@@ -1,3 +1,33 @@
-from django.contrib import admin
+# Diplomacy Tournament Visualiser
+# Copyright (C) 2014 Chris Brand
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# Register your models here.
+from django.contrib import admin
+from tournament.models import *
+
+class RoundInline(admin.StackedInline):
+    model = Round
+    extra = 4
+
+class TournamentAdmin(admin.ModelAdmin):
+    inlines = [RoundInline]
+
+# Register models
+admin.site.register(GreatPower)
+admin.site.register(Player)
+admin.site.register(ScoringSystem)
+admin.site.register(DrawProposal)
+admin.site.register(Tournament, TournamentAdmin)
+admin.site.register(Round)

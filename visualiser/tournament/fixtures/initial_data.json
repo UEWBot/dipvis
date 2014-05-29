@@ -1,0 +1,92 @@
+[
+{
+    "pk": 1, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "A", 
+        "name": "Austria-Hungary"
+    }
+},
+{
+    "pk": 2, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "E", 
+        "name": "England"
+    }
+},
+{
+    "pk": 3, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "F", 
+        "name": "France"
+    }
+},
+{
+    "pk": 4, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "G", 
+        "name": "Germany"
+    }
+},
+{
+    "pk": 5, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "I", 
+        "name": "Italy"
+    }
+},
+{
+    "pk": 6, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "R", 
+        "name": "Russia"
+    }
+},
+{
+    "pk": 7, 
+    "model": "tournament.greatpower", 
+    "fields": {
+        "abbreviation": "T", 
+        "name": "Turkey"
+    }
+},
+{
+    "pk": 1, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Chris", 
+        "last_name": "Brand", 
+        "wdd_player_id": 4173
+    }
+},
+{
+    "pk": 1, 
+    "model": "tournament.scoringsystem", 
+    "fields": {
+        "name": "TD Plays Favourites"
+    }
+},
+{
+    "pk": 1, 
+    "model": "auth.user", 
+    "fields": {
+        "username": "chris", 
+        "first_name": "", 
+        "last_name": "", 
+        "is_active": true, 
+        "is_superuser": true, 
+        "is_staff": true, 
+        "last_login": "2014-05-29T07:04:17.178Z", 
+        "groups": [], 
+        "user_permissions": [], 
+        "password": "pbkdf2_sha256$12000$MK4M30Clbcmk$HcA0UkIkmqSmb9KKMZkT2/88EWViIM3Ky3w7po5vQb0=", 
+        "email": "chris_brand@shaw.ca", 
+        "date_joined": "2014-05-29T07:03:27.677Z"
+    }
+}
+]
