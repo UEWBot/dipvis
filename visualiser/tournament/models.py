@@ -78,9 +78,9 @@ class Round(models.Model):
     number = models.PositiveSmallIntegerField()
     scoring_system = models.ForeignKey(ScoringSystem)
     dias = models.BooleanField(verbose_name='Draws Include All Survivors')
-    final_year = models.PositiveSmallIntegerField(blank=True)
-    earliest_end_time = models.DateTimeField(blank=True)
-    latest_end_time = models.DateTimeField(blank=True)
+    final_year = models.PositiveSmallIntegerField(blank=True, null=True)
+    earliest_end_time = models.DateTimeField(blank=True, null=True)
+    latest_end_time = models.DateTimeField(blank=True, null=True)
     def __unicode__(self):
         return u'%s round %d' % (self.tournament, self.number)
 
@@ -103,14 +103,14 @@ class DrawProposal(models.Model):
     game = models.ForeignKey(Game)
     year = models.PositiveSmallIntegerField()
     season = models.CharField(max_length=1, choices=SEASONS)
-    passed = models.BooleanField(blank=True)
+    passed = models.NullBooleanField(blank=True)
     power_1 = models.ForeignKey(GreatPower, related_name='+')
-    power_2 = models.ForeignKey(GreatPower, blank=True, related_name='+')
-    power_3 = models.ForeignKey(GreatPower, blank=True, related_name='+')
-    power_4 = models.ForeignKey(GreatPower, blank=True, related_name='+')
-    power_5 = models.ForeignKey(GreatPower, blank=True, related_name='+')
-    power_6 = models.ForeignKey(GreatPower, blank=True, related_name='+')
-    power_7 = models.ForeignKey(GreatPower, blank=True, related_name='+')
+    power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    power_4 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
@@ -123,9 +123,9 @@ class GamePlayer(models.Model):
     power = models.ForeignKey(GreatPower, related_name='+')
     first_year = models.PositiveSmallIntegerField(default=1)
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
-    last_year = models.PositiveSmallIntegerField(blank=True)
-    last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
-    score = models.FloatField(blank=True)
+    last_year = models.PositiveSmallIntegerField(blank=True, null=True)
+    last_season = models.CharField(max_length=1, choices=SEASONS, blank=True, null=True)
+    score = models.FloatField(blank=True, null=True)
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
 

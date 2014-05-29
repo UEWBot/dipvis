@@ -20,6 +20,15 @@ from tournament.models import *
 class RoundInline(admin.StackedInline):
     model = Round
     extra = 4
+    fieldsets = (
+        (None, {
+            'fields': ('number', 'scoring_system', 'dias')
+        }),
+        ('Round end options', {
+            'classes': ('collapse',),
+            'fields': ('final_year', 'earliest_end_time', 'latest_end_time')
+        }),
+    )
 
 class TournamentAdmin(admin.ModelAdmin):
     inlines = [RoundInline]
@@ -30,4 +39,3 @@ admin.site.register(Player)
 admin.site.register(ScoringSystem)
 admin.site.register(DrawProposal)
 admin.site.register(Tournament, TournamentAdmin)
-admin.site.register(Round)
