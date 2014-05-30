@@ -33,9 +33,49 @@ class RoundInline(admin.StackedInline):
 class TournamentAdmin(admin.ModelAdmin):
     inlines = [RoundInline]
 
+class GamePlayerInline(admin.TabularInline):
+    model = GamePlayer
+    fieldsets = (
+        (None, {
+            'fields': ('player', 'power', 'score')
+        }),
+        ('Replacement player options', {
+            'classes': ('collapse',),
+            'fields': ('first_season', 'first_year')
+        }),
+        ('Replaced player options', {
+            'classes': ('collapse',),
+            'fields': ('last_season', 'last_year')
+        }),
+    )
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            # Replacement players are pretty rare
+            # Let them click the button if needed
+            return 0
+        # We're going to want 7 players
+        return 7
+
+class DrawProposalInline(admin.StackedInline):
+    model = DrawProposal
+    extra = 1
+    fieldsets = (
+        (None, {
+            'fields': ('season', 'year', 'passed')
+        }),
+        ('Powers', {
+            'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')
+        })
+    )
+
+class GameAdmin(admin.ModelAdmin):
+    fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
+    inlines = [GamePlayerInline, DrawProposalInline]
+
 # Register models
 admin.site.register(GreatPower)
 admin.site.register(Player)
 admin.site.register(ScoringSystem)
 admin.site.register(DrawProposal)
 admin.site.register(Tournament, TournamentAdmin)
+admin.site.register(Game, GameAdmin)
