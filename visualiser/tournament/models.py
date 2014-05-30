@@ -38,7 +38,7 @@ class Player(models.Model):
     """
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-    wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name='WDD player id')
+    wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name='WDD player id', blank=True, null=True)
     def __unicode__(self):
         return u'%s %s' % (self.first_name, self.last_name)
 
@@ -103,7 +103,7 @@ class DrawProposal(models.Model):
     game = models.ForeignKey(Game)
     year = models.PositiveSmallIntegerField()
     season = models.CharField(max_length=1, choices=SEASONS)
-    passed = models.NullBooleanField(blank=True)
+    passed = models.BooleanField()
     power_1 = models.ForeignKey(GreatPower, related_name='+')
     power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
