@@ -30,8 +30,11 @@ class RoundInline(admin.StackedInline):
         }),
     )
 
+class TournamentPlayerInline(admin.TabularInline):
+    model = TournamentPlayer
+
 class TournamentAdmin(admin.ModelAdmin):
-    inlines = [RoundInline]
+    inlines = [RoundInline, TournamentPlayerInline]
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
@@ -56,6 +59,10 @@ class GamePlayerInline(admin.TabularInline):
         # We're going to want 7 players
         return 7
 
+class CentreCountInline(admin.TabularInline):
+    model = CentreCount
+    extra = 7
+
 class DrawProposalInline(admin.StackedInline):
     model = DrawProposal
     extra = 1
@@ -70,12 +77,14 @@ class DrawProposalInline(admin.StackedInline):
 
 class GameAdmin(admin.ModelAdmin):
     fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
-    inlines = [GamePlayerInline, DrawProposalInline]
+    inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline]
 
 # Register models
 admin.site.register(GreatPower)
 admin.site.register(Player)
 admin.site.register(ScoringSystem)
 admin.site.register(DrawProposal)
+admin.site.register(CentreCount)
+admin.site.register(TournamentPlayer)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(Game, GameAdmin)
