@@ -23,6 +23,27 @@ SEASONS = (
     (FALL, 'fall'),
 )
 
+def validate_year(value):
+    """
+    Checks for a valid game year
+    """
+    if value < 1901:
+        raise ValidationError(u'%s is not a valid game year' % value)
+
+def validate_sc_count(value):
+    """
+    Checks for a valid SC count
+    """
+    if value < 0 or value > 34:
+        raise ValidationError(u'%s is not a valid SC count' % value)
+
+def validate_wdd_id(value):
+    """
+    Checks a WDD id
+    """
+    url = u'http://world-diplomacy-database.com/php/results/player_fiche.php?id_player=%d' % value
+    # TODO Check that the URL doesn't redirect
+
 class GreatPower(models.Model):
     """
     One of the seven great powers that can be played
@@ -78,7 +99,7 @@ class Round(models.Model):
     number = models.PositiveSmallIntegerField()
     scoring_system = models.ForeignKey(ScoringSystem)
     dias = models.BooleanField(verbose_name='Draws Include All Survivors')
-    final_year = models.PositiveSmallIntegerField(blank=True, null=True)
+    final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
     def __unicode__(self):
@@ -101,7 +122,7 @@ class DrawProposal(models.Model):
     A single draw or concession proposal in a game
     """
     game = models.ForeignKey(Game)
-    year = models.PositiveSmallIntegerField()
+    year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
     passed = models.BooleanField()
     power_1 = models.ForeignKey(GreatPower, related_name='+')
@@ -121,10 +142,10 @@ class GamePlayer(models.Model):
     player = models.ForeignKey(Player)
     game = models.ForeignKey(Game)
     power = models.ForeignKey(GreatPower, related_name='+')
-    first_year = models.PositiveSmallIntegerField(default=1)
+    first_year = models.PositiveSmallIntegerField(default=1901, validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
-    last_year = models.PositiveSmallIntegerField(blank=True, null=True)
-    last_season = models.CharField(max_length=1, choices=SEASONS, blank=True, null=True)
+    last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
+    last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(blank=True, null=True)
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
@@ -135,8 +156,8 @@ class CentreCount(models.Model):
     """
     power = models.ForeignKey(GreatPower, related_name='+')
     game = models.ForeignKey(Game)
-    year = models.PositiveSmallIntegerField()
-    count = models.PositiveSmallIntegerField()
+    year = models.PositiveSmallIntegerField(validators=[validate_year])
+    count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
 
