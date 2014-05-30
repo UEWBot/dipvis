@@ -81,13 +81,13 @@ class Tournament(models.Model):
     def __unicode__(self):
         return self.name
 
-class TournamentScore(models.Model):
+class TournamentPlayer(models.Model):
     """
-    One player's score in a tournament
+    One player in a tournament
     """
     player = models.ForeignKey(Player)
     tournament = models.ForeignKey(Tournament)
-    score = models.PositiveIntegerField()
+    score = models.FloatField(default=0.0)
     def __unicode__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
 
@@ -148,7 +148,7 @@ class GamePlayer(models.Model):
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
-    score = models.FloatField(blank=True, null=True)
+    score = models.FloatField(default=0.0)
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
 
