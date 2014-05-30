@@ -125,6 +125,7 @@ class DrawProposal(models.Model):
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
     passed = models.BooleanField()
+    # TODO Ensure that each power is unique
     power_1 = models.ForeignKey(GreatPower, related_name='+')
     power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
@@ -142,6 +143,7 @@ class GamePlayer(models.Model):
     player = models.ForeignKey(Player)
     game = models.ForeignKey(Game)
     power = models.ForeignKey(GreatPower, related_name='+')
+    # TODO Ensure no overlapping players, or gaps
     first_year = models.PositiveSmallIntegerField(default=1901, validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
