@@ -19,3 +19,6 @@ from django.http import HttpResponse
 
 def index(request):
     return HttpResponse("This is the index")
+
+def detail(request, tournament_id):
+    return HttpResponse("This is the tournament %s" % tournament_id)

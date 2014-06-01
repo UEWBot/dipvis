@@ -19,5 +19,6 @@ from django.conf.urls import patterns, url
 from tournament import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.index, name='index')
+    url(r'^$', views.index, name='index'),
+    url(r'^(?P<tournament_id>\d+)/$', views.detail, name='detail'),
 )
