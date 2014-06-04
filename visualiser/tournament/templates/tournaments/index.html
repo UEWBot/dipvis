@@ -1,0 +1,12 @@
+<h1>Diplomacy Tournament Visualiser</h1>
+{% if tournament_list %}
+    <ul>
+    {% for t in tournament_list %}
+        <li><a href="{% url 'tournament_detail' t.id %}">{{ t.name }}</a>
+            <a href="{% url 'tournament_scores' t.id %}">Scores</a>
+            <a href="{% url 'tournament_round' t.id %}">Current Round</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No tournaments are available.</p>
+{% endif %}

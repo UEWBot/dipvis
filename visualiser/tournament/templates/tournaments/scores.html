@@ -1,0 +1,9 @@
+<h1>{{ tournament.name }}</h1>
+
+<p>From {{ tournament.start_date }} to {{ tournament.end_date }}.<p>
+
+<ul>
+{% for tp in tournament.tournamentplayer_set.all %}
+    <li>{{ tp.player }} {{ tp.score }}</li>
+{% endfor %}
+</ul>
