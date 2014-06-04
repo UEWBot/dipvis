@@ -30,7 +30,8 @@ def tournament_detail(request, tournament_id):
 
 def tournament_scores(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
-    return render(request, 'tournaments/scores.html', {'tournament': t})
+    tps = t.tournamentplayer_set.order_by('-score')
+    return render(request, 'tournaments/scores.html', {'tournament': t, 'player_set': tps})
 
 def tournament_round(request, tournament_id):
     return HttpResponse("This is the tournament %s current round" % tournament_id)

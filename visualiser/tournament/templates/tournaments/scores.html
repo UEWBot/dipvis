@@ -3,7 +3,7 @@
 <p>From {{ tournament.start_date }} to {{ tournament.end_date }}.<p>
 
 <ul>
-{% for tp in tournament.tournamentplayer_set.all %}
-    <li>{{ tp.player }} {{ tp.score }}</li>
+{% for tp in player_set %}
+    <li>{{ tp.player }} {{ tp.score|default:"0.0" }}</li>
 {% endfor %}
 </ul>
