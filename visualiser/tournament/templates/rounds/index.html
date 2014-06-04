@@ -1,0 +1,14 @@
+<h1>{{ tournament }}</h1>
+{% if round_list %}
+    <ul>
+    {% for r in round_list %}
+        <li><a href="{% url 'round_detail' tournament.id r.number %}">Round {{ r.number }}</a>
+            {% if r.is_finished %}
+                (Complete)
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No rounds exist in the tournament.</p>
+{% endif %}

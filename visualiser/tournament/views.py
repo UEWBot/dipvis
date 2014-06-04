@@ -34,15 +34,24 @@ def tournament_scores(request, tournament_id):
     return render(request, 'tournaments/scores.html', {'tournament': t, 'player_set': tps})
 
 def tournament_round(request, tournament_id):
-    return HttpResponse("This is the tournament %s current round" % tournament_id)
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    rds = t.round_set.order_by('number')
+    for r in rds:
+        if not r.is_finished():
+            # This must be the "current round"
+            return render(request, 'rounds/detail.html', {'round': r})
+    return HttpResponse("No rounds currently being played")
 
 def round_index(request, tournament_id):
-    the_list = Tournament.objects.order_by('-start_date')
-    context = {'round_list': the_list}
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    the_list = t.round_set.order_by('number')
+    context = {'tournament': t, 'round_list': the_list}
     return render(request, 'rounds/index.html', context)
 
 def round_detail(request, tournament_id, round_num):
-    return HttpResponse("This is the tournament %s round %s detail" % (tournament_id, round_num))
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    r = t.round_set.get(number=round_num)
+    return render(request, 'rounds/detail.html', {'round': r})
 
 def round_scores(request, tournament_id, round_num):
     return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
