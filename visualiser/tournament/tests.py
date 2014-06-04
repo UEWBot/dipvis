@@ -15,5 +15,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 
-# Create your tests here.
+from tournament.models import *
+
+class TournamentModelTests(TestCase):
+    def test_validate_year_negative(self):
+        self.assertRaises(ValidationError, validate_year, -1)
+    def test_validate_year_1899(self):
+        self.assertRaises(ValidationError, validate_year, 1899)
+    def test_validate_sc_count_negative(self):
+        self.assertRaises(ValidationError, validate_sc_count, -1)
+    def test_validate_sc_count_35(self):
+        self.assertRaises(ValidationError, validate_sc_count, 35)
