@@ -79,6 +79,11 @@ class Tournament(models.Model):
     name = models.CharField(max_length=20)
     start_date = models.DateField()
     end_date = models.DateField()
+    def is_finished(self):
+        for r in self.round_set.all():
+            if not r.is_finished():
+                return False
+        return True
     def __unicode__(self):
         return self.name
 
@@ -103,6 +108,11 @@ class Round(models.Model):
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
+    def is_finished(self):
+        for g in self.game_set.all():
+            if not g.is_finished:
+                return False
+        return True
     def __unicode__(self):
         return u'%s round %d' % (self.tournament, self.number)
 
