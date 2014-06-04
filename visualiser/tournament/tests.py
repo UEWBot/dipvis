@@ -29,6 +29,7 @@ class TournamentModelTests(TestCase):
         r11 = Round.objects.create(tournament=t1, number=1, scoring_system=s1, dias=True)
         r12 = Round.objects.create(tournament=t1, number=2, scoring_system=s1, dias=True)
         r13 = Round.objects.create(tournament=t1, number=3, scoring_system=s1, dias=True)
+        r14 = Round.objects.create(tournament=t1, number=4, scoring_system=s1, dias=True)
         r21 = Round.objects.create(tournament=t2, number=1, scoring_system=s1, dias=True)
         r22 = Round.objects.create(tournament=t2, number=2, scoring_system=s1, dias=True)
         r31 = Round.objects.create(tournament=t3, number=1, scoring_system=s1, dias=True)
@@ -70,6 +71,14 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r3 = t.round_set.get(number=3)
         self.assertEqual(r3.is_finished(), True)
+
+    def test_round_is_finished_no_games(self):
+        """
+        Rounds with no games can't have started, let alone finished
+        """
+        t = Tournament.objects.get(name='t1')
+        r4 = t.round_set.get(number=4)
+        self.assertEqual(r4.is_finished(), False)
 
     def test_tourney_is_finished_some_rounds_over(self):
         t = Tournament.objects.get(name='t1')

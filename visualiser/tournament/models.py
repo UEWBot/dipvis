@@ -109,7 +109,11 @@ class Round(models.Model):
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
     def is_finished(self):
-        for g in self.game_set.all():
+        gs = self.game_set.all()
+        if len(gs) == 0:
+            # Rounds with no games can't have started
+            return False
+        for g in gs:
             if not g.is_finished:
                 return False
         return True
