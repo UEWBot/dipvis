@@ -151,6 +151,16 @@ class DrawProposal(models.Model):
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
+class RoundPlayer(models.Model):
+    """
+    A person who played a round in a tournament
+    """
+    player = models.ForeignKey(Player)
+    the_round = models.ForeignKey(Round, verbose_name='round')
+    score = models.FloatField(default=0.0)
+    def __unicode__(self):
+        return u'%s in %s' % (self.player, self.the_round)
+
 class GamePlayer(models.Model):
     """
     A person who played a Great Power in a Game
