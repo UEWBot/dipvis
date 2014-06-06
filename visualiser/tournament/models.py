@@ -16,6 +16,7 @@
 
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 
 SPRING = 'S'
 FALL = 'F'
@@ -84,6 +85,8 @@ class Tournament(models.Model):
             if not r.is_finished():
                 return False
         return True
+    def get_absolute_url(self):
+        return reverse('tournament_detail', args=[str(self.id)])
     def __unicode__(self):
         return self.name
 
@@ -117,6 +120,8 @@ class Round(models.Model):
             if not g.is_finished:
                 return False
         return True
+    def get_absolute_url(self):
+        return reverse('round_detail', args=[str(self.tournament.id), str(self.number)])
     def __unicode__(self):
         return u'%s round %d' % (self.tournament, self.number)
 
@@ -129,6 +134,8 @@ class Game(models.Model):
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name='round')
+    def get_absolute_url(self):
+        return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
     def __unicode__(self):
         return self.name
 
