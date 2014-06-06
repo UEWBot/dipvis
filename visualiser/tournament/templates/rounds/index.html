@@ -1,3 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament }}{%endblock %}
+
+{% block content %}
 <h1>{{ tournament }}</h1>
 {% if round_list %}
     <ul>
@@ -12,3 +17,4 @@
 {% else %}
     <p>No rounds exist in the tournament.</p>
 {% endif %}
+{% endblock %}

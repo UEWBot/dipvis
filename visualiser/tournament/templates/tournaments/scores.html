@@ -1,5 +1,8 @@
-<h1>{{ tournament.name }}</h1>
+{% extends "base.html" %}
 
+{% block title %}{{ tournament.name }}{% endblock %}
+
+{% block content %}
 <p>Current Standings</p>
 
 <ul>
@@ -7,3 +10,4 @@
     <li>{{ tp.player }} {{ tp.score|default:"0.0" }}</li>
 {% endfor %}
 </ul>
+{% endblock %}

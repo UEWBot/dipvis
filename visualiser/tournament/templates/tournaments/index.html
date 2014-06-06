@@ -1,4 +1,6 @@
-<h1>Diplomacy Tournament Visualiser</h1>
+{% extends "base.html" %}
+
+{% block content %}
 {% if tournament_list %}
     <ul>
     {% for t in tournament_list %}
@@ -10,3 +12,4 @@
 {% else %}
     <p>No tournaments are available.</p>
 {% endif %}
+{% endblock %}
