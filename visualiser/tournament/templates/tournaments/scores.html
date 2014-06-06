@@ -9,7 +9,7 @@
   <tr>
     <th>Player</th>
     {% for r in rounds %}
-      <th>Round {{ r }}</th>
+      <th><a href="{% url 'round_detail' tournament.id r %}">Round {{ r }}</a></th>
     {% endfor %}
     <th>Final Score</th>
   </tr>
