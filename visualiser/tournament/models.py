@@ -222,6 +222,8 @@ class CentreCount(models.Model):
     """
     The number of centres owned by one power at the end of a given game year
     """
+    class Meta:
+        unique_together = ('power', 'game', 'year')
     power = models.ForeignKey(GreatPower, related_name='+')
     game = models.ForeignKey(Game)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
