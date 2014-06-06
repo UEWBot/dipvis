@@ -21,7 +21,7 @@ from django.views import generic
 
 from tournament.models import Tournament, Round, Game
 
-class IndexView(generic.ListView):
+class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
     context_object_name = 'tournament_list'
 
@@ -29,7 +29,7 @@ class IndexView(generic.ListView):
         """Sort in date order, latest at the top"""
         return Tournament.objects.order_by('-start_date')
 
-class DetailView(generic.DetailView):
+class TourneyDetailView(generic.DetailView):
     model = Tournament
     template_name = 'tournaments/detail.html'
 
