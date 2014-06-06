@@ -147,7 +147,6 @@ class DrawProposal(models.Model):
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
     passed = models.BooleanField()
-    # TODO Ensure that each power is unique
     power_1 = models.ForeignKey(GreatPower, related_name='+')
     power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
@@ -155,6 +154,29 @@ class DrawProposal(models.Model):
     power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    def draw_size(self):
+        count = 0
+        for name, value in self.__dict__.iteritems():
+            if name.startswith('power_'):
+                if value:
+                    count += 1
+        return count
+    def clean(self):
+        # No skipping powers
+        found_null = False
+        for n in range(1,8):
+            if not self.__dict__['power_%d_id' % n]:
+                found_null = True
+            elif found_null:
+                raise ValidationError('Draw powers should go as early as possible')
+        # Each power must be unique
+        powers = set()
+        for name, value in self.__dict__.iteritems():
+            if value and name.startswith('power_'):
+                if value in powers:
+                    power = GreatPower.objects.get(pk=value)
+                    raise ValidationError('%s present more than once' % power)
+                powers.add(value)
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
