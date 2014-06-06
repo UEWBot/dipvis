@@ -44,6 +44,13 @@ class TournamentModelTests(TestCase):
         g22 = Game.objects.create(name='g2', started_at=timezone.now(), the_round=r22)
         g31 = Game.objects.create(name='g1', started_at=timezone.now(), the_round=r31, is_finished=True)
         g32 = Game.objects.create(name='g2', started_at=timezone.now(), the_round=r32, is_finished=True)
+        self.austria = GreatPower.objects.get(abbreviation='A')
+        self.england = GreatPower.objects.get(abbreviation='E')
+        self.france = GreatPower.objects.get(abbreviation='F')
+        self.germany = GreatPower.objects.get(abbreviation='G')
+        self.italy = GreatPower.objects.get(abbreviation='I')
+        self.russia = GreatPower.objects.get(abbreviation='R')
+        self.turkey = GreatPower.objects.get(abbreviation='T')
 
     def test_validate_year_negative(self):
         self.assertRaises(ValidationError, validate_year, -1)
@@ -91,4 +98,16 @@ class TournamentModelTests(TestCase):
     def test_tourney_is_finished_all_rounds_over(self):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.is_finished(), True)
+
+    def test_draw_proposal_with_duplicates(self):
+        g = Game.objects.get(pk=1)
+        dp = DrawProposal(game=g, year=1910, season='F', passed=False,
+                          power_1=self.austria, power_2=self.austria)
+        self.assertRaises(ValidationError, dp.clean)
+
+    def test_draw_proposal_with_gap(self):
+        g = Game.objects.get(pk=1)
+        dp = DrawProposal(game=g, year=1910, season='F', passed=False,
+                          power_1=self.austria, power_3=self.england)
+        self.assertRaises(ValidationError, dp.clean)
 
