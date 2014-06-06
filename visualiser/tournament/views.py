@@ -16,17 +16,22 @@
 
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
+from django.core.urlresolvers import reverse
+from django.views import generic
 
 from tournament.models import Tournament, Round, Game
 
-def index(request):
-    the_list = Tournament.objects.order_by('-start_date')
-    context = {'tournament_list': the_list}
-    return render(request, 'tournaments/index.html', context)
+class IndexView(generic.ListView):
+    template_name = 'tournaments/index.html'
+    context_object_name = 'tournament_list'
 
-def tournament_detail(request, tournament_id):
-    t = get_object_or_404(Tournament, pk=tournament_id)
-    return render(request, 'tournaments/detail.html', {'tournament': t})
+    def get_queryset(self):
+        """Sort in date order, latest at the top"""
+        return Tournament.objects.order_by('-start_date')
+
+class DetailView(generic.DetailView):
+    model = Tournament
+    template_name = 'tournaments/detail.html'
 
 def tournament_scores(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)

@@ -19,8 +19,8 @@ from django.conf.urls import patterns, url
 from tournament import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.index, name='index'),
-    url(r'^(?P<tournament_id>\d+)/$', views.tournament_detail, name='tournament_detail'),
+    url(r'^$', views.IndexView.as_view(), name='index'),
+    url(r'^(?P<pk>\d+)/$', views.DetailView.as_view(), name='tournament_detail'),
     url(r'^(?P<tournament_id>\d+)/scores/$', views.tournament_scores, name='tournament_scores'),
     url(r'^(?P<tournament_id>\d+)/current_round/$', views.tournament_round, name='tournament_round'),
     url(r'^(?P<tournament_id>\d+)/rounds/$', views.round_index, name='round_index'),
