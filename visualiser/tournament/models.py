@@ -187,6 +187,12 @@ class RoundPlayer(models.Model):
     player = models.ForeignKey(Player)
     the_round = models.ForeignKey(Round, verbose_name='round')
     score = models.FloatField(default=0.0)
+    def clean(self):
+        # Player should already be in the tournament
+        t = self.the_round.tournament
+        tp = self.player.tournamentplayer_set.filter(tournament=t)
+        if not tp:
+            raise ValidationError('Player is not yet in the tournament')
     def __unicode__(self):
         return u'%s in %s' % (self.player, self.the_round)
 
@@ -203,6 +209,12 @@ class GamePlayer(models.Model):
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(default=0.0)
+    def clean(self):
+        # Player should already be in the tournament
+        t = self.game.the_round.tournament
+        tp = self.player.tournamentplayer_set.filter(tournament=t)
+        if not tp:
+            raise ValidationError('Player is not yet in the tournament')
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
 
