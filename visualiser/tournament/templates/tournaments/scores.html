@@ -3,11 +3,22 @@
 {% block title %}{{ tournament.name }}{% endblock %}
 
 {% block content %}
-<p>Current Standings</p>
+<h1>{{ tournament.name }} Current Standings</h1>
 
-<ul>
-{% for tp in player_set %}
-    <li>{{ tp.player }} {{ tp.score|default:"0.0" }}</li>
-{% endfor %}
-</ul>
+<table border="1">
+  <tr>
+    <th>Player</th>
+    {% for r in rounds %}
+      <th>Round {{ r }}</th>
+    {% endfor %}
+    <th>Final Score</th>
+  </tr>
+  {% for player in scores %}
+    <tr>
+      {% for data in player %}
+        <td>{{ data }}</td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
 {% endblock %}

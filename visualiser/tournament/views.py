@@ -36,7 +36,20 @@ class TourneyDetailView(generic.DetailView):
 def tournament_scores(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
     tps = t.tournamentplayer_set.order_by('-score')
-    return render(request, 'tournaments/scores.html', {'tournament': t, 'player_set': tps})
+    rds = t.round_set.order_by('number')
+    rounds = [r.number for r in rds]
+    # Construct a list of lists with [player name, round 1 score, ..., round n score, tournament score]
+    scores = []
+    for p in tps:
+        rs = []
+        for r in rds:
+            rp = p.player.roundplayer_set.filter(the_round=r)
+            if rp:
+                rs.append(rp.score)
+            else:
+                rs.append('')
+        scores.append(['%s' % p.player] + rs + ['%f' % p.score])
+    return render(request, 'tournaments/scores.html', {'tournament': t, 'scores': scores, 'rounds': rounds})
 
 def tournament_round(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
