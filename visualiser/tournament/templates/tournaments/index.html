@@ -4,7 +4,7 @@
 {% if tournament_list %}
     <ul>
     {% for t in tournament_list %}
-        <li><a href="{% url 'tournament_detail' t.id %}">{{ t.name }}</a>
+        <li><a href="{% t.get_absolute_url %}">{{ t.name }}</a>
             <a href="{% url 'tournament_scores' t.id %}">Scores</a>
             <a href="{% url 'tournament_round' t.id %}">Current Round</a></li>
     {% endfor %}
