@@ -52,6 +52,8 @@ class GreatPower(models.Model):
     """
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=1, unique=True)
+    class Meta:
+        ordering = ['name']
     def __unicode__(self):
         return self.name
 
@@ -62,6 +64,8 @@ class Player(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name='WDD player id', blank=True, null=True)
+    class Meta:
+        ordering = ['last_name', 'first_name']
     def __unicode__(self):
         return u'%s %s' % (self.first_name, self.last_name)
 
@@ -70,6 +74,8 @@ class ScoringSystem(models.Model):
     A system for assigning scores to players of a single game
     """
     name = models.CharField(max_length=30)
+    class Meta:
+        ordering = ['name']
     def __unicode__(self):
         return self.name
 
@@ -111,6 +117,8 @@ class Round(models.Model):
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
+    class Meta:
+        ordering = ['number']
     def is_finished(self):
         gs = self.game_set.all()
         if len(gs) == 0:
@@ -134,6 +142,8 @@ class Game(models.Model):
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name='round')
+    class Meta:
+        ordering = ['name']
     def get_absolute_url(self):
         return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
     def __unicode__(self):
