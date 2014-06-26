@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.core.urlresolvers import reverse
 from django.views import generic
 
@@ -68,24 +68,57 @@ def round_index(request, tournament_id):
 
 def round_detail(request, tournament_id, round_num):
     t = get_object_or_404(Tournament, pk=tournament_id)
-    r = t.round_set.get(number=round_num)
+    try:
+	r = t.round_set.get(number=round_num)
+    except Round.DoesNotExist:
+	raise Http404
     return render(request, 'rounds/detail.html', {'round': r})
 
 def round_scores(request, tournament_id, round_num):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	r = t.round_set.get(number=round_num)
+    except Round.DoesNotExist:
+	raise Http404
     return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
 
 def game_index(request, tournament_id, round_num):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+    	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+	raise Http404
     return HttpResponse("This is the tournament %s round %s game index" % (tournament_id, round_num))
 
 def game_detail(request, tournament_id, game_name):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+	raise Http404
     return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
 
 def game_sc_chart(request, tournament_id, game_name):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+	raise Http404
     return HttpResponse("This is the tournament %s game %s sc_chart" % (tournament_id, game_name))
 
 def game_news(request, tournament_id, game_name):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+	raise Http404
     return HttpResponse("This is the tournament %s game %s news" % (tournament_id, game_name))
 
 def game_background(request, tournament_id, game_name):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+	raise Http404
     return HttpResponse("This is the tournament %s game %s background" % (tournament_id, game_name))
 
