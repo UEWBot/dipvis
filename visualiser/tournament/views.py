@@ -97,36 +97,36 @@ def game_index(request, tournament_id, round_num):
 def game_detail(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
-	raise Http404
+        raise Http404
     # TODO Render actual game detail
     return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
 
 def game_sc_chart(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
-	raise Http404
+        raise Http404
     # TODO Render actual sc chart
     return HttpResponse("This is the tournament %s game %s sc_chart" % (tournament_id, game_name))
 
 def game_news(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
-	raise Http404
+        raise Http404
     # TODO Render actual news
     return HttpResponse("This is the tournament %s game %s news" % (tournament_id, game_name))
 
 def game_background(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
-	raise Http404
+        raise Http404
     # TODO Render actual background
     return HttpResponse("This is the tournament %s game %s background" % (tournament_id, game_name))
 
