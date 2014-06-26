@@ -58,7 +58,8 @@ def tournament_round(request, tournament_id):
         if not r.is_finished():
             # This must be the "current round"
             return render(request, 'rounds/detail.html', {'round': r})
-    return HttpResponse("No rounds currently being played")
+    # TODO There must be a better way than this
+    return HttpResponse("No round currently being played")
 
 def round_index(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -80,6 +81,7 @@ def round_scores(request, tournament_id, round_num):
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
+    # TODO Render actual scores
     return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
 
 def game_index(request, tournament_id, round_num):
@@ -98,6 +100,7 @@ def game_detail(request, tournament_id, game_name):
 	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
 	raise Http404
+    # TODO Render actual game detail
     return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
 
 def game_sc_chart(request, tournament_id, game_name):
@@ -106,6 +109,7 @@ def game_sc_chart(request, tournament_id, game_name):
 	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
 	raise Http404
+    # TODO Render actual sc chart
     return HttpResponse("This is the tournament %s game %s sc_chart" % (tournament_id, game_name))
 
 def game_news(request, tournament_id, game_name):
@@ -114,6 +118,7 @@ def game_news(request, tournament_id, game_name):
 	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
 	raise Http404
+    # TODO Render actual news
     return HttpResponse("This is the tournament %s game %s news" % (tournament_id, game_name))
 
 def game_background(request, tournament_id, game_name):
@@ -122,5 +127,6 @@ def game_background(request, tournament_id, game_name):
 	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
 	raise Http404
+    # TODO Render actual background
     return HttpResponse("This is the tournament %s game %s background" % (tournament_id, game_name))
 
