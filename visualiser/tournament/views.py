@@ -85,10 +85,12 @@ def round_scores(request, tournament_id, round_num):
 def game_index(request, tournament_id, round_num):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-    	g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
+	r = t.round_set.get(number=round_num)
+    except Round.DoesNotExist:
 	raise Http404
-    return HttpResponse("This is the tournament %s round %s game index" % (tournament_id, round_num))
+    the_list = r.game_set.order_by('name')
+    context = {'round': r, 'game_list': the_list}
+    return render(request, 'games/index.html', context)
 
 def game_detail(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ round }}{%endblock %}
+
+{% block content %}
+<h1>{{ round }}</h1>
+{% if game_list %}
+    <ul>
+    {% for g in game_list %}
+        <li><a href="{{ g.get_absolute_url }}">Game {{ g.name }}</a>
+            {% if g.is_finished %}
+                (Complete)
+            {% endif %}
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No games exist in the round.</p>
+{% endif %}
+{% endblock %}
