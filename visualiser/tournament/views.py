@@ -130,12 +130,15 @@ def game_sc_chart(request, tournament_id, game_name):
     # Create a list of rows, each with a year and each power's SC count
     rows = []
     for year in years:
+        neutrals = 34
         yscs = scs.filter(year=year)
         row = []
         row.append(year)
         for power in powers:
             sc = yscs.filter(power=power).get()
             row.append(sc.count)
+            neutrals -= sc.count
+        row.append(neutrals)
         rows.append(row)
     context = {'game': g, 'powers': powers, 'players': ps, 'rows': rows}
     #formset = CentreCountFormSet(instance=g, queryset=scs)
