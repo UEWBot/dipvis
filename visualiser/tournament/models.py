@@ -25,18 +25,23 @@ SEASONS = (
     (FALL, 'fall'),
 )
 
+FIRST_YEAR = 1901
+
+TOTAL_SCS = 34
+WINNING_SCS = ((TOTAL_SCS/2)+1)
+
 def validate_year(value):
     """
     Checks for a valid game year
     """
-    if value < 1901:
+    if value < FIRST_YEAR:
         raise ValidationError(u'%s is not a valid game year' % value)
 
 def validate_sc_count(value):
     """
     Checks for a valid SC count
     """
-    if value < 0 or value > 34:
+    if value < 0 or value > TOTAL_SCS:
         raise ValidationError(u'%s is not a valid SC count' % value)
 
 def validate_wdd_id(value):
@@ -185,7 +190,7 @@ class Game(models.Model):
         # Did a power reach 18 centres ?
         final_year = self.years_played()[-1]
         scs = self.centrecount_set.filter(year=final_year).order_by('-count')
-        if scs[0].count > 17:
+        if scs[0].count >= WINNING_SCS:
             return u'Game won by %s' % scs[0].power.name
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
@@ -270,7 +275,7 @@ class GamePlayer(models.Model):
     game = models.ForeignKey(Game)
     power = models.ForeignKey(GreatPower, related_name='+')
     # TODO Ensure no overlapping players, or gaps
-    first_year = models.PositiveSmallIntegerField(default=1901, validators=[validate_year])
+    first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR, validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
@@ -294,6 +299,19 @@ class CentreCount(models.Model):
     game = models.ForeignKey(Game)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
+    def clean(self):
+        # Not possible to more than double your count in one year
+        # or to recover from an elimination
+        if self.year > FIRST_YEAR:
+            try:
+                prev = CentreCount.objects.filter(power=self.power, game=self.game, year=self.year-1).get()
+                if self.count > 2 * prev.count:
+                    raise ValidationError('SC count for a power should not more than double in a year')
+                elif (prev.count == 0) and (self.count > 0):
+                    raise ValidationError('SC count cannot increase from zero')
+            except DrawProposal.DoesNotExist:
+                # We're obviously missing a year - let that go
+                pass
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
 

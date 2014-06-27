@@ -20,7 +20,7 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
 
-from tournament.models import Tournament, Round, Game, CentreCount, GreatPower
+from tournament.models import *
 
 class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
@@ -130,14 +130,18 @@ def game_sc_chart(request, tournament_id, game_name):
     # Create a list of rows, each with a year and each power's SC count
     rows = []
     for year in years:
-        neutrals = 34
+        neutrals = TOTAL_SCS
         yscs = scs.filter(year=year)
         row = []
         row.append(year)
         for power in powers:
-            sc = yscs.filter(power=power).get()
-            row.append(sc.count)
-            neutrals -= sc.count
+            try:
+                sc = yscs.filter(power=power).get()
+                row.append(sc.count)
+                neutrals -= sc.count
+            except CentreCount.DoesNotExist:
+                # This is presumably because they were eliminated
+                row.append(0)
         row.append(neutrals)
         rows.append(row)
     context = {'game': g, 'powers': powers, 'players': ps, 'rows': rows}
