@@ -24,5 +24,10 @@
            {% endfor %}
        </tr>
    {% endfor %}
+   {% if game.is_finished %}
+       <tr>
+           <td colspan=9 align=center>Game Ended</td>
+       </tr>
+   {% endif %}
 </table>
 {% endblock %}
