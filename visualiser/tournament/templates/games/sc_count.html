@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Game {{ game }} SC Chart{%endblock %}
+
+{% block content %}
+<h1>Game {{ game }} SC Chart</h1>
+<table border=1>
+   <tr>
+       <th/>
+       {% for power in powers %}
+           <th>{{ power }}</th>
+       {% endfor %}
+   </tr>
+   <tr>
+       <th>Year</th>
+       {% for gameplayer in players %}
+           <th>{{ gameplayer|safe }}</th>
+       {% endfor %}
+   </tr>
+   {% for row in rows %}
+       <tr>
+           {% for cell in row %}
+               <td>{{ cell }} </td>
+           {% endfor %}
+       </tr>
+   {% endfor %}
+</table>
+{% endblock %}

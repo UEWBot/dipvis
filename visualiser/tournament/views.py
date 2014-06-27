@@ -20,7 +20,7 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
 
-from tournament.models import Tournament, Round, Game, CentreCount
+from tournament.models import Tournament, Round, Game, CentreCount, GreatPower
 
 class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
@@ -111,19 +111,35 @@ def game_detail(request, tournament_id, game_name):
     return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
 
 def game_sc_chart(request, tournament_id, game_name):
-    CentreCountFormSet = inlineformset_factory(Game, CentreCount)
+    #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    ps = g.gameplayer_set.order_by('power')
+    powers = GreatPower.objects.all()
+    # TODO massage ps so we have one entry per power
+    players = g.players()
+    ps = []
+    for power in powers:
+        names = '<br>'.join(map(unicode, players[power]))
+        ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
-    context = {'tournament': t, 'game': g, 'players': ps, 'counts': scs}
-    formset = CentreCountFormSet(instance=g, queryset=scs)
-    print(formset)
-    # TODO Render actual sc chart
-    return HttpResponse("This is the tournament %s game %s sc_chart" % (tournament_id, game_name))
+    # Create a list of years that have been played
+    years = g.years_played()
+    # Create a list of rows, each with a year and each power's SC count
+    rows = []
+    for year in years:
+        yscs = scs.filter(year=year)
+        row = []
+        row.append(year)
+        for power in powers:
+            sc = yscs.filter(power=power).get()
+            row.append(sc.count)
+        rows.append(row)
+    context = {'game': g, 'powers': powers, 'players': ps, 'rows': rows}
+    #formset = CentreCountFormSet(instance=g, queryset=scs)
+    return render(request, 'games/sc_count.html', context)
 
 def game_news(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
