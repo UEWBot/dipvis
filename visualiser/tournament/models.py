@@ -205,6 +205,14 @@ class DrawProposal(models.Model):
                     power = GreatPower.objects.get(pk=value)
                     raise ValidationError('%s present more than once' % power)
                 powers.add(value)
+        # Only one successful draw proposal
+        if self.passed:
+            try:
+                p = DrawProposal.objects.filter(game=self.game, passed=True).get()
+                if p != self:
+                    raise ValidationError('Game already has a successful draw proposal')
+            except DrawProposal.DoesNotExist:
+                pass
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
