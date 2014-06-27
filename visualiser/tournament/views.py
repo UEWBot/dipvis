@@ -49,7 +49,8 @@ def tournament_scores(request, tournament_id):
             else:
                 rs.append('')
         scores.append(['%s' % p.player] + rs + ['%f' % p.score])
-    return render(request, 'tournaments/scores.html', {'tournament': t, 'scores': scores, 'rounds': rounds})
+    context = {'tournament': t, 'scores': scores, 'rounds': rounds}
+    return render(request, 'tournaments/scores.html', context)
 
 def tournament_round(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -57,7 +58,8 @@ def tournament_round(request, tournament_id):
     for r in rds:
         if not r.is_finished():
             # This must be the "current round"
-            return render(request, 'rounds/detail.html', {'round': r})
+            context = {'round': r}
+            return render(request, 'rounds/detail.html', context)
     # TODO There must be a better way than this
     return HttpResponse("No round currently being played")
 
@@ -73,7 +75,8 @@ def round_detail(request, tournament_id, round_num):
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
-    return render(request, 'rounds/detail.html', {'round': r})
+    context = {'round': r}
+    return render(request, 'rounds/detail.html', context)
 
 def round_scores(request, tournament_id, round_num):
     t = get_object_or_404(Tournament, pk=tournament_id)
