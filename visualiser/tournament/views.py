@@ -18,8 +18,9 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404
 from django.core.urlresolvers import reverse
 from django.views import generic
+from django.forms.models import inlineformset_factory
 
-from tournament.models import Tournament, Round, Game
+from tournament.models import Tournament, Round, Game, CentreCount
 
 class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
@@ -84,6 +85,8 @@ def round_scores(request, tournament_id, round_num):
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
+    rps = r.roundplayer_set.order_by('score')
+    context = {'tournament': t, 'player_list': rps}
     # TODO Render actual scores
     return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
 
@@ -103,15 +106,22 @@ def game_detail(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
+    context = {'tournament': t, 'game': g}
     # TODO Render actual game detail
     return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
 
 def game_sc_chart(request, tournament_id, game_name):
+    CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
+    ps = g.gameplayer_set.order_by('power')
+    scs = g.centrecount_set.order_by('power', 'year')
+    context = {'tournament': t, 'game': g, 'players': ps, 'counts': scs}
+    formset = CentreCountFormSet(instance=g, queryset=scs)
+    print(formset)
     # TODO Render actual sc chart
     return HttpResponse("This is the tournament %s game %s sc_chart" % (tournament_id, game_name))
 
@@ -121,6 +131,7 @@ def game_news(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
+    context = {'tournament': t, 'game': g}
     # TODO Render actual news
     return HttpResponse("This is the tournament %s game %s news" % (tournament_id, game_name))
 
@@ -130,6 +141,7 @@ def game_background(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
+    context = {'tournament': t, 'game': g}
     # TODO Render actual background
     return HttpResponse("This is the tournament %s game %s background" % (tournament_id, game_name))
 
