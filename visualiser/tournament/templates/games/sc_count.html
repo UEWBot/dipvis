@@ -8,7 +8,7 @@
    <tr>
        <th rowspan=2>Year</th>
        {% for power in powers %}
-           <th>{{ power }}</th>
+           <th bgcolor={{ power.colour }}>{{ power }}</th>
        {% endfor %}
        <th rowspan=2>Neutrals</th>
    </tr>

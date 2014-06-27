@@ -4,7 +4,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "A", 
-        "name": "Austria-Hungary"
+        "name": "Austria-Hungary",
+        "colour": "red"
     }
 },
 {
@@ -12,7 +13,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "E", 
-        "name": "England"
+        "name": "England",
+        "colour": "blue"
     }
 },
 {
@@ -20,7 +22,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "F", 
-        "name": "France"
+        "name": "France",
+        "colour": "cyan"
     }
 },
 {
@@ -28,7 +31,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "G", 
-        "name": "Germany"
+        "name": "Germany",
+        "colour": "grey"
     }
 },
 {
@@ -36,7 +40,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "I", 
-        "name": "Italy"
+        "name": "Italy",
+        "colour": "green"
     }
 },
 {
@@ -44,7 +49,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "R", 
-        "name": "Russia"
+        "name": "Russia",
+        "colour": "white"
     }
 },
 {
@@ -52,7 +58,8 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "T", 
-        "name": "Turkey"
+        "name": "Turkey",
+        "colour": "yellow"
     }
 },
 {

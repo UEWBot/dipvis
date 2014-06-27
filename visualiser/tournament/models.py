@@ -52,6 +52,7 @@ class GreatPower(models.Model):
     """
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=1, unique=True)
+    colour = models.CharField(max_length=20)
     class Meta:
         ordering = ['name']
     def __unicode__(self):
