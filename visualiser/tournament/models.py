@@ -144,6 +144,23 @@ class Game(models.Model):
     the_round = models.ForeignKey(Round, verbose_name='round')
     class Meta:
         ordering = ['name']
+    def years_played(self):
+        """
+        Returns a list of years for which there are SC counts for this game
+        """
+        scs = self.centrecount_set.all()
+        return sorted(list(set([sc.year for sc in scs])))
+    def players(self):
+        """
+        Returns a dict, keyed by power, of lists of players of that power
+        """
+        powers = GreatPower.objects.all()
+        gps = self.gameplayer_set.all()
+        retval = {}
+        for power in powers:
+            ps = gps.filter(power=power)
+            retval[power] = [gp.player for gp in ps]
+        return retval
     def get_absolute_url(self):
         return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
     def __unicode__(self):
