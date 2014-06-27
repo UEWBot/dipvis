@@ -162,6 +162,36 @@ class Game(models.Model):
             ps = gps.filter(power=power)
             retval[power] = [gp.player for gp in ps]
         return retval
+    def result_str(self):
+        """
+        Returns a string representing the game result, if any, or None
+        """
+        # Did a draw proposal pass ?
+        try:
+            dp = self.drawproposal_set.filter(passed=True).get()
+            sz = dp.draw_size()
+            if sz == 1:
+                retval = u'Game conceded to '
+            else:
+                retval = u'Game ended as a draw between '
+            winners = []
+            for n in range(1,sz+1):
+                value = dp.__dict__['power_%d_id' % n]
+                power = GreatPower.objects.get(pk=value)
+                winners.append(power.name)
+            return retval + ', '.join(winners)
+        except DrawProposal.DoesNotExist:
+            pass
+        # Did a power reach 18 centres ?
+        final_year = self.years_played()[-1]
+        scs = self.centrecount_set.filter(year=final_year).order_by('-count')
+        if scs[0].count > 17:
+            return u'Game won by %s' % scs[0].power.name
+        # TODO Did the game get to the fixed endpoint ?
+        if self.is_finished:
+            return u'Game ended'
+        # Then it seems to be ongoing
+        return None
     def get_absolute_url(self):
         return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
     def __unicode__(self):
