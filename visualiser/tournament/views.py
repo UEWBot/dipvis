@@ -90,6 +90,17 @@ def round_scores(request, tournament_id, round_num):
     # TODO Render actual scores
     return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
 
+def roll_call(request, tournament_id, round_num):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	r = t.round_set.get(number=round_num)
+    except Round.DoesNotExist:
+	raise Http404
+    rps = r.roundplayer_set.order_by('score')
+    context = {'tournament': t, 'player_list': rps}
+    # TODO Render actual scores
+    return HttpResponse("This is the tournament %s round %s roll call" % (tournament_id, round_num))
+
 def game_index(request, tournament_id, round_num):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
