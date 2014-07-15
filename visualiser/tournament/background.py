@@ -15,9 +15,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from bs4 import BeautifulSoup
-import urllib2
+import urllib2, time
 
 WDD_BASE_URL = 'http://world-diplomacy-database.com/php/results/'
+
+MAP = {'Name of the tournament': 'Tournament',
+      }
+
+def img_to_country(img):
+    """
+    Convert a WDD flag image name to a country name.
+    """
+    path, sep, filename = img.rpartition('/')
+    return filename[:-4]
 
 class Background():
     """
@@ -50,7 +60,7 @@ class Background():
         """
         Returns a list of tournament placings.
         Each entry is a dict.
-        Keys are Position, Date, Country, Name of the tournament, and Type.
+        Keys are Position, Date, Country, Tournament, and Type.
         """
         # Individual Prize List
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
@@ -69,7 +79,11 @@ class Background():
         row = row.find_next_sibling()
         columns = []
         for th in row.find_all('th'):
-            columns.append(th.string)
+            try:
+                col = MAP[th.string]
+            except KeyError:
+                col = th.string
+            columns.append(col)
         results = []
         while True:
             row = row.find_next_sibling()
@@ -82,19 +96,22 @@ class Background():
             else:
                 # New result at that position
                 result = {'Position': position}
-                for key,td in zip(columns, row.find_all('td')):
+                for key, td in zip(columns, row.find_all('td')):
                     # Countries are encoded as flag images
                     if td.string:
-                        result[key] = td.string
+                        if key == 'Date':
+                            result[key] = time.strptime(td.string, "%Y-%m-%d")
+                        else:
+                            result[key] = td.string
                     else:
-                        result[key] = td.img['src']
+                        result[key] = img_to_country(td.img['src'])
                 results.append(result)
         return results
 
     def stats(self):
         """
         Returns statistics by country for the player.
-        Returns a dict, keyed by country name (or 'Total') of dicts.
+        Returns a dict, keyed by country name, of dicts.
         Inner dict is keyed by column name.
         """
         # Board Statistics for tournaments only
@@ -122,6 +139,18 @@ class Background():
                     country = td.string
                     results[country] = []
                 else:
-                    result[key] = td.string
+                    val = td.string
+                    # Massage the value
+                    val = val.replace(' %', '%')
+                    val = val.split()[0]
+                    try:
+                        val = int(val)
+                    except ValueError:
+                        try:
+                            val = float(val)
+                        except ValueError:
+                            pass
+                    result[key] = val
             results[country].append(result)
+        del results['Total']
         return results
