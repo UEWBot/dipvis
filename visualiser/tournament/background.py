@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 import urllib2, time
 
 WDD_BASE_URL = 'http://world-diplomacy-database.com/php/results/'
+WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
 
 MAP = {'Name of the tournament': 'Tournament',
       }
@@ -40,6 +41,57 @@ class Background():
         parts = name.split()
         self.first_name = parts[0].title()
         self.last_name = parts[1].title()
+
+    def relevant(self, d):
+        for val in d.itervalues():
+            if val == self.name():
+                return True
+        return False
+
+    def titles(self):
+        """
+        Returns a list of dicts.
+        Keys are Tournament and position.
+        """
+        url = WIKIPEDIA_URL
+        page = urllib2.urlopen(url)
+        soup = BeautifulSoup(page.read())
+        # Find the first H2 with a span inside
+        for h2 in soup.find_all('h2'):
+            span = h2.span
+            if span:
+                break
+        results = []
+        tag = h2
+        while tag:
+            if tag.name == 'h2' or tag.name == 'h3':
+                span = tag.span
+                if span:
+                    tournament = span.string
+            elif tag.name == 'table':
+                row = tag.tr
+                columns = []
+                for th in row.find_all('th'):
+                    columns.append(th.string)
+                while True:
+                    row = row.find_next_sibling()
+                    if not row:
+                        break
+                    result = {'Tournament': tournament}
+                    for key,td in zip(columns, row.find_all('td')):
+                        val = list(td.stripped_strings)
+                        if len(val) > 0:
+                            val = val[0]
+                            try:
+                                val = int(val)
+                            except ValueError:
+                                pass
+                            result[key] = val
+                    results.append(result)
+            tag = tag.find_next_sibling()
+        # Now results contains all the results
+        # Filter out any that don't refer to the person we care about
+        return [item for item in results if self.relevant(item)]
 
     def wdd_name(self):
         """
