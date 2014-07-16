@@ -332,3 +332,42 @@ class CentreCount(models.Model):
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
 
+class PlayerTitle(models.Model):
+    """
+    A tournament podium for a player
+    """
+    player = models.ForeignKey(Player)
+    tournament = models.CharField(max_length=30)
+    position = models.PositiveSmallIntegerField()
+    year = models.PositiveSmallIntegerField()
+    date = models.DateField(blank=True, null=True)
+    def __unicode__(self):
+        if self.position == 1:
+            pos = u'first'
+        elif self.position == 2:
+            pos = u'second'
+        elif self.position == 3:
+            pos = u'third'
+        return u'%s came %s at %s in %d' % (self.player, pos, self.tournament, self.year)
+
+class PlayerCountryStat(models.Model):
+    """
+    Stats for a player playing a particular great power
+    """
+    player = models.ForeignKey(Player)
+    power = models.ForeignKey(GreatPower, related_name='+')
+    games = models.PositiveIntegerField()
+    solos = models.PositiveIntegerField()
+    eliminations = models.PositiveIntegerField()
+    victories = models.PositiveIntegerField()
+    def games_str(self):
+        return u'%s has played %d tournament games as %s' % (self.player, self.games, self.power)
+    def solos_str(self):
+        return u'%s has soloed %d of their %d tournament games as %s' % (self.player, self.solos, self.games, self.power)
+    def elims_str(self):
+        return u'%s has been eliminated in %d of their %d tournament games as %s' % (self.player, self.eliminations, self.games, self.power)
+    def victories_str(self):
+        return u'%s was victorious in %d of their %d tournament games as %s' % (self.player, self.victories, self.games, self.power)
+    def __unicode__(self):
+        return u'%s (%s)' % (self.name, self.power)
+
