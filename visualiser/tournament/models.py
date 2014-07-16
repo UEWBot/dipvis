@@ -17,6 +17,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from tournament.background import Background
 
 SPRING = 'S'
 FALL = 'F'
@@ -63,6 +64,54 @@ class GreatPower(models.Model):
     def __unicode__(self):
         return self.name
 
+TITLE_MAP = {
+    'World Champion' : 1,
+    'North American Champion' : 1,
+    'Winner' : 1,
+    'European Champion' : 1,
+    'Second' : 2,
+    'Third' : 3,
+}
+
+def add_player_bg(player):
+    """
+    Cache background data for the player
+    """
+    wdd = player.wdd_player_id
+    if wdd:
+        bg = Background(wdd)
+        titles = bg.titles()
+        for title in titles:
+            pos = None
+            for key,val in TITLE_MAP.iteritems():
+                try:
+                    if title[key] == unicode(player):
+                        pos = val
+                except KeyError:
+                    pass
+            if pos:
+                PlayerTitle.objects.get_or_create(player=player,
+                                                  tournament=title['Tournament'],
+                                                  position=pos,
+                                                  year=title['Year'])
+        finishes = bg.finishes()
+        for finish in finishes:
+            d = finish['Date']
+            PlayerTitle.objects.get_or_create(player=player,
+                                              tournament=finish['Tournament'],
+                                              position=finish['Position'],
+                                              year=d[:4],
+                                              date=d)
+        stats = bg.stats()
+        for power,data in stats.iteritems():
+            p = GreatPower.objects.get(name__contains=power)
+            PlayerCountryStat.objects.get_or_create(player=player,
+                                                    power=p,
+                                                    games=data['Number of boards played'],
+                                                    solos=data['Solo'],
+                                                    eliminations=data['Eliminations'],
+                                                    victories=data['Victories'])
+
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -74,6 +123,9 @@ class Player(models.Model):
         ordering = ['last_name', 'first_name']
     def __unicode__(self):
         return u'%s %s' % (self.first_name, self.last_name)
+    def save(self, *args, **kwargs):
+        super(Player, self).save(*args, **kwargs)
+        add_player_bg(self)
 
 class ScoringSystem(models.Model):
     """
@@ -111,6 +163,9 @@ class TournamentPlayer(models.Model):
     score = models.FloatField(default=0.0)
     def __unicode__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
+    def save(self, *args, **kwargs):
+        super(TournamentPlayer, self).save(*args, **kwargs)
+        add_player_bg(self.player)
 
 class Round(models.Model):
     """
