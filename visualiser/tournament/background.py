@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from bs4 import BeautifulSoup
-import urllib2, time
+import urllib2
 
 WDD_BASE_URL = 'http://world-diplomacy-database.com/php/results/'
 WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
@@ -151,10 +151,7 @@ class Background():
                 for key, td in zip(columns, row.find_all('td')):
                     # Countries are encoded as flag images
                     if td.string:
-                        if key == 'Date':
-                            result[key] = time.strptime(td.string, "%Y-%m-%d")
-                        else:
-                            result[key] = unicode(td.string)
+                        result[key] = unicode(td.string)
                     else:
                         result[key] = img_to_country(td.img['src'])
                 results.append(result)
