@@ -67,12 +67,12 @@ class Background():
             if tag.name == 'h2' or tag.name == 'h3':
                 span = tag.span
                 if span:
-                    tournament = span.string
+                    tournament = unicode(span.string)
             elif tag.name == 'table':
                 row = tag.tr
                 columns = []
                 for th in row.find_all('th'):
-                    columns.append(th.string)
+                    columns.append(unicode(th.string))
                 while True:
                     row = row.find_next_sibling()
                     if not row:
@@ -134,7 +134,7 @@ class Background():
             try:
                 col = MAP[th.string]
             except KeyError:
-                col = th.string
+                col = unicode(th.string)
             columns.append(col)
         results = []
         while True:
@@ -154,7 +154,7 @@ class Background():
                         if key == 'Date':
                             result[key] = time.strptime(td.string, "%Y-%m-%d")
                         else:
-                            result[key] = td.string
+                            result[key] = unicode(td.string)
                     else:
                         result[key] = img_to_country(td.img['src'])
                 results.append(result)
@@ -179,7 +179,7 @@ class Background():
         row = table.tr
         columns = []
         for th in row.find_all('th'):
-            columns.append(th.string)
+            columns.append(unicode(th.string))
         results = {}
         while True:
             row = row.find_next_sibling()
@@ -188,8 +188,7 @@ class Background():
             result = {}
             for key,td in zip(columns, row.find_all('td')):
                 if key == 'Country':
-                    country = td.string
-                    results[country] = []
+                    country = unicode(td.string)
                 else:
                     val = td.string
                     # Massage the value
@@ -203,6 +202,6 @@ class Background():
                         except ValueError:
                             pass
                     result[key] = val
-            results[country].append(result)
+            results[country] = result
         del results['Total']
         return results
