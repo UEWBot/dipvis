@@ -369,5 +369,5 @@ class PlayerCountryStat(models.Model):
     def victories_str(self):
         return u'%s was victorious in %d of their %d tournament games as %s' % (self.player, self.victories, self.games, self.power)
     def __unicode__(self):
-        return u'%s (%s)' % (self.name, self.power)
+        return u'%s (%s)' % (self.player, self.power)
 
