@@ -150,6 +150,11 @@ class Game(models.Model):
     the_round = models.ForeignKey(Round, verbose_name='round')
     class Meta:
         ordering = ['name']
+    def is_dias(self):
+        """
+        Returns whether the game is Draws Include All Survivors
+        """
+        return self.the_round.dias
     def years_played(self):
         """
         Returns a list of years for which there are SC counts for this game
@@ -248,6 +253,18 @@ class DrawProposal(models.Model):
                     raise ValidationError('Game already has a successful draw proposal')
             except DrawProposal.DoesNotExist:
                 pass
+        # No dead powers included
+        # If DIAS, all alive powers must be included
+        dias = self.game.is_dias()
+        year = self.game.years_played()[-1]
+        scs = self.game.centrecount_set.filter(year=final_year)
+        for sc in scs:
+            if sc.power in powers:
+                if sc.count == 0:
+                    raise ValidationError('Dead power %s included in proposal' % sc.power)
+            else:
+                if dias and sc.count > 0:
+                    raise ValidationError('Missing alive power %s in DIAS game' % sc.power)
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
