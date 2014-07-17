@@ -45,7 +45,7 @@ class Background():
         self.first_name = parts[0].title()
         self.last_name = parts[1].title()
 
-    def relevant(self, d):
+    def __relevant__(self, d):
         for val in d.itervalues():
             if val == self.name():
                 return True
@@ -94,7 +94,7 @@ class Background():
             tag = tag.find_next_sibling()
         # Now results contains all the results
         # Filter out any that don't refer to the person we care about
-        return [item for item in results if self.relevant(item)]
+        return [item for item in results if self.__relevant__(item)]
 
     def wdd_name(self):
         """
