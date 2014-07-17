@@ -424,10 +424,10 @@ class PlayerCountryStat(models.Model):
     """
     player = models.ForeignKey(Player)
     power = models.ForeignKey(GreatPower, related_name='+')
-    games = models.PositiveIntegerField()
-    solos = models.PositiveIntegerField()
-    eliminations = models.PositiveIntegerField()
-    victories = models.PositiveIntegerField()
+    games = models.PositiveIntegerField(default=0)
+    solos = models.PositiveIntegerField(default=0)
+    eliminations = models.PositiveIntegerField(default=0)
+    victories = models.PositiveIntegerField(default=0)
     def games_str(self):
         return u'%s has played %d tournament games as %s' % (self.player, self.games, self.power)
     def solos_str(self):
