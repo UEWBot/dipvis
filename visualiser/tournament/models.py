@@ -131,6 +131,11 @@ class Player(models.Model):
     def save(self, *args, **kwargs):
         super(Player, self).save(*args, **kwargs)
         add_player_bg(self)
+    def clean(self):
+        # Check that the WDD id seems to match the name
+        bg = Background(self.wdd_player_id)
+        wdd_name = bg.name()
+        raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
 
 class ScoringSystem(models.Model):
     """
