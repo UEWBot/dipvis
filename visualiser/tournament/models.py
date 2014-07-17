@@ -408,7 +408,10 @@ class PlayerTitle(models.Model):
             pos = u'second'
         elif self.position == 3:
             pos = u'third'
-        return u'%s came %s at %s in %d' % (self.player, pos, self.tournament, self.year)
+        s = u'%s came %s at %s' % (self.player, pos, self.tournament)
+        if self.tournament[-4:] != unicode(self.year):
+            s += u' in %d' % self.year
+        return s
 
 class PlayerCountryStat(models.Model):
     """
