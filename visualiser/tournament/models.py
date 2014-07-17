@@ -97,20 +97,22 @@ def add_player_bg(player):
         finishes = bg.finishes()
         for finish in finishes:
             d = finish['Date']
-            PlayerTitle.objects.get_or_create(player=player,
-                                              tournament=finish['Tournament'],
-                                              position=finish['Position'],
-                                              year=d[:4],
-                                              date=d)
+            i = PlayerTitle.objects.get_or_create(player=player,
+                                                  tournament=finish['Tournament'],
+                                                  position=finish['Position'],
+                                                  year=d[:4])
+            i.date = d
+            i.save()
         stats = bg.stats()
         for power,data in stats.iteritems():
             p = GreatPower.objects.get(name__contains=power)
-            PlayerCountryStat.objects.get_or_create(player=player,
-                                                    power=p,
-                                                    games=data['Number of boards played'],
-                                                    solos=data['Solo'],
-                                                    eliminations=data['Eliminations'],
-                                                    victories=data['Victories'])
+            i = PlayerCountryStat.objects.get_or_create(player=player,
+                                                        power=p)
+            i.games = data['Number of boards played']
+            i.solos = data['Solo']
+            i.eliminations = data['Eliminations']
+            i.victories = data['Victories']
+            i.save()
 
 class Player(models.Model):
     """
