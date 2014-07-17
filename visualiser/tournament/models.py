@@ -18,6 +18,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from tournament.background import Background
+import urllib2
 
 SPRING = 'S'
 FALL = 'F'
@@ -50,7 +51,9 @@ def validate_wdd_id(value):
     Checks a WDD id
     """
     url = u'http://world-diplomacy-database.com/php/results/player_fiche.php?id_player=%d' % value
-    # TODO Check that the URL doesn't redirect
+    p = urllib2.urlopen(url)
+    if p.geturl() != url:
+        raise ValidationError(u'%d is not a valid WDD Id' % value)
 
 class GreatPower(models.Model):
     """
