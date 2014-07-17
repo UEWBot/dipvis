@@ -23,6 +23,9 @@ WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplo
 MAP = {'Name of the tournament': 'Tournament',
       }
 
+class InvalidWDDId(Exception):
+    pass
+
 def img_to_country(img):
     """
     Convert a WDD flag image name to a country name.
@@ -99,6 +102,9 @@ class Background():
         """
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         page = urllib2.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
         soup = BeautifulSoup(page.read())
         return soup.title.string[6:]
 
@@ -117,6 +123,9 @@ class Background():
         # Individual Prize List
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         page = urllib2.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
         soup = BeautifulSoup(page.read())
         table = soup.find('table', width='65%')
         if not table:
@@ -166,6 +175,9 @@ class Background():
         # Board Statistics for tournaments only
         url = WDD_BASE_URL + 'player_fiche16.php?event=1&id_player=%d' % self.wdd_id
         page = urllib2.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
         soup = BeautifulSoup(page.read())
         # Script is in the footer
         script = soup.find('script')
@@ -202,3 +214,143 @@ class Background():
             results[country] = result
         del results['Total']
         return results
+
+    def parse_tournaments(self):
+        """
+        Returns a list of dicts, one per tournament competed in.
+        Dict is keyed by column name, except for "Step of the following circuits", which
+        is omitted, and an additional "WDD URL" giving the URL for the tournament in the WDD.
+        The content of the "Rank" column is split into "Rank" and "Total Players".
+        """
+        # Tournaments competed in
+        url = WDD_BASE_URL + 'player_fiche5.php?id_player=%d' % self.wdd_id
+        page = urllib2.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
+        soup = BeautifulSoup(page.read())
+        results = []
+        # This page really confuses BeautifulSoup. Have to just find all th and td tags
+        for row in soup.find_all('tr'):
+            # Header row contains header cells
+            th = row.th
+            if th:
+                # First column is "Date"
+                if th.string == u'Date':
+                    # This is the row to parse
+                    columns = []
+                    for th in row.find_all('th'):
+                        columns.append(unicode(th.string))
+                    # Beautiful Soup actually truncates the row,
+                    # but it only misses team stuff that we don't care about
+                    continue
+            # All the data rows in the table we're interested in have class="row_even" or "row_odd"
+            try:
+                c = row.attrs[u'class']
+            except KeyError:
+                continue
+            if c[0].startswith('row_'):
+                result = {}
+                for key,td in zip(columns, row.find_all('td')):
+                    if key == u'Rank':
+                        # Split the two separate pieces of info
+                        rank, total = td.string.split(u' / ')
+                        try:
+                            result['Rank'] = int(rank)
+                        except ValueError:
+                            # WDD include TDs (who played ?) but doesn't rank them
+                            pass
+                        result['Total players'] = int(total[:-8])
+                    elif td.string:
+                        result[key] = unicode(td.string)
+                    elif td.img:
+                        result[key] = td.img['src']
+                    # Add URLs to the results dict
+                    if key == u'Name of the tournament':
+                        result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
+                    # Don't populate "Step of the following circuits"
+                results.append(result)
+        return results
+
+    def parse_boards(self):
+        """
+        Returns a list of boards played.
+        Each board is a dict, keyed by column name. The "Rank" column is replaced by three
+        keys - "Position", "Position sharing" (number of people sharing the position),
+        and "Game end" ("L", "W", or "Dn"). The "SCs" column is replaced by "Final SCs"
+        and/or "Elimination year".
+        Two additional keys are added - "WDD Tournament URL" and "WDD Board URL", giving
+        the URLs for the tournament and the board in the WDD.
+        """
+        # Tournament board listings
+        url = WDD_BASE_URL + 'player_fiche9.php?id_player=%d' % self.wdd_id
+        page = urllib2.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
+        soup = BeautifulSoup(page.read())
+        results = []
+        # This page really confuses BeautifulSoup. Have to just find all th and td tags
+        for row in soup.find_all('tr'):
+            # Header row contains header cells
+            th = row.th
+            if th:
+                # First column is "Date"
+                if th.string == u'Date':
+                    # This is the row to parse
+                    columns = []
+                    for th in row.find_all('th'):
+                        # Note that there are two columsn called "Country"
+                        # Fortunately the second is the one we want,
+                        # So we don't worry about the second overwriting the first
+                        columns.append(unicode(th.string))
+                    # Beautiful Soup even truncates this row
+                    columns += [u'Rank', u'SCs', u'Score']
+                    continue
+            # All the data rows in the table we're interested in have class="row_even" or "row_odd"
+            try:
+                c = row.attrs[u'class']
+            except KeyError:
+                continue
+            if c[0].startswith('row_'):
+                result = {}
+                for key,td in zip(columns, row.find_all('td')):
+                    if key == u'Rank':
+                        # The Rank column actually encodes up to three separate pieces of info
+                        for key,s in zip([u'Position', u'Position sharing', u'Game end'],
+                                         td.stripped_strings):
+                            if s.find('ex') != -1:
+                                result[key] = int(s[:-2])
+                            elif s.find('(') != -1:
+                                result[key] = s[1:-1]
+                            else:
+                                result[key] = int(s)
+                    elif key == 'SCs':
+                        # The SCs column can contain year of elimination instead
+                        if td.string.find('c.') != -1:
+                            # It's a final centre count, or maybe just 'c.'
+                            if td.string != 'c.':
+                                n = int(td.string[:-2])
+                                result[u'Final SCs'] = n
+                                # Not all solos are flagged as such
+                                if n > 17:
+                                    result[u'Game end'] = u'W'
+                        else:
+                            # It's a year of elimination
+                            result[u'Elimination year'] = unicode(td.string)
+                            result[u'Final SCs'] = u'0'
+                    elif td.string:
+                        try:
+                            result[key] = float(td.string)
+                        except ValueError:
+                            result[key] = unicode(td.string)
+                    elif td.img:
+                        result[key] = td.img['src']
+                    # Add URLs to the results dict
+                    if key == u'Name of the tournament':
+                        result[u'WDD Tournament URL'] = WDD_BASE_URL + td.a['href']
+                    elif key == u'Round / Board':
+                        result[u'WDD Board URL'] = WDD_BASE_URL + td.a['href']
+                results.append(result)
+        return results
+
