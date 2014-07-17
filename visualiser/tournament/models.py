@@ -17,7 +17,10 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
+from django.db.models import Min
+
 from tournament.background import Background
+
 import urllib2
 
 SPRING = 'S'
@@ -117,6 +120,24 @@ def add_player_bg(player):
             i.victories = data['Victories']
             i.save()
 
+def position_str(position):
+    """
+    Returns the string version of the position e.g. '1st', '12th'.
+    """
+    result = unicode(position)
+    pos = position % 100
+    if pos > 3 and pos < 21:
+        result += u'th'
+    elif pos % 10 == 1:
+        result += u'st'
+    elif pos % 10 == 2:
+        result += u'nd'
+    elif pos % 10 == 3:
+        result += u'rd'
+    else:
+        result += u'th'
+    return result
+
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -136,6 +157,32 @@ class Player(models.Model):
         bg = Background(self.wdd_player_id)
         wdd_name = bg.name()
         raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
+    def background(self):
+        """
+        List of background strings about the player
+        """
+        title_set = self.playertitle_set.order_by('year')
+        plays = title_set.count()
+        wins = title_set.filter(position=1).count()
+        best = title_set.aggregate(Min('position'))['position__min']
+        results = []
+        if plays > 0:
+            results.append(u'%s has played in %d tournaments' % (self, plays))
+            first = title_set.first()
+            results.append(u'%s first played a tournament (%s) in %d' % (self, first.tournament, first.year))
+            last = title_set.last()
+            results.append(u'%s most recently played a tournament (%s) in %d' % (self, last.tournament, last.year))
+            pos = position_str(best)
+            results.append(u'The best tournament result for %s is %s' % (self, pos))
+            if wins > 1:
+                results.append(u'%s has won %d tournaments' % (self, wins))
+            elif wins > 0:
+                results.append(u'%s has won %d tournament' % (self, wins))
+            else:
+                results.append(u'%s has never won a tournament' % self)
+        else:
+            results.append(u'This is the first tournament for %s' % (self))
+        return results
 
 class ScoringSystem(models.Model):
     """
