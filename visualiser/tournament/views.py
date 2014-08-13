@@ -19,8 +19,26 @@ from django.http import HttpResponse, Http404
 from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
+from django import forms
 
 from tournament.models import *
+
+class DrawForm(forms.Form):
+    year = forms.IntegerField(min_value=FIRST_YEAR)
+    season = forms.ChoiceField(choices=SEASONS)
+    proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
+                                      to_field_name='name')
+    powers = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all()COUNTRIES,
+                                            to_field_name='name',
+                                            widget=forms.SelectMultiple(attrs={'size':'7'}))
+    passed = forms.BooleanField(initial=False)
+
+class DiasDrawForm(forms.Form):
+    year = forms.IntegerField(min_value=FIRST_YEAR)
+    season = forms.ChoiceField(choices=SEASONS)
+    proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
+                                      to_field_name='name')
+    passed = forms.BooleanField(initial=False)
 
 class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
