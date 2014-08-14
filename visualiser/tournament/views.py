@@ -23,22 +23,129 @@ from django import forms
 
 from tournament.models import *
 
+# TODO Merge these two forms ?
 class DrawForm(forms.Form):
+    """Form for a draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
     season = forms.ChoiceField(choices=SEASONS)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
                                       to_field_name='name')
-    powers = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all()COUNTRIES,
+    powers = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
                                             to_field_name='name',
                                             widget=forms.SelectMultiple(attrs={'size':'7'}))
     passed = forms.BooleanField(initial=False)
 
 class DiasDrawForm(forms.Form):
+    """Form for a DIAS draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
     season = forms.ChoiceField(choices=SEASONS)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
                                       to_field_name='name')
     passed = forms.BooleanField(initial=False)
+
+class SCCountForm(forms.Form):
+    """Form for a Supply Centre count"""
+    # Allow for an initial game-start SC count
+    year = forms.IntegerField(min_value=FIRST_YEAR-1)
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates one count field per Great Power"""
+        super(SCCountForm, self).__init__(*args, **kwargs)
+
+        self.fields['year'].widget.attrs['size'] = 4
+
+        # Create the right country fields
+        for power in GreatPower.objects.all():
+            c = power.name
+            self.fields[c] = forms.IntegerField(min_value=0, max_value=TOTAL_SCS)
+            self.fields[c].widget.attrs['size'] = 2
+            self.fields[c].widget.attrs['maxlength'] = 2
+
+    def clean(self):
+        """Checks that the total SC count is reasonable"""
+        cleaned_data = self.cleaned_data
+        year = self.cleaned_data.get('year')
+        total_scs = 0
+        for power in GreatPower.objects.all():
+            c = power.name
+            dots = cleaned_data.get(c)
+            # If the field itself didn't validate, drop out
+            if dots == None:
+                return cleaned_data
+            total_scs += dots
+        if total_scs > TOTAL_SCS:
+            raise forms.ValidationError("Total SC count for %d is %d, more than %d" % (year, total_scs, TOTAL_SCS))
+        # Add a pseudo-field with the number of neutrals, for convenience
+        self.cleaned_data['neutral'] = TOTAL_SCS - total_scs
+
+        return cleaned_data
+
+class BaseSCCountFormset(BaseFormSet):
+    def clean(self):
+        """
+        Checks that no year appears more than once,
+        and that neutrals always decrease
+        """
+        if any(self.errors):
+            return
+        years = {}
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            year = form.cleaned_data.get('year')
+            if year in years:
+                raise forms.ValidationError('Year %s appears more than once' % year)
+            # For convenience, store the number of neutrals left each year
+            years[year] = form.cleaned_data.get('neutral')
+        # Now check that the number of neutrals only goes down
+        neutrals = TOTAL_SCS
+        for year in sorted(years.iterkeys()):
+            if years[year] > neutrals:
+                raise forms.ValidationError('Neutrals increases from %d to %d in %d' % (neutrals, years[year], year))
+            neutrals = years[year]
+
+class PlayerRoundForm(forms.Form):
+    """Form to specify which rounds a player played in"""
+    player = forms.ModelChoiceField(queryset=Player.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        # Remove our two special kwargs from the list
+        self.rounds = kwargs.pop('rounds')
+        self.this_round = kwargs.pop('this_round')
+        super(PlayerRoundForm, self).__init__(*args, **kwargs)
+
+        # Create the right number of round fields, with the right ones read-only
+        for i in range(1, 1 + self.rounds):
+            name = 'round_%d' % i
+            readonly = (i < self.this_round)
+            self.fields[name] = forms.BooleanField(initial=False)
+            if readonly:
+                # "readonly" on checkboxes is purely visual, but good enough for now
+                self.fields[name].widget.attrs['readonly'] = 'readonly'
+
+class BasePlayerRoundFormset(BaseFormSet):
+    def clean(self):
+        """Checks that no player appears more than once"""
+        if any(self.errors):
+            return
+        players = []
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            player = form.cleaned_data.get('player')
+            if player in players:
+                raise forms.ValidationError('Player %s appears more than once' % player)
+            players.append(player)
+
+    def __init__(self, *args, **kwargs):
+        # Remove our two special kwargs from the list
+        self.rounds = kwargs.pop('rounds')
+        self.this_round = kwargs.pop('this_round')
+        super(BasePlayerRoundFormset, self).__init__(*args, **kwargs)
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the two special args down to the form itself
+        kwargs['rounds'] = self.rounds
+        kwargs['this_round'] = self.this_round
+        return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
 
 class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
