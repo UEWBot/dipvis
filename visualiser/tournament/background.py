@@ -215,7 +215,7 @@ class Background():
         del results['Total']
         return results
 
-    def parse_tournaments(self):
+    def tournaments(self):
         """
         Returns a list of dicts, one per tournament competed in.
         Dict is keyed by column name, except for "Step of the following circuits", which
@@ -272,7 +272,7 @@ class Background():
                 results.append(result)
         return results
 
-    def parse_boards(self):
+    def boards(self):
         """
         Returns a list of boards played.
         Each board is a dict, keyed by column name. The "Rank" column is replaced by three
