@@ -17,7 +17,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
-from django.db.models import Min
+from django.db.models import Min, Sum
 
 from tournament.background import Background
 
@@ -86,6 +86,7 @@ def add_player_bg(player):
     wdd = player.wdd_player_id
     if wdd:
         bg = Background(wdd)
+        # Titles won
         titles = bg.titles()
         for title in titles:
             pos = None
@@ -96,24 +97,63 @@ def add_player_bg(player):
                 except KeyError:
                     pass
             if pos:
-                PlayerTitle.objects.get_or_create(player=player,
-                                                  tournament=title['Tournament'],
-                                                  position=pos,
-                                                  year=title['Year'])
+                PlayerRanking.objects.get_or_create(player=player,
+                                                    tournament=title['Tournament'],
+                                                    position=pos,
+                                                    year=title['Year'])
+        # Podium finishes
         finishes = bg.finishes()
         for finish in finishes:
             d = finish['Date']
-            i = PlayerTitle.objects.get_or_create(player=player,
-                                                  tournament=finish['Tournament'],
-                                                  position=finish['Position'],
-                                                  year=d[:4])
+            i,created = PlayerRanking.objects.get_or_create(player=player,
+                                                            tournament=finish['Tournament'],
+                                                            position=finish['Position'],
+                                                            year=d[:4])
             i.date = d
             i.save()
+        # Tournaments
+        tournaments = bg.tournaments()
+        for t in tournaments:
+            d = t['Date']
+            try:
+                i,created = PlayerRanking.objects.get_or_create(player=player,
+                                                                tournament=t['Name of the tournament'],
+                                                                position=t['Rank'],
+                                                                year=d[:4])
+                i.date = d
+                if d[:4] == '2014':
+                    print("Saving %s for %s" % (t['Name of the tournament'], player))
+                i.save()
+            except KeyError:
+                # No rank implies they were the TD or similar - just ignore that tournament
+                print("Ignoring %s for %s" % (t['Name of the tournament'], player))
+                pass
+        # Boards
+        boards = bg.boards()
+        for b in boards:
+            print b
+            # TODO Not all these are always present
+            try:
+                d = b['Date']
+                tournament=b['Name of the tournament']
+                p=GreatPower.objects.get(name__contains=b['Country'])
+                scs=b['Final SCs']
+                end=b['Game end']
+                score=b['Score']
+                position=b['Position']
+                share=b['Position sharing']
+                death=b['Elimination year']
+            except Exception as e:
+                print e
+                print b
+            # TODO Store this information in the database
+            pass
+        # Per-country stats
         stats = bg.stats()
         for power,data in stats.iteritems():
             p = GreatPower.objects.get(name__contains=power)
-            i = PlayerCountryStat.objects.get_or_create(player=player,
-                                                        power=p)
+            i,created = PlayerCountryStat.objects.get_or_create(player=player,
+                                                                power=p)
             i.games = data['Number of boards played']
             i.solos = data['Solo']
             i.eliminations = data['Eliminations']
@@ -172,11 +212,11 @@ class Player(models.Model):
         best = title_set.aggregate(Min('position'))['position__min']
         results = []
         if plays > 0:
-            results.append(u'%s has played in %d tournaments' % (self, plays))
+            results.append(u'%s has competed in %d tournaments' % (self, plays))
             first = title_set.first()
-            results.append(u'%s first played a tournament (%s) in %d' % (self, first.tournament, first.year))
+            results.append(u'%s first competed in a tournament (%s) in %d' % (self, first.tournament, first.year))
             last = title_set.last()
-            results.append(u'%s most recently played a tournament (%s) in %d' % (self, last.tournament, last.year))
+            results.append(u'%s most recently competed in a tournament (%s) in %d' % (self, last.tournament, last.year))
             pos = position_str(best)
             results.append(u'The best tournament result for %s is %s' % (self, pos))
             if wins > 1:
@@ -187,6 +227,27 @@ class Player(models.Model):
                 results.append(u'%s has never won a tournament' % self)
         else:
             results.append(u'This is the first tournament for %s' % (self))
+        stats_set = self.playercountrystat_set.all()
+        games = stats_set.aggregate(Sum('games'))['games__sum']
+        solos = stats_set.aggregate(Sum('solos'))['solos__sum']
+        eliminations = stats_set.aggregate(Sum('eliminations'))['eliminations__sum']
+        victories = stats_set.aggregate(Sum('victories'))['victories__sum']
+        if games > 0:
+            results.append(u'%s has played %d tournament games' % (self, games))
+            if solos > 0:
+                results.append(u'%s has soloed %d of %d tournament games played (%.2f%%)' % (self, solos, games, 100.0*float(solos)/float(games)))
+            else:
+                results.append(u'%s has yet to solo at a tournament' % self)
+            if eliminations > 0:
+                results.append(u'%s was eliminated in %d of %d tournament games played (%.2f%%)' % (self, eliminations, games, 100.0*float(eliminations)/float(games)))
+            else:
+                results.append(u'%s has yet to be eliminated in a tournament' % self)
+            if victories > 0:
+                results.append(u'%s was victorious in %d of %d tournament games played (%.2f%%)' % (self, victories, games, 100.0*float(victories)/float(games)))
+            else:
+                results.append(u'%s has yet to be victorious in a tournament' % self)
+        else:
+            results.append(u'%s has never played in a tournament before' % self)
         return results
 
 class ScoringSystem(models.Model):
@@ -478,9 +539,9 @@ class CentreCount(models.Model):
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
 
-class PlayerTitle(models.Model):
+class PlayerRanking(models.Model):
     """
-    A tournament podium for a player
+    A tournament ranking for a player
     """
     player = models.ForeignKey(Player)
     tournament = models.CharField(max_length=30)
@@ -489,12 +550,7 @@ class PlayerTitle(models.Model):
     date = models.DateField(blank=True, null=True)
 
     def __unicode__(self):
-        if self.position == 1:
-            pos = u'first'
-        elif self.position == 2:
-            pos = u'second'
-        elif self.position == 3:
-            pos = u'third'
+        pos = position_str(self.position)
         s = u'%s came %s at %s' % (self.player, pos, self.tournament)
         if self.tournament[-4:] != unicode(self.year):
             s += u' in %d' % self.year
