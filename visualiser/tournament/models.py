@@ -145,18 +145,23 @@ class Player(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name='WDD player id', blank=True, null=True)
+
     class Meta:
         ordering = ['last_name', 'first_name']
+
     def __unicode__(self):
         return u'%s %s' % (self.first_name, self.last_name)
+
     def save(self, *args, **kwargs):
         super(Player, self).save(*args, **kwargs)
         add_player_bg(self)
+
     def clean(self):
         # Check that the WDD id seems to match the name
         bg = Background(self.wdd_player_id)
         wdd_name = bg.name()
         raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
+
     def background(self):
         """
         List of background strings about the player
@@ -189,8 +194,10 @@ class ScoringSystem(models.Model):
     A system for assigning scores to players of a single game
     """
     name = models.CharField(max_length=30)
+
     class Meta:
         ordering = ['name']
+
     def __unicode__(self):
         return self.name
 
@@ -201,13 +208,16 @@ class Tournament(models.Model):
     name = models.CharField(max_length=20)
     start_date = models.DateField()
     end_date = models.DateField()
+
     def is_finished(self):
         for r in self.round_set.all():
             if not r.is_finished():
                 return False
         return True
+
     def get_absolute_url(self):
         return reverse('tournament_detail', args=[str(self.id)])
+
     def __unicode__(self):
         return self.name
 
@@ -218,8 +228,10 @@ class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player)
     tournament = models.ForeignKey(Tournament)
     score = models.FloatField(default=0.0)
+
     def __unicode__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
+
     def save(self, *args, **kwargs):
         super(TournamentPlayer, self).save(*args, **kwargs)
         add_player_bg(self.player)
@@ -235,8 +247,10 @@ class Round(models.Model):
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
+
     class Meta:
         ordering = ['number']
+
     def is_finished(self):
         gs = self.game_set.all()
         if len(gs) == 0:
@@ -246,8 +260,10 @@ class Round(models.Model):
             if not g.is_finished:
                 return False
         return True
+
     def get_absolute_url(self):
         return reverse('round_detail', args=[str(self.tournament.id), str(self.number)])
+
     def __unicode__(self):
         return u'%s round %d' % (self.tournament, self.number)
 
@@ -260,19 +276,23 @@ class Game(models.Model):
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name='round')
+
     class Meta:
         ordering = ['name']
+
     def is_dias(self):
         """
         Returns whether the game is Draws Include All Survivors
         """
         return self.the_round.dias
+
     def years_played(self):
         """
         Returns a list of years for which there are SC counts for this game
         """
         scs = self.centrecount_set.all()
         return sorted(list(set([sc.year for sc in scs])))
+
     def players(self):
         """
         Returns a dict, keyed by power, of lists of players of that power
@@ -284,6 +304,7 @@ class Game(models.Model):
             ps = gps.filter(power=power)
             retval[power] = [gp.player for gp in ps]
         return retval
+
     def result_str(self):
         """
         Returns a string representing the game result, if any, or None
@@ -314,8 +335,10 @@ class Game(models.Model):
             return u'Game ended'
         # Then it seems to be ongoing
         return None
+
     def get_absolute_url(self):
         return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
+
     def __unicode__(self):
         return self.name
 
@@ -327,6 +350,7 @@ class DrawProposal(models.Model):
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
     passed = models.BooleanField()
+    proposer = models.ForeignKey(GreatPower, related_name='+')
     power_1 = models.ForeignKey(GreatPower, related_name='+')
     power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
@@ -334,6 +358,7 @@ class DrawProposal(models.Model):
     power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
     power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+
     def draw_size(self):
         count = 0
         for name, value in self.__dict__.iteritems():
@@ -341,6 +366,7 @@ class DrawProposal(models.Model):
                 if value:
                     count += 1
         return count
+
     def clean(self):
         # No skipping powers
         found_null = False
@@ -377,6 +403,7 @@ class DrawProposal(models.Model):
             else:
                 if dias and sc.count > 0:
                     raise ValidationError('Missing alive power %s in DIAS game' % sc.power)
+
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
@@ -387,12 +414,14 @@ class RoundPlayer(models.Model):
     player = models.ForeignKey(Player)
     the_round = models.ForeignKey(Round, verbose_name='round')
     score = models.FloatField(default=0.0)
+
     def clean(self):
         # Player should already be in the tournament
         t = self.the_round.tournament
         tp = self.player.tournamentplayer_set.filter(tournament=t)
         if not tp:
             raise ValidationError('Player is not yet in the tournament')
+
     def __unicode__(self):
         return u'%s in %s' % (self.player, self.the_round)
 
@@ -409,12 +438,14 @@ class GamePlayer(models.Model):
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(default=0.0)
+
     def clean(self):
         # Player should already be in the tournament
         t = self.game.the_round.tournament
         tp = self.player.tournamentplayer_set.filter(tournament=t)
         if not tp:
             raise ValidationError('Player is not yet in the tournament')
+
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
 
@@ -422,12 +453,14 @@ class CentreCount(models.Model):
     """
     The number of centres owned by one power at the end of a given game year
     """
-    class Meta:
-        unique_together = ('power', 'game', 'year')
     power = models.ForeignKey(GreatPower, related_name='+')
     game = models.ForeignKey(Game)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
+
+    class Meta:
+        unique_together = ('power', 'game', 'year')
+
     def clean(self):
         # Not possible to more than double your count in one year
         # or to recover from an elimination
@@ -441,6 +474,7 @@ class CentreCount(models.Model):
             except DrawProposal.DoesNotExist:
                 # We're obviously missing a year - let that go
                 pass
+
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
 
@@ -453,6 +487,7 @@ class PlayerTitle(models.Model):
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
+
     def __unicode__(self):
         if self.position == 1:
             pos = u'first'
@@ -475,14 +510,19 @@ class PlayerCountryStat(models.Model):
     solos = models.PositiveIntegerField(default=0)
     eliminations = models.PositiveIntegerField(default=0)
     victories = models.PositiveIntegerField(default=0)
+
     def games_str(self):
         return u'%s has played %d tournament games as %s' % (self.player, self.games, self.power)
+
     def solos_str(self):
         return u'%s has soloed %d of their %d tournament games as %s' % (self.player, self.solos, self.games, self.power)
+
     def elims_str(self):
         return u'%s has been eliminated in %d of their %d tournament games as %s' % (self.player, self.eliminations, self.games, self.power)
+
     def victories_str(self):
         return u'%s was victorious in %d of their %d tournament games as %s' % (self.player, self.victories, self.games, self.power)
+
     def __unicode__(self):
         return u'%s (%s)' % (self.player, self.power)
 
