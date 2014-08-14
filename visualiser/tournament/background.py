@@ -260,7 +260,11 @@ class Background():
                         except ValueError:
                             # WDD include TDs (who played ?) but doesn't rank them
                             pass
-                        result['Total players'] = int(total[:-8])
+                        try:
+                            result['Total players'] = int(total[:-8])
+                        except ValueError:
+                            # Sometimes WDD doesn't have total players for a tournament
+                            pass
                     elif td.string:
                         result[key] = unicode(td.string)
                     elif td.img:
