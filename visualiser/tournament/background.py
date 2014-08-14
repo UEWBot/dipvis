@@ -316,13 +316,22 @@ class Background():
                 result = {}
                 for key,td in zip(columns, row.find_all('td')):
                     if key == u'Rank':
+                        # stripped_strings here could produce a number of different things:
+                        # '3'
+                        # '6', '2ex'
+                        # '4', '2ex', '(D3)'
+                        # '4 (L)'
                         # The Rank column actually encodes up to three separate pieces of info
                         for key,s in zip([u'Position', u'Position sharing', u'Game end'],
                                          td.stripped_strings):
                             if s.find('ex') != -1:
                                 result[key] = int(s[:-2])
-                            elif s.find('(') != -1:
+                            elif s[0] == '(':
                                 result[key] = s[1:-1]
+                            elif s.find('(') != -1:
+                                s2 = s.split()
+                                result[key] = s2[0]
+                                result[u'Game end'] = s2[1][1:-1]
                             else:
                                 result[key] = int(s)
                     elif key == 'SCs':
