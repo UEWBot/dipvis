@@ -43,6 +43,54 @@ class DiasDrawForm(forms.Form):
                                       to_field_name='name')
     passed = forms.BooleanField(initial=False)
 
+class GamePlayersForm(forms.Form):
+    """Form for players of a single game"""
+    game_name = forms.CharField(label='Game Name', max_length=10)
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates one player field per Great Power"""
+        # Remove our special kwarg from the list
+        self.the_round = kwargs.pop('round')
+        super(GamePlayersForm, self).__init__(*args, **kwargs)
+
+        attrs = self.fields['game_name'].widget.attrs
+        attrs['size'] = attrs['maxlength']
+
+        queryset = the_round.roundplayer_set.all()
+
+        # Create the right country fields
+        for power in GreatPower.objects.all():
+            c = power.name
+            self.fields[c] = forms.ModelChoiceField(queryset)
+            self.fields[c].widget.attrs['size'] = 20
+
+    def clean(self):
+        """Checks that no player is playing multiple powers"""
+        cleaned_data = self.cleaned_data
+        players = []
+        for power in GreatPower.objects.all():
+            c = power.name
+            player = cleaned_data.get(c)
+            # If the field itself didn't validate, drop out
+            if player == None:
+                return cleaned_data
+            if player in players:
+                raise forms.ValidationError('Player %s appears more than once' % player)
+            players.append(player)
+
+        return cleaned_data
+
+class BaseGamePlayersForm(BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.the_round = kwargs.pop('round')
+        super(BaseGamePlayersForm, self).__init__(*args, **kwargs)
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special arg down to the form itself
+        kwargs['round'] = self.the_round
+        return super(BaseGamePlayersForm, self)._construct_form(index, **kwargs)
+
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count
