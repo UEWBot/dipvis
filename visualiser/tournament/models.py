@@ -127,8 +127,6 @@ def add_player_bg(player):
                                                                 position=t['Rank'],
                                                                 year=d[:4])
                 i.date = d
-                if d[:4] == '2014':
-                    print("Saving %s for %s" % (t['Name of the tournament'], player))
                 i.save()
             except KeyError:
                 # No rank implies they were the TD or similar - just ignore that tournament
