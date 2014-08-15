@@ -92,6 +92,8 @@ class BaseSCCountFormset(BaseFormSet):
         for i in range(0, self.total_form_count()):
             form = self.forms[i]
             year = form.cleaned_data.get('year')
+            if not year:
+                continue
             if year in years:
                 raise forms.ValidationError('Year %s appears more than once' % year)
             # For convenience, store the number of neutrals left each year
@@ -131,6 +133,8 @@ class BasePlayerRoundFormset(BaseFormSet):
         for i in range(0, self.total_form_count()):
             form = self.forms[i]
             player = form.cleaned_data.get('player')
+            if not player:
+                continue
             if player in players:
                 raise forms.ValidationError('Player %s appears more than once' % player)
             players.append(player)
