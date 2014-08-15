@@ -35,6 +35,18 @@ FIRST_YEAR = 1901
 TOTAL_SCS = 34
 WINNING_SCS = ((TOTAL_SCS/2)+1)
 
+# These happen to co-incide with the coding used by the WDD
+GAME_RESULT = (
+    ('W', 'Win'),
+    ('D2', '2-way draw'),
+    ('D3', '3-way draw'),
+    ('D4', '4-way draw'),
+    ('D5', '5-way draw'),
+    ('D6', '6-way draw'),
+    ('D7', '7-way draw'),
+    ('L', 'Loss'),
+)
+
 def validate_year(value):
     """
     Checks for a valid game year
@@ -135,23 +147,41 @@ def add_player_bg(player):
         # Boards
         boards = bg.boards()
         for b in boards:
-            print b
-            # TODO Not all these are always present
             try:
-                d = b['Date']
-                tournament=b['Name of the tournament']
-                p=GreatPower.objects.get(name__contains=b['Country'])
-                scs=b['Final SCs']
-                end=b['Game end']
-                score=b['Score']
-                position=b['Position']
-                share=b['Position sharing']
-                death=b['Elimination year']
-            except Exception as e:
-                print e
-                print b
-            # TODO Store this information in the database
-            pass
+                power = b['Country']
+                p=GreatPower.objects.get(name__contains=power)
+            except GreatPower.DoesNotExist:
+                # Apparently not a Standard game
+                continue
+            i,created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
+                                                               game_name=b['Round / Board'],
+                                                               player=player,
+                                                               power=p,
+                                                               date = b['Date'],
+                                                               position = b['Position'])
+            # If there's no 'Position sharing', they were alone at that position
+            try:
+                i.position_equals = b['Position sharing']
+            except KeyError:
+                i.position_equals = 1
+            # Ignore any of these that aren't present
+            try:
+                i.score = b['Score']
+            except KeyError:
+                pass
+            try:
+                i.final_sc_count = b['Final SCs']
+            except KeyError:
+                pass
+            try:
+                i.result = b['Game end']
+            except KeyError:
+                pass
+            try:
+                i.year_eliminated = b['Elimination year']
+            except KeyError:
+                pass
+            i.save()
         # Per-country stats
         stats = bg.stats()
         for power,data in stats.iteritems():
@@ -569,6 +599,28 @@ class PlayerRanking(models.Model):
         if self.tournament[-4:] != unicode(self.year):
             s += u' in %d' % self.year
         return s
+
+class PlayerGameResult(models.Model):
+    """
+    One player's result for a tournament game
+    """
+    tournament_name = models.CharField(max_length=20)
+    game_name = models.CharField(max_length=20)
+    player = models.ForeignKey(Player)
+    power = models.ForeignKey(GreatPower, related_name='+')
+    date = models.DateField()
+    position = models.PositiveSmallIntegerField()
+    position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
+    score = models.FloatField(blank=True, null=True)
+    final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
+    result = models.CharField(max_length=2, choices=GAME_RESULT, blank=True, null=True)
+    year_eliminated = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
+
+    class Meta:
+        unique_together = ('tournament_name', 'game_name', 'player', 'power')
+
+    def __unicode__(self):
+        return u'%s played %s in %s' % (self.player, self.power, self.game_name)
 
 class PlayerCountryStat(models.Model):
     """
