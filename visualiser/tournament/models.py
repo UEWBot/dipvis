@@ -241,8 +241,7 @@ class Player(models.Model):
                 results.append(u'%s has won %d tournament' % (self, wins))
             else:
                 results.append(u'%s has never won a tournament' % self)
-        else:
-            results.append(u'This is the first tournament for %s' % (self))
+        # Add summaries of per-country stats
         stats_set = self.playercountrystat_set.all()
         games = stats_set.aggregate(Sum('games'))['games__sum']
         solos = stats_set.aggregate(Sum('solos'))['solos__sum']
