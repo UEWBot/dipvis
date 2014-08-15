@@ -90,17 +90,23 @@ def add_player_bg(player):
         titles = bg.titles()
         for title in titles:
             pos = None
+            the_title = None
             for key,val in TITLE_MAP.iteritems():
                 try:
                     if title[key] == unicode(player):
                         pos = val
+                        if key.find('Champion') != -1:
+                            the_title = key
                 except KeyError:
                     pass
             if pos:
-                PlayerRanking.objects.get_or_create(player=player,
-                                                    tournament=title['Tournament'],
-                                                    position=pos,
-                                                    year=title['Year'])
+                i, created = PlayerRanking.objects.get_or_create(player=player,
+                                                                 tournament=title['Tournament'],
+                                                                 position=pos,
+                                                                 year=title['Year'])
+                if the_title:
+                    i.title = the_title
+                i.save()
         # Podium finishes
         finishes = bg.finishes()
         for finish in finishes:
@@ -206,16 +212,26 @@ class Player(models.Model):
         """
         List of background strings about the player
         """
-        title_set = self.playertitle_set.order_by('year')
-        plays = title_set.count()
-        wins = title_set.filter(position=1).count()
-        best = title_set.aggregate(Min('position'))['position__min']
+        ranking_set = self.playerranking_set.order_by('year')
+        plays = ranking_set.count()
+        wins = ranking_set.filter(position=1).count()
+        best = ranking_set.aggregate(Min('position'))['position__min']
         results = []
+        # Add summaries of actual titles
+        titles = {}
+        for ranking in ranking_set:
+            if ranking.title:
+                if ranking.title not in titles:
+                    titles[ranking.title] = []
+                titles[ranking.title].append(ranking.year)
+        for key, lst in titles.iteritems():
+            results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)))
+        # Add summaries of tournament rankings
         if plays > 0:
-            results.append(u'%s has competed in %d tournaments' % (self, plays))
-            first = title_set.first()
+            results.append(u'%s has competed in %d tournament(s)' % (self, plays))
+            first = ranking_set.first()
             results.append(u'%s first competed in a tournament (%s) in %d' % (self, first.tournament, first.year))
-            last = title_set.last()
+            last = ranking_set.last()
             results.append(u'%s most recently competed in a tournament (%s) in %d' % (self, last.tournament, last.year))
             pos = position_str(best)
             results.append(u'The best tournament result for %s is %s' % (self, pos))
@@ -548,6 +564,7 @@ class PlayerRanking(models.Model):
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
+    title = models.CharField(max_length=30, blank=True, null=True)
 
     def __unicode__(self):
         pos = position_str(self.position)
