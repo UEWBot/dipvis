@@ -250,14 +250,13 @@ class Player(models.Model):
             results.append(u'%s first competed in a tournament (%s) in %d' % (self, first.tournament, first.year))
             last = ranking_set.last()
             results.append(u'%s most recently competed in a tournament (%s) in %d' % (self, last.tournament, last.year))
-            pos = position_str(best)
-            results.append(u'The best tournament result for %s is %s' % (self, pos))
             if wins > 1:
                 results.append(u'%s has won %d tournaments' % (self, wins))
             elif wins > 0:
                 results.append(u'%s has won %d tournament' % (self, wins))
             else:
-                results.append(u'%s has never won a tournament' % self)
+                pos = position_str(best)
+                results.append(u'The best tournament result for %s is %s' % (self, pos))
         # Add summaries of tournament games
         results_set = self.playergameresult_set.order_by('year')
         games = results_set.count()
@@ -268,7 +267,7 @@ class Player(models.Model):
         eliminations = eliminations_set.count()
         query = Q(result='W') | Q(position=1)
         victories_set = results_set.filter(query)
-        victories = victories_set.count()
+        board_tops = victories_set.count()
         if games > 0:
             results.append(u'%s has played %d tournament games' % (self, games))
             if solos > 0:
@@ -279,10 +278,10 @@ class Player(models.Model):
                 results.append(u'%s was eliminated in %d of %d tournament games played (%.2f%%)' % (self, eliminations, games, 100.0*float(eliminations)/float(games)))
             else:
                 results.append(u'%s has yet to be eliminated in a tournament' % self)
-            if victories > 0:
-                results.append(u'%s was victorious in %d of %d tournament games played (%.2f%%)' % (self, victories, games, 100.0*float(victories)/float(games)))
+            if board_tops > 0:
+                results.append(u'%s topped the board in %d of %d tournament games played (%.2f%%)' % (self, board_tops, games, 100.0*float(victories)/float(games)))
             else:
-                results.append(u'%s has yet to be victorious in a tournament' % self)
+                results.append(u'%s has yet to top the board at a tournament' % self)
         else:
             results.append(u'%s has never played in a tournament before' % self)
         return results
