@@ -17,7 +17,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
-from django.db.models import Min, Sum
+from django.db.models import Min, Sum, Q
 
 from tournament.background import Background
 
@@ -182,17 +182,6 @@ def add_player_bg(player):
             except KeyError:
                 pass
             i.save()
-        # Per-country stats
-        stats = bg.stats()
-        for power,data in stats.iteritems():
-            p = GreatPower.objects.get(name__contains=power)
-            i,created = PlayerCountryStat.objects.get_or_create(player=player,
-                                                                power=p)
-            i.games = data['Number of boards played']
-            i.solos = data['Solo']
-            i.eliminations = data['Eliminations']
-            i.victories = data['Victories']
-            i.save()
 
 def position_str(position):
     """
@@ -269,12 +258,17 @@ class Player(models.Model):
                 results.append(u'%s has won %d tournament' % (self, wins))
             else:
                 results.append(u'%s has never won a tournament' % self)
-        # Add summaries of per-country stats
-        stats_set = self.playercountrystat_set.all()
-        games = stats_set.aggregate(Sum('games'))['games__sum']
-        solos = stats_set.aggregate(Sum('solos'))['solos__sum']
-        eliminations = stats_set.aggregate(Sum('eliminations'))['eliminations__sum']
-        victories = stats_set.aggregate(Sum('victories'))['victories__sum']
+        # Add summaries of tournament games
+        results_set = self.playergameresult_set.order_by('year')
+        games = results_set.count()
+        solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
+        solos = solo_set.count()
+        query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
+        eliminations_set = results_set.filter(query)
+        eliminations = eliminations_set.count()
+        query = Q(result='W') | Q(position=1)
+        victories_set = results_set.filter(query)
+        victories = victories_set.count()
         if games > 0:
             results.append(u'%s has played %d tournament games' % (self, games))
             if solos > 0:
@@ -621,30 +615,4 @@ class PlayerGameResult(models.Model):
 
     def __unicode__(self):
         return u'%s played %s in %s' % (self.player, self.power, self.game_name)
-
-class PlayerCountryStat(models.Model):
-    """
-    Stats for a player playing a particular great power
-    """
-    player = models.ForeignKey(Player)
-    power = models.ForeignKey(GreatPower, related_name='+')
-    games = models.PositiveIntegerField(default=0)
-    solos = models.PositiveIntegerField(default=0)
-    eliminations = models.PositiveIntegerField(default=0)
-    victories = models.PositiveIntegerField(default=0)
-
-    def games_str(self):
-        return u'%s has played %d tournament games as %s' % (self.player, self.games, self.power)
-
-    def solos_str(self):
-        return u'%s has soloed %d of their %d tournament games as %s' % (self.player, self.solos, self.games, self.power)
-
-    def elims_str(self):
-        return u'%s has been eliminated in %d of their %d tournament games as %s' % (self.player, self.eliminations, self.games, self.power)
-
-    def victories_str(self):
-        return u'%s was victorious in %d of their %d tournament games as %s' % (self.player, self.victories, self.games, self.power)
-
-    def __unicode__(self):
-        return u'%s (%s)' % (self.player, self.power)
 
