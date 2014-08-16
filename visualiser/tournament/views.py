@@ -33,7 +33,7 @@ class DrawForm(forms.Form):
     powers = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
                                             to_field_name='name',
                                             widget=forms.SelectMultiple(attrs={'size':'7'}))
-    passed = forms.BooleanField(initial=False)
+    passed = forms.BooleanField(initial=False, required=False)
 
 class DiasDrawForm(forms.Form):
     """Form for a DIAS draw vote"""
@@ -41,7 +41,28 @@ class DiasDrawForm(forms.Form):
     season = forms.ChoiceField(choices=SEASONS)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
                                       to_field_name='name')
-    passed = forms.BooleanField(initial=False)
+    passed = forms.BooleanField(initial=False, required=False)
+
+class GameScoreForm(forms.Form):
+    """Form for score for a single game"""
+    game_name = forms.CharField(label='Game Name', max_length=10)
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates one score field per Great Power"""
+        super(GameScoreForm, self).__init__(*args, **kwargs)
+
+        # No changing the game name !
+        attrs = self.fields['game_name'].widget.attrs
+        attrs['size'] = attrs['maxlength']
+        attrs['readonly'] = 'readonly'
+
+        # Create the right country fields
+        for x,c in COUNTRIES:
+            # Don't require a score for every player
+            self.fields[c] = forms.FloatField(required=False)
+            attrs = self.fields[c].widget.attrs
+            attrs['size'] = 10
+            attrs['maxlength'] = 10
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
@@ -105,6 +126,9 @@ class SCCountForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
+            # TODO It may make sense to use required=False
+            # and to default any not provided to zero
+            # It may also make sense for that default to be in the model...
             self.fields[c] = forms.IntegerField(min_value=0, max_value=TOTAL_SCS)
             self.fields[c].widget.attrs['size'] = 2
             self.fields[c].widget.attrs['maxlength'] = 2
@@ -155,6 +179,7 @@ class BaseSCCountFormset(BaseFormSet):
 
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
+    # TODO this should be probably every player in the tournament, not all of them
     player = forms.ModelChoiceField(queryset=Player.objects.all())
 
     def __init__(self, *args, **kwargs):
@@ -198,6 +223,51 @@ class BasePlayerRoundFormset(BaseFormSet):
         kwargs['rounds'] = self.rounds
         kwargs['this_round'] = self.this_round
         return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
+
+class PlayerRoundScoreForm(forms.Form):
+    """Form to enter round score(s) for a player"""
+    # TODO this should be probably every player in the tournament, not all of them
+    player = forms.ModelChoiceField(queryset=Player.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        # Remove our two special kwargs from the list
+        self.rounds = kwargs.pop('rounds')
+        self.this_round = kwargs.pop('this_round')
+        super(PlayerRoundScoreForm, self).__init__(*args, **kwargs)
+
+        self.fields['player'].widget.attrs['readonly'] = 'readonly'
+
+        # Create the right number of round fields, with the right ones read-only
+        for i in range(1, 1 + self.rounds):
+            name = 'round_%d' % i
+            readonly = (i < self.this_round)
+            if not readonly:
+                # Create an additional field to show the game scores for that round
+                game_scores_name = 'game_scores_%d' %i
+                self.fields[game_scores_name] = forms.CharField(max_length=10,
+                                                                required=False)
+                attrs = self.fields[game_scores_name].widget.attrs
+                attrs['readonly'] = 'readonly'
+            self.fields[name] = forms.FloatField(required=False)
+            attrs = self.fields[name].widget.attrs
+            attrs['size'] = 10
+            attrs['maxlength'] = 10
+            if readonly:
+                # "readonly" on checkboxes is purely visual, but good enough for now
+                self.fields[name].widget.attrs['readonly'] = 'readonly'
+
+class BasePlayerRoundScoreFormset(BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        # Remove our two special kwargs from the list
+        self.rounds = kwargs.pop('rounds')
+        self.this_round = kwargs.pop('this_round')
+        super(BasePlayerRoundScoreFormset, self).__init__(*args, **kwargs)
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the two special args down to the form itself
+        kwargs['rounds'] = self.rounds
+        kwargs['this_round'] = self.this_round
+        return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
 
 class TourneyIndexView(generic.ListView):
     template_name = 'tournaments/index.html'
