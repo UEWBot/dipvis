@@ -47,6 +47,19 @@ GAME_RESULT = (
     ('L', 'Loss'),
 )
 
+# Mask values to choose which background strings to include
+MASK_TITLES = 1<<0
+MASK_TOURNEY_COUNT = 1<<1
+MASK_FIRST_TOURNEY = 1<<2
+MASK_LAST_TOURNEY = 1<<3
+MASK_BEST_TOURNEY_RESULT = 1<<4
+MASK_GAMES_PLAYED = 1<<5
+MASK_BEST_SC_COUNT = 1<<6
+MASK_SOLO_COUNT = 1<<7
+MASK_ELIM_COUNT = 1<<8
+MASK_BOARD_TOP_COUNT = 1<<9
+MASK_ALL = (1<<10)-1
+
 def validate_year(value):
     """
     Checks for a valid game year
@@ -225,39 +238,44 @@ class Player(models.Model):
         wdd_name = bg.name()
         raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
 
-    def _rankings(self):
+    def _rankings(self, mask=MASK_ALL):
         """ List of titles won and tournament rankings"""
         results = []
         ranking_set = self.playerranking_set.order_by('year')
         plays = ranking_set.count()
-        wins = ranking_set.filter(position=1).count()
-        best = ranking_set.aggregate(Min('position'))['position__min']
-        # Add summaries of actual titles
-        titles = {}
-        for ranking in ranking_set:
-            if ranking.title:
-                if ranking.title not in titles:
-                    titles[ranking.title] = []
-                titles[ranking.title].append(ranking.year)
-        for key, lst in titles.iteritems():
-            results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)))
-        # Add summaries of tournament rankings
-        if plays > 0:
+        if plays == 0:
+            return results
+        if (mask & MASK_TOURNEY_COUNT) != 0:
             results.append(u'%s has competed in %d tournament(s)' % (self, plays))
+        if (mask & MASK_TITLES) != 0:
+            # Add summaries of actual titles
+            titles = {}
+            for ranking in ranking_set:
+                if ranking.title:
+                    if ranking.title not in titles:
+                        titles[ranking.title] = []
+                    titles[ranking.title].append(ranking.year)
+            for key, lst in titles.iteritems():
+                results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)))
+        if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
             results.append(u'%s first competed in a tournament (%s) in %d' % (self, first.tournament, first.year))
+        if (mask & MASK_LAST_TOURNEY) != 0:
             last = ranking_set.last()
             results.append(u'%s most recently competed in a tournament (%s) in %d' % (self, last.tournament, last.year))
+        if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
+            wins = ranking_set.filter(position=1).count()
             if wins > 1:
                 results.append(u'%s has won %d tournaments' % (self, wins))
             elif wins > 0:
                 results.append(u'%s has won %d tournament' % (self, wins))
             else:
+                best = ranking_set.aggregate(Min('position'))['position__min']
                 pos = position_str(best)
                 results.append(u'The best tournament result for %s is %s' % (self, pos))
         return results
 
-    def _results(self, power=None):
+    def _results(self, power=None, mask=MASK_ALL):
         """ List of tournament game achievements, optionally with one Great Power """
         results = []
         results_set = self.playergameresult_set.order_by('year')
@@ -268,40 +286,46 @@ class Player(models.Model):
             c_str = ''
         games = results_set.count()
         if games == 0:
-            results.append(u'%s has never played%s in a tournament before' % (self, c_str))
+            if (mask & MASK_GAMES_PLAYED) != 0:
+                results.append(u'%s has never played%s in a tournament before' % (self, c_str))
             return results
-        results.append(u'%s has played %d tournament games%s' % (self, games, c_str))
-        best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
-        results.append(u'%s has finished with as many as %d centres%s in tournament games' % (self, best, c_str))
-        solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
-        solos = solo_set.count()
-        if solos > 0:
-            results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%)' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
-        else:
-            results.append(u'%s has yet to solo%s at a tournament' % (self, c_str))
-        query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
-        eliminations_set = results_set.filter(query)
-        eliminations = eliminations_set.count()
-        if eliminations > 0:
-            results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%)' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
-        else:
-            results.append(u'%s has yet to be eliminated%s in a tournament' % (self, c_str))
-        query = Q(result='W') | Q(position=1)
-        victories_set = results_set.filter(query)
-        board_tops = victories_set.count()
-        if board_tops > 0:
-            results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%)' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
-        else:
-            results.append(u'%s has yet to top the board%s at a tournament' % (self, c_str))
+        if (mask & MASK_GAMES_PLAYED) != 0:
+            results.append(u'%s has played %d tournament games%s' % (self, games, c_str))
+        if (mask & MASK_BEST_SC_COUNT) != 0:
+            best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
+            results.append(u'%s has finished with as many as %d centres%s in tournament games' % (self, best, c_str))
+            solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
+        if (mask & MASK_SOLO_COUNT) != 0:
+            solos = solo_set.count()
+            if solos > 0:
+                results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%)' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
+            else:
+                results.append(u'%s has yet to solo%s at a tournament' % (self, c_str))
+        if (mask & MASK_ELIM_COUNT) != 0:
+            query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
+            eliminations_set = results_set.filter(query)
+            eliminations = eliminations_set.count()
+            if eliminations > 0:
+                results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%)' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
+            else:
+                results.append(u'%s has yet to be eliminated%s in a tournament' % (self, c_str))
+        if (mask & MASK_BOARD_TOP_COUNT) != 0:
+            query = Q(result='W') | Q(position=1)
+            victories_set = results_set.filter(query)
+            board_tops = victories_set.count()
+            if board_tops > 0:
+                results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%)' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
+            else:
+                results.append(u'%s has yet to top the board%s at a tournament' % (self, c_str))
         return results
 
-    def background(self, power=None):
+    def background(self, power=None, mask=MASK_ALL):
         """
         List of background strings about the player, optionally as a specific Great Power
         """
         if not power:
-            return self._rankings() + self._results()
-        return self._results(power)
+            return self._rankings(mask=mask) + self._results(mask=mask)
+        return self._results(power, mask=mask)
 
 class ScoringSystem(models.Model):
     """
@@ -323,11 +347,11 @@ class Tournament(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
 
-    def background(self):
+    def background(self, mask=MASK_ALL):
         players = Player.objects.filter(tournamentplayer__tournament = self)
         results = []
         for p in players:
-            results += p.background()
+            results += p.background(mask=mask)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -431,12 +455,12 @@ class Game(models.Model):
             retval[power] = [gp.player for gp in ps]
         return retval
 
-    def background(self):
+    def background(self, mask=MASK_ALL):
         players_by_power = self.players(latest=True)
         results = []
         for c,players in players_by_power.iteritems():
             for p in players:
-                results += p.background(c)
+                results += p.background(c, mask=mask)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
