@@ -20,6 +20,7 @@ from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
 from django import forms
+from django.forms.formsets import formset_factory, BaseFormSet
 
 from tournament.models import *
 
@@ -376,8 +377,8 @@ def game_sc_chart(request, tournament_id, game_name):
     except Game.DoesNotExist:
         raise Http404
     powers = GreatPower.objects.all()
-    # TODO massage ps so we have one entry per power
-    players = g.players()
+    # Massage ps so we have one entry per power
+    players = g.players(latest=False)
     ps = []
     for power in powers:
         names = '<br>'.join(map(unicode, players[power]))
