@@ -301,6 +301,11 @@ def tournament_scores(request, tournament_id):
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     return render(request, 'tournaments/scores.html', context)
 
+def tournament_background(request, tournament_id):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    context = {'tournament': t, 'background': t.background()}
+    return render(request, 'tournaments/background.html', context)
+
 def tournament_round(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
     rds = t.round_set.order_by('number')

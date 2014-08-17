@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament }} Background{%endblock %}
+
+{% block content %}
+<h1>{{ tournament }} Background</h1>
+<ul>
+    {% for str in background %}
+        <li>{{ str }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
