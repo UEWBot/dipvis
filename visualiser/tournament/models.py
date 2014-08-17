@@ -267,30 +267,30 @@ class Player(models.Model):
         else:
             c_str = ''
         games = results_set.count()
+        if games == 0:
+            results.append(u'%s has never played%s in a tournament before' % (self, c_str))
+            return results
+        results.append(u'%s has played %d tournament games%s' % (self, games, c_str))
         solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
         solos = solo_set.count()
+        if solos > 0:
+            results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%)' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
+        else:
+            results.append(u'%s has yet to solo%s at a tournament' % (self, c_str))
         query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
         eliminations_set = results_set.filter(query)
         eliminations = eliminations_set.count()
+        if eliminations > 0:
+            results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%)' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
+        else:
+            results.append(u'%s has yet to be eliminated%s in a tournament' % (self, c_str))
         query = Q(result='W') | Q(position=1)
         victories_set = results_set.filter(query)
         board_tops = victories_set.count()
-        if games > 0:
-            results.append(u'%s has played %d tournament games%s' % (self, games, c_str))
-            if solos > 0:
-                results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%)' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
-            else:
-                results.append(u'%s has yet to solo%s at a tournament' % (self, c_str))
-            if eliminations > 0:
-                results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%)' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
-            else:
-                results.append(u'%s has yet to be eliminated%s in a tournament' % (self, c_str))
-            if board_tops > 0:
-                results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%)' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
-            else:
-                results.append(u'%s has yet to top the board%s at a tournament' % (self, c_str))
+        if board_tops > 0:
+            results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%)' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
         else:
-            results.append(u'%s has never played%s in a tournament before' % (self, c_str))
+            results.append(u'%s has yet to top the board%s at a tournament' % (self, c_str))
         return results
 
     def background(self, power=None):
