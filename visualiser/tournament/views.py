@@ -423,7 +423,6 @@ def game_background(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    context = {'tournament': t, 'game': g}
-    # TODO Render actual background
-    return HttpResponse("This is the tournament %s game %s background" % (tournament_id, game_name))
+    context = {'tournament': t, 'game': g, 'background': g.background()}
+    return render(request, 'games/background.html', context)
 

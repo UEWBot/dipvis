@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Game {{ game }} Background{%endblock %}
+
+{% block content %}
+<h1>Game {{ game }} Background</h1>
+<ul>
+    {% for str in background %}
+        <li>{{ str }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
