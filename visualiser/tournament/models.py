@@ -21,7 +21,7 @@ from django.db.models import Min, Sum, Q
 
 from tournament.background import Background
 
-import urllib2
+import urllib2, random
 
 SPRING = 'S'
 FALL = 'F'
@@ -326,8 +326,8 @@ class Tournament(models.Model):
         results = []
         for p in players:
             results += p.background()
-        # TODO Shuffle the resulting list
-        pass
+        # Shuffle the resulting list
+        random.shuffle(results)
         return results
 
     def is_finished(self):
@@ -435,8 +435,8 @@ class Game(models.Model):
         for c,players in players_by_power.iteritems():
             for p in players:
                 results += p.background(c)
-        # TODO Shuffle the resulting list
-        pass
+        # Shuffle the resulting list
+        random.shuffle(results)
         return results
 
     def result_str(self):
