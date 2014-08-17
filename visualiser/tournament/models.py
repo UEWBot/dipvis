@@ -17,7 +17,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
-from django.db.models import Min, Sum, Q
+from django.db.models import Max, Min, Sum, Q
 
 from tournament.background import Background
 
@@ -271,6 +271,8 @@ class Player(models.Model):
             results.append(u'%s has never played%s in a tournament before' % (self, c_str))
             return results
         results.append(u'%s has played %d tournament games%s' % (self, games, c_str))
+        best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
+        results.append(u'%s has finished with as many as %d centres%s in tournament games' % (self, best, c_str))
         solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
         solos = solo_set.count()
         if solos > 0:
