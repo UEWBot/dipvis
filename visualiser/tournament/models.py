@@ -605,8 +605,8 @@ class DrawProposal(models.Model):
         # No dead powers included
         # If DIAS, all alive powers must be included
         dias = self.game.is_dias()
-        year = self.game.years_played()[-1]
-        scs = self.game.centrecount_set.filter(year=final_year)
+        year = self.game.final_year()
+        scs = self.game.centrecount_set.filter(year=year)
         for sc in scs:
             if sc.power in powers:
                 if sc.count == 0:
