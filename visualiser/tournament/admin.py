@@ -68,7 +68,7 @@ class DrawProposalInline(admin.StackedInline):
     extra = 1
     fieldsets = (
         (None, {
-            'fields': ('season', 'year', 'passed')
+            'fields': ('season', 'year', 'proposer', 'passed')
         }),
         ('Powers', {
             'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')
