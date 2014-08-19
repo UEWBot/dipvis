@@ -67,6 +67,13 @@ def validate_year(value):
     if value < FIRST_YEAR:
         raise ValidationError(u'%s is not a valid game year' % value)
 
+def validate_year_including_start(value):
+    """
+    Checks for a valid game year, allowing 1900, too
+    """
+    if value < FIRST_YEAR-1:
+        raise ValidationError(u'%s is not a valid game year' % value)
+
 def validate_sc_count(value):
     """
     Checks for a valid SC count
@@ -615,7 +622,7 @@ class CentreCount(models.Model):
     """
     power = models.ForeignKey(GreatPower, related_name='+')
     game = models.ForeignKey(Game)
-    year = models.PositiveSmallIntegerField(validators=[validate_year])
+    year = models.PositiveSmallIntegerField(validators=[validate_year_including_start])
     count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
 
     class Meta:
