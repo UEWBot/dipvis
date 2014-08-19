@@ -675,16 +675,15 @@ class CentreCount(models.Model):
     def clean(self):
         # Not possible to more than double your count in one year
         # or to recover from an elimination
-        if self.year > FIRST_YEAR:
-            try:
-                prev = CentreCount.objects.filter(power=self.power, game=self.game, year=self.year-1).get()
-                if self.count > 2 * prev.count:
-                    raise ValidationError('SC count for a power should not more than double in a year')
-                elif (prev.count == 0) and (self.count > 0):
-                    raise ValidationError('SC count cannot increase from zero')
-            except DrawProposal.DoesNotExist:
-                # We're obviously missing a year - let that go
-                pass
+        try:
+            prev = CentreCount.objects.filter(power=self.power, game=self.game, year=self.year-1).get()
+            if self.count > 2 * prev.count:
+                raise ValidationError('SC count for a power cannot more than double in a year')
+            elif (prev.count == 0) and (self.count > 0):
+                raise ValidationError('SC count for a power cannot increase from zero')
+        except CentreCount.DoesNotExist:
+            # We're either missing a year, or this is the first year - let that go
+            pass
 
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
