@@ -472,36 +472,74 @@ class Game(models.Model):
         random.shuffle(results)
         return results
 
+    def passed_draw(self):
+        """
+        Returns either a DrawProposal if a draw vote passed, or None.
+        """
+        # Did a draw proposal pass ?
+        try:
+            return self.drawproposal_set.filter(passed=True).get()
+        except DrawProposal.DoesNotExist:
+            return None
+
+    def final_year(self):
+        """
+        Returns the last complete year of the game, whether the game is completed or ongoing
+        """
+        return self.years_played()[-1]
+
+    def soloer(self):
+        """
+        Returns either a GamePlayer if somebody soloed the game, or None
+        """
+        # TODO I suspect there's a better way to get at "the highest SC count in the highest year"
+        final_year = self.final_year()
+        scs = self.centrecount_set.filter(year=final_year).order_by('-count')
+        if scs[0].count >= WINNING_SCS:
+            return self.gameplayer_set.filter(power=scs[0].power).get()
+        return None
+
     def result_str(self):
         """
         Returns a string representing the game result, if any, or None
         """
         # Did a draw proposal pass ?
-        try:
-            dp = self.drawproposal_set.filter(passed=True).get()
-            sz = dp.draw_size()
+        draw = self.passed_draw()
+        if draw:
+            sz = draw.draw_size()
             if sz == 1:
                 retval = u'Game conceded to '
             else:
                 retval = u'Game ended as a draw between '
             winners = []
             for n in range(1,sz+1):
-                value = dp.__dict__['power_%d_id' % n]
+                value = draw.__dict__['power_%d_id' % n]
                 power = GreatPower.objects.get(pk=value)
-                winners.append(power.name)
+                game_player = self.gameplayer_set.filter(power=power).get()
+                winners.append('%s (%s)' % (game_player.player, power.abbreviation))
             return retval + ', '.join(winners)
-        except DrawProposal.DoesNotExist:
-            pass
         # Did a power reach 18 centres ?
-        final_year = self.years_played()[-1]
-        scs = self.centrecount_set.filter(year=final_year).order_by('-count')
-        if scs[0].count >= WINNING_SCS:
-            return u'Game won by %s' % scs[0].power.name
+        soloer = self.soloer()
+        if soloer:
+            return u'Game won by %s (%s)' % (soloer.player, soloer.power.abbreviation)
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
             return u'Game ended'
         # Then it seems to be ongoing
         return None
+
+    def save(self, *args, **kwargs):
+        super(Game, self).save(*args, **kwargs)
+        # Auto-create 1900 SC counts (unless they already exist)
+        for power in GreatPower.objects.all():
+            initial = 3
+            if power.name == u'Russia':
+                initial = 4
+            i, created = CentreCount.objects.get_or_create(power=power,
+                                                           game=self,
+                                                           year=FIRST_YEAR-1,
+                                                           count=initial)
+            i.save()
 
     def get_absolute_url(self):
         return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
