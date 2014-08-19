@@ -565,12 +565,18 @@ class DrawProposal(models.Model):
     power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
 
     def draw_size(self):
-        count = 0
+        return len(self.powers())
+
+    def powers(self):
+        """
+        Returns a list of powers included in the draw proposal.
+        """
+        retval = []
         for name, value in self.__dict__.iteritems():
             if name.startswith('power_'):
                 if value:
-                    count += 1
-        return count
+                    retval.append(GreatPower.objects.get(pk=value))
+        return retval
 
     def clean(self):
         # No skipping powers
