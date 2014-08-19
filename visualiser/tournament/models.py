@@ -506,24 +506,26 @@ class Game(models.Model):
         # Did a draw proposal pass ?
         draw = self.passed_draw()
         if draw:
-            sz = draw.draw_size()
+            powers = draw.powers()
+            sz = len(powers)
             if sz == 1:
                 retval = u'Game conceded to '
             else:
-                retval = u'Game ended as a draw between '
+                retval = u'Vote passed to end the game as a %d-way draw between ' % sz
             winners = []
-            for n in range(1,sz+1):
-                value = draw.__dict__['power_%d_id' % n]
-                power = GreatPower.objects.get(pk=value)
+            for power in powers:
+                # TODO This looks broken if there were replacements
                 game_player = self.gameplayer_set.filter(power=power).get()
                 winners.append('%s (%s)' % (game_player.player, power.abbreviation))
             return retval + ', '.join(winners)
-        # Did a power reach 18 centres ?
+        # Did a power reach 18 (or more) centres ?
         soloer = self.soloer()
         if soloer:
+            # TODO would be nice to include their SC count
             return u'Game won by %s (%s)' % (soloer.player, soloer.power.abbreviation)
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
+            # TODO Probably want to list board topper(s) and their SC count
             return u'Game ended'
         # Then it seems to be ongoing
         return None
