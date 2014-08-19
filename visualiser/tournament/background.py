@@ -26,6 +26,9 @@ MAP = {'Name of the tournament': 'Tournament',
 class InvalidWDDId(Exception):
     pass
 
+class WDDNotAccessible(Exception):
+    pass
+
 def img_to_country(img):
     """
     Convert a WDD flag image name to a country name.
@@ -101,7 +104,11 @@ class Background():
         Player name from the WDD
         """
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
-        page = urllib2.urlopen(url)
+        try:
+            page = urllib2.urlopen(url)
+        except urllib2.URLError:
+            # Most likely, WDD is not available
+            raise WDDNotAccessible
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
             raise InvalidWDDId

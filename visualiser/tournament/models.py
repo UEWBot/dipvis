@@ -19,7 +19,7 @@ from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min, Sum, Q
 
-from tournament.background import Background
+from tournament.background import *
 
 import urllib2, random
 
@@ -125,7 +125,10 @@ def add_player_bg(player):
     """
     wdd = player.wdd_player_id
     if wdd:
-        bg = Background(wdd)
+        try:
+            bg = Background(wdd)
+        except WDDNotAccessible:
+            return
         # Titles won
         titles = bg.titles()
         for title in titles:
@@ -249,7 +252,14 @@ class Player(models.Model):
 
     def clean(self):
         # Check that the WDD id seems to match the name
-        bg = Background(self.wdd_player_id)
+        try:
+            bg = Background(self.wdd_player_id)
+        except WDDNotAccessible:
+            # Not much we can do in this case
+            return
+        except InvalidWDDId:
+            raise ValidationError, u'WDD Id %d is invalid' % self.wdd_player_id
+        # TODO This may be too strict
         wdd_name = bg.name()
         raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
 
