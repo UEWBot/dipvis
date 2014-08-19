@@ -58,7 +58,15 @@ MASK_BEST_SC_COUNT = 1<<6
 MASK_SOLO_COUNT = 1<<7
 MASK_ELIM_COUNT = 1<<8
 MASK_BOARD_TOP_COUNT = 1<<9
-MASK_ALL = (1<<10)-1
+MASK_ALL_BG = (1<<10)-1
+
+# Mask values to choose which news strings to include
+MASK_BOARD_TOP = 1<<0
+MASK_GAINERS = 1<<1
+MASK_LOSERS = 1<<2
+MASK_DRAW_VOTES = 1<<3
+MASK_ELIMINATIONS = 1<<4
+MASK_ALL_NEWS = (1<<5)-1
 
 def validate_year(value):
     """
@@ -245,7 +253,7 @@ class Player(models.Model):
         wdd_name = bg.name()
         raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
 
-    def _rankings(self, mask=MASK_ALL):
+    def _rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
         results = []
         ranking_set = self.playerranking_set.order_by('year')
@@ -282,7 +290,7 @@ class Player(models.Model):
                 results.append(u'The best tournament result for %s is %s' % (self, pos))
         return results
 
-    def _results(self, power=None, mask=MASK_ALL):
+    def _results(self, power=None, mask=MASK_ALL_BG):
         """ List of tournament game achievements, optionally with one Great Power """
         results = []
         results_set = self.playergameresult_set.order_by('year')
@@ -326,7 +334,7 @@ class Player(models.Model):
                 results.append(u'%s has yet to top the board%s at a tournament' % (self, c_str))
         return results
 
-    def background(self, power=None, mask=MASK_ALL):
+    def background(self, power=None, mask=MASK_ALL_BG):
         """
         List of background strings about the player, optionally as a specific Great Power
         """
@@ -354,7 +362,7 @@ class Tournament(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
 
-    def background(self, mask=MASK_ALL):
+    def background(self, mask=MASK_ALL_BG):
         players = Player.objects.filter(tournamentplayer__tournament = self)
         results = []
         for p in players:
@@ -462,7 +470,65 @@ class Game(models.Model):
             retval[power] = [gp.player for gp in ps]
         return retval
 
-    def background(self, mask=MASK_ALL):
+    def news(self, mask=MASK_ALL_NEWS):
+        """
+        Returns a list of strings the describe the latest events in the game
+        """
+        if self.is_finished:
+            # Just report the final result
+            return [self.result_str()]
+        # TODO move these into appropriate blocks below, or remove any that aren't used
+        centres_set = self.centrecount_set.order_by('-year')
+        draws_set = self.drawproposal_set.order_by('-year')
+        players_set = self.gameplayer_set.all()
+        powers = GreatPower.objects.all()
+        player_dict = self.players(latest=True)
+        last_year = centres_set[0].year
+        current_scs = centres_set.filter(year=last_year)
+        if last_year > 1900:
+            prev_scs = centres_set.filter(year=last_year-1)
+        else:
+            # We only look for differences, so just force no differences
+            prev_scs = current_scs
+        max_scs = current_scs.order_by('-count')[0].count
+        first = current_scs.order_by('-count').filter(count=max_scs)
+        results = []
+        if (mask & MASK_BOARD_TOP) != 0:
+            # Who's topping the board ?
+            first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
+                                                scs.power.abbreviation) for scs in list(first)])
+            results.append("Highest SC count is %d, for %s" % (max_scs, first_str))
+        if (mask & MASK_GAINERS) != 0:
+            pass
+        if (mask & MASK_LOSERS) != 0:
+            # TODO Who gained or lost 2 or more centres in the last year ?
+            pass
+        if (mask & MASK_DRAW_VOTES) != 0:
+            # What draw votes failed in the last year ?
+            # TODO Lots of overlap with result_str()
+            for d in draws_set:
+                powers = d.powers()
+                sz = len(powers)
+                incl = []
+                for power in powers:
+                    # TODO This looks broken if there were replacements
+                    game_player = self.gameplayer_set.filter(power=power).get()
+                    incl.append('%s (%s)' % (game_player.player, power.abbreviation))
+                incl_str = ', '.join(incl)
+                if sz == 1:
+                    d_str = u'Vote to concede to %s failed' % incl_str
+                else:
+                    d_str = 'Draw vote for %d-way between %s failed' % (sz, incl_str)
+                results.append(d_str)
+        if (mask & MASK_ELIMINATIONS) != 0:
+            # TODO Who has been eliminated so far, and when ?
+            pass
+        return results
+
+    def background(self, mask=MASK_ALL_BG):
+        """
+        Returns a list of strings that give background for the game
+        """
         players_by_power = self.players(latest=True)
         results = []
         for c,players in players_by_power.iteritems():
