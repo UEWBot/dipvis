@@ -373,6 +373,9 @@ class Tournament(models.Model):
     end_date = models.DateField()
 
     def background(self, mask=MASK_ALL_BG):
+        """
+        Returns a list of background strings for the tournament
+        """
         players = Player.objects.filter(tournamentplayer__tournament = self)
         results = []
         for p in players:
