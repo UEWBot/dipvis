@@ -391,6 +391,8 @@ class Tournament(models.Model):
         results = []
         for g in self.current_round().game_set.all():
             results += g.news()
+        # Shuffle the resulting list
+        random.shuffle(results)
         return results
 
     def current_round(self):
@@ -571,6 +573,8 @@ class Game(models.Model):
                 results.append("%s (%s) was eliminated in %d" % (player_dict[power][0],
                                                                  power.abbreviation,
                                                                  scs.year))
+        # Shuffle the resulting list
+        random.shuffle(results)
         return results
 
     def background(self, mask=MASK_ALL_BG):
