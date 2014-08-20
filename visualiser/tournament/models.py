@@ -487,34 +487,43 @@ class Game(models.Model):
         if self.is_finished:
             # Just report the final result
             return [self.result_str()]
-        # TODO move these into appropriate blocks below, or remove any that aren't used
-        centres_set = self.centrecount_set.order_by('-year')
-        draws_set = self.drawproposal_set.order_by('-year')
-        players_set = self.gameplayer_set.all()
-        powers = GreatPower.objects.all()
         player_dict = self.players(latest=True)
+        centres_set = self.centrecount_set.order_by('-year')
         last_year = centres_set[0].year
         current_scs = centres_set.filter(year=last_year)
+        results = []
+        if (mask & MASK_BOARD_TOP) != 0:
+            # Who's topping the board ?
+            max_scs = current_scs.order_by('-count')[0].count
+            first = current_scs.order_by('-count').filter(count=max_scs)
+            first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
+                                                scs.power.abbreviation) for scs in list(first)])
+            results.append("Highest SC count is %d, for %s" % (max_scs, first_str))
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
         else:
             # We only look for differences, so just force no differences
             prev_scs = current_scs
-        max_scs = current_scs.order_by('-count')[0].count
-        first = current_scs.order_by('-count').filter(count=max_scs)
-        results = []
-        if (mask & MASK_BOARD_TOP) != 0:
-            # Who's topping the board ?
-            first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
-                                                scs.power.abbreviation) for scs in list(first)])
-            results.append("Highest SC count is %d, for %s" % (max_scs, first_str))
-        if (mask & MASK_GAINERS) != 0:
-            pass
-        if (mask & MASK_LOSERS) != 0:
-            # TODO Who gained or lost 2 or more centres in the last year ?
-            pass
+        for scs in current_scs:
+            power = scs.power
+            prev = prev_scs.get(power=power)
+            # Who gained 2 or more centres in the last year ?
+            if (mask & MASK_GAINERS) != 0:
+                if scs.count - prev.count > 1:
+                    results.append("%s (%s) grew from %d to %d centres" % (player_dict[power][0],
+                                                                           power.abbreviation,
+                                                                           prev.count,
+                                                                           scs.count))
+            # Who lost 2 or more centres in the last year ?
+            if (mask & MASK_LOSERS) != 0:
+                if prev.count - scs.count > 1:
+                    results.append("%s (%s) shrank from %d to %d centres" % (player_dict[power][0],
+                                                                             power.abbreviation,
+                                                                             prev.count,
+                                                                             scs.count))
         if (mask & MASK_DRAW_VOTES) != 0:
             # What draw votes failed in the last year ?
+            draws_set = self.drawproposal_set.order_by('-year')
             # TODO Lots of overlap with result_str()
             for d in draws_set:
                 powers = d.powers()
@@ -531,8 +540,15 @@ class Game(models.Model):
                     d_str = 'Draw vote for %d-way between %s failed' % (sz, incl_str)
                 results.append(d_str)
         if (mask & MASK_ELIMINATIONS) != 0:
-            # TODO Who has been eliminated so far, and when ?
-            pass
+            # Who has been eliminated so far, and when ?
+            zeroes = centres_set.filter(count=0).reverse()
+            while len(zeroes):
+                scs = zeroes[0]
+                power = scs.power
+                zeroes = zeroes.exclude(power=power)
+                results.append("%s (%s) was eliminated in %d" % (player_dict[power][0],
+                                                                 power.abbreviation,
+                                                                 scs.year))
         return results
 
     def background(self, mask=MASK_ALL_BG):
