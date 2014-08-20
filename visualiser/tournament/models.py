@@ -381,6 +381,25 @@ class Tournament(models.Model):
         random.shuffle(results)
         return results
 
+    def news(self):
+        """
+        Returns a list of news strings for the tournament
+        """
+        results = []
+        for g in self.current_round().games_set:
+            results += g.news()
+        return results
+
+    def current_round(self):
+        """
+        Returns the Round in progress, or None
+        """
+        rds = self.round_set.order_by('number')
+        for r in rds:
+            if not r.is_finished():
+                return r
+        return None
+
     def is_finished(self):
         for r in self.round_set.all():
             if not r.is_finished():
