@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament }} News{%endblock %}
+
+{% block content %}
+<h1>{{ tournament }} News</h1>
+<ul>
+    {% for str in news %}
+        <li>{{ str }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

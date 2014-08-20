@@ -306,14 +306,17 @@ def tournament_background(request, tournament_id):
     context = {'tournament': t, 'background': t.background()}
     return render(request, 'tournaments/background.html', context)
 
+def tournament_news(request, tournament_id):
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    context = {'tournament': t, 'news': t.news()}
+    return render(request, 'tournaments/news.html', context)
+
 def tournament_round(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
-    rds = t.round_set.order_by('number')
-    for r in rds:
-        if not r.is_finished():
-            # This must be the "current round"
-            context = {'round': r}
-            return render(request, 'rounds/detail.html', context)
+    r = t.current_round()
+    if r:
+        context = {'round': r}
+        return render(request, 'rounds/detail.html', context)
     # TODO There must be a better way than this
     return HttpResponse("No round currently being played")
 
@@ -418,9 +421,8 @@ def game_news(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    context = {'tournament': t, 'game': g}
-    # TODO Render actual news
-    return HttpResponse("This is the tournament %s game %s news" % (tournament_id, game_name))
+    context = {'tournament': t, 'game': g, 'news': g.news()}
+    return render(request, 'games/news.html', context)
 
 def game_background(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)

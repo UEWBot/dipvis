@@ -389,7 +389,7 @@ class Tournament(models.Model):
         Returns a list of news strings for the tournament
         """
         results = []
-        for g in self.current_round().games_set:
+        for g in self.current_round().game_set.all():
             results += g.news()
         return results
 
