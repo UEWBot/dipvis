@@ -389,8 +389,13 @@ class Tournament(models.Model):
         Returns a list of news strings for the tournament
         """
         results = []
-        for g in self.current_round().game_set.all():
-            results += g.news(include_game_name=True)
+        current_round = self.current_round()
+        if current_round:
+            for g in current_round.game_set.all():
+                results += g.news(include_game_name=True)
+        else:
+            # TODO list top few scores in previous round, perhaps ?
+            pass
         # Shuffle the resulting list
         random.shuffle(results)
         return results
