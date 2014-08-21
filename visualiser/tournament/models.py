@@ -390,7 +390,7 @@ class Tournament(models.Model):
         """
         results = []
         for g in self.current_round().game_set.all():
-            results += g.news()
+            results += g.news(include_game_name=True)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -504,13 +504,17 @@ class Game(models.Model):
             retval[power] = [gp.player for gp in ps]
         return retval
 
-    def news(self, mask=MASK_ALL_NEWS):
+    def news(self, include_game_name=False, mask=MASK_ALL_NEWS):
         """
         Returns a list of strings the describe the latest events in the game
         """
+        if include_game_name:
+            gn_str = ' in game %s' % self.name
+        else:
+            gn_str = ''
         if self.is_finished:
             # Just report the final result
-            return [self.result_str()]
+            return [self.result_str(include_game_name)]
         player_dict = self.players(latest=True)
         centres_set = self.centrecount_set.order_by('-year')
         last_year = centres_set[0].year
@@ -522,7 +526,7 @@ class Game(models.Model):
             first = current_scs.order_by('-count').filter(count=max_scs)
             first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
                                                 scs.power.abbreviation) for scs in list(first)])
-            results.append("Highest SC count is %d, for %s" % (max_scs, first_str))
+            results.append("Highest SC count%s is %d, for %s" % (gn_str, max_scs, first_str))
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
         else:
@@ -534,17 +538,19 @@ class Game(models.Model):
             # Who gained 2 or more centres in the last year ?
             if (mask & MASK_GAINERS) != 0:
                 if scs.count - prev.count > 1:
-                    results.append("%s (%s) grew from %d to %d centres" % (player_dict[power][0],
-                                                                           power.abbreviation,
-                                                                           prev.count,
-                                                                           scs.count))
+                    results.append("%s (%s) grew from %d to %d centres%s" % (player_dict[power][0],
+                                                                             power.abbreviation,
+                                                                             prev.count,
+                                                                             scs.count,
+                                                                             gn_str))
             # Who lost 2 or more centres in the last year ?
             if (mask & MASK_LOSERS) != 0:
                 if prev.count - scs.count > 1:
-                    results.append("%s (%s) shrank from %d to %d centres" % (player_dict[power][0],
-                                                                             power.abbreviation,
-                                                                             prev.count,
-                                                                             scs.count))
+                    results.append("%s (%s) shrank from %d to %d centres%s" % (player_dict[power][0],
+                                                                               power.abbreviation,
+                                                                               prev.count,
+                                                                               scs.count,
+                                                                               gn_str))
         if (mask & MASK_DRAW_VOTES) != 0:
             # What draw votes failed in the last year ?
             draws_set = self.drawproposal_set.order_by('-year')
@@ -559,9 +565,9 @@ class Game(models.Model):
                     incl.append('%s (%s)' % (game_player.player, power.abbreviation))
                 incl_str = ', '.join(incl)
                 if sz == 1:
-                    d_str = u'Vote to concede to %s failed' % incl_str
+                    d_str = u'Vote to concede to %s failed%s' % (incl_str, gn_str)
                 else:
-                    d_str = 'Draw vote for %d-way between %s failed' % (sz, incl_str)
+                    d_str = 'Draw vote for %d-way between %s failed%s' % (sz, incl_str, gn_str)
                 results.append(d_str)
         if (mask & MASK_ELIMINATIONS) != 0:
             # Who has been eliminated so far, and when ?
@@ -570,9 +576,10 @@ class Game(models.Model):
                 scs = zeroes[0]
                 power = scs.power
                 zeroes = zeroes.exclude(power=power)
-                results.append("%s (%s) was eliminated in %d" % (player_dict[power][0],
-                                                                 power.abbreviation,
-                                                                 scs.year))
+                results.append("%s (%s) was eliminated in %d%s" % (player_dict[power][0],
+                                                                   power.abbreviation,
+                                                                   scs.year,
+                                                                   gn_str))
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -617,19 +624,23 @@ class Game(models.Model):
             return self.gameplayer_set.filter(power=scs[0].power).get()
         return None
 
-    def result_str(self):
+    def result_str(self, include_game_name=False):
         """
         Returns a string representing the game result, if any, or None
         """
+        if include_game_name:
+            gn_str = ' %s' % self.name
+        else:
+            gn_str = ''
         # Did a draw proposal pass ?
         draw = self.passed_draw()
         if draw:
             powers = draw.powers()
             sz = len(powers)
             if sz == 1:
-                retval = u'Game conceded to '
+                retval = u'Game%s conceded to ' % gn_str
             else:
-                retval = u'Vote passed to end the game as a %d-way draw between ' % sz
+                retval = u'Vote passed to end game%s as a %d-way draw between ' % (gn_str, sz)
             winners = []
             for power in powers:
                 # TODO This looks broken if there were replacements
@@ -640,11 +651,11 @@ class Game(models.Model):
         soloer = self.soloer()
         if soloer:
             # TODO would be nice to include their SC count
-            return u'Game won by %s (%s)' % (soloer.player, soloer.power.abbreviation)
+            return u'Game%s won by %s (%s)' % (gn_str, soloer.player, soloer.power.abbreviation)
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
             # TODO Probably want to list board topper(s) and their SC count
-            return u'Game ended'
+            return u'Game%s ended' % gn_str
         # Then it seems to be ongoing
         return None
 
