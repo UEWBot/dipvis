@@ -665,8 +665,11 @@ class Game(models.Model):
             return u'Game%s won by %s (%s)' % (gn_str, soloer.player, soloer.power.abbreviation)
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
-            # TODO Probably want to list board topper(s) and their SC count
-            return u'Game%s ended' % gn_str
+            player_dict = self.players(latest=True)
+            toppers = self.board_toppers()
+            first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
+                                                scs.power.abbreviation) for scs in list(toppers)])
+            return u'Game%s ended. Board top is %d centres, for %s' % (gn_str, scs.count, first_str)
         # Then it seems to be ongoing
         return None
 
