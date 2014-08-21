@@ -607,6 +607,17 @@ class Game(models.Model):
         except DrawProposal.DoesNotExist:
             return None
 
+    def board_toppers(self):
+        """
+        Returns a list of CentreCounts for the current leader(s)
+        """
+        centres_set = self.centrecount_set.order_by('-year')
+        last_year = centres_set[0].year
+        current_scs = centres_set.filter(year=last_year)
+        max_scs = current_scs.order_by('-count')[0].count
+        first = current_scs.order_by('-count').filter(count=max_scs)
+        return list(first)
+
     def final_year(self):
         """
         Returns the last complete year of the game, whether the game is completed or ongoing
