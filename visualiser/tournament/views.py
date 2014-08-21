@@ -343,7 +343,7 @@ def round_scores(request, tournament_id, round_num):
 	raise Http404
     rps = r.roundplayer_set.order_by('score')
     context = {'tournament': t, 'player_list': rps}
-    # TODO Render actual scores
+    # TODO Render actual round scores
     return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
 
 def roll_call(request, tournament_id, round_num):
@@ -354,7 +354,7 @@ def roll_call(request, tournament_id, round_num):
 	raise Http404
     rps = r.roundplayer_set.order_by('score')
     context = {'tournament': t, 'player_list': rps}
-    # TODO Render actual scores
+    # TODO Render actual round roll call
     return HttpResponse("This is the tournament %s round %s roll call" % (tournament_id, round_num))
 
 def game_index(request, tournament_id, round_num):
