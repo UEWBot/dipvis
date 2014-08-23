@@ -14,35 +14,37 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, render_to_response
 from django.http import HttpResponse, Http404
 from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
 from django import forms
 from django.forms.formsets import formset_factory, BaseFormSet
+from django.template import RequestContext
 
 from tournament.models import *
 
-# TODO Merge these two forms ?
+import datetime
+
 class DrawForm(forms.Form):
     """Form for a draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
     season = forms.ChoiceField(choices=SEASONS)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
                                       to_field_name='name')
-    powers = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
-                                            to_field_name='name',
-                                            widget=forms.SelectMultiple(attrs={'size':'7'}))
     passed = forms.BooleanField(initial=False, required=False)
 
-class DiasDrawForm(forms.Form):
-    """Form for a DIAS draw vote"""
-    year = forms.IntegerField(min_value=FIRST_YEAR)
-    season = forms.ChoiceField(choices=SEASONS)
-    proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
-                                      to_field_name='name')
-    passed = forms.BooleanField(initial=False, required=False)
+    def __init__(self, *args, **kwargs):
+        """Adds powers field if game is not set Draws Include All Survivors"""
+        # Remove our special kwarg from the list
+        is_dias = kwargs.pop('dias')
+        super(DrawForm, self).__init__(*args, **kwargs)
+
+        if not is_dias:
+            self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
+                                                                   to_field_name='name',
+                                                                   widget=forms.SelectMultiple(attrs={'size':'7'}))
 
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
@@ -178,16 +180,21 @@ class BaseSCCountFormset(BaseFormSet):
                 raise forms.ValidationError('Neutrals increases from %d to %d in %d' % (neutrals, years[year], year))
             neutrals = years[year]
 
+class TournamentPlayerChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.player.__unicode__()
+
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
-    # TODO this should be probably every player in the tournament, not all of them
-    player = forms.ModelChoiceField(queryset=Player.objects.all())
+    player = TournamentPlayerChoiceField(queryset=Tournament.objects.none())
 
     def __init__(self, *args, **kwargs):
-        # Remove our two special kwargs from the list
+        # Remove our three special kwargs from the list
+        self.tournament = kwargs.pop('tournament')
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
         super(PlayerRoundForm, self).__init__(*args, **kwargs)
+        self.fields['player'].queryset = self.tournament.tournamentplayer_set.all()
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.rounds):
@@ -214,27 +221,29 @@ class BasePlayerRoundFormset(BaseFormSet):
             players.append(player)
 
     def __init__(self, *args, **kwargs):
-        # Remove our two special kwargs from the list
-        self.rounds = kwargs.pop('rounds')
-        self.this_round = kwargs.pop('this_round')
+        # Remove our special kwargs from the list
+        self.tournament = kwargs.pop('tournament')
         super(BasePlayerRoundFormset, self).__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
-        # Pass the two special args down to the form itself
-        kwargs['rounds'] = self.rounds
-        kwargs['this_round'] = self.this_round
+        # Pass the three special args down to the form itself
+        kwargs['tournament'] = self.tournament
+        kwargs['rounds'] = self.tournament.round_set.count()
+        # TODO current_round() could return None, if all rounds are over
+        kwargs['this_round'] = self.tournament.current_round().number
         return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
-    # TODO this should be probably every player in the tournament, not all of them
-    player = forms.ModelChoiceField(queryset=Player.objects.all())
+    player = TournamentPlayerChoiceField(queryset=Tournament.objects.none())
 
     def __init__(self, *args, **kwargs):
-        # Remove our two special kwargs from the list
+        # Remove our three special kwargs from the list
+        self.tournament = kwargs.pop('tournament')
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
         super(PlayerRoundScoreForm, self).__init__(*args, **kwargs)
+        self.fields['player'].queryset = self.tournament.tournamentplayer_set.all()
 
         self.fields['player'].widget.attrs['readonly'] = 'readonly'
 
@@ -259,15 +268,16 @@ class PlayerRoundScoreForm(forms.Form):
 
 class BasePlayerRoundScoreFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
-        # Remove our two special kwargs from the list
-        self.rounds = kwargs.pop('rounds')
-        self.this_round = kwargs.pop('this_round')
+        # Remove our special kwargs from the list
+        self.tournament = kwargs.pop('tournament')
         super(BasePlayerRoundScoreFormset, self).__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
-        # Pass the two special args down to the form itself
-        kwargs['rounds'] = self.rounds
-        kwargs['this_round'] = self.this_round
+        # Pass the three special args down to the form itself
+        kwargs['tournament'] = self.tournament
+        kwargs['rounds'] = self.tournament.round_set.count()
+        # TODO current_round() could return None, if all rounds are over
+        kwargs['this_round'] = self.tournament.current_round().number
         return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
 
 class TourneyIndexView(generic.ListView):
