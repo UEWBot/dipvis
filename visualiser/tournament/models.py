@@ -463,7 +463,8 @@ class Round(models.Model):
         return True
 
     def get_absolute_url(self):
-        return reverse('round_detail', args=[str(self.tournament.id), str(self.number)])
+        return reverse('round_detail',
+                       args=[str(self.tournament.id), str(self.number)])
 
     def __unicode__(self):
         return u'%s round %d' % (self.tournament, self.number)
@@ -497,7 +498,7 @@ class Game(models.Model):
     def players(self, latest=True):
         """
         Returns a dict, keyed by power, of lists of players of that power
-        If latest is True, only inlcude the latest player of each power
+        If latest is True, only include the latest player of each power
         """
         powers = GreatPower.objects.all()
         gps = self.gameplayer_set.all().order_by('-first_year')
@@ -692,7 +693,8 @@ class Game(models.Model):
             i.save()
 
     def get_absolute_url(self):
-        return reverse('game_detail', args=[str(self.the_round.tournament.id), self.name])
+        return reverse('game_detail',
+                       args=[str(self.the_round.tournament.id), self.name])
 
     def __unicode__(self):
         return self.name
