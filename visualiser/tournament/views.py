@@ -72,13 +72,13 @@ class GamePlayersForm(forms.Form):
     def __init__(self, *args, **kwargs):
         """Dynamically creates one player field per Great Power"""
         # Remove our special kwarg from the list
-        self.the_round = kwargs.pop('round')
+        self.the_round = kwargs.pop('the_round')
         super(GamePlayersForm, self).__init__(*args, **kwargs)
 
         attrs = self.fields['game_name'].widget.attrs
         attrs['size'] = attrs['maxlength']
 
-        queryset = the_round.roundplayer_set.all()
+        queryset = self.the_round.roundplayer_set.all()
 
         # Create the right country fields
         for power in GreatPower.objects.all():
@@ -105,12 +105,12 @@ class GamePlayersForm(forms.Form):
 class BaseGamePlayersForm(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
-        self.the_round = kwargs.pop('round')
+        self.the_round = kwargs.pop('the_round')
         super(BaseGamePlayersForm, self).__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself
-        kwargs['round'] = self.the_round
+        kwargs['the_round'] = self.the_round
         return super(BaseGamePlayersForm, self)._construct_form(index, **kwargs)
 
 class SCCountForm(forms.Form):
