@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>{{ tournament }} round {{ round }} Games</h1>
-<form method="post" action="/game_score/">
+<form method="post" action={% url 'game_scores' tournament.id round.id %}>
     {% include "formset_table.html" %}
 </form>
 {% endblock %}

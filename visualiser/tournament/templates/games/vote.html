@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>Game {{ game }} Draw Vote</h1>
-<form action="/vote/" method="post">{% csrf_token %}
+<form action={% url 'draw_vote' tournament.id game.id %} method="post">{% csrf_token %}
 {% for field in form %}
     {{ field.errors }}
     {{ field.label_tag }}: {{ field }}

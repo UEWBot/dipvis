@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>Game {{ game }} Supply Centres</h1>
-<form method="post" action="/sc_counts/">
+<form method="post" action={% url 'enter_scs' tournament.id game.id %}>
     {% include "formset_table.html" %}
 </form>
 {% endblock %}
