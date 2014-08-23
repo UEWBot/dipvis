@@ -336,13 +336,120 @@ def tournament_round(request, tournament_id):
     # TODO There must be a better way than this
     return HttpResponse("No round currently being played")
 
+# TODO Name is confusing - sounds like it takes a round_num
+def round_scores(request, tournament_id):
+    """Provide a form to enter each player's score for each round"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    round_set = t.round_set.all()
+    PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
+                                              extra=0,
+                                              formset=BasePlayerRoundScoreFormset)
+    if request.method == 'POST':
+        formset = PlayerRoundScoreFormset(request.POST, tournament=t)
+        if formset.is_valid():
+            for form in formset:
+                player = form.cleaned_data['player']
+                for r_name,value in f.cleaned_data.iteritems():
+                    # We're only interested in the round score fields
+                    if not r_name.startswith('round_'):
+                        continue
+                    # Extract the round number from the field name
+                    i = int(r_name[6:])
+                    # Find that Round
+                    r = round_set.get(number=i)
+                    # Update the score
+                    i, created = RoundPlayer.objects.get_or_create(player=player,
+                                                                   the_round=r)
+                    i.score = value
+                    i.save()
+            # Redirect to the read-only version
+            return HttpResponseRedirect(reverse('tournament_scores',
+                                                args=(tournament_id,)))
+    else:
+        data = []
+        # Go through each player in the Tournament
+        for tp in t.tournamentplayer_set.all():
+            current = {'player': tp}
+            for rp in tp.player.roundplayer_set.all():
+                current['round_%d'%rp.the_round.number] = rp.score
+                # Scores for any games in the round
+                games = GamePlayer.objects.filter(player=tp.player,
+                                                  game__the_round=r)
+                current['game_scores_%d'%i] = ', '.join(str(g.score) for g in games)
+            data.append(current)
+        formset = PlayerRoundScoreFormset(tournament=t, initial=data)
+
+    return render_to_response('tournaments/round_players.html',
+                              {'title': 'Scores',
+                               'tournament': t,
+                               'formset' : formset},
+                              context_instance = RequestContext(request))
+
+def roll_call(request, tournament_id):
+    """Provide a form to specify which players are playing each round"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    round_set = t.round_set.all()
+    PlayerRoundFormset = formset_factory(PlayerRoundForm,
+                                         extra=2,
+                                         formset=BasePlayerRoundFormset)
+    if request.method == 'POST':
+        formset = PlayerRoundFormset(request.POST, tournament=t)
+        print formset.is_valid()
+        if formset.is_valid():
+            print formset
+            print formset.cleaned_data
+            for form in formset:
+                print form
+                player = form.cleaned_data['player']
+                for r_name,value in f.cleaned_data.iteritems():
+                    print r_name
+                    print value
+                    # Ignore non-bool fields and ones that aren't True
+                    if value != True:
+                        continue
+                    # Extract the round number from the field name
+                    i = int(r_name[6:])
+                    # Find that Round
+                    r = round_set.get(number=i)
+                    # Ensure that we have a corresponding RoundPlayer
+                    i, created = RoundPlayer.objects.get_or_create(player=player,
+                                                                   the_round=r)
+                    i.save()
+            # Next job is almost certainly to create the actual games
+            return HttpResponseRedirect(reverse('create_games',
+                                                args=(tournament_id, round_num)))
+    else:
+        data = []
+        # Go through each player in the Tournament
+        for player in t.tournamentplayer_set.all():
+            current = {'player':player}
+            # And each round of the Tournament
+            for r in t.round_set.order_by('number'):
+                i = r.number
+                # Is this player listed as playing this round ?
+                played = r.roundplayer_set.filter(player=player).exists()
+                current['round_%d'%i] = played
+            data.append(current)
+        formset = PlayerRoundFormset(tournament=t, initial=data)
+
+    print "Calling render_to_response()"
+    return render_to_response('tournaments/round_players.html',
+                              {'title': 'Roll Call',
+                               'tournament': t,
+                               'formset' : formset},
+                              context_instance = RequestContext(request))
+
 def round_index(request, tournament_id):
+    """Display a list of rounds of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     the_list = t.round_set.order_by('number')
     context = {'tournament': t, 'round_list': the_list}
     return render(request, 'rounds/index.html', context)
 
+# Round views
+
 def round_detail(request, tournament_id, round_num):
+    """Display the details of a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
 	r = t.round_set.get(number=round_num)
@@ -351,29 +458,102 @@ def round_detail(request, tournament_id, round_num):
     context = {'round': r}
     return render(request, 'rounds/detail.html', context)
 
-def round_scores(request, tournament_id, round_num):
+def create_games(request, tournament_id, round_num):
+    """Provide a form to create the games for a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
-    rps = r.roundplayer_set.order_by('score')
-    context = {'tournament': t, 'player_list': rps}
-    # TODO Render actual round scores
-    return HttpResponse("This is the tournament %s round %s scores" % (tournament_id, round_num))
+    if request.method == 'POST':
+        GamePlayersFormset = formset_factory(GamePlayersForm, formset=BaseGamePlayersForm)
+        formset = GamePlayersFormset(request.POST, the_round=r)
+        if formset.is_valid():
+            for f in formset:
+                # Update/create the game
+                g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
+                                                        started_at=datetime.now(),
+                                                        the_round=r)
+                g.save()
+                # Assign the players to the game
+                for power, field in f.cleaned_data.iteritems():
+                    try:
+                        p = GreatPower.objects.get(name=power)
+                    except GreatPower.DoesNotExist:
+                        continue
+                    i, created = GamePlayer.objects.get_or_create(player=field,
+                                                                  game = g,
+                                                                  power=p)
+                    i.save()
+            # Redirect to the index of games in the round
+            return HttpResponseRedirect(reverse('game_index',
+                                                args=(tournament_id, round_num)))
+    else:
+        # Estimate the number of games for the round
+        round_players = r.roundplayer_set.count()
+        print round_players
+        expected_games = (round_players + 6) / 7
+        print expected_games
+        if expected_games < 1:
+            expected_games = 1
+        GamePlayersFormset = formset_factory(GamePlayersForm,
+                                             extra=expected_games,
+                                             formset=BaseGamePlayersForm)
+        formset = GamePlayersFormset(the_round=r)
 
-def roll_call(request, tournament_id, round_num):
+    return render_to_response('rounds/game_score.html',
+                              {'tournament': t,
+                               'round': r,
+                               'formset' : formset},
+                              context_instance = RequestContext(request))
+
+def game_scores(request, tournament_id, round_num):
+    """Provide a form to enter scores for all the games in a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
-    rps = r.roundplayer_set.order_by('score')
-    context = {'tournament': t, 'player_list': rps}
-    # TODO Render actual round roll call
-    return HttpResponse("This is the tournament %s round %s roll call" % (tournament_id, round_num))
+    GameScoreFormset = formset_factory(GameScoreForm,
+                                       extra=0)
+    if request.method == 'POST':
+        formset = GameScoreFormset(request.POST)
+        if formset.is_valid():
+            for f in formset:
+                # Find the game
+                g = Game.objects.get(name=f.cleaned_data['game_name'],
+                                     the_round=r)
+                # Set the score for each player
+                for power, field in f.cleaned_data.iteritems():
+                    # Ignore non-GreatPower fields (game_name)
+                    try:
+                        p = GreatPower.objects.get(name=power)
+                    except GreatPower.DoesNotExist:
+                        continue
+                    # Find the matching GamePlayer
+                    # TODO This will fail if there was a replacement
+                    i = GamePlayer.objects.get(game=g, power=p)
+                    # Set the score
+                    i.score = field
+                    i.save()
+            # TODO Redirect to somewhere that actually exists...
+            return HttpResponseRedirect('/thanks/')
+    else:
+        # Initial data
+        data = []
+        the_list = r.game_set.order_by('name')
+        for game in the_list:
+            data.append({'game_name': game.name})
+        formset = GameScoreFormset(initial=data)
+
+    return render_to_response('rounds/game_score.html',
+                              {'tournament': t,
+                               'round': r,
+                               'formset' : formset},
+                              context_instance = RequestContext(request))
 
 def game_index(request, tournament_id, round_num):
+    """Display a list of games in the round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
 	r = t.round_set.get(number=round_num)
@@ -434,7 +614,62 @@ def game_sc_chart(request, tournament_id, game_name):
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
 
+def sc_counts(request, tournament_id, game_name):
+    """Provide a form to enter SC counts for a game"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+        raise Http404
+    SCCountFormset = formset_factory(SCCountForm,
+                                     extra=2,
+                                     formset=BaseSCCountFormset)
+    if request.method == 'POST':
+        formset = SCCountFormset(request.POST)
+        if formset.is_valid():
+            for form in formset:
+                year = form.cleaned_data['year']
+                for name, value in form.cleaned_data.iteritems():
+                    try:
+                        power = GreatPower.objects.get(name=name)
+                    except:
+                        continue
+                    # Can't use get_or_create() here,
+                    # because count has no default and may have changed
+                    try:
+                        i = CentreCount.objects.get(power=power,
+                                                    game=g,
+                                                    year=year)
+                        # Ensure the count has the value we want
+                        i.count = value
+                    except CentreCount.DoesNotExist:
+                        i = CentreCount(power=power,
+                                        game=g,
+                                        year=year,
+                                        count=value)
+                    i.save()
+            # Redirect to the read-only version
+            return HttpResponseRedirect(reverse('game_sc_chart',
+                                                args(tournament_id, game_name)))
+    else:
+        # Put in all the existing CentreCounts for this game
+        data = []
+        for year in g.years_played():
+            scs = {'year': year}
+            counts = g.centrecount_set.filter(year=year)
+            for c in counts:
+                scs[c.power.name] = c.count
+            data.append(scs)
+        formset = SCCountFormset(initial=data)
+
+    return render_to_response('games/sc_counts_form.html',
+                              {'formset': formset,
+                               'tournament': t,
+                               'game': g},
+                              context_instance = RequestContext(request))
+
 def game_news(request, tournament_id, game_name):
+    """Display news for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
@@ -452,4 +687,43 @@ def game_background(request, tournament_id, game_name):
         raise Http404
     context = {'tournament': t, 'game': g, 'background': g.background()}
     return render(request, 'games/background.html', context)
+
+def draw_vote(request, tournament_id, game_name):
+    """Provide a form to enter a draw vote for a game"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+        raise Http404
+    form = DrawForm(request.POST or None, dias=g.is_dias())
+    if form.is_valid():
+        year = form.cleaned_data['year']
+        try:
+            countries = form.cleaned_data['countries']
+        except IndexError:
+            # Must be DIAS
+            scs = g.centrecount_set.filter(year=year, count__gt=0)
+            countries = [sc.power for sc in scs]
+
+        # Create a dict from countries, to pass as kwargs
+        kwargs = {}
+        for i in range(0,len(countries)):
+            kwargs['power_%d'%(i+1)] = countries[i]
+
+        # Create the DrawProposal
+        dp = DrawProposal(game=g,
+                          year = year,
+                          season=form.cleaned_data['season'],
+                          passed=form.cleaned_data['passed'],
+                          proposer=form.cleaned_data['proposer'],
+                          **kwargs)
+        dp.save()
+        # TODO Redirect to somewhere that actually exists...
+        return HttpResponseRedirect('/thanks/')
+
+    return render_to_response('games/vote.html',
+                              {'tournament': t,
+                               'game': g,
+                               'form' : form},
+                              context_instance = RequestContext(request))
 
