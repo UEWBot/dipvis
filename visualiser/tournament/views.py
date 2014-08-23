@@ -282,7 +282,10 @@ class TourneyDetailView(generic.DetailView):
     model = Tournament
     template_name = 'tournaments/detail.html'
 
+# Tournament views
+
 def tournament_scores(request, tournament_id):
+    """Display scores of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     tps = t.tournamentplayer_set.order_by('-score')
     rds = t.round_set.order_by('number')
@@ -302,16 +305,19 @@ def tournament_scores(request, tournament_id):
     return render(request, 'tournaments/scores.html', context)
 
 def tournament_background(request, tournament_id):
+    """Display background info for a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     context = {'tournament': t, 'background': t.background()}
     return render(request, 'tournaments/background.html', context)
 
 def tournament_news(request, tournament_id):
+    """Display the latest news of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     context = {'tournament': t, 'news': t.news()}
     return render(request, 'tournaments/news.html', context)
 
 def tournament_round(request, tournament_id):
+    """Display details of the currently in-progress round of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     r = t.current_round()
     if r:
@@ -367,6 +373,8 @@ def game_index(request, tournament_id, round_num):
     context = {'round': r, 'game_list': the_list}
     return render(request, 'games/index.html', context)
 
+# Game views
+
 def game_detail(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
@@ -378,6 +386,7 @@ def game_detail(request, tournament_id, game_name):
     return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
 
 def game_sc_chart(request, tournament_id, game_name):
+    """Display the SupplyCentre chart for a game"""
     #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
@@ -425,6 +434,7 @@ def game_news(request, tournament_id, game_name):
     return render(request, 'games/news.html', context)
 
 def game_background(request, tournament_id, game_name):
+    """Display background info for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
