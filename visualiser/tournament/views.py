@@ -394,16 +394,10 @@ def roll_call(request, tournament_id):
                                          formset=BasePlayerRoundFormset)
     if request.method == 'POST':
         formset = PlayerRoundFormset(request.POST, tournament=t)
-        print formset.is_valid()
         if formset.is_valid():
-            print formset
-            print formset.cleaned_data
             for form in formset:
-                print form
                 player = form.cleaned_data['player']
                 for r_name,value in f.cleaned_data.iteritems():
-                    print r_name
-                    print value
                     # Ignore non-bool fields and ones that aren't True
                     if value != True:
                         continue
@@ -432,7 +426,6 @@ def roll_call(request, tournament_id):
             data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
 
-    print "Calling render_to_response()"
     return render_to_response('tournaments/round_players.html',
                               {'title': 'Roll Call',
                                'tournament': t,
@@ -491,9 +484,7 @@ def create_games(request, tournament_id, round_num):
     else:
         # Estimate the number of games for the round
         round_players = r.roundplayer_set.count()
-        print round_players
         expected_games = (round_players + 6) / 7
-        print expected_games
         if expected_games < 1:
             expected_games = 1
         GamePlayersFormset = formset_factory(GamePlayersForm,
