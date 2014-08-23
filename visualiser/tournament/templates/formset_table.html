@@ -1,0 +1,29 @@
+{% csrf_token %}
+{{ formset.management_form }}
+{{ formset.non_form_errors.as_ul }}
+<table class="form">
+{% for form in formset.forms %}
+    {% if forloop.first %}
+        <thead><tr>
+        {% for field in form.visible_fields %}
+            <th>{{ field.label }}</th>
+        {% endfor %}
+        </tr></thead>
+    {% endif %}
+    <tr class="{% cycle row1,row2 %}">
+    {{ form.non_field_errors }}
+    {% for field in form.visible_fields %}
+        <td>
+        {% if forloop.first %}
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+        {% endif %}
+        {{ field.errors.as_ul }}
+        {{ field }}
+        </td>
+    {% endfor %}
+    </tr>
+{% endfor %}
+</table>
+<input type="submit" value="Submit" />

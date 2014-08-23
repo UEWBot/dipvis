@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Game {{ game }} Supply Centres{%endblock %}
+
+{% block content %}
+<h1>Game {{ game }} Supply Centres</h1>
+<form method="post" action="/sc_counts/">
+    {% include "formset_table.html" %}
+</form>
+{% endblock %}

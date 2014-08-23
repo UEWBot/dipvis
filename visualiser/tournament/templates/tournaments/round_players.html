@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament }} {{ title }}{%endblock %}
+
+{% block content %}
+<h1>{{ tournament }} {{ title }}</h1>
+<form method="post" action="/round_players/">
+    {% include "formset_table.html" %}
+</form>
+{% endblock %}
