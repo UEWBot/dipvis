@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.shortcuts import render, get_object_or_404, render_to_response
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
@@ -200,7 +200,7 @@ class PlayerRoundForm(forms.Form):
         for i in range(1, 1 + self.rounds):
             name = 'round_%d' % i
             readonly = (i < self.this_round)
-            self.fields[name] = forms.BooleanField(initial=False)
+            self.fields[name] = forms.BooleanField(required=False, initial=False)
             if readonly:
                 # "readonly" on checkboxes is purely visual, but good enough for now
                 self.fields[name].widget.attrs['readonly'] = 'readonly'
@@ -396,8 +396,12 @@ def roll_call(request, tournament_id):
         formset = PlayerRoundFormset(request.POST, tournament=t)
         if formset.is_valid():
             for form in formset:
-                player = form.cleaned_data['player']
-                for r_name,value in f.cleaned_data.iteritems():
+                try:
+                    tp = form.cleaned_data['player']
+                except KeyError:
+                    # This must be one of the extra forms, still empty
+                    continue
+                for r_name,value in form.cleaned_data.iteritems():
                     # Ignore non-bool fields and ones that aren't True
                     if value != True:
                         continue
@@ -406,22 +410,22 @@ def roll_call(request, tournament_id):
                     # Find that Round
                     r = round_set.get(number=i)
                     # Ensure that we have a corresponding RoundPlayer
-                    i, created = RoundPlayer.objects.get_or_create(player=player,
+                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
                                                                    the_round=r)
                     i.save()
             # Next job is almost certainly to create the actual games
             return HttpResponseRedirect(reverse('create_games',
-                                                args=(tournament_id, round_num)))
+                                                args=(tournament_id, t.current_round().number)))
     else:
         data = []
         # Go through each player in the Tournament
-        for player in t.tournamentplayer_set.all():
-            current = {'player':player}
+        for tp in t.tournamentplayer_set.all():
+            current = {'player':tp}
             # And each round of the Tournament
             for r in t.round_set.order_by('number'):
                 i = r.number
                 # Is this player listed as playing this round ?
-                played = r.roundplayer_set.filter(player=player).exists()
+                played = r.roundplayer_set.filter(player=tp.player).exists()
                 current['round_%d'%i] = played
             data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
