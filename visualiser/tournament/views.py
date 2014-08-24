@@ -25,7 +25,7 @@ from django.template import RequestContext
 
 from tournament.models import *
 
-import datetime
+from datetime import datetime
 
 class DrawForm(forms.Form):
     """Form for a draw vote"""
@@ -60,12 +60,17 @@ class GameScoreForm(forms.Form):
         attrs['readonly'] = 'readonly'
 
         # Create the right country fields
-        for x,c in COUNTRIES:
+        for power in GreatPower.objects.all():
+            c = power.name
             # Don't require a score for every player
             self.fields[c] = forms.FloatField(required=False)
             attrs = self.fields[c].widget.attrs
             attrs['size'] = 10
             attrs['maxlength'] = 10
+
+class RoundPlayerChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.player.__unicode__()
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
@@ -85,7 +90,7 @@ class GamePlayersForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            self.fields[c] = forms.ModelChoiceField(queryset)
+            self.fields[c] = RoundPlayerChoiceField(queryset)
             self.fields[c].widget.attrs['size'] = 20
 
     def clean(self):
@@ -468,9 +473,13 @@ def create_games(request, tournament_id, round_num):
         if formset.is_valid():
             for f in formset:
                 # Update/create the game
-                g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
-                                                        started_at=datetime.now(),
-                                                        the_round=r)
+                try:
+                    g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
+                                                            started_at=datetime.now(),
+                                                            the_round=r)
+                except KeyError:
+                    # This must be an extra, unused formset
+                    continue
                 g.save()
                 # Assign the players to the game
                 for power, field in f.cleaned_data.iteritems():
@@ -478,7 +487,7 @@ def create_games(request, tournament_id, round_num):
                         p = GreatPower.objects.get(name=power)
                     except GreatPower.DoesNotExist:
                         continue
-                    i, created = GamePlayer.objects.get_or_create(player=field,
+                    i, created = GamePlayer.objects.get_or_create(player=field.player,
                                                                   game = g,
                                                                   power=p)
                     i.save()
@@ -496,7 +505,7 @@ def create_games(request, tournament_id, round_num):
                                              formset=BaseGamePlayersForm)
         formset = GamePlayersFormset(the_round=r)
 
-    return render_to_response('rounds/game_score.html',
+    return render_to_response('rounds/create_games.html',
                               {'tournament': t,
                                'round': r,
                                'formset' : formset},
