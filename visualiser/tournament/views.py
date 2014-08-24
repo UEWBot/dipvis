@@ -312,10 +312,7 @@ def tournament_scores(request, tournament_id):
         rs = []
         for r in rds:
             rp = p.player.roundplayer_set.filter(the_round=r)
-            if rp:
-                rs.append(rp.score)
-            else:
-                rs.append('')
+            rs.append(', '.join([str(i.score) for i in rp]))
         scores.append(['%s' % p.player] + rs + ['%f' % p.score])
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     return render(request, 'tournaments/scores.html', context)
