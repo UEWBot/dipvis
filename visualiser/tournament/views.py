@@ -633,7 +633,11 @@ def sc_counts(request, tournament_id, game_name):
         formset = SCCountFormset(request.POST)
         if formset.is_valid():
             for form in formset:
-                year = form.cleaned_data['year']
+                try:
+                    year = form.cleaned_data['year']
+                except KeyError:
+                    # Must be one of the extra forms, still blank
+                    continue
                 for name, value in form.cleaned_data.iteritems():
                     try:
                         power = GreatPower.objects.get(name=name)
@@ -655,7 +659,7 @@ def sc_counts(request, tournament_id, game_name):
                     i.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_chart',
-                                                args(tournament_id, game_name)))
+                                                args=(tournament_id, game_name)))
     else:
         # Put in all the existing CentreCounts for this game
         data = []
