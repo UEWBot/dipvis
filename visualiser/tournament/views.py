@@ -704,8 +704,8 @@ def draw_vote(request, tournament_id, game_name):
     if form.is_valid():
         year = form.cleaned_data['year']
         try:
-            countries = form.cleaned_data['countries']
-        except IndexError:
+            countries = form.cleaned_data['powers']
+        except KeyError:
             # Must be DIAS
             scs = g.centrecount_set.filter(year=year, count__gt=0)
             countries = [sc.power for sc in scs]
