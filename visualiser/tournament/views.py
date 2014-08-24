@@ -351,17 +351,20 @@ def round_scores(request, tournament_id):
         formset = PlayerRoundScoreFormset(request.POST, tournament=t)
         if formset.is_valid():
             for form in formset:
-                player = form.cleaned_data['player']
-                for r_name,value in f.cleaned_data.iteritems():
+                tp = form.cleaned_data['player']
+                for r_name,value in form.cleaned_data.iteritems():
                     # We're only interested in the round score fields
                     if not r_name.startswith('round_'):
+                        continue
+                    # Skip if no score was entered
+                    if not value:
                         continue
                     # Extract the round number from the field name
                     i = int(r_name[6:])
                     # Find that Round
                     r = round_set.get(number=i)
                     # Update the score
-                    i, created = RoundPlayer.objects.get_or_create(player=player,
+                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
                                                                    the_round=r)
                     i.score = value
                     i.save()
@@ -377,14 +380,15 @@ def round_scores(request, tournament_id):
                 current['round_%d'%rp.the_round.number] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
-                                                  game__the_round=r)
-                current['game_scores_%d'%i] = ', '.join(str(g.score) for g in games)
+                                                  game__the_round=rp.the_round)
+                current['game_scores_%d'%rp.the_round.number] = ', '.join([str(g.score) for g in games])
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
     return render_to_response('tournaments/round_players.html',
                               {'title': 'Scores',
                                'tournament': t,
+                               'post_url': reverse('enter_scores', args=(tournament_id,)),
                                'formset' : formset},
                               context_instance = RequestContext(request))
 
@@ -436,6 +440,7 @@ def roll_call(request, tournament_id):
     return render_to_response('tournaments/round_players.html',
                               {'title': 'Roll Call',
                                'tournament': t,
+                               'post_url': reverse('roll_call', args=(tournament_id,)),
                                'formset' : formset},
                               context_instance = RequestContext(request))
 
