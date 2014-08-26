@@ -471,6 +471,13 @@ class Round(models.Model):
                 return False
         return True
 
+    def clean(self):
+        # Must provide either both end times, or neither
+        if self.earliest_end_time and not self.latest_end_time:
+            raise ValidationError('Earliest end time specified without latest end time')
+        if self.latest_end_time and not self.earliest_end_time:
+            raise ValidationError('Latest end time specified without earliest end time')
+
     def get_absolute_url(self):
         return reverse('round_detail',
                        args=[str(self.tournament.id), str(self.number)])
