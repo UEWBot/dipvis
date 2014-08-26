@@ -334,7 +334,7 @@ def tournament_round(request, tournament_id):
     t = get_object_or_404(Tournament, pk=tournament_id)
     r = t.current_round()
     if r:
-        context = {'round': r}
+        context = {'tournament': t, 'round': r}
         return render(request, 'rounds/detail.html', context)
     # TODO There must be a better way than this
     return HttpResponse("No round currently being played")
@@ -460,7 +460,7 @@ def round_detail(request, tournament_id, round_num):
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
-    context = {'round': r}
+    context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
 
 def create_games(request, tournament_id, round_num):
@@ -579,8 +579,7 @@ def game_detail(request, tournament_id, game_name):
     except Game.DoesNotExist:
         raise Http404
     context = {'tournament': t, 'game': g}
-    # TODO Render actual game detail
-    return HttpResponse("This is the tournament %s game %s detail" % (tournament_id, game_name))
+    return render(request, 'games/detail.html', context)
 
 def game_sc_chart(request, tournament_id, game_name):
     """Display the SupplyCentre chart for a game"""

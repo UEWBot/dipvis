@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 
+{% block title %}DipTV - {{ tournament }} round {{ round }} Views{%endblock %}
+
 {% block content %}
-<p>This is round {{ round }} detail</p>
+<h1><a href={{ tournament.get_absolute_url }}>{{ tournament }}</a> round {{ round }} Views</h1>
+<p>Views:</p>
+<ul>
+  <li><a href={% url 'game_index' tournament.id round.id %}>Game Index</a></li>
+</ul>
+<p>Data Entry:</p>
+<ul>
+  <li><a href={% url 'create_games' tournament.id round.id %}>Create Games</a></li>
+  <li><a href={% url 'game_scores' tournament.id round.id %}>Score Games</a></li>
+</ul>
 {% endblock %}
