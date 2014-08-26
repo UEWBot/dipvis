@@ -852,7 +852,7 @@ class PlayerRanking(models.Model):
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
-    title = models.CharField(max_length=30, blank=True, null=True)
+    title = models.CharField(max_length=30, blank=True)
 
     def __unicode__(self):
         pos = position_str(self.position)
@@ -874,7 +874,7 @@ class PlayerGameResult(models.Model):
     position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
-    result = models.CharField(max_length=2, choices=GAME_RESULT, blank=True, null=True)
+    result = models.CharField(max_length=2, choices=GAME_RESULT, blank=True)
     year_eliminated = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
 
     class Meta:
