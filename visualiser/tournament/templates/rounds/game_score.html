@@ -3,7 +3,7 @@
 {% block title %}DipTV - {{ tournament }} round {{ round }} Game Scores{%endblock %}
 
 {% block content %}
-<h1>{{ tournament }} round {{ round }} Games</h1>
+<h1><a href={{ tournament.get_absolute_url }}>{{ tournament }}</a> round <a href={{ round.get_absolute_url }}>{{ round }}</a> Games</h1>
 <form method="post" action={% url 'game_scores' tournament.id round.id %}>
     {% include "formset_table.html" %}
 </form>

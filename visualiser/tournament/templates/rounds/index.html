@@ -3,7 +3,7 @@
 {% block title %}DipTV - {{ tournament }}{%endblock %}
 
 {% block content %}
-<h1>{{ tournament }}</h1>
+<h1><a href={{ tournament.get_absolute_url }}>{{ tournament }}</a></h1>
 {% if round_list %}
     <ul>
     {% for r in round_list %}
