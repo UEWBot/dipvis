@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}DipTV - {{ tournament }} round {{ round.number }} Game Scores{%endblock %}
+{% block title %}DipTV - {{ tournament }} Round {{ round.number }} Game Scores{%endblock %}
 
 {% block content %}
 <h1><a href={{ tournament.get_absolute_url }}>{{ tournament }}</a> <a href={{ round.get_absolute_url }}>Round {{ round.number }}</a> Games</h1>
