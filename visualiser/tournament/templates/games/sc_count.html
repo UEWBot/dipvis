@@ -4,8 +4,8 @@
 
 {% block content %}
 <h1>Game {{ game }} SC Chart</h1>
-<table border=1>
-   <tr>
+<table class="form">
+   <thead><tr>
        <th rowspan=2>Year</th>
        {% for power in powers %}
            <th bgcolor={{ power.colour }}>{{ power }}</th>
@@ -16,7 +16,8 @@
        {% for gameplayer in players %}
            <th>{{ gameplayer|safe }}</th>
        {% endfor %}
-   </tr>
+   </tr></thead>
+   <tbody>
    {% for row in rows %}
        <tr>
            {% for cell in row %}
@@ -32,6 +33,6 @@
                Game ongoing
            {% endif %}
        </td>
-   </tr>
+   </tr></tbody>
 </table>
 {% endblock %}

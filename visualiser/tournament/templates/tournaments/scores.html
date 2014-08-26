@@ -5,14 +5,15 @@
 {% block content %}
 <h1>{{ tournament.name }} Current Standings</h1>
 
-<table border="1">
-  <tr>
+<table class="form">
+  <thead><tr>
     <th>Player</th>
     {% for r in rounds %}
       <th><a href="{% url 'round_detail' tournament.id r %}">Round {{ r }}</a></th>
     {% endfor %}
     <th>Final Score</th>
-  </tr>
+  </tr></thead>
+  <tbody>
   {% for player in scores %}
     <tr>
       {% for data in player %}
@@ -20,5 +21,6 @@
       {% endfor %}
     </tr>
   {% endfor %}
+  </tbody>
 </table>
 {% endblock %}
