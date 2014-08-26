@@ -13,4 +13,11 @@
   <li><a href="{% url 'create_games' tournament.id round.id %}">Create Games</a></li>
   <li><a href="{% url 'game_scores' tournament.id round.id %}">Score Games</a></li>
 </ul>
+{% if round.final_year %}
+  <p>Games in this round end with {{ round.final_year }}.</p>
+{% elif round.earliest_end_time %}
+  <p>Games in this round will end between {{ round.earliest_end_time }} and {{ round.latest_end_time }}.</p>
+{% else %}
+  <p>Games in this round have no set endpoint.</p>
+{% endif %}
 {% endblock %}
