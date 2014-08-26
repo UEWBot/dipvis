@@ -798,7 +798,6 @@ class GamePlayer(models.Model):
     player = models.ForeignKey(Player)
     game = models.ForeignKey(Game)
     power = models.ForeignKey(GreatPower, related_name='+')
-    # TODO Ensure no overlapping players, or gaps
     first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR, validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
@@ -811,6 +810,49 @@ class GamePlayer(models.Model):
         tp = self.player.tournamentplayer_set.filter(tournament=t)
         if not tp:
             raise ValidationError('Player is not yet in the tournament')
+        # Need either both or neither of last_year and last_season
+        if self.last_season == '' and self.last_year:
+            raise ValidationError('Final season played must also be specified')
+        if self.last_season != '' and not self.last_year:
+            raise ValidationError('Final year must be specified with final season')
+        # Check for overlap with another player
+        others = GamePlayer.objects.filter(game=self.game, power=self.power).exclude(player=self.player)
+        # Ensure one player at a time
+        for other in others:
+            if self.first_year < other.first_year:
+                we_were_first = True
+            elif self.first_year == other.first_year:
+                if self.first_season == other.first_season:
+                    raise ValidationError()
+                if self.first_season == SPRING:
+                    we_were_first = True
+                else:
+                    we_were_first = False
+            else:
+                we_were_first = False
+            if we_were_first:
+                # Our term must finish before theirs started
+                err_str = '%s is listed as playing %s in game %s from %s %d' % (other.player,
+                                                                                power,
+                                                                                other.first_season,
+                                                                                other.first_year)
+                if not self.last_year or self.last_year > other.first_year:
+                    raise ValidationError(err_str)
+                if self.last_year == other.first_year:
+                    if self.last_season != SPRING or other.first_season != FALL:
+                        raise ValidationError(err_str)
+            else:
+                # Their term must finish before ours started
+                err_str = '%s is listed as still playing %s in game %s in %s %d' % (other.player,
+                                                                                    power,
+                                                                                    self.first_season,
+                                                                                    self.first_year)
+                if not other.last_year or other.last_year > self.first_year:
+                    raise ValidationError(err_str)
+                if other.last_year == self.first_year:
+                    if other.last_season != SPRING or self.first_season != FALL:
+                        raise ValidationError(err_str)
+        # TODO Ensure no gaps - may have to be done elsewhere
 
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
