@@ -29,16 +29,14 @@ urlpatterns = patterns('',
         url(r'^news/$', views.tournament_news, name='tournament_news'),
         url(r'^background/$', views.tournament_background, name='tournament_background'),
         url(r'^rounds/$', views.round_index, name='round_index'),
-        # TODO can probably move this one into the block below, too
-        url(r'^rounds/(?P<round_num>\d+)/$', views.round_detail, name='round_detail'),
         url(r'^rounds/(?P<round_num>\d+)/', include([
+            url(r'^$', views.round_detail, name='round_detail'),
             url(r'^create_games/$', views.create_games, name='create_games'),
             url(r'^game_scores/$', views.game_scores, name='game_scores'),
             url(r'^games/$', views.game_index, name='game_index'),
         ])),
-        # TODO can probably move this one into the block below, too
-        url(r'^games/(?P<game_name>\w+)/$', views.game_detail, name='game_detail'),
         url(r'^games/(?P<game_name>\w+)/', include([
+            url(r'^$', views.game_detail, name='game_detail'),
             url(r'^sc_chart/$', views.game_sc_chart, name='game_sc_chart'),
             url(r'^enter_scs/$', views.sc_counts, name='enter_scs'),
             url(r'^news/$', views.game_news, name='game_news'),
