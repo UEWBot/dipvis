@@ -476,7 +476,10 @@ class Game(models.Model):
     """
     A single game of Diplomacy
     """
-    name = models.CharField(max_length=20)
+    # TODO Because we use game name in URLs, they must not contain spaces
+    # TODO with our current URL scheme, we actually need game names to be unique
+    # within the tournament - this is more restrictive than that
+    name = models.CharField(max_length=20, unique=True)
     started_at = models.DateTimeField()
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)

@@ -48,7 +48,6 @@ class DrawForm(forms.Form):
 
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
-    # TODO With game names in URLs, they can't contain spaces
     game_name = forms.CharField(label='Game Name', max_length=10)
 
     def __init__(self, *args, **kwargs):
