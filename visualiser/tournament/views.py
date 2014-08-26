@@ -185,10 +185,6 @@ class BaseSCCountFormset(BaseFormSet):
                 raise forms.ValidationError('Neutrals increases from %d to %d in %d' % (neutrals, years[year], year))
             neutrals = years[year]
 
-class TournamentPlayerChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.player.__unicode__()
-
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
     # We want all Players to be available to be chosen,
@@ -241,7 +237,7 @@ class BasePlayerRoundFormset(BaseFormSet):
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
-    player = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
+    player = forms.CharField(max_length=20)
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
@@ -249,7 +245,6 @@ class PlayerRoundScoreForm(forms.Form):
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
         super(PlayerRoundScoreForm, self).__init__(*args, **kwargs)
-        self.fields['player'].queryset = self.tournament.tournamentplayer_set.all()
 
         self.fields['player'].widget.attrs['readonly'] = 'readonly'
 
@@ -381,7 +376,7 @@ def round_scores(request, tournament_id):
         data = []
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
-            current = {'player': tp}
+            current = {'player': tp.player}
             for rp in tp.player.roundplayer_set.all():
                 current['round_%d'%rp.the_round.number] = rp.score
                 # Scores for any games in the round
