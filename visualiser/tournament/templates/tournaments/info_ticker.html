@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}DipTV - {{ tournament }} {{ subject }}{%endblock %}
+
+{% block content %}
+<marquee behavior="scroll" direction="left">
+    {% for str in content %}
+        {{ str }}
+    {% endfor %}
+</marquee>
+{% endblock %}

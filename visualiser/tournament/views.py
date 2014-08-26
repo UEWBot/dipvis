@@ -321,13 +321,19 @@ def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     context = {'tournament': t, 'subject': 'Background', 'content': t.background()}
-    return render(request, 'tournaments/info.html', context)
+    if as_ticker:
+        return render(request, 'tournaments/info_ticker.html', context)
+    else:
+        return render(request, 'tournaments/info.html', context)
 
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     context = {'tournament': t, 'subject': 'News', 'content': t.news()}
-    return render(request, 'tournaments/info.html', context)
+    if as_ticker:
+        return render(request, 'tournaments/info_ticker.html', context)
+    else:
+        return render(request, 'tournaments/info.html', context)
 
 def tournament_round(request, tournament_id):
     """Display details of the currently in-progress round of a tournament"""
@@ -708,7 +714,10 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
     except Game.DoesNotExist:
         raise Http404
     context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
-    return render(request, 'games/info.html', context)
+    if as_ticker:
+        return render(request, 'games/info_ticker.html', context)
+    else:
+        return render(request, 'games/info.html', context)
 
 def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
@@ -718,7 +727,10 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
     except Game.DoesNotExist:
         raise Http404
     context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
-    return render(request, 'games/info.html', context)
+    if as_ticker:
+        return render(request, 'games/info_ticker.html', context)
+    else:
+        return render(request, 'games/info.html', context)
 
 def draw_vote(request, tournament_id, game_name):
     """Provide a form to enter a draw vote for a game"""
