@@ -434,8 +434,11 @@ class TournamentPlayer(models.Model):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
         super(TournamentPlayer, self).save(*args, **kwargs)
-        add_player_bg(self.player)
+        # Update background info when a player is added to the Tournament (only)
+        if is_new:
+            add_player_bg(self.player)
 
 class Round(models.Model):
     """
