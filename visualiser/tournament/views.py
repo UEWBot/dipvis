@@ -317,17 +317,17 @@ def tournament_scores(request, tournament_id):
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     return render(request, 'tournaments/scores.html', context)
 
-def tournament_background(request, tournament_id):
+def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    context = {'tournament': t, 'background': t.background()}
-    return render(request, 'tournaments/background.html', context)
+    context = {'tournament': t, 'subject': 'Background', 'content': t.background()}
+    return render(request, 'tournaments/info.html', context)
 
-def tournament_news(request, tournament_id):
+def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    context = {'tournament': t, 'news': t.news()}
-    return render(request, 'tournaments/news.html', context)
+    context = {'tournament': t, 'subject': 'News', 'content': t.news()}
+    return render(request, 'tournaments/info.html', context)
 
 def tournament_round(request, tournament_id):
     """Display details of the currently in-progress round of a tournament"""
@@ -700,25 +700,25 @@ def sc_counts(request, tournament_id, game_name):
                                'game': g},
                               context_instance = RequestContext(request))
 
-def game_news(request, tournament_id, game_name):
+def game_news(request, tournament_id, game_name, as_ticker=False):
     """Display news for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    context = {'tournament': t, 'game': g, 'news': g.news()}
-    return render(request, 'games/news.html', context)
+    context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
+    return render(request, 'games/info.html', context)
 
-def game_background(request, tournament_id, game_name):
+def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    context = {'tournament': t, 'game': g, 'background': g.background()}
-    return render(request, 'games/background.html', context)
+    context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
+    return render(request, 'games/info.html', context)
 
 def draw_vote(request, tournament_id, game_name):
     """Provide a form to enter a draw vote for a game"""

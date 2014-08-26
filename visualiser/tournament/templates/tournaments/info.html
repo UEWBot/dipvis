@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}DipTV - {{ tournament }} {{ subject }}{%endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ subject }}</h1>
+<ul>
+    {% for str in content %}
+        <li>{{ str }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
