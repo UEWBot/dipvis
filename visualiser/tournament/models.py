@@ -271,7 +271,7 @@ class Player(models.Model):
         if plays == 0:
             return results
         if (mask & MASK_TOURNEY_COUNT) != 0:
-            results.append(u'%s has competed in %d tournament(s)' % (self, plays))
+            results.append(u'%s has competed in %d tournament(s).' % (self, plays))
         if (mask & MASK_TITLES) != 0:
             # Add summaries of actual titles
             titles = {}
@@ -281,23 +281,23 @@ class Player(models.Model):
                         titles[ranking.title] = []
                     titles[ranking.title].append(ranking.year)
             for key, lst in titles.iteritems():
-                results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)))
+                results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
-            results.append(u'%s first competed in a tournament (%s) in %d' % (self, first.tournament, first.year))
+            results.append(u'%s first competed in a tournament (%s) in %d.' % (self, first.tournament, first.year))
         if (mask & MASK_LAST_TOURNEY) != 0:
             last = ranking_set.last()
-            results.append(u'%s most recently competed in a tournament (%s) in %d' % (self, last.tournament, last.year))
+            results.append(u'%s most recently competed in a tournament (%s) in %d.' % (self, last.tournament, last.year))
         if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
             wins = ranking_set.filter(position=1).count()
             if wins > 1:
-                results.append(u'%s has won %d tournaments' % (self, wins))
+                results.append(u'%s has won %d tournaments.' % (self, wins))
             elif wins > 0:
-                results.append(u'%s has won %d tournament' % (self, wins))
+                results.append(u'%s has won %d tournament.' % (self, wins))
             else:
                 best = ranking_set.aggregate(Min('position'))['position__min']
                 pos = position_str(best)
-                results.append(u'The best tournament result for %s is %s' % (self, pos))
+                results.append(u'The best tournament result for %s is %s.' % (self, pos))
         return results
 
     def _results(self, power=None, mask=MASK_ALL_BG):
@@ -312,36 +312,36 @@ class Player(models.Model):
         games = results_set.count()
         if games == 0:
             if (mask & MASK_GAMES_PLAYED) != 0:
-                results.append(u'%s has never played%s in a tournament before' % (self, c_str))
+                results.append(u'%s has never played%s in a tournament before.' % (self, c_str))
             return results
         if (mask & MASK_GAMES_PLAYED) != 0:
-            results.append(u'%s has played %d tournament games%s' % (self, games, c_str))
+            results.append(u'%s has played %d tournament games%s.' % (self, games, c_str))
         if (mask & MASK_BEST_SC_COUNT) != 0:
             best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
-            results.append(u'%s has finished with as many as %d centres%s in tournament games' % (self, best, c_str))
+            results.append(u'%s has finished with as many as %d centres%s in tournament games.' % (self, best, c_str))
             solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
         if (mask & MASK_SOLO_COUNT) != 0:
             solos = solo_set.count()
             if solos > 0:
-                results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%)' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
+                results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%).' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
             else:
-                results.append(u'%s has yet to solo%s at a tournament' % (self, c_str))
+                results.append(u'%s has yet to solo%s at a tournament.' % (self, c_str))
         if (mask & MASK_ELIM_COUNT) != 0:
             query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
             eliminations_set = results_set.filter(query)
             eliminations = eliminations_set.count()
             if eliminations > 0:
-                results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%)' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
+                results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%).' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
             else:
-                results.append(u'%s has yet to be eliminated%s in a tournament' % (self, c_str))
+                results.append(u'%s has yet to be eliminated%s in a tournament.' % (self, c_str))
         if (mask & MASK_BOARD_TOP_COUNT) != 0:
             query = Q(result='W') | Q(position=1)
             victories_set = results_set.filter(query)
             board_tops = victories_set.count()
             if board_tops > 0:
-                results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%)' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
+                results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%).' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
             else:
-                results.append(u'%s has yet to top the board%s at a tournament' % (self, c_str))
+                results.append(u'%s has yet to top the board%s at a tournament.' % (self, c_str))
         return results
 
     def background(self, power=None, mask=MASK_ALL_BG):
@@ -551,7 +551,7 @@ class Game(models.Model):
             first = current_scs.order_by('-count').filter(count=max_scs)
             first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
                                                 scs.power.abbreviation) for scs in list(first)])
-            results.append("Highest SC count%s is %d, for %s" % (gn_str, max_scs, first_str))
+            results.append("Highest SC count%s is %d, for %s." % (gn_str, max_scs, first_str))
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
         else:
@@ -563,19 +563,19 @@ class Game(models.Model):
             # Who gained 2 or more centres in the last year ?
             if (mask & MASK_GAINERS) != 0:
                 if scs.count - prev.count > 1:
-                    results.append("%s (%s) grew from %d to %d centres%s" % (player_dict[power][0],
-                                                                             power.abbreviation,
-                                                                             prev.count,
-                                                                             scs.count,
-                                                                             gn_str))
+                    results.append("%s (%s) grew from %d to %d centres%s." % (player_dict[power][0],
+                                                                              power.abbreviation,
+                                                                              prev.count,
+                                                                              scs.count,
+                                                                              gn_str))
             # Who lost 2 or more centres in the last year ?
             if (mask & MASK_LOSERS) != 0:
                 if prev.count - scs.count > 1:
-                    results.append("%s (%s) shrank from %d to %d centres%s" % (player_dict[power][0],
-                                                                               power.abbreviation,
-                                                                               prev.count,
-                                                                               scs.count,
-                                                                               gn_str))
+                    results.append("%s (%s) shrank from %d to %d centres%s." % (player_dict[power][0],
+                                                                                power.abbreviation,
+                                                                                prev.count,
+                                                                                scs.count,
+                                                                                gn_str))
         if (mask & MASK_DRAW_VOTES) != 0:
             # What draw votes failed in the last year ?
             draws_set = self.drawproposal_set.order_by('-year')
@@ -590,9 +590,9 @@ class Game(models.Model):
                     incl.append('%s (%s)' % (game_player.player, power.abbreviation))
                 incl_str = ', '.join(incl)
                 if sz == 1:
-                    d_str = u'Vote to concede to %s failed%s' % (incl_str, gn_str)
+                    d_str = u'Vote to concede to %s failed%s.' % (incl_str, gn_str)
                 else:
-                    d_str = 'Draw vote for %d-way between %s failed%s' % (sz, incl_str, gn_str)
+                    d_str = 'Draw vote for %d-way between %s failed%s.' % (sz, incl_str, gn_str)
                 results.append(d_str)
         if (mask & MASK_ELIMINATIONS) != 0:
             # Who has been eliminated so far, and when ?
@@ -601,10 +601,10 @@ class Game(models.Model):
                 scs = zeroes[0]
                 power = scs.power
                 zeroes = zeroes.exclude(power=power)
-                results.append("%s (%s) was eliminated in %d%s" % (player_dict[power][0],
-                                                                   power.abbreviation,
-                                                                   scs.year,
-                                                                   gn_str))
+                results.append("%s (%s) was eliminated in %d%s." % (player_dict[power][0],
+                                                                    power.abbreviation,
+                                                                    scs.year,
+                                                                    gn_str))
         # Shuffle the resulting list
         random.shuffle(results)
         return results
