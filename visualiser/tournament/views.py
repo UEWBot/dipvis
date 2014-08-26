@@ -498,15 +498,26 @@ def create_games(request, tournament_id, round_num):
             return HttpResponseRedirect(reverse('game_index',
                                                 args=(tournament_id, round_num)))
     else:
+        # Do any games already exist for the round ?
+        games = r.game_set.all()
+        data = []
+        for g in games:
+            current = {'game_name': g.name}
+            for gp in g.gameplayer_set.all():
+                current[gp.power.name] = gp.player
+            data.append(current)
+        # TODO data looks reasonable here, but the resulting form isn't right
+        print data
         # Estimate the number of games for the round
         round_players = r.roundplayer_set.count()
         expected_games = (round_players + 6) / 7
+        # This can happen if there are no RoundPlayers for this round
         if expected_games < 1:
             expected_games = 1
         GamePlayersFormset = formset_factory(GamePlayersForm,
-                                             extra=expected_games,
+                                             extra=expected_games - games.count(),
                                              formset=BaseGamePlayersForm)
-        formset = GamePlayersFormset(the_round=r)
+        formset = GamePlayersFormset(the_round=r, initial=data)
 
     return render_to_response('rounds/create_games.html',
                               {'tournament': t,
