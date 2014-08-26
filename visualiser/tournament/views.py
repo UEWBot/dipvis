@@ -191,7 +191,9 @@ class TournamentPlayerChoiceField(forms.ModelChoiceField):
 
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
-    player = TournamentPlayerChoiceField(queryset=Tournament.objects.none())
+    # We want all Players to be available to be chosen,
+    # as this provides an easy way to add TournamentPlayers
+    player = forms.ModelChoiceField(queryset=Player.objects.all())
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
@@ -199,7 +201,6 @@ class PlayerRoundForm(forms.Form):
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
         super(PlayerRoundForm, self).__init__(*args, **kwargs)
-        self.fields['player'].queryset = self.tournament.tournamentplayer_set.all()
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.rounds):
@@ -403,10 +404,14 @@ def roll_call(request, tournament_id):
         if formset.is_valid():
             for form in formset:
                 try:
-                    tp = form.cleaned_data['player']
+                    p = form.cleaned_data['player']
                 except KeyError:
                     # This must be one of the extra forms, still empty
                     continue
+                # Ensure that this Player is in the Tournament
+                i, created = TournamentPlayer.objects.get_or_create(player=p,
+                                                                    tournament=t)
+                i.save()
                 for r_name,value in form.cleaned_data.iteritems():
                     # Ignore non-bool fields and ones that aren't True
                     if value != True:
@@ -416,7 +421,7 @@ def roll_call(request, tournament_id):
                     # Find that Round
                     r = round_set.get(number=i)
                     # Ensure that we have a corresponding RoundPlayer
-                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
+                    i, created = RoundPlayer.objects.get_or_create(player=p,
                                                                    the_round=r)
                     i.save()
             # Next job is almost certainly to create the actual games
@@ -426,7 +431,7 @@ def roll_call(request, tournament_id):
         data = []
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
-            current = {'player':tp}
+            current = {'player':tp.player}
             # And each round of the Tournament
             for r in t.round_set.order_by('number'):
                 i = r.number
