@@ -372,6 +372,9 @@ class Tournament(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
 
+    class Meta:
+        ordering = ['-start_date']
+
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of background strings for the tournament
@@ -429,6 +432,9 @@ class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player)
     tournament = models.ForeignKey(Tournament)
     score = models.FloatField(default=0.0)
+
+    class Meta:
+        ordering = ['player']
 
     def __unicode__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
@@ -790,6 +796,9 @@ class RoundPlayer(models.Model):
     player = models.ForeignKey(Player)
     the_round = models.ForeignKey(Round, verbose_name='round')
     score = models.FloatField(default=0.0)
+
+    class Meta:
+        ordering = ['player']
 
     def clean(self):
         # Player should already be in the tournament

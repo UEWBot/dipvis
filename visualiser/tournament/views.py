@@ -241,7 +241,7 @@ class BasePlayerRoundFormset(BaseFormSet):
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
-    player = TournamentPlayerChoiceField(queryset=Tournament.objects.none())
+    player = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
@@ -292,7 +292,7 @@ class TourneyIndexView(generic.ListView):
 
     def get_queryset(self):
         """Sort in date order, latest at the top"""
-        return Tournament.objects.order_by('-start_date')
+        return Tournament.objects.all()
 
 class TourneyDetailView(generic.DetailView):
     model = Tournament
@@ -304,7 +304,7 @@ def tournament_scores(request, tournament_id):
     """Display scores of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     tps = t.tournamentplayer_set.order_by('-score')
-    rds = t.round_set.order_by('number')
+    rds = t.round_set.all()
     rounds = [r.number for r in rds]
     # Construct a list of lists with [player name, round 1 score, ..., round n score, tournament score]
     scores = []
@@ -433,7 +433,7 @@ def roll_call(request, tournament_id):
         for tp in t.tournamentplayer_set.all():
             current = {'player':tp.player}
             # And each round of the Tournament
-            for r in t.round_set.order_by('number'):
+            for r in t.round_set.all():
                 i = r.number
                 # Is this player listed as playing this round ?
                 played = r.roundplayer_set.filter(player=tp.player).exists()
@@ -451,7 +451,7 @@ def roll_call(request, tournament_id):
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    the_list = t.round_set.order_by('number')
+    the_list = t.round_set.all()
     context = {'tournament': t, 'round_list': the_list}
     return render(request, 'rounds/index.html', context)
 
@@ -563,7 +563,7 @@ def game_scores(request, tournament_id, round_num):
     else:
         # Initial data
         data = []
-        the_list = r.game_set.order_by('name')
+        the_list = r.game_set.all()
         for game in the_list:
             data.append({'game_name': game.name})
         formset = GameScoreFormset(initial=data)
@@ -581,7 +581,7 @@ def game_index(request, tournament_id, round_num):
 	r = t.round_set.get(number=round_num)
     except Round.DoesNotExist:
 	raise Http404
-    the_list = r.game_set.order_by('name')
+    the_list = r.game_set.all()
     context = {'round': r, 'game_list': the_list}
     return render(request, 'games/index.html', context)
 
