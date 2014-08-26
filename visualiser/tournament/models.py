@@ -770,6 +770,13 @@ class DrawProposal(models.Model):
                 if dias and sc.count > 0:
                     raise ValidationError('Missing alive power %s in DIAS game' % sc.power)
 
+    def save(self, *args, **kwargs):
+        super(CentreCount, self).save(*args, **kwargs)
+        # Does this complete the game ?
+        if self.passed:
+            self.game.is_finished = True
+            self.game.save()
+
     def __unicode__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
@@ -870,6 +877,10 @@ class CentreCount(models.Model):
         unique_together = ('power', 'game', 'year')
 
     def clean(self):
+        # Is this for a year that is supposed to be played ?
+        final_year = self.game.the_round.final_year
+        if final_year and self.year > final_year:
+                raise ValidationError('Games in this round end with %d' % final_year)
         # Not possible to more than double your count in one year
         # or to recover from an elimination
         try:
@@ -881,6 +892,19 @@ class CentreCount(models.Model):
         except CentreCount.DoesNotExist:
             # We're either missing a year, or this is the first year - let that go
             pass
+
+    def save(self, *args, **kwargs):
+        super(CentreCount, self).save(*args, **kwargs)
+        # Does this complete the game ?
+        final_year = self.game.the_round.final_year
+        if final_year and self.year == final_year:
+            # Final game year has been played
+            self.game.is_finished = True
+            self.game.save()
+        if self.count >= WINNING_SCS:
+            # Somebody won the game
+            self.game.is_finished = True
+            self.game.save()
 
     def __unicode__(self):
         return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)

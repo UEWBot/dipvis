@@ -638,8 +638,15 @@ def sc_counts(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
+    # If the round ends with a certain year, provide the right number of blank rows
+    # Otherwise, just give them two
+    years_to_go = 2
+    last_year_played = g.final_year()
+    final_year = g.the_round.final_year
+    if final_year:
+        years_to_go = final_year - last_year_played
     SCCountFormset = formset_factory(SCCountForm,
-                                     extra=2,
+                                     extra=years_to_go,
                                      formset=BaseSCCountFormset)
     if request.method == 'POST':
         formset = SCCountFormset(request.POST)
