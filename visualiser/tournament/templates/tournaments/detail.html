@@ -6,15 +6,15 @@
 <h1>{{ tournament }}</h1>
 <p>Views:</p>
 <ul>
-  <li><a href={% url 'tournament_scores' tournament.id %}>Current Standings</a></li>
-  <li><a href={% url 'tournament_news' tournament.id %}>News</a></li>
-  <li><a href={% url 'tournament_background' tournament.id %}>Background</a></li>
-  <li><a href={% url 'tournament_round' tournament.id %}>Current Round</a></li>
-  <li><a href={% url 'round_index' tournament.id %}>Round Index</a></li>
+  <li><a href="{% url 'tournament_scores' tournament.id %}">Current Standings</a></li>
+  <li><a href="{% url 'tournament_news' tournament.id %}">News</a></li>
+  <li><a href="{% url 'tournament_background' tournament.id %}">Background</a></li>
+  <li><a href="{% url 'tournament_round' tournament.id %}">Current Round</a></li>
+  <li><a href="{% url 'round_index' tournament.id %}">Round Index</a></li>
 </ul>
 <p>Data Entry:</p>
 <ul>
-  <li><a href={% url 'enter_scores' tournament.id %}>Enter Scores</a></li>
-  <li><a href={% url 'roll_call' tournament.id %}>Roll Call</a></li>
+  <li><a href="{% url 'enter_scores' tournament.id %}">Enter Scores</a></li>
+  <li><a href="{% url 'roll_call' tournament.id %}">Roll Call</a></li>
 </ul>
 {% endblock %}

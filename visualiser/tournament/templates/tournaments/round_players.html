@@ -3,7 +3,7 @@
 {% block title %}DipTV - {{ tournament }} {{ title }}{%endblock %}
 
 {% block content %}
-<h1>{{ tournament }} {{ title }}</h1>
+<h1><a href="{{ tournament.get_absolute_url }}>{{ tournament }}</a> {{ title }}</h1>
 <form method="post" action={{ post_url }}>
     {% include "formset_table.html" %}
 </form>

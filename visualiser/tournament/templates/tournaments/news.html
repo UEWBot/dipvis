@@ -3,7 +3,7 @@
 {% block title %}DipTV - {{ tournament }} News{%endblock %}
 
 {% block content %}
-<h1>{{ tournament }} News</h1>
+<h1><a href="{{ tournament.get_absolute_url }}>{{ tournament }}</a> News</h1>
 <ul>
     {% for str in news %}
         <li>{{ str }}</li>

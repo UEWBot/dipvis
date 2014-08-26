@@ -3,14 +3,14 @@
 {% block title %}DipTV - {{ tournament }} Round {{ round.number }} Views{%endblock %}
 
 {% block content %}
-<h1><a href={{ tournament.get_absolute_url }}>{{ tournament }}</a> Round {{ round.number }} Views</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Round {{ round.number }} Views</h1>
 <p>Views:</p>
 <ul>
-  <li><a href={% url 'game_index' tournament.id round.id %}>Game Index</a></li>
+  <li><a href="{% url 'game_index' tournament.id round.id %}">Game Index</a></li>
 </ul>
 <p>Data Entry:</p>
 <ul>
-  <li><a href={% url 'create_games' tournament.id round.id %}>Create Games</a></li>
-  <li><a href={% url 'game_scores' tournament.id round.id %}>Score Games</a></li>
+  <li><a href="{% url 'create_games' tournament.id round.id %}">Create Games</a></li>
+  <li><a href="{% url 'game_scores' tournament.id round.id %}">Score Games</a></li>
 </ul>
 {% endblock %}

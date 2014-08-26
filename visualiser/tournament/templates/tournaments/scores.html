@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}DipTV - {{ tournament.name }} Standings{% endblock %}
+{% block title %}DipTV - {{ tournament }} Standings{% endblock %}
 
 {% block content %}
-<h1>{{ tournament.name }} Current Standings</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Current Standings</h1>
 
 <table class="form">
   <thead><tr>
