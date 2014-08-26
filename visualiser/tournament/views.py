@@ -235,8 +235,14 @@ class BasePlayerRoundFormset(BaseFormSet):
         kwargs['this_round'] = self.tournament.current_round().number
         return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
 
+class TournamentPlayerChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.player.__unicode__()
+
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
+    tp_id = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
+                                            widget=forms.HiddenInput(attrs={'readonly':'readonly'}))
     player = forms.CharField(max_length=20)
 
     def __init__(self, *args, **kwargs):
@@ -246,6 +252,7 @@ class PlayerRoundScoreForm(forms.Form):
         self.this_round = kwargs.pop('this_round')
         super(PlayerRoundScoreForm, self).__init__(*args, **kwargs)
 
+        self.fields['tp_id'].queryset = self.tournament.tournamentplayer_set.all()
         self.fields['player'].widget.attrs['readonly'] = 'readonly'
 
         # Create the right number of round fields, with the right ones read-only
@@ -266,6 +273,12 @@ class PlayerRoundScoreForm(forms.Form):
             if readonly:
                 # "readonly" on checkboxes is purely visual, but good enough for now
                 self.fields[name].widget.attrs['readonly'] = 'readonly'
+
+        # Last field is for the overall tournament score
+        self.fields['overall_score'] = forms.FloatField(required=False)
+        attrs = self.fields[name].widget.attrs
+        attrs['size'] = 10
+        attrs['maxlength'] = 10
 
 class BasePlayerRoundScoreFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
@@ -352,23 +365,26 @@ def round_scores(request, tournament_id):
         formset = PlayerRoundScoreFormset(request.POST, tournament=t)
         if formset.is_valid():
             for form in formset:
-                tp = form.cleaned_data['player']
+                tp = form.cleaned_data['tp_id']
                 for r_name,value in form.cleaned_data.iteritems():
-                    # We're only interested in the round score fields
-                    if not r_name.startswith('round_'):
-                        continue
                     # Skip if no score was entered
                     if not value:
                         continue
-                    # Extract the round number from the field name
-                    i = int(r_name[6:])
-                    # Find that Round
-                    r = round_set.get(number=i)
-                    # Update the score
-                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
-                                                                   the_round=r)
-                    i.score = value
-                    i.save()
+                    # We're only interested in the round score fields
+                    if r_name.startswith('round_'):
+                        # Extract the round number from the field name
+                        i = int(r_name[6:])
+                        # Find that Round
+                        r = round_set.get(number=i)
+                        # Update the score
+                        i, created = RoundPlayer.objects.get_or_create(player=tp.player,
+                                                                       the_round=r)
+                        i.score = value
+                        i.save()
+                    elif r_name == 'overall_score':
+                        # Store the player's tournament score
+                        tp.score = value
+                        tp.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('tournament_scores',
                                                 args=(tournament_id,)))
@@ -376,7 +392,7 @@ def round_scores(request, tournament_id):
         data = []
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
-            current = {'player': tp.player}
+            current = {'tp_id': tp, 'player': tp.player, 'overall_score':tp.score}
             for rp in tp.player.roundplayer_set.all():
                 current['round_%d'%rp.the_round.number] = rp.score
                 # Scores for any games in the round
