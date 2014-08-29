@@ -407,7 +407,8 @@ class Tournament(models.Model):
         """
         Returns the Round in progress, or None
         """
-        rds = self.round_set.order_by('number')
+        # Rely on the default ordering
+        rds = self.round_set.all()
         for r in rds:
             if not r.is_finished():
                 return r
