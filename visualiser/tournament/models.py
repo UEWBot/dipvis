@@ -644,6 +644,16 @@ class Game(models.Model):
         first = current_scs.order_by('-count').filter(count=max_scs)
         return list(first)
 
+    def neutrals(self, year=None):
+        """How many neutral SCs are/were there ?"""
+        if not year:
+            year = self.final_year()
+        scs = self.centrecount_set.filter(year=year)
+        neutrals = TOTAL_SCS
+        for sc in scs:
+            neutrals -= sc.count
+        return neutrals
+
     def final_year(self):
         """
         Returns the last complete year of the game, whether the game is completed or ongoing
