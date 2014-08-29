@@ -308,7 +308,13 @@ class TourneyDetailView(generic.DetailView):
 
 # Tournament views
 
-def tournament_scores(request, tournament_id):
+def tournament_simple(request, tournament_id, template):
+    """Just render the specified template with the tournament"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    context = {'tournament': t}
+    return render(request, 'tournaments/%s.html' % template, context)
+
+def tournament_scores(request, tournament_id, refresh=False):
     """Display scores of a tournament"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     tps = t.tournamentplayer_set.order_by('-score')
@@ -323,6 +329,10 @@ def tournament_scores(request, tournament_id):
             rs.append(', '.join([str(i.score) for i in rp]))
         scores.append(['%s' % p.player] + rs + ['%f' % p.score])
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = 300
+        context['redirect_url'] = reverse('tournament_scores_refresh', args=(tournament_id,))
     return render(request, 'tournaments/scores.html', context)
 
 def tournament_background(request, tournament_id, as_ticker=False):
@@ -330,6 +340,10 @@ def tournament_background(request, tournament_id, as_ticker=False):
     t = get_object_or_404(Tournament, pk=tournament_id)
     context = {'tournament': t, 'subject': 'Background', 'content': t.background()}
     if as_ticker:
+        # 300s = 5 mins
+        context['redirect_time'] = '300'
+        context['redirect_url'] = reverse('tournament_ticker',
+                                          args=(tournament_id,))
         return render(request, 'tournaments/info_ticker.html', context)
     else:
         return render(request, 'tournaments/info.html', context)
@@ -339,6 +353,10 @@ def tournament_news(request, tournament_id, as_ticker=False):
     t = get_object_or_404(Tournament, pk=tournament_id)
     context = {'tournament': t, 'subject': 'News', 'content': t.news()}
     if as_ticker:
+        # 300s = 5 mins
+        context['redirect_time'] = '300'
+        context['redirect_url'] = reverse('tournament_ticker',
+                                          args=(tournament_id,))
         return render(request, 'tournaments/info_ticker.html', context)
     else:
         return render(request, 'tournaments/info.html', context)
@@ -474,6 +492,16 @@ def round_index(request, tournament_id):
 
 # Round views
 
+def round_simple(request, tournament_id, round_num, template):
+    """Just render the specified template with the round"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+	r = t.round_set.get(number=round_num)
+    except Round.DoesNotExist:
+	raise Http404
+    context = {'tournament': t, 'round': r}
+    return render(request, 'rounds/%s.html' % template, context)
+
 def round_detail(request, tournament_id, round_num):
     """Display the details of a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -604,6 +632,16 @@ def game_index(request, tournament_id, round_num):
 
 # Game views
 
+def game_simple(request, tournament_id, game_name, template):
+    """Just render the specified template with the game"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+        raise Http404
+    context = {'tournament': t, 'game': g}
+    return render(request, 'games/%s.html' % template, context)
+
 def game_detail(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
@@ -613,7 +651,7 @@ def game_detail(request, tournament_id, game_name):
     context = {'tournament': t, 'game': g}
     return render(request, 'games/detail.html', context)
 
-def game_sc_chart(request, tournament_id, game_name):
+def game_sc_chart(request, tournament_id, game_name, refresh=False):
     """Display the SupplyCentre chart for a game"""
     #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -649,6 +687,11 @@ def game_sc_chart(request, tournament_id, game_name):
         row.append(neutrals)
         rows.append(row)
     context = {'game': g, 'powers': powers, 'players': ps, 'rows': rows}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = 300
+        context['redirect_url'] = reverse('game_sc_chart_refresh',
+                                          args=(tournament_id, game_name))
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
 
@@ -726,6 +769,10 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
         raise Http404
     context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
     if as_ticker:
+        # 300s = 5 mins
+        context['redirect_time'] = '300'
+        context['redirect_url'] = reverse('game_ticker',
+                                          args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
     else:
         return render(request, 'games/info.html', context)
@@ -739,6 +786,10 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
         raise Http404
     context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
     if as_ticker:
+        # 300s = 5 mins
+        context['redirect_time'] = '300'
+        context['redirect_url'] = reverse('game_ticker',
+                                          args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
     else:
         return render(request, 'games/info.html', context)

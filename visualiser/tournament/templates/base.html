@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="style.css" />
+    {% if redirect_url %}
+    <meta http-equiv="refresh" content="{{ redirect_time }}; url={{ redirect_url }}"/>
+    {% endif %}
     <title>{% block title %}DipTV - Diplomacy Tournament Visualiser{% endblock %}</title>
 </head>
 
