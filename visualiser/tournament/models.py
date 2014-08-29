@@ -29,6 +29,20 @@ SEASONS = (
     (SPRING, 'spring'),
     (FALL, 'fall'),
 )
+MOVEMENT = 'M'
+RETREATS = 'R'
+# Use X for adjustments to simplify sorting
+ADJUSTMENTS = 'X'
+PHASES = (
+    (MOVEMENT, 'movement'),
+    (RETREATS, 'retreats'),
+    (ADJUSTMENTS, 'adjustments'),
+)
+phase_str = {
+    MOVEMENT: 'M',
+    RETREATS: 'R',
+    ADJUSTMENTS: 'A',
+}
 
 FIRST_YEAR = 1901
 
@@ -239,6 +253,7 @@ class Player(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name='WDD player id', blank=True, null=True)
+    # TODO Would be nice to support a picture of the player, too
 
     class Meta:
         ordering = ['last_name', 'first_name']
@@ -893,6 +908,36 @@ class GamePlayer(models.Model):
 
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
+
+def file_location(instance, filename):
+    """
+    Function that determines where to store the file.
+    """
+    # TODO Probably want a separate directory for each tournament,
+    #      containing a directory per game
+    return 'games'
+
+class GameImage(models.Model):
+    """
+    An image depicting a Game at a certain point.
+    The year, season, phase together indicate the phase that is about to played.
+    """
+    game = models.ForeignKey(Game)
+    year = models.PositiveSmallIntegerField(validators=[validate_year])
+    season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
+    phase = models.CharField(max_length=1, choices=PHASES, default=MOVEMENT)
+    image = models.ImageField(upload_to=file_location)
+
+    class Meta:
+        unique_together = ('game', 'year', 'season', 'phase')
+        ordering = ['game', 'year', '-season', 'phase']
+
+    def clean(self):
+        if season == SPRING and phase == ADJUSTMENT:
+            raise ValidationError('No adjustment phase in spring')
+
+    def __unicode__(self):
+        return u'%s %s%d%s image' % (game, season, year, phase_str[phase])
 
 class CentreCount(models.Model):
     """
