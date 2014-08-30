@@ -61,6 +61,9 @@ GAME_RESULT = (
     ('L', 'Loss'),
 )
 
+# Default initial position image
+S1901M_IMAGE = u's1901m.gif'
+
 # Mask values to choose which background strings to include
 MASK_TITLES = 1<<0
 MASK_TOURNEY_COUNT = 1<<1
@@ -736,6 +739,13 @@ class Game(models.Model):
                                                            year=FIRST_YEAR-1,
                                                            count=initial)
             i.save()
+        # Auto-create S1901M image (if it doesn't exist)
+        i, created = GameImage.objects.get_or_create(game=self,
+                                                     year=FIRST_YEAR,
+                                                     season=SPRING,
+                                                     phase=MOVEMENT,
+                                                     image=S1901M_IMAGE)
+        i.save()
 
     def get_absolute_url(self):
         return reverse('game_detail',
@@ -932,12 +942,19 @@ class GameImage(models.Model):
         unique_together = ('game', 'year', 'season', 'phase')
         ordering = ['game', 'year', '-season', 'phase']
 
+    def turn_str(self):
+        """
+        Short string version of season/year/phase
+        e.g. 'S1901M'
+        """
+        return u'%s%d%s' % (self.season, self.year, phase_str(self.phase))
+
     def clean(self):
-        if season == SPRING and phase == ADJUSTMENT:
+        if self.season == SPRING and self.phase == ADJUSTMENTS:
             raise ValidationError('No adjustment phase in spring')
 
     def __unicode__(self):
-        return u'%s %s%d%s image' % (game, season, year, phase_str[phase])
+        return u'%s %s image' % (self.game, self.turn_str())
 
 class CentreCount(models.Model):
     """

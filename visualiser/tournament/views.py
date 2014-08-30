@@ -22,6 +22,7 @@ from django.forms.models import inlineformset_factory
 from django import forms
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.template import RequestContext
+from django.forms import ModelForm
 
 from tournament.models import *
 
@@ -305,6 +306,11 @@ class TourneyIndexView(generic.ListView):
 class TourneyDetailView(generic.DetailView):
     model = Tournament
     template_name = 'tournaments/detail.html'
+
+class GameImageForm(ModelForm):
+    class Meta:
+        model = GameImage
+        fields = ('game', 'year', 'season', 'phase', 'image')
 
 # Tournament views
 
@@ -830,6 +836,76 @@ def draw_vote(request, tournament_id, game_name):
     return render_to_response('games/vote.html',
                               {'tournament': t,
                                'game': g,
+                               'form' : form},
+                              context_instance = RequestContext(request))
+
+def game_image(request, tournament_id, game_name, turn='', timelapse=False):
+    """Display the image for the game at the specified time"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    try:
+        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+    except Game.DoesNotExist:
+        raise Http404
+    if turn == '':
+        # Always display the latest image
+        this_image = g.gameimage_set.last()
+        if timelapse:
+            next_image_str = ''
+    else:
+        # Look for the specified image for that game
+        # And while we're at it, also find the one that follows it
+        # TODO There may be a better way than iterating through all of them...
+        this_image = None
+        all_images = g.gameimage_set.all()
+        if timelapse:
+            # If there is no "next turn", timelapse should loop back to the first
+            next_image_str = all_images[0].turn_str()
+        for i in all_images:
+            if i.turn_str() == turn:
+                this_image = i
+                if not timelapse:
+                    break
+            elif this_image:
+                next_image_str = i.turn_str()
+                break
+    if not this_image:
+        raise Http404
+    context = {'tournament': t, 'image': this_image}
+    if timelapse:
+        # Switch to the next image after 15s
+        context['refresh_time'] = 15
+        # If we're just refreshing the latest image, every 5 mins is fine 
+        if turn == '':
+            context['refresh_time'] = 300
+        # Note that this works even if there is just one image.
+        # In that case, this becomes a refresh, which will then check
+        # for new images in 5 minutes
+        context['refresh_url'] = reverse('game_image_seq',
+                                         args=(tournament_id,
+                                               game_name,
+                                               next_image_str))
+    return render(request, 'games/image.html', context)
+
+def add_game_image(request, tournament_id, game_name=''):
+    """Add an image for a game"""
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    if game_name != '':
+        try:
+            g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
+        except Game.DoesNotExist:
+            raise Http404
+    # TODO Would be nice to initially populate with the "next season", and game
+    form = GameImageForm(request.POST or None)
+    if form.is_valid():
+        # Create the new image in the database
+        image = form.save()
+        return HttpResponseRedirect(reverse('game_image',
+                                            args=(tournament_id,
+                                                  image.game.name,
+                                                  image.turn_str())))
+
+    return render_to_response('games/add_image.html',
+                              {'tournament': t,
                                'form' : form},
                               context_instance = RequestContext(request))
 

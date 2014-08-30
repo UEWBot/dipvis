@@ -33,6 +33,7 @@ urlpatterns = patterns('',
         url(r'^enter_scores/$', views.round_scores, name='enter_scores'),
         url(r'^roll_call/$', views.roll_call, name='roll_call'),
         url(r'^current_round/$', views.tournament_round, name='tournament_round'),
+        url(r'^game_image/$', views.add_game_image, name='add_game_image'),
         url(r'^news/$', views.tournament_news, name='tournament_news'),
         url(r'^news_ticker/$', views.tournament_news, {'as_ticker': True}, name='tournament_news_ticker'),
         url(r'^background/$', views.tournament_background, name='tournament_background'),
@@ -52,6 +53,20 @@ urlpatterns = patterns('',
             url(r'^sc_chart/$', views.game_sc_chart, name='game_sc_chart'),
             url(r'^sc_chart_refresh/$', views.game_sc_chart, {'refresh': True}, name='game_sc_chart_refresh'),
             url(r'^enter_scs/$', views.sc_counts, name='enter_scs'),
+            # Always the latest position
+            url(r'^positions/latest/$', views.game_image,
+                {'turn': '', 'timelapse': True}, name='current_game_image'),
+            # Fixed at the specified turn
+            url(r'^positions/(?P<turn>)/$', views.game_image, name='game_image'),
+            # Cycle through all images, from S1901M
+            url(r'^timelapse/$', views.game_image,
+                {'turn': 'S1901M', 'timelapse': True}, name='game_timelapse'),
+            # Same as either current_game_image or game_timelapse, depending on turn
+            # This is the URL they both redirect to. Don't expect users to go there
+            # TODO Begs the question of why not just use this one...
+            url(r'^timelapse/(?P<turn>)/$', views.game_image,
+                {'timelapse': True}, name='game_image_seq'),
+            url(r'^add_position/$', views.add_game_image, name='add_game_image'),
             url(r'^news/$', views.game_news, name='game_news'),
             url(r'^news_ticker/$', views.game_news, {'as_ticker': True}, name='game_news_ticker'),
             url(r'^background/$', views.game_background, name='game_background'),

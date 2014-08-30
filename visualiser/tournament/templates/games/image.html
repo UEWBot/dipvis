@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+
+{% block title %}Game {{ image.game }} {{ image.turn_str }}{%endblock %}
+
+{% block content %}
+<h1>Game {{ image.game }} {{ image.turn_str }}</h1>
+<img src="{{ image.image.url }}">
+{% endblock %}
