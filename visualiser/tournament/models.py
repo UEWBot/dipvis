@@ -467,10 +467,11 @@ class TournamentPlayer(models.Model):
 
 class Round(models.Model):
     """
-    A single round of a tournament
+    A single round of a Tournament
     """
     tournament = models.ForeignKey(Tournament)
     number = models.PositiveSmallIntegerField()
+    # There has at least been talk of tournaments using multiple scoring systems, one per round
     scoring_system = models.ForeignKey(ScoringSystem)
     dias = models.BooleanField(verbose_name='Draws Include All Survivors')
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
@@ -506,7 +507,7 @@ class Round(models.Model):
 
 class Game(models.Model):
     """
-    A single game of Diplomacy
+    A single game of Diplomacy, within a Round
     """
     # TODO Because we use game name in URLs, they must not contain spaces
     # TODO with our current URL scheme, we actually need game names to be unique
@@ -731,6 +732,7 @@ class Game(models.Model):
         super(Game, self).save(*args, **kwargs)
         # Auto-create 1900 SC counts (unless they already exist)
         for power in GreatPower.objects.all():
+            # TODO This should be part of the GreatPower class (starting_centres ?)
             initial = 3
             if power.name == u'Russia':
                 initial = 4
@@ -1003,7 +1005,8 @@ class CentreCount(models.Model):
 
 class PlayerRanking(models.Model):
     """
-    A tournament ranking for a player
+    A tournament ranking for a player.
+    Used to import background information from the WDD.
     """
     player = models.ForeignKey(Player)
     tournament = models.CharField(max_length=30)
@@ -1021,7 +1024,8 @@ class PlayerRanking(models.Model):
 
 class PlayerGameResult(models.Model):
     """
-    One player's result for a tournament game
+    One player's result for a tournament game.
+    Used to import background information from the WDD.
     """
     tournament_name = models.CharField(max_length=20)
     game_name = models.CharField(max_length=20)
