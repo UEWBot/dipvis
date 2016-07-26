@@ -122,6 +122,7 @@ class GreatPower(models.Model):
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=1, unique=True)
     colour = models.CharField(max_length=20)
+    starting_centres = models.PositiveIntegerField()
     class Meta:
         ordering = ['name']
     def __unicode__(self):
@@ -732,14 +733,10 @@ class Game(models.Model):
         super(Game, self).save(*args, **kwargs)
         # Auto-create 1900 SC counts (unless they already exist)
         for power in GreatPower.objects.all():
-            # TODO This should be part of the GreatPower class (starting_centres ?)
-            initial = 3
-            if power.name == u'Russia':
-                initial = 4
             i, created = CentreCount.objects.get_or_create(power=power,
                                                            game=self,
                                                            year=FIRST_YEAR-1,
-                                                           count=initial)
+                                                           count=power.starting_centres)
             i.save()
         # Auto-create S1901M image (if it doesn't exist)
         i, created = GameImage.objects.get_or_create(game=self,
