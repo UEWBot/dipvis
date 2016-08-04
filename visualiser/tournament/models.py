@@ -684,10 +684,10 @@ class Game(models.Model):
         """
         Returns either a GamePlayer if somebody soloed the game, or None
         """
-        # TODO I suspect there's a better way to get at "the highest SC count in the highest year"
-        final_year = self.final_year()
-        scs = self.centrecount_set.filter(year=final_year).order_by('-count')
+        # Just order by SC count, and check the first (highest)
+        scs = self.centrecount_set.order_by('-count')
         if scs[0].count >= WINNING_SCS:
+            # TODO This looks like it fails if the soloer was a replacement player
             return self.gameplayer_set.filter(power=scs[0].power).get()
         return None
 
