@@ -85,6 +85,15 @@ MASK_DRAW_VOTES = 1<<3
 MASK_ELIMINATIONS = 1<<4
 MASK_ALL_NEWS = (1<<5)-1
 
+TITLE_MAP = {
+    'World Champion' : 1,
+    'North American Champion' : 1,
+    'Winner' : 1,
+    'European Champion' : 1,
+    'Second' : 2,
+    'Third' : 3,
+}
+
 def validate_year(value):
     """
     Checks for a valid game year
@@ -127,15 +136,6 @@ class GreatPower(models.Model):
         ordering = ['name']
     def __unicode__(self):
         return self.name
-
-TITLE_MAP = {
-    'World Champion' : 1,
-    'North American Champion' : 1,
-    'Winner' : 1,
-    'European Champion' : 1,
-    'Second' : 2,
-    'Third' : 3,
-}
 
 def add_player_bg(player):
     """
