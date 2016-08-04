@@ -83,7 +83,8 @@ MASK_BEST_SC_COUNT = 1<<6
 MASK_SOLO_COUNT = 1<<7
 MASK_ELIM_COUNT = 1<<8
 MASK_BOARD_TOP_COUNT = 1<<9
-MASK_ALL_BG = (1<<10)-1
+MASK_ROUND_ENDPOINTS = 1<<10
+MASK_ALL_BG = (1<<11)-1
 
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1<<0
@@ -712,6 +713,7 @@ class Tournament(models.Model):
         Returns a list of news strings for the tournament
         """
         results = []
+        # TODO This should probably just call through to the current round's news() method
         current_round = self.current_round()
         if current_round:
             for g in current_round.game_set.all():
@@ -797,6 +799,24 @@ class Round(models.Model):
             if not g.is_finished:
                 return False
         return True
+
+    def background(self, mask=MASK_ALL_BG):
+        """
+        Returns a list of background strings for the round
+        """
+        results = []
+        if (mask & MASK_ROUND_ENDPOINTS) & self.earliest_end_time:
+            results.append(u'Round %d could end as early as %s.' % (self.number,
+                                                                    self.earliest_end_time.strftime("%H:%M")))
+        if (mask & MASK_ROUND_ENDPOINTS) & self.latest_end_time:
+            results.append(u'Round %d could end as late as %s.' % (self.number,
+                                                                   self.latest_end_time.strftime("%H:%M")))
+        if (mask & MASK_ROUND_ENDPOINTS) & self.final_year:
+            results.append(u'Round %d will end after playing year %d.' % (self.number,
+                                                                          self.final_year))
+        # Shuffle the resulting list
+        random.shuffle(results)
+        return results
 
     def clean(self):
         # Must provide either both end times, or neither
