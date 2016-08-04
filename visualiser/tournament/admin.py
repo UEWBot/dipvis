@@ -32,6 +32,7 @@ class RoundInline(admin.StackedInline):
 
 class TournamentPlayerInline(admin.TabularInline):
     model = TournamentPlayer
+    extra = 7
 
 class TournamentAdmin(admin.ModelAdmin):
     inlines = [RoundInline, TournamentPlayerInline]
