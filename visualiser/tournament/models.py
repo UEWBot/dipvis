@@ -102,6 +102,301 @@ TITLE_MAP = {
     'Third' : 3,
 }
 
+class GameScoringSystem():
+    # TODO This doesn't deal with multiple players playing one power
+    """
+    A scoring system for a Game.
+    Provides a method to calculate a score for each player of one game.
+    """
+    name = u''
+    # True for classes that provide building blocks rather than full scoring systems
+    is_abstract = True
+
+    def _the_game(self, centre_counts):
+        """Returns the game in question."""
+        return centre_counts[0].game
+
+    def _final_year(self, centre_counts):
+        """Returns the most recent year we have centre counts for."""
+        return centre_counts.order_by('-year')[0].year
+
+    def _final_year_scs(self, centre_counts):
+        """Returns the CentreCounts for the most recent year only, ordered largest-to-smallest."""
+        return centre_counts.filter(year=self._final_year(centre_counts)).order_by('-count')
+
+    def _survivor_count(self, centre_counts):
+        """Returns the number of surviving powers"""
+        return self.final_year_scs(centre_counts).filter(count__gt=0).count()
+
+    def scores(self, centre_counts):
+        """
+        Takes the set of CentreCount objects for one Game.
+        Returns a dict, indexed by power id, of scores.
+        """
+        return {}
+
+class GScoringSolos(GameScoringSystem):
+    """
+    Solos score 100 points.
+    Other results score 0.
+    """
+    def __init__(self):
+        self.is_abstract = False
+        self.name = u'Solo or bust'
+
+    def scores(self, centre_counts):
+        """
+        If any power soloed, they get 100 points.
+        Otherwise, they get 0.
+        Return a dict, indexed by power id, of scores.
+        """
+        retval = {}
+        # We only care about the most recent centrecounts
+        for sc in self._final_year_scs(centre_counts):
+            retval[sc.power] = 0
+            if sc.count >= WINNING_SCS:
+                retval[sc.power] = 100.0
+        return retval
+
+class GScoringDrawSize(GameScoringSystem):
+    """
+    Solos score 100 points.
+    Draw sharers split 100 points between them.
+    """
+    def __init__(self):
+        self.is_abstract = False
+        self.name = u'Draw size'
+
+    def scores(self, centre_counts):
+        """
+        If any power soloed, they get 100 points.
+        Otherwise, if a draw passed, all powers in the draw equally shared 100 points between them.
+        Otherwise, all surviving powers equally share 100 points between them.
+        Return a dict, indexed by power id, of scores.
+        """
+        retval = {}
+        the_game = self._the_game(centre_counts)
+        is_dias = the_game.is_dias()
+        draw = the_game.passed_draw()
+        survivors = self._survivor_count(centre_counts)
+        # We only care about the most recent centrecounts
+        for sc in self._final_year_scs(centre_counts):
+            retval[sc.power] = 0
+            if sc.count >= WINNING_SCS:
+                retval[sc.power] = 100.0
+            elif draw and sc.power in draw.powers():
+                retval[sc.power] = 100.0 / draw.draw_size()
+            elif sc.count > 0:
+                retval[sc.power] = 100.0 / survivors
+        return retval
+
+def adjust_rank_score(centre_counts, rank_points):
+    """
+    Takes a list of CentreCounts for one year of one game, ordered highest-to-lowest
+    and a list of ranking points for positions, ordered from first place to last.
+    Returns a list of ranking points for positions, ordered to correspond to the centre counts,
+    having made adjustments for any tied positions.
+    Where two or more powers have the same score, the ranking points for their positions
+    are shared eveny between them.
+    """
+    # Nothing to do if there are no rank points to share out
+    if len(rank_points) == 0:
+        return []
+    # First count up how many powers tied at the top
+    i = 0
+    count = 0
+    points = 0
+    scs = centre_counts[0].count
+    while (i < len(centre_counts)) and (centre_counts[i].count == scs):
+        count += 1
+        if i < len(rank_points):
+            points += rank_points[i]
+        i += 1
+    # Now share the points between those tied players
+    for j in range(0,i):
+        if j < len(rank_points):
+            rank_points[j] = points / count
+        else:
+            rank_points.append(points / count)
+    # And recursively continue
+    return rank_points[0:i] + adjust_rank_score(centre_counts[i:], rank_points[i:])
+
+class GScoringCDiplo(GameScoringSystem):
+    """
+    If there is a solo:
+    - Soloers score a set number of points (soloer_pts).
+    - Losers to a solo may optionally also score some set number of points (loss_pts).
+    Otherwise:
+    - Participants get some points (played_pts).
+    - Everyone gets one point per centre owned.
+    - Power with the most centres gets a set number of points (first_pts).
+    - Power with the second most centres gets a set number of points (second_pts).
+    - Power with the third most centres gets a set number of points (third_pts).
+    - if powers are tied for rank, they split the points for their ranks.
+    """
+    def __init__(self, name, soloer_pts, played_pts, first_pts, second_pts, third_pts, loss_pts=0):
+        self.is_abstract = False
+        self.name = name
+        self.soloer_pts = soloer_pts
+        self.played_pts = played_pts
+        self.position_pts = [first_pts, second_pts, third_pts]
+        self.loss_pts = loss_pts
+
+    def scores(self, centre_counts):
+        retval = {}
+        final_scs = self._final_year_scs(centre_counts)
+        # Tweak the ranking points to allow for ties
+        rank_pts = adjust_rank_score(centre_counts, self.position_pts)
+        i = 0
+        for sc in final_scs:
+            if final_scs[0].count >= WINNING_SCS:
+                retval[sc.power] = self.loss_pts
+                if sc.count >= WINNING_SCS:
+                    retval[sc.power] = self.soloer_pts
+            else:
+                retval[sc.power] = self.played_pts + sc.count + rank_pts[i]
+            i += 1
+        return retval
+
+class GScoringSumOfSquares(GameScoringSystem):
+    """
+    Soloer gets 100 points, everyone else gets zero.
+    If there is no solo, square each power's final centre-count and normalize those numbers to
+    sum to 100 points.
+    """
+    def __init__(self):
+        self.name = "Sum of Squares"
+        self.is_abstract = False
+
+    def scores(self, centre_counts):
+        retval = {}
+        retval_solo = {}
+        solo_found = False
+        final_scs = self._final_year_scs(centre_counts)
+        sum_of_squares = 0
+        for sc in final_scs:
+            retval_solo = 0
+            retval[sc.power] = sc.count * sc.count * 1.0
+            sum_of_squares += sc.count
+            if sc.count >= WINNING_SCS:
+                # Overwrite the previous totals we came up with
+                retval_solo[sc.power] = 100.0
+                solo_found = True
+        if solo_found:
+            return retval_solo
+        for sc in final_scs:
+            retval[sc.power] /= sum_of_squares
+        return retval
+
+# All the game scoring systems we support
+G_SCORING_SYSTEMS = [
+    GScoringSolos(),
+    GScoringDrawSize(),
+    GScoringCDiplo("CDiplo 100", 100.0, 1.0, 38.0, 14.0, 7.0),
+    GScoringCDiplo("CDiplo 80", 80.0, 0.0, 25.0, 14.0, 7.0),
+    GScoringSumOfSquares(),
+]
+
+class RoundScoringSystem():
+    """
+    A scoring system for a Round.
+    Provides a method to calculate a score for each player of one round.
+    """
+    name = u''
+    # True for classes that provide building blocks rather than full scoring systems
+    is_abstract = True
+
+    def scores(self, game_players):
+        """
+        Takes the set of GamePlayer objects of interest.
+        Returns a dict, indexed by player key, of scores.
+        """
+        return {}
+
+class RScoringBest(RoundScoringSystem):
+    """
+    Take the best of any game scores for that round.
+    """
+    def __init__(self):
+        self.is_abstract = False
+        self.name = u'Best game counts'
+
+    def scores(self, game_players):
+        """
+        If any player played multiple games, take the best game score.
+        Otherwise, just take their game score.
+        Return a dict, indexed by player key, of scores.
+        """
+        retval = {}
+        # for each player who played any of the specified games
+        for p in Player.objects.filter(gameplayer_set__in=game_players):
+            # Find just their games, in order of decreasing score
+            player_games = game_players.filter(player=p).order_by('-score')
+            # Take the score from the first in the list
+            retval[p.player] = player_games[:1].score
+        return retval
+
+# All the round scoring systems we support
+R_SCORING_SYSTEMS = [
+    RScoringBest(),
+]
+
+class TournamentScoringSystem():
+    """
+    A scoring system for a Tournament.
+    Provides a method to calculate a score for each player of tournament.
+    """
+    name = u''
+    # True for classes that provide building blocks rather than full scoring systems
+    is_abstract = True
+
+    def scores(self, round_players):
+        """
+        Takes the set of RoundPlayer objects of interest.
+        Combines the score attribute of ones for each player into an overall score for that player.
+        Returns a dict, indexed by player key, of scores.
+        """
+        return {}
+
+class TScoringSum(TournamentScoringSystem):
+    """
+    Just add up the best N round scores.
+    """
+    scored_rounds = 0
+
+    def __init__(self, name, scored_rounds):
+        self.is_abstract = False
+        self.name = name
+        self.scored_rounds = scored_rounds
+
+    def scores(self, round_players):
+        """
+        If a player played more than N rounds, sum the best N round scores.
+        Otherwise, sum all their round scores.
+        Return a dict, indexed by player key, of scores.
+        """
+        retval = {}
+        # for each player who played any of the specified rounds
+        for p in Player.objects.filter(roundplayer_set__in=round_players):
+            score = 0
+            # Find just their rounds, in order of decreasing score
+            player_rounds = round_players.filter(player=p).order_by('-score')
+            # Add up the first N
+            for pr in player_rounds[:self.scored_rounds]:
+                score += pr.score
+            retval[p.player] = score
+        return retval
+
+# All the tournament scoring systems we support
+T_SCORING_SYSTEMS = [
+    TScoringSum("Sum best 2 rounds", 2),
+    TScoringSum("Sum best 3 rounds", 3),
+    TScoringSum("Sum best 4 rounds", 4),
+]
+
+def get_scoring_systems(systems):
+    return sorted([(s.name, s.name) for s in systems if not s.is_abstract])
+
 def validate_year(value):
     """
     Checks for a valid game year
@@ -379,18 +674,6 @@ class Player(models.Model):
             return self._rankings(mask=mask) + self._results(mask=mask)
         return self._results(power, mask=mask)
 
-class ScoringSystem(models.Model):
-    """
-    A system for assigning scores to players of a single game
-    """
-    name = models.CharField(max_length=30)
-
-    class Meta:
-        ordering = ['name']
-
-    def __unicode__(self):
-        return self.name
-
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -398,6 +681,16 @@ class Tournament(models.Model):
     name = models.CharField(max_length=20)
     start_date = models.DateField()
     end_date = models.DateField()
+    # How do we combine round scores to get an overall player tournament score ?
+    # This is the name of a TournamentScoringSystem object
+    tournament_scoring_system = models.CharField(max_length=40,
+                                                 choices=get_scoring_systems(T_SCORING_SYSTEMS),
+                                                 help_text='How to combine round scores into a tournament score')
+    # How do we combine game scores to get an overall player score for a round ?
+    # This is the name of a RoundScoringSystem object
+    round_scoring_system = models.CharField(max_length=40,
+                                            choices=get_scoring_systems(R_SCORING_SYSTEMS),
+                                            help_text='How to combine game scores into a round score')
 
     class Meta:
         ordering = ['-start_date']
@@ -480,8 +773,13 @@ class Round(models.Model):
     """
     tournament = models.ForeignKey(Tournament)
     number = models.PositiveSmallIntegerField()
+    # How do we combine game scores to get an overall player score for a round ?
+    # This is the name of a GameScoringSystem object
     # There has at least been talk of tournaments using multiple scoring systems, one per round
-    scoring_system = models.ForeignKey(ScoringSystem)
+    scoring_system = models.CharField(max_length=40,
+                                      verbose_name='Game scoring system',
+                                      choices=get_scoring_systems(G_SCORING_SYSTEMS),
+                                      help_text='How to calculate a score for one game')
     dias = models.BooleanField(verbose_name='Draws Include All Survivors')
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)

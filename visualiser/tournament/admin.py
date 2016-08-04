@@ -83,7 +83,6 @@ class GameAdmin(admin.ModelAdmin):
 # Register models
 admin.site.register(GreatPower)
 admin.site.register(Player)
-admin.site.register(ScoringSystem)
 admin.site.register(DrawProposal)
 admin.site.register(CentreCount)
 admin.site.register(TournamentPlayer)
