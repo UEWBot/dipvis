@@ -1157,7 +1157,7 @@ class DrawProposal(models.Model):
                     raise ValidationError('Missing alive power %s in DIAS game' % sc.power)
 
     def save(self, *args, **kwargs):
-        super(CentreCount, self).save(*args, **kwargs)
+        super(DrawProposal, self).save(*args, **kwargs)
         # Does this complete the game ?
         if self.passed:
             self.game.is_finished = True
