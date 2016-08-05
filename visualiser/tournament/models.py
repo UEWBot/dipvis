@@ -18,6 +18,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min, Sum, Q
+from django.utils.translation import ugettext as _
 
 from tournament.background import *
 
@@ -26,17 +27,17 @@ import urllib2, random
 SPRING = 'S'
 FALL = 'F'
 SEASONS = (
-    (SPRING, 'spring'),
-    (FALL, 'fall'),
+    (SPRING, _('spring')),
+    (FALL, _('fall')),
 )
 MOVEMENT = 'M'
 RETREATS = 'R'
 # Use X for adjustments to simplify sorting
 ADJUSTMENTS = 'X'
 PHASES = (
-    (MOVEMENT, 'movement'),
-    (RETREATS, 'retreats'),
-    (ADJUSTMENTS, 'adjustments'),
+    (MOVEMENT, _('movement')),
+    (RETREATS, _('retreats')),
+    (ADJUSTMENTS, _('adjustments')),
 )
 phase_str = {
     MOVEMENT: 'M',
@@ -51,14 +52,14 @@ WINNING_SCS = ((TOTAL_SCS/2)+1)
 
 # These happen to co-incide with the coding used by the WDD
 GAME_RESULT = (
-    ('W', 'Win'),
-    ('D2', '2-way draw'),
-    ('D3', '3-way draw'),
-    ('D4', '4-way draw'),
-    ('D5', '5-way draw'),
-    ('D6', '6-way draw'),
-    ('D7', '7-way draw'),
-    ('L', 'Loss'),
+    ('W', _('Win')),
+    ('D2', _('2-way draw')),
+    ('D3', _('3-way draw')),
+    ('D4', _('4-way draw')),
+    ('D5', _('5-way draw')),
+    ('D6', _('6-way draw')),
+    ('D7', _('7-way draw')),
+    ('L', _('Loss')),
 )
 
 # Default initial position image
@@ -68,8 +69,8 @@ S1901M_IMAGE = u's1901m.gif'
 RANDOM = 'R'
 FRENCH_METHOD = 'F'
 POWER_ASSIGNS =  (
-    (RANDOM, 'Random'),
-    (FRENCH_METHOD, 'French method'),
+    (RANDOM, _('Random')),
+    (FRENCH_METHOD, _('French method')),
 )
 
 # Mask values to choose which background strings to include
@@ -143,7 +144,7 @@ class GScoringSolos(GameScoringSystem):
     """
     def __init__(self):
         self.is_abstract = False
-        self.name = u'Solo or bust'
+        self.name = _(u'Solo or bust')
 
     def scores(self, centre_counts):
         """
@@ -166,7 +167,7 @@ class GScoringDrawSize(GameScoringSystem):
     """
     def __init__(self):
         self.is_abstract = False
-        self.name = u'Draw size'
+        self.name = _(u'Draw size')
 
     def scores(self, centre_counts):
         """
@@ -266,7 +267,7 @@ class GScoringSumOfSquares(GameScoringSystem):
     sum to 100 points.
     """
     def __init__(self):
-        self.name = "Sum of Squares"
+        self.name = _(u'Sum of Squares')
         self.is_abstract = False
 
     def scores(self, centre_counts):
@@ -293,8 +294,8 @@ class GScoringSumOfSquares(GameScoringSystem):
 G_SCORING_SYSTEMS = [
     GScoringSolos(),
     GScoringDrawSize(),
-    GScoringCDiplo("CDiplo 100", 100.0, 1.0, 38.0, 14.0, 7.0),
-    GScoringCDiplo("CDiplo 80", 80.0, 0.0, 25.0, 14.0, 7.0),
+    GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
+    GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringSumOfSquares(),
 ]
 
@@ -320,7 +321,7 @@ class RScoringBest(RoundScoringSystem):
     """
     def __init__(self):
         self.is_abstract = False
-        self.name = u'Best game counts'
+        self.name = _(u'Best game counts')
 
     def scores(self, game_players):
         """
@@ -390,9 +391,9 @@ class TScoringSum(TournamentScoringSystem):
 
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [
-    TScoringSum("Sum best 2 rounds", 2),
-    TScoringSum("Sum best 3 rounds", 3),
-    TScoringSum("Sum best 4 rounds", 4),
+    TScoringSum(_('Sum best 2 rounds'), 2),
+    TScoringSum(_('Sum best 3 rounds'), 3),
+    TScoringSum(_('Sum best 4 rounds'), 4),
 ]
 
 def get_scoring_systems(systems):
@@ -403,21 +404,21 @@ def validate_year(value):
     Checks for a valid game year
     """
     if value < FIRST_YEAR:
-        raise ValidationError(u'%s is not a valid game year' % value)
+        raise ValidationError(_(u'%(value)d is not a valid game year'), params = {'value': value})
 
 def validate_year_including_start(value):
     """
     Checks for a valid game year, allowing 1900, too
     """
     if value < FIRST_YEAR-1:
-        raise ValidationError(u'%s is not a valid game year' % value)
+        raise ValidationError(_(u'%(value)d is not a valid game year'), params = {'value': value})
 
 def validate_sc_count(value):
     """
     Checks for a valid SC count
     """
     if value < 0 or value > TOTAL_SCS:
-        raise ValidationError(u'%s is not a valid SC count' % value)
+        raise ValidationError(_(u'%(value)d is not a valid SC count'), params = {'value': value})
 
 # TODO Not used
 def validate_wdd_id(value):
@@ -427,7 +428,7 @@ def validate_wdd_id(value):
     url = u'http://world-diplomacy-database.com/php/results/player_fiche.php?id_player=%d' % value
     p = urllib2.urlopen(url)
     if p.geturl() != url:
-        raise ValidationError(u'%d is not a valid WDD Id' % value)
+        raise ValidationError(_(u'%(value)d is not a valid WDD Id'), params = {'value': value})
 
 class GreatPower(models.Model):
     """
@@ -553,7 +554,7 @@ def position_str(position):
         result += u'rd'
     else:
         result += u'th'
-    return result
+    return _(result)
 
 class Player(models.Model):
     """
@@ -561,7 +562,7 @@ class Player(models.Model):
     """
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-    wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name='WDD player id', blank=True, null=True)
+    wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name=_(u'WDD player id'), blank=True, null=True)
     # TODO Would be nice to support a picture of the player, too
 
     class Meta:
@@ -584,11 +585,15 @@ class Player(models.Model):
             # Not much we can do in this case
             return
         except InvalidWDDId:
-            raise ValidationError, u'WDD Id %d is invalid' % self.wdd_player_id
+            raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'), params = {'wdd_id': self.wdd_player_id})
         # TODO This may be too strict
         wdd_name = bg.name()
         if wdd_name != self.__unicode__():
-            raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
+            raise ValidationError(_(u'WDD Id %(wdd_id)d is for %(wdd_name)s, not %(first_name)s %(last_name)s'),
+                                  params = {'wdd_id': self.wdd_player_id,
+                                            'wdd_name': wdd_name,
+                                            'first_name': self.first_name,
+                                            'last_name': self.last_name})
 
     def _rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
@@ -598,7 +603,7 @@ class Player(models.Model):
         if plays == 0:
             return results
         if (mask & MASK_TOURNEY_COUNT) != 0:
-            results.append(u'%s has competed in %d tournament(s).' % (self, plays))
+            results.append(_(u'%(name)s has competed in %(number)d tournament(s).') % {'name': self, 'number': plays})
         if (mask & MASK_TITLES) != 0:
             # Add summaries of actual titles
             titles = {}
@@ -611,20 +616,24 @@ class Player(models.Model):
                 results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
-            results.append(u'%s first competed in a tournament (%s) in %d.' % (self, first.tournament, first.year))
+            results.append(_(u'%(name)s first competed in a tournament (%(tournament)s) in %(year)d.') % {'name': self,
+                                                                                                          'tournament': first.tournament,
+                                                                                                          'year': first.year})
         if (mask & MASK_LAST_TOURNEY) != 0:
             last = ranking_set.last()
-            results.append(u'%s most recently competed in a tournament (%s) in %d.' % (self, last.tournament, last.year))
+            results.append(_(u'%(name)s most recently competed in a tournament (%(tournament)s) in %(year)d.') % {'name': self,
+                                                                                                                  'tournament': last.tournament,
+                                                                                                                  'year': last.year})
         if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
             wins = ranking_set.filter(position=1).count()
             if wins > 1:
-                results.append(u'%s has won %d tournaments.' % (self, wins))
+                results.append(_(u'%(name)s has won %(wins)d tournaments.') % {'name': self, 'wins': wins})
             elif wins > 0:
-                results.append(u'%s has won %d tournament.' % (self, wins))
+                results.append(_(u'%(name)s has won %(wins)d tournament.') % {'name': self, 'wins': wins})
             else:
                 best = ranking_set.aggregate(Min('position'))['position__min']
                 pos = position_str(best)
-                results.append(u'The best tournament result for %s is %s.' % (self, pos))
+                results.append(_(u'The best tournament result for %(name)s is %(position)s.') % {'name': self, 'position': pos})
         return results
 
     def _results(self, power=None, mask=MASK_ALL_BG):
@@ -633,42 +642,62 @@ class Player(models.Model):
         results_set = self.playergameresult_set.order_by('year')
         if power:
             results_set = results_set.filter(power=power)
-            c_str = u' as %s' % power
+            c_str = _(u' as %(power)s') % {'power': power}
         else:
-            c_str = ''
+            c_str = u''
         games = results_set.count()
         if games == 0:
             if (mask & MASK_GAMES_PLAYED) != 0:
-                results.append(u'%s has never played%s in a tournament before.' % (self, c_str))
+                results.append(_(u'%(name)s has never played%(power)s in a tournament before.') % {'name': self,
+                                                                                                   'power': c_str})
             return results
         if (mask & MASK_GAMES_PLAYED) != 0:
-            results.append(u'%s has played %d tournament games%s.' % (self, games, c_str))
+            results.append(_(u'%(name)s has played %(games)d tournament games%(power)s.') % {'name': self,
+                                                                                             'games': games,
+                                                                                             'power': c_str})
         if (mask & MASK_BEST_SC_COUNT) != 0:
             best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
-            results.append(u'%s has finished with as many as %d centres%s in tournament games.' % (self, best, c_str))
+            results.append(_(u'%(name)s has finished with as many as %(dots)d centres%(power)s in tournament games.') % {'name': self,
+                                                                                                                         'dots': best,
+                                                                                                                         'power': c_str})
             solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
         if (mask & MASK_SOLO_COUNT) != 0:
             solos = solo_set.count()
             if solos > 0:
-                results.append(u'%s has soloed %d of %d tournament games played%s (%.2f%%).' % (self, solos, games, c_str, 100.0*float(solos)/float(games)))
+                results.append(_(u'%(name)s has soloed %(solos)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).') % {'name': self,
+                                                                                                                                          'solos': solos,
+                                                                                                                                          'games': games,
+                                                                                                                                          'power': c_str,
+                                                                                                                                          'percentage': 100.0*float(solos)/float(games)})
             else:
-                results.append(u'%s has yet to solo%s at a tournament.' % (self, c_str))
+                results.append(_(u'%(name)s has yet to solo%(power)s at a tournament.') % {'name': self,
+                                                                                           'power': c_str})
         if (mask & MASK_ELIM_COUNT) != 0:
             query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
             eliminations_set = results_set.filter(query)
             eliminations = eliminations_set.count()
             if eliminations > 0:
-                results.append(u'%s was eliminated in %d of %d tournament games played%s (%.2f%%).' % (self, eliminations, games, c_str, 100.0*float(eliminations)/float(games)))
+                results.append(_(u'%(name)s was eliminated in %(deaths)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).') % {'name': self,
+                                                                                                                                                  'deaths': eliminations,
+                                                                                                                                                  'games': games,
+                                                                                                                                                  'power': c_str,
+                                                                                                                                                  'percentage': 100.0*float(eliminations)/float(games)})
             else:
-                results.append(u'%s has yet to be eliminated%s in a tournament.' % (self, c_str))
+                results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.') % {'name': self,
+                                                                                                   'power': c_str})
         if (mask & MASK_BOARD_TOP_COUNT) != 0:
             query = Q(result='W') | Q(position=1)
             victories_set = results_set.filter(query)
             board_tops = victories_set.count()
             if board_tops > 0:
-                results.append(u'%s topped the board in %d of %d tournament games played%s (%.2f%%).' % (self, board_tops, games, c_str, 100.0*float(board_tops)/float(games)))
+                results.append(_(u'%(name)s topped the board in %(tops)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).') % {'name': self,
+                                                                                                                                                  'tops': board_tops,
+                                                                                                                                                  'games': games,
+                                                                                                                                                  'power': c_str,
+                                                                                                                                                  'percentage': 100.0*float(board_tops)/float(games)})
             else:
-                results.append(u'%s has yet to top the board%s at a tournament.' % (self, c_str))
+                results.append(_(u'%(name)s has yet to top the board%(power)s at a tournament.') % {'name': self,
+                                                                                                   'power': c_str})
         return results
 
     def background(self, power=None, mask=MASK_ALL_BG):
@@ -690,12 +719,12 @@ class Tournament(models.Model):
     # This is the name of a TournamentScoringSystem object
     tournament_scoring_system = models.CharField(max_length=40,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
-                                                 help_text='How to combine round scores into a tournament score')
+                                                 help_text=_(u'How to combine round scores into a tournament score'))
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a RoundScoringSystem object
     round_scoring_system = models.CharField(max_length=40,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS),
-                                            help_text='How to combine game scores into a round score')
+                                            help_text=_(u'How to combine game scores into a round score'))
 
     class Meta:
         ordering = ['-start_date']
@@ -783,10 +812,10 @@ class Round(models.Model):
     # This is the name of a GameScoringSystem object
     # There has at least been talk of tournaments using multiple scoring systems, one per round
     scoring_system = models.CharField(max_length=40,
-                                      verbose_name='Game scoring system',
+                                      verbose_name=_(u'Game scoring system'),
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
-                                      help_text='How to calculate a score for one game')
-    dias = models.BooleanField(verbose_name='Draws Include All Survivors')
+                                      help_text=_(u'How to calculate a score for one game'))
+    dias = models.BooleanField(verbose_name=_(u'Draws Include All Survivors'))
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
@@ -810,14 +839,14 @@ class Round(models.Model):
         """
         results = []
         if (mask & MASK_ROUND_ENDPOINTS) & self.earliest_end_time:
-            results.append(u'Round %d could end as early as %s.' % (self.number,
-                                                                    self.earliest_end_time.strftime("%H:%M")))
+            results.append(_(u'Round %(round)d could end as early as %(time)s.') % {'round': self.number,
+                                                                                    'time': self.earliest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) & self.latest_end_time:
-            results.append(u'Round %d could end as late as %s.' % (self.number,
-                                                                   self.latest_end_time.strftime("%H:%M")))
+            results.append(_(u'Round %(round)d could end as late as %(time)s.') % {'round': self.number,
+                                                                                   'time': self.latest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) & self.final_year:
-            results.append(u'Round %d will end after playing year %d.' % (self.number,
-                                                                          self.final_year))
+            results.append(_(u'Round %(round)d will end after playing year %(year)d.') % {'round': self.number,
+                                                                                          'year': self.final_year})
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -825,16 +854,16 @@ class Round(models.Model):
     def clean(self):
         # Must provide either both end times, or neither
         if self.earliest_end_time and not self.latest_end_time:
-            raise ValidationError('Earliest end time specified without latest end time')
+            raise ValidationError(_(u'Earliest end time specified without latest end time'))
         if self.latest_end_time and not self.earliest_end_time:
-            raise ValidationError('Latest end time specified without earliest end time')
+            raise ValidationError(_(u'Latest end time specified without earliest end time'))
 
     def get_absolute_url(self):
         return reverse('round_detail',
                        args=[str(self.tournament.id), str(self.number)])
 
     def __unicode__(self):
-        return u'%s round %d' % (self.tournament, self.number)
+        return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament, 'round': self.number}
 
 class Game(models.Model):
     """
@@ -847,10 +876,10 @@ class Game(models.Model):
     started_at = models.DateTimeField()
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
-    the_round = models.ForeignKey(Round, verbose_name='round')
+    the_round = models.ForeignKey(Round, verbose_name=_(u'round'))
     # TODO Use this
     power_assignment = models.CharField(max_length=1,
-                                        verbose_name='Power assignment method',
+                                        verbose_name=_(u'Power assignment method'),
                                         choices=POWER_ASSIGNS,
                                         default=RANDOM)
 
@@ -890,7 +919,7 @@ class Game(models.Model):
         Returns a list of strings the describe the latest events in the game
         """
         if include_game_name:
-            gn_str = ' in game %s' % self.name
+            gn_str = _(u' in game %(name)s') % {'name': self.name}
         else:
             gn_str = ''
         if self.is_finished:
@@ -907,7 +936,9 @@ class Game(models.Model):
             first = current_scs.order_by('-count').filter(count=max_scs)
             first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
                                                 scs.power.abbreviation) for scs in list(first)])
-            results.append("Highest SC count%s is %d, for %s." % (gn_str, max_scs, first_str))
+            results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.') % {'game': gn_str,
+                                                                                          'dots': max_scs,
+                                                                                          'player': first_str})
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
         else:
@@ -919,19 +950,19 @@ class Game(models.Model):
             # Who gained 2 or more centres in the last year ?
             if (mask & MASK_GAINERS) != 0:
                 if scs.count - prev.count > 1:
-                    results.append("%s (%s) grew from %d to %d centres%s." % (player_dict[power][0],
-                                                                              power.abbreviation,
-                                                                              prev.count,
-                                                                              scs.count,
-                                                                              gn_str))
+                    results.append(_(u'%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s.') % {'player': player_dict[power][0],
+                                                                                                                 'power': power.abbreviation,
+                                                                                                                 'old': prev.count,
+                                                                                                                 'new': scs.count,
+                                                                                                                 'game': gn_str})
             # Who lost 2 or more centres in the last year ?
             if (mask & MASK_LOSERS) != 0:
                 if prev.count - scs.count > 1:
-                    results.append("%s (%s) shrank from %d to %d centres%s." % (player_dict[power][0],
-                                                                                power.abbreviation,
-                                                                                prev.count,
-                                                                                scs.count,
-                                                                                gn_str))
+                    results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centres%(game)s.') % {'player': player_dict[power][0],
+                                                                                                                   'power': power.abbreviation,
+                                                                                                                   'old': prev.count,
+                                                                                                                   'new': scs.count,
+                                                                                                                   'game': gn_str})
         if (mask & MASK_DRAW_VOTES) != 0:
             # What draw votes failed in the last year ?
             draws_set = self.drawproposal_set.order_by('-year')
@@ -943,12 +974,15 @@ class Game(models.Model):
                 for power in powers:
                     # TODO This looks broken if there were replacements
                     game_player = self.gameplayer_set.filter(power=power).get()
-                    incl.append('%s (%s)' % (game_player.player, power.abbreviation))
+                    incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
+                                                                'power': power.abbreviation})
                 incl_str = ', '.join(incl)
                 if sz == 1:
-                    d_str = u'Vote to concede to %s failed%s.' % (incl_str, gn_str)
+                    d_str = _(u'Vote to concede to %(powers)s failed%(game)s.') % {'powers': incl_str, 'game': gn_str}
                 else:
-                    d_str = 'Draw vote for %d-way between %s failed%s.' % (sz, incl_str, gn_str)
+                    d_str = _(u'Draw vote for %(n)d-way between %(powers)s failed%(game)s.') % {'n': sz,
+                                                                                                'powers': incl_str,
+                                                                                                'game': gn_str}
                 results.append(d_str)
         if (mask & MASK_ELIMINATIONS) != 0:
             # Who has been eliminated so far, and when ?
@@ -957,10 +991,10 @@ class Game(models.Model):
                 scs = zeroes[0]
                 power = scs.power
                 zeroes = zeroes.exclude(power=power)
-                results.append("%s (%s) was eliminated in %d%s." % (player_dict[power][0],
-                                                                    power.abbreviation,
-                                                                    scs.year,
-                                                                    gn_str))
+                results.append(_(u'%(player)s (%(power)s) was eliminated in %(year)d%(game)s.') % {'player': player_dict[power][0],
+                                                                                                   'power': power.abbreviation,
+                                                                                                   'year': scs.year,
+                                                                                                   'game': gn_str})
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -1040,27 +1074,32 @@ class Game(models.Model):
             powers = draw.powers()
             sz = len(powers)
             if sz == 1:
-                retval = u'Game%s conceded to ' % gn_str
+                retval = _(u'Game%(game)s conceded to ') % {'game': gn_str}
             else:
-                retval = u'Vote passed to end game%s as a %d-way draw between ' % (gn_str, sz)
+                retval = _(u'Vote passed to end game%(game)s as a %(n)d-way draw between ') % {'game': gn_str, 'n': sz}
             winners = []
             for power in powers:
                 # TODO This looks broken if there were replacements
                 game_player = self.gameplayer_set.filter(power=power).get()
-                winners.append('%s (%s)' % (game_player.player, power.abbreviation))
+                winners.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
+                                                               'power': power.abbreviation})
             return retval + ', '.join(winners)
         # Did a power reach 18 (or more) centres ?
         soloer = self.soloer()
         if soloer:
             # TODO would be nice to include their SC count
-            return u'Game%s won by %s (%s)' % (gn_str, soloer.player, soloer.power.abbreviation)
+            return _(u'Game%(game)s won by %(player)s (%(power)s)') % {'game': gn_str,
+                                                                       'player': soloer.player,
+                                                                       'power': soloer.power.abbreviation}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
             player_dict = self.players(latest=True)
             toppers = self.board_toppers()
-            first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
-                                                scs.power.abbreviation) for scs in list(toppers)])
-            return u'Game%s ended. Board top is %d centres, for %s' % (gn_str, scs.count, first_str)
+            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': player_dict[scs.power][0],
+                                                                   'power': scs.power.abbreviation} for scs in list(toppers)])
+            return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
+                                                                                             'top': scs.count,
+                                                                                             'player': first_str}
         # Then it seems to be ongoing
         return None
 
@@ -1126,21 +1165,21 @@ class DrawProposal(models.Model):
             if not self.__dict__['power_%d_id' % n]:
                 found_null = True
             elif found_null:
-                raise ValidationError('Draw powers should go as early as possible')
+                raise ValidationError(_(u'Draw powers should go as early as possible'))
         # Each power must be unique
         powers = set()
         for name, value in self.__dict__.iteritems():
             if value and name.startswith('power_'):
                 if value in powers:
                     power = GreatPower.objects.get(pk=value)
-                    raise ValidationError('%s present more than once' % power)
+                    raise ValidationError(_(u'%(power)s present more than once'), params = {'power':  power})
                 powers.add(value)
         # Only one successful draw proposal
         if self.passed:
             try:
                 p = DrawProposal.objects.filter(game=self.game, passed=True).get()
                 if p != self:
-                    raise ValidationError('Game already has a successful draw proposal')
+                    raise ValidationError(_(u'Game already has a successful draw proposal'))
             except DrawProposal.DoesNotExist:
                 pass
         # No dead powers included
@@ -1151,10 +1190,10 @@ class DrawProposal(models.Model):
         for sc in scs:
             if sc.power in powers:
                 if sc.count == 0:
-                    raise ValidationError('Dead power %s included in proposal' % sc.power)
+                    raise ValidationError(_(u'Dead power %(power)s included in proposal'), params = {'power': sc.power})
             else:
                 if dias and sc.count > 0:
-                    raise ValidationError('Missing alive power %s in DIAS game' % sc.power)
+                    raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'), params = {'power': sc.power})
 
     def save(self, *args, **kwargs):
         super(DrawProposal, self).save(*args, **kwargs)
@@ -1171,7 +1210,7 @@ class RoundPlayer(models.Model):
     A person who played a round in a tournament
     """
     player = models.ForeignKey(Player)
-    the_round = models.ForeignKey(Round, verbose_name='round')
+    the_round = models.ForeignKey(Round, verbose_name=_(u'round'))
     score = models.FloatField(default=0.0)
 
     class Meta:
@@ -1182,10 +1221,10 @@ class RoundPlayer(models.Model):
         t = self.the_round.tournament
         tp = self.player.tournamentplayer_set.filter(tournament=t)
         if not tp:
-            raise ValidationError('Player is not yet in the tournament')
+            raise ValidationError(_(u'Player is not yet in the tournament'))
 
     def __unicode__(self):
-        return u'%s in %s' % (self.player, self.the_round)
+        return _(u'%(player)s in %(round)s') % {'player': self.player, 'round': self.the_round}
 
 class GamePlayer(models.Model):
     """
@@ -1210,12 +1249,12 @@ class GamePlayer(models.Model):
         t = self.game.the_round.tournament
         tp = self.player.tournamentplayer_set.filter(tournament=t)
         if not tp:
-            raise ValidationError('Player is not yet in the tournament')
+            raise ValidationError(_(u'Player is not yet in the tournament'))
         # Need either both or neither of last_year and last_season
         if self.last_season == '' and self.last_year:
-            raise ValidationError('Final season played must also be specified')
+            raise ValidationError(_(u'Final season played must also be specified'))
         if self.last_season != '' and not self.last_year:
-            raise ValidationError('Final year must be specified with final season')
+            raise ValidationError(_(u'Final year must be specified with final season'))
         # Check for overlap with another player
         others = GamePlayer.objects.filter(game=self.game, power=self.power).exclude(player=self.player)
         # Ensure one player at a time
@@ -1224,7 +1263,7 @@ class GamePlayer(models.Model):
                 we_were_first = True
             elif self.first_year == other.first_year:
                 if self.first_season == other.first_season:
-                    raise ValidationError()
+                    raise ValidationError(_(u'Overlap between players'))
                 if self.first_season == SPRING:
                     we_were_first = True
                 else:
@@ -1233,26 +1272,40 @@ class GamePlayer(models.Model):
                 we_were_first = False
             if we_were_first:
                 # Our term must finish before theirs started
-                err_str = '%s is listed as playing %s in game %s from %s %d' % (other.player,
-                                                                                power,
-                                                                                other.first_season,
-                                                                                other.first_year)
+                err_str = _(u'%(player)s is listed as playing %(power)s in game %(game)s from %(season)s %(year)')
                 if not self.last_year or self.last_year > other.first_year:
-                    raise ValidationError(err_str)
+                    raise ValidationError(err_str,
+                                          params = {'player': other.player,
+                                                    'power': power,
+                                                    'game': XXX,
+                                                    'season': other.first_season,
+                                                    'year': other.first_year})
                 if self.last_year == other.first_year:
                     if self.last_season != SPRING or other.first_season != FALL:
-                        raise ValidationError(err_str)
+                        raise ValidationError(err_str,
+                                              params = {'player': other.player,
+                                                        'power': power,
+                                                        'game': XXX,
+                                                        'season': other.first_season,
+                                                        'year': other.first_year})
             else:
                 # Their term must finish before ours started
-                err_str = '%s is listed as still playing %s in game %s in %s %d' % (other.player,
-                                                                                    power,
-                                                                                    self.first_season,
-                                                                                    self.first_year)
+                err_str = _(u'%(player)s is listed as still playing %(power)s in game %(game)s from %(season)s %(year)')
                 if not other.last_year or other.last_year > self.first_year:
-                    raise ValidationError(err_str)
+                    raise ValidationError(err_str,
+                                          params = {'player': other.player,
+                                                    'power': power,
+                                                    'game': self.game,
+                                                    'season': self.first_season,
+                                                    'year': self.first_year})
                 if other.last_year == self.first_year:
                     if other.last_season != SPRING or self.first_season != FALL:
-                        raise ValidationError(err_str)
+                        raise ValidationError(err_str,
+                                              params = {'player': other.player,
+                                                        'power': power,
+                                                        'game': self.game,
+                                                        'season': self.first_season,
+                                                        'year': self.first_year})
         # TODO Ensure no gaps - may have to be done elsewhere
 
     def __unicode__(self):
@@ -1290,10 +1343,10 @@ class GameImage(models.Model):
 
     def clean(self):
         if self.season == SPRING and self.phase == ADJUSTMENTS:
-            raise ValidationError('No adjustment phase in spring')
+            raise ValidationError(_(u'No adjustment phase in spring'))
 
     def __unicode__(self):
-        return u'%s %s image' % (self.game, self.turn_str())
+        return _(u'%(game)s %(turn)s image') % {'game': self.game, 'turn': self.turn_str()}
 
 class CentreCount(models.Model):
     """
@@ -1311,15 +1364,15 @@ class CentreCount(models.Model):
         # Is this for a year that is supposed to be played ?
         final_year = self.game.the_round.final_year
         if final_year and self.year > final_year:
-                raise ValidationError('Games in this round end with %d' % final_year)
+                raise ValidationError(_(u'Games in this round end with %(year)d'), params = {'year': final_year})
         # Not possible to more than double your count in one year
         # or to recover from an elimination
         try:
             prev = CentreCount.objects.filter(power=self.power, game=self.game, year=self.year-1).get()
             if self.count > 2 * prev.count:
-                raise ValidationError('SC count for a power cannot more than double in a year')
+                raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
             elif (prev.count == 0) and (self.count > 0):
-                raise ValidationError('SC count for a power cannot increase from zero')
+                raise ValidationError(_(u'SC count for a power cannot increase from zero'))
         except CentreCount.DoesNotExist:
             # We're either missing a year, or this is the first year - let that go
             pass
@@ -1354,9 +1407,11 @@ class PlayerRanking(models.Model):
 
     def __unicode__(self):
         pos = position_str(self.position)
-        s = u'%s came %s at %s' % (self.player, pos, self.tournament)
+        s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
+                                                                    'position': pos,
+                                                                    'tournament': self.tournament}
         if self.tournament[-4:] != unicode(self.year):
-            s += u' in %d' % self.year
+            s += _(u' in %(year)d') % {'year': self.year}
         return s
 
 class PlayerGameResult(models.Model):
@@ -1380,5 +1435,7 @@ class PlayerGameResult(models.Model):
         unique_together = ('tournament_name', 'game_name', 'player', 'power')
 
     def __unicode__(self):
-        return u'%s played %s in %s' % (self.player, self.power, self.game_name)
+        return _(u'%(player)s played %(power)s in %(game)s') % {'player': self.player,
+                                                                'power': self.power,
+                                                                'game': self.game_name}
 

@@ -23,6 +23,7 @@ from django import forms
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.template import RequestContext
 from django.forms import ModelForm
+from django.utils.translation import ugettext as _
 
 from tournament.models import *
 
@@ -105,7 +106,7 @@ class GamePlayersForm(forms.Form):
             if player == None:
                 return cleaned_data
             if player in players:
-                raise forms.ValidationError('Player %s appears more than once' % player)
+                raise forms.ValidationError(_('Player %(player)s appears more than once') % {'player':player})
             players.append(player)
 
         return cleaned_data
@@ -155,7 +156,9 @@ class SCCountForm(forms.Form):
                 return cleaned_data
             total_scs += dots
         if total_scs > TOTAL_SCS:
-            raise forms.ValidationError("Total SC count for %d is %d, more than %d" % (year, total_scs, TOTAL_SCS))
+            raise forms.ValidationError(_("Total SC count for %(year)d is %(dots)d, more than %(max)d") % {'year': year,
+                                                                                                           'dots': total_scs,
+                                                                                                           'max': TOTAL_SCS})
         # Add a pseudo-field with the number of neutrals, for convenience
         self.cleaned_data['neutral'] = TOTAL_SCS - total_scs
 
@@ -176,14 +179,16 @@ class BaseSCCountFormset(BaseFormSet):
             if not year:
                 continue
             if year in years:
-                raise forms.ValidationError('Year %s appears more than once' % year)
+                raise forms.ValidationError(_('Year %(year)s appears more than once') % {'year': year})
             # For convenience, store the number of neutrals left each year
             years[year] = form.cleaned_data.get('neutral')
         # Now check that the number of neutrals only goes down
         neutrals = TOTAL_SCS
         for year in sorted(years.iterkeys()):
             if years[year] > neutrals:
-                raise forms.ValidationError('Neutrals increases from %d to %d in %d' % (neutrals, years[year], year))
+                raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d') % {'before': neutrals,
+                                                                                                                'after': years[year],
+                                                                                                                'year': year})
             neutrals = years[year]
 
 class PlayerRoundForm(forms.Form):
@@ -220,7 +225,7 @@ class BasePlayerRoundFormset(BaseFormSet):
             if not player:
                 continue
             if player in players:
-                raise forms.ValidationError('Player %s appears more than once' % player)
+                raise forms.ValidationError(_('Player %(player)s appears more than once') % {'player': player})
             players.append(player)
 
     def __init__(self, *args, **kwargs):
