@@ -419,6 +419,7 @@ def validate_sc_count(value):
     if value < 0 or value > TOTAL_SCS:
         raise ValidationError(u'%s is not a valid SC count' % value)
 
+# TODO Not used
 def validate_wdd_id(value):
     """
     Checks a WDD id
@@ -574,6 +575,8 @@ class Player(models.Model):
         add_player_bg(self)
 
     def clean(self):
+        if not self.wdd_player_id:
+            return
         # Check that the WDD id seems to match the name
         try:
             bg = Background(self.wdd_player_id)
@@ -584,7 +587,8 @@ class Player(models.Model):
             raise ValidationError, u'WDD Id %d is invalid' % self.wdd_player_id
         # TODO This may be too strict
         wdd_name = bg.name()
-        raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
+        if wdd_name != self.__unicode__():
+            raise ValidationError, u'WDD Id %d is for %s, not %s %s' % (self.wdd_player_id, wdd_name, self.first_name, self.last_name)
 
     def _rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
