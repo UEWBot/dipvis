@@ -964,8 +964,9 @@ class Game(models.Model):
                                                                                                                    'new': scs.count,
                                                                                                                    'game': gn_str})
         if (mask & MASK_DRAW_VOTES) != 0:
-            # What draw votes failed in the last year ?
-            draws_set = self.drawproposal_set.order_by('-year')
+            # What draw votes failed recently ?
+            # Note that it's fairly arbitrary where we draw the line here
+            draws_set = self.drawproposal_set.order_by('-year').filter(year__gte=last_year)
             # TODO Lots of overlap with result_str()
             for d in draws_set:
                 powers = d.powers()
