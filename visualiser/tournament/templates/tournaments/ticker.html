@@ -1,10 +1,13 @@
 <head>
   {% with round=tournament.current_round %}
   {% if round %}
-    {% if round.game_set.count == 0 %}
+    {% if round.game_set.count > 0 %}
       <meta http-equiv="refresh" content="0; url=../news_ticker/">
+    {% else %}
+      <meta http-equiv="refresh" content="0; url=../background_ticker/">
     {% endif %}
+  {% else %}
+    <meta http-equiv="refresh" content="0; url=../background_ticker/">
   {% endif %}
   {% endwith %}
-  <meta http-equiv="refresh" content="0; url=../background_ticker/">
 </head>
