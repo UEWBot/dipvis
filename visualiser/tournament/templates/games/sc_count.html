@@ -6,7 +6,7 @@
 <h1>Game {{ game }} SC Chart</h1>
 <table class="form">
    <thead><tr>
-       <th rowspan=2>Year</th>
+       <th rowspan=2></th>
        {% for power in powers %}
            <th bgcolor={{ power.colour }}>{{ power }}</th>
        {% endfor %}
@@ -21,7 +21,11 @@
    {% for row in rows %}
        <tr>
            {% for cell in row %}
-               <td align=center>{{ cell }} </td>
+               {% if forloop.first %}
+                 <th align=center>{{ cell }} </th>
+               {% else %}
+                 <td align=center>{{ cell|floatformat }} </td>
+               {% endif %}
            {% endfor %}
        </tr>
    {% endfor %}

@@ -116,7 +116,7 @@ class GameScoringSystem():
 
     def _the_game(self, centre_counts):
         """Returns the game in question."""
-        return centre_counts[0].game
+        return centre_counts.first().game
 
     def _final_year(self, centre_counts):
         """Returns the most recent year we have centre counts for."""
@@ -128,7 +128,7 @@ class GameScoringSystem():
 
     def _survivor_count(self, centre_counts):
         """Returns the number of surviving powers"""
-        return self.final_year_scs(centre_counts).filter(count__gt=0).count()
+        return self._final_year_scs(centre_counts).filter(count__gt=0).count()
 
     def scores(self, centre_counts):
         """
@@ -181,11 +181,15 @@ class GScoringDrawSize(GameScoringSystem):
         is_dias = the_game.is_dias()
         draw = the_game.passed_draw()
         survivors = self._survivor_count(centre_counts)
+        soloed = the_game.soloer() != None
         # We only care about the most recent centrecounts
         for sc in self._final_year_scs(centre_counts):
             retval[sc.power] = 0
             if sc.count >= WINNING_SCS:
                 retval[sc.power] = 100.0
+            elif soloed:
+                # Leave the score at zero
+                pass
             elif draw and sc.power in draw.powers():
                 retval[sc.power] = 100.0 / draw.draw_size()
             elif sc.count > 0:
@@ -201,9 +205,9 @@ def adjust_rank_score(centre_counts, rank_points):
     Where two or more powers have the same score, the ranking points for their positions
     are shared eveny between them.
     """
-    # Nothing to do if there are no rank points to share out
     if len(rank_points) == 0:
-        return []
+        # The rest of them get zero points
+        return [] + [0.0] * len(centre_counts)
     # First count up how many powers tied at the top
     i = 0
     count = 0
@@ -248,7 +252,7 @@ class GScoringCDiplo(GameScoringSystem):
         retval = {}
         final_scs = self._final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
-        rank_pts = adjust_rank_score(centre_counts, self.position_pts)
+        rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
         i = 0
         for sc in final_scs:
             if final_scs[0].count >= WINNING_SCS:
@@ -277,9 +281,9 @@ class GScoringSumOfSquares(GameScoringSystem):
         final_scs = self._final_year_scs(centre_counts)
         sum_of_squares = 0
         for sc in final_scs:
-            retval_solo = 0
-            retval[sc.power] = sc.count * sc.count * 1.0
-            sum_of_squares += sc.count
+            retval_solo[sc.power] = 0
+            retval[sc.power] = sc.count * sc.count * 100.0
+            sum_of_squares += sc.count * sc.count
             if sc.count >= WINNING_SCS:
                 # Overwrite the previous totals we came up with
                 retval_solo[sc.power] = 100.0
@@ -395,6 +399,26 @@ T_SCORING_SYSTEMS = [
     TScoringSum(_('Sum best 3 rounds'), 3),
     TScoringSum(_('Sum best 4 rounds'), 4),
 ]
+
+def find_scoring_system(name, the_list):
+    """
+    Searches through the_list for a scoring system with the specified name.
+    Returns either the ScoringSystem object or None.
+    """
+    for s in the_list:
+        # There shouldn't be any abstract systems in here, but just in case...
+        if not s.is_abstract and s.name == name:
+            return s
+    return None
+
+def find_game_scoring_system(name):
+    return find_scoring_system(name, G_SCORING_SYSTEMS)
+
+def find_round_scoring_system(name):
+    return find_scoring_system(name, R_SCORING_SYSTEMS)
+
+def find_tournament_scoring_system(name):
+    return find_scoring_system(name, T_SCORING_SYSTEMS)
 
 def get_scoring_systems(systems):
     return sorted([(s.name, s.name) for s in systems if not s.is_abstract])
@@ -885,6 +909,17 @@ class Game(models.Model):
 
     class Meta:
         ordering = ['name']
+
+    def scores(self):
+        """
+        Returns the scores if the game were to end now.
+        Return value is a dict, indexed by power id, of scores.
+        """
+        system = find_game_scoring_system(self.the_round.scoring_system)
+        if not system:
+            # TODO Raise an exception ?
+            return []
+        return system.scores(self.centrecount_set)
 
     def is_dias(self):
         """

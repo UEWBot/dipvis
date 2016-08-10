@@ -697,6 +697,12 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
                 row.append(0)
         row.append(neutrals)
         rows.append(row)
+    # Add one final row with the current scores
+    scores = g.scores()
+    row = [_(u'Score')]
+    for power in powers:
+        row.append(scores[power])
+    rows.append(row)
     context = {'game': g, 'powers': powers, 'players': ps, 'rows': rows}
     if refresh:
         context['refresh'] = True
