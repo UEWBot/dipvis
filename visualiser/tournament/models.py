@@ -863,7 +863,7 @@ class Round(models.Model):
                        args=[str(self.tournament.id), str(self.number)])
 
     def __unicode__(self):
-        return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament, 'round': self.number}
+        return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number}
 
 class Game(models.Model):
     """
