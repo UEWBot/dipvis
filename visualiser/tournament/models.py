@@ -399,7 +399,6 @@ class TScoringSum(TournamentScoringSystem):
         round_scores = {}
         for r in Round.objects.filter(roundplayer__in=round_players):
             round_scores[r] = r.scores()
-        print round_scores
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players):
             if p in retval:
@@ -415,8 +414,6 @@ class TScoringSum(TournamentScoringSystem):
                 except KeyError:
                     pass
             player_scores.sort(reverse=True)
-            print player_scores
-            print player_scores[:self.scored_rounds]
             # Add up the first N
             for s in player_scores[:self.scored_rounds]:
                 score += s
