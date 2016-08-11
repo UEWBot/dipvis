@@ -394,15 +394,33 @@ class TScoringSum(TournamentScoringSystem):
         Return a dict, indexed by player key, of scores.
         """
         retval = {}
+        # Retrieve all the scores for all the rounds involved.
+        # This will give us "if the round ended now" scores for in-progress round(s)
+        round_scores = {}
+        for r in Round.objects.filter(roundplayer__in=round_players):
+            round_scores[r] = r.scores()
+        print round_scores
         # for each player who played any of the specified rounds
-        for p in Player.objects.filter(roundplayer_set__in=round_players):
+        for p in Player.objects.filter(roundplayer__in=round_players):
+            if p in retval:
+                continue
             score = 0
-            # Find just their rounds, in order of decreasing score
-            player_rounds = round_players.filter(player=p).order_by('-score')
+            # Find just their rounds
+            player_rounds = round_players.filter(player=p)
+            # Extract the scores into a sorted list, highest first
+            player_scores = []
+            for r in player_rounds:
+                try:
+                    player_scores.append(round_scores[r.the_round][r.player])
+                except KeyError:
+                    pass
+            player_scores.sort(reverse=True)
+            print player_scores
+            print player_scores[:self.scored_rounds]
             # Add up the first N
-            for pr in player_rounds[:self.scored_rounds]:
-                score += pr.score
-            retval[p.player] = score
+            for s in player_scores[:self.scored_rounds]:
+                score += s
+            retval[p] = score
         return retval
 
 # All the tournament scoring systems we support
@@ -765,6 +783,23 @@ class Tournament(models.Model):
     class Meta:
         ordering = ['-start_date']
 
+    def scores(self, force_recalculation=False):
+        """
+        Returns the scores for everyone who played in the tournament.
+        """
+        # If the tournament is over, report the stored scores unless we're told to recaclulate
+        if self.is_finished() and not force_recalculation:
+            retval = {}
+            for p in self.tournamentplayer_set.all():
+                retval[p.player] = p.score
+            return retval
+
+        # Find the scoring system to combine round scores into a tournament score
+        system = find_tournament_scoring_system(self.tournament_scoring_system)
+        if not system:
+            raise InvalidScoringSystem(self.tournament_scoring_system)
+        return system.scores(RoundPlayer.objects.filter(the_round__tournament=self))
+
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of background strings for the tournament
@@ -910,15 +945,6 @@ class Round(models.Model):
             raise ValidationError(_(u'Earliest end time specified without latest end time'))
         if self.latest_end_time and not self.earliest_end_time:
             raise ValidationError(_(u'Latest end time specified without earliest end time'))
-
-    def save(self, *args, **kwargs):
-        super(Round, self).save(*args, **kwargs)
-        # If the round is (now) finished, store the player scores
-        if self.is_finished():
-            scores = self.scores(True)
-            for p in self.roundplayer_set.all():
-                p.score = scores[p.player]
-                p.save()
 
     def get_absolute_url(self):
         return reverse('round_detail',
@@ -1198,6 +1224,28 @@ class Game(models.Model):
             for p in players:
                 p.score = scores[p.power]
                 p.save()
+
+            # If the round is (now) finished, store the player scores
+            r = self.the_round
+            if r.is_finished():
+                scores = r.scores(True)
+                for p in r.roundplayer_set.all():
+                    try:
+                        p.score = scores[p.player]
+                    except KeyError:
+                        # Player was checked at rool call but didn't play
+                        # TODO May want to add a way to give them some points
+                        pass
+                    p.save()
+
+            # if the tournament is (now) finished, store the player scores
+            t = self.the_round.tournament
+            if t.is_finished():
+                scores = t.scores(True)
+                for p in t.tournamentplayer_set.all():
+                    p.score = scores[p.player]
+                    p.save()
+
         # Auto-create 1900 SC counts (unless they already exist)
         for power in GreatPower.objects.all():
             i, created = CentreCount.objects.get_or_create(power=power,
@@ -1205,6 +1253,7 @@ class Game(models.Model):
                                                            year=FIRST_YEAR-1,
                                                            count=power.starting_centres)
             i.save()
+
         # Auto-create S1901M image (if it doesn't exist)
         i, created = GameImage.objects.get_or_create(game=self,
                                                      year=FIRST_YEAR,

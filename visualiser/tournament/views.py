@@ -336,6 +336,8 @@ def tournament_scores(request, tournament_id, refresh=False):
     round_scores = {}
     for r in rds:
         round_scores[r] = r.scores()
+    # Grab the tournament scores, which will also be "if it ended now"
+    t_scores = t.scores()
     # Construct a list of lists with [player name, round 1 score, ..., round n score, tournament score]
     scores = []
     for p in tps:
@@ -347,7 +349,22 @@ def tournament_scores(request, tournament_id, refresh=False):
             except KeyError:
                 # This player didn't play this round
                 rs.append('')
-        scores.append(['%s' % p.player] + rs + ['%.2f' % p.score])
+        scores.append(['%s' % p.player] + rs + ['%.2f' % t_scores[p.player]])
+    # sort rows by tournament score (they'll retain the alphabetic sorting if equal)
+    scores.sort(key = lambda row: float(row[-1]), reverse=True)
+    # Add one final row showing whether each round is ongoing or not
+    row = ['']
+    for r in rds:
+        if r.is_finished():
+            row.append(_(u'Final'))
+        else:
+            row.append('')
+    if t.is_finished():
+        row.append(_(u'Final'))
+    else:
+        row.append('')
+    print row
+    scores.append(row)
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     if refresh:
         context['refresh'] = True
