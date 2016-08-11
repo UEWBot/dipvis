@@ -442,7 +442,7 @@ def round_scores(request, tournament_id):
                         tp.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('tournament_scores',
-                                                args=(tournament_id,)))
+                                                args=(tournament_id)))
     else:
         data = []
         # Go through each player in the Tournament
@@ -872,8 +872,9 @@ def draw_vote(request, tournament_id, game_name):
                           proposer=form.cleaned_data['proposer'],
                           **kwargs)
         dp.save()
-        # TODO Redirect to somewhere that actually exists...
-        return HttpResponseRedirect('/thanks/')
+        # Redirect to the page for the game
+        return HttpResponseRedirect(reverse('game_detail',
+                                            args=(tournament_id, game_name)))
 
     return render_to_response('games/vote.html',
                               {'tournament': t,
