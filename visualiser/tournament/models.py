@@ -1432,7 +1432,7 @@ class GameImage(models.Model):
         Short string version of season/year/phase
         e.g. 'S1901M'
         """
-        return u'%s%d%s' % (self.season, self.year, phase_str(self.phase))
+        return u'%s%d%s' % (self.season, self.year, phase_str[self.phase])
 
     def clean(self):
         if self.season == SPRING and self.phase == ADJUSTMENTS:
