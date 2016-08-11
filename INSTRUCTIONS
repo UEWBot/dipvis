@@ -1,0 +1,20 @@
+Assuming you have python and Django installed.
+
+You can test out the system as follows:
+1. Create a SQLite database - "python manage.py syncdb"
+   It will be auto-populated with Great Powers and a few known players.
+2. Run the test server - "python manage.py runserver"
+* Missing - add an administrator user ? *
+3. Open the URL "http://127.0.0.1:8000/admin/tournament/player/" in
+   a web broswer and add players by filling in the fields.
+4. Open the URL "http://127.0.0.1:8000/admin/tournament/tournament/" in
+   a web browser and add a tournament by filling in the fields. Optionally
+   add players to the tournament. Note that adding a player to a tournament
+   can take a while because the system copies information from the WDD to
+   its own database.
+5. Open the tournament's page "http://127.0.0.1:8000/tournaments/1/" in a
+   web browser and try out some of the links.
+6. Open the Roll Call URL "http://127.0.0.1:8000/tournaments/1/roll_call/"
+   in a web browser and add players to one or more rounds.
+7. You'll be taken to the page to create a game for the round. Go ahead and
+   do that.
