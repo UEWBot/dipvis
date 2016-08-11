@@ -487,6 +487,8 @@ def roll_call(request, tournament_id):
                 for r_name,value in form.cleaned_data.iteritems():
                     # Ignore non-bool fields and ones that aren't True
                     if value != True:
+                        # TODO Ideally, we should delete any corresponding RoundPlayer here
+                        # This could be a player who was previously checked-off in error
                         continue
                     # Extract the round number from the field name
                     i = int(r_name[6:])
