@@ -104,6 +104,9 @@ TITLE_MAP = {
     'Third' : 3,
 }
 
+class InvalidScoringSystem(Exception):
+    pass
+
 class GameScoringSystem():
     # TODO This doesn't deal with multiple players playing one power
     """
@@ -334,12 +337,21 @@ class RScoringBest(RoundScoringSystem):
         Return a dict, indexed by player key, of scores.
         """
         retval = {}
+        # First retrieve all the scores of all the games that are involved
+        # This will give us the "if the game ended now" score for in-progress games
+        game_scores = {}
+        for g in Game.objects.filter(gameplayer__in=game_players):
+            game_scores[g] = g.scores()
         # for each player who played any of the specified games
-        for p in Player.objects.filter(gameplayer_set__in=game_players):
-            # Find just their games, in order of decreasing score
-            player_games = game_players.filter(player=p).order_by('-score')
-            # Take the score from the first in the list
-            retval[p.player] = player_games[:1].score
+        for p in Player.objects.filter(gameplayer__in=game_players):
+            # For some reason, if a player is in game_players more than once, we'll hit this
+            # TODO Investigate and fix the need for this
+            if p in retval:
+                continue
+            # Find just their games
+            player_games = game_players.filter(player=p)
+            # Find the highest score
+            retval[p] = max(game_scores[g.game][g.power] for g in player_games)
         return retval
 
 # All the round scoring systems we support
@@ -847,6 +859,23 @@ class Round(models.Model):
     class Meta:
         ordering = ['number']
 
+    def scores(self, force_recalculation=False):
+        """
+        Returns the scores for everyone who played in the round.
+        """
+        # If the round is over, report the stored scores unless we're told to recaclulate
+        if self.is_finished() and not force_recalculation:
+            retval = {}
+            for p in self.roundplayer_set.all():
+                retval[p.player] = p.score
+            return retval
+
+        # Find the scoring system to combine game scores into a round score
+        system = find_round_scoring_system(self.tournament.round_scoring_system)
+        if not system:
+            raise InvalidScoringSystem(self.tournament.round_scoring_system)
+        return system.scores(GamePlayer.objects.filter(game__the_round=self))
+
     def is_finished(self):
         gs = self.game_set.all()
         if len(gs) == 0:
@@ -882,6 +911,15 @@ class Round(models.Model):
         if self.latest_end_time and not self.earliest_end_time:
             raise ValidationError(_(u'Latest end time specified without earliest end time'))
 
+    def save(self, *args, **kwargs):
+        super(Round, self).save(*args, **kwargs)
+        # If the round is (now) finished, store the player scores
+        if self.is_finished():
+            scores = self.scores(True)
+            for p in self.roundplayer_set.all():
+                p.score = scores[p.player]
+                p.save()
+
     def get_absolute_url(self):
         return reverse('round_detail',
                        args=[str(self.tournament.id), str(self.number)])
@@ -910,15 +948,26 @@ class Game(models.Model):
     class Meta:
         ordering = ['name']
 
-    def scores(self):
+    def scores(self, force_recalculation=False):
         """
-        Returns the scores if the game were to end now.
+        If the game has ended and force_recalculation is False, report the recorded scores.
+        If the game has not ended or force_recalculation is True, calculate the scores if
+        the game were to end now.
         Return value is a dict, indexed by power id, of scores.
         """
+        if self.is_finished and not force_recalculation:
+            # Return the stored scores for the game
+            retval = {}
+            players = self.gameplayer_set.all()
+            for p in players:
+                # TODO Need to combine scores if multiple players played a power
+                retval[p.power] = p.score
+            return retval
+
+        # Calculate the scores for the game using the specified ScoringSystem
         system = find_game_scoring_system(self.the_round.scoring_system)
         if not system:
-            # TODO Raise an exception ?
-            return []
+            raise InvalidScoringSystem(self.the_round.scoring_system)
         return system.scores(self.centrecount_set)
 
     def is_dias(self):
@@ -1141,6 +1190,14 @@ class Game(models.Model):
 
     def save(self, *args, **kwargs):
         super(Game, self).save(*args, **kwargs)
+        # If the game is (now) finished, store the player scores
+        if self.is_finished:
+            scores = self.scores(True)
+            players = self.gameplayer_set.all()
+            # TODO Need to split the score somehow if there were multiple players of a power
+            for p in players:
+                p.score = scores[p.power]
+                p.save()
         # Auto-create 1900 SC counts (unless they already exist)
         for power in GreatPower.objects.all():
             i, created = CentreCount.objects.get_or_create(power=power,

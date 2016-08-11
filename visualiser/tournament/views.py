@@ -331,14 +331,23 @@ def tournament_scores(request, tournament_id, refresh=False):
     tps = t.tournamentplayer_set.order_by('-score')
     rds = t.round_set.all()
     rounds = [r.number for r in rds]
+    # Grab the scores for each round once.
+    # This will get us the "if the round ended now" scores
+    round_scores = {}
+    for r in rds:
+        round_scores[r] = r.scores()
     # Construct a list of lists with [player name, round 1 score, ..., round n score, tournament score]
     scores = []
     for p in tps:
         rs = []
         for r in rds:
             rp = p.player.roundplayer_set.filter(the_round=r)
-            rs.append(', '.join([str(i.score) for i in rp]))
-        scores.append(['%s' % p.player] + rs + ['%f' % p.score])
+            try:
+                rs.append('%.2f' % round_scores[r][p.player])
+            except KeyError:
+                # This player didn't play this round
+                rs.append('')
+        scores.append(['%s' % p.player] + rs + ['%.2f' % p.score])
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     if refresh:
         context['refresh'] = True
