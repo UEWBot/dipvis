@@ -649,7 +649,10 @@ def game_scores(request, tournament_id, round_num):
         data = []
         the_list = r.game_set.all()
         for game in the_list:
-            data.append({'game_name': game.name})
+            content = {'game_name': game.name}
+            for gp in game.gameplayer_set.all():
+                content[gp.power.name] = gp.score
+            data.append(content)
         formset = GameScoreFormset(initial=data)
 
     return render_to_response('rounds/game_score.html',
