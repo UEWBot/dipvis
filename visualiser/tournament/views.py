@@ -642,8 +642,9 @@ def game_scores(request, tournament_id, round_num):
                     # Set the score
                     i.score = field
                     i.save()
-            # TODO Redirect to somewhere that actually exists...
-            return HttpResponseRedirect('/thanks/')
+            # Redirect to the round index
+            return HttpResponseRedirect(reverse('round_index',
+                                                args=(tournament_id)))
     else:
         # Initial data
         data = []
