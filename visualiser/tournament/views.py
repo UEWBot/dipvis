@@ -50,7 +50,7 @@ class DrawForm(forms.Form):
 
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
-    game_name = forms.CharField(label='Game Name', max_length=10)
+    game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one score field per Great Power"""
@@ -76,7 +76,8 @@ class RoundPlayerChoiceField(forms.ModelChoiceField):
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
-    game_name = forms.CharField(label='Game Name', max_length=10)
+    game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
+    power_assignment = forms.ChoiceField(label=_(u'Power Assignment'), choices=POWER_ASSIGNS)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one player field per Great Power"""
@@ -93,7 +94,7 @@ class GamePlayersForm(forms.Form):
         for power in GreatPower.objects.all():
             c = power.name
             self.fields[c] = RoundPlayerChoiceField(queryset)
-            self.fields[c].widget.attrs['size'] = 20
+            #self.fields[c].widget.attrs['size'] = 20
 
     def clean(self):
         """Checks that no player is playing multiple powers"""
@@ -566,10 +567,12 @@ def create_games(request, tournament_id, round_num):
         if formset.is_valid():
             for f in formset:
                 # Update/create the game
+                # TODO: This doesn't handle "update" because "started_at" will differ
                 try:
                     g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
                                                             started_at=datetime.now(),
-                                                            the_round=r)
+                                                            the_round=r,
+                                                            power_assignment=f.cleaned_data['power_assignment'])
                 except KeyError:
                     # This must be an extra, unused formset
                     continue
@@ -592,8 +595,9 @@ def create_games(request, tournament_id, round_num):
         games = r.game_set.all()
         data = []
         for g in games:
-            current = {'game_name': g.name}
+            current = {'game_name': g.name, 'power_assignment': g.power_assignment}
             for gp in g.gameplayer_set.all():
+                # TODO This doesn't result in existing players being selected
                 current[gp.power.name] = gp.player
             data.append(current)
         # TODO data looks reasonable here, but the resulting form isn't right
