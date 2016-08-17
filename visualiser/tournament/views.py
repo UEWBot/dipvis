@@ -24,6 +24,7 @@ from django.forms.formsets import formset_factory, BaseFormSet
 from django.template import RequestContext
 from django.forms import ModelForm
 from django.utils.translation import ugettext as _
+from django.contrib.auth.decorators import permission_required
 
 from tournament.models import *
 
@@ -412,6 +413,7 @@ def tournament_round(request, tournament_id):
     return HttpResponse("No round currently being played")
 
 # TODO Name is confusing - sounds like it takes a round_num
+@permission_required('tournament.change_roundplayer')
 def round_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -467,6 +469,7 @@ def round_scores(request, tournament_id):
                                'formset' : formset},
                               context_instance = RequestContext(request))
 
+@permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id):
     """Provide a form to specify which players are playing each round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -554,6 +557,7 @@ def round_detail(request, tournament_id, round_num):
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
 
+@permission_required('tournament.add_game')
 def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -619,6 +623,7 @@ def create_games(request, tournament_id, round_num):
                                'formset' : formset},
                               context_instance = RequestContext(request))
 
+@permission_required('tournament.change_gameplayer')
 def game_scores(request, tournament_id, round_num):
     """Provide a form to enter scores for all the games in a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -750,6 +755,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
 
+@permission_required('tournament.add_centrecount')
 def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -849,6 +855,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
     else:
         return render(request, 'games/info.html', context)
 
+@permission_required('tournament.add_drawproposal')
 def draw_vote(request, tournament_id, game_name):
     """Provide a form to enter a draw vote for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
@@ -936,6 +943,7 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
                                                next_image_str))
     return render(request, 'games/image.html', context)
 
+@permission_required('tournament.add_gameimage')
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
