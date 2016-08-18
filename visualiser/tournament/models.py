@@ -1213,6 +1213,23 @@ class Game(models.Model):
 
     def save(self, *args, **kwargs):
         super(Game, self).save(*args, **kwargs)
+
+        # Auto-create 1900 SC counts (unless they already exist)
+        for power in GreatPower.objects.all():
+            i, created = CentreCount.objects.get_or_create(power=power,
+                                                           game=self,
+                                                           year=FIRST_YEAR-1,
+                                                           count=power.starting_centres)
+            i.save()
+
+        # Auto-create S1901M image (if it doesn't exist)
+        i, created = GameImage.objects.get_or_create(game=self,
+                                                     year=FIRST_YEAR,
+                                                     season=SPRING,
+                                                     phase=MOVEMENT,
+                                                     image=S1901M_IMAGE)
+        i.save()
+
         # If the game is (now) finished, store the player scores
         if self.is_finished:
             scores = self.scores(True)
@@ -1242,22 +1259,6 @@ class Game(models.Model):
                 for p in t.tournamentplayer_set.all():
                     p.score = scores[p.player]
                     p.save()
-
-        # Auto-create 1900 SC counts (unless they already exist)
-        for power in GreatPower.objects.all():
-            i, created = CentreCount.objects.get_or_create(power=power,
-                                                           game=self,
-                                                           year=FIRST_YEAR-1,
-                                                           count=power.starting_centres)
-            i.save()
-
-        # Auto-create S1901M image (if it doesn't exist)
-        i, created = GameImage.objects.get_or_create(game=self,
-                                                     year=FIRST_YEAR,
-                                                     season=SPRING,
-                                                     phase=MOVEMENT,
-                                                     image=S1901M_IMAGE)
-        i.save()
 
     def get_absolute_url(self):
         return reverse('game_detail',
