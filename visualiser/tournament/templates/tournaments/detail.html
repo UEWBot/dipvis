@@ -13,9 +13,11 @@
   <li><a href="{% url 'tournament_round' tournament.id %}">{% trans "Current Round" %}</a></li>
   <li><a href="{% url 'round_index' tournament.id %}">{% trans "Round Index" %}</a></li>
 </ul>
+{% if user.is_active %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a></li>
   <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a></li>
 </ul>
+{% endif %}
 {% endblock %}
