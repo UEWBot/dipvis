@@ -14,8 +14,12 @@
 {% if user.is_active %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
-  <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a></li>
-  <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a></li>
+  {% if perms.tournament.add_centrecount %}
+    <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a></li>
+  {% endif %}
+  {% if perms.tournament.add_drawvote %}
+    <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a></li>
+  {% endif %}
 </ul>
 {% endif %}
 {% endblock %}

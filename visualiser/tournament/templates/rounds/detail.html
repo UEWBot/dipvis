@@ -12,8 +12,12 @@
 {% if user.is_active %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
-  <li><a href="{% url 'create_games' tournament.id round.id %}">{% trans "Create Games" %}</a></li>
-  <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a></li>
+  {% if perms.tournament.create_game %}
+    <li><a href="{% url 'create_games' tournament.id round.id %}">{% trans "Create Games" %}</a></li>
+  {% endif %}
+  {% if perms.tournament.change_game %}
+    <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a></li>
+  {% endif %}
 </ul>
 {% endif %}
 {% if round.final_year %}

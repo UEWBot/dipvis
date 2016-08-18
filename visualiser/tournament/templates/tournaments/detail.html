@@ -14,10 +14,14 @@
   <li><a href="{% url 'round_index' tournament.id %}">{% trans "Round Index" %}</a></li>
 </ul>
 {% if user.is_active %}
-<p>{% trans "Data Entry:" %}</p>
-<ul>
-  <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a></li>
-  <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a></li>
-</ul>
+  <p>{% trans "Data Entry:" %}</p>
+  <ul>
+    {% if perms.tournament.change_roundplayer %}
+      <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a></li>
+    {% endif %}
+    {% if perms.tournament.add_roundplayer %}
+      <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a></li>
+    {% endif %}
+  </ul>
 {% endif %}
 {% endblock %}
