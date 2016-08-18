@@ -1,8 +1,9 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Game {{ image.game }} {{ image.turn_str }}{%endblock %}
+{% block title %}{% blocktrans with game=image.game turn=image.turn_str %}Game {{ game }} {{ turn }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>Game {{ image.game }} {{ image.turn_str }}</h1>
+<h1>{% blocktrans with game=image.game turn=image.turn_str %}Game {{ game }} {{ turn }}{% endblocktrans %}</h1>
 <img src="{{ image.image.url }}">
 {% endblock %}

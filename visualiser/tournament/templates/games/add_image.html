@@ -1,10 +1,11 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}Upload Game Position Image{%endblock %}
+{% block title %}{% trans "Upload Game Position Image" %}{% endblock %}
 
 {% block content %}
-<h1>Upload Game Position Image</h1>
-<p>Image should be of the start position for the specified phase</p>
+<h1>{% trans "Upload Game Position Image" %}</h1>
+<p>{% trans "Image should be of the start position for the specified phase" %}</p>
 <form method="post" action={% url 'add_game_image' tournament.id %}>
   {% csrf_token %}
   {{ form }}

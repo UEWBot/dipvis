@@ -1,20 +1,21 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - {{ round }}{%endblock %}
+{% block title %}{% blocktrans with round=round %}DipTV - {{ round }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <h1><a href="{{ round.get_absolute_url }}">{{ round }}</a></h1>
 {% if game_list %}
     <ul>
     {% for g in game_list %}
-        <li><a href="{{ g.get_absolute_url }}">Game {{ g.name }}</a>
+        <li><a href="{{ g.get_absolute_url }}">{% blocktrans with game=g.name %}Game {{ game }}{% endblocktrans %}</a>
             {% if g.is_finished %}
-                (Complete)
+                {% trans "(Complete)" %}
             {% endif %}
         </li>
     {% endfor %}
     </ul>
 {% else %}
-    <p>No games exist in the round.</p>
+    <p>{% trans "No games exist in the round." %}</p>
 {% endif %}
 {% endblock %}

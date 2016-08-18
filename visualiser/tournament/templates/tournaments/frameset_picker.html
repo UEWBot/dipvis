@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - Frame Picker{%endblock %}
+{% block title %}{% trans "DipTV - Frame Picker" %}{% endblock %}
 
 {% block content %}
-Pick a screen layout:
+{% trans "Pick a screen layout:" %}
 <ul>
   <li><a href="../frameset_3x3/">
     <table border="1">

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 {% if tournament_list %}
@@ -10,6 +11,6 @@
     {% endfor %}
     </ul>
 {% else %}
-    <p>No tournaments are available.</p>
+    <p>{% trans "No tournaments are available." %}</p>
 {% endif %}
 {% endblock %}

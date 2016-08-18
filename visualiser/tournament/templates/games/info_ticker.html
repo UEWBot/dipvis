@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - Game {{ game }} {{ subject }}{%endblock %}
+{% block title %}{% blocktrans with game=game subject=subject %}DipTV - Game {{ game }} {{ subject }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <marquee behavior="scroll" direction="left">

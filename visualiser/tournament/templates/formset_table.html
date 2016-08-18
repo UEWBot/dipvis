@@ -1,3 +1,4 @@
+{% load i18n %}
 {% csrf_token %}
 {{ formset.management_form }}
 {{ formset.non_form_errors.as_ul }}
@@ -6,7 +7,7 @@
     {% if forloop.first %}
         <thead><tr>
         {% for field in form.visible_fields %}
-            <th>{{ field.label }}</th>
+            <th>{% trans field.label %}</th>
         {% endfor %}
         </tr></thead><tbody>
     {% endif %}

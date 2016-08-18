@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - Game {{ game }} Draw Vote{%endblock %}
+{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} Draw Vote{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>Game {{ game }} Draw Vote</h1>
+<h1>{% blocktrans with game=game %}Game {{ game }} Draw Vote{% endblocktrans %}</h1>
 <form action={% url 'draw_vote' tournament.id game.name %} method="post">{% csrf_token %}
 {% for field in form %}
     {{ field.errors }}

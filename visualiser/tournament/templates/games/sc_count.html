@@ -1,16 +1,17 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - Game {{ game }} SC Chart{%endblock %}
+{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} SC Chart{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>Game {{ game }} SC Chart</h1>
+<h1>{% blocktrans with game=game %}Game {{ game }} SC Chart{% endblocktrans %}</h1>
 <table class="form">
    <thead><tr>
        <th rowspan=2></th>
        {% for power in powers %}
-           <th bgcolor={{ power.colour }}>{{ power }}</th>
+           <th bgcolor={{ power.colour }}>{% trans power.name %}</th>
        {% endfor %}
-       <th rowspan=2>Neutrals</th>
+       <th rowspan=2>{% trans "Neutrals" %}</th>
    </tr>
    <tr>
        {% for gameplayer in players %}
@@ -34,7 +35,7 @@
            {% if game.is_finished %}
                {{ game.result_str }}
            {% else %}
-               Game ongoing
+               {% trans "Game ongoing" %}
            {% endif %}
        </td>
    </tr></tbody>

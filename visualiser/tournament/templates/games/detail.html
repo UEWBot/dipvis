@@ -1,18 +1,19 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - {{ tournament }} Game {{ game.name }} Views{%endblock %}
+{% block title %}{% blocktrans with tournament=tournament game=game.name %}DipTV - {{ tournament }} Game {{ game }} Views{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Game {{ game.name }} Views</h1>
-<p>Views:</p>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with game=game.name %}Game {{ game }} Views{% endblocktrans %}</h1>
+<p>{% trans "Views:" %}</p>
 <ul>
-  <li><a href="{% url 'game_sc_chart' tournament.id game.name %}">Supply Centre Chart</a></li>
-  <li><a href="{% url 'game_news' tournament.id game.name %}">News</a></li>
-  <li><a href="{% url 'game_background' tournament.id game.name %}">Background</a></li>
+  <li><a href="{% url 'game_sc_chart' tournament.id game.name %}">{% trans "Supply Centre Chart" %}</a></li>
+  <li><a href="{% url 'game_news' tournament.id game.name %}">{% trans "News" %}</a></li>
+  <li><a href="{% url 'game_background' tournament.id game.name %}">{% trans "Background" %}</a></li>
 </ul>
-<p>Data Entry:</p>
+<p>{% trans "Data Entry:" %}</p>
 <ul>
-  <li><a href="{% url 'enter_scs' tournament.id game.name %}">Enter SC Counts</a></li>
-  <li><a href="{% url 'draw_vote' tournament.id game.name %}">Enter Draw Vote</a></li>
+  <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a></li>
+  <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a></li>
 </ul>
 {% endblock %}

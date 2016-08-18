@@ -1,17 +1,18 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - {{ tournament }} Scores{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Scores{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Current Scores</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Current Scores" %}</h1>
 
 <table class="form">
   <thead><tr>
-    <th>Player</th>
+    <th>{% trans "Player" %}</th>
     {% for r in rounds %}
-      <th><a href="{% url 'round_detail' tournament.id r %}">Round {{ r }}</a></th>
+      <th><a href="{% url 'round_detail' tournament.id r %}">{% blocktrans with round=r %}Round {{ round }}{% endblocktrans %}</a></th>
     {% endfor %}
-    <th>Tournament</th>
+    <th>{% trans "Tournament" %}</th>
   </tr></thead>
   <tbody>
   {% for player in scores %}

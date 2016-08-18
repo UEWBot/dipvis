@@ -1,23 +1,24 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - {{ tournament }} Round {{ round.number }} Views{%endblock %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Views{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Round {{ round.number }} Views</h1>
-<p>Views:</p>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Views{% endblocktrans %}</h1>
+<p>{% trans "Views:" %}</p>
 <ul>
-  <li><a href="{% url 'game_index' tournament.id round.id %}">Game Index</a></li>
+  <li><a href="{% url 'game_index' tournament.id round.id %}">{% trans "Game Index" %}</a></li>
 </ul>
-<p>Data Entry:</p>
+<p>{% trans "Data Entry:" %}</p>
 <ul>
-  <li><a href="{% url 'create_games' tournament.id round.id %}">Create Games</a></li>
-  <li><a href="{% url 'game_scores' tournament.id round.id %}">Score Games</a></li>
+  <li><a href="{% url 'create_games' tournament.id round.id %}">{% trans "Create Games" %}</a></li>
+  <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a></li>
 </ul>
 {% if round.final_year %}
-  <p>Games in this round end with {{ round.final_year }}.</p>
+  <p>{% blocktrans with year=round.final_year %}Games in this round end with {{ year }}.{% endblocktrans %}</p>
 {% elif round.earliest_end_time %}
-  <p>Games in this round will end between {{ round.earliest_end_time }} and {{ round.latest_end_time }}.</p>
+  <p>{% blocktrans with start=round.earliest_end_time end=round.latest_end_time %}Games in this round will end between {{ start }} and {{ end }}.{% endblocktrans %}</p>
 {% else %}
-  <p>Games in this round have no set endpoint.</p>
+  <p>{% trans "Games in this round have no set endpoint." %}</p>
 {% endif %}
 {% endblock %}

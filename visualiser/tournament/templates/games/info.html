@@ -1,9 +1,10 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - Game {{ game }} {{ subject }}{%endblock %}
+{% block title %}{% blocktrans with game=game subject=subject %}DipTV - Game {{ game }} {{ subject }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>Game {{ game }} {{ subject }}</h1>
+<h1>{% blocktrans with game=game subject=subject %}Game {{ game }} {{ subject }}{% endblocktrans %}</h1>
 <ul>
     {% for str in content %}
         <li>{{ str }}</li>

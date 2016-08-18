@@ -1,6 +1,7 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - {{ tournament }} {{ title }}{%endblock %}
+{% block title %}{% trans "DipTV" %} - {{ tournament }} {{ title }}{% endblock %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ title }}</h1>

@@ -1,14 +1,15 @@
 {% extends "base.html" %}
+{% load i18n %}
 
-{% block title %}DipTV - {{ tournament }}{%endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <h1>{{ tournament }}</h1>
 <ul>
-  <li><a href="{% url 'tournament_scores_refresh' tournament.id %}">Current Standings</a></li>
+  <li><a href="{% url 'tournament_scores_refresh' tournament.id %}">{% trans "Current Standings" %}</a></li>
   {% for round in tournament.round_set.all %}
     {% for game in round.game_set.all %}
-      <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">Round {{ round.number }} Game {{ game.name }} Supply Centre Chart</a></li>
+      <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with round=round.number game=game.name %}Round {{ round }} Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
     {% endfor %}
   {% endfor %}
 </ul>
