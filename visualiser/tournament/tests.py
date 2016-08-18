@@ -22,10 +22,22 @@ from tournament.models import *
 
 class TournamentModelTests(TestCase):
     def setUp(self):
-        s1 = ScoringSystem.objects.create(name='s1')
-        t1 = Tournament.objects.create(name='t1', start_date=timezone.now(), end_date=timezone.now())
-        t2 = Tournament.objects.create(name='t2', start_date=timezone.now(), end_date=timezone.now())
-        t3 = Tournament.objects.create(name='t3', start_date=timezone.now(), end_date=timezone.now())
+        s1 = G_SCORING_SYSTEMS[0].name
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=timezone.now(),
+                                       end_date=timezone.now(),
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+        t2 = Tournament.objects.create(name='t2',
+                                       start_date=timezone.now(),
+                                       end_date=timezone.now(),
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=timezone.now(),
+                                       end_date=timezone.now(),
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
         r11 = Round.objects.create(tournament=t1, number=1, scoring_system=s1, dias=True)
         r12 = Round.objects.create(tournament=t1, number=2, scoring_system=s1, dias=True)
         r13 = Round.objects.create(tournament=t1, number=3, scoring_system=s1, dias=True)
