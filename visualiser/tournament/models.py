@@ -991,7 +991,7 @@ class Game(models.Model):
         system = find_game_scoring_system(self.the_round.scoring_system)
         if not system:
             raise InvalidScoringSystem(self.the_round.scoring_system)
-        return system.scores(self.centrecount_set)
+        return system.scores(self.centrecount_set.all())
 
     def is_dias(self):
         """
