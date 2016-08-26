@@ -78,6 +78,7 @@ class RoundPlayerChoiceField(forms.ModelChoiceField):
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
     game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
+    the_set = forms.ModelChoiceField(label=_(u'Game Set'), queryset=GameSet.objects.all())
     power_assignment = forms.ChoiceField(label=_(u'Power Assignment'), choices=POWER_ASSIGNS)
 
     def __init__(self, *args, **kwargs):
@@ -576,6 +577,7 @@ def create_games(request, tournament_id, round_num):
                     g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
                                                             started_at=datetime.now(),
                                                             the_round=r,
+                                                            the_set=f.cleaned_data['the_set'],
                                                             power_assignment=f.cleaned_data['power_assignment'])
                 except KeyError:
                     # This must be an extra, unused formset
@@ -599,7 +601,7 @@ def create_games(request, tournament_id, round_num):
         games = r.game_set.all()
         data = []
         for g in games:
-            current = {'game_name': g.name, 'power_assignment': g.power_assignment}
+            current = {'game_name': g.name, 'power_assignment': g.power_assignment, 'the_set': g.the_set}
             for gp in g.gameplayer_set.all():
                 # TODO This doesn't result in existing players being selected
                 current[gp.power.name] = gp.player
@@ -713,12 +715,13 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    powers = GreatPower.objects.all()
+    set_powers = g.the_set.setpower_set.order_by('power')
+    # TODO Sort set_powers alphabetically by translated power.name
     # Massage ps so we have one entry per power
     players = g.players(latest=False)
     ps = []
-    for power in powers:
-        names = '<br>'.join(map(unicode, players[power]))
+    for sp in set_powers:
+        names = '<br>'.join(map(unicode, players[sp.power]))
         ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
     # Create a list of years that have been played
@@ -730,9 +733,9 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
         yscs = scs.filter(year=year)
         row = []
         row.append(year)
-        for power in powers:
+        for sp in set_powers:
             try:
-                sc = yscs.filter(power=power).get()
+                sc = yscs.filter(power=sp.power).get()
                 row.append(sc.count)
                 neutrals -= sc.count
             except CentreCount.DoesNotExist:
@@ -743,10 +746,10 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     # Add one final row with the current scores
     scores = g.scores()
     row = [_(u'Score')]
-    for power in powers:
-        row.append(scores[power])
+    for sp in set_powers:
+        row.append(scores[sp.power])
     rows.append(row)
-    context = {'game': g, 'powers': powers, 'players': ps, 'rows': rows}
+    context = {'game': g, 'powers': set_powers, 'players': ps, 'rows': rows}
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = 300

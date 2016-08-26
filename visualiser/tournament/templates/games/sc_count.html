@@ -8,8 +8,8 @@
 <table class="form">
    <thead><tr>
        <th rowspan=2></th>
-       {% for power in powers %}
-           <th bgcolor={{ power.colour }}>{% trans power.name %}</th>
+       {% for sp in powers %}
+           <th bgcolor={{ sp.colour }}>{% trans sp.power.name %}</th>
        {% endfor %}
        <th rowspan=2>{% trans "Neutrals" %}</th>
    </tr>

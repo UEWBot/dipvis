@@ -22,6 +22,8 @@ from tournament.models import *
 
 class TournamentModelTests(TestCase):
     def setUp(self):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+        set2 = GameSet.objects.get(name='Gibsons')
         s1 = G_SCORING_SYSTEMS[0].name
         t1 = Tournament.objects.create(name='t1',
                                        start_date=timezone.now(),
@@ -46,16 +48,16 @@ class TournamentModelTests(TestCase):
         r22 = Round.objects.create(tournament=t2, number=2, scoring_system=s1, dias=True)
         r31 = Round.objects.create(tournament=t3, number=1, scoring_system=s1, dias=True)
         r32 = Round.objects.create(tournament=t3, number=2, scoring_system=s1, dias=True)
-        g11 = Game.objects.create(name='g11', started_at=timezone.now(), the_round=r11)
-        g12 = Game.objects.create(name='g12', started_at=timezone.now(), the_round=r11)
-        g13 = Game.objects.create(name='g13', started_at=timezone.now(), the_round=r12, is_finished=True)
-        g14 = Game.objects.create(name='g14', started_at=timezone.now(), the_round=r12)
-        g15 = Game.objects.create(name='g15', started_at=timezone.now(), the_round=r13, is_finished=True)
-        g16 = Game.objects.create(name='g16', started_at=timezone.now(), the_round=r13, is_finished=True)
-        g21 = Game.objects.create(name='g21', started_at=timezone.now(), the_round=r21)
-        g22 = Game.objects.create(name='g22', started_at=timezone.now(), the_round=r22)
-        g31 = Game.objects.create(name='g31', started_at=timezone.now(), the_round=r31, is_finished=True)
-        g32 = Game.objects.create(name='g32', started_at=timezone.now(), the_round=r32, is_finished=True)
+        g11 = Game.objects.create(name='g11', started_at=timezone.now(), the_round=r11, the_set=set1)
+        g12 = Game.objects.create(name='g12', started_at=timezone.now(), the_round=r11, the_set=set1)
+        g13 = Game.objects.create(name='g13', started_at=timezone.now(), the_round=r12, is_finished=True, the_set=set1)
+        g14 = Game.objects.create(name='g14', started_at=timezone.now(), the_round=r12, the_set=set1)
+        g15 = Game.objects.create(name='g15', started_at=timezone.now(), the_round=r13, is_finished=True, the_set=set1)
+        g16 = Game.objects.create(name='g16', started_at=timezone.now(), the_round=r13, is_finished=True, the_set=set1)
+        g21 = Game.objects.create(name='g21', started_at=timezone.now(), the_round=r21, the_set=set1)
+        g22 = Game.objects.create(name='g22', started_at=timezone.now(), the_round=r22, the_set=set1)
+        g31 = Game.objects.create(name='g31', started_at=timezone.now(), the_round=r31, is_finished=True, the_set=set1)
+        g32 = Game.objects.create(name='g32', started_at=timezone.now(), the_round=r32, is_finished=True, the_set=set1)
         self.austria = GreatPower.objects.get(abbreviation='A')
         self.england = GreatPower.objects.get(abbreviation='E')
         self.france = GreatPower.objects.get(abbreviation='F')

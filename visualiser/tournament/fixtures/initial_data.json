@@ -70,6 +70,146 @@
     }
 },
 {
+    "pk": 1,
+    "model": "tournament.gameset",
+    "fields": {
+        "name": "Avalon Hill"
+    }
+},
+{
+    "pk": 2,
+    "model": "tournament.gameset",
+    "fields": {
+        "name": "Gibsons"
+    }
+},
+{
+    "pk": 1,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 1,
+        "colour": "red"
+    }
+},
+{
+    "pk": 2,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 2,
+        "colour": "blue"
+    }
+},
+{
+    "pk": 3,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 3,
+        "colour": "cyan"
+    }
+},
+{
+    "pk": 4,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 4,
+        "colour": "grey"
+    }
+},
+{
+    "pk": 5,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 5,
+        "colour": "green"
+    }
+},
+{
+    "pk": 6,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 6,
+        "colour": "white"
+    }
+},
+{
+    "pk": 7,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 1,
+        "power": 7,
+        "colour": "yellow"
+    }
+},
+{
+    "pk": 8,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 1,
+        "colour": "brown"
+    }
+},
+{
+    "pk": 9,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 2,
+        "colour": "pink"
+    }
+},
+{
+    "pk": 10,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 3,
+        "colour": "blue"
+    }
+},
+{
+    "pk": 11,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 4,
+        "colour": "grey"
+    }
+},
+{
+    "pk": 12,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 5,
+        "colour": "green"
+    }
+},
+{
+    "pk": 13,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 6,
+        "colour": "purple"
+    }
+},
+{
+    "pk": 14,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 2,
+        "power": 7,
+        "colour": "yellow"
+    }
+},
+{
     "pk": 1, 
     "model": "tournament.player", 
     "fields": {

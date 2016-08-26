@@ -487,12 +487,41 @@ class GreatPower(models.Model):
     """
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=1, unique=True)
+    # TODO Remove now that we have SetPower.colour
     colour = models.CharField(max_length=20)
     starting_centres = models.PositiveIntegerField()
+
     class Meta:
         ordering = ['name']
+
     def __unicode__(self):
         return self.name
+
+class GameSet(models.Model):
+    """
+    A Diplomacy board game set.
+    Over the years, different sets have been produced with different pieces, maps, etc.
+    The main purpose of separating this out is so that we can display SC counts with power
+    colours matching those of any photos of the board.
+    """
+    name = models.CharField(max_length=20, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+class SetPower(models.Model):
+    """
+    A single GreatPower in a given GameSet.
+    """
+    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'))
+    power = models.ForeignKey(GreatPower)
+    colour = models.CharField(max_length=20)
+
+    class Meta:
+        unique_together = ('the_set', 'power')
+
+    def __unicode__(self):
+        return _(u'%(power)s in %(the_set)s' % {'power': self.power.name, 'the_set': self.the_set.name})
 
 def add_player_bg(player):
     """
@@ -962,6 +991,7 @@ class Game(models.Model):
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'))
+    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'))
     # TODO Use this
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=_(u'Power assignment method'),

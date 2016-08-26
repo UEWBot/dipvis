@@ -17,6 +17,19 @@
 from django.contrib import admin
 from tournament.models import *
 
+class SetPowerInline(admin.TabularInline):
+    model = SetPower
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj:
+            # Most likely we have the set we need
+            return 0
+        # We're going to want 7 set powers
+        return 7
+
+class GameSetAdmin(admin.ModelAdmin):
+    inlines = [SetPowerInline]
+
 class RoundInline(admin.StackedInline):
     model = Round
     extra = 4
@@ -82,6 +95,7 @@ class GameAdmin(admin.ModelAdmin):
 
 # Register models
 admin.site.register(GreatPower)
+admin.site.register(GameSet, GameSetAdmin)
 admin.site.register(Player)
 admin.site.register(DrawProposal)
 admin.site.register(CentreCount)
