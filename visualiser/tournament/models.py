@@ -487,8 +487,6 @@ class GreatPower(models.Model):
     """
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=1, unique=True)
-    # TODO Remove now that we have SetPower.colour
-    colour = models.CharField(max_length=20)
     starting_centres = models.PositiveIntegerField()
 
     class Meta:

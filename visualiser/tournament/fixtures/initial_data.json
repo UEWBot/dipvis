@@ -5,7 +5,6 @@
     "fields": {
         "abbreviation": "A", 
         "name": "Austria-Hungary",
-        "colour": "red",
         "starting_centres": 3
     }
 },
@@ -15,7 +14,6 @@
     "fields": {
         "abbreviation": "E", 
         "name": "England",
-        "colour": "blue",
         "starting_centres": 3
     }
 },
@@ -25,7 +23,6 @@
     "fields": {
         "abbreviation": "F", 
         "name": "France",
-        "colour": "cyan",
         "starting_centres": 3
     }
 },
@@ -35,7 +32,6 @@
     "fields": {
         "abbreviation": "G", 
         "name": "Germany",
-        "colour": "grey",
         "starting_centres": 3
     }
 },
@@ -45,7 +41,6 @@
     "fields": {
         "abbreviation": "I", 
         "name": "Italy",
-        "colour": "green",
         "starting_centres": 3
     }
 },
@@ -55,7 +50,6 @@
     "fields": {
         "abbreviation": "R", 
         "name": "Russia",
-        "colour": "white",
         "starting_centres": 4
     }
 },
@@ -65,7 +59,6 @@
     "fields": {
         "abbreviation": "T", 
         "name": "Turkey",
-        "colour": "yellow",
         "starting_centres": 3
     }
 },
