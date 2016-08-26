@@ -929,18 +929,19 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
         raise Http404
     context = {'tournament': t, 'image': this_image}
     if timelapse:
+        context['refresh'] = True
         # Switch to the next image after 15s
-        context['refresh_time'] = 15
+        context['redirect_time'] = 15
         # If we're just refreshing the latest image, every 5 mins is fine 
         if turn == '':
-            context['refresh_time'] = 300
+            context['redirect_time'] = 300
         # Note that this works even if there is just one image.
         # In that case, this becomes a refresh, which will then check
         # for new images in 5 minutes
-        context['refresh_url'] = reverse('game_image_seq',
-                                         args=(tournament_id,
-                                               game_name,
-                                               next_image_str))
+        context['redirect_url'] = reverse('game_image_seq',
+                                          args=(tournament_id,
+                                                game_name,
+                                                next_image_str))
     return render(request, 'games/image.html', context)
 
 @permission_required('tournament.add_gameimage')
