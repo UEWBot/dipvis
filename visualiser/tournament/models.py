@@ -1042,7 +1042,7 @@ class Game(models.Model):
             max_scs = current_scs.order_by('-count')[0].count
             first = current_scs.order_by('-count').filter(count=max_scs)
             first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
-                                                scs.power.abbreviation) for scs in list(first)])
+                                                _(scs.power.abbreviation)) for scs in list(first)])
             results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.') % {'game': gn_str,
                                                                                           'dots': max_scs,
                                                                                           'player': first_str})
@@ -1058,7 +1058,7 @@ class Game(models.Model):
             if (mask & MASK_GAINERS) != 0:
                 if scs.count - prev.count > 1:
                     results.append(_(u'%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s.') % {'player': player_dict[power][0],
-                                                                                                                 'power': power.abbreviation,
+                                                                                                                 'power': _(power.abbreviation),
                                                                                                                  'old': prev.count,
                                                                                                                  'new': scs.count,
                                                                                                                  'game': gn_str})
@@ -1066,7 +1066,7 @@ class Game(models.Model):
             if (mask & MASK_LOSERS) != 0:
                 if prev.count - scs.count > 1:
                     results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centres%(game)s.') % {'player': player_dict[power][0],
-                                                                                                                   'power': power.abbreviation,
+                                                                                                                   'power': _(power.abbreviation),
                                                                                                                    'old': prev.count,
                                                                                                                    'new': scs.count,
                                                                                                                    'game': gn_str})
@@ -1083,7 +1083,7 @@ class Game(models.Model):
                     # TODO This looks broken if there were replacements
                     game_player = self.gameplayer_set.filter(power=power).get()
                     incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
-                                                                'power': power.abbreviation})
+                                                                'power': _(power.abbreviation)})
                 incl_str = ', '.join(incl)
                 if sz == 1:
                     d_str = _(u'Vote to concede to %(powers)s failed%(game)s.') % {'powers': incl_str, 'game': gn_str}
@@ -1100,7 +1100,7 @@ class Game(models.Model):
                 power = scs.power
                 zeroes = zeroes.exclude(power=power)
                 results.append(_(u'%(player)s (%(power)s) was eliminated in %(year)d%(game)s.') % {'player': player_dict[power][0],
-                                                                                                   'power': power.abbreviation,
+                                                                                                   'power': _(power.abbreviation),
                                                                                                    'year': scs.year,
                                                                                                    'game': gn_str})
         # Shuffle the resulting list
@@ -1190,7 +1190,7 @@ class Game(models.Model):
                 # TODO This looks broken if there were replacements
                 game_player = self.gameplayer_set.filter(power=power).get()
                 winners.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
-                                                               'power': power.abbreviation})
+                                                               'power': _(power.abbreviation)})
             return retval + ', '.join(winners)
         # Did a power reach 18 (or more) centres ?
         soloer = self.soloer()
@@ -1198,13 +1198,13 @@ class Game(models.Model):
             # TODO would be nice to include their SC count
             return _(u'Game%(game)s won by %(player)s (%(power)s)') % {'game': gn_str,
                                                                        'player': soloer.player,
-                                                                       'power': soloer.power.abbreviation}
+                                                                       'power': _(soloer.power.abbreviation)}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
             player_dict = self.players(latest=True)
             toppers = self.board_toppers()
             first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': player_dict[scs.power][0],
-                                                                   'power': scs.power.abbreviation} for scs in list(toppers)])
+                                                                   'power': _(scs.power.abbreviation)} for scs in list(toppers)])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
                                                                                              'top': scs.count,
                                                                                              'player': first_str}
@@ -1531,7 +1531,7 @@ class CentreCount(models.Model):
             self.game.save()
 
     def __unicode__(self):
-        return u'%s %d %s %d' % (self.game, self.year, self.power.abbreviation, self.count)
+        return u'%s %d %s %d' % (self.game, self.year, _(self.power.abbreviation), self.count)
 
 class PlayerRanking(models.Model):
     """
