@@ -620,6 +620,7 @@ def position_str(position):
     """
     Returns the string version of the position e.g. '1st', '12th'.
     """
+    # TODO translation support ?
     result = unicode(position)
     pos = position % 100
     if pos > 3 and pos < 21:
