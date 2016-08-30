@@ -441,10 +441,37 @@ def round_scores(request, tournament_id):
                         i, created = RoundPlayer.objects.get_or_create(player=tp.player,
                                                                        the_round=r)
                         i.score = value
+                        try:
+                            i.full_clean()
+                        except ValidationError as e:
+                            # add_error() was introduced in Django 1.7
+                            # form.add_error(form.fields[r_name], e)
+                            form._errors[r_name] = forms.util.ErrorList()
+                            form._errors[r_name].append(u', '.join(e.messages))
+                            return render_to_response('tournaments/round_players.html',
+                                                      {'title': 'Scores',
+                                                       'tournament': t,
+                                                       'post_url': reverse('enter_scores', args=(tournament_id,)),
+                                                       'formset' : formset},
+                                                      context_instance = RequestContext(request))
+
                         i.save()
                     elif r_name == 'overall_score':
                         # Store the player's tournament score
                         tp.score = value
+                        try:
+                            tp.full_clean()
+                        except ValidationError as e:
+                            # add_error() was introduced in Django 1.7
+                            # form.add_error(form.fields[r_name], e)
+                            form._errors[r_name] = forms.util.ErrorList()
+                            form._errors[r_name].append(u', '.join(e.messages))
+                            return render_to_response('tournaments/round_players.html',
+                                                      {'title': 'Scores',
+                                                       'tournament': t,
+                                                       'post_url': reverse('enter_scores', args=(tournament_id,)),
+                                                       'formset' : formset},
+                                                      context_instance = RequestContext(request))
                         tp.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('tournament_scores',
@@ -490,6 +517,19 @@ def roll_call(request, tournament_id):
                 # Ensure that this Player is in the Tournament
                 i, created = TournamentPlayer.objects.get_or_create(player=p,
                                                                     tournament=t)
+                try:
+                    i.full_clean()
+                except ValidationError as e:
+                    # add_error() was introduced in Django 1.7
+                    # form.add_error(form.fields[r_name], e)
+                    form._errors['player'] = forms.util.ErrorList()
+                    form._errors['player'].append(u', '.join(e.messages))
+                    return render_to_response('tournaments/round_players.html',
+                                              {'title': 'Roll Call',
+                                               'tournament': t,
+                                               'post_url': reverse('roll_call', args=(tournament_id,)),
+                                               'formset' : formset},
+                                              context_instance = RequestContext(request))
                 i.save()
                 for r_name,value in form.cleaned_data.iteritems():
                     # Ignore non-bool fields and ones that aren't True
@@ -504,6 +544,19 @@ def roll_call(request, tournament_id):
                     # Ensure that we have a corresponding RoundPlayer
                     i, created = RoundPlayer.objects.get_or_create(player=p,
                                                                    the_round=r)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        # add_error() was introduced in Django 1.7
+                        # form.add_error(form.fields[r_name], e)
+                        form._errors[r_name] = forms.util.ErrorList()
+                        form._errors[r_name].append(u', '.join(e.messages))
+                        return render_to_response('tournaments/round_players.html',
+                                                  {'title': 'Roll Call',
+                                                   'tournament': t,
+                                                   'post_url': reverse('roll_call', args=(tournament_id,)),
+                                                   'formset' : formset},
+                                                  context_instance = RequestContext(request))
                     i.save()
             # Next job is almost certainly to create the actual games
             return HttpResponseRedirect(reverse('create_games',
@@ -582,6 +635,18 @@ def create_games(request, tournament_id, round_num):
                 except KeyError:
                     # This must be an extra, unused formset
                     continue
+                try:
+                    g.full_clean()
+                except ValidationError as e:
+                    # add_error() was introduced in Django 1.7
+                    # f.add_error(None, e)
+                    f._errors['game_name'] = forms.util.ErrorList()
+                    f._errors['game_name'].append(u', '.join(e.messages))
+                    return render_to_response('rounds/create_games.html',
+                                              {'tournament': t,
+                                               'round': r,
+                                               'formset' : formset},
+                                              context_instance = RequestContext(request))
                 g.save()
                 # Assign the players to the game
                 for power, field in f.cleaned_data.iteritems():
@@ -592,6 +657,18 @@ def create_games(request, tournament_id, round_num):
                     i, created = GamePlayer.objects.get_or_create(player=field.player,
                                                                   game = g,
                                                                   power=p)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        # add_error() was introduced in Django 1.7
+                        # f.add_error(None, e)
+                        f._errors['game_name'] = forms.util.ErrorList()
+                        f._errors['game_name'].append(u', '.join(e.messages))
+                        return render_to_response('rounds/create_games.html',
+                                                  {'tournament': t,
+                                                   'round': r,
+                                                   'formset' : formset},
+                                                  context_instance = RequestContext(request))
                     i.save()
             # Redirect to the index of games in the round
             return HttpResponseRedirect(reverse('game_index',
@@ -654,6 +731,18 @@ def game_scores(request, tournament_id, round_num):
                     i = GamePlayer.objects.get(game=g, power=p)
                     # Set the score
                     i.score = field
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        # add_error() was introduced in Django 1.7
+                        # f.add_error(None, e)
+                        f._errors['game_name'] = forms.util.ErrorList()
+                        f._errors['game_name'].append(u', '.join(e.messages))
+                        return render_to_response('rounds/game_score.html',
+                                                  {'tournament': t,
+                                                   'round': r,
+                                                   'formset' : formset},
+                                                  context_instance = RequestContext(request))
                     i.save()
             # Redirect to the round index
             return HttpResponseRedirect(reverse('round_index',
@@ -803,6 +892,19 @@ def sc_counts(request, tournament_id, game_name):
                                         game=g,
                                         year=year,
                                         count=value)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        # add_error() was introduced in Django 1.7
+                        # formset.add_error(form.fields[name], e)
+                        form._errors[name] = forms.util.ErrorList()
+                        form._errors[name].append(u', '.join(e.messages))
+                        return render_to_response('games/sc_counts_form.html',
+                                                  {'formset': formset,
+                                                   'tournament': t,
+                                                   'game': g},
+                                                  context_instance = RequestContext(request))
+
                     i.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_chart',
@@ -888,6 +990,18 @@ def draw_vote(request, tournament_id, game_name):
                           passed=form.cleaned_data['passed'],
                           proposer=form.cleaned_data['proposer'],
                           **kwargs)
+        try:
+            dp.full_clean()
+        except ValidationError as e:
+            # add_error() was introduced in Django 1.7
+            # form.add_error(None, e)
+            form._errors['season'] = forms.util.ErrorList()
+            form._errors['season'].append(u', '.join(e.messages))
+            return render_to_response('games/vote.html',
+                                      {'tournament': t,
+                                       'game': g,
+                                       'form' : form},
+                                      context_instance = RequestContext(request))
         dp.save()
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
