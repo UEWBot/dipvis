@@ -1538,13 +1538,13 @@ class CentreCount(models.Model):
         # or to recover from an elimination
         try:
             prev = CentreCount.objects.filter(power=self.power, game=self.game, year=self.year-1).get()
-            if self.count > 2 * prev.count:
-                raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
-            elif (prev.count == 0) and (self.count > 0):
-                raise ValidationError(_(u'SC count for a power cannot increase from zero'))
         except CentreCount.DoesNotExist:
             # We're either missing a year, or this is the first year - let that go
-            pass
+            return
+        if (prev.count == 0) and (self.count > 0):
+            raise ValidationError(_(u'SC count for a power cannot increase from zero'))
+        elif self.count > 2 * prev.count:
+            raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
 
     def save(self, *args, **kwargs):
         super(CentreCount, self).save(*args, **kwargs)
