@@ -122,6 +122,14 @@ class BaseGamePlayersForm(BaseFormSet):
         kwargs['the_round'] = self.the_round
         return super(BaseGamePlayersForm, self)._construct_form(index, **kwargs)
 
+    def clean(self):
+        cleaned_data = super(BaseGamePlayersForm, self).clean()
+        # Any duplicates within the page ?
+        names = [cd['game_name'] for cd in self.cleaned_data]
+        if len(set(names)) != len(names):
+            raise forms.ValidationError(_('Game names must be unique within the tournament'))
+        return cleaned_data
+
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count

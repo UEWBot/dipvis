@@ -989,13 +989,9 @@ class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
     """
-    # Because we use game name in URLs, they must not contain spaces
-    # TODO with our current URL scheme, we actually need game names to be unique
-    # within the tournament - this is more restrictive than that
     name = models.CharField(max_length=20,
                             validators=[validate_game_name],
-                            unique=True,
-                            help_text='Must be unique. No spaces')
+                            help_text='Must be unique within the tournament. No spaces')
     started_at = models.DateTimeField(default=datetime.datetime.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
@@ -1249,6 +1245,13 @@ class Game(models.Model):
                                                                                              'player': first_str}
         # Then it seems to be ongoing
         return None
+
+    def clean(self):
+        # Game names must be unique within the tournament
+        games = Game.objects.filter(the_round__tournament=self.the_round.tournament)
+        for g in games:
+            if (self != g) and (self.name == g.name):
+                raise ValidationError(_('Game names must be unique within the tournament'))
 
     def save(self, *args, **kwargs):
         super(Game, self).save(*args, **kwargs)
