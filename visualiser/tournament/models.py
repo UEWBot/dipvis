@@ -22,7 +22,7 @@ from django.utils.translation import ugettext as _
 
 from tournament.background import *
 
-import urllib2, random
+import urllib2, random, datetime
 
 SPRING = 'S'
 FALL = 'F'
@@ -986,7 +986,7 @@ class Game(models.Model):
     # TODO with our current URL scheme, we actually need game names to be unique
     # within the tournament - this is more restrictive than that
     name = models.CharField(max_length=20, unique=True, help_text='Must be unique. No spaces')
-    started_at = models.DateTimeField()
+    started_at = models.DateTimeField(default=datetime.datetime.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'))

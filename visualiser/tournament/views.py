@@ -28,8 +28,6 @@ from django.contrib.auth.decorators import permission_required
 
 from tournament.models import *
 
-from datetime import datetime
-
 class DrawForm(forms.Form):
     """Form for a draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
@@ -625,10 +623,8 @@ def create_games(request, tournament_id, round_num):
         if formset.is_valid():
             for f in formset:
                 # Update/create the game
-                # TODO: This doesn't handle "update" because "started_at" will differ
                 try:
                     g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
-                                                            started_at=datetime.now(),
                                                             the_round=r,
                                                             the_set=f.cleaned_data['the_set'],
                                                             power_assignment=f.cleaned_data['power_assignment'])
