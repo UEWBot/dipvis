@@ -66,18 +66,58 @@ class TournamentModelTests(TestCase):
         self.russia = GreatPower.objects.get(abbreviation='R')
         self.turkey = GreatPower.objects.get(abbreviation='T')
 
+    # GScoringSolos
+
+    # GScoringDrawSize
+
+    # GScoringCDiplo
+
+    # GScoringSumOfSquares
+
+    # RScoringBest
+
+    # TScoringSum
+
+    # validate_year()
     def test_validate_year_negative(self):
         self.assertRaises(ValidationError, validate_year, -1)
 
     def test_validate_year_1899(self):
         self.assertRaises(ValidationError, validate_year, 1899)
 
+    def test_validate_year_1900(self):
+        self.assertRaises(ValidationError, validate_year, 1900)
+
+    def test_validate_year_1901(self):
+        self.assertIsNone(validate_year(1901))
+
+    # validate_year_including_start()
+    def test_validate_year_inc_start_negative(self):
+        self.assertRaises(ValidationError, validate_year_including_start, -1)
+
+    def test_validate_year_inc_start_1899(self):
+        self.assertRaises(ValidationError, validate_year_including_start, 1899)
+
+    def test_validate_year_inc_start_1900(self):
+        self.assertIsNone(validate_year_including_start(1900))
+
+    def test_validate_year_inc_start_1901(self):
+        self.assertIsNone(validate_year_including_start(1901))
+
+    # validate_sc_count()
     def test_validate_sc_count_negative(self):
         self.assertRaises(ValidationError, validate_sc_count, -1)
 
+    def test_validate_sc_count_0(self):
+        self.assertIsNone(validate_sc_count(0))
+
+    def test_validate_sc_count_34(self):
+        self.assertIsNone(validate_sc_count(34))
+
     def test_validate_sc_count_35(self):
         self.assertRaises(ValidationError, validate_sc_count, 35)
-    
+
+    # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')
         r1 = t.round_set.get(number=1)
@@ -101,6 +141,7 @@ class TournamentModelTests(TestCase):
         r4 = t.round_set.get(number=4)
         self.assertEqual(r4.is_finished(), False)
 
+    # Tournament.is_finished()
     def test_tourney_is_finished_some_rounds_over(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.is_finished(), False)
@@ -113,6 +154,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.is_finished(), True)
 
+    # DrawProposal
     def test_draw_proposal_with_duplicates(self):
         g = Game.objects.get(pk=1)
         dp = DrawProposal(game=g, year=1910, season='F', passed=False,
