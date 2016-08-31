@@ -15,8 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls import patterns, include, url
-
 from django.contrib import admin
+
+import tournament
+
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -26,4 +28,6 @@ urlpatterns = patterns('',
 
     url(r'^tournaments/', include('tournament.urls')),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^players/$', tournament.views.PlayerIndexView.as_view()),
+    url(r'^players/(?P<pk>\d+)/$', tournament.views.PlayerDetailView.as_view(), name='player_detail'),
 )

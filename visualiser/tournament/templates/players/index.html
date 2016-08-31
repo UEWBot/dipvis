@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "DipTV - Player Index" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Player Index" %}</h1>
+{% if player_list %}
+    <ul>
+    {% for p in player_list %}
+        <li><a href="{{ p.get_absolute_url }}">{{ p }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>{% trans "No players exist in the database." %}</p>
+{% endif %}
+{% endblock %}

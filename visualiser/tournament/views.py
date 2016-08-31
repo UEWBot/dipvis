@@ -1097,3 +1097,14 @@ def add_game_image(request, tournament_id, game_name=''):
                                'form' : form},
                               context_instance = RequestContext(request))
 
+# Player views
+
+class PlayerIndexView(generic.ListView):
+    model = Player
+    template_name = 'players/index.html'
+    context_object_name = 'player_list'
+
+class PlayerDetailView(generic.DetailView):
+    model = Player
+    template_name = 'players/detail.html'
+

@@ -688,6 +688,10 @@ class Player(models.Model):
                                             'first_name': self.first_name,
                                             'last_name': self.last_name})
 
+    def wdd_url(self):
+        """URL for this player in the World Diplomacy Database."""
+        return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
+
     def _rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
         results = []
@@ -800,6 +804,9 @@ class Player(models.Model):
         if not power:
             return self._rankings(mask=mask) + self._results(mask=mask)
         return self._results(power, mask=mask)
+
+    def get_absolute_url(self):
+        return reverse('player_detail', args=[str(self.id)])
 
 class Tournament(models.Model):
     """

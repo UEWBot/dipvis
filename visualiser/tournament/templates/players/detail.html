@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with player=player %}DipTV - {{ player }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{{ player }}</h1>
+<p>{% trans "WDD Id:" %} <a href="{{ player.wdd_url }}">{{ player.wdd_player_id }}</a></p>
+<h2>{% trans "Tournaments" %}</h2>
+<ul>
+  {% for t in player.tournamentplayer_set.all %}
+    <li><a href="{{ t.tournament.get_absolute_url }}">{{ t.tournament }}</a> {{ t.score }}</li>
+  {% empty %}
+    <li>{% trans "No tournaments in the database" %}</li>
+  {% endfor %}
+</ul>
+<h2>{% trans "Background" %}</h2>
+<ul>
+  {% for b in player.background %}
+    <li>{{ b }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}
