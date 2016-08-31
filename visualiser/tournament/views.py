@@ -445,6 +445,7 @@ def round_scores(request, tournament_id):
                             # form.add_error(form.fields[r_name], e)
                             form._errors[r_name] = forms.util.ErrorList()
                             form._errors[r_name].append(u', '.join(e.messages))
+                            i.delete()
                             return render_to_response('tournaments/round_players.html',
                                                       {'title': 'Scores',
                                                        'tournament': t,
@@ -521,6 +522,7 @@ def roll_call(request, tournament_id):
                     # form.add_error(form.fields[r_name], e)
                     form._errors['player'] = forms.util.ErrorList()
                     form._errors['player'].append(u', '.join(e.messages))
+                    i.delete()
                     return render_to_response('tournaments/round_players.html',
                                               {'title': 'Roll Call',
                                                'tournament': t,
@@ -548,6 +550,7 @@ def roll_call(request, tournament_id):
                         # form.add_error(form.fields[r_name], e)
                         form._errors[r_name] = forms.util.ErrorList()
                         form._errors[r_name].append(u', '.join(e.messages))
+                        i.delete()
                         return render_to_response('tournaments/round_players.html',
                                                   {'title': 'Roll Call',
                                                    'tournament': t,
@@ -637,6 +640,7 @@ def create_games(request, tournament_id, round_num):
                     # f.add_error(None, e)
                     f._errors['game_name'] = forms.util.ErrorList()
                     f._errors['game_name'].append(u', '.join(e.messages))
+                    g.delete()
                     return render_to_response('rounds/create_games.html',
                                               {'tournament': t,
                                                'round': r,
@@ -659,6 +663,7 @@ def create_games(request, tournament_id, round_num):
                         # f.add_error(None, e)
                         f._errors['game_name'] = forms.util.ErrorList()
                         f._errors['game_name'].append(u', '.join(e.messages))
+                        i.delete()
                         return render_to_response('rounds/create_games.html',
                                                   {'tournament': t,
                                                    'round': r,
@@ -894,6 +899,7 @@ def sc_counts(request, tournament_id, game_name):
                         # formset.add_error(form.fields[name], e)
                         form._errors[name] = forms.util.ErrorList()
                         form._errors[name].append(u', '.join(e.messages))
+                        i.delete()
                         return render_to_response('games/sc_counts_form.html',
                                                   {'formset': formset,
                                                    'tournament': t,
