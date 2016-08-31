@@ -261,8 +261,8 @@ class Background():
                 for key,td in zip(columns, row.find_all('td')):
                     if key == u'Rank':
                         # Split the two separate pieces of info
-                        rank, total = td.string.split(u' / ')
                         try:
+                            rank, total = td.string.split(u' / ')
                             result['Rank'] = int(rank)
                         except ValueError:
                             # WDD include TDs (who played ?) but doesn't rank them
