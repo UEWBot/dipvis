@@ -117,6 +117,13 @@ class TournamentModelTests(TestCase):
     def test_validate_sc_count_35(self):
         self.assertRaises(ValidationError, validate_sc_count, 35)
 
+    # validate_game_name()
+    def test_validate_game_name_spaces(self):
+        self.assertRaises(ValidationError, validate_game_name, u'space name')
+
+    def test_validate_game_name_valid(self):
+        self.assertIsNone(validate_game_name(u'ok'))
+
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')

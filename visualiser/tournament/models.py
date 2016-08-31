@@ -481,6 +481,13 @@ def validate_wdd_id(value):
     if p.geturl() != url:
         raise ValidationError(_(u'%(value)d is not a valid WDD Id'), params = {'value': value})
 
+def validate_game_name(value):
+    """
+    Game names cannot contain spaces because they are used in URLs.
+    """
+    if u' ' in value:
+        raise ValidationError(_(u'Game names cannot contain spaces'))
+
 class GreatPower(models.Model):
     """
     One of the seven great powers that can be played
@@ -982,10 +989,13 @@ class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
     """
-    # TODO Because we use game name in URLs, they must not contain spaces
+    # Because we use game name in URLs, they must not contain spaces
     # TODO with our current URL scheme, we actually need game names to be unique
     # within the tournament - this is more restrictive than that
-    name = models.CharField(max_length=20, unique=True, help_text='Must be unique. No spaces')
+    name = models.CharField(max_length=20,
+                            validators=[validate_game_name],
+                            unique=True,
+                            help_text='Must be unique. No spaces')
     started_at = models.DateTimeField(default=datetime.datetime.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
