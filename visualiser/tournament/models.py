@@ -1438,11 +1438,19 @@ class GamePlayer(models.Model):
         others = GamePlayer.objects.filter(game=self.game, power=self.power).exclude(player=self.player)
         # Ensure one player at a time
         for other in others:
+            # It's possible that the in-memory object has a different player than the one in the database
+            if self == other:
+                continue
             if self.first_year < other.first_year:
                 we_were_first = True
             elif self.first_year == other.first_year:
                 if self.first_season == other.first_season:
-                    raise ValidationError(_(u'Overlap between players'))
+                    raise ValidationError(_(u'%(player1)s and %(player2)s both start playing %(power)s %(season)s %(year)d'),
+                                          params = {'player1': other.player,
+                                                    'player2': self.player,
+                                                    'power': self.power,
+                                                    'season': self.first_season,
+                                                    'year': self.first_year})
                 if self.first_season == SPRING:
                     we_were_first = True
                 else:
@@ -1451,7 +1459,7 @@ class GamePlayer(models.Model):
                 we_were_first = False
             if we_were_first:
                 # Our term must finish before theirs started
-                err_str = _(u'%(player)s is listed as playing %(power)s in game %(game)s from %(season)s %(year)')
+                err_str = _(u'%(player)s is listed as playing %(power)s in game %(game)s from %(season)s %(year)d')
                 if not self.last_year or self.last_year > other.first_year:
                     raise ValidationError(err_str,
                                           params = {'player': other.player,
@@ -1469,7 +1477,7 @@ class GamePlayer(models.Model):
                                                         'year': other.first_year})
             else:
                 # Their term must finish before ours started
-                err_str = _(u'%(player)s is listed as still playing %(power)s in game %(game)s from %(season)s %(year)')
+                err_str = _(u'%(player)s is listed as still playing %(power)s in game %(game)s from %(season)s %(year)d')
                 if not other.last_year or other.last_year > self.first_year:
                     raise ValidationError(err_str,
                                           params = {'player': other.player,

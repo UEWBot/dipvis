@@ -647,17 +647,20 @@ def create_games(request, tournament_id, round_num):
                                               context_instance = RequestContext(request))
                 g.save()
                 # Assign the players to the game
-                # TODO if this is an update, we're potentially replacing players,
-                #      but we use the defaults for first_year, first_season, last_year and last_season,
-                #      so we'll always overlap with the previous player.
                 for power, field in f.cleaned_data.iteritems():
                     try:
                         p = GreatPower.objects.get(name=power)
                     except GreatPower.DoesNotExist:
                         continue
-                    i, created = GamePlayer.objects.get_or_create(player=field.player,
-                                                                  game = g,
-                                                                  power=p)
+                    # Is there already a player for this power in this game ?
+                    try:
+                        i = GamePlayer.objects.filter(game=g).filter(power=p).get()
+                    except GamePlayer.DoesNotExist:
+                        # Create one (default first_season and first_year)
+                        i = GamePlayer(player=field.player, game=g, power=p)
+                    else:
+                        # Change the player (if necessary)
+                        i.player = field.player
                     try:
                         i.full_clean()
                     except ValidationError as e:
@@ -665,6 +668,7 @@ def create_games(request, tournament_id, round_num):
                         # f.add_error(None, e)
                         f._errors['game_name'] = forms.util.ErrorList()
                         f._errors['game_name'].append(u', '.join(e.messages))
+                        # TODO Not 100% certain that this is the right thing to do here
                         i.delete()
                         return render_to_response('rounds/create_games.html',
                                                   {'tournament': t,
