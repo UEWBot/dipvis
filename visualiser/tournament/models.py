@@ -1286,7 +1286,7 @@ class Game(models.Model):
                     try:
                         p.score = scores[p.player]
                     except KeyError:
-                        # Player was checked at rool call but didn't play
+                        # Player was checked at roll call but didn't play
                         # TODO May want to add a way to give them some points
                         pass
                     p.save()

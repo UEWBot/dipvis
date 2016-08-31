@@ -366,7 +366,6 @@ def tournament_scores(request, tournament_id, refresh=False):
         row.append(_(u'Final'))
     else:
         row.append('')
-    print row
     scores.append(row)
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     if refresh:
@@ -680,7 +679,7 @@ def create_games(request, tournament_id, round_num):
                 current[gp.power.name] = gp.player
             data.append(current)
         # TODO data looks reasonable here, but the resulting form isn't right
-        print data
+        print(data)
         # Estimate the number of games for the round
         round_players = r.roundplayer_set.count()
         expected_games = (round_players + 6) / 7
