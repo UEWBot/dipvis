@@ -94,7 +94,6 @@ class GamePlayersForm(forms.Form):
         for power in GreatPower.objects.all():
             c = power.name
             self.fields[c] = RoundPlayerChoiceField(queryset)
-            #self.fields[c].widget.attrs['size'] = 20
 
     def clean(self):
         """Checks that no player is playing multiple powers"""
@@ -648,6 +647,9 @@ def create_games(request, tournament_id, round_num):
                                               context_instance = RequestContext(request))
                 g.save()
                 # Assign the players to the game
+                # TODO if this is an update, we're potentially replacing players,
+                #      but we use the defaults for first_year, first_season, last_year and last_season,
+                #      so we'll always overlap with the previous player.
                 for power, field in f.cleaned_data.iteritems():
                     try:
                         p = GreatPower.objects.get(name=power)
@@ -680,11 +682,8 @@ def create_games(request, tournament_id, round_num):
         for g in games:
             current = {'game_name': g.name, 'power_assignment': g.power_assignment, 'the_set': g.the_set}
             for gp in g.gameplayer_set.all():
-                # TODO This doesn't result in existing players being selected
-                current[gp.power.name] = gp.player
+                current[gp.power.name] = RoundPlayer.objects.filter(the_round=g.the_round).filter(player=gp.player).get()
             data.append(current)
-        # TODO data looks reasonable here, but the resulting form isn't right
-        print(data)
         # Estimate the number of games for the round
         round_players = r.roundplayer_set.count()
         expected_games = (round_players + 6) / 7
