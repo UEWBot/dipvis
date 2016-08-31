@@ -117,6 +117,15 @@ class TournamentModelTests(TestCase):
     def test_validate_sc_count_35(self):
         self.assertRaises(ValidationError, validate_sc_count, 35)
 
+    # validate_wdd_id()
+    def test_validate_wdd_id_me(self):
+        # 4173 is Chris Brand
+        self.assertIsNone(validate_wdd_id(4173))
+
+    def test_validate_wdd_id_1(self):
+        # 1 is known to be unused
+        self.assertRaises(ValidationError, validate_wdd_id, 1)
+
     # validate_game_name()
     def test_validate_game_name_spaces(self):
         self.assertRaises(ValidationError, validate_game_name, u'space name')

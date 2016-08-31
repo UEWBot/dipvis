@@ -471,13 +471,16 @@ def validate_sc_count(value):
     if value < 0 or value > TOTAL_SCS:
         raise ValidationError(_(u'%(value)d is not a valid SC count'), params = {'value': value})
 
-# TODO Not used
 def validate_wdd_id(value):
     """
     Checks a WDD id
     """
-    url = u'http://world-diplomacy-database.com/php/results/player_fiche.php?id_player=%d' % value
-    p = urllib2.urlopen(url)
+    url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % value
+    try:
+        p = urllib2.urlopen(url)
+    except urllib2.URLError:
+        # Most likely WDD is not available - assume the value is ok
+        return
     if p.geturl() != url:
         raise ValidationError(_(u'%(value)d is not a valid WDD Id'), params = {'value': value})
 
@@ -648,7 +651,11 @@ class Player(models.Model):
     """
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
-    wdd_player_id = models.PositiveIntegerField(unique=True, verbose_name=_(u'WDD player id'), blank=True, null=True)
+    wdd_player_id = models.PositiveIntegerField(unique=True,
+                                                validators = [validate_wdd_id],
+                                                verbose_name=_(u'WDD player id'),
+                                                blank=True,
+                                                null=True)
     # TODO Would be nice to support a picture of the player, too
 
     class Meta:
