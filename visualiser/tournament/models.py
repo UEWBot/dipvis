@@ -19,10 +19,11 @@ from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Max, Min, Sum, Q
 from django.utils.translation import ugettext as _
+from django.utils import timezone
 
 from tournament.background import *
 
-import urllib2, random, datetime
+import urllib2, random
 
 SPRING = 'S'
 FALL = 'F'
@@ -1028,7 +1029,7 @@ class Game(models.Model):
     name = models.CharField(max_length=20,
                             validators=[validate_game_name],
                             help_text='Must be unique within the tournament. No spaces')
-    started_at = models.DateTimeField(default=datetime.datetime.now)
+    started_at = models.DateTimeField(default=timezone.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'))
