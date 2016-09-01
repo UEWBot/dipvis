@@ -133,6 +133,19 @@ class TournamentModelTests(TestCase):
     def test_validate_game_name_valid(self):
         self.assertIsNone(validate_game_name(u'ok'))
 
+    # Tournament.is_finished()
+    def test_tourney_is_finished_some_rounds_over(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.is_finished(), False)
+
+    def test_tourney_is_finished_no_rounds_over(self):
+        t = Tournament.objects.get(name='t2')
+        self.assertEqual(t.is_finished(), False)
+
+    def test_tourney_is_finished_all_rounds_over(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.is_finished(), True)
+
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')
@@ -157,18 +170,25 @@ class TournamentModelTests(TestCase):
         r4 = t.round_set.get(number=4)
         self.assertEqual(r4.is_finished(), False)
 
-    # Tournament.is_finished()
-    def test_tourney_is_finished_some_rounds_over(self):
-        t = Tournament.objects.get(name='t1')
-        self.assertEqual(t.is_finished(), False)
+    # Tournament.current_round()
 
-    def test_tourney_is_finished_no_rounds_over(self):
-        t = Tournament.objects.get(name='t2')
-        self.assertEqual(t.is_finished(), False)
+    # Game.is_dias()
 
-    def test_tourney_is_finished_all_rounds_over(self):
-        t = Tournament.objects.get(name='t3')
-        self.assertEqual(t.is_finished(), True)
+    # Game.years_player()
+
+    # Game.players()
+
+    # Game.passed_draw()
+
+    # Game.board_toppers()
+
+    # Game.neutrals()
+
+    # Game.final_year()
+
+    # Game.soloer()
+
+    # Game.result_str()
 
     # DrawProposal
     def test_draw_proposal_with_duplicates(self):
@@ -182,4 +202,8 @@ class TournamentModelTests(TestCase):
         dp = DrawProposal(game=g, year=1910, season='F', passed=False,
                           power_1=self.austria, power_3=self.england)
         self.assertRaises(ValidationError, dp.clean)
+
+    # DrawProposal.draw_size()
+
+    # DrawProposal.powers()
 
