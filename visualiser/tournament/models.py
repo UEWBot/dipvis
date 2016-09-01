@@ -489,7 +489,7 @@ def validate_game_name(value):
     if u' ' in value:
         raise ValidationError(_(u'Game names cannot contain spaces'))
 
-def file_location(instance, filename):
+def game_image_location(instance, filename):
     """
     Function that determines where to store the file.
     """
@@ -519,7 +519,7 @@ class GameSet(models.Model):
     colours matching those of any photos of the board.
     """
     name = models.CharField(max_length=20, unique=True)
-    initial_image = models.ImageField(upload_to=file_location)
+    initial_image = models.ImageField(upload_to=game_image_location)
 
     def __unicode__(self):
         return self.name
@@ -1553,7 +1553,7 @@ class GameImage(models.Model):
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     phase = models.CharField(max_length=1, choices=PHASES, default=MOVEMENT)
-    image = models.ImageField(upload_to=file_location)
+    image = models.ImageField(upload_to=game_image_location)
 
     class Meta:
         unique_together = ('game', 'year', 'season', 'phase')
