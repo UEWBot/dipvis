@@ -125,7 +125,11 @@ class BaseGamePlayersForm(BaseFormSet):
     def clean(self):
         cleaned_data = super(BaseGamePlayersForm, self).clean()
         # Any duplicates within the page ?
-        names = [cd['game_name'] for cd in self.cleaned_data]
+        try:
+            names = [cd['game_name'] for cd in self.cleaned_data]
+        except AttributeError:
+            # This happens when we have a form left blank
+            return []
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
         return cleaned_data
