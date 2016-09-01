@@ -695,18 +695,6 @@ class Player(models.Model):
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'), params = {'wdd_id': self.wdd_player_id})
         return bg.name()
 
-    def clean(self):
-        if not self.wdd_player_id:
-            return
-        wdd_name = self.wdd_name()
-        # TODO This may be too strict
-        if wdd_name != self.__unicode__():
-            raise ValidationError(_(u'WDD Id %(wdd_id)d is for %(wdd_name)s, not %(first_name)s %(last_name)s'),
-                                  params = {'wdd_id': self.wdd_player_id,
-                                            'wdd_name': wdd_name,
-                                            'first_name': self.first_name,
-                                            'last_name': self.last_name})
-
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
         return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
