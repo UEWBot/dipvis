@@ -247,7 +247,7 @@ class BasePlayerRoundFormset(BaseFormSet):
         kwargs['rounds'] = self.tournament.round_set.count()
         # current_round() could return None, if all rounds are over,
         # but that just gives us a blank form, which is fine
-        kwargs['this_round'] = self.tournament.current_round().number
+        kwargs['this_round'] = self.tournament.current_round().number()
         return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
 
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
@@ -307,7 +307,7 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         kwargs['rounds'] = self.tournament.round_set.count()
         # current_round() could return None, if all rounds are over,
         # but that just gives us a blank form, which is fine
-        kwargs['this_round'] = self.tournament.current_round().number
+        kwargs['this_round'] = self.tournament.current_round().number()
         return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
 
 class TourneyIndexView(generic.ListView):
@@ -340,7 +340,7 @@ def tournament_scores(request, tournament_id, refresh=False):
     t = get_object_or_404(Tournament, pk=tournament_id)
     tps = t.tournamentplayer_set.order_by('-score')
     rds = t.round_set.all()
-    rounds = [r.number for r in rds]
+    rounds = [r.number() for r in rds]
     # Grab the scores for each round once.
     # This will get us the "if the round ended now" scores
     round_scores = {}
@@ -426,7 +426,6 @@ def tournament_round(request, tournament_id):
 def round_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    round_set = t.round_set.all()
     PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
                                               extra=0,
                                               formset=BasePlayerRoundScoreFormset)
@@ -444,7 +443,7 @@ def round_scores(request, tournament_id):
                         # Extract the round number from the field name
                         i = int(r_name[6:])
                         # Find that Round
-                        r = round_set.get(number=i)
+                        r = t.round_numbered(i)
                         # Update the score
                         i, created = RoundPlayer.objects.get_or_create(player=tp.player,
                                                                        the_round=r)
@@ -491,11 +490,11 @@ def round_scores(request, tournament_id):
         for tp in t.tournamentplayer_set.all():
             current = {'tp_id': tp, 'player': tp.player, 'overall_score':tp.score}
             for rp in tp.player.roundplayer_set.all():
-                current['round_%d'%rp.the_round.number] = rp.score
+                current['round_%d'%rp.the_round.number()] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
                                                   game__the_round=rp.the_round)
-                current['game_scores_%d'%rp.the_round.number] = ', '.join([str(g.score) for g in games])
+                current['game_scores_%d'%rp.the_round.number()] = ', '.join([str(g.score) for g in games])
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
@@ -510,7 +509,6 @@ def round_scores(request, tournament_id):
 def roll_call(request, tournament_id):
     """Provide a form to specify which players are playing each round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    round_set = t.round_set.all()
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
@@ -550,7 +548,7 @@ def roll_call(request, tournament_id):
                     # Extract the round number from the field name
                     i = int(r_name[6:])
                     # Find that Round
-                    r = round_set.get(number=i)
+                    r = t.round_numbered(i)
                     # Ensure that we have a corresponding RoundPlayer
                     i, created = RoundPlayer.objects.get_or_create(player=p,
                                                                    the_round=r)
@@ -571,7 +569,7 @@ def roll_call(request, tournament_id):
                     i.save()
             # Next job is almost certainly to create the actual games
             return HttpResponseRedirect(reverse('create_games',
-                                                args=(tournament_id, t.current_round().number)))
+                                                args=(tournament_id, t.current_round().number())))
     else:
         data = []
         # Go through each player in the Tournament
@@ -579,7 +577,7 @@ def roll_call(request, tournament_id):
             current = {'player':tp.player}
             # And each round of the Tournament
             for r in t.round_set.all():
-                i = r.number
+                i = r.number()
                 # Is this player listed as playing this round ?
                 played = r.roundplayer_set.filter(player=tp.player).exists()
                 current['round_%d'%i] = played
@@ -606,9 +604,9 @@ def round_simple(request, tournament_id, round_num, template):
     """Just render the specified template with the round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	r = t.round_set.get(number=round_num)
+        r = t.round_numbered(round_num)
     except Round.DoesNotExist:
-	raise Http404
+        raise Http404
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/%s.html' % template, context)
 
@@ -616,9 +614,9 @@ def round_detail(request, tournament_id, round_num):
     """Display the details of a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	r = t.round_set.get(number=round_num)
+        r = t.round_numbered(round_num)
     except Round.DoesNotExist:
-	raise Http404
+        raise Http404
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
 
@@ -627,9 +625,9 @@ def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	r = t.round_set.get(number=round_num)
+        r = t.round_numbered(round_num)
     except Round.DoesNotExist:
-	raise Http404
+        raise Http404
     if request.method == 'POST':
         GamePlayersFormset = formset_factory(GamePlayersForm, formset=BaseGamePlayersForm)
         formset = GamePlayersFormset(request.POST, the_round=r)
@@ -722,9 +720,9 @@ def game_scores(request, tournament_id, round_num):
     """Provide a form to enter scores for all the games in a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	r = t.round_set.get(number=round_num)
+        r = t.round_numbered(round_num)
     except Round.DoesNotExist:
-	raise Http404
+        raise Http404
     GameScoreFormset = formset_factory(GameScoreForm,
                                        extra=0)
     if request.method == 'POST':
@@ -783,9 +781,9 @@ def game_index(request, tournament_id, round_num):
     """Display a list of games in the round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
     try:
-	r = t.round_set.get(number=round_num)
+        r = t.round_numbered(round_num)
     except Round.DoesNotExist:
-	raise Http404
+        raise Http404
     the_list = r.game_set.all()
     context = {'round': r, 'game_list': the_list}
     return render(request, 'games/index.html', context)

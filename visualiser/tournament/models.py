@@ -846,6 +846,16 @@ class Tournament(models.Model):
             raise InvalidScoringSystem(self.tournament_scoring_system)
         return system.scores(RoundPlayer.objects.filter(the_round__tournament=self))
 
+    def round_numbered(self, number):
+        """
+        Return the Round (if any) of the tournament with the specified number.
+        """
+        for r in self.round_set.all():
+            if r.number() == int(number):
+                return r
+        # This allows this function to be used like QuerySet.get()
+        raise Round.DoesNotExist
+
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of background strings for the tournament
@@ -924,7 +934,6 @@ class Round(models.Model):
     A single round of a Tournament
     """
     tournament = models.ForeignKey(Tournament)
-    number = models.PositiveSmallIntegerField()
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a GameScoringSystem object
     # There has at least been talk of tournaments using multiple scoring systems, one per round
@@ -933,12 +942,13 @@ class Round(models.Model):
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
                                       help_text=_(u'How to calculate a score for one game'))
     dias = models.BooleanField(verbose_name=_(u'Draws Include All Survivors'))
+    start = models.DateTimeField()
     final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        ordering = ['number']
+        ordering = ['start']
 
     def scores(self, force_recalculation=False):
         """
@@ -967,19 +977,31 @@ class Round(models.Model):
                 return False
         return True
 
+    def number(self):
+        """
+        Which round within the tournament is this one ?
+        """
+        rounds = self.tournament.round_set.all()
+        count = 1
+        for r in rounds:
+            if r == self:
+                return count
+            count += 1
+        assert 0, u"Round doesn't exist within its own tournament"
+
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of background strings for the round
         """
         results = []
         if (mask & MASK_ROUND_ENDPOINTS) & self.earliest_end_time:
-            results.append(_(u'Round %(round)d could end as early as %(time)s.') % {'round': self.number,
+            results.append(_(u'Round %(round)d could end as early as %(time)s.') % {'round': self.number(),
                                                                                     'time': self.earliest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) & self.latest_end_time:
-            results.append(_(u'Round %(round)d could end as late as %(time)s.') % {'round': self.number,
+            results.append(_(u'Round %(round)d could end as late as %(time)s.') % {'round': self.number(),
                                                                                    'time': self.latest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) & self.final_year:
-            results.append(_(u'Round %(round)d will end after playing year %(year)d.') % {'round': self.number,
+            results.append(_(u'Round %(round)d will end after playing year %(year)d.') % {'round': self.number(),
                                                                                           'year': self.final_year})
         # Shuffle the resulting list
         random.shuffle(results)
@@ -994,10 +1016,10 @@ class Round(models.Model):
 
     def get_absolute_url(self):
         return reverse('round_detail',
-                       args=[str(self.tournament.id), str(self.number)])
+                       args=[str(self.tournament.id), str(self.number())])
 
     def __unicode__(self):
-        return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number}
+        return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number()}
 
 class Game(models.Model):
     """

@@ -8,7 +8,7 @@
 {% if round_list %}
     <ul>
     {% for r in round_list %}
-        <li><a href="{{ r.get_absolute_url }}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a>
+        <li><a href="{{ r.get_absolute_url }}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Start" %} {{ r.start }}
             {% if r.is_finished %}
                 {% trans "(Complete)" %}
             {% endif %}

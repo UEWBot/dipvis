@@ -35,7 +35,7 @@ class RoundInline(admin.StackedInline):
     extra = 4
     fieldsets = (
         (None, {
-            'fields': ('number', 'scoring_system', 'dias')
+            'fields': ('start', 'scoring_system', 'dias')
         }),
         ('Round end options', {
             'classes': ('collapse',),
