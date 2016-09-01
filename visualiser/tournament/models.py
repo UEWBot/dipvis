@@ -495,7 +495,14 @@ def game_image_location(instance, filename):
     """
     # TODO Probably want a separate directory for each tournament,
     #      containing a directory per game
-    return 'games'
+    return 'games/%s' % filename
+
+def player_picture_location(instance, filename):
+    """
+    Function that determines where to store the file.
+    """
+    # Stuff them all into one directory
+    return 'player_pictures/%s' % filename
 
 class GreatPower(models.Model):
     """
@@ -663,7 +670,7 @@ class Player(models.Model):
                                                 verbose_name=_(u'WDD player id'),
                                                 blank=True,
                                                 null=True)
-    # TODO Would be nice to support a picture of the player, too
+    picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
 
     class Meta:
         ordering = ['last_name', 'first_name']

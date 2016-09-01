@@ -5,6 +5,9 @@
 
 {% block content %}
 <h1>{{ player }}</h1>
+{% if player.picture %}
+  <img src="{{ player.picture.url }}">
+{% endif %}
 <p>{% trans "WDD Id:" %} <a href="{{ player.wdd_url }}">{{ player.wdd_player_id }}</a></p>
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
