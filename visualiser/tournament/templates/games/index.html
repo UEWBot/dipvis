@@ -4,7 +4,7 @@
 {% block title %}{% blocktrans with round=round %}DipTV - {{ round }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ round.get_absolute_url }}">{{ round }}</a></h1>
+<h1><a href="{{ round.tournament.get_absolute_url }}">{{ round.tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with n=round.number %}Round {{ n }}{% endblocktrans %}</a></h1>
 {% if game_list %}
     <ul>
     {% for g in game_list %}
