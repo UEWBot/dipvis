@@ -682,19 +682,24 @@ class Player(models.Model):
         super(Player, self).save(*args, **kwargs)
         add_player_bg(self)
 
-    def clean(self):
+    def wdd_name(self):
+        """Name for this player in the World Diplomacy Database."""
         if not self.wdd_player_id:
-            return
-        # Check that the WDD id seems to match the name
+            return u''
         try:
             bg = Background(self.wdd_player_id)
         except WDDNotAccessible:
             # Not much we can do in this case
-            return
+            return u''
         except InvalidWDDId:
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'), params = {'wdd_id': self.wdd_player_id})
+        return bg.name()
+
+    def clean(self):
+        if not self.wdd_player_id:
+            return
+        wdd_name = self.wdd_name()
         # TODO This may be too strict
-        wdd_name = bg.name()
         if wdd_name != self.__unicode__():
             raise ValidationError(_(u'WDD Id %(wdd_id)d is for %(wdd_name)s, not %(first_name)s %(last_name)s'),
                                   params = {'wdd_id': self.wdd_player_id,
