@@ -359,7 +359,11 @@ def tournament_scores(request, tournament_id, refresh=False):
             except KeyError:
                 # This player didn't play this round
                 rs.append('')
-        scores.append(['%s' % p.player] + rs + ['%.2f' % t_scores[p.player]])
+        try:
+            scores.append(['%s' % p.player] + rs + ['%.2f' % t_scores[p.player]])
+        except KeyError:
+            # This player didn't play at all
+            rs.append('')
     # sort rows by tournament score (they'll retain the alphabetic sorting if equal)
     scores.sort(key = lambda row: float(row[-1]), reverse=True)
     # Add one final row showing whether each round is ongoing or not
