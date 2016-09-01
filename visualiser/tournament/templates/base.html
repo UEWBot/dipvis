@@ -13,5 +13,8 @@
     <div id="content">
         {% block content %}{% endblock %}
     </div>
+    <div id="footer">
+        {% block footer %}{% trans "Retrieved at " %}{% now "SHORT_DATETIME_FORMAT" %}{% endblock %}
+    </div>
 </body>
 </html>
