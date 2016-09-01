@@ -63,9 +63,6 @@ GAME_RESULT = (
     ('L', _('Loss')),
 )
 
-# Default initial position image
-S1901M_IMAGE = u's1901m.gif'
-
 # Power assignment methods
 RANDOM = 'R'
 FRENCH_METHOD = 'F'
@@ -492,6 +489,14 @@ def validate_game_name(value):
     if u' ' in value:
         raise ValidationError(_(u'Game names cannot contain spaces'))
 
+def file_location(instance, filename):
+    """
+    Function that determines where to store the file.
+    """
+    # TODO Probably want a separate directory for each tournament,
+    #      containing a directory per game
+    return 'games'
+
 class GreatPower(models.Model):
     """
     One of the seven great powers that can be played
@@ -514,6 +519,7 @@ class GameSet(models.Model):
     colours matching those of any photos of the board.
     """
     name = models.CharField(max_length=20, unique=True)
+    initial_image = models.ImageField(upload_to=file_location)
 
     def __unicode__(self):
         return self.name
@@ -1306,7 +1312,7 @@ class Game(models.Model):
                                                      year=FIRST_YEAR,
                                                      season=SPRING,
                                                      phase=MOVEMENT,
-                                                     image=S1901M_IMAGE)
+                                                     image=self.the_set.initial_image)
         i.save()
 
         # If the game is (now) finished, store the player scores
@@ -1537,14 +1543,6 @@ class GamePlayer(models.Model):
 
     def __unicode__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
-
-def file_location(instance, filename):
-    """
-    Function that determines where to store the file.
-    """
-    # TODO Probably want a separate directory for each tournament,
-    #      containing a directory per game
-    return 'games'
 
 class GameImage(models.Model):
     """

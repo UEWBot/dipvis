@@ -66,14 +66,16 @@
     "pk": 1,
     "model": "tournament.gameset",
     "fields": {
-        "name": "Avalon Hill"
+        "name": "Avalon Hill",
+        "initial_image": "games/ah_start_position.jpg"
     }
 },
 {
     "pk": 2,
     "model": "tournament.gameset",
     "fields": {
-        "name": "Gibsons"
+        "name": "Gibsons",
+        "initial_image": "games/gibsons_start_position.jpg"
     }
 },
 {
