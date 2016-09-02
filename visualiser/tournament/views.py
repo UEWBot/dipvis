@@ -986,7 +986,18 @@ def draw_vote(request, tournament_id, game_name):
         g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
     except Game.DoesNotExist:
         raise Http404
-    form = DrawForm(request.POST or None, dias=g.is_dias())
+    last_image = g.gameimage_set.last()
+    final_year = g.final_year()
+    if last_image.year < final_year:
+        # In this case, we only have the centre count to go on
+        year = final_year + 1
+        season = SPRING
+    else:
+        # Assume we're currently playing the season the image is for
+        year = last_image.year
+        season = last_image.season
+    form = DrawForm(request.POST or None, dias=g.is_dias(), initial={'year': year,
+                                                                     'season' : season})
     if form.is_valid():
         year = form.cleaned_data['year']
         try:
