@@ -33,10 +33,10 @@
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   {% if perms.tournament.create_game %}
-    <li><a href="{% url 'create_games' tournament.id round.id %}">{% trans "Create Games" %}</a></li>
+    <li><a href="{% url 'create_games' tournament.id round.id %}">{% trans "Create Games" %}</a> - {% trans "Use this to create the games for this round, to assign players to games, and to assign great powers to players." %}</li>
   {% endif %}
   {% if perms.tournament.change_game %}
-    <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a></li>
+    <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a> - {% trans "Use this if you need to override the scores calculated by the system." %}</li>
   {% endif %}
 </ul>
 {% endif %}

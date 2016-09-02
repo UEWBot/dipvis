@@ -5,6 +5,12 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Games" %}</h1>
+
+<p>{% trans "Game Names cannot contain spaces and must be unique within the round." %}</p>
+<p>{% trans "Game Set should be chosen to ensure the great power colours are as expected. If the set being used does not appear in the drop-down, you can add it (provided you have a picture of the initial position) at" %} <a href="{% url 'admin:tournament_gameset_add' %}">{% trans "this page" %}</a>.</p>
+<p>{% trans "Power Assignments other than Random are not really supported properly at present." %}</p>
+<p>{% blocktrans with round_num=round.number %}If a player does not appear in the drop-down, you need to flag them as playing in round {{ round_num }} on the{% endblocktrans %} <a href="{% url 'roll_call' tournament.pk %}">{% trans "roll call page" %}</a>.</p>
+
 <form method="post" action={% url 'create_games' tournament.id round.id %}>
     {% include "formset_table.html" %}
 </form>

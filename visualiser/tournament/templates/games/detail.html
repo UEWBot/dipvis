@@ -32,13 +32,13 @@
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   {% if perms.tournament.add_centrecount %}
-    <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a></li>
+    <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a> - {% trans "Use this to update the supply centre chart for the game." %}</li>
   {% endif %}
   {% if perms.tournament.add_gameimage %}
-    <li><a href="{% url 'add_game_image' tournament.id game.name %}">{% trans "Upload Game Image" %}</a></li>
+    <li><a href="{% url 'add_game_image' tournament.id game.name %}">{% trans "Upload Game Image" %}</a> - {% trans "Use this to add a picture of the game in progress." %}</li>
   {% endif %}
   {% if perms.tournament.add_drawvote %}
-    <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a></li>
+    <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a> - {% trans "Use this to record draw votes, whether they succeed or fail." %}</li>
   {% endif %}
 </ul>
 {% endif %}

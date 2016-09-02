@@ -21,11 +21,11 @@
 {% if user.is_active %}
   <p>{% trans "Data Entry:" %}</p>
   <ul>
-    {% if perms.tournament.change_roundplayer %}
-      <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a></li>
-    {% endif %}
     {% if perms.tournament.add_roundplayer %}
-      <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a></li>
+      <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a> - {% trans "Use this to spcify which of the players at the tournament are actually playing in each round." %}</li>
+    {% endif %}
+    {% if perms.tournament.change_roundplayer %}
+      <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a> - {% trans "Use this if you need to modify the scores that the system calculates when games end." %}</li>
     {% endif %}
   </ul>
 {% endif %}

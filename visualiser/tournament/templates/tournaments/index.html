@@ -2,7 +2,9 @@
 {% load i18n %}
 
 {% block content %}
+<h1>{% trans "DipTV - Diplomacy Tournament Visualiser" %}</h1>
 {% if tournament_list %}
+<p>{% trans "Tournaments:" %}</p>
     <ul>
     {% for t in tournament_list %}
         <li><a href="{{ t.get_absolute_url }}">{{ t.name }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
@@ -14,5 +16,9 @@
     </ul>
 {% else %}
     <p>{% trans "No tournaments are available." %}</p>
+{% endif %}
+{% if user.is_active %}
+<p><a href="{% url 'admin:tournament_tournament_add' %}">{% trans "Add a tournament" %}</a></p>
+</ul>
 {% endif %}
 {% endblock %}
