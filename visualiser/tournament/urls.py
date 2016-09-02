@@ -57,14 +57,14 @@ urlpatterns = patterns('',
             url(r'^positions/latest/$', views.game_image,
                 {'turn': '', 'timelapse': True}, name='current_game_image'),
             # Fixed at the specified turn
-            url(r'^positions/(?P<turn>)/$', views.game_image, name='game_image'),
+            url(r'^positions/(?P<turn>\w+)/$', views.game_image, name='game_image'),
             # Cycle through all images, from S1901M
             url(r'^timelapse/$', views.game_image,
                 {'turn': 'S1901M', 'timelapse': True}, name='game_timelapse'),
             # Same as either current_game_image or game_timelapse, depending on turn
             # This is the URL they both redirect to. Don't expect users to go there
             # TODO Begs the question of why not just use this one...
-            url(r'^timelapse/(?P<turn>)/$', views.game_image,
+            url(r'^timelapse/(?P<turn>\w*)/$', views.game_image,
                 {'timelapse': True}, name='game_image_seq'),
             url(r'^add_position/$', views.add_game_image, name='add_game_image'),
             url(r'^news/$', views.game_news, name='game_news'),

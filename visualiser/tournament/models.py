@@ -1570,6 +1570,9 @@ class GameImage(models.Model):
         if self.season == SPRING and self.phase == ADJUSTMENTS:
             raise ValidationError(_(u'No adjustment phase in spring'))
 
+    def get_absolute_url(self):
+        return reverse('game_image', args=[str(self.game.the_round.tournament.id), self.game.name, self.turn_str()])
+
     def __unicode__(self):
         return _(u'%(game)s %(turn)s image') % {'game': self.game, 'turn': self.turn_str()}
 

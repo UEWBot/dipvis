@@ -4,6 +4,6 @@
 {% block title %}{% blocktrans with game=image.game turn=image.turn_str %}Game {{ game }} {{ turn }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with game=image.game turn=image.turn_str %}Game {{ game }} {{ turn }}{% endblocktrans %}</h1>
-<img src="{{ image.image.url }}">
+<h1><a href="{{ image.game.get_absolute_url }}">{% blocktrans with game=image.game turn=image.turn_str %}Game {{ game }}{% endblocktrans %}</a> <a href="{{ image.get_absolute_url }}">{{ image.turn_str }}</a></h1>
+<img src="{{ image.image.url }}" alt="{{ image.game }} {{ image.turn_str }}" width="100%"/>
 {% endblock %}

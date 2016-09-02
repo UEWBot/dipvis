@@ -8,7 +8,9 @@
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'game_sc_chart' tournament.id game.name %}">{% trans "Supply Centre Chart" %}</a></li>
+  <li><a href="{% url 'current_game_image' tournament.id game.name %}">{% trans "Latest Position" %}</a></li>
   <li><a href="{% url 'game_news' tournament.id game.name %}">{% trans "News" %}</a></li>
+  <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% trans "Position Timelapse" %}</a></li>
   <li><a href="{% url 'game_background' tournament.id game.name %}">{% trans "Background" %}</a></li>
 </ul>
 {% if user.is_active %}
@@ -16,6 +18,9 @@
 <ul>
   {% if perms.tournament.add_centrecount %}
     <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a></li>
+  {% endif %}
+  {% if perms.tournament.add_gameimage %}
+    <li><a href="{% url 'add_game_image' tournament.id game.name %}">{% trans "Upload Game Image" %}</a></li>
   {% endif %}
   {% if perms.tournament.add_drawvote %}
     <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a></li>
