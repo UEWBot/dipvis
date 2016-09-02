@@ -145,17 +145,39 @@ class TournamentModelTests(TestCase):
     # Tournament.is_finished()
     def test_tourney_is_finished_some_rounds_over(self):
         t = Tournament.objects.get(name='t1')
-        self.assertEqual(t.is_finished(), False)
+        self.assertFalse(t.is_finished())
 
     def test_tourney_is_finished_no_rounds_over(self):
         t = Tournament.objects.get(name='t2')
-        self.assertEqual(t.is_finished(), False)
+        self.assertFalse(t.is_finished())
 
     def test_tourney_is_finished_all_rounds_over(self):
         t = Tournament.objects.get(name='t3')
-        self.assertEqual(t.is_finished(), True)
+        self.assertTrue(t.is_finished())
 
     # Tournament.round_numbered()
+    def test_tourney_round_numbered_negative(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertRaises(Round.DoesNotExist, t.round_numbered, -1)
+
+    def test_tourney_round_numbered_3(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.round_numbered(3).number(), 3)
+
+    # Tournament.current_round()
+    def test_tourney_current_round_none(self):
+        # All games in t3 are finished
+        t = Tournament.objects.get(name='t3')
+        self.assertIsNone(t.current_round())
+
+    def test_tourney_current_round(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.current_round()
+        # All earlier rounds should be finished
+        for i in range(1, r.number()):
+            self.assertTrue(t.round_numbered(i).is_finished(), 'round %d' % i)
+        # This round should be unfinished
+        self.assertFalse(r.is_finished())
 
     # Round.number()
     def test_round_number_11(self):
@@ -188,31 +210,21 @@ class TournamentModelTests(TestCase):
         r22 = t.round_set.all()[1]
         self.assertEqual(r22.number(), 2)
 
-    def test_round_number_31(self):
-        t = Tournament.objects.get(name='t3')
-        r31 = t.round_set.all()[0]
-        self.assertEqual(r31.number(), 1)
-
-    def test_round_number_32(self):
-        t = Tournament.objects.get(name='t3')
-        r32 = t.round_set.all()[1]
-        self.assertEqual(r32.number(), 2)
-
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')
         r1 = t.round_numbered(1)
-        self.assertEqual(r1.is_finished(), False)
+        self.assertFalse(r1.is_finished())
 
     def test_round_is_finished_some_games_over(self):
         t = Tournament.objects.get(name='t1')
         r2 = t.round_numbered(2)
-        self.assertEqual(r2.is_finished(), False)
+        self.assertFalse(r2.is_finished())
 
     def test_round_is_finished_all_games_over(self):
         t = Tournament.objects.get(name='t1')
         r3 = t.round_numbered(3)
-        self.assertEqual(r3.is_finished(), True)
+        self.assertTrue(r3.is_finished())
 
     def test_round_is_finished_no_games(self):
         """
@@ -220,9 +232,7 @@ class TournamentModelTests(TestCase):
         """
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
-        self.assertEqual(r4.is_finished(), False)
-
-    # Tournament.current_round()
+        self.assertFalse(r4.is_finished())
 
     # Game.is_dias()
 
