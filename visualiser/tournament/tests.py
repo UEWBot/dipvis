@@ -23,6 +23,8 @@ from tournament.models import *
 from datetime import *
 
 HOURS_8 = timedelta(hours=8)
+HOURS_9 = timedelta(hours=9)
+HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
@@ -51,8 +53,8 @@ class TournamentModelTests(TestCase):
         r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
         r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
         r14 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
-        r21 = Round.objects.create(tournament=t2, scoring_system=s1, dias=True, start=t2.start_date)
-        r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=True, start=t2.start_date + HOURS_8)
+        r21 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date)
+        r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date + HOURS_8)
         r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date)
         r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8)
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
@@ -234,9 +236,33 @@ class TournamentModelTests(TestCase):
         r4 = t.round_numbered(4)
         self.assertFalse(r4.is_finished())
 
-    # Game.is_dias()
+    # Round.clean()
+    def test_round_clean_missing_earliest_end(self):
+        t = Tournament.objects.get(name='t1')
+        s1 = G_SCORING_SYSTEMS[0].name
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s1,
+                                 dias=True,
+                                 start=t.start_date + HOURS_8,
+                                 earliest_end_time=t.start_date + HOURS_9)
+        self.assertRaises(ValidationError, r.clean)
 
-    # Game.years_player()
+    def test_round_clean_missing_latest_end(self):
+        t = Tournament.objects.get(name='t1')
+        s1 = G_SCORING_SYSTEMS[0].name
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s1,
+                                 dias=True,
+                                 start=t.start_date + HOURS_8,
+                                 latest_end_time=t.start_date + HOURS_10)
+        self.assertRaises(ValidationError, r.clean)
+
+    # Game.is_dias()
+    def test_game_is_dias(self):
+        for g in Game.objects.all():
+            self.assertEqual(g.is_dias(), g.the_round.dias)
+
+    # Game.years_played()
 
     # Game.players()
 
@@ -252,20 +278,42 @@ class TournamentModelTests(TestCase):
 
     # Game.result_str()
 
-    # DrawProposal
-    def test_draw_proposal_with_duplicates(self):
+    # Game.clean()
+    def test_game_clean_non_unique_name(self):
+        g1 = Game.objects.get(pk=1)
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(4)
+        g2 = Game.objects.create(name='g13',
+                                 started_at=g1.started_at + HOURS_8,
+                                 the_round=r,
+                                 is_finished=False,
+                                 the_set=g1.the_set)
+        self.assertRaises(ValidationError, g2.clean)
+
+    # DrawProposal.draw_size()
+
+    # DrawProposal.powers()
+
+    # DrawProposal.clean()
+    def test_draw_proposal_clean_with_duplicates(self):
         g = Game.objects.get(pk=1)
         dp = DrawProposal(game=g, year=1910, season='F', passed=False,
                           power_1=self.austria, power_2=self.austria)
         self.assertRaises(ValidationError, dp.clean)
 
-    def test_draw_proposal_with_gap(self):
+    def test_draw_proposal_clean_with_gap(self):
         g = Game.objects.get(pk=1)
         dp = DrawProposal(game=g, year=1910, season='F', passed=False,
                           power_1=self.austria, power_3=self.england)
         self.assertRaises(ValidationError, dp.clean)
 
-    # DrawProposal.draw_size()
+    # RoundPlayer.clean()
 
-    # DrawProposal.powers()
+    # GamePlayer.clean()
+
+    # GameImage.turn_str()
+
+    # GameImage.clean()
+
+    # CentreCount.clean()
 
