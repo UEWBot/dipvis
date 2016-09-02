@@ -5,10 +5,10 @@
 
 {% block content %}
 <h1>{% trans "Upload Game Position Image" %}</h1>
-<p>{% trans "Image should be of the start position for the specified phase" %}</p>
+<p>{% trans "Image should be of the position at the <b>start</b> of the specified phase" %}</p>
 <form method="post" action={% url 'add_game_image' tournament.id %}>
   {% csrf_token %}
-  {{ form }}
+  {{ form }}<br/>
   <input type="submit" value="Submit" />
 </form>
 {% endblock %}
