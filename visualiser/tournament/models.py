@@ -1584,6 +1584,7 @@ class CentreCount(models.Model):
 
     class Meta:
         unique_together = ('power', 'game', 'year')
+        ordering = ['game', 'year']
 
     def clean(self):
         # Is this for a year that is supposed to be played ?
