@@ -5,6 +5,11 @@
 
 {% block content %}
 <h1>{{ tournament }}</h1>
+
+<p>{{ tournament.start_date }} - {{tournament.end_date }}</p>
+
+<p>{% blocktrans with count=tournament.round_set.count %}{{ count }} Rounds{% endblocktrans %}</p>
+
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>

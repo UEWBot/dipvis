@@ -5,10 +5,30 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Views{% endblocktrans %}</h1>
+
+<p>{% trans "Start time:" %} {{ round.start }}</p>
+
+<p>{% trans "Scoring system:" %} {{ round.scoring_system }}</p>
+
+<p>{% if round.dias %}{% trans "All surviving players are included if a game ends in a draw." %}
+   {% else %}{% trans "Surviving players may vote themselves out of draws." %}
+   {% endif %}</p>
+
+{% if round.final_year %}
+  <p>{% blocktrans with year=round.final_year %}Games in this round end with {{ year }}.{% endblocktrans %}</p>
+{% elif round.earliest_end_time %}
+  <p>{% blocktrans with start=round.earliest_end_time end=round.latest_end_time %}Games in this round will end between {{ start }} and {{ end }}.{% endblocktrans %}</p>
+{% else %}
+  <p>{% trans "Games in this round have no set endpoint." %}</p>
+{% endif %}
+
+<p>{% blocktrans with count=round.game_set.count %}{{ count }} Games{% endblocktrans %}</p>
+
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'game_index' tournament.id round.id %}">{% trans "Game Index" %}</a></li>
 </ul>
+
 {% if user.is_active %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
@@ -19,12 +39,5 @@
     <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a></li>
   {% endif %}
 </ul>
-{% endif %}
-{% if round.final_year %}
-  <p>{% blocktrans with year=round.final_year %}Games in this round end with {{ year }}.{% endblocktrans %}</p>
-{% elif round.earliest_end_time %}
-  <p>{% blocktrans with start=round.earliest_end_time end=round.latest_end_time %}Games in this round will end between {{ start }} and {{ end }}.{% endblocktrans %}</p>
-{% else %}
-  <p>{% trans "Games in this round have no set endpoint." %}</p>
 {% endif %}
 {% endblock %}

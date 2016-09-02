@@ -5,6 +5,21 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with game=game.name %}Game {{ game }} Views{% endblocktrans %}</h1>
+
+{% if game.is_top_board %}<p>{% trans "Top Board for the tournament" %}</p>{% endif %}
+
+{% with result=game.result_str %}{% if result %}<p>{{ result_str }}.</p>{% endif %}{% endwith %}
+
+<p>{% trans "Start time:" %} {{ game.started_at }}</p>
+
+<p>{% if game.is_finished %}{% trans "Game is over." %}
+   {% else %}{% trans "Game is ongoing." %}
+   {% endif %}</p>
+
+<p>{% blocktrans with year=game.final_year %}Last year played is {{year}}.{% endblocktrans %}</p>
+
+<p>{% blocktrans with set=game.the_set %}Being played with the {{ set }} set.{% endblocktrans %}</p>
+
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'game_sc_chart' tournament.id game.name %}">{% trans "Supply Centre Chart" %}</a></li>
