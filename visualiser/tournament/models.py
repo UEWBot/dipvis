@@ -1034,7 +1034,7 @@ class Game(models.Model):
     """
     name = models.CharField(max_length=20,
                             validators=[validate_game_name],
-                            help_text='Must be unique within the tournament. No spaces')
+                            help_text=_(u'Must be unique within the tournament. No spaces'))
     started_at = models.DateTimeField(default=timezone.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
