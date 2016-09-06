@@ -604,23 +604,25 @@ def round_index(request, tournament_id):
 
 # Round views
 
+def get_round_or_404(tournament, round_num):
+    """Return the specified numbered round of the specified tournament or raise Http404."""
+    try:
+        return tournament.round_numbered(round_num)
+    except Round.DoesNotExist:
+        raise Http404
+
 def round_simple(request, tournament_id, round_num, template):
     """Just render the specified template with the round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        r = t.round_numbered(round_num)
-    except Round.DoesNotExist:
-        raise Http404
+    r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/%s.html' % template, context)
 
+# TODO Replace with return round_simple(request, tournament_id, round_num, 'detail') ?
 def round_detail(request, tournament_id, round_num):
     """Display the details of a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        r = t.round_numbered(round_num)
-    except Round.DoesNotExist:
-        raise Http404
+    r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
 
@@ -628,10 +630,7 @@ def round_detail(request, tournament_id, round_num):
 def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        r = t.round_numbered(round_num)
-    except Round.DoesNotExist:
-        raise Http404
+    r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         GamePlayersFormset = formset_factory(GamePlayersForm, formset=BaseGamePlayersForm)
         formset = GamePlayersFormset(request.POST, the_round=r)
@@ -723,10 +722,7 @@ def create_games(request, tournament_id, round_num):
 def game_scores(request, tournament_id, round_num):
     """Provide a form to enter scores for all the games in a round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        r = t.round_numbered(round_num)
-    except Round.DoesNotExist:
-        raise Http404
+    r = get_round_or_404(t, round_num)
     GameScoreFormset = formset_factory(GameScoreForm,
                                        extra=0)
     if request.method == 'POST':
@@ -784,32 +780,30 @@ def game_scores(request, tournament_id, round_num):
 def game_index(request, tournament_id, round_num):
     """Display a list of games in the round"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        r = t.round_numbered(round_num)
-    except Round.DoesNotExist:
-        raise Http404
+    r = get_round_or_404(t, round_num)
     the_list = r.game_set.all()
     context = {'round': r, 'game_list': the_list}
     return render(request, 'games/index.html', context)
 
 # Game views
 
+def get_game_or_404(tournament, game_name):
+    """Return the specified game of the specified tournament or raise Http404."""
+    try:
+        return Game.objects.filter(name=game_name, the_round__tournament=tournament).get()
+    except Game.DoesNotExist:
+        raise Http404
+
 def game_simple(request, tournament_id, game_name, template):
     """Just render the specified template with the game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
     return render(request, 'games/%s.html' % template, context)
 
 def game_detail(request, tournament_id, game_name):
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
     return render(request, 'games/detail.html', context)
 
@@ -817,10 +811,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     """Display the SupplyCentre chart for a game"""
     #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     set_powers = g.the_set.setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
     # Massage ps so we have one entry per power
@@ -868,10 +859,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
 def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them two
     years_to_go = 2
@@ -947,10 +935,7 @@ def sc_counts(request, tournament_id, game_name):
 def game_news(request, tournament_id, game_name, as_ticker=False):
     """Display news for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
     if as_ticker:
         # 300s = 5 mins
@@ -964,10 +949,7 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
 def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
     if as_ticker:
         # 300s = 5 mins
@@ -982,10 +964,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
 def draw_vote(request, tournament_id, game_name):
     """Provide a form to enter a draw vote for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     last_image = g.gameimage_set.last()
     final_year = g.final_year()
     if last_image.year < final_year:
@@ -1045,10 +1024,7 @@ def draw_vote(request, tournament_id, game_name):
 def game_image(request, tournament_id, game_name, turn='', timelapse=False):
     """Display the image for the game at the specified time"""
     t = get_object_or_404(Tournament, pk=tournament_id)
-    try:
-        g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-    except Game.DoesNotExist:
-        raise Http404
+    g = get_game_or_404(t, game_name)
     if turn == '':
         # Always display the latest image
         this_image = g.gameimage_set.last()
