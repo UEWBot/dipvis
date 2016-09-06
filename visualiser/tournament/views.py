@@ -1094,15 +1094,17 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
     t = get_object_or_404(Tournament, pk=tournament_id)
+    initial = {}
     if game_name != '':
         try:
             g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
         except Game.DoesNotExist:
             raise Http404
-    #last_image = g.gameimage_set.last()
-    next_year = g.final_year() + 1
-    form = GameImageForm(request.POST or None, initial={'game': g,
-                                                        'year': next_year})
+        else:
+            #last_image = g.gameimage_set.last()
+            next_year = g.final_year() + 1
+            initial = {'game': g, 'year': next_year}
+    form = GameImageForm(request.POST or None, initial=initial)
     if form.is_valid():
         # Create the new image in the database
         image = form.save()
