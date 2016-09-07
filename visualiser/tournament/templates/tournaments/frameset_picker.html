@@ -6,21 +6,21 @@
 {% block content %}
 {% trans "Pick a screen layout:" %}
 <ul>
-  <li><a href="../frameset_3x3/">
+  <li><a href="{% url 'frameset_3x3' tournament.id %}">
     <table border="1">
       <tr><td>fr1</td><td>fr2</td><td>fr3</td></tr>
       <tr><td>fr4</td><td>fr5</td><td>fr6</td></tr>
       <tr><td>fr7</td><td>fr8</td><td>fr9</td></tr>
     </table></a>
   </li>
-  <li><a href="../frameset_top_board/">
+  <li><a href="{% url 'frameset_top_board' tournament.id %}">
     <table border="1">
       <tr><td rowspan="2" colspan="2">fr1</td><td>fr2</td></tr>
       <tr><td>fr3</td></tr>
       <tr><td>fr4</td><td>fr5</td><td>fr6</td></tr>
     </table></a>
   </li>
-  <li><a href="../frameset_2x2/">
+  <li><a href="{% url 'frameset_2x2' tournament.id %}">
     <table border="1">
       <tr><td>fr1</td><td>fr2</td></tr>
       <tr><td>fr3</td><td>fr4</td></tr>

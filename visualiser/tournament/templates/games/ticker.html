@@ -1,7 +1,7 @@
 <head>
   {% if game.centrecount_set.count > 0 %}
-    <meta http-equiv="refresh" content="0; url=../news_ticker/">
+    <meta http-equiv="refresh" content="0; url={% url 'game_news_ticker' tournament.id game.name %}">
   {% else %}
-    <meta http-equiv="refresh" content="0; url=../background_ticker/">
+    <meta http-equiv="refresh" content="0; url={% url 'game_background_ticker' tournament.id game.name %}">
   {% endif %}
 </head>

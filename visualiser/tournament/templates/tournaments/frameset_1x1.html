@@ -2,8 +2,8 @@
 <head>
 </head>
   <frameset rows="*, 5%">
-    <frame src="../views/">
-    <frame src="../ticker/">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_ticker' tournament.id %}">
     <noframes>
       no frames
     </noframes>

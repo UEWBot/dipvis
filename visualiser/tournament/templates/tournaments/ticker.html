@@ -2,12 +2,12 @@
   {% with round=tournament.current_round %}
   {% if round %}
     {% if round.game_set.count > 0 %}
-      <meta http-equiv="refresh" content="0; url=../news_ticker/">
+      <meta http-equiv="refresh" content="0; url={% url 'tournament_news_ticker' tournament.id %}">
     {% else %}
-      <meta http-equiv="refresh" content="0; url=../background_ticker/">
+      <meta http-equiv="refresh" content="0; url={% url 'tournament_background_ticker' tournament.id %}">
     {% endif %}
   {% else %}
-    <meta http-equiv="refresh" content="0; url=../background_ticker/">
+    <meta http-equiv="refresh" content="0; url={% url 'tournament_background_ticker' tournament.id %}">
   {% endif %}
   {% endwith %}
 </head>

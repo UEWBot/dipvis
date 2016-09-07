@@ -3,20 +3,20 @@
 </head>
 <frameset rows="*, 5%">
   <frameset rows="33%, 33%, *", cols="33%, 33%, *">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
-    <frame src="../views/">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <frame src="{% url 'tournament_views' tournament.id %}">
     <noframes>
       no frames
     </noframes>
   </frameset>
-  <frame src="../ticker/">
+  <frame src="{% url 'tournament_ticker' tournament.id %}">
   <noframes>
     no frames
   </noframes>
