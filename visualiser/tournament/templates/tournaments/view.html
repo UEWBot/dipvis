@@ -10,6 +10,9 @@
   {% for round in tournament.round_set.all %}
     {% for game in round.game_set.all %}
       <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with round=round.number game=game.name %}Round {{ round }} Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
+      {% if game.gameimage_set.count > 1 %}
+        <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% blocktrans with round=round.number game=game.name %}Round {{ round }} Game {{ game }} Position Timelapse{% endblocktrans %}</a></li>
+      {% endif %}
     {% endfor %}
   {% endfor %}
 </ul>
