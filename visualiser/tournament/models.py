@@ -23,7 +23,7 @@ from django.utils import timezone
 
 from tournament.background import *
 
-import urllib2, random
+import urllib2, random, os
 
 SPRING = 'S'
 FALL = 'F'
@@ -493,9 +493,13 @@ def game_image_location(instance, filename):
     """
     Function that determines where to store the file.
     """
-    # TODO Probably want a separate directory for each tournament,
-    #      containing a directory per game
-    return 'games/%s' % filename
+    if type(instance) == GameImage:
+        game = instance.game
+        tournament = game.the_round.tournament
+        directory = os.path.join(tournament.name, game.name)
+    else:
+        directory = 'starting_positions'
+    return os.path.join('games', directory, filename)
 
 def player_picture_location(instance, filename):
     """
