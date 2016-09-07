@@ -18,6 +18,21 @@
     <p>{% trans "No tournaments are available." %}</p>
 {% endif %}
 {% if user.is_active %}
+{% if unpublished_list %}
+<p>{% trans "Unpublished Tournaments:" %}</p>
+    <ul>
+    {% for t in unpublished_list %}
+        <li><a href="{{ t.get_absolute_url }}">{{ t.name }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
+            <a href="{% url 'tournament_scores' t.id %}">Scores</a>
+            {% if not t.is_finished %}
+              <a href="{% url 'tournament_round' t.id %}">Current Round</a></li>
+            {% endif %}
+    {% endfor %}
+    </ul>
+    <p>{% trans "Unpublished tournaments are not visible to most site users. To make one visible, check the 'is_published' checkbox for it in the " %}<a href="{% url 'admin:tournament_tournament_changelist' %}">{% trans "admin page" %}</a>.</p>
+{% else %}
+    <p>{% trans "No unpublished tournaments are available." %}</p>
+{% endif %}
 <p><a href="{% url 'admin:tournament_tournament_add' %}">{% trans "Add a tournament" %}</a></p>
 </ul>
 {% endif %}

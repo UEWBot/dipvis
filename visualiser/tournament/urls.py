@@ -19,8 +19,8 @@ from django.conf.urls import patterns, url, include
 from tournament import views
 
 urlpatterns = patterns('',
-    url(r'^$', views.TourneyIndexView.as_view(), name='index'),
-    url(r'^(?P<pk>\d+)/$', views.TourneyDetailView.as_view(), name='tournament_detail'),
+    url(r'^$', views.tournament_index, name='index'),
+    url(r'^(?P<tournament_id>\d+)/$', views.tournament_simple, {'template': 'detail'}, name='tournament_detail'),
     url(r'^(?P<tournament_id>\d+)/', include([
         url(r'^framesets/$', views.tournament_simple, {'template': 'frameset_picker'}, name='framesets'),
         url(r'^frameset_3x3/$', views.tournament_simple, {'template': 'frameset_3x3'}, name='frameset_3x3'),

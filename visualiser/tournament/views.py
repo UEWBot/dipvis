@@ -314,34 +314,52 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         kwargs['this_round'] = self.tournament.current_round().number()
         return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
 
-class TourneyIndexView(generic.ListView):
-    template_name = 'tournaments/index.html'
-    context_object_name = 'tournament_list'
-
-    def get_queryset(self):
-        """Sort in date order, latest at the top"""
-        return Tournament.objects.all()
-
-class TourneyDetailView(generic.DetailView):
-    model = Tournament
-    template_name = 'tournaments/detail.html'
-
 class GameImageForm(ModelForm):
     class Meta:
         model = GameImage
         fields = ('game', 'year', 'season', 'phase', 'image')
 
+# Index of Tournaments
+
+def tournament_index(request):
+    """Display a list of tournaments"""
+    # We actually retrieve two separate lists, one of all published tournaments (visible to all)
+    main_list = Tournament.objects.filter(is_published=True)
+    # and a second list of unpublished tournaents visible to the current user
+    # For now, all unpublished tournaments are visbile to all active users
+    if request.user.is_active:
+        unpublished_list = Tournament.objects.filter(is_published=False)
+    else:
+        unpublished_list = Tournament.objects.none()
+    context = {'tournament_list': main_list, 'unpublished_list': unpublished_list}
+    return render(request, 'tournaments/index.html', context)
+
 # Tournament views
+
+def get_visible_tournament_or_404(pk, user):
+    """
+    Get the specified Tournament object, if it exists, and check that it is visible to the user.
+    If it doesn't exist or isn't visible, raise Http404.
+    """
+    t = get_object_or_404(Tournament, pk=pk)
+    # Visible to all if published
+    if t.is_published:
+        return t
+    # For now, also visible if logged in as an active user
+    if user.is_active:
+        return t
+    # Default to not visible
+    raise Http404
 
 def tournament_simple(request, tournament_id, template):
     """Just render the specified template with the tournament"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     context = {'tournament': t}
     return render(request, 'tournaments/%s.html' % template, context)
 
 def tournament_scores(request, tournament_id, refresh=False):
     """Display scores of a tournament"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('-score')
     rds = t.round_set.all()
     rounds = [r.number() for r in rds]
@@ -391,7 +409,7 @@ def tournament_scores(request, tournament_id, refresh=False):
 
 def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     context = {'tournament': t, 'subject': 'Background', 'content': t.background()}
     if as_ticker:
         # 300s = 5 mins
@@ -404,7 +422,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
 
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     context = {'tournament': t, 'subject': 'News', 'content': t.news()}
     if as_ticker:
         # 300s = 5 mins
@@ -417,7 +435,7 @@ def tournament_news(request, tournament_id, as_ticker=False):
 
 def tournament_round(request, tournament_id):
     """Display details of the currently in-progress round of a tournament"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     r = t.current_round()
     if r:
         context = {'tournament': t, 'round': r}
@@ -429,7 +447,7 @@ def tournament_round(request, tournament_id):
 @permission_required('tournament.change_roundplayer')
 def round_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
                                               extra=0,
                                               formset=BasePlayerRoundScoreFormset)
@@ -512,7 +530,7 @@ def round_scores(request, tournament_id):
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id):
     """Provide a form to specify which players are playing each round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
@@ -597,7 +615,7 @@ def roll_call(request, tournament_id):
 
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     the_list = t.round_set.all()
     context = {'tournament': t, 'round_list': the_list}
     return render(request, 'rounds/index.html', context)
@@ -613,7 +631,7 @@ def get_round_or_404(tournament, round_num):
 
 def round_simple(request, tournament_id, round_num, template):
     """Just render the specified template with the round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/%s.html' % template, context)
@@ -621,7 +639,7 @@ def round_simple(request, tournament_id, round_num, template):
 # TODO Replace with return round_simple(request, tournament_id, round_num, 'detail') ?
 def round_detail(request, tournament_id, round_num):
     """Display the details of a round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
@@ -629,7 +647,7 @@ def round_detail(request, tournament_id, round_num):
 @permission_required('tournament.add_game')
 def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         GamePlayersFormset = formset_factory(GamePlayersForm, formset=BaseGamePlayersForm)
@@ -721,7 +739,7 @@ def create_games(request, tournament_id, round_num):
 @permission_required('tournament.change_gameplayer')
 def game_scores(request, tournament_id, round_num):
     """Provide a form to enter scores for all the games in a round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     GameScoreFormset = formset_factory(GameScoreForm,
                                        extra=0)
@@ -779,7 +797,7 @@ def game_scores(request, tournament_id, round_num):
 
 def game_index(request, tournament_id, round_num):
     """Display a list of games in the round"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     the_list = r.game_set.all()
     context = {'round': r, 'game_list': the_list}
@@ -796,13 +814,14 @@ def get_game_or_404(tournament, game_name):
 
 def game_simple(request, tournament_id, game_name, template):
     """Just render the specified template with the game"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
     return render(request, 'games/%s.html' % template, context)
 
+# TODO Replace with return game_simple(request, tournament_id, game_name, 'detail') ?
 def game_detail(request, tournament_id, game_name):
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
     return render(request, 'games/detail.html', context)
@@ -810,7 +829,7 @@ def game_detail(request, tournament_id, game_name):
 def game_sc_chart(request, tournament_id, game_name, refresh=False):
     """Display the SupplyCentre chart for a game"""
     #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     set_powers = g.the_set.setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
@@ -858,7 +877,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
 @permission_required('tournament.add_centrecount')
 def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them two
@@ -934,7 +953,7 @@ def sc_counts(request, tournament_id, game_name):
 
 def game_news(request, tournament_id, game_name, as_ticker=False):
     """Display news for a game"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
     if as_ticker:
@@ -948,7 +967,7 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
 
 def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
     if as_ticker:
@@ -963,7 +982,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
 @permission_required('tournament.add_drawproposal')
 def draw_vote(request, tournament_id, game_name):
     """Provide a form to enter a draw vote for a game"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     last_image = g.gameimage_set.last()
     final_year = g.final_year()
@@ -1023,7 +1042,7 @@ def draw_vote(request, tournament_id, game_name):
 
 def game_image(request, tournament_id, game_name, turn='', timelapse=False):
     """Display the image for the game at the specified time"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     if turn == '':
         # Always display the latest image
@@ -1069,7 +1088,7 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
 @permission_required('tournament.add_gameimage')
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
-    t = get_object_or_404(Tournament, pk=tournament_id)
+    t = get_visible_tournament_or_404(tournament_id, request.user)
     if request.method == 'POST':
         form = GameImageForm(request.POST, request.FILES)
         if form.is_valid():

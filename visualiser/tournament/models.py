@@ -836,6 +836,7 @@ class Tournament(models.Model):
     round_scoring_system = models.CharField(max_length=40,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS),
                                             help_text=_(u'How to combine game scores into a round score'))
+    is_published = models.BooleanField(default=False, help_text=_(u'Whether the tournament is visible to all site visitors'))
 
     class Meta:
         ordering = ['-start_date']
