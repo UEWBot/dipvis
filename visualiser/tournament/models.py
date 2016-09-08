@@ -20,6 +20,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Max, Min, Sum, Q
 from django.utils.translation import ugettext as _
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 from tournament.background import *
 
@@ -837,6 +838,7 @@ class Tournament(models.Model):
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS),
                                             help_text=_(u'How to combine game scores into a round score'))
     is_published = models.BooleanField(default=False, help_text=_(u'Whether the tournament is visible to all site visitors'))
+    managers = models.ManyToManyField(User, help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
 
     class Meta:
         ordering = ['-start_date']

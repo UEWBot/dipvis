@@ -326,10 +326,14 @@ def tournament_index(request):
     # We actually retrieve two separate lists, one of all published tournaments (visible to all)
     main_list = Tournament.objects.filter(is_published=True)
     # and a second list of unpublished tournaents visible to the current user
-    # For now, all unpublished tournaments are visbile to all active users
-    if request.user.is_active:
+    if request.user.is_superuser:
+        # All unpublished tournaments
         unpublished_list = Tournament.objects.filter(is_published=False)
+    elif request.user.is_active:
+        # All unpublished tournaments where the current user is listed as a manager
+        unpublished_list = request.user.tournament_set.filter(is_published=False)
     else:
+        # None at all
         unpublished_list = Tournament.objects.none()
     context = {'tournament_list': main_list, 'unpublished_list': unpublished_list}
     return render(request, 'tournaments/index.html', context)
@@ -345,8 +349,11 @@ def get_visible_tournament_or_404(pk, user):
     # Visible to all if published
     if t.is_published:
         return t
-    # For now, also visible if logged in as an active user
-    if user.is_active:
+    # Also visible if the user is a manager for the tournament
+    if user.is_active and t in user.tournament_set.all():
+        return t
+    # Superusers see all
+    if user.is_superuser:
         return t
     # Default to not visible
     raise Http404

@@ -49,6 +49,10 @@ class TournamentPlayerInline(admin.TabularInline):
 
 class TournamentAdmin(admin.ModelAdmin):
     inlines = [RoundInline, TournamentPlayerInline]
+    fields = ('name',
+              ('start_date', 'end_date'),
+              ('tournament_scoring_system', 'round_scoring_system'),
+              ('managers', 'is_published'))
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
