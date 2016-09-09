@@ -27,6 +27,7 @@ urlpatterns = patterns('',
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^tournaments/', include('tournament.urls')),
+    url(r'^accounts/login/$', 'django.contrib.auth.views.login', name='login'),
     url(r'^admin/', include(admin.site.urls)),
     url(r'^players/$', tournament.views.PlayerIndexView.as_view()),
     url(r'^players/(?P<pk>\d+)/$', tournament.views.PlayerDetailView.as_view(), name='player_detail'),
