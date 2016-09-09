@@ -32,8 +32,11 @@ class TournamentModelTests(TestCase):
     def setUp(self):
         set1 = GameSet.objects.get(name='Avalon Hill')
         set2 = GameSet.objects.get(name='Gibsons')
+
         s1 = G_SCORING_SYSTEMS[0].name
+
         now = timezone.now()
+
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
                                        end_date=now,
@@ -49,6 +52,7 @@ class TournamentModelTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
         r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
         r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
@@ -57,6 +61,7 @@ class TournamentModelTests(TestCase):
         r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date + HOURS_8)
         r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date)
         r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8)
+
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
         g12 = Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
         g13 = Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
@@ -67,6 +72,7 @@ class TournamentModelTests(TestCase):
         g22 = Game.objects.create(name='g22', started_at=r22.start, the_round=r22, the_set=set1)
         g31 = Game.objects.create(name='g31', started_at=r31.start, the_round=r31, is_finished=True, the_set=set1)
         g32 = Game.objects.create(name='g32', started_at=r32.start, the_round=r32, is_finished=True, the_set=set1)
+
         self.austria = GreatPower.objects.get(abbreviation='A')
         self.england = GreatPower.objects.get(abbreviation='E')
         self.france = GreatPower.objects.get(abbreviation='F')
@@ -75,13 +81,147 @@ class TournamentModelTests(TestCase):
         self.russia = GreatPower.objects.get(abbreviation='R')
         self.turkey = GreatPower.objects.get(abbreviation='T')
 
+        sc1101a = CentreCount.objects.create(power=self.austria, game=g11, year=1901, count=5)
+        sc1101e = CentreCount.objects.create(power=self.england, game=g11, year=1901, count=4)
+        sc1101f = CentreCount.objects.create(power=self.france, game=g11, year=1901, count=5)
+        sc1101g = CentreCount.objects.create(power=self.germany, game=g11, year=1901, count=5)
+        sc1101i = CentreCount.objects.create(power=self.italy, game=g11, year=1901, count=4)
+        sc1101r = CentreCount.objects.create(power=self.russia, game=g11, year=1901, count=5)
+        sc1101t = CentreCount.objects.create(power=self.turkey, game=g11, year=1901, count=4)
+
+        sc1104a = CentreCount.objects.create(power=self.austria, game=g11, year=1904, count=0)
+        sc1104e = CentreCount.objects.create(power=self.england, game=g11, year=1904, count=4)
+        sc1104f = CentreCount.objects.create(power=self.france, game=g11, year=1904, count=2)
+        sc1104g = CentreCount.objects.create(power=self.germany, game=g11, year=1904, count=18)
+        sc1104i = CentreCount.objects.create(power=self.italy, game=g11, year=1904, count=2)
+        sc1104r = CentreCount.objects.create(power=self.russia, game=g11, year=1904, count=3)
+        sc1104t = CentreCount.objects.create(power=self.turkey, game=g11, year=1904, count=5)
+
     # GScoringSolos
+    def test_g_scoring_solos_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Solo or bust')
+        scores = system.scores(scs)
+        for s in scores.itervalues():
+            self.assertEqual(s, 0)
+
+    def test_g_scoring_solos_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('Solo or bust')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 100)
+            else:
+                self.assertEqual(s, 0)
 
     # GScoringDrawSize
+    def test_g_scoring_draws_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Draw size')
+        scores = system.scores(scs)
+        for s in scores.itervalues():
+            self.assertEqual(s, 100.0/7)
+
+    def test_g_scoring_draws_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('Draw size')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 100)
+            else:
+                self.assertEqual(s, 0)
 
     # GScoringCDiplo
+    def test_g_scoring_cdiplo_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('CDiplo 100')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 4:
+                self.assertEqual(s, 5)
+            else:
+                self.assertEqual(s, 20.75)
+
+    def test_g_scoring_cdiplo_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('CDiplo 100')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 100)
+            else:
+                self.assertEqual(s, 0)
+
+    def test_g_scoring_cdiplo80_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('CDiplo 80')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 4:
+                self.assertEqual(s, 4)
+            else:
+                self.assertEqual(s, 16.5)
+
+    def test_g_scoring_cdiplo80_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('CDiplo 80')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 80)
+            else:
+                self.assertEqual(s, 0)
 
     # GScoringSumOfSquares
+    def test_g_scoring_squares_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Sum of Squares')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 4:
+                self.assertEqual(s, 100.0 * 16 / 148)
+            else:
+                self.assertEqual(s, 100.0 * 25 / 148)
+
+    def test_g_scoring_squares_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('Sum of Squares')
+        scores = system.scores(scs)
+        for p,s in scores.iteritems():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 100)
+            else:
+                self.assertEqual(s, 0)
 
     # RScoringBest
 
