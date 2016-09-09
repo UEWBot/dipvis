@@ -183,9 +183,10 @@ class GScoringDrawSize(GameScoringSystem):
         is_dias = the_game.is_dias()
         draw = the_game.passed_draw()
         survivors = self._survivor_count(centre_counts)
-        soloed = the_game.soloer() != None
+        final_scs = self._final_year_scs(centre_counts)
+        soloed = final_scs[0].count >= WINNING_SCS
         # We only care about the most recent centrecounts
-        for sc in self._final_year_scs(centre_counts):
+        for sc in final_scs:
             retval[sc.power] = 0
             if sc.count >= WINNING_SCS:
                 retval[sc.power] = 100.0
