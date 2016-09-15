@@ -389,7 +389,7 @@ def tournament_scores(request, tournament_id, refresh=False):
                 # This player didn't play this round
                 rs.append('')
         try:
-            scores.append(['%s' % p.player] + rs + ['%.2f' % t_scores[p.player]])
+            scores.append(['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_scores[p.player]])
         except KeyError:
             # This player didn't play at all
             rs.append('')
