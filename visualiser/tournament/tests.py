@@ -403,6 +403,20 @@ class TournamentModelTests(TestCase):
             self.assertEqual(g.is_dias(), g.the_round.dias)
 
     # Game.years_played()
+    def test_game_years_played_first(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.years_played()[0], 1900)
+
+    def test_game_years_played_last(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.years_played()[-1], 1904)
+
+    def test_game_years_played_none(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertEqual(g.years_played()[0], 1900)
 
     # Game.players()
 
@@ -413,6 +427,15 @@ class TournamentModelTests(TestCase):
     # Game.neutrals()
 
     # Game.final_year()
+    def test_game_final_year_1904(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.final_year(), 1904)
+
+    def test_game_final_year_none(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertEqual(g.final_year(), 1900)
 
     # Game.soloer()
 
