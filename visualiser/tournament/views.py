@@ -844,7 +844,8 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     players = g.players(latest=False)
     ps = []
     for sp in set_powers:
-        names = '<br>'.join(map(unicode, players[sp.power]))
+        power_players = ['<a href="%s">%s</a>' % (p.get_absolute_url(), p) for p in players[sp.power]]
+        names = '<br>'.join(map(unicode, power_players))
         ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
     # Create a list of years that have been played
