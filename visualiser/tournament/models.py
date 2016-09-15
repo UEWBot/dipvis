@@ -106,6 +106,9 @@ TITLE_MAP = {
 class InvalidScoringSystem(Exception):
     pass
 
+class InvalidYear(Exception):
+    pass
+
 class GameScoringSystem():
     # TODO This doesn't deal with multiple players playing one power
     """
@@ -1232,6 +1235,8 @@ class Game(models.Model):
         if not year:
             year = self.final_year()
         scs = self.centrecount_set.filter(year=year)
+        if not scs.exists():
+            raise InvalidYear(year)
         neutrals = TOTAL_SCS
         for sc in scs:
             neutrals -= sc.count

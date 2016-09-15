@@ -425,6 +425,40 @@ class TournamentModelTests(TestCase):
     # Game.board_toppers()
 
     # Game.neutrals()
+    def test_game_neutrals_1900(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.neutrals(1900), 34 - (6*3 + 4))
+
+    def test_game_neutrals_1901(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.neutrals(1901), 34 - (4*5 + 3*4))
+
+    def test_game_neutrals_1899(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertRaises(InvalidYear, g.neutrals, 1899)
+
+    def test_game_neutrals_1904(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.neutrals(1904), 0)
+
+    def test_game_neutrals_1905(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertRaises(InvalidYear, g.neutrals, 1905)
+
+    def test_game_neutrals_default(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.neutrals(), 0)
+
+    def test_game_neutrals_none_default(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertEqual(g.neutrals(), 34 - (6*3 + 4))
 
     # Game.final_year()
     def test_game_final_year_1904(self):
