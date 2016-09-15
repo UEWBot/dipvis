@@ -97,6 +97,15 @@ class TournamentModelTests(TestCase):
         sc1104r = CentreCount.objects.create(power=self.russia, game=g11, year=1904, count=3)
         sc1104t = CentreCount.objects.create(power=self.turkey, game=g11, year=1904, count=5)
 
+        gp11a1 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g11, power=self.austria, last_year=1903, last_season='F')
+        gp11a2 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g11, power=self.austria, first_year=1903, first_season='X')
+        gp11e1 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g11, power=self.england)
+        gp11f1 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g11, power=self.france)
+        gp11g1 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g11, power=self.germany)
+        gp11i1 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g11, power=self.italy)
+        gp11r1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g11, power=self.russia)
+        gp11t1 = GamePlayer.objects.create(player=Player.objects.get(pk=8), game=g11, power=self.turkey)
+
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -419,10 +428,55 @@ class TournamentModelTests(TestCase):
         self.assertEqual(g.years_played()[0], 1900)
 
     # Game.players()
+    def test_game_players_default(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(len(g.players()), 7)
+        for gp in g.players().itervalues():
+            self.assertEqual(len(gp), 1)
+
+    def test_game_players_all(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(len(g.players(False)), 7)
+        players = g.players(False)
+        for power in players.iterkeys():
+            if power.abbreviation == u'A':
+                self.assertEqual(len(players[power]), 2)
+            else:
+                self.assertEqual(len(players[power]), 1)
+
+    def test_game_players_none(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertEqual(len(g.players()), 7)
+        for gp in g.players().itervalues():
+            self.assertEqual(len(gp), 0)
 
     # Game.passed_draw()
 
     # Game.board_toppers()
+    def test_game_board_toppers_soloed(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        bt = g.board_toppers()
+        self.assertEqual(len(bt), 1)
+        bt = bt[0]
+        self.assertEqual(bt.game, g)
+        self.assertEqual(bt.year, 1904)
+        self.assertEqual(bt.power, GreatPower.objects.get(abbreviation='G'))
+        self.assertEqual(bt.count, 18)
+
+    def test_game_board_toppers_start(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        bt = g.board_toppers()
+        self.assertEqual(len(bt), 1)
+        bt = bt[0]
+        self.assertEqual(bt.game, g)
+        self.assertEqual(bt.year, 1900)
+        self.assertEqual(bt.power, GreatPower.objects.get(abbreviation='R'))
+        self.assertEqual(bt.count, 4)
 
     # Game.neutrals()
     def test_game_neutrals_1900(self):
@@ -472,8 +526,29 @@ class TournamentModelTests(TestCase):
         self.assertEqual(g.final_year(), 1900)
 
     # Game.soloer()
+    def test_game_soloer_somebody(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(g.soloer().player, Player.objects.get(pk=5))
+        self.assertEqual(g.soloer().game, g)
+
+    def test_game_soloer_nobody(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertIsNone(g.soloer())
 
     # Game.result_str()
+    def test_game_result_str_soloed(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertIn(' won by ', g.result_str())
+
+    def test_game_result_str_in_progress(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertIsNone(g.result_str())
+
+    # TODO Add tests of drawn game, game that reached fixed endpoint, and game with failed draw proposal
 
     # Game.clean()
     def test_game_clean_non_unique_name(self):
