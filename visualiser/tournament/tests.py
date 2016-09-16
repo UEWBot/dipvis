@@ -389,21 +389,21 @@ class TournamentModelTests(TestCase):
     def test_round_clean_missing_earliest_end(self):
         t = Tournament.objects.get(name='t1')
         s1 = G_SCORING_SYSTEMS[0].name
-        r = Round.objects.create(tournament=t,
-                                 scoring_system=s1,
-                                 dias=True,
-                                 start=t.start_date + HOURS_8,
-                                 earliest_end_time=t.start_date + HOURS_9)
+        r = Round(tournament=t,
+                  scoring_system=s1,
+                  dias=True,
+                  start=t.start_date + HOURS_8,
+                  earliest_end_time=t.start_date + HOURS_9)
         self.assertRaises(ValidationError, r.clean)
 
     def test_round_clean_missing_latest_end(self):
         t = Tournament.objects.get(name='t1')
         s1 = G_SCORING_SYSTEMS[0].name
-        r = Round.objects.create(tournament=t,
-                                 scoring_system=s1,
-                                 dias=True,
-                                 start=t.start_date + HOURS_8,
-                                 latest_end_time=t.start_date + HOURS_10)
+        r = Round(tournament=t,
+                  scoring_system=s1,
+                  dias=True,
+                  start=t.start_date + HOURS_8,
+                  latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
 
     # Game.is_dias()
@@ -477,6 +477,8 @@ class TournamentModelTests(TestCase):
         self.assertEqual(bt.year, 1900)
         self.assertEqual(bt.power, GreatPower.objects.get(abbreviation='R'))
         self.assertEqual(bt.count, 4)
+
+    # TODO Test board_toppers() returning more than one CentreCount
 
     # Game.neutrals()
     def test_game_neutrals_1900(self):
@@ -555,11 +557,11 @@ class TournamentModelTests(TestCase):
         g1 = Game.objects.get(pk=1)
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(4)
-        g2 = Game.objects.create(name='g13',
-                                 started_at=g1.started_at + HOURS_8,
-                                 the_round=r,
-                                 is_finished=False,
-                                 the_set=g1.the_set)
+        g2 = Game(name='g13',
+                  started_at=g1.started_at + HOURS_8,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=g1.the_set)
         self.assertRaises(ValidationError, g2.clean)
 
     # DrawProposal.draw_size()
