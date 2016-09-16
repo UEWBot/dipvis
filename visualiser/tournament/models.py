@@ -1408,10 +1408,10 @@ class DrawProposal(models.Model):
         powers = set()
         for name, value in self.__dict__.iteritems():
             if value and name.startswith('power_'):
-                if value in powers:
-                    power = GreatPower.objects.get(pk=value)
+                power = GreatPower.objects.get(pk=value)
+                if power in powers:
                     raise ValidationError(_(u'%(power)s present more than once'), params = {'power':  power})
-                powers.add(value)
+                powers.add(power)
         # Only one successful draw proposal
         if self.passed:
             try:
@@ -1420,11 +1420,17 @@ class DrawProposal(models.Model):
                     raise ValidationError(_(u'Game already has a successful draw proposal'))
             except DrawProposal.DoesNotExist:
                 pass
+        # No successful proposal prior to the latest SC count
+        final_year = self.game.final_year()
+        if self.passed and (self.year <= final_year):
+            raise ValidationError(_(u'Game already has a centre count for %(year)d'), params = {'year': final_year})
         # No dead powers included
         # If DIAS, all alive powers must be included
         dias = self.game.is_dias()
-        year = self.game.final_year()
-        scs = self.game.centrecount_set.filter(year=year)
+        # Get the most recent CentreCounts before the DrawProposal
+        scs = self.game.centrecount_set.filter(year__lt=self.year)
+        # We will always have at least the 1900 CentreCounts, and DrawProposal.year must be >= 1901
+        scs = scs.filter(year=scs.last().year)
         for sc in scs:
             if sc.power in powers:
                 if sc.count == 0:
