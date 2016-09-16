@@ -59,7 +59,7 @@ class TournamentModelTests(TestCase):
         r14 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
         r21 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date)
         r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date + HOURS_8)
-        r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date)
+        r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date, final_year=1907)
         r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8)
 
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
@@ -232,9 +232,9 @@ class TournamentModelTests(TestCase):
             else:
                 self.assertEqual(s, 0)
 
-    # RScoringBest
+    # TODO RScoringBest
 
-    # TScoringSum
+    # TODO TScoringSum
 
     # validate_year()
     def test_validate_year_negative(self):
@@ -843,4 +843,25 @@ class TournamentModelTests(TestCase):
         self.assertRaises(ValidationError, gi2.clean)
 
     # CentreCount.clean()
+    def test_centrecount_clean_past_final_year(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        cc = CentreCount(power=self.austria, game=g, year=1908, count=7)
+        self.assertRaises(ValidationError, cc.clean)
+
+    def test_centrecount_clean_up_from_zero(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        cc1 = CentreCount.objects.create(power=self.austria, game=g, year=1902, count=0)
+        cc2 = CentreCount(power=self.austria, game=g, year=1903, count=1)
+        self.assertRaises(ValidationError, cc2.clean)
+        cc1.delete()
+
+    def test_centrecount_clean_more_than_double(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        cc1 = CentreCount.objects.create(power=self.austria, game=g, year=1902, count=5)
+        cc2 = CentreCount(power=self.austria, game=g, year=1903, count=11)
+        self.assertRaises(ValidationError, cc2.clean)
+        cc1.delete()
 
