@@ -464,7 +464,7 @@ class TournamentModelTests(TestCase):
         bt = bt[0]
         self.assertEqual(bt.game, g)
         self.assertEqual(bt.year, 1904)
-        self.assertEqual(bt.power, GreatPower.objects.get(abbreviation='G'))
+        self.assertEqual(bt.power, self.germany)
         self.assertEqual(bt.count, 18)
 
     def test_game_board_toppers_start(self):
@@ -475,7 +475,7 @@ class TournamentModelTests(TestCase):
         bt = bt[0]
         self.assertEqual(bt.game, g)
         self.assertEqual(bt.year, 1900)
-        self.assertEqual(bt.power, GreatPower.objects.get(abbreviation='R'))
+        self.assertEqual(bt.power, self.russia)
         self.assertEqual(bt.count, 4)
 
     # TODO Test board_toppers() returning more than one CentreCount
@@ -589,7 +589,7 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         gp = GamePlayer(player=Player.objects.get(pk=1),
                         game=g,
-                        power=GreatPower.objects.get(abbreviation='A'))
+                        power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
 
     def test_gameplayer_clean_player_missing_last_year(self):
@@ -599,7 +599,7 @@ class TournamentModelTests(TestCase):
         tp = TournamentPlayer.objects.create(player=p, tournament=t)
         gp = GamePlayer(player=p,
                         game=g,
-                        power=GreatPower.objects.get(abbreviation='A'),
+                        power=self.austria,
                         last_year=1909)
         self.assertRaises(ValidationError, gp.clean)
 
@@ -610,7 +610,7 @@ class TournamentModelTests(TestCase):
         tp = TournamentPlayer.objects.create(player=p, tournament=t)
         gp = GamePlayer(player=p,
                         game=g,
-                        power=GreatPower.objects.get(abbreviation='A'),
+                        power=self.austria,
                         last_season='S')
         self.assertRaises(ValidationError, gp.clean)
 
@@ -623,10 +623,10 @@ class TournamentModelTests(TestCase):
         tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'))
+                         power=self.austria)
         gp2 = GamePlayer(player=p2,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          first_year=1902,
                          first_season='S')
         gp1.clean()
@@ -643,12 +643,12 @@ class TournamentModelTests(TestCase):
         tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          last_year=1902,
                          last_season='S')
         gp2 = GamePlayer(player=p2,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          first_year=1902,
                          first_season='S')
         gp1.clean()
@@ -665,12 +665,12 @@ class TournamentModelTests(TestCase):
         tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          first_year=1902,
                          first_season='S')
         gp2 = GamePlayer(player=p2,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          last_year=1902,
                          last_season='S')
         gp1.clean()
@@ -687,12 +687,12 @@ class TournamentModelTests(TestCase):
         tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          first_year=1902,
                          first_season='S')
         gp2 = GamePlayer(player=p2,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'))
+                         power=self.austria)
         gp1.clean()
         gp1.save()
         self.assertRaises(ValidationError, gp2.clean)
@@ -707,12 +707,12 @@ class TournamentModelTests(TestCase):
         tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          first_year=1902,
                          first_season='S')
         gp2 = GamePlayer(player=p2,
                          game=g,
-                         power=GreatPower.objects.get(abbreviation='A'),
+                         power=self.austria,
                          first_year=1902,
                          first_season='S')
         gp1.clean()
