@@ -1522,16 +1522,16 @@ class GamePlayer(models.Model):
                 if not self.last_year or self.last_year > other.first_year:
                     raise ValidationError(err_str,
                                           params = {'player': other.player,
-                                                    'power': power,
-                                                    'game': XXX,
+                                                    'power': other.power,
+                                                    'game': other.game.name,
                                                     'season': other.first_season,
                                                     'year': other.first_year})
                 if self.last_year == other.first_year:
                     if self.last_season != SPRING or other.first_season != FALL:
                         raise ValidationError(err_str,
                                               params = {'player': other.player,
-                                                        'power': power,
-                                                        'game': XXX,
+                                                        'power': other.power,
+                                                        'game': other.game.name,
                                                         'season': other.first_season,
                                                         'year': other.first_year})
             else:
@@ -1540,18 +1540,18 @@ class GamePlayer(models.Model):
                 if not other.last_year or other.last_year > self.first_year:
                     raise ValidationError(err_str,
                                           params = {'player': other.player,
-                                                    'power': power,
-                                                    'game': self.game,
-                                                    'season': self.first_season,
-                                                    'year': self.first_year})
+                                                    'power': other.power,
+                                                    'game': other.game,
+                                                    'season': other.first_season,
+                                                    'year': other.first_year})
                 if other.last_year == self.first_year:
                     if other.last_season != SPRING or self.first_season != FALL:
                         raise ValidationError(err_str,
                                               params = {'player': other.player,
-                                                        'power': power,
-                                                        'game': self.game,
-                                                        'season': self.first_season,
-                                                        'year': self.first_year})
+                                                        'power': other.power,
+                                                        'game': other.game,
+                                                        'season': other.first_season,
+                                                        'year': other.first_year})
         # TODO Ensure no gaps - may have to be done elsewhere
 
     def __unicode__(self):

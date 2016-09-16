@@ -584,6 +584,141 @@ class TournamentModelTests(TestCase):
     # RoundPlayer.clean()
 
     # GamePlayer.clean()
+    def test_gameplayer_clean_player_not_in_tournament(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        gp = GamePlayer(player=Player.objects.get(pk=1),
+                        game=g,
+                        power=GreatPower.objects.get(abbreviation='A'))
+        self.assertRaises(ValidationError, gp.clean)
+
+    def test_gameplayer_clean_player_missing_last_year(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p = Player.objects.get(pk=1)
+        tp = TournamentPlayer.objects.create(player=p, tournament=t)
+        gp = GamePlayer(player=p,
+                        game=g,
+                        power=GreatPower.objects.get(abbreviation='A'),
+                        last_year=1909)
+        self.assertRaises(ValidationError, gp.clean)
+
+    def test_gameplayer_clean_player_missing_last_season(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p = Player.objects.get(pk=1)
+        tp = TournamentPlayer.objects.create(player=p, tournament=t)
+        gp = GamePlayer(player=p,
+                        game=g,
+                        power=GreatPower.objects.get(abbreviation='A'),
+                        last_season='S')
+        self.assertRaises(ValidationError, gp.clean)
+
+    def test_gameplayer_clean_overlap_1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p1 = Player.objects.get(pk=1)
+        p2 = Player.objects.get(pk=2)
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        gp1 = GamePlayer(player=p1,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'))
+        gp2 = GamePlayer(player=p2,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         first_year=1902,
+                         first_season='S')
+        gp1.clean()
+        gp1.save()
+        self.assertRaises(ValidationError, gp2.clean)
+        gp1.delete()
+
+    def test_gameplayer_clean_overlap_2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p1 = Player.objects.get(pk=1)
+        p2 = Player.objects.get(pk=2)
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        gp1 = GamePlayer(player=p1,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         last_year=1902,
+                         last_season='S')
+        gp2 = GamePlayer(player=p2,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         first_year=1902,
+                         first_season='S')
+        gp1.clean()
+        gp1.save()
+        self.assertRaises(ValidationError, gp2.clean)
+        gp1.delete()
+
+    def test_gameplayer_clean_overlap_3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p1 = Player.objects.get(pk=1)
+        p2 = Player.objects.get(pk=2)
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        gp1 = GamePlayer(player=p1,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         first_year=1902,
+                         first_season='S')
+        gp2 = GamePlayer(player=p2,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         last_year=1902,
+                         last_season='S')
+        gp1.clean()
+        gp1.save()
+        self.assertRaises(ValidationError, gp2.clean)
+        gp1.delete()
+
+    def test_gameplayer_clean_overlap_4(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p1 = Player.objects.get(pk=1)
+        p2 = Player.objects.get(pk=2)
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        gp1 = GamePlayer(player=p1,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         first_year=1902,
+                         first_season='S')
+        gp2 = GamePlayer(player=p2,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'))
+        gp1.clean()
+        gp1.save()
+        self.assertRaises(ValidationError, gp2.clean)
+        gp1.delete()
+
+    def test_gameplayer_clean_overlap_5(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        p1 = Player.objects.get(pk=1)
+        p2 = Player.objects.get(pk=2)
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        gp1 = GamePlayer(player=p1,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         first_year=1902,
+                         first_season='S')
+        gp2 = GamePlayer(player=p2,
+                         game=g,
+                         power=GreatPower.objects.get(abbreviation='A'),
+                         first_year=1902,
+                         first_season='S')
+        gp1.clean()
+        gp1.save()
+        self.assertRaises(ValidationError, gp2.clean)
+        gp1.delete()
 
     # GameImage.turn_str()
 
