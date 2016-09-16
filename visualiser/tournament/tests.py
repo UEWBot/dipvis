@@ -683,6 +683,12 @@ class TournamentModelTests(TestCase):
         dp1.delete()
 
     # RoundPlayer.clean()
+    def test_roundplayer_clean(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        p = Player.objects.get(pk=1)
+        rp = RoundPlayer(player=p, the_round=r)
+        self.assertRaises(ValidationError, rp.clean)
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
@@ -822,8 +828,19 @@ class TournamentModelTests(TestCase):
         gp1.delete()
 
     # GameImage.turn_str()
+    def test_gameimage_turn_str(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        gi = GameImage.objects.get(game=g)
+        self.assertEqual(gi.turn_str(), 'S1901M')
 
     # GameImage.clean()
+    def test_gameimage_clean(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        gi1 = GameImage.objects.get(game=g)
+        gi2 = GameImage(game=g, year=1902, season=SPRING, phase=ADJUSTMENTS, image=gi1.image)
+        self.assertRaises(ValidationError, gi2.clean)
 
     # CentreCount.clean()
 
