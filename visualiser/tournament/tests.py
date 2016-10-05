@@ -28,6 +28,8 @@ HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
+CHRIS_BRAND_WDD_ID = 4173
+
 class TournamentModelTests(TestCase):
     def setUp(self):
         set1 = GameSet.objects.get(name='Avalon Hill')
@@ -97,6 +99,8 @@ class TournamentModelTests(TestCase):
         sc1104r = CentreCount.objects.create(power=self.russia, game=g11, year=1904, count=3)
         sc1104t = CentreCount.objects.create(power=self.turkey, game=g11, year=1904, count=5)
 
+        # Tournament.news() will call Game.news() for all games in the current round,
+        # which will need a player for every country
         gp11a1 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g11, power=self.austria, last_year=1903, last_season='F')
         gp11a2 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g11, power=self.austria, first_year=1903, first_season='X')
         gp11e1 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g11, power=self.england)
@@ -105,6 +109,13 @@ class TournamentModelTests(TestCase):
         gp11i1 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g11, power=self.italy)
         gp11r1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g11, power=self.russia)
         gp11t1 = GamePlayer.objects.create(player=Player.objects.get(pk=8), game=g11, power=self.turkey)
+        gp12a = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g12, power=self.austria)
+        gp12e = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g12, power=self.england)
+        gp12f = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g12, power=self.france)
+        gp12g = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g12, power=self.germany)
+        gp12i = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g12, power=self.italy)
+        gp12r = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g12, power=self.russia)
+        gp12t = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g12, power=self.turkey)
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
@@ -277,8 +288,7 @@ class TournamentModelTests(TestCase):
 
     # validate_wdd_id()
     def test_validate_wdd_id_me(self):
-        # 4173 is Chris Brand
-        self.assertIsNone(validate_wdd_id(4173))
+        self.assertIsNone(validate_wdd_id(CHRIS_BRAND_WDD_ID))
 
     def test_validate_wdd_id_1(self):
         # 1 is known to be unused
@@ -292,6 +302,29 @@ class TournamentModelTests(TestCase):
 
     def test_validate_game_name_valid(self):
         self.assertIsNone(validate_game_name(u'ok'))
+
+    # Player.wdd_name()
+    def test_player_wdd_name(self):
+        p = Player.objects.get(pk=1)
+        # TODO Validate results
+        p.wdd_name()
+
+    # Player.wdd_url()
+    def test_player_wdd_url(self):
+        p = Player.objects.get(pk=1)
+        # TODO Validate results
+        p.wdd_url()
+
+    # Player.background()
+    def test_player_background(self):
+        p = Player.objects.get(pk=1)
+        # TODO Validate results
+        p.background()
+
+    def test_player_background_with_power(self):
+        p = Player.objects.get(pk=1)
+        # TODO Validate results
+        p.background(power=self.germany)
 
     # Tournament.is_finished()
     def test_tourney_is_finished_some_rounds_over(self):
@@ -329,6 +362,18 @@ class TournamentModelTests(TestCase):
             self.assertTrue(t.round_numbered(i).is_finished(), 'round %d' % i)
         # This round should be unfinished
         self.assertFalse(r.is_finished())
+
+    # Tournament.background()
+    def test_tournament_background(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        t.background()
+
+    # Tournament.news()
+    def test_tournament_news(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        t.news()
 
     # Round.number()
     def test_round_number_11(self):
@@ -406,6 +451,13 @@ class TournamentModelTests(TestCase):
                   latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
 
+    # Round.background()
+    def test_round_background(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.background()
+
     # Game.is_dias()
     def test_game_is_dias(self):
         for g in Game.objects.all():
@@ -448,7 +500,7 @@ class TournamentModelTests(TestCase):
 
     def test_game_players_none(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         self.assertEqual(len(g.players()), 7)
         for gp in g.players().itervalues():
             self.assertEqual(len(gp), 0)
@@ -592,6 +644,23 @@ class TournamentModelTests(TestCase):
 
     # TODO Add tests of drawn game, game that reached fixed endpoint, and game with failed draw proposal
 
+    # Game.news()
+    def test_game_news(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.news()
+
+    def test_game_news_with_name(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.news(include_game_name=True)
+
+    # Game.background()
+    def test_game_background(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.background()
+
     # Game.clean()
     def test_game_clean_non_unique_name(self):
         g1 = Game.objects.get(pk=1)
@@ -693,7 +762,7 @@ class TournamentModelTests(TestCase):
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         gp = GamePlayer(player=Player.objects.get(pk=1),
                         game=g,
                         power=self.austria)
@@ -701,7 +770,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_player_missing_last_year(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p = Player.objects.get(pk=1)
         tp = TournamentPlayer.objects.create(player=p, tournament=t)
         gp = GamePlayer(player=p,
@@ -712,7 +781,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_player_missing_last_season(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p = Player.objects.get(pk=1)
         tp = TournamentPlayer.objects.create(player=p, tournament=t)
         gp = GamePlayer(player=p,
@@ -723,7 +792,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_1(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
         tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
@@ -743,7 +812,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_2(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
         tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
@@ -765,7 +834,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_3(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
         tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
@@ -787,7 +856,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_4(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
         tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
@@ -807,7 +876,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_5(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
+        g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
         tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)

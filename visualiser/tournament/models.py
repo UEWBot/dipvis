@@ -1012,13 +1012,13 @@ class Round(models.Model):
         Returns a list of background strings for the round
         """
         results = []
-        if (mask & MASK_ROUND_ENDPOINTS) & self.earliest_end_time:
+        if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.earliest_end_time:
             results.append(_(u'Round %(round)d could end as early as %(time)s.') % {'round': self.number(),
                                                                                     'time': self.earliest_end_time.strftime("%H:%M")})
-        if (mask & MASK_ROUND_ENDPOINTS) & self.latest_end_time:
+        if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.latest_end_time:
             results.append(_(u'Round %(round)d could end as late as %(time)s.') % {'round': self.number(),
                                                                                    'time': self.latest_end_time.strftime("%H:%M")})
-        if (mask & MASK_ROUND_ENDPOINTS) & self.final_year:
+        if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.final_year:
             results.append(_(u'Round %(round)d will end after playing year %(year)d.') % {'round': self.number(),
                                                                                           'year': self.final_year})
         # Shuffle the resulting list
