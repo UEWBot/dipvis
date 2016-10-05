@@ -173,55 +173,6 @@ class Background():
                 results.append(result)
         return results
 
-    def stats(self):
-        """
-        Returns statistics by country for the player.
-        Returns a dict, keyed by country name, of dicts.
-        Inner dict is keyed by column name.
-        """
-        # Board Statistics for tournaments only
-        url = WDD_BASE_URL + 'player_fiche16.php?event=1&id_player=%d' % self.wdd_id
-        page = urllib2.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
-        soup = BeautifulSoup(page.read())
-        # Script is in the footer
-        script = soup.find('script')
-        footer = script.find_parent()
-        table = footer.find_previous_sibling()
-        if not table:
-            return []
-        row = table.tr
-        columns = []
-        for th in row.find_all('th'):
-            columns.append(unicode(th.string))
-        results = {}
-        while True:
-            row = row.find_next_sibling()
-            if not row:
-                break
-            result = {}
-            for key,td in zip(columns, row.find_all('td')):
-                if key == 'Country':
-                    country = unicode(td.string)
-                else:
-                    val = td.string
-                    # Massage the value
-                    val = val.replace(' %', '%')
-                    val = val.split()[0]
-                    try:
-                        val = int(val)
-                    except ValueError:
-                        try:
-                            val = float(val)
-                        except ValueError:
-                            pass
-                    result[key] = val
-            results[country] = result
-        del results['Total']
-        return results
-
     def tournaments(self):
         """
         Returns a list of dicts, one per tournament competed in.
@@ -311,7 +262,7 @@ class Background():
                     # This is the row to parse
                     columns = []
                     for th in row.find_all('th'):
-                        # Note that there are two columsn called "Country"
+                        # Note that there are two columns called "Country"
                         # Fortunately the second is the one we want,
                         # So we don't worry about the second overwriting the first
                         columns.append(unicode(th.string))
