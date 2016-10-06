@@ -317,12 +317,14 @@ class TournamentModelTests(TestCase):
 
     # Player.background()
     def test_player_background(self):
-        p = Player.objects.get(pk=1)
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        add_player_bg(p)
         # TODO Validate results
         p.background()
 
     def test_player_background_with_power(self):
-        p = Player.objects.get(pk=1)
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        add_player_bg(p)
         # TODO Validate results
         p.background(power=self.germany)
 
@@ -454,6 +456,12 @@ class TournamentModelTests(TestCase):
     # Round.background()
     def test_round_background(self):
         t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.background()
+
+    def test_round_background_final_year(self):
+        t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
         # TODO Validate results
         r.background()
