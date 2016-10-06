@@ -714,6 +714,8 @@ class Player(models.Model):
         ranking_set = self.playerranking_set.order_by('year')
         plays = ranking_set.count()
         if plays == 0:
+            if (mask & MASK_TOURNEY_COUNT) != 0:
+                results.append(_(u'This is the first tournament for %(name)s.') % {'name': self})
             return results
         if (mask & MASK_TOURNEY_COUNT) != 0:
             results.append(_(u'%(name)s has competed in %(number)d tournament(s).') % {'name': self, 'number': plays})
