@@ -62,7 +62,8 @@ class TournamentModelTests(TestCase):
         r21 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date)
         r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date + HOURS_8)
         r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date, final_year=1907)
-        r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8)
+        r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8,
+                                   earliest_end_time=t3.start_date + HOURS_8, latest_end_time=t3.start_date + HOURS_9)
 
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
         g12 = Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
@@ -463,6 +464,12 @@ class TournamentModelTests(TestCase):
     def test_round_background_final_year(self):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
+        # TODO Validate results
+        r.background()
+
+    def test_round_background_timed_end(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[1]
         # TODO Validate results
         r.background()
 
