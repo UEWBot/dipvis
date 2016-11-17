@@ -1,0 +1,83 @@
+[
+{
+    "pk": 1, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Chris", 
+        "last_name": "Brand", 
+        "wdd_player_id": 4173
+    }
+},
+{
+    "pk": 2, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "John", 
+        "last_name": "Jamieson", 
+        "wdd_player_id": 353
+    }
+},
+{
+    "pk": 3, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Christian", 
+        "last_name": "MacDonald", 
+        "wdd_player_id": 11161
+    }
+},
+{
+    "pk": 4, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Andrew", 
+        "last_name": "Goff", 
+        "wdd_player_id": 1326
+    }
+},
+{
+    "pk": 5, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Edi", 
+        "last_name": "Birsan", 
+        "wdd_player_id": 912
+    }
+},
+{
+    "pk": 6, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Nathan", 
+        "last_name": "Barnes", 
+        "wdd_player_id": 3595
+    }
+},
+{
+    "pk": 7, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Dan", 
+        "last_name": "Lester", 
+        "wdd_player_id": 2016
+    }
+},
+{
+    "pk": 8, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Eric", 
+        "last_name": "Mead", 
+        "wdd_player_id": 3650
+    }
+},
+{
+    "pk": 9, 
+    "model": "tournament.player", 
+    "fields": {
+        "first_name": "Doc", 
+        "last_name": "Binder", 
+        "wdd_player_id": 9638
+    }
+}
+]

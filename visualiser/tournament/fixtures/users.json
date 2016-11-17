@@ -1,0 +1,20 @@
+[
+{
+    "pk": 1, 
+    "model": "auth.user", 
+    "fields": {
+        "username": "chris", 
+        "first_name": "", 
+        "last_name": "", 
+        "is_active": true, 
+        "is_superuser": true, 
+        "is_staff": true, 
+        "last_login": "2014-05-29T07:04:17.178Z", 
+        "groups": [], 
+        "user_permissions": [], 
+        "password": "pbkdf2_sha256$12000$MK4M30Clbcmk$HcA0UkIkmqSmb9KKMZkT2/88EWViIM3Ky3w7po5vQb0=", 
+        "email": "chris_brand@shaw.ca", 
+        "date_joined": "2014-05-29T07:03:27.677Z"
+    }
+}
+]
