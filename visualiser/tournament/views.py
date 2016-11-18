@@ -481,7 +481,8 @@ def round_scores(request, tournament_id):
                         except ValidationError as e:
                             form.add_error(form.fields[r_name], e)
                             i.delete()
-                            return render('tournaments/round_players.html',
+                            return render(request,
+                                          'tournaments/round_players.html',
                                           {'title': 'Scores',
                                            'tournament': t,
                                            'post_url': reverse('enter_scores', args=(tournament_id,)),
@@ -495,7 +496,8 @@ def round_scores(request, tournament_id):
                             tp.full_clean()
                         except ValidationError as e:
                             form.add_error(form.fields[r_name], e)
-                            return render('tournaments/round_players.html',
+                            return render(request,
+                                          'tournaments/round_players.html',
                                           {'title': 'Scores',
                                            'tournament': t,
                                            'post_url': reverse('enter_scores', args=(tournament_id,)),
@@ -518,7 +520,8 @@ def round_scores(request, tournament_id):
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
-    return render('tournaments/round_players.html',
+    return render(request,
+                  'tournaments/round_players.html',
                   {'title': 'Scores',
                    'tournament': t,
                    'post_url': reverse('enter_scores', args=(tournament_id,)),
@@ -548,7 +551,8 @@ def roll_call(request, tournament_id):
                 except ValidationError as e:
                     form.add_error(form.fields[r_name], e)
                     i.delete()
-                    return render('tournaments/round_players.html',
+                    return render(request,
+                                  'tournaments/round_players.html',
                                   {'title': 'Roll Call',
                                    'tournament': t,
                                    'post_url': reverse('roll_call', args=(tournament_id,)),
@@ -572,7 +576,8 @@ def roll_call(request, tournament_id):
                     except ValidationError as e:
                         form.add_error(form.fields[r_name], e)
                         i.delete()
-                        return render('tournaments/round_players.html',
+                        return render(request,
+                                      'tournaments/round_players.html',
                                       {'title': 'Roll Call',
                                        'tournament': t,
                                        'post_url': reverse('roll_call', args=(tournament_id,)),
@@ -595,7 +600,8 @@ def roll_call(request, tournament_id):
             data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
 
-    return render('tournaments/round_players.html',
+    return render(request,
+                  'tournaments/round_players.html',
                   {'title': 'Roll Call',
                    'tournament': t,
                    'post_url': reverse('roll_call', args=(tournament_id,)),
@@ -656,7 +662,8 @@ def create_games(request, tournament_id, round_num):
                 except ValidationError as e:
                     f.add_error(None, e)
                     g.delete()
-                    return render('rounds/create_games.html',
+                    return render(request,
+                                  'rounds/create_games.html',
                                   {'tournament': t,
                                    'round': r,
                                    'formset' : formset})
@@ -682,7 +689,8 @@ def create_games(request, tournament_id, round_num):
                         f.add_error(None, e)
                         # TODO Not 100% certain that this is the right thing to do here
                         i.delete()
-                        return render('rounds/create_games.html',
+                        return render(request,
+                                      'rounds/create_games.html',
                                       {'tournament': t,
                                        'round': r,
                                        'formset' : formset})
@@ -710,7 +718,8 @@ def create_games(request, tournament_id, round_num):
                                              formset=BaseGamePlayersForm)
         formset = GamePlayersFormset(the_round=r, initial=data)
 
-    return render('rounds/create_games.html',
+    return render(request,
+                  'rounds/create_games.html',
                   {'tournament': t,
                    'round': r,
                    'formset' : formset})
@@ -745,7 +754,8 @@ def game_scores(request, tournament_id, round_num):
                         i.full_clean()
                     except ValidationError as e:
                         f.add_error(None, e)
-                        return render('rounds/game_score.html',
+                        return render(request,
+                                      'rounds/game_score.html',
                                       {'tournament': t,
                                        'round': r,
                                        'formset' : formset})
@@ -764,7 +774,8 @@ def game_scores(request, tournament_id, round_num):
             data.append(content)
         formset = GameScoreFormset(initial=data)
 
-    return render('rounds/game_score.html',
+    return render(request,
+                  'rounds/game_score.html',
                   {'tournament': t,
                    'round': r,
                    'formset' : formset})
@@ -896,7 +907,8 @@ def sc_counts(request, tournament_id, game_name):
                     except ValidationError as e:
                         formset.add_error(form.fields[name], e)
                         i.delete()
-                        return render('games/sc_counts_form.html',
+                        return render(request,
+                                      'games/sc_counts_form.html',
                                       {'formset': formset,
                                        'tournament': t,
                                        'game': g})
@@ -916,7 +928,8 @@ def sc_counts(request, tournament_id, game_name):
             data.append(scs)
         formset = SCCountFormset(initial=data)
 
-    return render('games/sc_counts_form.html',
+    return render(request,
+                  'games/sc_counts_form.html',
                   {'formset': formset,
                    'tournament': t,
                    'game': g})
@@ -991,7 +1004,8 @@ def draw_vote(request, tournament_id, game_name):
             dp.full_clean()
         except ValidationError as e:
             form.add_error(None, e)
-            return render('games/vote.html',
+            return render(request,
+                          'games/vote.html',
                           {'tournament': t,
                            'game': g,
                            'form' : form})
@@ -1000,7 +1014,8 @@ def draw_vote(request, tournament_id, game_name):
         return HttpResponseRedirect(reverse('game_detail',
                                             args=(tournament_id, game_name)))
 
-    return render('games/vote.html',
+    return render(request,
+                  'games/vote.html',
                   {'tournament': t,
                    'game': g,
                    'form' : form})
@@ -1076,7 +1091,8 @@ def add_game_image(request, tournament_id, game_name=''):
                 initial = {'game': g, 'year': next_year}
         form = GameImageForm(initial=initial)
 
-    return render('games/add_image.html',
+    return render(request,
+                  'games/add_image.html',
                   {'tournament': t,
                    'form' : form})
 
