@@ -480,10 +480,7 @@ def round_scores(request, tournament_id):
                         try:
                             i.full_clean()
                         except ValidationError as e:
-                            # add_error() was introduced in Django 1.7
-                            # form.add_error(form.fields[r_name], e)
-                            form._errors[r_name] = forms.util.ErrorList()
-                            form._errors[r_name].append(u', '.join(e.messages))
+                            form.add_error(form.fields[r_name], e)
                             i.delete()
                             return render_to_response('tournaments/round_players.html',
                                                       {'title': 'Scores',
@@ -499,10 +496,7 @@ def round_scores(request, tournament_id):
                         try:
                             tp.full_clean()
                         except ValidationError as e:
-                            # add_error() was introduced in Django 1.7
-                            # form.add_error(form.fields[r_name], e)
-                            form._errors[r_name] = forms.util.ErrorList()
-                            form._errors[r_name].append(u', '.join(e.messages))
+                            form.add_error(form.fields[r_name], e)
                             return render_to_response('tournaments/round_players.html',
                                                       {'title': 'Scores',
                                                        'tournament': t,
@@ -556,10 +550,7 @@ def roll_call(request, tournament_id):
                 try:
                     i.full_clean()
                 except ValidationError as e:
-                    # add_error() was introduced in Django 1.7
-                    # form.add_error(form.fields[r_name], e)
-                    form._errors['player'] = forms.util.ErrorList()
-                    form._errors['player'].append(u', '.join(e.messages))
+                    form.add_error(form.fields[r_name], e)
                     i.delete()
                     return render_to_response('tournaments/round_players.html',
                                               {'title': 'Roll Call',
@@ -584,10 +575,7 @@ def roll_call(request, tournament_id):
                     try:
                         i.full_clean()
                     except ValidationError as e:
-                        # add_error() was introduced in Django 1.7
-                        # form.add_error(form.fields[r_name], e)
-                        form._errors[r_name] = forms.util.ErrorList()
-                        form._errors[r_name].append(u', '.join(e.messages))
+                        form.add_error(form.fields[r_name], e)
                         i.delete()
                         return render_to_response('tournaments/round_players.html',
                                                   {'title': 'Roll Call',
@@ -673,10 +661,7 @@ def create_games(request, tournament_id, round_num):
                 try:
                     g.full_clean()
                 except ValidationError as e:
-                    # add_error() was introduced in Django 1.7
-                    # f.add_error(None, e)
-                    f._errors['game_name'] = forms.util.ErrorList()
-                    f._errors['game_name'].append(u', '.join(e.messages))
+                    f.add_error(None, e)
                     g.delete()
                     return render_to_response('rounds/create_games.html',
                                               {'tournament': t,
@@ -702,10 +687,7 @@ def create_games(request, tournament_id, round_num):
                     try:
                         i.full_clean()
                     except ValidationError as e:
-                        # add_error() was introduced in Django 1.7
-                        # f.add_error(None, e)
-                        f._errors['game_name'] = forms.util.ErrorList()
-                        f._errors['game_name'].append(u', '.join(e.messages))
+                        f.add_error(None, e)
                         # TODO Not 100% certain that this is the right thing to do here
                         i.delete()
                         return render_to_response('rounds/create_games.html',
@@ -772,10 +754,7 @@ def game_scores(request, tournament_id, round_num):
                     try:
                         i.full_clean()
                     except ValidationError as e:
-                        # add_error() was introduced in Django 1.7
-                        # f.add_error(None, e)
-                        f._errors['game_name'] = forms.util.ErrorList()
-                        f._errors['game_name'].append(u', '.join(e.messages))
+                        f.add_error(None, e)
                         return render_to_response('rounds/game_score.html',
                                                   {'tournament': t,
                                                    'round': r,
@@ -927,10 +906,7 @@ def sc_counts(request, tournament_id, game_name):
                     try:
                         i.full_clean()
                     except ValidationError as e:
-                        # add_error() was introduced in Django 1.7
-                        # formset.add_error(form.fields[name], e)
-                        form._errors[name] = forms.util.ErrorList()
-                        form._errors[name].append(u', '.join(e.messages))
+                        formset.add_error(form.fields[name], e)
                         i.delete()
                         return render_to_response('games/sc_counts_form.html',
                                                   {'formset': formset,
@@ -1028,10 +1004,7 @@ def draw_vote(request, tournament_id, game_name):
         try:
             dp.full_clean()
         except ValidationError as e:
-            # add_error() was introduced in Django 1.7
-            # form.add_error(None, e)
-            form._errors['season'] = forms.util.ErrorList()
-            form._errors['season'].append(u', '.join(e.messages))
+            form.add_error(None, e)
             return render_to_response('games/vote.html',
                                       {'tournament': t,
                                        'game': g,
