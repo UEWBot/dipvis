@@ -14,14 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.shortcuts import render, get_object_or_404, render_to_response
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.core.urlresolvers import reverse
 from django.views import generic
 from django.forms.models import inlineformset_factory
 from django import forms
 from django.forms.formsets import formset_factory, BaseFormSet
-from django.template import RequestContext
 from django.forms import ModelForm
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import permission_required
@@ -482,12 +481,11 @@ def round_scores(request, tournament_id):
                         except ValidationError as e:
                             form.add_error(form.fields[r_name], e)
                             i.delete()
-                            return render_to_response('tournaments/round_players.html',
-                                                      {'title': 'Scores',
-                                                       'tournament': t,
-                                                       'post_url': reverse('enter_scores', args=(tournament_id,)),
-                                                       'formset' : formset},
-                                                      context_instance = RequestContext(request))
+                            return render('tournaments/round_players.html',
+                                          {'title': 'Scores',
+                                           'tournament': t,
+                                           'post_url': reverse('enter_scores', args=(tournament_id,)),
+                                           'formset' : formset})
 
                         i.save()
                     elif r_name == 'overall_score':
@@ -497,12 +495,11 @@ def round_scores(request, tournament_id):
                             tp.full_clean()
                         except ValidationError as e:
                             form.add_error(form.fields[r_name], e)
-                            return render_to_response('tournaments/round_players.html',
-                                                      {'title': 'Scores',
-                                                       'tournament': t,
-                                                       'post_url': reverse('enter_scores', args=(tournament_id,)),
-                                                       'formset' : formset},
-                                                      context_instance = RequestContext(request))
+                            return render('tournaments/round_players.html',
+                                          {'title': 'Scores',
+                                           'tournament': t,
+                                           'post_url': reverse('enter_scores', args=(tournament_id,)),
+                                           'formset' : formset})
                         tp.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('tournament_scores',
@@ -521,12 +518,11 @@ def round_scores(request, tournament_id):
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
-    return render_to_response('tournaments/round_players.html',
-                              {'title': 'Scores',
-                               'tournament': t,
-                               'post_url': reverse('enter_scores', args=(tournament_id,)),
-                               'formset' : formset},
-                              context_instance = RequestContext(request))
+    return render('tournaments/round_players.html',
+                  {'title': 'Scores',
+                   'tournament': t,
+                   'post_url': reverse('enter_scores', args=(tournament_id,)),
+                   'formset' : formset})
 
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id):
@@ -552,12 +548,11 @@ def roll_call(request, tournament_id):
                 except ValidationError as e:
                     form.add_error(form.fields[r_name], e)
                     i.delete()
-                    return render_to_response('tournaments/round_players.html',
-                                              {'title': 'Roll Call',
-                                               'tournament': t,
-                                               'post_url': reverse('roll_call', args=(tournament_id,)),
-                                               'formset' : formset},
-                                              context_instance = RequestContext(request))
+                    return render('tournaments/round_players.html',
+                                  {'title': 'Roll Call',
+                                   'tournament': t,
+                                   'post_url': reverse('roll_call', args=(tournament_id,)),
+                                   'formset' : formset})
                 i.save()
                 for r_name,value in form.cleaned_data.iteritems():
                     # Ignore non-bool fields and ones that aren't True
@@ -577,12 +572,11 @@ def roll_call(request, tournament_id):
                     except ValidationError as e:
                         form.add_error(form.fields[r_name], e)
                         i.delete()
-                        return render_to_response('tournaments/round_players.html',
-                                                  {'title': 'Roll Call',
-                                                   'tournament': t,
-                                                   'post_url': reverse('roll_call', args=(tournament_id,)),
-                                                   'formset' : formset},
-                                                  context_instance = RequestContext(request))
+                        return render('tournaments/round_players.html',
+                                      {'title': 'Roll Call',
+                                       'tournament': t,
+                                       'post_url': reverse('roll_call', args=(tournament_id,)),
+                                       'formset' : formset})
                     i.save()
             # Next job is almost certainly to create the actual games
             return HttpResponseRedirect(reverse('create_games',
@@ -601,12 +595,11 @@ def roll_call(request, tournament_id):
             data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
 
-    return render_to_response('tournaments/round_players.html',
-                              {'title': 'Roll Call',
-                               'tournament': t,
-                               'post_url': reverse('roll_call', args=(tournament_id,)),
-                               'formset' : formset},
-                              context_instance = RequestContext(request))
+    return render('tournaments/round_players.html',
+                  {'title': 'Roll Call',
+                   'tournament': t,
+                   'post_url': reverse('roll_call', args=(tournament_id,)),
+                   'formset' : formset})
 
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
@@ -663,11 +656,10 @@ def create_games(request, tournament_id, round_num):
                 except ValidationError as e:
                     f.add_error(None, e)
                     g.delete()
-                    return render_to_response('rounds/create_games.html',
-                                              {'tournament': t,
-                                               'round': r,
-                                               'formset' : formset},
-                                              context_instance = RequestContext(request))
+                    return render('rounds/create_games.html',
+                                  {'tournament': t,
+                                   'round': r,
+                                   'formset' : formset})
                 g.save()
                 # Assign the players to the game
                 for power, field in f.cleaned_data.iteritems():
@@ -690,11 +682,10 @@ def create_games(request, tournament_id, round_num):
                         f.add_error(None, e)
                         # TODO Not 100% certain that this is the right thing to do here
                         i.delete()
-                        return render_to_response('rounds/create_games.html',
-                                                  {'tournament': t,
-                                                   'round': r,
-                                                   'formset' : formset},
-                                                  context_instance = RequestContext(request))
+                        return render('rounds/create_games.html',
+                                      {'tournament': t,
+                                       'round': r,
+                                       'formset' : formset})
                     i.save()
             # Redirect to the index of games in the round
             return HttpResponseRedirect(reverse('game_index',
@@ -719,11 +710,10 @@ def create_games(request, tournament_id, round_num):
                                              formset=BaseGamePlayersForm)
         formset = GamePlayersFormset(the_round=r, initial=data)
 
-    return render_to_response('rounds/create_games.html',
-                              {'tournament': t,
-                               'round': r,
-                               'formset' : formset},
-                              context_instance = RequestContext(request))
+    return render('rounds/create_games.html',
+                  {'tournament': t,
+                   'round': r,
+                   'formset' : formset})
 
 @permission_required('tournament.change_gameplayer')
 def game_scores(request, tournament_id, round_num):
@@ -755,11 +745,10 @@ def game_scores(request, tournament_id, round_num):
                         i.full_clean()
                     except ValidationError as e:
                         f.add_error(None, e)
-                        return render_to_response('rounds/game_score.html',
-                                                  {'tournament': t,
-                                                   'round': r,
-                                                   'formset' : formset},
-                                                  context_instance = RequestContext(request))
+                        return render('rounds/game_score.html',
+                                      {'tournament': t,
+                                       'round': r,
+                                       'formset' : formset})
                     i.save()
             # Redirect to the round index
             return HttpResponseRedirect(reverse('round_index',
@@ -775,11 +764,10 @@ def game_scores(request, tournament_id, round_num):
             data.append(content)
         formset = GameScoreFormset(initial=data)
 
-    return render_to_response('rounds/game_score.html',
-                              {'tournament': t,
-                               'round': r,
-                               'formset' : formset},
-                              context_instance = RequestContext(request))
+    return render('rounds/game_score.html',
+                  {'tournament': t,
+                   'round': r,
+                   'formset' : formset})
 
 def game_index(request, tournament_id, round_num):
     """Display a list of games in the round"""
@@ -908,11 +896,10 @@ def sc_counts(request, tournament_id, game_name):
                     except ValidationError as e:
                         formset.add_error(form.fields[name], e)
                         i.delete()
-                        return render_to_response('games/sc_counts_form.html',
-                                                  {'formset': formset,
-                                                   'tournament': t,
-                                                   'game': g},
-                                                  context_instance = RequestContext(request))
+                        return render('games/sc_counts_form.html',
+                                      {'formset': formset,
+                                       'tournament': t,
+                                       'game': g})
 
                     i.save()
             # Redirect to the read-only version
@@ -929,11 +916,10 @@ def sc_counts(request, tournament_id, game_name):
             data.append(scs)
         formset = SCCountFormset(initial=data)
 
-    return render_to_response('games/sc_counts_form.html',
-                              {'formset': formset,
-                               'tournament': t,
-                               'game': g},
-                              context_instance = RequestContext(request))
+    return render('games/sc_counts_form.html',
+                  {'formset': formset,
+                   'tournament': t,
+                   'game': g})
 
 def game_news(request, tournament_id, game_name, as_ticker=False):
     """Display news for a game"""
@@ -1005,21 +991,19 @@ def draw_vote(request, tournament_id, game_name):
             dp.full_clean()
         except ValidationError as e:
             form.add_error(None, e)
-            return render_to_response('games/vote.html',
-                                      {'tournament': t,
-                                       'game': g,
-                                       'form' : form},
-                                      context_instance = RequestContext(request))
+            return render('games/vote.html',
+                          {'tournament': t,
+                           'game': g,
+                           'form' : form})
         dp.save()
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
                                             args=(tournament_id, game_name)))
 
-    return render_to_response('games/vote.html',
-                              {'tournament': t,
-                               'game': g,
-                               'form' : form},
-                              context_instance = RequestContext(request))
+    return render('games/vote.html',
+                  {'tournament': t,
+                   'game': g,
+                   'form' : form})
 
 def game_image(request, tournament_id, game_name, turn='', timelapse=False):
     """Display the image for the game at the specified time"""
@@ -1092,10 +1076,9 @@ def add_game_image(request, tournament_id, game_name=''):
                 initial = {'game': g, 'year': next_year}
         form = GameImageForm(initial=initial)
 
-    return render_to_response('games/add_image.html',
-                              {'tournament': t,
-                               'form' : form},
-                              context_instance = RequestContext(request))
+    return render('games/add_image.html',
+                  {'tournament': t,
+                   'form' : form})
 
 # Player views
 
