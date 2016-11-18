@@ -31,7 +31,10 @@ HOURS_24 = timedelta(hours=24)
 CHRIS_BRAND_WDD_ID = 4173
 
 class TournamentModelTests(TestCase):
-    def setUp(self):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
         set1 = GameSet.objects.get(name='Avalon Hill')
         set2 = GameSet.objects.get(name='Gibsons')
 
@@ -76,47 +79,47 @@ class TournamentModelTests(TestCase):
         g31 = Game.objects.create(name='g31', started_at=r31.start, the_round=r31, is_finished=True, the_set=set1)
         g32 = Game.objects.create(name='g32', started_at=r32.start, the_round=r32, is_finished=True, the_set=set1)
 
-        self.austria = GreatPower.objects.get(abbreviation='A')
-        self.england = GreatPower.objects.get(abbreviation='E')
-        self.france = GreatPower.objects.get(abbreviation='F')
-        self.germany = GreatPower.objects.get(abbreviation='G')
-        self.italy = GreatPower.objects.get(abbreviation='I')
-        self.russia = GreatPower.objects.get(abbreviation='R')
-        self.turkey = GreatPower.objects.get(abbreviation='T')
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
 
-        sc1101a = CentreCount.objects.create(power=self.austria, game=g11, year=1901, count=5)
-        sc1101e = CentreCount.objects.create(power=self.england, game=g11, year=1901, count=4)
-        sc1101f = CentreCount.objects.create(power=self.france, game=g11, year=1901, count=5)
-        sc1101g = CentreCount.objects.create(power=self.germany, game=g11, year=1901, count=5)
-        sc1101i = CentreCount.objects.create(power=self.italy, game=g11, year=1901, count=4)
-        sc1101r = CentreCount.objects.create(power=self.russia, game=g11, year=1901, count=5)
-        sc1101t = CentreCount.objects.create(power=self.turkey, game=g11, year=1901, count=4)
+        sc1101a = CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        sc1101e = CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        sc1101f = CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        sc1101g = CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        sc1101i = CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        sc1101r = CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        sc1101t = CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
-        sc1104a = CentreCount.objects.create(power=self.austria, game=g11, year=1904, count=0)
-        sc1104e = CentreCount.objects.create(power=self.england, game=g11, year=1904, count=4)
-        sc1104f = CentreCount.objects.create(power=self.france, game=g11, year=1904, count=2)
-        sc1104g = CentreCount.objects.create(power=self.germany, game=g11, year=1904, count=18)
-        sc1104i = CentreCount.objects.create(power=self.italy, game=g11, year=1904, count=2)
-        sc1104r = CentreCount.objects.create(power=self.russia, game=g11, year=1904, count=3)
-        sc1104t = CentreCount.objects.create(power=self.turkey, game=g11, year=1904, count=5)
+        sc1104a = CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        sc1104e = CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
+        sc1104f = CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
+        sc1104g = CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
+        sc1104i = CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=2)
+        sc1104r = CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
+        sc1104t = CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
 
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
-        gp11a1 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g11, power=self.austria, last_year=1903, last_season='F')
-        gp11a2 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g11, power=self.austria, first_year=1903, first_season='X')
-        gp11e1 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g11, power=self.england)
-        gp11f1 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g11, power=self.france)
-        gp11g1 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g11, power=self.germany)
-        gp11i1 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g11, power=self.italy)
-        gp11r1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g11, power=self.russia)
-        gp11t1 = GamePlayer.objects.create(player=Player.objects.get(pk=8), game=g11, power=self.turkey)
-        gp12a = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g12, power=self.austria)
-        gp12e = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g12, power=self.england)
-        gp12f = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g12, power=self.france)
-        gp12g = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g12, power=self.germany)
-        gp12i = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g12, power=self.italy)
-        gp12r = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g12, power=self.russia)
-        gp12t = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g12, power=self.turkey)
+        gp11a1 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g11, power=cls.austria, last_year=1903, last_season='F')
+        gp11a2 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g11, power=cls.austria, first_year=1903, first_season='X')
+        gp11e1 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g11, power=cls.england)
+        gp11f1 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g11, power=cls.france)
+        gp11g1 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g11, power=cls.germany)
+        gp11i1 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g11, power=cls.italy)
+        gp11r1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g11, power=cls.russia)
+        gp11t1 = GamePlayer.objects.create(player=Player.objects.get(pk=8), game=g11, power=cls.turkey)
+        gp12a = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g12, power=cls.austria)
+        gp12e = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g12, power=cls.england)
+        gp12f = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g12, power=cls.france)
+        gp12g = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g12, power=cls.germany)
+        gp12i = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g12, power=cls.italy)
+        gp12r = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g12, power=cls.russia)
+        gp12t = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g12, power=cls.turkey)
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
