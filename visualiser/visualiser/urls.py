@@ -14,14 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls import patterns, include, url
+from django.conf.urls import url, include
 from django.contrib import admin
 
 import tournament
 
 admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = [
     # Examples:
     # url(r'^$', 'visualiser.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
@@ -31,4 +31,4 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^players/$', tournament.views.PlayerIndexView.as_view()),
     url(r'^players/(?P<pk>\d+)/$', tournament.views.PlayerDetailView.as_view(), name='player_detail'),
-)
+]
