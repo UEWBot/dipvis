@@ -830,7 +830,7 @@ class Tournament(models.Model):
     """
     A Diplomacy tournament
     """
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=40)
     start_date = models.DateField()
     end_date = models.DateField()
     # How do we combine round scores to get an overall player tournament score ?
@@ -1649,7 +1649,7 @@ class PlayerRanking(models.Model):
     Used to import background information from the WDD.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=30)
+    tournament = models.CharField(max_length=40)
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
@@ -1669,7 +1669,7 @@ class PlayerGameResult(models.Model):
     One player's result for a tournament game.
     Used to import background information from the WDD.
     """
-    tournament_name = models.CharField(max_length=20)
+    tournament_name = models.CharField(max_length=40)
     game_name = models.CharField(max_length=20)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
