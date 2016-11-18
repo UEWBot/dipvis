@@ -544,8 +544,8 @@ class SetPower(models.Model):
     """
     A single GreatPower in a given GameSet.
     """
-    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'))
-    power = models.ForeignKey(GreatPower)
+    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
+    power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
     colour = models.CharField(max_length=20)
 
     class Meta:
@@ -932,8 +932,8 @@ class TournamentPlayer(models.Model):
     """
     One player in a tournament
     """
-    player = models.ForeignKey(Player)
-    tournament = models.ForeignKey(Tournament)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
 
     class Meta:
@@ -953,7 +953,7 @@ class Round(models.Model):
     """
     A single round of a Tournament
     """
-    tournament = models.ForeignKey(Tournament)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a GameScoringSystem object
     # There has at least been talk of tournaments using multiple scoring systems, one per round
@@ -1051,8 +1051,8 @@ class Game(models.Model):
     started_at = models.DateTimeField(default=timezone.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
-    the_round = models.ForeignKey(Round, verbose_name=_(u'round'))
-    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'))
+    the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
+    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
     # TODO Use this
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=_(u'Power assignment method'),
@@ -1371,18 +1371,18 @@ class DrawProposal(models.Model):
     """
     A single draw or concession proposal in a game
     """
-    game = models.ForeignKey(Game)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
     passed = models.BooleanField()
-    proposer = models.ForeignKey(GreatPower, related_name='+')
-    power_1 = models.ForeignKey(GreatPower, related_name='+')
-    power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
-    power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
-    power_4 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
-    power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
-    power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
-    power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+')
+    proposer = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
+    power_1 = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
+    power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
+    power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
+    power_4 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
+    power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
+    power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
+    power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
 
     def draw_size(self):
         return len(self.powers())
@@ -1455,8 +1455,8 @@ class RoundPlayer(models.Model):
     """
     A person who played a round in a tournament
     """
-    player = models.ForeignKey(Player)
-    the_round = models.ForeignKey(Round, verbose_name=_(u'round'))
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
 
     class Meta:
@@ -1476,9 +1476,9 @@ class GamePlayer(models.Model):
     """
     A person who played a Great Power in a Game
     """
-    player = models.ForeignKey(Player)
-    game = models.ForeignKey(Game)
-    power = models.ForeignKey(GreatPower, related_name='+')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR, validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
@@ -1570,7 +1570,7 @@ class GameImage(models.Model):
     An image depicting a Game at a certain point.
     The year, season, phase together indicate the phase that is about to played.
     """
-    game = models.ForeignKey(Game)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
     phase = models.CharField(max_length=1, choices=PHASES, default=MOVEMENT)
@@ -1601,8 +1601,8 @@ class CentreCount(models.Model):
     """
     The number of centres owned by one power at the end of a given game year
     """
-    power = models.ForeignKey(GreatPower, related_name='+')
-    game = models.ForeignKey(Game)
+    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year_including_start])
     count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
 
@@ -1648,7 +1648,7 @@ class PlayerRanking(models.Model):
     A tournament ranking for a player.
     Used to import background information from the WDD.
     """
-    player = models.ForeignKey(Player)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.CharField(max_length=30)
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
@@ -1671,8 +1671,8 @@ class PlayerGameResult(models.Model):
     """
     tournament_name = models.CharField(max_length=20)
     game_name = models.CharField(max_length=20)
-    player = models.ForeignKey(Player)
-    power = models.ForeignKey(GreatPower, related_name='+')
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     date = models.DateField()
     position = models.PositiveSmallIntegerField()
     position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
