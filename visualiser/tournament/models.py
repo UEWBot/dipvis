@@ -16,7 +16,7 @@
 
 from django.db import models
 from django.core.exceptions import ValidationError
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.db.models import Max, Min, Sum, Q
 from django.utils.translation import ugettext as _
 from django.utils import timezone
