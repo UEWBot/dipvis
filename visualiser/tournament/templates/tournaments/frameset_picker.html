@@ -26,5 +26,11 @@
       <tr><td>fr3</td><td>fr4</td></tr>
     </table></a>
   </li>
+  <li><a href="{% url 'frameset_1x1' tournament.id %}">
+    <table border="1">
+      <tr><td>fr1</td>
+    </table></a>
+  </li>
 </ul>
+<p>{% trans "All views also have a news ticker across the bottom. You can choose any URL in each frame. Most will auto-refresh every 5 minutes." %}</p>
 {% endblock %}

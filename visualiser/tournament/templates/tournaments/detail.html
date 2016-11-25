@@ -12,6 +12,7 @@
 
 <p>{% trans "Views:" %}</p>
 <ul>
+  <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
   <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
   <li><a href="{% url 'tournament_news' tournament.id %}">{% trans "News" %}</a></li>
   <li><a href="{% url 'tournament_background' tournament.id %}">{% trans "Background" %}</a></li>
