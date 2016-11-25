@@ -706,7 +706,9 @@ class Player(models.Model):
 
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
-        return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
+        if self.wdd_player_id:
+            return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
+        return u''
 
     def _rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
