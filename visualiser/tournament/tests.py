@@ -20,7 +20,7 @@ from django.utils import timezone
 
 from tournament.models import *
 
-from datetime import *
+from datetime import timedelta
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
