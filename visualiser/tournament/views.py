@@ -195,7 +195,7 @@ class BaseSCCountFormset(BaseFormSet):
             years[year] = form.cleaned_data.get('neutral')
         # Now check that the number of neutrals only goes down
         neutrals = TOTAL_SCS
-        for year in sorted(years.iterkeys()):
+        for year in sorted(years.keys()):
             if years[year] > neutrals:
                 raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d') % {'before': neutrals,
                                                                                                                 'after': years[year],
@@ -823,7 +823,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     ps = []
     for sp in set_powers:
         power_players = ['<a href="%s">%s</a>' % (p.get_absolute_url(), p) for p in players[sp.power]]
-        names = '<br>'.join(map(unicode, power_players))
+        names = '<br>'.join(map(str, power_players))
         ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
     # Create a list of years that have been played

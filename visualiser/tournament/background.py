@@ -15,7 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from bs4 import BeautifulSoup
-import urllib2
+import urllib.request
 
 WDD_BASE_URL = 'http://world-diplomacy-database.com/php/results/'
 WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
@@ -49,7 +49,7 @@ class Background():
         self.last_name = parts[1].title()
 
     def _relevant(self, d):
-        for val in d.itervalues():
+        for val in d.values():
             if val == self.name():
                 return True
         return False
@@ -60,7 +60,7 @@ class Background():
         Keys are Tournament and position.
         """
         url = WIKIPEDIA_URL
-        page = urllib2.urlopen(url)
+        page = urllib.request.urlopen(url)
         soup = BeautifulSoup(page.read())
         # Find the first H2 with a span inside
         for h2 in soup.find_all('h2'):
@@ -73,12 +73,12 @@ class Background():
             if tag.name == 'h2' or tag.name == 'h3':
                 span = tag.span
                 if span:
-                    tournament = unicode(span.string)
+                    tournament = str(span.string)
             elif tag.name == 'table':
                 row = tag.tr
                 columns = []
                 for th in row.find_all('th'):
-                    columns.append(unicode(th.string))
+                    columns.append(str(th.string))
                 while True:
                     row = row.find_next_sibling()
                     if not row:
@@ -105,8 +105,8 @@ class Background():
         """
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         try:
-            page = urllib2.urlopen(url)
-        except urllib2.URLError:
+            page = urllib.request.urlopen(url)
+        except urllib.request.URLError:
             # Most likely, WDD is not available
             raise WDDNotAccessible
         if page.geturl() != url:
@@ -129,7 +129,7 @@ class Background():
         """
         # Individual Prize List
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
-        page = urllib2.urlopen(url)
+        page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
             raise InvalidWDDId
@@ -150,7 +150,7 @@ class Background():
             try:
                 col = MAP[th.string]
             except KeyError:
-                col = unicode(th.string)
+                col = str(th.string)
             columns.append(col)
         results = []
         while True:
@@ -167,7 +167,7 @@ class Background():
                 for key, td in zip(columns, row.find_all('td')):
                     # Countries are encoded as flag images
                     if td.string:
-                        result[key] = unicode(td.string)
+                        result[key] = str(td.string)
                     else:
                         result[key] = img_to_country(td.img['src'])
                 results.append(result)
@@ -182,7 +182,7 @@ class Background():
         """
         # Tournaments competed in
         url = WDD_BASE_URL + 'player_fiche5.php?id_player=%d' % self.wdd_id
-        page = urllib2.urlopen(url)
+        page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
             raise InvalidWDDId
@@ -198,7 +198,7 @@ class Background():
                     # This is the row to parse
                     columns = []
                     for th in row.find_all('th'):
-                        columns.append(unicode(th.string))
+                        columns.append(str(th.string))
                     # Beautiful Soup actually truncates the row,
                     # but it only misses team stuff that we don't care about
                     continue
@@ -224,7 +224,7 @@ class Background():
                             # Sometimes WDD doesn't have total players for a tournament
                             pass
                     elif td.string:
-                        result[key] = unicode(td.string)
+                        result[key] = str(td.string)
                     elif td.img:
                         result[key] = td.img['src']
                     # Add URLs to the results dict
@@ -246,7 +246,7 @@ class Background():
         """
         # Tournament board listings
         url = WDD_BASE_URL + 'player_fiche9.php?id_player=%d' % self.wdd_id
-        page = urllib2.urlopen(url)
+        page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
             raise InvalidWDDId
@@ -265,7 +265,7 @@ class Background():
                         # Note that there are two columns called "Country"
                         # Fortunately the second is the one we want,
                         # So we don't worry about the second overwriting the first
-                        columns.append(unicode(th.string))
+                        columns.append(str(th.string))
                     # Beautiful Soup even truncates this row
                     columns += [u'Rank', u'SCs', u'Score']
                     continue
@@ -308,13 +308,13 @@ class Background():
                                     result[u'Game end'] = u'W'
                         else:
                             # It's a year of elimination
-                            result[u'Elimination year'] = unicode(td.string)
+                            result[u'Elimination year'] = str(td.string)
                             result[u'Final SCs'] = u'0'
                     elif td.string:
                         try:
                             result[key] = float(td.string)
                         except ValueError:
-                            result[key] = unicode(td.string)
+                            result[key] = str(td.string)
                     elif td.img:
                         result[key] = td.img['src']
                     # Add URLs to the results dict

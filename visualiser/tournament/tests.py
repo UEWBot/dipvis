@@ -128,7 +128,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
-        for s in scores.itervalues():
+        for s in scores.values():
             self.assertEqual(s, 0)
 
     def test_g_scoring_solos_solo(self):
@@ -137,7 +137,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
                 self.assertEqual(s, 100)
@@ -151,7 +151,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
-        for s in scores.itervalues():
+        for s in scores.values():
             self.assertEqual(s, 100.0/7)
 
     def test_g_scoring_draws_solo(self):
@@ -160,7 +160,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
                 self.assertEqual(s, 100)
@@ -174,7 +174,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 4:
                 self.assertEqual(s, 5)
@@ -187,7 +187,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
                 self.assertEqual(s, 100)
@@ -200,7 +200,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 4:
                 self.assertEqual(s, 4)
@@ -213,7 +213,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
                 self.assertEqual(s, 80)
@@ -227,7 +227,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 4:
                 self.assertEqual(s, 100.0 * 16 / 148)
@@ -240,7 +240,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
-        for p,s in scores.iteritems():
+        for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
                 self.assertEqual(s, 100)
@@ -502,7 +502,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertEqual(len(g.players()), 7)
-        for gp in g.players().itervalues():
+        for gp in g.players().values():
             self.assertEqual(len(gp), 1)
 
     def test_game_players_all(self):
@@ -510,7 +510,7 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertEqual(len(g.players(False)), 7)
         players = g.players(False)
-        for power in players.iterkeys():
+        for power in players.keys():
             if power.abbreviation == u'A':
                 self.assertEqual(len(players[power]), 2)
             else:
@@ -520,7 +520,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         self.assertEqual(len(g.players()), 7)
-        for gp in g.players().itervalues():
+        for gp in g.players().values():
             self.assertEqual(len(gp), 0)
 
     # Game.passed_draw()

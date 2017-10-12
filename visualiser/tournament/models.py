@@ -24,7 +24,7 @@ from django.contrib.auth.models import User
 
 from tournament.background import *
 
-import urllib2, random, os
+import urllib.request, random, os
 
 SPRING = 'S'
 FALL = 'F'
@@ -480,8 +480,8 @@ def validate_wdd_id(value):
     """
     url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % value
     try:
-        p = urllib2.urlopen(url)
-    except urllib2.URLError:
+        p = urllib.request.urlopen(url)
+    except urllib.request.URLError:
         # Most likely WDD is not available - assume the value is ok
         return
     if p.geturl() != url:
@@ -569,9 +569,9 @@ def add_player_bg(player):
         for title in titles:
             pos = None
             the_title = None
-            for key,val in TITLE_MAP.iteritems():
+            for key,val in TITLE_MAP.items():
                 try:
-                    if title[key] == unicode(player):
+                    if title[key] == str(player):
                         pos = val
                         if key.find('Champion') != -1:
                             the_title = key
@@ -654,7 +654,7 @@ def position_str(position):
     Returns the string version of the position e.g. '1st', '12th'.
     """
     # TODO translation support ?
-    result = unicode(position)
+    result = str(position)
     pos = position % 100
     if pos > 3 and pos < 21:
         result += u'th'
@@ -727,7 +727,7 @@ class Player(models.Model):
                     if ranking.title not in titles:
                         titles[ranking.title] = []
                     titles[ranking.title].append(ranking.year)
-            for key, lst in titles.iteritems():
+            for key, lst in titles.items():
                 results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
@@ -1204,7 +1204,7 @@ class Game(models.Model):
         """
         players_by_power = self.players(latest=True)
         results = []
-        for c,players in players_by_power.iteritems():
+        for c,players in players_by_power.items():
             for p in players:
                 results += p.background(c, mask=mask)
         # Shuffle the resulting list
@@ -1392,7 +1392,7 @@ class DrawProposal(models.Model):
         Returns a list of powers included in the draw proposal.
         """
         retval = []
-        for name, value in self.__dict__.iteritems():
+        for name, value in self.__dict__.items():
             if name.startswith('power_'):
                 if value:
                     retval.append(GreatPower.objects.get(pk=value))
@@ -1408,7 +1408,7 @@ class DrawProposal(models.Model):
                 raise ValidationError(_(u'Draw powers should go as early as possible'))
         # Each power must be unique
         powers = set()
-        for name, value in self.__dict__.iteritems():
+        for name, value in self.__dict__.items():
             if value and name.startswith('power_'):
                 power = GreatPower.objects.get(pk=value)
                 if power in powers:
@@ -1660,7 +1660,7 @@ class PlayerRanking(models.Model):
         s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
                                                                     'position': pos,
                                                                     'tournament': self.tournament}
-        if self.tournament[-4:] != unicode(self.year):
+        if self.tournament[-4:] != str(self.year):
             s += _(u' in %(year)d') % {'year': self.year}
         return s
 
