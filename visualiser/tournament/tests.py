@@ -121,6 +121,12 @@ class TournamentModelTests(TestCase):
         gp12r = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g12, power=cls.russia)
         gp12t = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g12, power=cls.turkey)
 
+        # For t3 (the finished tournament), we want TournamentPlayers and RoundPlayers
+        # Unfortunately, adding these slows down the test dramatically
+        tp1 = TournamentPlayer.objects.create(player=Player.objects.get(pk=1), tournament=t3, score=147.3)
+        rp1 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r31, score=100.0)
+        rp2 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r32, score=47.3)
+
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -369,9 +375,31 @@ class TournamentModelTests(TestCase):
         # This round should be unfinished
         self.assertFalse(r.is_finished())
 
+    # Tournament.scores()
+    def test_tournament_scores_finished(self):
+        t = Tournament.objects.get(name='t3')
+        # TODO Validate results
+        t.scores()
+
+    def test_tournament_scores_unfinished(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        t.scores()
+
+    def test_tournament_scores_recalculate(self):
+        t = Tournament.objects.get(name='t3')
+        # TODO Validate results
+        t.scores(True)
+
     # Tournament.background()
     def test_tournament_background(self):
         t = Tournament.objects.get(name='t1')
+        print(Player.objects.filter(tournamentplayer__tournament = t).all())
+        # TODO Validate results
+        t.background()
+
+    def test_tournament_background_with_players(self):
+        t = Tournament.objects.get(name='t3')
         # TODO Validate results
         t.background()
 
@@ -456,6 +484,25 @@ class TournamentModelTests(TestCase):
                   start=t.start_date + HOURS_8,
                   latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
+
+    # Round.scores()
+    def test_round_scores_finished(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.scores()
+
+    def test_round_scores_unfinished(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.scores()
+
+    def test_round_scores_recalculate(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.scores(True)
 
     # Round.background()
     def test_round_background(self):
