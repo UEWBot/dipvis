@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}i{% blocktrans with tournament=tournament %}DipTV - {{ tournament }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <h1>{{ tournament }}</h1>
