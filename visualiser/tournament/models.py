@@ -1361,7 +1361,11 @@ class Game(models.Model):
             if t.is_finished():
                 scores = t.scores(True)
                 for p in t.tournamentplayer_set.all():
-                    p.score = scores[p.player]
+                    try:
+                        p.score = scores[p.player]
+                    except KeyError:
+                        # Player was added to the tournament but didn't play
+                        pass
                     p.save()
 
     def get_absolute_url(self):
