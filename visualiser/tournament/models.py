@@ -940,6 +940,8 @@ class TournamentPlayer(models.Model):
 
     class Meta:
         ordering = ['player']
+        # Each player can only be in each tournament once
+        unique_together = ('player', 'tournament')
 
     def __unicode__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
