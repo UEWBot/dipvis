@@ -1078,9 +1078,38 @@ class Round(models.Model):
         This is the latest news for every game in the round.
         """
         results = []
+        # Include who has done best in the round (so far)
+        the_scores = self.scores()
+        max_score = max(the_scores.values())
+        winners = [k for k,v in the_scores.items() if v == max_score]
+        if self.is_finished():
+            done_str = u'Final'
+        else:
+            done_str = u'Current'
+        player_str = ', '.join([str(w) for w in winners])
+        results.append(_(u'%(done)s top score for round %(r_num)d is %(score).2f for %(players)s.') % {'done': done_str,
+                                                                                                       'r_num': self.number(),
+                                                                                                       'score': max_score,
+                                                                                                       'players': player_str})
         # Get the news for every game in the round
+        done_games = 0
         for g in self.game_set.all():
+            if g.is_finished:
+                done_games += 1
             results += g.news(include_game_name=True)
+        # Note if the round has finished
+        if self.is_finished:
+            results.append(_(u'Round %(r_num)d has ended.') % {'r_num': self.number()})
+        else:
+            # Otherwise, add a count of completed games
+            if done_games == 0:
+                done_str = u'None'
+            else:
+                done_str = u'%d' % done_games
+            results.append(_(u'%(done)s of the %(total_num)d games in round %(r_num)d have ended.') % {'done': done_str,
+                                                                                                       'r_num': self.number(),
+                                                                                                       'total_num': self.game_set.count()})
+            # TODO Add time played in the round so far (difficult to internationalise ?)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
