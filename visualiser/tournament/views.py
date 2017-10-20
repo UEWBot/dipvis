@@ -70,7 +70,7 @@ class GameScoreForm(forms.Form):
 
 class RoundPlayerChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return obj.player.__unicode__()
+        return obj.player.__str__()
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
@@ -255,7 +255,7 @@ class BasePlayerRoundFormset(BaseFormSet):
 
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return obj.player.__unicode__()
+        return obj.player.__str__()
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""

@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db.models import Max, Min, Sum, Q
 from django.utils.translation import ugettext as _
+from django.utils.encoding import python_2_unicode_compatible
 from django.utils import timezone
 from django.contrib.auth.models import User
 
@@ -514,6 +515,7 @@ def player_picture_location(instance, filename):
     # Stuff them all into one directory
     return 'player_pictures/%s' % filename
 
+@python_2_unicode_compatible
 class GreatPower(models.Model):
     """
     One of the seven great powers that can be played
@@ -525,9 +527,10 @@ class GreatPower(models.Model):
     class Meta:
         ordering = ['name']
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
+@python_2_unicode_compatible
 class GameSet(models.Model):
     """
     A Diplomacy board game set.
@@ -538,9 +541,10 @@ class GameSet(models.Model):
     name = models.CharField(max_length=20, unique=True)
     initial_image = models.ImageField(upload_to=game_image_location)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
+@python_2_unicode_compatible
 class SetPower(models.Model):
     """
     A single GreatPower in a given GameSet.
@@ -552,7 +556,7 @@ class SetPower(models.Model):
     class Meta:
         unique_together = ('the_set', 'power')
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u'%(power)s in %(the_set)s' % {'power': self.power.name, 'the_set': self.the_set.name})
 
 def add_player_bg(player):
@@ -669,6 +673,7 @@ def position_str(position):
         result += u'th'
     return _(result)
 
+@python_2_unicode_compatible
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -685,7 +690,7 @@ class Player(models.Model):
     class Meta:
         ordering = ['last_name', 'first_name']
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s %s' % (self.first_name, self.last_name)
 
     def save(self, *args, **kwargs):
@@ -829,6 +834,7 @@ class Player(models.Model):
     def get_absolute_url(self):
         return reverse('player_detail', args=[str(self.id)])
 
+@python_2_unicode_compatible
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -978,9 +984,10 @@ class Tournament(models.Model):
     def get_absolute_url(self):
         return reverse('tournament_detail', args=[str(self.id)])
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
+@python_2_unicode_compatible
 class TournamentPlayer(models.Model):
     """
     One player in a tournament
@@ -994,7 +1001,7 @@ class TournamentPlayer(models.Model):
         # Each player can only be in each tournament once
         unique_together = ('player', 'tournament')
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
 
     def save(self, *args, **kwargs):
@@ -1004,6 +1011,7 @@ class TournamentPlayer(models.Model):
         if is_new:
             add_player_bg(self.player)
 
+@python_2_unicode_compatible
 class Round(models.Model):
     """
     A single round of a Tournament
@@ -1106,9 +1114,10 @@ class Round(models.Model):
         return reverse('round_detail',
                        args=[str(self.tournament.id), str(self.number())])
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number()}
 
+@python_2_unicode_compatible
 class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
@@ -1436,9 +1445,10 @@ class Game(models.Model):
         return reverse('game_detail',
                        args=[str(self.the_round.tournament.id), self.name])
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
+@python_2_unicode_compatible
 class DrawProposal(models.Model):
     """
     A single draw or concession proposal in a game
@@ -1520,9 +1530,10 @@ class DrawProposal(models.Model):
             self.game.is_finished = True
             self.game.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
+@python_2_unicode_compatible
 class RoundPlayer(models.Model):
     """
     A person who played a round in a tournament
@@ -1541,9 +1552,10 @@ class RoundPlayer(models.Model):
         if not tp:
             raise ValidationError(_(u'Player is not yet in the tournament'))
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u'%(player)s in %(round)s') % {'player': self.player, 'round': self.the_round}
 
+@python_2_unicode_compatible
 class GamePlayer(models.Model):
     """
     A person who played a Great Power in a Game
@@ -1634,9 +1646,10 @@ class GamePlayer(models.Model):
                                                         'year': other.first_year})
         # TODO Ensure no gaps - may have to be done elsewhere
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
 
+@python_2_unicode_compatible
 class GameImage(models.Model):
     """
     An image depicting a Game at a certain point.
@@ -1666,9 +1679,10 @@ class GameImage(models.Model):
     def get_absolute_url(self):
         return reverse('game_image', args=[str(self.game.the_round.tournament.id), self.game.name, self.turn_str()])
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u'%(game)s %(turn)s image') % {'game': self.game, 'turn': self.turn_str()}
 
+@python_2_unicode_compatible
 class CentreCount(models.Model):
     """
     The number of centres owned by one power at the end of a given game year
@@ -1712,9 +1726,10 @@ class CentreCount(models.Model):
             self.game.is_finished = True
             self.game.save()
 
-    def __unicode__(self):
+    def __str__(self):
         return u'%s %d %s %d' % (self.game, self.year, _(self.power.abbreviation), self.count)
 
+@python_2_unicode_compatible
 class PlayerRanking(models.Model):
     """
     A tournament ranking for a player.
@@ -1727,7 +1742,7 @@ class PlayerRanking(models.Model):
     date = models.DateField(blank=True, null=True)
     title = models.CharField(max_length=30, blank=True)
 
-    def __unicode__(self):
+    def __str__(self):
         pos = position_str(self.position)
         s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
                                                                     'position': pos,
@@ -1736,6 +1751,7 @@ class PlayerRanking(models.Model):
             s += _(u' in %(year)d') % {'year': self.year}
         return s
 
+@python_2_unicode_compatible
 class PlayerGameResult(models.Model):
     """
     One player's result for a tournament game.
@@ -1756,7 +1772,7 @@ class PlayerGameResult(models.Model):
     class Meta:
         unique_together = ('tournament_name', 'game_name', 'player', 'power')
 
-    def __unicode__(self):
+    def __str__(self):
         return _(u'%(player)s played %(power)s in %(game)s') % {'player': self.player,
                                                                 'power': self.power,
                                                                 'game': self.game_name}
