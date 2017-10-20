@@ -862,7 +862,7 @@ class Tournament(models.Model):
         """
         Returns the scores for everyone who played in the tournament.
         """
-        # If the tournament is over, report the stored scores unless we're told to recaclulate
+        # If the tournament is over, report the stored scores unless we're told to recalculate
         if self.is_finished() and not force_recalculation:
             retval = {}
             for p in self.tournamentplayer_set.all():
@@ -1037,7 +1037,7 @@ class Round(models.Model):
         """
         Returns the scores for everyone who played in the round.
         """
-        # If the round is over, report the stored scores unless we're told to recaclulate
+        # If the round is over, report the stored scores unless we're told to recalculate
         if self.is_finished() and not force_recalculation:
             retval = {}
             for p in self.roundplayer_set.all():
