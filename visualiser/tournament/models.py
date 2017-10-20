@@ -924,9 +924,8 @@ class Tournament(models.Model):
         results = []
         current_round = self.current_round()
         if current_round:
-            # TODO This should probably just call through to the current round's news() method
-            for g in current_round.game_set.all():
-                results += g.news(include_game_name=True)
+            # Get the news for the current round
+            results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
         elif self.is_finished():
             scores_reported = 0
@@ -1064,6 +1063,19 @@ class Round(models.Model):
                 return count
             count += 1
         assert 0, u"Round doesn't exist within its own tournament"
+
+    def news(self):
+        """
+        Returns a list of news strings for the round.
+        This is the latest news for every game in the round.
+        """
+        results = []
+        # Get the news for every game in the round
+        for g in self.game_set.all():
+            results += g.news(include_game_name=True)
+        # Shuffle the resulting list
+        random.shuffle(results)
+        return results
 
     def background(self, mask=MASK_ALL_BG):
         """
