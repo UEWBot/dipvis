@@ -25,6 +25,7 @@ from django.contrib.auth.models import User
 from tournament.background import *
 
 import urllib.request, random, os
+from operator import attrgetter
 
 SPRING = 'S'
 FALL = 'F'
@@ -878,6 +879,32 @@ class Tournament(models.Model):
         # This allows this function to be used like QuerySet.get()
         raise Round.DoesNotExist
 
+    def best_countries(self):
+        """
+        Returns a dict, indexed by GreatPower, of lists of the GamePlayers with the best scores for each country
+        """
+        retval = {}
+        # Populate retval. Dict, keyed by GreatPower, of lists of GamePlayers
+        for r in self.round_set.all():
+            for g in r.game_set.all():
+                for gp in g.gameplayer_set.all():
+                    try:
+                        retval[gp.power].append(gp)
+                    except KeyError:
+                        retval[gp.power] = [gp]
+        for power in retval.keys():
+            # Find the best score for this power in the whole tournament
+            # First, sort by descending score
+            retval[power].sort(key=attrgetter('score'), reverse=True)
+            best = retval[power][0].score
+            # Throw away all but the top scores
+            retval[power] = [gp for gp in retval[power] if gp.score == best]
+            # Do we need to resolve a tie ?
+            if len(retval[power]) > 1:
+                # TODO Resolve the tie
+                pass
+        return retval
+
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of background strings for the tournament
@@ -895,11 +922,36 @@ class Tournament(models.Model):
         Returns a list of news strings for the tournament
         """
         results = []
-        # TODO This should probably just call through to the current round's news() method
         current_round = self.current_round()
         if current_round:
+            # TODO This should probably just call through to the current round's news() method
             for g in current_round.game_set.all():
                 results += g.news(include_game_name=True)
+        # If the tournament is over, just report the top three players, plus best countries
+        elif self.is_finished():
+            scores_reported = 0
+            # TODO There are potentially ties here
+            for p in self.tournamentplayer_set.all().order_by('-score'):
+                scores_reported += 1
+                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f') % {'player': p.player.__unicode__(),
+                                                                                           'pos':  position_str(scores_reported),
+                                                                                           'score':  p.score})
+                if scores_reported == 3:
+                    break
+            # Add best countries
+            for power, gps in self.best_countries().items():
+                if len(gps) == 1:
+                    gp = gps[0]
+                    sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d') % {'player': gp.player.__unicode__(),
+          'country': power.name,
+          'dots': sc.count,
+          'score': gp.score,
+          'game': gp.game.name,
+          'round': gp.game.the_round.number()})
+                else:
+                    # TODO Tie for best power
+                    pass
         else:
             # TODO list top few scores in previous round, perhaps ?
             pass
