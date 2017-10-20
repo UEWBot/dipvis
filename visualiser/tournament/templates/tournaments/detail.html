@@ -13,10 +13,16 @@
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
-  <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
+  {% if tournament.is_finished %}
+    <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Final Standings" %}</a></li>
+  {% else %}
+    <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
+  {% endif %}
   <li><a href="{% url 'tournament_news' tournament.id %}">{% trans "News" %}</a></li>
   <li><a href="{% url 'tournament_background' tournament.id %}">{% trans "Background" %}</a></li>
-  <li><a href="{% url 'tournament_round' tournament.id %}">{% trans "Current Round" %}</a></li>
+  {% if not tournament.is_finished %}
+    <li><a href="{% url 'tournament_round' tournament.id %}">{% trans "Current Round" %}</a></li>
+  {% endif %}
   <li><a href="{% url 'round_index' tournament.id %}">{% trans "Round Index" %}</a></li>
 </ul>
 {% if user.is_active %}

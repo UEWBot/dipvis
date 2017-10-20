@@ -4,7 +4,11 @@
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Scores{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Current Scores" %}</h1>
+{% if tournament.is_finished %}
+  <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Final Scores" %}</h1>
+{% else %}
+  <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Current Scores" %}</h1>
+{% endif %}
 
 <table class="form">
   <thead><tr>
