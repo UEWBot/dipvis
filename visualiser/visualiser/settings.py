@@ -68,6 +68,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tournament',
+    'django_extensions',
 )
 
 MIDDLEWARE_CLASSES = (
