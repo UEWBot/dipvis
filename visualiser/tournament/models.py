@@ -928,15 +928,14 @@ class Tournament(models.Model):
         Returns a list of news strings for the tournament
         """
         results = []
+        include_leader = False
         current_round = self.current_round()
         if current_round:
             # Include who is leading the tournament
-            the_scores = self.scores()
-            max_score = max(the_scores.values())
-            winners = [k for k,v in the_scores.items() if v == max_score]
-            player_str = ', '.join(winners)
-            results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
-                                                                                                                          'players': player_str})
+            include_leader = True
+            # And which round is currently being played
+            results.append(_(u'Round %(r_num)d of %(rounds)d is currently being played.') % {'r_num': current_round.number(),
+                                                                                             'rounds': self.round_set.count()})
             # Get the news for the current round
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
@@ -977,8 +976,31 @@ class Tournament(models.Model):
                    'dots': best_dots,
                    'score': gps[0].score})
         else:
-            # TODO list top few scores in previous round, perhaps ?
-            pass
+            # which rounds have been played ?
+            played_rounds = len([r for r in self.round_set.all() if r.is_finished()])
+            if played_rounds == 0:
+                results.append(_(u'Tournament has yet to start.'))
+            else:
+                if played_rounds == 1:
+                    have_str = u'has'
+                else:
+                    have_str = u'have'
+                results.append(_(u'%(r_num)d of %(rounds)d rounds %(have)s been played.') % {'r_num': played_rounds,
+                                                                                             'rounds': self.round_set.count(),
+                                                                                             'have': have_str})
+                # Include who is leading the tournament
+                include_leader = True
+        if include_leader:
+            the_scores = self.scores()
+            max_score = max(the_scores.values())
+            winners = [k for k,v in the_scores.items() if v == max_score]
+            player_str = ', '.join(winners)
+            results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
+                                                                                                                          'players': player_str})
+            # Include the top score from each previous round (if any)
+            for r in self.round_set.all():
+                if r.is_finished():
+                    results.append(r.leader_str())
         # Shuffle the resulting list
         random.shuffle(results)
         return results
