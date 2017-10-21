@@ -930,6 +930,13 @@ class Tournament(models.Model):
         results = []
         current_round = self.current_round()
         if current_round:
+            # Include who is leading the tournament
+            the_scores = self.scores()
+            max_score = max(the_scores.values())
+            winners = [k for k,v in the_scores.items() if v == max_score]
+            player_str = ', '.join(winners)
+            results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
+                                                                                                                          'players': player_str})
             # Get the news for the current round
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries

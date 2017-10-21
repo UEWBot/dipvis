@@ -405,7 +405,7 @@ class TournamentModelTests(TestCase):
 
     # Tournament.news()
     def test_tournament_news(self):
-        t = Tournament.objects.get(name='t1')
+        t = Tournament.objects.get(name='t3')
         # TODO Validate results
         t.news()
 
