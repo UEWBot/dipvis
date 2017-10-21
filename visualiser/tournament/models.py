@@ -945,6 +945,14 @@ class Tournament(models.Model):
                     break
             # Add best countries
             for power, gps in self.best_countries().items():
+                if len(gps) > 1:
+                    # Multiple people have the same best score as this country. Compare centrecounts
+                    best_dots = 0
+                    for gp in gps:
+                        sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                        best_dots = max([best_dots, sc.count])
+                    winners = [gp for gp in gps if gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count == best_dots]
+                    gps = winners
                 if len(gps) == 1:
                     gp = gps[0]
                     sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
@@ -955,8 +963,12 @@ class Tournament(models.Model):
           'game': gp.game.name,
           'round': gp.game.the_round.number()})
                 else:
-                    # TODO Tie for best power
-                    pass
+                    # Tie for best power
+                    winner_str = ', '.join([str(gp.player) for gp in gps])
+                    results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.') % {'country': power.name,
+                   'winner_str': winner_str,
+                   'dots': best_dots,
+                   'score': gps[0].score})
         else:
             # TODO list top few scores in previous round, perhaps ?
             pass
