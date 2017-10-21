@@ -1072,13 +1072,10 @@ class Round(models.Model):
             count += 1
         assert 0, u"Round doesn't exist within its own tournament"
 
-    def news(self):
+    def leader_str(self):
         """
-        Returns a list of news strings for the round.
-        This is the latest news for every game in the round.
+        Returns a news string detailing the person with the best score for the round.
         """
-        results = []
-        # Include who has done best in the round (so far)
         the_scores = self.scores()
         max_score = max(the_scores.values())
         winners = [k for k,v in the_scores.items() if v == max_score]
@@ -1087,10 +1084,19 @@ class Round(models.Model):
         else:
             done_str = u'Current'
         player_str = ', '.join([str(w) for w in winners])
-        results.append(_(u'%(done)s top score for round %(r_num)d is %(score).2f for %(players)s.') % {'done': done_str,
+        return _(u'%(done)s top score for round %(r_num)d is %(score).2f for %(players)s.') % {'done': done_str,
                                                                                                        'r_num': self.number(),
                                                                                                        'score': max_score,
-                                                                                                       'players': player_str})
+                                                                                                       'players': player_str}
+
+    def news(self):
+        """
+        Returns a list of news strings for the round.
+        This is the latest news for every game in the round.
+        """
+        results = []
+        # Include who has done best in the round (so far)
+        results.append(self.leader_str())
         # Get the news for every game in the round
         done_games = 0
         for g in self.game_set.all():
