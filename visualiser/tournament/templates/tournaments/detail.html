@@ -18,6 +18,7 @@
   {% else %}
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
   {% endif %}
+  <li><a href="{% url 'tournament_game_results' tournament.id %}">{% trans "Game Summary" %}</a></li>
   <li><a href="{% url 'tournament_news' tournament.id %}">{% trans "News" %}</a></li>
   <li><a href="{% url 'tournament_background' tournament.id %}">{% trans "Background" %}</a></li>
   {% if not tournament.is_finished %}

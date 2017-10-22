@@ -413,6 +413,103 @@ def tournament_scores(request, tournament_id, refresh=False):
         context['redirect_url'] = reverse('tournament_scores_refresh', args=(tournament_id,))
     return render(request, 'tournaments/scores.html', context)
 
+def tournament_game_results(request, tournament_id, refresh=False):
+    """Display the results of all the games of a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name')
+    rds = t.round_set.all()
+    rounds = [r.number() for r in rds]
+    # Grab the games for each round
+    round_games = {}
+    for r in rds:
+        round_games[r] = r.game_set.all()
+    # Construct a list of lists with [player name, round 1 game results, ..., round n game results]
+    results = []
+    for p in tps:
+        # All the games (in every tournament) this player has played in
+        gps = p.player.gameplayer_set.all()
+        rs = []
+        for r in rds:
+            gs = ''
+            for g in round_games[r]:
+                # Is this game one that this player played in?
+                try:
+                    gp = gps.filter(game=g).get()
+                    # New line if they played multiple games in this round
+                    if len(gs):
+                        gs += '<br>'
+                    # Final year of the game as a whole
+                    final_year = g.centrecount_set.order_by('-year').first().year
+                    # Final CentreCount for this player in this game
+                    final_sc = g.centrecount_set.filter(power=gp.power).order_by('-year').first()
+                    if final_sc.count == 0:
+                        # We need to look back to find the first CentreCount with no dots
+                        final_sc = g.centrecount_set.filter(power=gp.power).filter(count=0).order_by('year').first()
+                        gs += _('Eliminated as %(power)s in %(year)d') % {'year': final_sc.year,
+                                                                          'power': gp.power.name}
+                    else:
+                        if final_sc.count == 1:
+                            centre_str = _('centre')
+                        else:
+                            centre_str = _('centres')
+                        # Was the game soloed ?
+                        soloer = g.soloer()
+                        if gp == soloer:
+                            gs += _('Solo as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_year,
+                                                                                                  'power': gp.power.name,
+                                                                                                  'dot_str': centre_str,
+                                                                                                  'dots': final_sc.count}
+                        elif soloer is not None:
+                            gs += _('Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_sc.year,
+                                                                                                  'power': gp.power.name,
+                                                                                                  'dot_str': centre_str,
+                                                                                                  'dots': final_sc.count}
+                        # Did a draw vote pass ?
+                        res = g.passed_draw()
+                        if res:
+                            if gp.power in res.powers():
+                                gs += _('%(n)d-way draw as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'n': res.draw_size(),
+                                                                                                                'power': gp.power.name,
+                                                                                                                'dots': final_sc.count,
+                                                                                                                'dot_str': centre_str,
+                                                                                                                'year': final_year}
+                            else:
+                                gs += _('Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_sc.year,
+                                                                                                      'power': gp.power.name,
+                                                                                                      'dot_str': centre_str,
+                                                                                                      'dots': final_sc.count}
+                        else:
+                            # Game is either ongoing or reached a timed end
+                            gs += _('%(dots)d %(dot_str)s as %(power)s in %(year)d') % {'year': final_sc.year,
+                                                                                        'power': gp.power.name,
+                                                                                        'dot_str': centre_str,
+                                                                                        'dots': final_sc.count}
+                    # game name and link
+                    gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name, 'url': g.get_absolute_url()}
+                    # Additional info
+                    if g.is_top_board:
+                        gs += _(' [Top Board]')
+                    if not g.is_finished:
+                        gs += _(' [Ongoing]')
+                except GamePlayer.DoesNotExist:
+                    pass
+            rs.append(gs)
+        results.append(['<a href=%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs)
+    # Add one final row showing whether each round is ongoing or not
+    row = ['']
+    for r in rds:
+        if r.is_finished():
+            row.append(_(u'Final'))
+        else:
+            row.append('')
+    results.append(row)
+    context = {'tournament': t, 'scores': results, 'rounds': rounds}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = 300
+        context['redirect_url'] = reverse('tournament_game_results_refresh', args=(tournament_id,))
+    return render(request, 'tournaments/game_results.html', context)
+
 def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
