@@ -1452,7 +1452,7 @@ class Game(models.Model):
             first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': player_dict[scs.power][0],
                                                                    'power': _(scs.power.abbreviation)} for scs in list(toppers)])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
-                                                                                             'top': scs.count,
+                                                                                             'top': toppers[0].count,
                                                                                              'player': first_str}
         # Then it seems to be ongoing
         return None
