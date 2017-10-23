@@ -55,15 +55,23 @@ TOTAL_SCS = 34
 WINNING_SCS = ((TOTAL_SCS/2)+1)
 
 # These happen to co-incide with the coding used by the WDD
+WIN = 'W'
+DRAW_2 = 'D2'
+DRAW_3 = 'D3'
+DRAW_4 = 'D4'
+DRAW_5 = 'D5'
+DRAW_6 = 'D6'
+DRAW_7 = 'D7'
+LOSS = 'L'
 GAME_RESULT = (
-    ('W', _('Win')),
-    ('D2', _('2-way draw')),
-    ('D3', _('3-way draw')),
-    ('D4', _('4-way draw')),
-    ('D5', _('5-way draw')),
-    ('D6', _('6-way draw')),
-    ('D7', _('7-way draw')),
-    ('L', _('Loss')),
+    (WIN, _('Win')),
+    (DRAW_2, _('2-way draw')),
+    (DRAW_3, _('3-way draw')),
+    (DRAW_4, _('4-way draw')),
+    (DRAW_5, _('5-way draw')),
+    (DRAW_6, _('6-way draw')),
+    (DRAW_7, _('7-way draw')),
+    (LOSS, _('Loss')),
 )
 
 # Power assignment methods
@@ -809,7 +817,7 @@ class Player(models.Model):
                 results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.') % {'name': self,
                                                                                                    'power': c_str})
         if (mask & MASK_BOARD_TOP_COUNT) != 0:
-            query = Q(result='W') | Q(position=1)
+            query = Q(result=WIN) | Q(position=1)
             victories_set = results_set.filter(query)
             board_tops = victories_set.count()
             if board_tops > 0:
