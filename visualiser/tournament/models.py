@@ -662,6 +662,61 @@ def add_player_bg(player):
                 pass
             i.save()
 
+def add_local_player_bg(player):
+    """
+    Add background for the player from earlier tournaments in the system,
+    unless they have already been added (e.g. because those results are
+    in the WDD).
+    """
+    # TODO Should this just be part of add_player_bg()?
+    for t in Tournament.objects.all():
+        # Not interested in ongoing tournaments
+        if not t.is_finished():
+            continue
+        # Get the corresponding TournamentPlayer (if any)
+        try:
+            tp = t.tournamentplayer_set.filter(player=player).get()
+        except TournamentPlayer.DoesNotExist:
+            continue
+        # Add a PlayerRanking
+        i, created = PlayerRanking.objects.get_or_create(player=player,
+                                                         tournament=t.name,
+                                                         position=tp.position(),
+                                                         year=t.start_date.year)
+        # Ensure that the date is set
+        i.date = t.start_date
+        i.save()
+        # Also add PlayerGameResult for each board played
+        for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).all():
+            pos = gp.game.positions()
+            i,created = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
+                                                               game_name=gp.game.name,
+                                                               player=player,
+                                                               power=gp.power,
+                                                               date = gp.game.the_round.start.date(),
+                                                               position = pos[gp.power])
+            # Set additional info
+            i.score = gp.score
+            i.year_eliminated = gp.elimination_year()
+            i.final_sc_count = gp.game.centrecount_set.filter(power=gp.power).order_by('-year').first().count
+            s = gp.game.soloer()
+            d = gp.game.passed_draw()
+            if s:
+                if s == gp:
+                    i.result = WIN
+                else:
+                    i.result = LOSS
+            elif d:
+                if d.power_is_part(gp.power):
+                    i.result = 'D%d' % d.draw_size()
+                else:
+                    i.result = LOSS
+            else:
+                i.result = DRAW_7
+            # TODO This is broken if there were replacement players, but so is scoring...
+            i.position_equals = len([v for v in pos.values() if v == pos[gp.power]])
+            i.save()
+
 def position_str(position):
     """
     Returns the string version of the position e.g. '1st', '12th'.
@@ -704,6 +759,7 @@ class Player(models.Model):
     def save(self, *args, **kwargs):
         super(Player, self).save(*args, **kwargs)
         add_player_bg(self)
+        add_local_player_bg(self)
 
     def wdd_name(self):
         """Name for this player in the World Diplomacy Database."""
@@ -1079,6 +1135,7 @@ class TournamentPlayer(models.Model):
         # Update background info when a player is added to the Tournament (only)
         if is_new:
             add_player_bg(self.player)
+            add_local_player_bg(self.player)
 
 @python_2_unicode_compatible
 class Round(models.Model):
