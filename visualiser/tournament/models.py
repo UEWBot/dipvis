@@ -1597,6 +1597,26 @@ class DrawProposal(models.Model):
                     retval.append(GreatPower.objects.get(pk=value))
         return retval
 
+    def power_is_part(self, power):
+        """
+        Returns a Boolean indicating whether the specified power is included or not.
+        """
+        if self.power_1 == power:
+            return True
+        if self.power_2 == power:
+            return True
+        if self.power_3 == power:
+            return True
+        if self.power_4 == power:
+            return True
+        if self.power_5 == power:
+            return True
+        if self.power_6 == power:
+            return True
+        if self.power_7 == power:
+            return True
+        return False
+
     def clean(self):
         # No skipping powers
         found_null = False

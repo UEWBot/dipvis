@@ -788,6 +788,32 @@ class TournamentModelTests(TestCase):
                           power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
         self.assertEqual(len(dp.powers()), 7)
 
+    # DrawProposal.power_is_part()
+    def test_draw_proposal_power_is_part_one(self):
+        g = Game.objects.get(pk=1)
+        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
+                          power_1=self.austria)
+        self.assertEqual(dp.power_is_part(self.austria), True)
+        self.assertEqual(dp.power_is_part(self.england), False)
+        self.assertEqual(dp.power_is_part(self.france), False)
+        self.assertEqual(dp.power_is_part(self.germany), False)
+        self.assertEqual(dp.power_is_part(self.italy), False)
+        self.assertEqual(dp.power_is_part(self.russia), False)
+        self.assertEqual(dp.power_is_part(self.turkey), False)
+
+    def test_draw_proposal_power_is_part_all(self):
+        g = Game.objects.get(pk=1)
+        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
+                          power_1=self.austria, power_2=self.england, power_3=self.france,
+                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        self.assertEqual(dp.power_is_part(self.austria), True)
+        self.assertEqual(dp.power_is_part(self.england), True)
+        self.assertEqual(dp.power_is_part(self.france), True)
+        self.assertEqual(dp.power_is_part(self.germany), True)
+        self.assertEqual(dp.power_is_part(self.italy), True)
+        self.assertEqual(dp.power_is_part(self.russia), True)
+        self.assertEqual(dp.power_is_part(self.turkey), True)
+
     # DrawProposal.clean()
     def test_draw_proposal_clean_with_duplicates(self):
         g = Game.objects.get(pk=1)
