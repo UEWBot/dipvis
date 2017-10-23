@@ -123,6 +123,7 @@ class TournamentModelTests(TestCase):
 
         # For t3 (the finished tournament), we want TournamentPlayers and RoundPlayers
         # Unfortunately, adding these slows down the test dramatically
+        # due to adding background?
         tp1 = TournamentPlayer.objects.create(player=Player.objects.get(pk=1), tournament=t3, score=147.3)
         rp1 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r31, score=100.0)
         rp2 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r32, score=47.3)
