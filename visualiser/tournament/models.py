@@ -26,7 +26,7 @@ from django.contrib.auth.models import User
 from tournament.background import *
 
 import urllib.request, random, os
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 
 SPRING = 'S'
 FALL = 'F'
@@ -869,6 +869,7 @@ class Tournament(models.Model):
     def scores(self, force_recalculation=False):
         """
         Returns the scores for everyone who played in the tournament.
+        Dict, keyed by player, of floats.
         """
         # If the tournament is over, report the stored scores unless we're told to recalculate
         if self.is_finished() and not force_recalculation:
@@ -882,6 +883,19 @@ class Tournament(models.Model):
         if not system:
             raise InvalidScoringSystem(self.tournament_scoring_system)
         return system.scores(RoundPlayer.objects.filter(the_round__tournament=self))
+
+    def positions(self):
+        """
+        Returns the positions of all the players.
+        Dict, keyed by player, of integer rankings (1 for first place, 2 for second place, etc)
+        """
+        result = {}
+        last_score = None
+        for i,(k,v) in enumerate(sorted([(k,v) for k,v in self.scores().items()], key=itemgetter(1), reverse=True)):
+            if v != last_score:
+                place, last_score = i + 1, v
+            result[k] = place
+        return result
 
     def round_numbered(self, number):
         """
@@ -1049,6 +1063,12 @@ class TournamentPlayer(models.Model):
         ordering = ['player']
         # Each player can only be in each tournament once
         unique_together = ('player', 'tournament')
+
+    def position(self):
+        """
+        Where is the player (currently) ranked overall in the tournament?
+        """
+        return self.tournament.positions()[self.player]
 
     def __str__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
@@ -1244,6 +1264,19 @@ class Game(models.Model):
         if not system:
             raise InvalidScoringSystem(self.the_round.scoring_system)
         return system.scores(self.centrecount_set.all())
+
+    def positions(self):
+        """
+        Returns the positions of all the powers.
+        Dict, keyed by power id, of integer rankings (1 for first place, 2 for second place, etc)
+        """
+        result = {}
+        last_score = None
+        for i,(k,v) in enumerate(sorted([(k,v) for k,v in self.scores().items()], key=itemgetter(1), reverse=True)):
+            if v != last_score:
+                place, last_score = i + 1, v
+            result[k] = place
+        return result
 
     def is_dias(self):
         """

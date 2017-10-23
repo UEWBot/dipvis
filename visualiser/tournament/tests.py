@@ -391,10 +391,20 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.scores(True)
 
-    # Tournament.background()
-    def test_tournament_background(self):
+    # Tournament.positions()
+    def test_tournament_positions_finished(self):
+        t = Tournament.objects.get(name='t3')
+        # TODO Validate results
+        t.positions()
+
+    def test_tournament_positions_unfinished(self):
         t = Tournament.objects.get(name='t1')
-        print(Player.objects.filter(tournamentplayer__tournament = t).all())
+        # TODO Validate results
+        t.positions()
+
+    # Tournament.background()
+    def test_tournament_background_without_players(self):
+        t = Tournament.objects.get(name='t1')
         # TODO Validate results
         t.background()
 
@@ -408,6 +418,12 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         # TODO Validate results
         t.news()
+
+    # TournamentPlayer.position()
+    def test_tournamentplayer_position_finished(self):
+        t = Tournament.objects.get(name='t3')
+        tp = t.tournamentplayer_set.filter(player__pk=1).get()
+        self.assertEquals(tp.position(), 1)
 
     # Round.number()
     def test_round_number_11(self):
@@ -708,6 +724,12 @@ class TournamentModelTests(TestCase):
         self.assertIsNone(g.result_str())
 
     # TODO Add tests of drawn game, game that reached fixed endpoint, and game with failed draw proposal
+
+    # Game.positions()
+    def test_game_positions(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.positions()
 
     # Game.news()
     def test_game_news(self):
