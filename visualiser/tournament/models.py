@@ -1711,6 +1711,23 @@ class GamePlayer(models.Model):
     # TODO Add validators
     power_choice_order = models.PositiveSmallIntegerField(default=1)
 
+    def elimination_year(self):
+        """
+        Year in which the player was eliminated, or None.
+        """
+        sc = self.game.centrecount_set.filter(power=self.power).filter(count=0).order_by('year').first()
+        if not sc:
+            return None
+        e_year = sc.year
+        # The power was eliminated. Was this player playing it at the time?
+        if not self.last_year:
+            return e_year
+        if e_year > self.last_year:
+            return None
+        elif e_year == self.last_year and self.last_season == SPRING:
+            return None
+        return e_year
+
     def clean(self):
         # Player should already be in the tournament
         t = self.game.the_round.tournament

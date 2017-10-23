@@ -872,6 +872,21 @@ class TournamentModelTests(TestCase):
         rp = RoundPlayer(player=p, the_round=r)
         self.assertRaises(ValidationError, rp.clean)
 
+    # GamePlayer.elimination_year()
+    def test_gameplayer_elimination_year_replacement(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.filter(power=self.austria).first()
+        self.assertEquals(gp.elimination_year(), None)
+        gp = g.gameplayer_set.filter(power=self.austria).last()
+        self.assertEquals(gp.elimination_year(), 1904)
+
+    def test_gameplayer_elimination_year_not_eliminated(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.get(power=self.england)
+        self.assertEquals(gp.elimination_year(), None)
+
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
