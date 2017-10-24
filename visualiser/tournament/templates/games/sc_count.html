@@ -4,7 +4,7 @@
 {% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} SC Chart{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with game=game %}Game {{ game }} SC Chart{% endblocktrans %}</h1>
+<h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> SC Chart{% endblocktrans %}</h1>
 <table class="form">
    <thead><tr>
        <th rowspan=2></th>
