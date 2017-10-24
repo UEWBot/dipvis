@@ -8,7 +8,7 @@
 {% if player.picture %}
   <img src="{{ player.picture.url }}">
 {% endif %}
-<p>{% trans "WDD Id:" %} {% if p.wdd_player_id %}<a href="{{ player.wdd_url }}">{{ player.wdd_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
+<p>{% trans "WDD Id:" %} {% if player.wdd_player_id %}<a href="{{ player.wdd_url }}">{{ player.wdd_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
 <ul>
   {% for t in player.tournamentplayer_set.all %}
     <li><a href="{{ t.tournament.get_absolute_url }}">{{ t.tournament }}</a> {{ t.score }}</li>
