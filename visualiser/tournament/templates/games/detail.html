@@ -6,10 +6,10 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with game=game.name %}Game {{ game }} Views{% endblocktrans %}</h1>
 
-{% if game.is_top_board %}<p>{% trans "Top Board for the tournament" %}</p>{% endif %}
-
-{% with result=game.result_str %}{% if result %}<p>{{ result_str }}.</p>{% endif %}{% endwith %}
-
+{% if game.is_top_board %}<p>{% trans "Top Board for the tournament" %}</p>
+{% endif %}
+{% with result=game.result_str %}{% if result %}<p>{{ result }}.</p>
+{% endif %}{% endwith %}
 <p>{% trans "Start time:" %} {{ game.started_at }}</p>
 
 <p>{% if game.is_finished %}{% trans "Game is over." %}
