@@ -494,7 +494,7 @@ def tournament_game_results(request, tournament_id, refresh=False):
                 except GamePlayer.DoesNotExist:
                     pass
             rs.append(gs)
-        results.append(['<a href=%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs)
+        results.append(['<a href=%s>%s</a>' % (p.player.get_absolute_url(), p.player)] + rs)
     # Add one final row showing whether each round is ongoing or not
     row = ['']
     for r in rds:
