@@ -8,13 +8,11 @@
 
 {% if game.is_top_board %}<p>{% trans "Top Board for the tournament" %}</p>
 {% endif %}
-{% with result=game.result_str %}{% if result %}<p>{{ result }}.</p>
-{% endif %}{% endwith %}
-<p>{% trans "Start time:" %} {{ game.started_at }}</p>
-
-<p>{% if game.is_finished %}{% trans "Game is over." %}
+<p>{% with result=game.result_str %}{% if result %}{{ result }}.
    {% else %}{% trans "Game is ongoing." %}
-   {% endif %}</p>
+   {% endif %}{% endwith %}</p>
+
+<p>{% trans "Start time:" %} {{ game.started_at }}</p>
 
 <p>{% blocktrans with year=game.final_year %}Last year played is {{year}}.{% endblocktrans %}</p>
 
