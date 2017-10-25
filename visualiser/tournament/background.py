@@ -325,3 +325,54 @@ class Background():
                 results.append(result)
         return results
 
+    def awards(self):
+        """
+        Returns a dict, keyed by power name or 'Awards' of arrays of dicts.
+        Keys for the inner dict are always 'Date', 'Country', 'Tournament', and 'Type'
+        plus either 'SCs' and 'Score' (for best country awards) or 'Name' (for other awards)
+        """
+        url = WDD_BASE_URL + 'player_fiche3.php?id_player=%d' % self.wdd_id
+        page = urllib.request.urlopen(url)
+        soup = BeautifulSoup(page.read())
+        results = {}
+        for table in soup.find_all('table', width='65%'):
+            for th in table.find_all('th'):
+                if th.string == 'List of won awards':
+                    awards_table = True
+                elif th.string.startswith('Best '):
+                    awards_table = False
+                    the_power = th.string.split()[-1]
+                else:
+                    # Skip the unexpected table
+                    continue
+                row = th.find_parent()
+                # Move to the column headers row
+                row = row.find_next_sibling()
+                columns = []
+                for th in row.find_all('th'):
+                    try:
+                        col = MAP[th.string]
+                    except KeyError:
+                        col = str(th.string)
+                    columns.append(col)
+                if awards_table:
+                    results['Awards'] = []
+                else:
+                    results[the_power] = []
+                while True:
+                    row = row.find_next_sibling()
+                    if not row:
+                        break
+                    result = {}
+                    for key, td in zip(columns, row.find_all('td')):
+                        # Countries are encoded as flag images
+                        if td.string:
+                            result[key] = str(td.string)
+                        elif td.img:
+                            result[key] = img_to_country(td.img['src'])
+                    if awards_table:
+                        results['Awards'].append(result)
+                    else:
+                        results[the_power].append(result)
+        return results
+

@@ -94,7 +94,9 @@ MASK_SOLO_COUNT = 1<<7
 MASK_ELIM_COUNT = 1<<8
 MASK_BOARD_TOP_COUNT = 1<<9
 MASK_ROUND_ENDPOINTS = 1<<10
-MASK_ALL_BG = (1<<11)-1
+MASK_BEST_COUNTRY = 1<<11
+MASK_OTHER_AWARDS = 1<<12
+MASK_ALL_BG = (1<<13)-1
 
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1<<0
@@ -661,6 +663,36 @@ def add_player_bg(player):
             except KeyError:
                 pass
             i.save()
+        # Awards
+        awards = bg.awards()
+        for k,v in awards.items():
+            # Go through the list of awards
+            for a in v:
+                if k == 'Awards':
+                    award_name = a['Name']
+                else:
+                    try:
+                        p = GreatPower.objects.get(name__contains=k)
+                    except GreatPower.DoesNotExist:
+                        # Apparently not a Standard game
+                        continue
+                    award_name = 'Best %s' % p
+                i, create = PlayerAward.objects.get_or_create(player=player,
+                                                              tournament=a['Tournament'],
+                                                              date=a['Date'],
+                                                              name=award_name)
+                if k != 'Awards':
+                    i.power = p
+                # Ignore any of these that aren't present
+                try:
+                    i.score = a['Score']
+                except KeyError:
+                    pass
+                try:
+                    i.final_sc_count = a['SCs']
+                except KeyError:
+                    pass
+                i.save()
 
 def add_local_player_bg(player):
     """
@@ -686,6 +718,7 @@ def add_local_player_bg(player):
         # Ensure that the date is set
         i.date = t.start_date
         i.save()
+        # TODO Add a PlayerAward for each best country
         # Also add PlayerGameResult for each board played
         for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).all():
             pos = gp.game.positions()
@@ -779,6 +812,55 @@ class Player(models.Model):
         if self.wdd_player_id:
             return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
         return u''
+
+    def _awards(self, power=None, mask=MASK_ALL_BG):
+        """List of all awards won, optionally as a specified power"""
+        results = []
+        award_set = self.playeraward_set.order_by('date')
+        powers = GreatPower.objects.all()
+        if power:
+            award_set = award_set.filter(power=power)
+            powers = [power]
+        if (mask & MASK_BEST_COUNTRY) != 0:
+            # Look at each of the interesting powers
+            for p in powers:
+                # Find all the awards related to the power of interest
+                power_award_set = award_set.filter(power=p)
+                award_count = power_award_set.count()
+                if award_count == 0:
+                    results.append(_('%(name)s has never won Best %(power)s') % {'name': self, 'power': p})
+                    continue
+                elif award_count == 1:
+                    count_str = _('once')
+                else:
+                    count_str = _('%(count)d times') % {'count': award_count}
+                results.append(_('%(name)s has won Best %(power)s %(count_str)s.') % {'name': self,
+                                                                                      'power': p,
+                                                                                      'count_str': count_str})
+                a = power_award_set.first()
+                s = _('%(name)s first won %(award)s in %(year)d at %(tourney)s') % {'name': self,
+                                                                                    'award': a.name,
+                                                                                    'year': a.date.year,
+                                                                                    'tourney': a.tournament}
+                if a.final_sc_count:
+                    s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
+                s += '.'
+                results.append(s)
+                a = power_award_set.last()
+                s = _('%(name)s most recently won %(award)s in %(year)d at %(tourney)s') % {'name': self,
+                                                                                            'award': a.name,
+                                                                                            'year': a.date.year,
+                                                                                            'tourney': a.tournament}
+                if a.final_sc_count:
+                    s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
+                s += '.'
+                results.append(s)
+        if (mask & MASK_OTHER_AWARDS) != 0:
+            for a in award_set.filter(power=None):
+                results.append(_('%(name)s won %(award)s at %(tourney)s') % {'name': self,
+                                                                             'award': a.name,
+                                                                             'tourney': a.tournament})
+        return results
 
     def _rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
@@ -902,8 +984,8 @@ class Player(models.Model):
         List of background strings about the player, optionally as a specific Great Power
         """
         if not power:
-            return self._rankings(mask=mask) + self._results(mask=mask)
-        return self._results(power, mask=mask)
+            return self._rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask)
+        return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
     def get_absolute_url(self):
         return reverse('player_detail', args=[str(self.id)])
@@ -1997,4 +2079,31 @@ class PlayerGameResult(models.Model):
         return _(u'%(player)s played %(power)s in %(game)s') % {'player': self.player,
                                                                 'power': self.power,
                                                                 'game': self.game_name}
+
+@python_2_unicode_compatible
+class PlayerAward(models.Model):
+    """
+    An award won by a player.
+    Used to import background information.
+    """
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    tournament = models.CharField(max_length=40)
+    date = models.DateField()
+    name = models.CharField(max_length=50)
+    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE, blank=True, null=True)
+    score = models.FloatField(blank=True, null=True)
+    final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
+
+    class Meta:
+        unique_together = ('player', 'tournament', 'date', 'name')
+
+    def __str__(self):
+        s = _('%(player)s won %(award)s in %(tourney)s') % {'player': self.player,
+                                                            'award': self.name,
+                                                            'tourney': self.tournament}
+        if self.tournament[-4] != str(self.date.year):
+            s += _(' in %(year)d') % {'year': self.date.year}
+        if self.final_sc_count:
+            s += _(' with %(dots)d supply centres') % {'dots': self.final_sc_count}
+        return s
 
