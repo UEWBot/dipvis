@@ -812,11 +812,21 @@ class Player(models.Model):
                                                                                                                   'tournament': last.tournament,
                                                                                                                   'year': last.year})
         if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
-            wins = ranking_set.filter(position=1).count()
-            if wins > 1:
-                results.append(_(u'%(name)s has won %(wins)d tournaments.') % {'name': self, 'wins': wins})
-            elif wins > 0:
-                results.append(_(u'%(name)s has won %(wins)d tournament.') % {'name': self, 'wins': wins})
+            wins_set = ranking_set.filter(position=1)
+            wins = wins_set.count()
+            if wins > 0:
+                results.append(_(u'%(name)s has won %(wins)d of %(plays)d tournaments (%(percentage).2f%%).') % {'name': self,
+                                                                                                                 'plays': plays,
+                                                                                                                 'percentage': 100.0*float(wins)/float(plays),
+                                                                                                                 'wins': wins})
+                w = wins_set.first()
+                results.append(_('%(name)s won their first tournament (%(tourney)s) in %(year)d.') % {'name': self,
+                                                                                                      'tourney': w.tournament,
+                                                                                                      'year': w.year})
+                w = wins_set.last()
+                results.append(_('%(name)s most recently won a tournament (%(tourney)s) in %(year)d.') % {'name': self,
+                                                                                                          'tourney': w.tournament,
+                                                                                                          'year': w.year})
             else:
                 best = ranking_set.aggregate(Min('position'))['position__min']
                 pos = position_str(best)
