@@ -333,6 +333,9 @@ class Background():
         """
         url = WDD_BASE_URL + 'player_fiche3.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
         soup = BeautifulSoup(page.read())
         results = {}
         for table in soup.find_all('table', width='65%'):
