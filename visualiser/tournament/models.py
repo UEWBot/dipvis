@@ -1077,8 +1077,13 @@ class Tournament(models.Model):
             retval[power] = [gp for gp in retval[power] if gp.score == best]
             # Do we need to resolve a tie ?
             if len(retval[power]) > 1:
-                # TODO Resolve the tie
-                pass
+                # Resolve the tie by comparing centrecounts
+                best_dots = 0
+                for gp in retval[power]:
+                    sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                    best_dots = max([best_dots, sc.count])
+                winners = [gp for gp in retval[power] if gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count == best_dots]
+                retval[power] = winners
         return retval
 
     def background(self, mask=MASK_ALL_BG):
@@ -1121,14 +1126,6 @@ class Tournament(models.Model):
                     break
             # Add best countries
             for power, gps in self.best_countries().items():
-                if len(gps) > 1:
-                    # Multiple people have the same best score as this country. Compare centrecounts
-                    best_dots = 0
-                    for gp in gps:
-                        sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
-                        best_dots = max([best_dots, sc.count])
-                    winners = [gp for gp in gps if gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count == best_dots]
-                    gps = winners
                 if len(gps) == 1:
                     gp = gps[0]
                     sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
