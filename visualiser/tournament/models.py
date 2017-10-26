@@ -573,126 +573,127 @@ def add_player_bg(player):
     """
     Cache background data for the player
     """
+    # First check wikipedia
+    bg = Wikipedia_Background('%s %s' % (player.first_name, player.last_name))
+    # Titles won
+    titles = bg.titles()
+    for title in titles:
+        pos = None
+        the_title = None
+        for key,val in TITLE_MAP.items():
+            try:
+                if title[key] == str(player):
+                    pos = val
+                    if key.find('Champion') != -1:
+                        the_title = key
+            except KeyError:
+                pass
+        if pos:
+            i, created = PlayerRanking.objects.get_or_create(player=player,
+                                                             tournament=title['Tournament'],
+                                                             position=pos,
+                                                             year=title['Year'])
+            if the_title:
+                i.title = the_title
+            i.save()
+    # Do we have a WDD id for this player?
     wdd = player.wdd_player_id
-    if wdd:
+    if not wdd:
+        return
+    bg = WDD_Background(wdd)
+    # Podium finishes
+    finishes = bg.finishes()
+    for finish in finishes:
+        d = finish['Date']
+        i,created = PlayerRanking.objects.get_or_create(player=player,
+                                                        tournament=finish['Tournament'],
+                                                        position=finish['Position'],
+                                                        year=d[:4])
+        i.date = d
+        i.save()
+    # Tournaments
+    tournaments = bg.tournaments()
+    for t in tournaments:
+        d = t['Date']
         try:
-            bg = Background(wdd)
-        except WDDNotAccessible:
-            return
-        # Titles won
-        titles = bg.titles()
-        for title in titles:
-            pos = None
-            the_title = None
-            for key,val in TITLE_MAP.items():
-                try:
-                    if title[key] == str(player):
-                        pos = val
-                        if key.find('Champion') != -1:
-                            the_title = key
-                except KeyError:
-                    pass
-            if pos:
-                i, created = PlayerRanking.objects.get_or_create(player=player,
-                                                                 tournament=title['Tournament'],
-                                                                 position=pos,
-                                                                 year=title['Year'])
-                if the_title:
-                    i.title = the_title
-                i.save()
-        # Podium finishes
-        finishes = bg.finishes()
-        for finish in finishes:
-            d = finish['Date']
             i,created = PlayerRanking.objects.get_or_create(player=player,
-                                                            tournament=finish['Tournament'],
-                                                            position=finish['Position'],
+                                                            tournament=t['Name of the tournament'],
+                                                            position=t['Rank'],
                                                             year=d[:4])
             i.date = d
             i.save()
-        # Tournaments
-        tournaments = bg.tournaments()
-        for t in tournaments:
-            d = t['Date']
-            try:
-                i,created = PlayerRanking.objects.get_or_create(player=player,
-                                                                tournament=t['Name of the tournament'],
-                                                                position=t['Rank'],
-                                                                year=d[:4])
-                i.date = d
-                i.save()
-            except KeyError:
-                # No rank implies they were the TD or similar - just ignore that tournament
-                print("Ignoring %s for %s" % (t['Name of the tournament'], player))
-                pass
-        # Boards
-        boards = bg.boards()
-        for b in boards:
-            try:
-                power = b['Country']
-                p=GreatPower.objects.get(name__contains=power)
-            except GreatPower.DoesNotExist:
-                # Apparently not a Standard game
-                continue
-            i,created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
-                                                               game_name=b['Round / Board'],
-                                                               player=player,
-                                                               power=p,
-                                                               date = b['Date'],
-                                                               position = b['Position'])
-            # If there's no 'Position sharing', they were alone at that position
-            try:
-                i.position_equals = b['Position sharing']
-            except KeyError:
-                i.position_equals = 1
+        except KeyError:
+            # No rank implies they were the TD or similar - just ignore that tournament
+            print("Ignoring %s for %s" % (t['Name of the tournament'], player))
+            pass
+    # Boards
+    boards = bg.boards()
+    for b in boards:
+        try:
+            power = b['Country']
+            p=GreatPower.objects.get(name__contains=power)
+        except GreatPower.DoesNotExist:
+            # Apparently not a Standard game
+            continue
+        i,created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
+                                                           game_name=b['Round / Board'],
+                                                           player=player,
+                                                           power=p,
+                                                           date = b['Date'],
+                                                           position = b['Position'])
+        # If there's no 'Position sharing', they were alone at that position
+        try:
+            i.position_equals = b['Position sharing']
+        except KeyError:
+            i.position_equals = 1
+        # Ignore any of these that aren't present
+        try:
+            i.score = b['Score']
+        except KeyError:
+            pass
+        try:
+            i.final_sc_count = b['Final SCs']
+        except KeyError:
+            pass
+        try:
+            i.result = b['Game end']
+        except KeyError:
+            pass
+        try:
+            i.year_eliminated = b['Elimination year']
+        except KeyError:
+            pass
+        i.save()
+    # Awards
+    awards = bg.awards()
+    for k,v in awards.items():
+        # Go through the list of awards
+        for a in v:
+            if k == 'Awards':
+                award_name = a['Name']
+            else:
+                try:
+                    p = GreatPower.objects.get(name__contains=k)
+                except GreatPower.DoesNotExist:
+                    # Apparently not a Standard game
+                    continue
+                award_name = 'Best %s' % p
+            i, create = PlayerAward.objects.get_or_create(player=player,
+                                                          tournament=a['Tournament'],
+                                                          date=a['Date'],
+                                                          name=award_name)
+            if k != 'Awards':
+                i.power = p
             # Ignore any of these that aren't present
             try:
-                i.score = b['Score']
+                i.score = a['Score']
             except KeyError:
                 pass
             try:
-                i.final_sc_count = b['Final SCs']
-            except KeyError:
-                pass
-            try:
-                i.result = b['Game end']
-            except KeyError:
-                pass
-            try:
-                i.year_eliminated = b['Elimination year']
+                i.final_sc_count = a['SCs']
             except KeyError:
                 pass
             i.save()
-        # Awards
-        awards = bg.awards()
-        for k,v in awards.items():
-            # Go through the list of awards
-            for a in v:
-                if k == 'Awards':
-                    award_name = a['Name']
-                else:
-                    try:
-                        p = GreatPower.objects.get(name__contains=k)
-                    except GreatPower.DoesNotExist:
-                        # Apparently not a Standard game
-                        continue
-                    award_name = 'Best %s' % p
-                i, create = PlayerAward.objects.get_or_create(player=player,
-                                                              tournament=a['Tournament'],
-                                                              date=a['Date'],
-                                                              name=award_name)
-                if k != 'Awards':
-                    i.power = p
-                # Ignore any of these that aren't present
-                try:
-                    i.score = a['Score']
-                except KeyError:
-                    pass
-                try:
-                    i.final_sc_count = a['SCs']
-                except KeyError:
-                    pass
-                i.save()
 
 def add_local_player_bg(player):
     """
@@ -810,14 +811,14 @@ class Player(models.Model):
         """Name for this player in the World Diplomacy Database."""
         if not self.wdd_player_id:
             return u''
+        bg = WDD_Background(self.wdd_player_id)
         try:
-            bg = Background(self.wdd_player_id)
+            return bg.wdd_name()
         except WDDNotAccessible:
             # Not much we can do in this case
             return u''
         except InvalidWDDId:
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'), params = {'wdd_id': self.wdd_player_id})
-        return bg.name()
 
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""

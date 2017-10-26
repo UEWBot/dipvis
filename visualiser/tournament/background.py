@@ -29,28 +29,18 @@ class InvalidWDDId(Exception):
 class WDDNotAccessible(Exception):
     pass
 
-def img_to_country(img):
+class Wikipedia_Background():
     """
-    Convert a WDD flag image name to a country name.
-    """
-    path, sep, filename = img.rpartition('/')
-    return filename[:-4]
-
-class Background():
-    """
-    Get background on a player from online sources.
+    Get background on a player from wikipedia.
     """
 
-    def __init__(self, wdd_id):
-        self.wdd_id = wdd_id
-        name = self.wdd_name()
-        parts = name.split()
-        self.first_name = parts[0].title()
-        self.last_name = parts[1].title()
+    def __init__(self, name):
+        self.name = name
 
     def _relevant(self, d):
         for val in d.values():
-            if val == self.name():
+            # It's relevant if the player name matches
+            if val == self.name:
                 return True
         return False
 
@@ -99,9 +89,25 @@ class Background():
         # Filter out any that don't refer to the person we care about
         return [item for item in results if self._relevant(item)]
 
+def img_to_country(img):
+    """
+    Convert a WDD flag image name to a country name.
+    """
+    path, sep, filename = img.rpartition('/')
+    return filename[:-4]
+
+class WDD_Background():
+    """
+    Get background on a player from the World Diplomacy Database.
+    """
+
+    def __init__(self, wdd_id):
+        self.wdd_id = wdd_id
+
     def wdd_name(self):
         """
-        Player name from the WDD
+        Returns the name of the player, as read from the WDD
+        Can raise WDDNotAccessible or InvalidWDDId
         """
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         try:
@@ -115,17 +121,12 @@ class Background():
         soup = BeautifulSoup(page.read())
         return soup.title.string[6:]
 
-    def name(self):
-        """
-        Returns the name of the player.
-        """
-        return self.first_name + ' ' + self.last_name
-
     def finishes(self):
         """
         Returns a list of tournament placings.
         Each entry is a dict.
         Keys are Position, Date, Country, Tournament, and Type.
+        Can raise InvalidWDDId
         """
         # Individual Prize List
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
@@ -179,6 +180,7 @@ class Background():
         Dict is keyed by column name, except for "Step of the following circuits", which
         is omitted, and an additional "WDD URL" giving the URL for the tournament in the WDD.
         The content of the "Rank" column is split into "Rank" and "Total Players".
+        Can raise InvalidWDDId
         """
         # Tournaments competed in
         url = WDD_BASE_URL + 'player_fiche5.php?id_player=%d' % self.wdd_id
@@ -243,6 +245,7 @@ class Background():
         and/or "Elimination year".
         Two additional keys are added - "WDD Tournament URL" and "WDD Board URL", giving
         the URLs for the tournament and the board in the WDD.
+        Can raise InvalidWDDId
         """
         # Tournament board listings
         url = WDD_BASE_URL + 'player_fiche9.php?id_player=%d' % self.wdd_id
@@ -330,6 +333,7 @@ class Background():
         Returns a dict, keyed by power name or 'Awards' of arrays of dicts.
         Keys for the inner dict are always 'Date', 'Country', 'Tournament', and 'Type'
         plus either 'SCs' and 'Score' (for best country awards) or 'Name' (for other awards)
+        Can raise InvalidWDDId
         """
         url = WDD_BASE_URL + 'player_fiche3.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
