@@ -718,7 +718,19 @@ def add_local_player_bg(player):
         # Ensure that the date is set
         i.date = t.start_date
         i.save()
-        # TODO Add a PlayerAward for each best country
+        # Add a PlayerAward for each best country
+        for power, gps in t.best_countries().items():
+            for gp in gps:
+                if gp.player == player:
+                    sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                    i, created = PlayerAward.objects.get_or_create(player=player,
+                                                                   tournament = t.name,
+                                                                   date=t.start_date,
+                                                                   name=_('Best %(country)s') % {'country': power})
+                    i.power = power
+                    i.score = gp.score
+                    i.final_sc_count = sc.count
+                    i.save()
         # Also add PlayerGameResult for each board played
         for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).all():
             pos = gp.game.positions()
