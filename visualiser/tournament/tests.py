@@ -350,43 +350,6 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         p.background(power=self.germany)
 
-    # Tournament.is_finished()
-    def test_tourney_is_finished_some_rounds_over(self):
-        t = Tournament.objects.get(name='t1')
-        self.assertFalse(t.is_finished())
-
-    def test_tourney_is_finished_no_rounds_over(self):
-        t = Tournament.objects.get(name='t2')
-        self.assertFalse(t.is_finished())
-
-    def test_tourney_is_finished_all_rounds_over(self):
-        t = Tournament.objects.get(name='t3')
-        self.assertTrue(t.is_finished())
-
-    # Tournament.round_numbered()
-    def test_tourney_round_numbered_negative(self):
-        t = Tournament.objects.get(name='t1')
-        self.assertRaises(Round.DoesNotExist, t.round_numbered, -1)
-
-    def test_tourney_round_numbered_3(self):
-        t = Tournament.objects.get(name='t1')
-        self.assertEqual(t.round_numbered(3).number(), 3)
-
-    # Tournament.current_round()
-    def test_tourney_current_round_none(self):
-        # All games in t3 are finished
-        t = Tournament.objects.get(name='t3')
-        self.assertIsNone(t.current_round())
-
-    def test_tourney_current_round(self):
-        t = Tournament.objects.get(name='t1')
-        r = t.current_round()
-        # All earlier rounds should be finished
-        for i in range(1, r.number()):
-            self.assertTrue(t.round_numbered(i).is_finished(), 'round %d' % i)
-        # This round should be unfinished
-        self.assertFalse(r.is_finished())
-
     # Tournament.scores()
     def test_tournament_scores_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -414,6 +377,15 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.positions()
 
+    # Tournament.round_numbered()
+    def test_tourney_round_numbered_negative(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertRaises(Round.DoesNotExist, t.round_numbered, -1)
+
+    def test_tourney_round_numbered_3(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.round_numbered(3).number(), 3)
+
     # TODO Tournament.best_countries()
 
     # Tournament.background()
@@ -433,11 +405,82 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.news()
 
+    # Tournament.current_round()
+    def test_tourney_current_round_none(self):
+        # All games in t3 are finished
+        t = Tournament.objects.get(name='t3')
+        self.assertIsNone(t.current_round())
+
+    def test_tourney_current_round(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.current_round()
+        # All earlier rounds should be finished
+        for i in range(1, r.number()):
+            self.assertTrue(t.round_numbered(i).is_finished(), 'round %d' % i)
+        # This round should be unfinished
+        self.assertFalse(r.is_finished())
+
+    # Tournament.is_finished()
+    def test_tourney_is_finished_some_rounds_over(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertFalse(t.is_finished())
+
+    def test_tourney_is_finished_no_rounds_over(self):
+        t = Tournament.objects.get(name='t2')
+        self.assertFalse(t.is_finished())
+
+    def test_tourney_is_finished_all_rounds_over(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertTrue(t.is_finished())
+
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):
         t = Tournament.objects.get(name='t3')
         tp = t.tournamentplayer_set.filter(player__pk=1).get()
         self.assertEquals(tp.position(), 1)
+
+    # Round.scores()
+    def test_round_scores_finished(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.scores()
+
+    def test_round_scores_unfinished(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.scores()
+
+    def test_round_scores_recalculate(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.scores(True)
+
+    # Round.is_finished()
+    def test_round_is_finished_no_games_over(self):
+        t = Tournament.objects.get(name='t1')
+        r1 = t.round_numbered(1)
+        self.assertFalse(r1.is_finished())
+
+    def test_round_is_finished_some_games_over(self):
+        t = Tournament.objects.get(name='t1')
+        r2 = t.round_numbered(2)
+        self.assertFalse(r2.is_finished())
+
+    def test_round_is_finished_all_games_over(self):
+        t = Tournament.objects.get(name='t1')
+        r3 = t.round_numbered(3)
+        self.assertTrue(r3.is_finished())
+
+    def test_round_is_finished_no_games(self):
+        """
+        Rounds with no games can't have started, let alone finished
+        """
+        t = Tournament.objects.get(name='t1')
+        r4 = t.round_numbered(4)
+        self.assertFalse(r4.is_finished())
 
     # Round.number()
     def test_round_number_11(self):
@@ -472,29 +515,26 @@ class TournamentModelTests(TestCase):
 
     # TODO Round.leader_str()
 
-    # Round.is_finished()
-    def test_round_is_finished_no_games_over(self):
-        t = Tournament.objects.get(name='t1')
-        r1 = t.round_numbered(1)
-        self.assertFalse(r1.is_finished())
+    # TODO Round.news()
 
-    def test_round_is_finished_some_games_over(self):
+    # Round.background()
+    def test_round_background(self):
         t = Tournament.objects.get(name='t1')
-        r2 = t.round_numbered(2)
-        self.assertFalse(r2.is_finished())
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.background()
 
-    def test_round_is_finished_all_games_over(self):
-        t = Tournament.objects.get(name='t1')
-        r3 = t.round_numbered(3)
-        self.assertTrue(r3.is_finished())
+    def test_round_background_final_year(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.background()
 
-    def test_round_is_finished_no_games(self):
-        """
-        Rounds with no games can't have started, let alone finished
-        """
-        t = Tournament.objects.get(name='t1')
-        r4 = t.round_numbered(4)
-        self.assertFalse(r4.is_finished())
+    def test_round_background_timed_end(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[1]
+        # TODO Validate results
+        r.background()
 
     # Round.clean()
     def test_round_clean_missing_earliest_end(self):
@@ -517,45 +557,13 @@ class TournamentModelTests(TestCase):
                   latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
 
-    # Round.scores()
-    def test_round_scores_finished(self):
-        t = Tournament.objects.get(name='t3')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.scores()
+    # TODO Game.scores
 
-    def test_round_scores_unfinished(self):
-        t = Tournament.objects.get(name='t1')
-        r = t.round_set.all()[0]
+    # Game.positions()
+    def test_game_positions(self):
+        g = Game.objects.get(pk=1)
         # TODO Validate results
-        r.scores()
-
-    def test_round_scores_recalculate(self):
-        t = Tournament.objects.get(name='t3')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.scores(True)
-
-    # TODO Round.news()
-
-    # Round.background()
-    def test_round_background(self):
-        t = Tournament.objects.get(name='t1')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.background()
-
-    def test_round_background_final_year(self):
-        t = Tournament.objects.get(name='t3')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.background()
-
-    def test_round_background_timed_end(self):
-        t = Tournament.objects.get(name='t3')
-        r = t.round_set.all()[1]
-        # TODO Validate results
-        r.background()
+        g.positions()
 
     # Game.is_dias()
     def test_game_is_dias(self):
@@ -603,6 +611,23 @@ class TournamentModelTests(TestCase):
         self.assertEqual(len(g.players()), 7)
         for gp in g.players().values():
             self.assertEqual(len(gp), 0)
+
+    # Game.news()
+    def test_game_news(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.news()
+
+    def test_game_news_with_name(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.news(include_game_name=True)
+
+    # Game.background()
+    def test_game_background(self):
+        g = Game.objects.get(pk=1)
+        # TODO Validate results
+        g.background()
 
     # Game.passed_draw()
     def test_game_passed_draw_none(self):
@@ -742,29 +767,6 @@ class TournamentModelTests(TestCase):
         self.assertIsNone(g.result_str())
 
     # TODO Add tests of drawn game, game that reached fixed endpoint, and game with failed draw proposal
-
-    # Game.positions()
-    def test_game_positions(self):
-        g = Game.objects.get(pk=1)
-        # TODO Validate results
-        g.positions()
-
-    # Game.news()
-    def test_game_news(self):
-        g = Game.objects.get(pk=1)
-        # TODO Validate results
-        g.news()
-
-    def test_game_news_with_name(self):
-        g = Game.objects.get(pk=1)
-        # TODO Validate results
-        g.news(include_game_name=True)
-
-    # Game.background()
-    def test_game_background(self):
-        g = Game.objects.get(pk=1)
-        # TODO Validate results
-        g.background()
 
     # Game.clean()
     def test_game_clean_non_unique_name(self):
