@@ -625,7 +625,7 @@ def add_player_bg(player):
             i.save()
         except KeyError:
             # No rank implies they were the TD or similar - just ignore that tournament
-            print("Ignoring %s for %s" % (t['Name of the tournament'], player))
+            print("Ignoring unranked %s for %s" % (t['Name of the tournament'], player))
             pass
     # Boards
     boards = bg.boards()
@@ -679,9 +679,19 @@ def add_player_bg(player):
                     # Apparently not a Standard game
                     continue
                 award_name = 'Best %s' % p
+            # Some of the WDD pages are badly-structured with nested tables
+            # Ignore any messed-up results
+            try:
+                date_str = a['Date']
+                if len(date_str) != 10:
+                    print('Ignoring award with bad date %s' % str(a))
+                    continue
+            except KeyError:
+                print('Ignoring award with no date %s' % str(a))
+                continue
             i, create = PlayerAward.objects.get_or_create(player=player,
                                                           tournament=a['Tournament'],
-                                                          date=a['Date'],
+                                                          date=date_str,
                                                           name=award_name)
             if k != 'Awards':
                 i.power = p

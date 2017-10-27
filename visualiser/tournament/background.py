@@ -377,6 +377,18 @@ class WDD_Background():
                             result[key] = str(td.string)
                         elif td.img:
                             result[key] = img_to_country(td.img['src'])
+                        else:
+                            # Sometimes multiple awards were won at one tournament, encoded as a nested table
+                            # (Multiple best country awards will be in separate tables)
+                            for t in td.find_all('td'):
+                                if t.string:
+                                    new_res = dict(result)
+                                    new_res[key] = str(t.string)
+                                    results['Awards'].append(new_res)
+                            result = {}
+                    # Don't add empty dicts
+                    if result == {}:
+                        continue
                     if awards_table:
                         results['Awards'].append(result)
                     else:

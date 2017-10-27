@@ -30,6 +30,9 @@ HOURS_24 = timedelta(hours=24)
 
 CHRIS_BRAND_WDD_ID = 4173
 INVALID_WDD_ID = 1
+MATT_SHIELDS_WDD_ID = 588
+MATT_SUNDSTROM_WDD_ID = 8355
+NATE_COCKERILL_WDD_ID = 5009
 
 class TournamentModelTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -405,6 +408,40 @@ class TournamentModelTests(TestCase):
         add_player_bg(p)
         # TODO Validate results
         p.background(power=self.germany)
+
+    def test_player_background_td(self):
+        # Matt has tournaments listings for tournaments when he was TD
+        p, created = Player.objects.get_or_create(first_name='Matt',
+                                                  last_name='Shields',
+                                                  wdd_player_id=MATT_SHIELDS_WDD_ID)
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        # WAC 10 he played Germany
+        p.background(power=self.germany)
+
+    def test_player_background_non_std(self):
+        # Matt has tournaments listings for non-Standard games
+        p, created = Player.objects.get_or_create(first_name='Matt',
+                                                  last_name='Sundstrom',
+                                                  wdd_player_id=MATT_SUNDSTROM_WDD_ID)
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        # Windy City Weasels 2012 he played United Kingdom
+        p.background()
+
+    def test_player_background_non_std_2(self):
+        # Nate has tournaments listings for non-Standard games,
+        # where power names match Standard powers (France)
+        p, created = Player.objects.get_or_create(first_name='Nate',
+                                                  last_name='Cockerill',
+                                                  wdd_player_id=NATE_COCKERILL_WDD_ID)
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        # Windy City Weasels 2012 he played France
+        p.background(power=self.france)
 
     # Tournament.scores()
     def test_tournament_scores_finished(self):
