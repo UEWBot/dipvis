@@ -1139,8 +1139,8 @@ class Tournament(models.Model):
                     break
             # Add best countries
             for power, gps in self.best_countries().items():
+                gp = gps[0]
                 if len(gps) == 1:
-                    gp = gps[0]
                     sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
                     results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d') % {'player': str(gp.player),
           'country': power.name,
@@ -1150,11 +1150,11 @@ class Tournament(models.Model):
           'round': gp.game.the_round.number()})
                 else:
                     # Tie for best power
-                    winner_str = ', '.join([str(gp.player) for gp in gps])
+                    winner_str = ', '.join([str(p.player) for p in gps])
                     results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.') % {'country': power.name,
                    'winner_str': winner_str,
-                   'dots': best_dots,
-                   'score': gps[0].score})
+                   'dots': gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count,
+                   'score': gp.score})
         else:
             # which rounds have been played ?
             played_rounds = len([r for r in self.round_set.all() if r.is_finished()])
