@@ -515,7 +515,12 @@ class TournamentModelTests(TestCase):
         t.background()
 
     # Tournament.news()
-    def test_tournament_news(self):
+    def test_tournament_news_in_progress(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        t.news()
+
+    def test_tournament_news_ended(self):
         t = Tournament.objects.get(name='t3')
         # TODO Validate results
         t.news()
