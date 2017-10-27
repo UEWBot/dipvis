@@ -320,9 +320,19 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         p.wdd_name()
 
+    def test_player_wdd_name_no_id(self):
+        p = Player.objects.create(first_name='John', last_name='Smith')
+        # TODO Validate results
+        p.wdd_name()
+
     # Player.wdd_url()
     def test_player_wdd_url(self):
         p = Player.objects.get(pk=1)
+        # TODO Validate results
+        p.wdd_url()
+
+    def test_player_wdd_url_no_id(self):
+        p = Player.objects.create(first_name='John', last_name='Smith')
         # TODO Validate results
         p.wdd_url()
 
