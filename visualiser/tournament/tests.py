@@ -180,6 +180,33 @@ class TournamentModelTests(TestCase):
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
 
+    def test_g_scoring_draws_7way_draw(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
+                                         power_1=self.austria, power_2=self.england, power_3=self.france,
+                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Draw size')
+        scores = system.scores(scs)
+        for s in scores.values():
+            self.assertEqual(s, 100.0/7)
+
+    def test_g_scoring_draws_4way_draw(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
+                                         power_1=self.austria, power_2=self.england, power_3=self.russia,
+                                         power_4=self.germany)
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Draw size')
+        scores = system.scores(scs)
+        for p in GreatPower.objects.all():
+            if (p == self.austria) or (p == self.england) or (p == self.russia) or (p == self.germany):
+                self.assertEqual(scores[p], 100.0/4)
+            else:
+                self.assertEqual(scores[p], 0.0)
+
     def test_g_scoring_draws_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')

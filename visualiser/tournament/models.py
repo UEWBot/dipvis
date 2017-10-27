@@ -202,14 +202,15 @@ class GScoringDrawSize(GameScoringSystem):
         soloed = final_scs[0].count >= WINNING_SCS
         # We only care about the most recent centrecounts
         for sc in final_scs:
-            retval[sc.power] = 0
+            retval[sc.power] = 0.0
             if sc.count >= WINNING_SCS:
                 retval[sc.power] = 100.0
             elif soloed:
                 # Leave the score at zero
                 pass
-            elif draw and sc.power in draw.powers():
-                retval[sc.power] = 100.0 / draw.draw_size()
+            elif draw:
+                if sc.power in draw.powers():
+                    retval[sc.power] = 100.0 / draw.draw_size()
             elif sc.count > 0:
                 retval[sc.power] = 100.0 / survivors
         return retval
