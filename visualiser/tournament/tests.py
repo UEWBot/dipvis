@@ -403,6 +403,8 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.positions()
 
+    # TODO Tournament.best_countries()
+
     # Tournament.background()
     def test_tournament_background_without_players(self):
         t = Tournament.objects.get(name='t1')
@@ -456,6 +458,8 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t2')
         r22 = t.round_set.all()[1]
         self.assertEqual(r22.number(), 2)
+
+    # TODO Round.leader_str()
 
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
@@ -520,6 +524,8 @@ class TournamentModelTests(TestCase):
         r = t.round_set.all()[0]
         # TODO Validate results
         r.scores(True)
+
+    # TODO Round.news()
 
     # Round.background()
     def test_round_background(self):
