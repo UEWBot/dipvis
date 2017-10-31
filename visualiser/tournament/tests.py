@@ -59,27 +59,38 @@ class TournamentModelTests(TestCase):
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
 
+        # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
         r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
         r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
         r14 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        # Add Rounds to t2
         r21 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date)
         r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date + HOURS_8)
+        # Add Rounds to t3
         r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date, final_year=1907)
         r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8,
                                    earliest_end_time=t3.start_date + HOURS_8, latest_end_time=t3.start_date + HOURS_9)
 
+        # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
         g12 = Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
         g13 = Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
         g14 = Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
         g15 = Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
         g16 = Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        # Add Games to r21
         g21 = Game.objects.create(name='g21', started_at=r21.start, the_round=r21, the_set=set1)
+        # Add Games to r22
         g22 = Game.objects.create(name='g22', started_at=r22.start, the_round=r22, the_set=set1)
+        # Add Games to r31
         g31 = Game.objects.create(name='g31', started_at=r31.start, the_round=r31, is_finished=True, the_set=set1)
+        # Add Games to r32
         g32 = Game.objects.create(name='g32', started_at=r32.start, the_round=r32, is_finished=True, the_set=set1)
 
+        # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
         cls.england = GreatPower.objects.get(abbreviation='E')
         cls.france = GreatPower.objects.get(abbreviation='F')
@@ -88,6 +99,7 @@ class TournamentModelTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
+        # Add CentreCounts to g11
         sc1101a = CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
         sc1101e = CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
         sc1101f = CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
@@ -106,6 +118,8 @@ class TournamentModelTests(TestCase):
 
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
+        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
+        # Add GamePlayers to g11
         gp11a1 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g11, power=cls.austria, last_year=1903, last_season='F')
         gp11a2 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g11, power=cls.austria, first_year=1903, first_season='X')
         gp11e1 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g11, power=cls.england)
@@ -114,6 +128,7 @@ class TournamentModelTests(TestCase):
         gp11i1 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g11, power=cls.italy)
         gp11r1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g11, power=cls.russia)
         gp11t1 = GamePlayer.objects.create(player=Player.objects.get(pk=8), game=g11, power=cls.turkey)
+        # Add GamePlayers to g12
         gp12a = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g12, power=cls.austria)
         gp12e = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g12, power=cls.england)
         gp12f = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g12, power=cls.france)
@@ -125,8 +140,11 @@ class TournamentModelTests(TestCase):
         # For t3 (the finished tournament), we want TournamentPlayers and RoundPlayers
         # Unfortunately, adding these slows down the test dramatically
         # due to adding background?
+        # Add a TournamentPlayer to t3
         tp1 = TournamentPlayer.objects.create(player=Player.objects.get(pk=1), tournament=t3, score=147.3)
+        # Add a RoundPlayer to r31
         rp1 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r31, score=100.0)
+        # Add a RoundPlayer to r32
         rp2 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r32, score=47.3)
 
     # GScoringSolos
@@ -920,31 +938,35 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p = Player.objects.get(pk=1)
-        tp = TournamentPlayer.objects.create(player=p, tournament=t)
+        tp = TournamentPlayer(player=p, tournament=t)
         gp = GamePlayer(player=p,
                         game=g,
                         power=self.austria,
                         last_year=1909)
+        tp.save()
         self.assertRaises(ValidationError, gp.clean)
+        tp.delete()
 
     def test_gameplayer_clean_player_missing_last_season(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p = Player.objects.get(pk=1)
-        tp = TournamentPlayer.objects.create(player=p, tournament=t)
+        tp = TournamentPlayer(player=p, tournament=t)
         gp = GamePlayer(player=p,
                         game=g,
                         power=self.austria,
                         last_season='S')
+        tp.save()
         self.assertRaises(ValidationError, gp.clean)
+        tp.delete()
 
     def test_gameplayer_clean_overlap_1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
-        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp1 = TournamentPlayer(player=p1, tournament=t)
+        tp2 = TournamentPlayer(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
                          power=self.austria)
@@ -953,18 +975,22 @@ class TournamentModelTests(TestCase):
                          power=self.austria,
                          first_year=1902,
                          first_season='S')
+        tp1.save()
+        tp2.save()
         gp1.clean()
         gp1.save()
         self.assertRaises(ValidationError, gp2.clean)
         gp1.delete()
+        tp2.delete()
+        tp1.delete()
 
     def test_gameplayer_clean_overlap_2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
-        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp1 = TournamentPlayer(player=p1, tournament=t)
+        tp2 = TournamentPlayer(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
                          power=self.austria,
@@ -975,18 +1001,22 @@ class TournamentModelTests(TestCase):
                          power=self.austria,
                          first_year=1902,
                          first_season='S')
+        tp1.save()
+        tp2.save()
         gp1.clean()
         gp1.save()
         self.assertRaises(ValidationError, gp2.clean)
         gp1.delete()
+        tp2.delete()
+        tp1.delete()
 
     def test_gameplayer_clean_overlap_3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
-        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp1 = TournamentPlayer(player=p1, tournament=t)
+        tp2 = TournamentPlayer(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
                          power=self.austria,
@@ -997,18 +1027,22 @@ class TournamentModelTests(TestCase):
                          power=self.austria,
                          last_year=1902,
                          last_season='S')
+        tp1.save()
+        tp2.save()
         gp1.clean()
         gp1.save()
         self.assertRaises(ValidationError, gp2.clean)
         gp1.delete()
+        tp2.delete()
+        tp1.delete()
 
     def test_gameplayer_clean_overlap_4(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
-        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp1 = TournamentPlayer(player=p1, tournament=t)
+        tp2 = TournamentPlayer(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
                          power=self.austria,
@@ -1017,18 +1051,22 @@ class TournamentModelTests(TestCase):
         gp2 = GamePlayer(player=p2,
                          game=g,
                          power=self.austria)
+        tp1.save()
+        tp2.save()
         gp1.clean()
         gp1.save()
         self.assertRaises(ValidationError, gp2.clean)
         gp1.delete()
+        tp2.delete()
+        tp1.delete()
 
     def test_gameplayer_clean_overlap_5(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
         p1 = Player.objects.get(pk=1)
         p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
-        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp1 = TournamentPlayer(player=p1, tournament=t)
+        tp2 = TournamentPlayer(player=p2, tournament=t)
         gp1 = GamePlayer(player=p1,
                          game=g,
                          power=self.austria,
@@ -1039,10 +1077,14 @@ class TournamentModelTests(TestCase):
                          power=self.austria,
                          first_year=1902,
                          first_season='S')
+        tp1.save()
+        tp2.save()
         gp1.clean()
         gp1.save()
         self.assertRaises(ValidationError, gp2.clean)
         gp1.delete()
+        tp2.delete()
+        tp1.delete()
 
     # GameImage.turn_str()
     def test_gameimage_turn_str(self):
@@ -1069,16 +1111,18 @@ class TournamentModelTests(TestCase):
     def test_centrecount_clean_up_from_zero(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        cc1 = CentreCount.objects.create(power=self.austria, game=g, year=1902, count=0)
+        cc1 = CentreCount(power=self.austria, game=g, year=1902, count=0)
         cc2 = CentreCount(power=self.austria, game=g, year=1903, count=1)
+        cc1.save()
         self.assertRaises(ValidationError, cc2.clean)
         cc1.delete()
 
     def test_centrecount_clean_more_than_double(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        cc1 = CentreCount.objects.create(power=self.austria, game=g, year=1902, count=5)
+        cc1 = CentreCount(power=self.austria, game=g, year=1902, count=5)
         cc2 = CentreCount(power=self.austria, game=g, year=1903, count=11)
+        cc1.save()
         self.assertRaises(ValidationError, cc2.clean)
         cc1.delete()
 
