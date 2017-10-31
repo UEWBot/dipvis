@@ -443,6 +443,12 @@ class TournamentModelTests(TestCase):
         # Windy City Weasels 2012 he played France
         p.background(power=self.france)
 
+    def test_player_background_unknown(self):
+        p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+
     # Tournament.scores()
     def test_tournament_scores_finished(self):
         t = Tournament.objects.get(name='t3')
