@@ -456,11 +456,6 @@ class TournamentModelTests(TestCase):
                                                       end_date=timezone.now(),
                                                       tournament_scoring_system='Invalid System',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
-        # Need to have at least one unfinished round
-        r, created = Round.objects.get_or_create(tournament=t,
-                                                 scoring_system=G_SCORING_SYSTEMS[0].name,
-                                                 dias=True,
-                                                 start=timezone.now())
         self.assertRaises(InvalidScoringSystem, t.scores)
 
     def test_tournament_scores_finished(self):
@@ -544,6 +539,14 @@ class TournamentModelTests(TestCase):
     def test_tourney_is_finished_all_rounds_over(self):
         t = Tournament.objects.get(name='t3')
         self.assertTrue(t.is_finished())
+
+    def test_tourney_is_finished_no_rounds(self):
+        t = Tournament.objects.create(name='Roundless',
+                                      start_date=timezone.now(),
+                                      end_date=timezone.now(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+        self.assertFalse(t.is_finished())
 
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):

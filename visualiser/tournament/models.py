@@ -1208,7 +1208,12 @@ class Tournament(models.Model):
         return None
 
     def is_finished(self):
-        for r in self.round_set.all():
+        rds = self.round_set.all()
+        # If there are no rounds, the tournament can't have started
+        if len(rds) == 0:
+            return False
+        # Look for any unfinished round
+        for r in rds:
             if not r.is_finished():
                 return False
         return True
