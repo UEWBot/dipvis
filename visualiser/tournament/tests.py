@@ -450,6 +450,19 @@ class TournamentModelTests(TestCase):
         p.background()
 
     # Tournament.scores()
+    def test_tournament_scores_invalid(self):
+        t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
+                                                      start_date=timezone.now(),
+                                                      end_date=timezone.now(),
+                                                      tournament_scoring_system='Invalid System',
+                                                      round_scoring_system=R_SCORING_SYSTEMS[0].name)
+        # Need to have at least one unfinished round
+        r, created = Round.objects.get_or_create(tournament=t,
+                                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                                 dias=True,
+                                                 start=timezone.now())
+        self.assertRaises(InvalidScoringSystem, t.scores)
+
     def test_tournament_scores_finished(self):
         t = Tournament.objects.get(name='t3')
         # TODO Validate results
