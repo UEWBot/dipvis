@@ -493,7 +493,15 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.round_numbered(3).number(), 3)
 
-    # TODO Tournament.best_countries()
+    # Tournament.best_countries()
+    def test_tournament_best_countries_with_games(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        t.best_countries()
+
+    def test_tournament_best_countries_without_games(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual({}, t.best_countries())
 
     # Tournament.background()
     def test_tournament_background_without_players(self):
