@@ -571,6 +571,15 @@ class TournamentModelTests(TestCase):
         self.assertEquals(tp.position(), 1)
 
     # Round.scores()
+    def test_round_scores_invalid(self):
+        t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
+                                                      start_date=timezone.now(),
+                                                      end_date=timezone.now(),
+                                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                      round_scoring_system='Invalid System')
+        r = Round.objects.create(tournament=t, scoring_system=G_SCORING_SYSTEMS[0].name, dias=True, start=t.start_date)
+        self.assertRaises(InvalidScoringSystem, r.scores)
+
     def test_round_scores_finished(self):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
@@ -688,7 +697,16 @@ class TournamentModelTests(TestCase):
                   latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
 
-    # TODO Game.scores
+    # Game.scores
+    def test_game_scores_invalid(self):
+        t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
+                                                      start_date=timezone.now(),
+                                                      end_date=timezone.now(),
+                                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                      round_scoring_system=R_SCORING_SYSTEMS[0].name)
+        r = Round.objects.create(tournament=t, scoring_system='Invalid System', dias=True, start=t.start_date)
+        g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
+        self.assertRaises(InvalidScoringSystem, g.scores)
 
     # Game.positions()
     def test_game_positions(self):
@@ -897,7 +915,31 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         self.assertIsNone(g.result_str())
 
-    # TODO Add tests of drawn game, game that reached fixed endpoint, and game with failed draw proposal
+    def test_game_result_str_passed_draw(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
+                                         power_1=self.austria, power_2=self.england, power_3=self.france,
+                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        self.assertIn('Vote passed ', g.result_str())
+
+    def test_game_result_str_conceded(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.england,
+                                         power_1=self.england)
+        self.assertIn('conceded ', g.result_str())
+
+    def test_game_result_str_failed_draw(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=False, proposer=self.austria,
+                                         power_1=self.austria, power_2=self.england, power_3=self.france,
+                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        # Game is still ongoing
+        self.assertIsNone(g.result_str())
+
+    # TODO Add test of game that reached fixed endpoint
 
     # Game.clean()
     def test_game_clean_non_unique_name(self):
