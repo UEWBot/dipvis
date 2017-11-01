@@ -419,6 +419,7 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         # WAC 10 he played Germany
         p.background(power=self.germany)
+        p.delete()
 
     def test_player_background_non_std(self):
         # Matt has tournaments listings for non-Standard games
@@ -430,6 +431,7 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         # Windy City Weasels 2012 he played United Kingdom
         p.background()
+        p.delete()
 
     def test_player_background_non_std_2(self):
         # Nate has tournaments listings for non-Standard games,
@@ -442,6 +444,7 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         # Windy City Weasels 2012 he played France
         p.background(power=self.france)
+        p.delete()
 
     def test_player_background_unknown(self):
         p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
