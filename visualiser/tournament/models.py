@@ -590,10 +590,10 @@ def add_player_bg(player):
             except KeyError:
                 pass
         if pos:
-            i, created = PlayerRanking.objects.get_or_create(player=player,
-                                                             tournament=title['Tournament'],
-                                                             position=pos,
-                                                             year=title['Year'])
+            i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                       tournament=title['Tournament'],
+                                                                       position=pos,
+                                                                       year=title['Year'])
             if the_title:
                 i.title = the_title
             i.save()
@@ -606,10 +606,10 @@ def add_player_bg(player):
     finishes = bg.finishes()
     for finish in finishes:
         d = finish['Date']
-        i,created = PlayerRanking.objects.get_or_create(player=player,
-                                                        tournament=finish['Tournament'],
-                                                        position=finish['Position'],
-                                                        year=d[:4])
+        i,created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                  tournament=finish['Tournament'],
+                                                                  position=finish['Position'],
+                                                                  year=d[:4])
         i.date = d
         i.save()
     # Tournaments
@@ -617,10 +617,10 @@ def add_player_bg(player):
     for t in tournaments:
         d = t['Date']
         try:
-            i,created = PlayerRanking.objects.get_or_create(player=player,
-                                                            tournament=t['Name of the tournament'],
-                                                            position=t['Rank'],
-                                                            year=d[:4])
+            i,created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                      tournament=t['Name of the tournament'],
+                                                                      position=t['Rank'],
+                                                                      year=d[:4])
             i.date = d
             i.save()
         except KeyError:
@@ -689,10 +689,10 @@ def add_player_bg(player):
             except KeyError:
                 print('Ignoring award with no date %s' % str(a))
                 continue
-            i, create = PlayerAward.objects.get_or_create(player=player,
-                                                          tournament=a['Tournament'],
-                                                          date=date_str,
-                                                          name=award_name)
+            i, created = PlayerAward.objects.get_or_create(player=player,
+                                                           tournament=a['Tournament'],
+                                                           date=date_str,
+                                                           name=award_name)
             if k != 'Awards':
                 i.power = p
             # Ignore any of these that aren't present
@@ -722,11 +722,11 @@ def add_local_player_bg(player):
             tp = t.tournamentplayer_set.filter(player=player).get()
         except TournamentPlayer.DoesNotExist:
             continue
-        # Add a PlayerRanking
-        i, created = PlayerRanking.objects.get_or_create(player=player,
-                                                         tournament=t.name,
-                                                         position=tp.position(),
-                                                         year=t.start_date.year)
+        # Add a PlayerTournamentRanking
+        i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                   tournament=t.name,
+                                                                   position=tp.position(),
+                                                                   year=t.start_date.year)
         # Ensure that the date is set
         i.date = t.start_date
         i.save()
@@ -886,10 +886,10 @@ class Player(models.Model):
                                                                              'tourney': a.tournament})
         return results
 
-    def _rankings(self, mask=MASK_ALL_BG):
+    def _tourney_rankings(self, mask=MASK_ALL_BG):
         """ List of titles won and tournament rankings"""
         results = []
-        ranking_set = self.playerranking_set.order_by('year')
+        ranking_set = self.playertournamentranking_set.order_by('year')
         plays = ranking_set.count()
         if plays == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:
@@ -1008,7 +1008,7 @@ class Player(models.Model):
         List of background strings about the player, optionally as a specific Great Power
         """
         if not power:
-            return self._rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask)
+            return self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask)
         return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
     def get_absolute_url(self):
@@ -2064,7 +2064,7 @@ class CentreCount(models.Model):
         return u'%s %d %s %d' % (self.game, self.year, _(self.power.abbreviation), self.count)
 
 @python_2_unicode_compatible
-class PlayerRanking(models.Model):
+class PlayerTournamentRanking(models.Model):
     """
     A tournament ranking for a player.
     Used to import background information from the WDD.
