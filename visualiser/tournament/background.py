@@ -389,3 +389,35 @@ class WDD_Background():
                         results[the_power].append(result)
         return results
 
+    def rankings(self):
+        """
+        Returns a list of dicts.
+        Keys for the dict are 'Name', 'Score', 'International rank', and 'National rank'.
+        Can raise InvalidWDDId
+        """
+        url = WDD_BASE_URL + 'player_fiche4.php?id_player=%d' % self.wdd_id
+        page = urllib.request.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid WDD id
+            raise InvalidWDDId
+        soup = BeautifulSoup(page.read())
+        results = []
+        for table in soup.find_all('table', width='70%'):
+            columns = []
+            for th in table.find_all('th'):
+                try:
+                    col = MAP[th.string]
+                except KeyError:
+                    col = str(th.string)
+                columns.append(col)
+            row = th.find_parent()
+            for row in row.next_siblings:
+                result = {}
+                for key, td in zip(columns, row.find_all('td')):
+                    if td.string:
+                        result[key] = str(td.string)
+                # Discard any row for a particular year
+                if '20' not in result['Name']:
+                    results.append(result)
+        return results
+

@@ -96,7 +96,8 @@ MASK_BOARD_TOP_COUNT = 1<<9
 MASK_ROUND_ENDPOINTS = 1<<10
 MASK_BEST_COUNTRY = 1<<11
 MASK_OTHER_AWARDS = 1<<12
-MASK_ALL_BG = (1<<13)-1
+MASK_RANKINGS = 1<<13
+MASK_ALL_BG = (1<<14)-1
 
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1<<0
@@ -705,6 +706,15 @@ def add_player_bg(player):
             except KeyError:
                 pass
             i.save()
+    # Rankings
+    rankings = bg.rankings()
+    for r in rankings:
+        i, created = PlayerRanking.objects.get_or_create(player=player,
+                                                         system=r['Name'])
+        i.score=float(r['Score'])
+        i.international_rank=r['International rank']
+        i.national_rank=r['National rank']
+        i.save()
 
 def add_local_player_bg(player):
     """
@@ -836,6 +846,16 @@ class Player(models.Model):
         if self.wdd_player_id:
             return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
         return u''
+
+    def _rankings(self, mask=MASK_ALL_BG):
+        """List of all rankings"""
+        results = []
+        if (mask & MASK_RANKINGS) == 0:
+            return results
+        rankings_set = self.playerranking_set.all()
+        for r in rankings_set:
+            results.append(str(r))
+        return results
 
     def _awards(self, power=None, mask=MASK_ALL_BG):
         """List of all awards won, optionally as a specified power"""
@@ -1008,7 +1028,7 @@ class Player(models.Model):
         List of background strings about the player, optionally as a specific Great Power
         """
         if not power:
-            return self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask)
+            return self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
         return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
     def get_absolute_url(self):
@@ -2136,5 +2156,32 @@ class PlayerAward(models.Model):
             s += _(' in %(year)d') % {'year': self.date.year}
         if self.final_sc_count:
             s += _(' with %(dots)d supply centres') % {'dots': self.final_sc_count}
+        return s
+
+@python_2_unicode_compatible
+class PlayerRanking(models.Model):
+    """
+    WDD Ranking of a player.
+    Used to import background information.
+    """
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    system = models.CharField(max_length=50)
+    score = models.FloatField(blank=True, null=True)
+    international_rank = models.CharField(max_length=20)
+    national_rank = models.CharField(max_length=20)
+
+    class Meta:
+        unique_together = ('player', 'system')
+
+    def national_str(self):
+        s = _('%(player)s is ranked %(ranking)s in their country in the %(system)s') % {'player': self.player,
+                                                                                        'ranking': self.international_rank,
+                                                                                        'system': self.system}
+        return s
+
+    def __str__(self):
+        s = _('%(player)s is ranked %(ranking)s internationally in the %(system)s') % {'player': self.player,
+                                                                                       'ranking': self.international_rank,
+                                                                                       'system': self.system}
         return s
 
