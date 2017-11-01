@@ -154,10 +154,7 @@ class WDD_Background():
                 col = str(th.string)
             columns.append(col)
         results = []
-        while True:
-            row = row.find_next_sibling()
-            if not row:
-                break
+        for row in row.next_siblings:
             th = row.find('th')
             if th:
                 # New position
@@ -366,10 +363,7 @@ class WDD_Background():
                     results['Awards'] = []
                 else:
                     results[the_power] = []
-                while True:
-                    row = row.find_next_sibling()
-                    if not row:
-                        break
+                for row in row.next_siblings:
                     result = {}
                     for key, td in zip(columns, row.find_all('td')):
                         # Countries are encoded as flag images
