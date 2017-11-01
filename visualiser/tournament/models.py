@@ -1183,10 +1183,11 @@ class Tournament(models.Model):
                 include_leader = True
         if include_leader:
             the_scores = self.scores()
-            max_score = max(the_scores.values())
-            winners = [k for k,v in the_scores.items() if v == max_score]
-            player_str = ', '.join(winners)
-            results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
+            if len(the_scores) > 0:
+                max_score = max(the_scores.values())
+                winners = [k for k,v in the_scores.items() if v == max_score]
+                player_str = ', '.join(winners)
+                results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
                                                                                                                           'players': player_str})
             # Include the top score from each previous round (if any)
             for r in self.round_set.all():
@@ -1321,6 +1322,8 @@ class Round(models.Model):
         Returns a news string detailing the person with the best score for the round.
         """
         the_scores = self.scores()
+        if len(the_scores) == 0:
+            return None
         max_score = max(the_scores.values())
         winners = [k for k,v in the_scores.items() if v == max_score]
         if self.is_finished():
@@ -1340,7 +1343,9 @@ class Round(models.Model):
         """
         results = []
         # Include who has done best in the round (so far)
-        results.append(self.leader_str())
+        ls = self.leader_str()
+        if ls:
+            results.append(ls)
         # Get the news for every game in the round
         done_games = 0
         for g in self.game_set.all():
@@ -1348,7 +1353,7 @@ class Round(models.Model):
                 done_games += 1
             results += g.news(include_game_name=True)
         # Note if the round has finished
-        if self.is_finished:
+        if self.is_finished():
             results.append(_(u'Round %(r_num)d has ended.') % {'r_num': self.number()})
         else:
             # Otherwise, add a count of completed games
