@@ -360,11 +360,7 @@ class RScoringBest(RoundScoringSystem):
         for g in Game.objects.filter(gameplayer__in=game_players):
             game_scores[g] = g.scores()
         # for each player who played any of the specified games
-        for p in Player.objects.filter(gameplayer__in=game_players):
-            # For some reason, if a player is in game_players more than once, we'll hit this
-            # TODO Investigate and fix the need for this
-            if p in retval:
-                continue
+        for p in Player.objects.filter(gameplayer__in=game_players).distinct():
             # Find just their games
             player_games = game_players.filter(player=p)
             # Find the highest score
