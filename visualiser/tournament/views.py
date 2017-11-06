@@ -928,7 +928,6 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     # Create a list of rows, each with a year and each power's SC count
     rows = []
     for year in years:
-        neutrals = TOTAL_SCS
         yscs = scs.filter(year=year)
         row = []
         row.append(year)
@@ -936,11 +935,10 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
             try:
                 sc = yscs.filter(power=sp.power).get()
                 row.append(sc.count)
-                neutrals -= sc.count
             except CentreCount.DoesNotExist:
                 # This is presumably because they were eliminated
                 row.append(0)
-        row.append(neutrals)
+        row.append(g.neutrals(year))
         rows.append(row)
     # Add one final row with the current scores
     scores = g.scores()

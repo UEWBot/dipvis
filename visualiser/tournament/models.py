@@ -1633,10 +1633,7 @@ class Game(models.Model):
         scs = self.centrecount_set.filter(year=year)
         if not scs.exists():
             raise InvalidYear(year)
-        neutrals = TOTAL_SCS
-        for sc in scs:
-            neutrals -= sc.count
-        return neutrals
+        return TOTAL_SCS - scs.aggregate(Sum('count'))['count__sum']
 
     def final_year(self):
         """
