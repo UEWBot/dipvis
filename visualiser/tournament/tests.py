@@ -158,6 +158,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 0)
 
@@ -167,6 +168,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
@@ -181,6 +183,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
 
@@ -193,6 +196,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
 
@@ -205,6 +209,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p in GreatPower.objects.all():
             if (p == self.austria) or (p == self.england) or (p == self.russia) or (p == self.germany):
                 self.assertEqual(scores[p], 100.0/4)
@@ -217,6 +222,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
@@ -231,6 +237,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
@@ -247,6 +254,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
@@ -260,6 +268,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
@@ -276,6 +285,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
@@ -290,8 +300,10 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, 100.0 * 16 / 148)
             else:
@@ -305,6 +317,7 @@ class TournamentModelTests(TestCase):
         scs = g.centrecount_set.filter(year=1904)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.get(power=p)
             if sc.count == 18:
