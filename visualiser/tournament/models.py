@@ -612,9 +612,9 @@ class Round(models.Model):
         max_score = max(the_scores.values())
         winners = [k for k,v in the_scores.items() if v == max_score]
         if self.is_finished():
-            done_str = u'Final'
+            done_str = _(u'Final')
         else:
-            done_str = u'Current'
+            done_str = _(u'Current')
         player_str = ', '.join([str(w) for w in winners])
         return _(u'%(done)s top score for round %(r_num)d is %(score).2f for %(players)s.') % {'done': done_str,
                                                                                                        'r_num': self.number(),
