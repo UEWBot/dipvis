@@ -14,6 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# This file contains code to parse online sources of background information
+# about Diplomacy players. Currently reads Wikipedia for titles and the World
+# Diplomacy Database for lots of stuff.
+
 from bs4 import BeautifulSoup
 import urllib.request
 

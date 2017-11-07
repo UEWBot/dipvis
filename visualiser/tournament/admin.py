@@ -16,6 +16,8 @@
 
 from django.contrib import admin
 from tournament.models import *
+from tournament.diplomacy import GreatPower, GameSet, SetPower
+from tournament.players import Player
 
 class SetPowerInline(admin.TabularInline):
     model = SetPower

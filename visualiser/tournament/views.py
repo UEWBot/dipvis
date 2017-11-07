@@ -25,6 +25,8 @@ from django.forms import ModelForm
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import permission_required
 
+from tournament.players import *
+from tournament.diplomacy import *
 from tournament.models import *
 
 class DrawForm(forms.Form):

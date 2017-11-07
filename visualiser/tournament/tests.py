@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from tournament.models import *
+from tournament.background import WDD_Background, InvalidWDDId
 
 from datetime import timedelta
 
