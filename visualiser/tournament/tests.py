@@ -325,6 +325,39 @@ class TournamentModelTests(TestCase):
             else:
                 self.assertEqual(s, 0)
 
+    # GScoringCarnage
+    def test_g_scoring_carnage_simple(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Carnage with dead equal')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.get(power=p)
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+            if sc.count == 4:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + 4)
+            else:
+                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + 5)
+        self.assertEquals(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
+
+    def test_g_scoring_carnage_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('Carnage with dead equal')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+            else:
+                self.assertEqual(s, 0)
+
+    # TODO test Carnage scoring with eliminations but no solo
+
     # TODO RScoringBest
 
     # TODO TScoringSum

@@ -18,7 +18,7 @@
 
 from django.utils.translation import ugettext as _
 
-from tournament.diplomacy import WINNING_SCS
+from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
 
 class GameScoringSystem():
     # TODO This doesn't deal with multiple players playing one power
@@ -182,6 +182,37 @@ class GScoringCDiplo(GameScoringSystem):
             i += 1
         return retval
 
+class GScoringCarnage(GameScoringSystem):
+    """
+    Position grants a set number of points (7000, 6000, 5000, 4000, 3000, 20000, or 1000),
+    with ties splitting those points.
+    Eliminated powers just split position points.
+    Each power gets 1 point per centre owned at the end, unless there's a solo, in which
+    case the soloer gets the 34 SC points.
+    """
+    # TODO Add support for dead powers scoring based on elimination order
+    def __init__(self):
+        self.name = _('Carnage with dead equal')
+        self.position_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
+        self.is_abstract = False
+
+    # TODO There's a lot of overlap with CDiplo here
+    def scores(self, centre_counts):
+        retval = {}
+        final_scs = self._final_year_scs(centre_counts)
+        # Tweak the ranking points to allow for ties
+        rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
+        i = 0
+        for sc in final_scs:
+            if final_scs[0].count >= WINNING_SCS:
+                retval[sc.power] = 0
+                if sc.count >= WINNING_SCS:
+                    retval[sc.power] = sum(self.position_pts) + TOTAL_SCS
+            else:
+                retval[sc.power] = sc.count + rank_pts[i]
+            i += 1
+        return retval
+
 class GScoringSumOfSquares(GameScoringSystem):
     """
     Soloer gets 100 points, everyone else gets zero.
@@ -219,5 +250,6 @@ G_SCORING_SYSTEMS = [
     GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
     GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringSumOfSquares(),
+    GScoringCarnage(),
 ]
 
