@@ -120,7 +120,7 @@ def adjust_rank_score(centre_counts, rank_points):
     and a list of ranking points for positions, ordered from first place to last.
     Returns a list of ranking points for positions, ordered to correspond to the centre counts,
     having made adjustments for any tied positions.
-    Where two or more powers have the same score, the ranking points for their positions
+    Where two or more powers have the same number of SCs, the ranking points for their positions
     are shared eveny between them.
     """
     if len(rank_points) == 0:
