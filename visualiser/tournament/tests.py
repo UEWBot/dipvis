@@ -233,10 +233,13 @@ class TournamentModelTests(TestCase):
         scores = system.scores(scs)
         for p,s in scores.items():
             sc = scs.get(power=p)
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
-                self.assertEqual(s, 5)
+                self.assertEqual(s, 1 + 4)
             else:
-                self.assertEqual(s, 20.75)
+                self.assertEqual(s, 1 + (38 + 14 + 7) / 4 + 5)
+        # With 2 neutrals, the total of all scores should be 100-2=98
+        self.assertEquals(sum(scores.values()), 100 - 2)
 
     def test_g_scoring_cdiplo_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -259,10 +262,13 @@ class TournamentModelTests(TestCase):
         scores = system.scores(scs)
         for p,s in scores.items():
             sc = scs.get(power=p)
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, 4)
             else:
-                self.assertEqual(s, 16.5)
+                self.assertEqual(s, (25 + 14 + 7) / 4 + 5)
+        # With 2 neutrals, the total of all scores should be 80-2=78
+        self.assertEquals(sum(scores.values()), 80 - 2)
 
     def test_g_scoring_cdiplo80_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -290,6 +296,8 @@ class TournamentModelTests(TestCase):
                 self.assertEqual(s, 100.0 * 16 / 148)
             else:
                 self.assertEqual(s, 100.0 * 25 / 148)
+        # Total of all scores should always be very close to 100
+        self.assertAlmostEqual(sum(scores.values()), 100)
 
     def test_g_scoring_squares_solo(self):
         t = Tournament.objects.get(name='t1')
