@@ -641,7 +641,7 @@ class Round(models.Model):
         else:
             # Otherwise, add a count of completed games
             if done_games == 0:
-                done_str = u'None'
+                done_str = _(u'None')
             else:
                 done_str = u'%d' % done_games
             results.append(_(u'%(done)s of the %(total_num)d games in round %(r_num)d have ended.') % {'done': done_str,

@@ -297,6 +297,7 @@ class Player(models.Model):
             # Not much we can do in this case
             return u''
         except InvalidWDDId:
+            # This can only happen if we couldn't get to the WDD when the Player was created
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'), params = {'wdd_id': self.wdd_player_id})
 
     def wdd_url(self):
@@ -312,7 +313,7 @@ class Player(models.Model):
             return results
         rankings_set = self.playerranking_set.all()
         for r in rankings_set:
-            results.append(str(r))
+            results.append('%s.' % str(r))
         return results
 
     def _awards(self, power=None, mask=MASK_ALL_BG):
@@ -330,7 +331,7 @@ class Player(models.Model):
                 power_award_set = award_set.filter(power=p)
                 award_count = power_award_set.count()
                 if award_count == 0:
-                    results.append(_('%(name)s has never won Best %(power)s') % {'name': self, 'power': p})
+                    results.append(_('%(name)s has never won Best %(power)s.') % {'name': self, 'power': p})
                     continue
                 elif award_count == 1:
                     count_str = _('once')
@@ -359,9 +360,9 @@ class Player(models.Model):
                 results.append(s)
         if (mask & MASK_OTHER_AWARDS) != 0:
             for a in award_set.filter(power=None):
-                results.append(_('%(name)s won %(award)s at %(tourney)s') % {'name': self,
-                                                                             'award': a.name,
-                                                                             'tourney': a.tournament})
+                results.append(_('%(name)s won %(award)s at %(tourney)s.') % {'name': self,
+                                                                              'award': a.name,
+                                                                              'tourney': a.tournament})
         return results
 
     def _tourney_rankings(self, mask=MASK_ALL_BG):
