@@ -595,11 +595,9 @@ class Round(models.Model):
         Which round within the tournament is this one ?
         """
         rounds = self.tournament.round_set.all()
-        count = 1
-        for r in rounds:
+        for count, r in enumerate(rounds, 1):
             if r == self:
                 return count
-            count += 1
         assert 0, u"Round doesn't exist within its own tournament"
 
     def leader_str(self):

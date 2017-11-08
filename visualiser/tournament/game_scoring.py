@@ -171,15 +171,13 @@ class GScoringCDiplo(GameScoringSystem):
         final_scs = self._final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
         rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
-        i = 0
-        for sc in final_scs:
+        for i, sc in enumerate(final_scs):
             if final_scs[0].count >= WINNING_SCS:
                 retval[sc.power] = self.loss_pts
                 if sc.count >= WINNING_SCS:
                     retval[sc.power] = self.soloer_pts
             else:
                 retval[sc.power] = self.played_pts + sc.count + rank_pts[i]
-            i += 1
         return retval
 
 class GScoringCarnage(GameScoringSystem):
@@ -202,15 +200,13 @@ class GScoringCarnage(GameScoringSystem):
         final_scs = self._final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
         rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
-        i = 0
-        for sc in final_scs:
+        for i, sc in enumerate(final_scs):
             if final_scs[0].count >= WINNING_SCS:
                 retval[sc.power] = 0
                 if sc.count >= WINNING_SCS:
                     retval[sc.power] = sum(self.position_pts) + TOTAL_SCS
             else:
                 retval[sc.power] = sc.count + rank_pts[i]
-            i += 1
         return retval
 
 class GScoringSumOfSquares(GameScoringSystem):
