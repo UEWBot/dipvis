@@ -428,9 +428,9 @@ class Tournament(models.Model):
             # TODO There are potentially ties here
             for p in self.tournamentplayer_set.all().order_by('-score'):
                 scores_reported += 1
-                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f') % {'player': str(p.player),
-                                                                                           'pos':  position_str(scores_reported),
-                                                                                           'score':  p.score})
+                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.') % {'player': str(p.player),
+                                                                                            'pos':  position_str(scores_reported),
+                                                                                            'score':  p.score})
                 if scores_reported == 3:
                     break
             # Add best countries
@@ -438,7 +438,7 @@ class Tournament(models.Model):
                 gp = gps[0]
                 if len(gps) == 1:
                     sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
-                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d') % {'player': str(gp.player),
+                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.') % {'player': str(gp.player),
           'country': power.name,
           'dots': sc.count,
           'score': gp.score,
