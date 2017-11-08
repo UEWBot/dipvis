@@ -16,7 +16,8 @@
 
 from django.contrib import admin
 
-from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer, CentreCount, DrawProposal
+from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
+from tournament.models import CentreCount, DrawProposal, GameImage
 from tournament.diplomacy import GreatPower, GameSet, SetPower
 from tournament.players import Player
 
@@ -101,6 +102,7 @@ class GameAdmin(admin.ModelAdmin):
     inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline]
 
 # Register models
+admin.site.register(GameImage)
 admin.site.register(GreatPower)
 admin.site.register(GameSet, GameSetAdmin)
 admin.site.register(Player)
