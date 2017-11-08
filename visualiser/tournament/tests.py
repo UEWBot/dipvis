@@ -20,6 +20,7 @@ from django.utils import timezone
 
 from tournament.models import *
 from tournament.background import WDD_Background, InvalidWDDId
+from tournament.players import PlayerRanking
 
 from datetime import timedelta
 
@@ -34,6 +35,7 @@ INVALID_WDD_ID = 1
 MATT_SHIELDS_WDD_ID = 588
 MATT_SUNDSTROM_WDD_ID = 8355
 NATE_COCKERILL_WDD_ID = 5009
+SPIROS_BOBETSIS_WDD_ID = 12304
 
 class TournamentModelTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -458,6 +460,22 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         p.background()
 
+    def test_player_background_no_wins(self):
+        # Spiros has yet to win a tournament
+        p, created = Player.objects.get_or_create(first_name='Spiros',
+                                                  last_name='Bobetsis',
+                                                  wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+        p.delete()
+
+    def test_player_background_mask(self):
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        add_player_bg(p)
+        self.assertEqual([], p.background(mask=0))
+
     def test_player_background_with_power(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
@@ -594,6 +612,7 @@ class TournamentModelTests(TestCase):
         r = t.current_round()
         # All earlier rounds should be finished
         for i in range(1, r.number()):
+            # TODO coverage shows that this line is never hit
             self.assertTrue(t.round_numbered(i).is_finished(), 'round %d' % i)
         # This round should be unfinished
         self.assertFalse(r.is_finished())
@@ -708,9 +727,25 @@ class TournamentModelTests(TestCase):
         r22 = t.round_set.all()[1]
         self.assertEqual(r22.number(), 2)
 
-    # TODO Round.leader_str()
+    # Round.leader_str()
+    def test_round_leader_str_unfinished(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.leader_str()
 
-    # TODO Round.news()
+    def test_round_leader_str_finished(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.leader_str()
+
+    # Round.news()
+    def test_round_news_unfinished(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # TODO Validate results
+        r.news()
 
     # Round.background()
     def test_round_background(self):
@@ -1364,3 +1399,13 @@ class TournamentModelTests(TestCase):
         b = WDD_Background(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.awards)
 
+    # WDD_Background.rankings()
+    def test_wdd_background_awards_invalid(self):
+        b = WDD_Background(INVALID_WDD_ID)
+        self.assertRaises(InvalidWDDId, b.rankings)
+
+    # PlayerRanking.national_str()
+    def test_playerranking_national_str(self):
+        pr = PlayerRanking.objects.get(pk=1)
+        # TODO Validate results
+        pr.national_str()
