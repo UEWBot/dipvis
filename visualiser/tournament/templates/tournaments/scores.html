@@ -12,6 +12,7 @@
 
 <table class="form">
   <thead><tr>
+    <th>{% trans "Position" %}</th>
     <th>{% trans "Player" %}</th>
     {% for r in rounds %}
       <th><a href="{% url 'round_detail' tournament.id r %}">{% blocktrans with round=r %}Round {{ round }}{% endblocktrans %}</a></th>
