@@ -39,18 +39,24 @@ class DrawForm(forms.Form):
     season = forms.ChoiceField(choices=SEASONS)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
                                       to_field_name='name')
-    passed = forms.BooleanField(initial=False, required=False)
 
     def __init__(self, *args, **kwargs):
         """Adds powers field if game is not set Draws Include All Survivors"""
-        # Remove our special kwarg from the list
+        # Remove our special kwargs from the list
         is_dias = kwargs.pop('dias')
+        secrecy = kwargs.pop('secrecy')
         super(DrawForm, self).__init__(*args, **kwargs)
 
         if not is_dias:
             self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
                                                                    to_field_name='name',
                                                                    widget=forms.SelectMultiple(attrs={'size':'7'}))
+        if secrecy == SECRET:
+            self.fields['passed'] = forms.BooleanField(initial=False, required=False)
+        elif secrecy == COUNTS:
+            self.fields['votes_in_favour'] = forms.IntegerField(min_value = 0, max_value = 7)
+        else:
+            assert 0, 'Unexpected draw secrecy value %c' % secrecy
 
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
@@ -1106,8 +1112,10 @@ def draw_vote(request, tournament_id, game_name):
         # Assume we're currently playing the season the image is for
         year = last_image.year
         season = last_image.season
-    form = DrawForm(request.POST or None, dias=g.is_dias(), initial={'year': year,
-                                                                     'season' : season})
+    form = DrawForm(request.POST or None,
+                    dias = g.is_dias(),
+                    secrecy = t.draw_secrecy,
+                    initial = {'year': year, 'season' : season})
     if form.is_valid():
         year = form.cleaned_data['year']
         try:
@@ -1125,12 +1133,22 @@ def draw_vote(request, tournament_id, game_name):
         for i in range(0,len(countries)):
             kwargs['power_%d'%(i+1)] = countries[i]
 
+        try:
+            passed = form.cleaned_data['passed']
+        except KeyError:
+            passed = None
+        try:
+            votes_in_favour = form.cleaned_data['votes_in_favour']
+        except KeyError:
+            votes_in_favour = None
+
         # Create the DrawProposal
         dp = DrawProposal(game=g,
                           year = year,
-                          season=form.cleaned_data['season'],
-                          passed=form.cleaned_data['passed'],
-                          proposer=form.cleaned_data['proposer'],
+                          season = form.cleaned_data['season'],
+                          passed = passed,
+                          votes_in_favour = votes_in_favour,
+                          proposer = form.cleaned_data['proposer'],
                           **kwargs)
         try:
             dp.full_clean()

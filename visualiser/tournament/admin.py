@@ -56,7 +56,7 @@ class TournamentAdmin(admin.ModelAdmin):
     fields = ('name',
               ('start_date', 'end_date'),
               ('tournament_scoring_system', 'round_scoring_system'),
-              ('managers', 'is_published'))
+              ('managers', 'is_published', 'draw_secrecy'))
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
@@ -90,7 +90,7 @@ class DrawProposalInline(admin.StackedInline):
     extra = 1
     fieldsets = (
         (None, {
-            'fields': ('season', 'year', 'proposer', 'passed')
+            'fields': ('season', 'year', 'proposer', 'passed', 'votes_in_favour')
         }),
         ('Powers', {
             'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')

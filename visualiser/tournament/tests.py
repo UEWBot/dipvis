@@ -53,17 +53,20 @@ class TournamentModelTests(TestCase):
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
@@ -1122,6 +1125,31 @@ class TournamentModelTests(TestCase):
         self.assertEqual(dp.power_is_part(self.russia), True)
         self.assertEqual(dp.power_is_part(self.turkey), True)
 
+    # DrawProposal.votes_against()
+    def test_draw_proposal_votes_against_none(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        dp = DrawProposal(game=g, year=1910, season='F', votes_in_favour=7, proposer=self.austria,
+                          power_1=self.austria, power_2=self.england, power_3=self.france,
+                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        self.assertEqual(dp.votes_against(), 0)
+
+    def test_draw_proposal_votes_against_some(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        dp = DrawProposal(game=g, year=1910, season='F', votes_in_favour=2, proposer=self.austria,
+                          power_1=self.austria, power_2=self.england, power_3=self.france,
+                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        self.assertEqual(dp.votes_against(), 5)
+
+    def test_draw_proposal_votes_against_exception(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
+                          power_1=self.austria, power_2=self.england, power_3=self.france,
+                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        self.assertRaises(TypeError, dp.votes_against)
+
     # DrawProposal.clean()
     def test_draw_proposal_clean_with_duplicates(self):
         g = Game.objects.get(pk=1)
@@ -1171,6 +1199,10 @@ class TournamentModelTests(TestCase):
                            power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
         self.assertRaises(ValidationError, dp2.clean)
         dp1.delete()
+
+    # TODO DrawProposal.clean() with passed not set in a tournament with SECRET draw votes
+    # TODO DrawProposal.clean() with votes_in_favour not set in a tournament with COUNTS draw votes
+    # TODO DrawProposal.clean() sets passed from votes_in_favour correctly
 
     # RoundPlayer.clean()
     def test_roundplayer_clean(self):

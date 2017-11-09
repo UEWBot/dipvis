@@ -63,6 +63,14 @@ POWER_ASSIGNS =  (
     (FRENCH_METHOD, _('French method')),
 )
 
+# Draw secrecy levels
+SECRET = 'S'
+COUNTS = 'C'
+DRAW_SECRECY = (
+    (SECRET, _('Pass/Fail')),
+    (COUNTS, _('Numbers for and against')),
+)
+
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1<<0
 MASK_GAINERS = 1<<1
@@ -229,6 +237,13 @@ def validate_game_name(value):
     if u' ' in value:
         raise ValidationError(_(u'Game names cannot contain spaces'))
 
+def validate_vote_count(value):
+    """
+    Checks for a valid vote count
+    """
+    if value < 0 or value > 7:
+        raise VaidationError(_('%(value)d is not a valid vote count'), {'value': value})
+
 def game_image_location(instance, filename):
     """
     Function that determines where to store the file.
@@ -327,6 +342,10 @@ class Tournament(models.Model):
     round_scoring_system = models.CharField(max_length=40,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS),
                                             help_text=_(u'How to combine game scores into a round score'))
+    draw_secrecy = models.CharField(max_length=1,
+                                    verbose_name=_(u'What players are told about failed draw votes'),
+                                    choices=DRAW_SECRECY,
+                                    default=SECRET)
     is_published = models.BooleanField(default=False, help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User, help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
 
@@ -853,12 +872,20 @@ class Game(models.Model):
                     incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                                 'power': _(power.abbreviation)})
                 incl_str = ', '.join(incl)
-                if sz == 1:
-                    d_str = _(u'Vote to concede to %(powers)s failed%(game)s.') % {'powers': incl_str, 'game': gn_str}
+                if self.the_round.tournament.draw_secrecy == COUNTS:
+                    count_str = _(', %(for)d for, %(against)d against' % {'for': d.votes_in_favour,
+                                                                          'against': d.votes_against()})
                 else:
-                    d_str = _(u'Draw vote for %(n)d-way between %(powers)s failed%(game)s.') % {'n': sz,
-                                                                                                'powers': incl_str,
-                                                                                                'game': gn_str}
+                    count_str = ''
+                if sz == 1:
+                    d_str = _(u'Vote to concede to %(powers)s failed%(game)s%(count)s.') % {'powers': incl_str,
+                                                                                            'game': gn_str,
+                                                                                            'count': count_str}
+                else:
+                    d_str = _(u'Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s.') % {'n': sz,
+                                                                                                         'powers': incl_str,
+                                                                                                         'game': gn_str,
+                                                                                                         'count': count_str}
                 results.append(d_str)
         if (mask & MASK_ELIMINATIONS) != 0:
             # Who has been eliminated so far, and when ?
@@ -1065,7 +1092,7 @@ class DrawProposal(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
-    passed = models.BooleanField()
+    passed = models.NullBooleanField(blank=True, null=True)
     proposer = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     power_1 = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
@@ -1074,6 +1101,7 @@ class DrawProposal(models.Model):
     power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
     power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
     power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
+    votes_in_favour = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_vote_count])
 
     def draw_size(self):
         return len(self.powers())
@@ -1108,6 +1136,18 @@ class DrawProposal(models.Model):
         if self.power_7 == power:
             return True
         return False
+
+    def votes_against(self):
+        """
+        Returns the number of votes against the draw proposal.
+        """
+        # Get the most recent CentreCounts before the DrawProposal
+        scs = self.game.centrecount_set.filter(year__lt=self.year)
+        survivors = len([sc for sc in scs if sc.count > 0])
+        try:
+            return survivors - self.votes_in_favour
+        except TypeError:
+            raise TypeError(_('This DrawProposal only has pass/fail, not vote counts'))
 
     def clean(self):
         # No skipping powers
@@ -1151,6 +1191,20 @@ class DrawProposal(models.Model):
             else:
                 if dias and sc.count > 0:
                     raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'), params = {'power': sc.power})
+        # Ensure that either passed or votes_in_favour, as appropriate, are set
+        if self.game.the_round.tournament.draw_secrecy == SECRET:
+            if not self.passed:
+                raise ValidationError(_('Passed needs a value'))
+        elif self.game.the_round.tournament.draw_secrecy == COUNTS:
+            if not self.votes_in_favour:
+                raise ValidationError(_('Votes_in_favour needs a value'))
+            # Derive passed from votes_in_favour and survivor count
+            survivors = len([sc for sc in scs if sc.count > 0])
+            if self.votes_in_favour:
+                # Votes must be unanimous
+                self.passed = (self.votes_in_favour == survivors)
+        else:
+            assert 0, 'Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy
 
     def save(self, *args, **kwargs):
         super(DrawProposal, self).save(*args, **kwargs)
