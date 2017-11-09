@@ -113,7 +113,7 @@ def add_player_bg(player):
             try:
                 if title[key] == str(player):
                     pos = val
-                    if key.find('Champion') != -1:
+                    if 'Champion' in key:
                         the_title = key
             except KeyError:
                 pass
@@ -469,8 +469,7 @@ class Player(models.Model):
                                                                                                    'power': c_str})
         if (mask & MASK_BOARD_TOP_COUNT) != 0:
             query = Q(result=WIN) | Q(position=1)
-            victories_set = results_set.filter(query)
-            board_tops = victories_set.count()
+            board_tops = results_set.filter(query).count()
             if board_tops > 0:
                 results.append(_(u'%(name)s topped the board in %(tops)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).') % {'name': self,
                                                                                                                                                   'tops': board_tops,

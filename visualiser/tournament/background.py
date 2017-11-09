@@ -290,11 +290,11 @@ class WDD_Background():
                         # The Rank column actually encodes up to three separate pieces of info
                         for key,s in zip([u'Position', u'Position sharing', u'Game end'],
                                          td.stripped_strings):
-                            if s.find('ex') != -1:
+                            if 'ex' in s:
                                 result[key] = int(s[:-2])
                             elif s[0] == '(':
                                 result[key] = s[1:-1]
-                            elif s.find('(') != -1:
+                            elif '(' in s:
                                 s2 = s.split()
                                 result[key] = s2[0]
                                 result[u'Game end'] = s2[1][1:-1]
@@ -302,7 +302,7 @@ class WDD_Background():
                                 result[key] = int(s)
                     elif key == 'SCs':
                         # The SCs column can contain year of elimination instead
-                        if td.string.find('c.') != -1:
+                        if 'c.' in td.string:
                             # It's a final centre count, or maybe just 'c.'
                             if td.string != 'c.':
                                 n = int(td.string[:-2])

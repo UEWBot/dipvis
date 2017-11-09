@@ -182,9 +182,7 @@ class TScoringSum(TournamentScoringSystem):
                     pass
             player_scores.sort(reverse=True)
             # Add up the first N
-            for s in player_scores[:self.scored_rounds]:
-                score += s
-            retval[p] = score
+            retval[p] = sum(player_scores[:self.scored_rounds])
         return retval
 
 # All the tournament scoring systems we support
@@ -424,15 +422,11 @@ class Tournament(models.Model):
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
         elif self.is_finished():
-            scores_reported = 0
             # TODO There are potentially ties here
-            for p in self.tournamentplayer_set.all().order_by('-score'):
-                scores_reported += 1
+            for scores_reported, p in enumerate(self.tournamentplayer_set.all().order_by('-score')[:3], 1):
                 results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.') % {'player': str(p.player),
-                                                                                            'pos':  position_str(scores_reported),
-                                                                                            'score':  p.score})
-                if scores_reported == 3:
-                    break
+                                                                                              'pos':  position_str(scores_reported),
+                                                                                              'score':  p.score})
             # Add best countries
             for power, gps in self.best_countries().items():
                 gp = gps[0]
