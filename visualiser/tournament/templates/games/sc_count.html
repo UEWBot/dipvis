@@ -21,7 +21,7 @@
    </tr></thead>
    <tbody>
    {% for row in rows %}
-       <tr>
+       <tr class="{% cycle 'odd_row' 'even_row' %}">
            {% for cell in row %}
                {% if forloop.first %}
                  <th align=center>{{ cell }} </th>

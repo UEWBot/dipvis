@@ -19,7 +19,7 @@
   </tr></thead>
   <tbody>
   {% for player in scores %}
-    <tr>
+    <tr class="{% cycle 'odd_row' 'even_row' %}">
       {% for data in player %}
         <td>{{ data|safe }}</td>
       {% endfor %}
