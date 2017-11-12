@@ -952,10 +952,17 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
         names = '<br>'.join(map(str, power_players))
         ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
-    # Create a list of years that have been played
+    # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
+    years.reverse()
     # Create a list of rows, each with a year and each power's SC count
     rows = []
+    # Start with a row with the current scores
+    scores = g.scores()
+    row = [_(u'Score')]
+    for sp in set_powers:
+        row.append(scores[sp.power])
+    rows.append(row)
     for year in years:
         yscs = scs.filter(year=year)
         row = []
@@ -969,12 +976,6 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
                 row.append(0)
         row.append(g.neutrals(year))
         rows.append(row)
-    # Add one final row with the current scores
-    scores = g.scores()
-    row = [_(u'Score')]
-    for sp in set_powers:
-        row.append(scores[sp.power])
-    rows.append(row)
     context = {'game': g, 'powers': set_powers, 'players': ps, 'rows': rows}
     if refresh:
         context['refresh'] = True
