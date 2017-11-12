@@ -11,6 +11,7 @@
   {% else %}
     <li><a href="{% url 'tournament_scores_refresh' tournament.id %}">{% trans "Current Standings" %}</a></li>
   {% endif %}
+  <li><a href="{% url 'tournament_best_countries_refresh' tournament.id %}">{% trans "Best Countries" %}</a></li>
   <li><a href="{% url 'tournament_game_results_refresh' tournament.id %}">{% trans "Game Summary" %}</a></li>
   {% for round in tournament.round_set.all %}
     {% for game in round.game_set.all %}

@@ -512,6 +512,33 @@ def tournament_game_results(request, tournament_id, refresh=False):
         context['redirect_url'] = reverse('tournament_game_results_refresh', args=(tournament_id,))
     return render(request, 'tournaments/game_results.html', context)
 
+def tournament_best_countries(request, tournament_id, refresh=False):
+    """Display best countries of a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score'))
+    # We have to just pick a set here. Avalon Hill is most common in North America
+    set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power')
+    # TODO Sort set_powers alphabetically by translated power.name
+    rows = []
+    while len(gps) > 0:
+        row = []
+        for p in set_powers:
+            # Find the first in gps for this power
+            for gp in gps:
+                if gp.power == p.power:
+                    gps.remove(gp)
+                    break
+            row.append('%s %s %f' % (gp.player,
+                                     gp.game.name,
+                                     gp.score))
+        rows.append(row)
+    context = {'tournament': t, 'powers': set_powers, 'rows': rows}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = 300
+        context['redirect_url'] = reverse('tournament_best_countries_refresh', args=(tournament_id,))
+    return render(request, 'tournaments/best_countries.html', context)
+
 def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
