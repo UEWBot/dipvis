@@ -412,6 +412,13 @@ class Tournament(models.Model):
         results = []
         include_leader = False
         current_round = self.current_round()
+        # Always include the number of players
+        if self.is_finished():
+            tense_str = _('were')
+        else:
+            tense_str = _('are')
+        results.append(_('%(count)d players %(are)s registered to play in the tournament.') % {'count': self.tournamentplayer_set.count(),
+                                                                                               'are': tense_str})
         if current_round:
             # Include who is leading the tournament
             include_leader = True
@@ -623,6 +630,13 @@ class Round(models.Model):
         ls = self.leader_str()
         if ls:
             results.append(ls)
+        # Always include the number of players
+        if self.is_finished():
+            tense_str = _('were')
+        else:
+            tense_str = _('are')
+        results.append(_('%(count)d players %(are)s registered to play in the round.') % {'count': self.roundplayer_set.count(),
+                                                                                          'are': tense_str})
         # Get the news for every game in the round
         done_games = 0
         for g in self.game_set.all():
