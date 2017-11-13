@@ -24,7 +24,7 @@ from django.utils import timezone
 from django.contrib.auth.models import User
 
 from tournament.diplomacy import GameSet, GreatPower
-from tournament.diplomacy import FIRST_YEAR, game_image_location, WINNING_SCS, TOTAL_SCS
+from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
@@ -228,6 +228,16 @@ def validate_game_name(value):
     """
     if u' ' in value:
         raise ValidationError(_(u'Game names cannot contain spaces'))
+
+def game_image_location(instance, filename):
+    """
+    Function that determines where to store the file.
+    """
+    # We expect instance to be a GameImage
+    game = instance.game
+    tournament = game.the_round.tournament
+    directory = os.path.join(tournament.name, str(tournament.start_date), game.name)
+    return os.path.join('games', directory, filename)
 
 def add_local_player_bg(player):
     """

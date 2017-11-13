@@ -49,13 +49,7 @@ def game_image_location(instance, filename):
     """
     Function that determines where to store the file.
     """
-    if type(instance) == GameImage:
-        game = instance.game
-        tournament = game.the_round.tournament
-        directory = os.path.join(tournament.name, game.name)
-    else:
-        directory = 'starting_positions'
-    return os.path.join('games', directory, filename)
+    return os.path.join('games', 'starting_positions', filename)
 
 @python_2_unicode_compatible
 class GreatPower(models.Model):
