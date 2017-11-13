@@ -29,6 +29,10 @@ from tournament.players import *
 from tournament.diplomacy import *
 from tournament.models import *
 
+# Redirect times are specified in seconds
+INTER_IMAGE_TIME = 15
+REFRESH_TIME = 300
+
 class DrawForm(forms.Form):
     """Form for a draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
@@ -411,7 +415,7 @@ def tournament_scores(request, tournament_id, refresh=False):
     context = {'tournament': t, 'scores': scores, 'rounds': rounds}
     if refresh:
         context['refresh'] = True
-        context['redirect_time'] = 300
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_scores_refresh', args=(tournament_id,))
     return render(request, 'tournaments/scores.html', context)
 
@@ -508,7 +512,7 @@ def tournament_game_results(request, tournament_id, refresh=False):
     context = {'tournament': t, 'scores': results, 'rounds': rounds}
     if refresh:
         context['refresh'] = True
-        context['redirect_time'] = 300
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_game_results_refresh', args=(tournament_id,))
     return render(request, 'tournaments/game_results.html', context)
 
@@ -537,7 +541,7 @@ def tournament_best_countries(request, tournament_id, refresh=False):
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
         context['refresh'] = True
-        context['redirect_time'] = 300
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_best_countries_refresh', args=(tournament_id,))
     return render(request, 'tournaments/best_countries.html', context)
 
@@ -546,8 +550,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     context = {'tournament': t, 'subject': 'Background', 'content': t.background()}
     if as_ticker:
-        # 300s = 5 mins
-        context['redirect_time'] = '300'
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_ticker',
                                           args=(tournament_id,))
         return render(request, 'tournaments/info_ticker.html', context)
@@ -559,8 +562,7 @@ def tournament_news(request, tournament_id, as_ticker=False):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     context = {'tournament': t, 'subject': 'News', 'content': t.news()}
     if as_ticker:
-        # 300s = 5 mins
-        context['redirect_time'] = '300'
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_ticker',
                                           args=(tournament_id,))
         return render(request, 'tournaments/info_ticker.html', context)
@@ -981,7 +983,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     context = {'game': g, 'powers': set_powers, 'players': ps, 'rows': rows}
     if refresh:
         context['refresh'] = True
-        context['redirect_time'] = 300
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_sc_chart_refresh',
                                           args=(tournament_id, game_name))
     #formset = CentreCountFormSet(instance=g, queryset=scs)
@@ -1067,8 +1069,7 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
     if as_ticker:
-        # 300s = 5 mins
-        context['redirect_time'] = '300'
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
                                           args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
@@ -1081,8 +1082,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
     if as_ticker:
-        # 300s = 5 mins
-        context['redirect_time'] = '300'
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
                                           args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
@@ -1178,11 +1178,11 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
     context = {'tournament': t, 'image': this_image}
     if timelapse:
         context['refresh'] = True
-        # Switch to the next image after 15s
-        context['redirect_time'] = 15
-        # If we're just refreshing the latest image, every 5 mins is fine 
+        # Display each image for a short time
+        context['redirect_time'] = INTER_IMAGE_TIME
+        # If we're just showing the current position, use the standard refresh time
         if turn == '':
-            context['redirect_time'] = 300
+            context['redirect_time'] = REFRESH_TIME
         # Note that this works even if there is just one image.
         # In that case, this becomes a refresh, which will then check
         # for new images in 5 minutes
