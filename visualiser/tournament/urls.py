@@ -62,6 +62,13 @@ tournament_patterns = [
     url(r'^frameset_2x2/$', views.tournament_simple, {'template': 'frameset_2x2'}, name='frameset_2x2'),
     url(r'^frameset_1x1/$', views.tournament_simple, {'template': 'frameset_1x1'}, name='frameset_1x1'),
     url(r'^views/$', views.tournament_simple, {'template': 'view'}, name='tournament_views'),
+    # These three go together as a cycle
+    url(r'^overview/$', views.tournament_scores,
+        {'refresh': True, 'redirect_url_name': 'tournament_overview_2'}, name='tournament_overview'),
+    url(r'^overview2/$', views.tournament_game_results,
+        {'refresh': True, 'redirect_url_name': 'tournament_overview_3'}, name='tournament_overview_2'),
+    url(r'^overview3/$', views.tournament_best_countries,
+        {'refresh': True, 'redirect_url_name': 'tournament_overview'}, name='tournament_overview_3'),
     url(r'^scores/$', views.tournament_scores, name='tournament_scores'),
     url(r'^scores_refresh/$', views.tournament_scores, {'refresh': True}, name='tournament_scores_refresh'),
     url(r'^game_results/$', views.tournament_game_results, name='tournament_game_results'),

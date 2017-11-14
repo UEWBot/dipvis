@@ -369,7 +369,7 @@ def tournament_simple(request, tournament_id, template):
     context = {'tournament': t}
     return render(request, 'tournaments/%s.html' % template, context)
 
-def tournament_scores(request, tournament_id, refresh=False):
+def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('-score')
@@ -416,10 +416,10 @@ def tournament_scores(request, tournament_id, refresh=False):
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
-        context['redirect_url'] = reverse('tournament_scores_refresh', args=(tournament_id,))
+        context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/scores.html', context)
 
-def tournament_game_results(request, tournament_id, refresh=False):
+def tournament_game_results(request, tournament_id, refresh=False, redirect_url_name='tournament_game_results_refresh'):
     """Display the results of all the games of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name')
@@ -513,10 +513,10 @@ def tournament_game_results(request, tournament_id, refresh=False):
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
-        context['redirect_url'] = reverse('tournament_game_results_refresh', args=(tournament_id,))
+        context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/game_results.html', context)
 
-def tournament_best_countries(request, tournament_id, refresh=False):
+def tournament_best_countries(request, tournament_id, refresh=False, redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score'))
@@ -542,7 +542,7 @@ def tournament_best_countries(request, tournament_id, refresh=False):
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
-        context['redirect_url'] = reverse('tournament_best_countries_refresh', args=(tournament_id,))
+        context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/best_countries.html', context)
 
 def tournament_background(request, tournament_id, as_ticker=False):

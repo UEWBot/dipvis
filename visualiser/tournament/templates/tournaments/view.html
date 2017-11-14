@@ -6,6 +6,7 @@
 {% block content %}
 <h1>{{ tournament }}</h1>
 <ul>
+  <li><a href="{% url 'tournament_overview' tournament.id %}">{% trans "Overview" %}</a></li>
   {% if tournament.is_finished %}
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Final Standings" %}</a></li>
   {% else %}
