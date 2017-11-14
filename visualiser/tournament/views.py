@@ -31,7 +31,7 @@ from tournament.models import *
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15
-REFRESH_TIME = 300
+REFRESH_TIME = 60
 
 class DrawForm(forms.Form):
     """Form for a draw vote"""
@@ -1185,7 +1185,7 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
             context['redirect_time'] = REFRESH_TIME
         # Note that this works even if there is just one image.
         # In that case, this becomes a refresh, which will then check
-        # for new images in 5 minutes
+        # for new images at the redirect time
         context['redirect_url'] = reverse('game_image_seq',
                                           args=(tournament_id,
                                                 game_name,
