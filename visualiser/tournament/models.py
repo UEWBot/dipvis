@@ -796,7 +796,7 @@ class Game(models.Model):
             gn_str = ''
         if self.is_finished:
             # Just report the final result
-            return [self.result_str(include_game_name)]
+            return [self.result_str(include_game_name) + '.']
         player_dict = self.players(latest=True)
         centres_set = self.centrecount_set.order_by('-year')
         last_year = centres_set[0].year
