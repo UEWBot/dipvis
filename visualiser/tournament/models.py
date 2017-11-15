@@ -245,7 +245,6 @@ def add_local_player_bg(player):
     unless they have already been added (e.g. because those results are
     in the WDD).
     """
-    # TODO Should this just be part of add_player_bg()?
     for t in Tournament.objects.all():
         # Not interested in ongoing tournaments
         if not t.is_finished():
