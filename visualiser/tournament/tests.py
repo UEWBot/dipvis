@@ -994,6 +994,14 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         self.assertIsNone(g.soloer())
 
+    # Game.survivors()
+    def test_game_survivors(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        # survivors() just returns surviving players, regardless of whether they
+        # lost to a solo or were excluded from a draw
+        self.assertEqual(len(g.survivors()), 6)
+
     # Game.result_str()
     def test_game_result_str_soloed(self):
         t = Tournament.objects.get(name='t1')

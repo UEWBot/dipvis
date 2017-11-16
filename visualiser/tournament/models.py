@@ -29,7 +29,7 @@ from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
-from tournament.players import validate_wdd_id, player_picture_location
+from tournament.players import validate_wdd_id, player_picture_location, TO_GAME_RESULT, LOSS
 
 import urllib.request, random, os
 from operator import attrgetter, itemgetter
@@ -297,11 +297,14 @@ def add_local_player_bg(player):
                     i.result = LOSS
             elif d:
                 if d.power_is_part(gp.power):
-                    i.result = 'D%d' % d.draw_size()
+                    i.result = TO_GAME_RESULT[d.draw_size()]
                 else:
                     i.result = LOSS
             else:
-                i.result = DRAW_7
+                if i.year_eliminated:
+                    i.result = LOSS
+                else:
+                    i.result = TO_GAME_RESULT[len(gp.game.survivors())]
             # TODO This is broken if there were replacement players, but so is scoring...
             i.position_equals = len([v for v in pos.values() if v == pos[gp.power]])
             i.save()
@@ -931,6 +934,15 @@ class Game(models.Model):
             # TODO This looks like it fails if the soloer was a replacement player
             return self.gameplayer_set.filter(power=scs[0].power).get()
         return None
+
+    def survivors(self):
+        """
+        Returns a list of the CentreCounts for the surviving powers.
+        """
+        scs = self.centrecount_set.all().order_by('-year')
+        final_year = scs.first().year
+        final_scs = scs.filter(year=final_year)
+        return [sc for sc in final_scs if sc.count > 0]
 
     def result_str(self, include_game_name=False):
         """
