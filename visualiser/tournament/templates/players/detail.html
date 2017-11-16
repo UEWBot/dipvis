@@ -6,7 +6,7 @@
 {% block content %}
 <h1>{{ player }}</h1>
 {% if player.picture %}
-  <img src="{{ player.picture.url }}" alt="" style="max-width:10%">
+  <img src="{{ player.picture.url }}" alt="" style="max-width:10%"/>
 {% endif %}
 <p>{% trans "WDD Id:" %} {% if player.wdd_player_id %}<a href="{{ player.wdd_url }}">{{ player.wdd_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
 <ul>
