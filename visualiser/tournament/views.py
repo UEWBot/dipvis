@@ -1095,7 +1095,9 @@ def draw_vote(request, tournament_id, game_name):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     last_image = g.gameimage_set.last()
-    final_year = g.final_year()
+    years_played = g.years_played()
+    final_year = years_played[-1]
+    # Try to put in reasonable defaults for year and season
     if last_image.year < final_year:
         # In this case, we only have the centre count to go on
         year = final_year + 1
@@ -1112,7 +1114,10 @@ def draw_vote(request, tournament_id, game_name):
             countries = form.cleaned_data['powers']
         except KeyError:
             # Must be DIAS
-            scs = g.centrecount_set.filter(year=final_year, count__gt=0)
+            # Find the last year before the draw year for which we have CentreCounts
+            while years_played[-1] >= year:
+                years_played.pop()
+            scs = g.survivors(years_played[-1])
             countries = [sc.power for sc in scs]
 
         # Create a dict from countries, to pass as kwargs
