@@ -935,13 +935,16 @@ class Game(models.Model):
             return self.gameplayer_set.filter(power=scs[0].power).get()
         return None
 
-    def survivors(self):
+    def survivors(self, year=None):
         """
         Returns a list of the CentreCounts for the surviving powers.
+        If a year is provided, it returns a list of the powers that survived that whole year.
+        If a year is provided for which there are no CentreCounts, an empty list will be returned.
         """
         scs = self.centrecount_set.all().order_by('-year')
-        final_year = scs.first().year
-        final_scs = scs.filter(year=final_year)
+        if not year:
+            year = scs.first().year
+        final_scs = scs.filter(year = year)
         return [sc for sc in final_scs if sc.count > 0]
 
     def result_str(self, include_game_name=False):

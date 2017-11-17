@@ -1002,6 +1002,23 @@ class TournamentModelTests(TestCase):
         # lost to a solo or were excluded from a draw
         self.assertEqual(len(g.survivors()), 6)
 
+    def test_game_survivors_year_1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(len(g.survivors(1901)), 7)
+
+    def test_game_survivors_year_2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        # survivors() just returns surviving players, regardless of whether they
+        # lost to a solo or were excluded from a draw
+        self.assertEqual(len(g.survivors(1904)), 6)
+
+    def test_game_survivors_invalid_year(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(len(g.survivors(1905)), 0)
+
     # Game.result_str()
     def test_game_result_str_soloed(self):
         t = Tournament.objects.get(name='t1')
