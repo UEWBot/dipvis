@@ -26,17 +26,17 @@
 
 <p>{% trans "Views:" %}</p>
 <ul>
-  <li><a href="{% url 'game_index' tournament.id round.id %}">{% trans "Game Index" %}</a></li>
+  <li><a href="{% url 'game_index' tournament.id round.number %}">{% trans "Game Index" %}</a></li>
 </ul>
 
 {% if user.is_active %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   {% if perms.tournament.create_game %}
-    <li><a href="{% url 'create_games' tournament.id round.id %}">{% trans "Create Games" %}</a> - {% trans "Use this to create the games for this round, to assign players to games, and to assign great powers to players." %}</li>
+    <li><a href="{% url 'create_games' tournament.id round.number %}">{% trans "Create Games" %}</a> - {% trans "Use this to create the games for this round, to assign players to games, and to assign great powers to players." %}</li>
   {% endif %}
   {% if perms.tournament.change_game %}
-    <li><a href="{% url 'game_scores' tournament.id round.id %}">{% trans "Score Games" %}</a> - {% trans "Use this if you need to override the scores calculated by the system." %}</li>
+    <li><a href="{% url 'game_scores' tournament.id round.number %}">{% trans "Score Games" %}</a> - {% trans "Use this if you need to override the scores calculated by the system." %}</li>
   {% endif %}
 </ul>
 {% endif %}

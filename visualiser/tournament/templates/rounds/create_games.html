@@ -11,7 +11,7 @@
 <p>{% trans "Power Assignments other than Random are not really supported properly at present." %}</p>
 <p>{% blocktrans with round_num=round.number %}If a player does not appear in the drop-down, you need to flag them as playing in round {{ round_num }} on the{% endblocktrans %} <a href="{% url 'roll_call' tournament.pk %}">{% trans "roll call page" %}</a>.</p>
 
-<form method="post" action={% url 'create_games' tournament.id round.id %}>
+<form method="post" action={% url 'create_games' tournament.id round.number %}>
     {% include "formset_table.html" %}
 </form>
 {% endblock %}
