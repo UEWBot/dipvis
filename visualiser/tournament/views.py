@@ -839,7 +839,7 @@ def create_games(request, tournament_id, round_num):
             data.append(current)
         # Estimate the number of games for the round
         round_players = r.roundplayer_set.count()
-        expected_games = (round_players + 6) / 7
+        expected_games = (round_players + 6) // 7
         # This can happen if there are no RoundPlayers for this round
         if expected_games < 1:
             expected_games = 1
