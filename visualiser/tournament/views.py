@@ -592,7 +592,7 @@ def round_scores(request, tournament_id):
         if formset.is_valid():
             for form in formset:
                 tp = form.cleaned_data['tp_id']
-                for r_name,value in form.cleaned_data.iteritems():
+                for r_name,value in form.cleaned_data.items():
                     # Skip if no score was entered
                     if not value:
                         continue
@@ -688,7 +688,7 @@ def roll_call(request, tournament_id):
                                    'post_url': reverse('roll_call', args=(tournament_id,)),
                                    'formset' : formset})
                 i.save()
-                for r_name,value in form.cleaned_data.iteritems():
+                for r_name,value in form.cleaned_data.items():
                     # Ignore non-bool fields and ones that aren't True
                     if value != True:
                         # TODO Ideally, we should delete any corresponding RoundPlayer here
@@ -799,7 +799,7 @@ def create_games(request, tournament_id, round_num):
                                    'formset' : formset})
                 g.save()
                 # Assign the players to the game
-                for power, field in f.cleaned_data.iteritems():
+                for power, field in f.cleaned_data.items():
                     try:
                         p = GreatPower.objects.get(name=power)
                     except GreatPower.DoesNotExist:
@@ -869,7 +869,7 @@ def game_scores(request, tournament_id, round_num):
                 g = Game.objects.get(name=f.cleaned_data['game_name'],
                                      the_round=r)
                 # Set the score for each player
-                for power, field in f.cleaned_data.iteritems():
+                for power, field in f.cleaned_data.items():
                     # Ignore non-GreatPower fields (game_name)
                     try:
                         p = GreatPower.objects.get(name=power)
@@ -1013,7 +1013,7 @@ def sc_counts(request, tournament_id, game_name):
                 except KeyError:
                     # Must be one of the extra forms, still blank
                     continue
-                for name, value in form.cleaned_data.iteritems():
+                for name, value in form.cleaned_data.items():
                     try:
                         power = GreatPower.objects.get(name=name)
                     except:
