@@ -1112,7 +1112,7 @@ def draw_vote(request, tournament_id, game_name):
             countries = form.cleaned_data['powers']
         except KeyError:
             # Must be DIAS
-            scs = g.centrecount_set.filter(year=year, count__gt=0)
+            scs = g.centrecount_set.filter(year=final_year, count__gt=0)
             countries = [sc.power for sc in scs]
 
         # Create a dict from countries, to pass as kwargs
