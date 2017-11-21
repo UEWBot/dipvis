@@ -33,6 +33,7 @@ from tournament.players import validate_wdd_id, player_picture_location, TO_GAME
 
 import urllib.request, random, os
 from operator import attrgetter, itemgetter
+from math import isclose
 
 SPRING = 'S'
 FALL = 'F'
@@ -376,9 +377,9 @@ class Tournament(models.Model):
         Dict, keyed by player, of integer rankings (1 for first place, 2 for second place, etc)
         """
         result = {}
-        last_score = None
+        last_score = 0.0
         for i,(k,v) in enumerate(sorted([(k,v) for k,v in self.scores().items()], key=itemgetter(1), reverse=True)):
-            if v != last_score:
+            if not isclose(v, last_score):
                 place, last_score = i + 1, v
             result[k] = place
         return result
