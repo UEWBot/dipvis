@@ -1232,14 +1232,10 @@ def add_game_image(request, tournament_id, game_name=''):
     else:
         initial = {}
         if game_name != '':
-            try:
-                g = Game.objects.filter(name=game_name, the_round__tournament=t).get()
-            except Game.DoesNotExist:
-                raise Http404
-            else:
-                #last_image = g.gameimage_set.last()
-                next_year = g.final_year() + 1
-                initial = {'game': g, 'year': next_year}
+            g = get_game_or_404(t, game_name)
+            #last_image = g.gameimage_set.last()
+            next_year = g.final_year() + 1
+            initial = {'game': g, 'year': next_year}
         form = GameImageForm(initial=initial)
 
     return render(request,
