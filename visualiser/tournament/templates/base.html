@@ -15,7 +15,7 @@
         {% block content %}{% endblock %}
     </div>
     <div id="footer">
-        {% block footer %}{% if not request.user.is_authenticated %}<a href="{% url 'login' %}?next={{ request.get_full_path }}">{% trans "login" %}</a>{% endif %} {% trans "Retrieved at " %}{% now "SHORT_DATETIME_FORMAT" %}{% endblock %}
+        {% block footer %}<p>{% if not request.user.is_authenticated %}<a href="{% url 'login' %}?next={{ request.get_full_path }}">{% trans "login" %}</a>{% trans " Retrieved at " %}{% else %}{% blocktrans with user=request.user %}Retrieved by {{ user }} at {% endblocktrans %}{% endif %}{% now "SHORT_DATETIME_FORMAT" %}</p>{% endblock %}
     </div>
 </body>
 </html>
