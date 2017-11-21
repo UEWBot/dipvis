@@ -502,7 +502,7 @@ class Tournament(models.Model):
             the_scores = self.scores()
             if len(the_scores) > 0:
                 max_score = max(the_scores.values())
-                winners = [k for k,v in the_scores.items() if v == max_score]
+                winners = [str(k) for k,v in the_scores.items() if v == max_score]
                 player_str = ', '.join(winners)
                 results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
                                                                                                                           'players': player_str})
