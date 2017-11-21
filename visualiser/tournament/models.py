@@ -1231,8 +1231,7 @@ class RoundPlayer(models.Model):
     def clean(self):
         # Player should already be in the tournament
         t = self.the_round.tournament
-        tp = self.player.tournamentplayer_set.filter(tournament=t)
-        if not tp:
+        if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError(_(u'Player is not yet in the tournament'))
 
     def __str__(self):
