@@ -525,7 +525,7 @@ def tournament_game_results(request, tournament_id, refresh=False, redirect_url_
 def tournament_best_countries(request, tournament_id, refresh=False, redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score'))
+    gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score').distinct())
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
@@ -651,7 +651,7 @@ def round_scores(request, tournament_id):
                 current['round_%d'%rp.the_round.number()] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
-                                                  game__the_round=rp.the_round)
+                                                  game__the_round=rp.the_round).distinct()
                 current['game_scores_%d'%rp.the_round.number()] = ', '.join([str(g.score) for g in games])
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)

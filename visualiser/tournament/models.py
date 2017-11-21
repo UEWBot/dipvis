@@ -119,7 +119,7 @@ class RScoringBest(RoundScoringSystem):
         # First retrieve all the scores of all the games that are involved
         # This will give us the "if the game ended now" score for in-progress games
         game_scores = {}
-        for g in Game.objects.filter(gameplayer__in=game_players):
+        for g in Game.objects.filter(gameplayer__in=game_players).distinct():
             game_scores[g] = g.scores()
         # for each player who played any of the specified games
         for p in Player.objects.filter(gameplayer__in=game_players).distinct():
@@ -172,10 +172,10 @@ class TScoringSum(TournamentScoringSystem):
         # Retrieve all the scores for all the rounds involved.
         # This will give us "if the round ended now" scores for in-progress round(s)
         round_scores = {}
-        for r in Round.objects.filter(roundplayer__in=round_players):
+        for r in Round.objects.filter(roundplayer__in=round_players).distinct():
             round_scores[r] = r.scores()
         # for each player who played any of the specified rounds
-        for p in Player.objects.filter(roundplayer__in=round_players):
+        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
             if p in retval:
                 continue
             score = 0
@@ -291,7 +291,7 @@ def add_local_player_bg(player):
                     i.final_sc_count = sc.count
                     i.save()
         # Also add PlayerGameResult for each board played
-        for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).all():
+        for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).distinct():
             pos = gp.game.positions()
             i,created = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
                                                                game_name=gp.game.name,
@@ -368,7 +368,7 @@ class Tournament(models.Model):
         system = find_tournament_scoring_system(self.tournament_scoring_system)
         if not system:
             raise InvalidScoringSystem(self.tournament_scoring_system)
-        return system.scores(RoundPlayer.objects.filter(the_round__tournament=self))
+        return system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
 
     def positions(self):
         """
@@ -428,7 +428,7 @@ class Tournament(models.Model):
         """
         Returns a list of background strings for the tournament
         """
-        players = Player.objects.filter(tournamentplayer__tournament = self)
+        players = Player.objects.filter(tournamentplayer__tournament = self).distinct()
         results = []
         for p in players:
             results += p.background(mask=mask)
@@ -610,7 +610,7 @@ class Round(models.Model):
         system = find_round_scoring_system(self.tournament.round_scoring_system)
         if not system:
             raise InvalidScoringSystem(self.tournament.round_scoring_system)
-        return system.scores(GamePlayer.objects.filter(game__the_round=self))
+        return system.scores(GamePlayer.objects.filter(game__the_round=self).distinct())
 
     def is_finished(self):
         gs = self.game_set.all()
@@ -1019,7 +1019,7 @@ class Game(models.Model):
 
     def clean(self):
         # Game names must be unique within the tournament
-        games = Game.objects.filter(the_round__tournament=self.the_round.tournament)
+        games = Game.objects.filter(the_round__tournament=self.the_round.tournament).distinct()
         for g in games:
             if (self != g) and (self.name == g.name):
                 raise ValidationError(_('Game names must be unique within the tournament'))
