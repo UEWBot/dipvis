@@ -371,17 +371,18 @@ class Tournament(models.Model):
             raise InvalidScoringSystem(self.tournament_scoring_system)
         return system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
 
-    def positions(self):
+    def positions_and_scores(self):
         """
-        Returns the positions of all the players.
-        Dict, keyed by player, of integer rankings (1 for first place, 2 for second place, etc)
+        Returns the positions and scores of all the players.
+        Dict, keyed by player, of 2-tuples containing integer rankings (1 for first place, etc) and float scores.
         """
         result = {}
-        last_score = 0.0
-        for i,(k,v) in enumerate(sorted([(k,v) for k,v in self.scores().items()], key=itemgetter(1), reverse=True)):
-            if not isclose(v, last_score):
+        scores = self.scores()
+        last_score = None
+        for i,(k,v) in enumerate(sorted([(k,v) for k,v in scores.items()], key=itemgetter(1), reverse=True)):
+            if v != last_score:
                 place, last_score = i + 1, v
-            result[k] = place
+            result[k] = (place, v)
         return result
 
     def round_numbered(self, number):
@@ -561,7 +562,7 @@ class TournamentPlayer(models.Model):
         """
         Where is the player (currently) ranked overall in the tournament?
         """
-        return self.tournament.positions()[self.player]
+        return self.tournament.positions_and_scores()[self.player][0]
 
     def __str__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)

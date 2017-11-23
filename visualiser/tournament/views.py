@@ -387,8 +387,7 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
     for r in rds:
         round_scores[r] = r.scores()
     # Grab the tournament scores and positions, which will also be "if it ended now"
-    t_scores = t.scores()
-    t_positions = t.positions()
+    t_positions_and_scores = t.positions_and_scores()
     # Construct a list of lists with [position, player name, round 1 score, ..., round n score, tournament score]
     scores = []
     for p in tps:
@@ -401,7 +400,7 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
                 # This player didn't play this round
                 rs.append('')
         try:
-            scores.append(['%d' % t_positions[p.player]] + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_scores[p.player]])
+            scores.append(['%d' % t_positions_and_scores[p.player][0]] + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_positions_and_scores[p.player][1]])
         except KeyError:
             # This player didn't play at all
             rs.append('')

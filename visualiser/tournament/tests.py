@@ -552,16 +552,16 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.scores(True)
 
-    # Tournament.positions()
-    def test_tournament_positions_finished(self):
+    # Tournament.positions_and_scores()
+    def test_tournament_positions_and_scores_finished(self):
         t = Tournament.objects.get(name='t3')
         # TODO Validate results
-        t.positions()
+        t.positions_and_scores()
 
-    def test_tournament_positions_unfinished(self):
+    def test_tournament_positions_and_scores_unfinished(self):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
-        t.positions()
+        t.positions_and_scores()
 
     # Tournament.round_numbered()
     def test_tourney_round_numbered_negative(self):
