@@ -330,7 +330,7 @@ class Tournament(models.Model):
     """
     A Diplomacy tournament
     """
-    name = models.CharField(max_length=40)
+    name = models.CharField(max_length=60)
     start_date = models.DateField()
     end_date = models.DateField()
     # How do we combine round scores to get an overall player tournament score ?

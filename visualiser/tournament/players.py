@@ -509,7 +509,7 @@ class PlayerTournamentRanking(models.Model):
     Used to import background information from the WDD.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=40)
+    tournament = models.CharField(max_length=60)
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
@@ -530,7 +530,7 @@ class PlayerGameResult(models.Model):
     One player's result for a tournament game.
     Used to import background information from the WDD.
     """
-    tournament_name = models.CharField(max_length=40)
+    tournament_name = models.CharField(max_length=60)
     game_name = models.CharField(max_length=20)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
@@ -557,7 +557,7 @@ class PlayerAward(models.Model):
     Used to import background information.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=40)
+    tournament = models.CharField(max_length=60)
     date = models.DateField()
     name = models.CharField(max_length=50)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE, blank=True, null=True)
