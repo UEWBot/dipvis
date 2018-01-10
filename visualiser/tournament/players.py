@@ -29,7 +29,7 @@ from tournament.background import Wikipedia_Background, WDD_Background, WDD_BASE
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy import WINNING_SCS, GreatPower, validate_year
 
-import urllib.request, random
+import urllib.request, random, traceback
 
 # These happen to co-incide with the coding used by the WDD
 WIN = 'W'
@@ -127,13 +127,23 @@ def add_player_bg(player):
             except KeyError:
                 pass
         if pos:
-            i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                       tournament=title['Tournament'],
-                                                                       position=pos,
-                                                                       year=title['Year'])
-            if the_title:
-                i.title = the_title
-            i.save()
+            try:
+                i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                           tournament=title['Tournament'],
+                                                                           position=pos,
+                                                                           year=title['Year'])
+                if the_title:
+                    i.title = the_title
+                i.save()
+            except:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerTournamentRanking")
+                print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
+                                                                          title['Tournament'],
+                                                                          pos,
+                                                                          title['Year']))
+                traceback.printexc()
     # Do we have a WDD id for this player?
     wdd = player.wdd_player_id
     if not wdd:
@@ -143,12 +153,22 @@ def add_player_bg(player):
     finishes = bg.finishes()
     for finish in finishes:
         d = finish['Date']
-        i,created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                  tournament=finish['Tournament'],
-                                                                  position=finish['Position'],
-                                                                  year=d[:4])
-        i.date = d
-        i.save()
+        try:
+            i,created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                      tournament=finish['Tournament'],
+                                                                      position=finish['Position'],
+                                                                      year=d[:4])
+            i.date = d
+            i.save()
+        except:
+            # Handle all exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print("Failed to save PlayerTournamentRanking")
+            print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
+                                                                      finish['Tournament'],
+                                                                      finish['Position'],
+                                                                      d[:4]))
+            traceback.printexc()
     # Tournaments
     tournaments = bg.tournaments()
     for t in tournaments:
@@ -163,7 +183,15 @@ def add_player_bg(player):
         except KeyError:
             # No rank implies they were the TD or similar - just ignore that tournament
             print("Ignoring unranked %s for %s" % (t['Name of the tournament'], player))
-            pass
+        except:
+            # Handle all other exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print("Failed to save PlayerTournamentRanking")
+            print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
+                                                                      t['Name of the tournament'],
+                                                                      t['Rank'],
+                                                                      d[:4]))
+            traceback.printexc()
     # Boards
     boards = bg.boards()
     for b in boards:
@@ -173,35 +201,47 @@ def add_player_bg(player):
         except GreatPower.DoesNotExist:
             # Apparently not a Standard game
             continue
-        i,created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
-                                                           game_name=b['Round / Board'],
-                                                           player=player,
-                                                           power=p,
-                                                           date = b['Date'],
-                                                           position = b['Position'])
-        # If there's no 'Position sharing', they were alone at that position
         try:
-            i.position_equals = b['Position sharing']
-        except KeyError:
-            i.position_equals = 1
-        # Ignore any of these that aren't present
-        try:
-            i.score = b['Score']
-        except KeyError:
-            pass
-        try:
-            i.final_sc_count = b['Final SCs']
-        except KeyError:
-            pass
-        try:
-            i.result = b['Game end']
-        except KeyError:
-            pass
-        try:
-            i.year_eliminated = b['Elimination year']
-        except KeyError:
-            pass
-        i.save()
+            i,created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
+                                                               game_name=b['Round / Board'],
+                                                               player=player,
+                                                               power=p,
+                                                               date = b['Date'],
+                                                               position = b['Position'])
+            # If there's no 'Position sharing', they were alone at that position
+            try:
+                i.position_equals = b['Position sharing']
+            except KeyError:
+                i.position_equals = 1
+            # Ignore any of these that aren't present
+            try:
+                i.score = b['Score']
+            except KeyError:
+                pass
+            try:
+                i.final_sc_count = b['Final SCs']
+            except KeyError:
+                pass
+            try:
+                i.result = b['Game end']
+            except KeyError:
+                pass
+            try:
+                i.year_eliminated = b['Elimination year']
+            except KeyError:
+                pass
+            i.save()
+        except:
+            # Handle all exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print("Failed to save PlayerGameResult")
+            print("player=%s, tournament_name=%s, game_name=%s, power=%s, position=%s, date=%s" % (str(player),
+                                                                                                   b['Name of the tournament'],
+                                                                                                   b['Round / Board'],
+                                                                                                   str(p),
+                                                                                                   b['Position'],
+                                                                                                   b['Date']))
+            traceback.printexc()
     # Awards
     awards = bg.awards()
     for k,v in awards.items():
@@ -226,31 +266,48 @@ def add_player_bg(player):
             except KeyError:
                 print('Ignoring award with no date %s' % str(a))
                 continue
-            i, created = PlayerAward.objects.get_or_create(player=player,
-                                                           tournament=a['Tournament'],
-                                                           date=date_str,
-                                                           name=award_name)
-            if k != 'Awards':
-                i.power = p
-            # Ignore any of these that aren't present
             try:
-                i.score = a['Score']
-            except KeyError:
-                pass
-            try:
-                i.final_sc_count = a['SCs']
-            except KeyError:
-                pass
-            i.save()
+                i, created = PlayerAward.objects.get_or_create(player=player,
+                                                               tournament=a['Tournament'],
+                                                               date=date_str,
+                                                               name=award_name)
+                if k != 'Awards':
+                    i.power = p
+                # Ignore any of these that aren't present
+                try:
+                    i.score = a['Score']
+                except KeyError:
+                    pass
+                try:
+                    i.final_sc_count = a['SCs']
+                except KeyError:
+                    pass
+                i.save()
+            except:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerAward")
+                print("player=%s, tournament=%s, date=%s, name=%s" % (str(player),
+                                                                      a['Tournament'],
+                                                                      date_str,
+                                                                      award_name))
+                traceback.printexc()
     # Rankings
     rankings = bg.rankings()
     for r in rankings:
-        i, created = PlayerRanking.objects.get_or_create(player=player,
-                                                         system=r['Name'])
-        i.score=float(r['Score'])
-        i.international_rank=r['International rank']
-        i.national_rank=r['National rank']
-        i.save()
+        try:
+            i, created = PlayerRanking.objects.get_or_create(player=player,
+                                                             system=r['Name'])
+            i.score=float(r['Score'])
+            i.international_rank=r['International rank']
+            i.national_rank=r['National rank']
+            i.save()
+        except:
+            # Handle all exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print("Failed to save PlayerRanking")
+            print("player=%s, system=%s" % (str(player), r['Name']))
+            traceback.printexc()
 
 def position_str(position):
     """
