@@ -251,7 +251,7 @@ class TournamentModelTests(TestCase):
             else:
                 self.assertEqual(s, 1 + (38 + 14 + 7) / 4 + 5)
         # With 2 neutrals, the total of all scores should be 100-2=98
-        self.assertEquals(sum(scores.values()), 100 - 2)
+        self.assertEqual(sum(scores.values()), 100 - 2)
 
     def test_g_scoring_cdiplo_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -282,7 +282,7 @@ class TournamentModelTests(TestCase):
             else:
                 self.assertEqual(s, (25 + 14 + 7) / 4 + 5)
         # With 2 neutrals, the total of all scores should be 80-2=78
-        self.assertEquals(sum(scores.values()), 80 - 2)
+        self.assertEqual(sum(scores.values()), 80 - 2)
 
     def test_g_scoring_cdiplo80_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -345,7 +345,7 @@ class TournamentModelTests(TestCase):
                 self.assertEqual(s, (3000 + 2000 + 1000) / 3 + 4)
             else:
                 self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + 5)
-        self.assertEquals(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
 
     def test_g_scoring_carnage_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -645,7 +645,7 @@ class TournamentModelTests(TestCase):
     def test_tournamentplayer_position_finished(self):
         t = Tournament.objects.get(name='t3')
         tp = t.tournamentplayer_set.filter(player__pk=1).get()
-        self.assertEquals(tp.position(), 1)
+        self.assertEqual(tp.position(), 1)
 
     # Round.scores()
     def test_round_scores_invalid(self):
@@ -1217,15 +1217,15 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         gp = g.gameplayer_set.filter(power=self.austria).first()
-        self.assertEquals(gp.elimination_year(), None)
+        self.assertEqual(gp.elimination_year(), None)
         gp = g.gameplayer_set.filter(power=self.austria).last()
-        self.assertEquals(gp.elimination_year(), 1904)
+        self.assertEqual(gp.elimination_year(), 1904)
 
     def test_gameplayer_elimination_year_not_eliminated(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         gp = g.gameplayer_set.get(power=self.england)
-        self.assertEquals(gp.elimination_year(), None)
+        self.assertEqual(gp.elimination_year(), None)
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
