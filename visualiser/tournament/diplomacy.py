@@ -20,7 +20,6 @@
 
 from django.db import models
 from django.utils.translation import ugettext as _
-from django.utils.encoding import python_2_unicode_compatible
 
 from django.core.exceptions import ValidationError
 
@@ -51,7 +50,6 @@ def game_image_location(instance, filename):
     """
     return os.path.join('games', 'starting_positions', filename)
 
-@python_2_unicode_compatible
 class GreatPower(models.Model):
     """
     One of the seven great powers that can be played
@@ -66,7 +64,6 @@ class GreatPower(models.Model):
     def __str__(self):
         return self.name
 
-@python_2_unicode_compatible
 class GameSet(models.Model):
     """
     A Diplomacy board game set.
@@ -80,7 +77,6 @@ class GameSet(models.Model):
     def __str__(self):
         return self.name
 
-@python_2_unicode_compatible
 class SetPower(models.Model):
     """
     A single GreatPower in a given GameSet.

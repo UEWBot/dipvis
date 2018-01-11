@@ -19,7 +19,6 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db.models import Max, Min, Sum, Q
 from django.utils.translation import ugettext as _
-from django.utils.encoding import python_2_unicode_compatible
 from django.utils import timezone
 from django.contrib.auth.models import User
 
@@ -325,7 +324,6 @@ def add_local_player_bg(player):
             i.position_equals = len([v for v in pos.values() if v == pos[gp.power]])
             i.save()
 
-@python_2_unicode_compatible
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -544,7 +542,6 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
-@python_2_unicode_compatible
 class TournamentPlayer(models.Model):
     """
     One player in a tournament
@@ -575,7 +572,6 @@ class TournamentPlayer(models.Model):
             add_player_bg(self.player)
             add_local_player_bg(self.player)
 
-@python_2_unicode_compatible
 class Round(models.Model):
     """
     A single round of a Tournament
@@ -725,7 +721,6 @@ class Round(models.Model):
     def __str__(self):
         return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number()}
 
-@python_2_unicode_compatible
 class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
@@ -1086,7 +1081,6 @@ class Game(models.Model):
     def __str__(self):
         return self.name
 
-@python_2_unicode_compatible
 class DrawProposal(models.Model):
     """
     A single draw or concession proposal in a game
@@ -1218,7 +1212,6 @@ class DrawProposal(models.Model):
     def __str__(self):
         return u'%s %d%s' % (self.game, self.year, self.season)
 
-@python_2_unicode_compatible
 class RoundPlayer(models.Model):
     """
     A person who played a round in a tournament
@@ -1239,7 +1232,6 @@ class RoundPlayer(models.Model):
     def __str__(self):
         return _(u'%(player)s in %(round)s') % {'player': self.player, 'round': self.the_round}
 
-@python_2_unicode_compatible
 class GamePlayer(models.Model):
     """
     A person who played a Great Power in a Game
@@ -1350,7 +1342,6 @@ class GamePlayer(models.Model):
     def __str__(self):
         return u'%s %s %s' % (self.game, self.player, self.power)
 
-@python_2_unicode_compatible
 class GameImage(models.Model):
     """
     An image depicting a Game at a certain point.
@@ -1383,7 +1374,6 @@ class GameImage(models.Model):
     def __str__(self):
         return _(u'%(game)s %(turn)s image') % {'game': self.game, 'turn': self.turn_str()}
 
-@python_2_unicode_compatible
 class CentreCount(models.Model):
     """
     The number of centres owned by one power at the end of a given game year

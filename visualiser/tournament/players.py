@@ -24,7 +24,6 @@ from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db.models import Max, Min, Sum, Q
 from django.utils.translation import ugettext as _
-from django.utils.encoding import python_2_unicode_compatible
 
 from tournament.background import Wikipedia_Background, WDD_Background, WDD_BASE_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
@@ -272,7 +271,6 @@ def position_str(position):
         result += u'th'
     return _(result)
 
-@python_2_unicode_compatible
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -502,7 +500,6 @@ class Player(models.Model):
     def get_absolute_url(self):
         return reverse('player_detail', args=[str(self.id)])
 
-@python_2_unicode_compatible
 class PlayerTournamentRanking(models.Model):
     """
     A tournament ranking for a player.
@@ -524,7 +521,6 @@ class PlayerTournamentRanking(models.Model):
             s += _(u' in %(year)d') % {'year': self.year}
         return s
 
-@python_2_unicode_compatible
 class PlayerGameResult(models.Model):
     """
     One player's result for a tournament game.
@@ -550,7 +546,6 @@ class PlayerGameResult(models.Model):
                                                                 'power': self.power,
                                                                 'game': self.game_name}
 
-@python_2_unicode_compatible
 class PlayerAward(models.Model):
     """
     An award won by a player.
@@ -577,7 +572,6 @@ class PlayerAward(models.Model):
             s += _(' with %(dots)d supply centres') % {'dots': self.final_sc_count}
         return s
 
-@python_2_unicode_compatible
 class PlayerRanking(models.Model):
     """
     WDD Ranking of a player.
