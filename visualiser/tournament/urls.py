@@ -86,6 +86,8 @@ tournament_patterns = [
     url(r'^background_ticker/$', views.tournament_background,
         {'as_ticker': True}, name='tournament_background_ticker'),
     url(r'^rounds/$', views.round_index, name='round_index'),
+    url(r'^csv_classification/$', views.view_classification_csv, name='csv_classification'),
+    url(r'^csv_boards/$', views.view_boards_csv, name='csv_boards'),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),
 ]
