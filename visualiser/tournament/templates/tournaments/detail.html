@@ -27,6 +27,13 @@
   {% endif %}
   <li><a href="{% url 'round_index' tournament.id %}">{% trans "Round Index" %}</a></li>
 </ul>
+{% if tournament.is_finished %}
+  <p>{% trans "CSV files for World Diplomacy Database upload:" %}</p>
+  <ul>
+    <li><a href="{% url 'csv_classification' tournament.id %}">{% trans "Classification" %}</a></li>
+    <li><a href="{% url 'csv_boards' tournament.id %}">{% trans "Boards" %}</a></li>
+  </ul>
+{% endif %}
 {% if user.is_active %}
   <p>{% trans "Data Entry:" %}</p>
   <ul>
