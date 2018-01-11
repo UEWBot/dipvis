@@ -1279,6 +1279,13 @@ def view_classification_csv(request, tournament_id):
     rds = t.round_set.all()
     # Grab the best country rankings
     best_countries = t.best_countries()
+    # Grab the top board, if any
+    try:
+        top_board = Game.objects.filter(is_top_board=True).filter(the_round__tournament=t).get()
+        tb_positions = top_board.positions()
+        tb_dots = top_board.centrecount_set.filter(year__gt=1900)
+    except Game.DoesNotExist:
+        top_board = None
     # What fields we want to write
     headers = ['FIRST NAME',
                'NAME',
@@ -1298,6 +1305,15 @@ def view_classification_csv(request, tournament_id):
         headers.append('CT_%s' % wdd_pwr)
         headers.append('HEAT_%s' % wdd_pwr)
         headers.append('BOARD_%s' % wdd_pwr)
+    # Top Board stuff
+    # Only add these headers if there was a top board
+    if top_board:
+        headers.append('NAME_TOPBOARD')
+        headers.append('HEAT_TOPBOARD')
+        headers.append('BOARD_TOPBOARD')
+        headers.append('RK_TOPBOARD')
+        headers.append('CT_TOPBOARD')
+        headers.append('COUNTRY_TOPBOARD')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="%s%dclassification.csv"' % (t.name, t.start_date.year)
@@ -1334,7 +1350,20 @@ def view_classification_csv(request, tournament_id):
                     # g.id is globally-unique. What we really want is number within the round
                     row_dict['BOARD_%s' % wdd_pwr] = gp.game.id
                     break
-        # TODO Add top board fields if applicable
+        # Add top board fields if applicable
+        if top_board:
+            try:
+                gp = top_board.gameplayer_set.filter(player=p).get()
+                row_dict['NAME_TOPBOARD'] = 'A' # This seems to be arbitrary
+                row_dict['HEAT_TOPBOARD'] = top_board.the_round.number()
+                row_dict['BOARD_TOPBOARD'] = top_board.id
+                row_dict['RK_TOPBOARD'] = tb_positions[gp.power]
+                row_dict['CT_TOPBOARD'] = tb_dots.filter(power=gp.power).last().count
+                # TODO Not certain that this is the correct value
+                row_dict['COUNTRY_TOPBOARD'] = _power_name_to_wdd(gp.power.name)
+            except GamePlayer.DoesNotExist:
+                # This player did not make the top board
+                pass
         # Write this player's row out
         writer.writerow(row_dict)
 
