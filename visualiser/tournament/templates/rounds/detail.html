@@ -22,6 +22,8 @@
   <p>{% trans "Games in this round have no set endpoint." %}</p>
 {% endif %}
 
+<p>{{ round.roundplayer_set.count }}{% trans " players present." %}</p>
+
 <p>{% blocktrans with count=round.game_set.count %}{{ count }} Games{% endblocktrans %}</p>
 
 <p>{% trans "Views:" %}</p>
