@@ -17,8 +17,8 @@
 from django.contrib import admin
 
 from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
-from tournament.models import CentreCount, DrawProposal, GameImage
-from tournament.diplomacy import GreatPower, GameSet, SetPower
+from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
+from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.players import Player
 
 class SetPowerInline(admin.TabularInline):
@@ -97,13 +97,18 @@ class DrawProposalInline(admin.StackedInline):
         })
     )
 
+class SCOwnershipInline(admin.TabularInline):
+    model = SupplyCentreOwnership
+    extra = 34
+
 class GameAdmin(admin.ModelAdmin):
     fields = ['the_round', 'name', 'is_top_board', 'power_assignment', 'started_at', 'is_finished']
-    inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline]
+    inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
 
 # Register models
 admin.site.register(GameImage)
 admin.site.register(GreatPower)
+admin.site.register(SupplyCentre)
 admin.site.register(GameSet, GameSetAdmin)
 admin.site.register(Player)
 admin.site.register(DrawProposal)

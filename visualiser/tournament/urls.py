@@ -31,6 +31,9 @@ game_patterns = [
     url(r'^sc_chart/$', views.game_sc_chart, name='game_sc_chart'),
     url(r'^sc_chart_refresh/$', views.game_sc_chart, {'refresh': True}, name='game_sc_chart_refresh'),
     url(r'^enter_scs/$', views.sc_counts, name='enter_scs'),
+    url(r'^sc_owners/$', views.game_sc_owners, name='game_sc_owners'),
+    url(r'^sc_owners_refresh/$', views.game_sc_owners, {'refresh': True}, name='game_sc_owners_refresh'),
+    url(r'^enter_sc_owners/$', views.sc_owners, name='enter_sc_owners'),
     # Always the latest position
     url(r'^positions/latest/$', views.game_image,
         {'turn': '', 'timelapse': True}, name='current_game_image'),

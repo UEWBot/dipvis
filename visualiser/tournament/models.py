@@ -22,7 +22,7 @@ from django.utils.translation import ugettext as _
 from django.utils import timezone
 from django.contrib.auth.models import User
 
-from tournament.diplomacy import GameSet, GreatPower
+from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
@@ -1080,6 +1080,23 @@ class Game(models.Model):
 
     def __str__(self):
         return self.name
+
+class SupplyCentreOwnership(models.Model):
+    """
+    Record of which GreatPower owned a given SupplyCentre
+    at the end of a particular game year in a Game.
+    """
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    year = models.PositiveSmallIntegerField(validators=[validate_year_including_start])
+    sc = models.ForeignKey(SupplyCentre, on_delete=models.CASCADE)
+    owner = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('sc', 'game', 'year')
+        ordering = ['game', 'year']
+
+    def __str__(self):
+        return "%s in %s was owned by %s at the end of %d" % (self.sc, self.game, self.owner, self.year)
 
 class DrawProposal(models.Model):
     """

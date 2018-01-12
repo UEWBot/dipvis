@@ -147,6 +147,38 @@ class BaseGamePlayersForm(BaseFormSet):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
         return cleaned_data
 
+class SCOwnerForm(forms.Form):
+    """Form for Supply Centre ownership for one year"""
+    # Allow for an initial game-start SC ownership
+    year = forms.IntegerField(min_value=FIRST_YEAR-1)
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates one owner field per SupplyCentre"""
+        super(SCOwnerForm, self).__init__(*args, **kwargs)
+
+        self.fields['year'].widget.attrs['size'] = 4
+
+        # Create the right country fields
+        for sc in SupplyCentre.objects.all():
+            self.fields[sc.name] = forms.ModelChoiceField(GreatPower.objects.all(), required=False)
+
+class BaseSCOwnerFormset(BaseFormSet):
+    def clean(self):
+        """
+        Checks that no year appears more than once
+        """
+        if any(self.errors):
+            return
+        years = {}
+        for i in range(0, self.total_form_count()):
+            form = self.forms[i]
+            year = form.cleaned_data.get('year')
+            if not year:
+                continue
+            if year in years:
+                raise forms.ValidationError(_('Year %(year)s appears more than once') % {'year': year})
+        # TODO check that SCs never become neutral
+
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count
@@ -952,6 +984,45 @@ def game_detail(request, tournament_id, game_name):
     context = {'tournament': t, 'game': g}
     return render(request, 'games/detail.html', context)
 
+def game_sc_owners(request, tournament_id, game_name, refresh=False):
+    """Display the SupplyCentre ownership for a game"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    scs = SupplyCentre.objects.all()
+    scos = SupplyCentreOwnership.objects.filter(game=g)
+    # Create a list of years that have been played, starting with the most recent
+    years = g.years_played()
+    years.reverse()
+    # Create a list of rows, each with a year and each supply centre's owner
+    rows = []
+    for year in years:
+        yscos = scos.filter(year=year)
+        if len(yscos) == 0:
+            # This year we have no data
+            no_data_str = '?'
+        else:
+            # No ownership this year implies neutral
+            no_data_str = '-'
+        row = []
+        row.append(year)
+        for sc in scs:
+            try:
+                sco = yscos.filter(sc=sc).get()
+                row.append(sco.owner.abbreviation)
+            except SupplyCentreOwnership.DoesNotExist:
+                # This is presumably because the centre was still neutral
+                row.append(no_data_str)
+        # Only add this year if there is some SC ownership recorded
+        if len(row) > 1:
+            rows.append(row)
+    context = {'game': g, 'centres': scs, 'rows': rows}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = REFRESH_TIME
+        context['redirect_url'] = reverse('game_sc_owners_refresh',
+                                          args=(tournament_id, game_name))
+    return render(request, 'games/sc_owners.html', context)
+
 def game_sc_chart(request, tournament_id, game_name, refresh=False):
     """Display the SupplyCentre chart for a game"""
     #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
@@ -999,6 +1070,88 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
                                           args=(tournament_id, game_name))
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
+
+@permission_required('tournament.add_centrecount')
+def sc_owners(request, tournament_id, game_name):
+    """Provide a form to enter SC ownership for a game"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    # If the round ends with a certain year, provide the right number of blank rows
+    # Otherwise, just give them two
+    years_to_go = 2
+    last_year_played = g.final_year()
+    final_year = g.the_round.final_year
+    if final_year:
+        years_to_go = final_year - last_year_played
+    SCOwnerFormset = formset_factory(SCOwnerForm,
+                                     extra=years_to_go,
+                                     formset=BaseSCOwnerFormset)
+    if request.method == 'POST':
+        formset = SCOwnerFormset(request.POST)
+        if formset.is_valid():
+            for form in formset:
+                try:
+                    year = form.cleaned_data['year']
+                except KeyError:
+                    # Must be one of the extra forms, still blank
+                    continue
+                for name, value in form.cleaned_data.items():
+                    try:
+                        dot = SupplyCentre.objects.get(name=name)
+                    except:
+                        continue
+                    # Can't use get_or_create() here,
+                    # because owner has no default and may have changed
+                    try:
+                        i = SupplyCentreOwnership.objects.get(sc=dot,
+                                                              game=g,
+                                                              year=year)
+                        if value == None:
+                            # There is an owner in the db, but now we want this dot to be neutral
+                            i.delete()
+                            continue
+                        else:
+                            # Ensure the owner has the value we want
+                            i.owner = value
+                    except SupplyCentreOwnership.DoesNotExist:
+                        if value == None:
+                            # Still neutral
+                            continue
+                        i = SupplyCentreOwnership(sc=dot,
+                                                  game=g,
+                                                  year=year,
+                                                  owner=value)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        form.add_error(None, e)
+                        i.delete()
+                        return render(request,
+                                      'games/sc_owners_form.html',
+                                      {'formset': formset,
+                                       'tournament': t,
+                                       'game': g})
+
+                    i.save()
+            # Redirect to the read-only version
+            return HttpResponseRedirect(reverse('game_sc_owners',
+                                                args=(tournament_id, game_name)))
+    else:
+        # Put in all the existing SupplyCentreOwnerships for this game
+        data = []
+        for year in g.years_played():
+            scs = {'year': year}
+            owners = g.supplycentreownership_set.filter(year=year)
+            for o in owners:
+                scs[o.sc.name] = o.owner
+            data.append(scs)
+        formset = SCOwnerFormset(initial=data)
+
+    return render(request,
+                  'games/sc_owners_form.html',
+                  {'formset': formset,
+                   'tournament': t,
+                   'game': g})
 
 @permission_required('tournament.add_centrecount')
 def sc_counts(request, tournament_id, game_name):

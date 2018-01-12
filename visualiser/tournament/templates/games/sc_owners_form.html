@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} Supply Centre Ownerships{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{% blocktrans with game=game %}Game {{ game }} Supply Centre Ownerships{% endblocktrans %}</h1>
+<form method="post" action={% url 'enter_sc_owners' tournament.id game.name %}>
+    {% include "formset_table.html" %}
+</form>
+{% endblock %}

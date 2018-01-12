@@ -64,6 +64,278 @@
 },
 {
     "pk": 1,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Ankara",
+        "abbreviation": "Ank"
+    }
+},
+{
+    "pk": 2,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Belgium",
+        "abbreviation": "Bel"
+    }
+},
+{
+    "pk": 3,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Berlin",
+        "abbreviation": "Ber"
+    }
+},
+{
+    "pk": 4,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Brest",
+        "abbreviation": "Bre"
+    }
+},
+{
+    "pk": 5,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Budapest",
+        "abbreviation": "Bud"
+    }
+},
+{
+    "pk": 6,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Bulgaria",
+        "abbreviation": "Bul"
+    }
+},
+{
+    "pk": 7,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Constantinople",
+        "abbreviation": "Con"
+    }
+},
+{
+    "pk": 8,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Denmark",
+        "abbreviation": "Den"
+    }
+},
+{
+    "pk": 9,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Edinburgh",
+        "abbreviation": "Edi"
+    }
+},
+{
+    "pk": 10,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Greece",
+        "abbreviation": "Gre"
+    }
+},
+{
+    "pk": 11,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Holland",
+        "abbreviation": "Hol"
+    }
+},
+{
+    "pk": 12,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Kiel",
+        "abbreviation": "Kie"
+    }
+},
+{
+    "pk": 13,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Liverpool",
+        "abbreviation": "Lvp"
+    }
+},
+{
+    "pk": 14,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "London",
+        "abbreviation": "Lon"
+    }
+},
+{
+    "pk": 15,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Marseilles",
+        "abbreviation": "Mar"
+    }
+},
+{
+    "pk": 16,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Moscow",
+        "abbreviation": "Mos"
+    }
+},
+{
+    "pk": 17,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Munich",
+        "abbreviation": "Mun"
+    }
+},
+{
+    "pk": 18,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Naples",
+        "abbreviation": "Nap"
+    }
+},
+{
+    "pk": 19,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Norway",
+        "abbreviation": "Nwy"
+    }
+},
+{
+    "pk": 20,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Paris",
+        "abbreviation": "Par"
+    }
+},
+{
+    "pk": 21,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Portugal",
+        "abbreviation": "Por"
+    }
+},
+{
+    "pk": 22,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Rome",
+        "abbreviation": "Rom"
+    }
+},
+{
+    "pk": 23,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Rumania",
+        "abbreviation": "Rum"
+    }
+},
+{
+    "pk": 24,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Serbia",
+        "abbreviation": "Ser"
+    }
+},
+{
+    "pk": 25,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Sevastapol",
+        "abbreviation": "Sev"
+    }
+},
+{
+    "pk": 26,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Smyrna",
+        "abbreviation": "Smy"
+    }
+},
+{
+    "pk": 27,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Spain",
+        "abbreviation": "Spa"
+    }
+},
+{
+    "pk": 28,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "St.Petersburg",
+        "abbreviation": "StP"
+    }
+},
+{
+    "pk": 29,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Sweden",
+        "abbreviation": "Swe"
+    }
+},
+{
+    "pk": 30,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Trieste",
+        "abbreviation": "Tri"
+    }
+},
+{
+    "pk": 31,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Tunis",
+        "abbreviation": "Tun"
+    }
+},
+{
+    "pk": 32,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Venice",
+        "abbreviation": "Ven"
+    }
+},
+{
+    "pk": 33,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Vienna",
+        "abbreviation": "Vie"
+    }
+},
+{
+    "pk": 34,
+    "model": "tournament.supplycentre",
+    "fields": {
+        "name": "Warsaw",
+        "abbreviation": "War"
+    }
+},
+{
+    "pk": 1,
     "model": "tournament.gameset",
     "fields": {
         "name": "Avalon Hill",
