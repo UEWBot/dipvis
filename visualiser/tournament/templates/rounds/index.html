@@ -6,15 +6,17 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a></h1>
 {% if round_list %}
-    <ul>
+    <dl>
     {% for r in round_list %}
-        <li><a href="{{ r.get_absolute_url }}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Start" %} {{ r.start }}
+        <dt><a href="{{ r.get_absolute_url }}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a></dt>
+          <dd>{% trans "Start" %} {{ r.start }}</dd>
+          <dd>{% blocktrans with count=r.game_set.count %}{{ count }} Games{% endblocktrans %}</dd>
             {% if r.is_finished %}
-                {% trans "(Complete)" %}
+                <dd>{% trans "Completed" %}</dd>
             {% endif %}
         </li>
     {% endfor %}
-    </ul>
+    </dl>
 {% else %}
     <p>{% trans "No rounds exist in the tournament." %}</p>
 {% endif %}
