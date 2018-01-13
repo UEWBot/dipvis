@@ -990,6 +990,7 @@ def game_sc_owners(request, tournament_id, game_name, refresh=False):
     g = get_game_or_404(t, game_name)
     scs = SupplyCentre.objects.all()
     scos = SupplyCentreOwnership.objects.filter(game=g)
+    set_powers = g.the_set.setpower_set.all()
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
@@ -1008,10 +1009,11 @@ def game_sc_owners(request, tournament_id, game_name, refresh=False):
         for sc in scs:
             try:
                 sco = yscos.filter(sc=sc).get()
-                row.append(sco.owner.abbreviation)
+                row.append({'color': set_powers.get(power=sco.owner).colour,
+                            'text': sco.owner.abbreviation})
             except SupplyCentreOwnership.DoesNotExist:
                 # This is presumably because the centre was still neutral
-                row.append(no_data_str)
+                row.append({'color': 'white', 'text': no_data_str})
         # Only add this year if there is some SC ownership recorded
         if len(row) > 1:
             rows.append(row)

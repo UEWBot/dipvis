@@ -20,7 +20,7 @@
                {% if forloop.first %}
                    <th align=center>{{ cell }} </th>
                {% else %}
-                   <td align=center>{{ cell }} </td>
+                   <td align=center bgcolor={{ cell.color }}>{{ cell.text }} </td>
                {% endif %}
            {% endfor %}
        </tr>
