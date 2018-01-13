@@ -747,7 +747,7 @@ def roll_call(request, tournament_id):
                     try:
                         i.full_clean()
                     except ValidationError as e:
-                        form.add_error(form.fields[r_name], e)
+                        form.add_error(None, e)
                         i.delete()
                         return render(request,
                                       'tournaments/round_players.html',
@@ -1206,7 +1206,7 @@ def sc_counts(request, tournament_id, game_name):
                     try:
                         i.full_clean()
                     except ValidationError as e:
-                        formset.add_error(form.fields[name], e)
+                        form.add_error(form.fields[name], e)
                         i.delete()
                         return render(request,
                                       'games/sc_counts_form.html',
