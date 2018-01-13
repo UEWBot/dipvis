@@ -1025,12 +1025,19 @@ class Game(models.Model):
         super(Game, self).save(*args, **kwargs)
 
         # Auto-create 1900 SC counts (unless they already exist)
+        # Auto-create SC Ownership (unless they already exist)
         for power in GreatPower.objects.all():
             i, created = CentreCount.objects.get_or_create(power=power,
                                                            game=self,
                                                            year=FIRST_YEAR-1,
                                                            count=power.starting_centres)
             i.save()
+            for sc in SupplyCentre.objects.filter(initial_owner=power):
+                i, created = SupplyCentreOwnership.objects.get_or_create(owner=power,
+                                                                         game=self,
+                                                                         year=FIRST_YEAR-1,
+                                                                         sc=sc)
+                i.save()
 
         # Auto-create S1901M image (if it doesn't exist)
         i, created = GameImage.objects.get_or_create(game=self,

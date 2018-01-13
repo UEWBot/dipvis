@@ -67,7 +67,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Ankara",
-        "abbreviation": "Ank"
+        "abbreviation": "Ank",
+        "initial_owner": 7
     }
 },
 {
@@ -83,7 +84,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Berlin",
-        "abbreviation": "Ber"
+        "abbreviation": "Ber",
+        "initial_owner": 4
     }
 },
 {
@@ -91,7 +93,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Brest",
-        "abbreviation": "Bre"
+        "abbreviation": "Bre",
+        "initial_owner": 3
     }
 },
 {
@@ -99,7 +102,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Budapest",
-        "abbreviation": "Bud"
+        "abbreviation": "Bud",
+        "initial_owner": 1
     }
 },
 {
@@ -115,7 +119,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Constantinople",
-        "abbreviation": "Con"
+        "abbreviation": "Con",
+        "initial_owner": 7
     }
 },
 {
@@ -131,7 +136,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Edinburgh",
-        "abbreviation": "Edi"
+        "abbreviation": "Edi",
+        "initial_owner": 2
     }
 },
 {
@@ -155,7 +161,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Kiel",
-        "abbreviation": "Kie"
+        "abbreviation": "Kie",
+        "initial_owner": 4
     }
 },
 {
@@ -163,7 +170,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Liverpool",
-        "abbreviation": "Lvp"
+        "abbreviation": "Lvp",
+        "initial_owner": 2
     }
 },
 {
@@ -171,7 +179,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "London",
-        "abbreviation": "Lon"
+        "abbreviation": "Lon",
+        "initial_owner": 2
     }
 },
 {
@@ -179,7 +188,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Marseilles",
-        "abbreviation": "Mar"
+        "abbreviation": "Mar",
+        "initial_owner": 3
     }
 },
 {
@@ -187,7 +197,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Moscow",
-        "abbreviation": "Mos"
+        "abbreviation": "Mos",
+        "initial_owner": 6
     }
 },
 {
@@ -195,7 +206,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Munich",
-        "abbreviation": "Mun"
+        "abbreviation": "Mun",
+        "initial_owner": 4
     }
 },
 {
@@ -203,7 +215,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Naples",
-        "abbreviation": "Nap"
+        "abbreviation": "Nap",
+        "initial_owner": 5
     }
 },
 {
@@ -219,7 +232,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Paris",
-        "abbreviation": "Par"
+        "abbreviation": "Par",
+        "initial_owner": 3
     }
 },
 {
@@ -235,7 +249,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Rome",
-        "abbreviation": "Rom"
+        "abbreviation": "Rom",
+        "initial_owner": 5
     }
 },
 {
@@ -259,7 +274,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Sevastapol",
-        "abbreviation": "Sev"
+        "abbreviation": "Sev",
+        "initial_owner": 6
     }
 },
 {
@@ -267,7 +283,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Smyrna",
-        "abbreviation": "Smy"
+        "abbreviation": "Smy",
+        "initial_owner": 7
     }
 },
 {
@@ -283,7 +300,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "St.Petersburg",
-        "abbreviation": "StP"
+        "abbreviation": "StP",
+        "initial_owner": 6
     }
 },
 {
@@ -299,7 +317,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Trieste",
-        "abbreviation": "Tri"
+        "abbreviation": "Tri",
+        "initial_owner": 1
     }
 },
 {
@@ -315,7 +334,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Venice",
-        "abbreviation": "Ven"
+        "abbreviation": "Ven",
+        "initial_owner": 5
     }
 },
 {
@@ -323,7 +343,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Vienna",
-        "abbreviation": "Vie"
+        "abbreviation": "Vie",
+        "initial_owner": 1
     }
 },
 {
@@ -331,7 +352,8 @@
     "model": "tournament.supplycentre",
     "fields": {
         "name": "Warsaw",
-        "abbreviation": "War"
+        "abbreviation": "War",
+        "initial_owner": 6
     }
 },
 {
