@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 
@@ -456,6 +456,7 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         p.wdd_url()
 
+    @tag('slow')
     # Player.background()
     def test_player_background(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
@@ -463,6 +464,7 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         p.background()
 
+    @tag('slow')
     def test_player_background_no_wins(self):
         # Spiros has yet to win a tournament
         p, created = Player.objects.get_or_create(first_name='Spiros',
@@ -474,17 +476,20 @@ class TournamentModelTests(TestCase):
         p.background()
         p.delete()
 
+    @tag('slow')
     def test_player_background_mask(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
         self.assertEqual([], p.background(mask=0))
 
+    @tag('slow')
     def test_player_background_with_power(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
         # TODO Validate results
         p.background(power=self.germany)
 
+    @tag('slow')
     def test_player_background_td(self):
         # Matt has tournaments listings for tournaments when he was TD
         p, created = Player.objects.get_or_create(first_name='Matt',
@@ -497,6 +502,7 @@ class TournamentModelTests(TestCase):
         p.background(power=self.germany)
         p.delete()
 
+    @tag('slow')
     def test_player_background_non_std(self):
         # Matt has tournaments listings for non-Standard games
         p, created = Player.objects.get_or_create(first_name='Matt',
@@ -509,6 +515,7 @@ class TournamentModelTests(TestCase):
         p.background()
         p.delete()
 
+    @tag('slow')
     def test_player_background_non_std_2(self):
         # Nate has tournaments listings for non-Standard games,
         # where power names match Standard powers (France)
@@ -1334,6 +1341,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(gp.elimination_year(), None)
 
     # GamePlayer.clean()
+    @tag('slow')
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1342,6 +1350,7 @@ class TournamentModelTests(TestCase):
                         power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
 
+    @tag('slow')
     def test_gameplayer_clean_player_missing_last_year(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1355,6 +1364,7 @@ class TournamentModelTests(TestCase):
         self.assertRaises(ValidationError, gp.clean)
         tp.delete()
 
+    @tag('slow')
     def test_gameplayer_clean_player_missing_last_season(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1368,6 +1378,7 @@ class TournamentModelTests(TestCase):
         self.assertRaises(ValidationError, gp.clean)
         tp.delete()
 
+    @tag('slow')
     def test_gameplayer_clean_overlap_1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1392,6 +1403,7 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
+    @tag('slow')
     def test_gameplayer_clean_overlap_2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1418,6 +1430,7 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
+    @tag('slow')
     def test_gameplayer_clean_overlap_3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1444,6 +1457,7 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
+    @tag('slow')
     def test_gameplayer_clean_overlap_4(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
@@ -1468,6 +1482,7 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
+    @tag('slow')
     def test_gameplayer_clean_overlap_5(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
