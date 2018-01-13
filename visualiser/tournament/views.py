@@ -1135,6 +1135,12 @@ def sc_owners(request, tournament_id, game_name):
                                        'game': g})
 
                     i.save()
+                # Ensure that CentreCounts for this year match
+                try:
+                    g.create_or_update_sc_counts_from_ownerships(year)
+                except SCOwnershipsNotFound:
+                    # We have a blank row
+                    continue
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_owners',
                                                 args=(tournament_id, game_name)))

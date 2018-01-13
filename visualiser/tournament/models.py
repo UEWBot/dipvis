@@ -85,6 +85,9 @@ class InvalidScoringSystem(Exception):
 class InvalidYear(Exception):
     pass
 
+class SCOwnershipsNotFound(Exception):
+    pass
+
 class RoundScoringSystem():
     """
     A scoring system for a Round.
@@ -741,6 +744,29 @@ class Game(models.Model):
 
     class Meta:
         ordering = ['name']
+
+    def create_or_update_sc_counts_from_ownerships(self, year):
+        """
+        Ensures that there is one CentreCount for each power for the specified year,
+        and that the values match those determined by looking at the SupplyCentreOwnerships
+        for that year.
+        """
+        all_scos = self.supplycentreownership_set.filter(year=year)
+        if not all_scos.exists():
+            raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
+        for p in GreatPower.objects.all():
+            # We can't use get_or_create() here because count may not match
+            try:
+                i = CentreCount.objects.get(power=p,
+                                            game=self,
+                                            year=year)
+                i.count = len(all_scos.filter(owner=p))
+            except CentreCount.DoesNotExist:
+                i = CentreCount(power=p,
+                                game=self,
+                                year=year,
+                                count=len(all_scos.filter(owner=p)))
+            i.save()
 
     def scores(self, force_recalculation=False):
         """

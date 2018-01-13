@@ -790,6 +790,112 @@ class TournamentModelTests(TestCase):
                   latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
 
+    # Game.create_or_update_sc_counts_from_ownerships
+    def test_create_sc_count_invalid(self):
+        # Arbitrary game
+        g = Game.objects.get(pk=1)
+        self.assertRaises(SCOwnershipsNotFound, g.create_or_update_sc_counts_from_ownerships, 1901)
+
+    def test_create_sc_count(self):
+        test_data = {
+                        SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
+                        SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
+                        SupplyCentre.objects.get(abbreviation='Edi'): self.france,
+                        SupplyCentre.objects.get(abbreviation='Par'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Mun'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Tun'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Spa'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Por'): self.italy,
+                        SupplyCentre.objects.get(abbreviation='Bud'): self.italy,
+                        SupplyCentre.objects.get(abbreviation='Bul'): self.austria,
+                    }
+        # expected results
+        res = {
+                  self.austria : 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 0,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey : 0,
+              }
+        # Arbitrary game
+        g = Game.objects.first()
+        # Add some SC ownerships for a far off year
+        YEAR=1920
+        scos = []
+        for k,v in test_data.items():
+            sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
+            sco.save()
+            scos.append(sco)
+            res[v] += 1
+        # Quickly check that no CentreCounts exist already
+        self.assertEqual(0, g.centrecount_set.filter(year=YEAR).count())
+        g.create_or_update_sc_counts_from_ownerships(YEAR)
+        ccs = g.centrecount_set.filter(year=YEAR)
+        # We should always have CentreCounts for all powers
+        self.assertEqual(len(ccs), 7)
+        self.assertEqual(ccs.aggregate(Sum('count'))['count__sum'], len(test_data))
+        for cc in ccs:
+            self.assertEqual(cc.count, res[cc.power])
+        # Remove everything we added to the database
+        for sco in scos:
+            sco.delete()
+        for cc in ccs:
+            cc.delete()
+
+    # Game.scores
+    def test_update_sc_count(self):
+        test_data = {
+                        SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
+                        SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
+                        SupplyCentre.objects.get(abbreviation='Edi'): self.france,
+                        SupplyCentre.objects.get(abbreviation='Par'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Mun'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Tun'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Spa'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Por'): self.italy,
+                        SupplyCentre.objects.get(abbreviation='Bud'): self.italy,
+                        SupplyCentre.objects.get(abbreviation='Bul'): self.austria,
+                    }
+        # expected results
+        res = {
+                  self.austria : 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 0,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey : 0,
+              }
+        # Arbitrary game
+        g = Game.objects.first()
+        # Add some SC ownerships for a far off year
+        YEAR=1920
+        scos = []
+        for k,v in test_data.items():
+            sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
+            sco.save()
+            scos.append(sco)
+            res[v] += 1
+        # Quickly check that no CentreCounts exist already
+        self.assertEqual(0, g.centrecount_set.filter(year=YEAR).count())
+        # Add some CentreCounts to be updated by the metho being tested
+        cc = CentreCount(power=self.england, game=g, year=YEAR, count=17)
+        cc = CentreCount(power=self.turkey, game=g, year=YEAR, count=17)
+        g.create_or_update_sc_counts_from_ownerships(YEAR)
+        ccs = g.centrecount_set.filter(year=YEAR)
+        # We should always have CentreCounts for all powers
+        self.assertEqual(len(ccs), 7)
+        self.assertEqual(ccs.aggregate(Sum('count'))['count__sum'], len(test_data))
+        for cc in ccs:
+            self.assertEqual(cc.count, res[cc.power])
+        # Remove everything we added to the database
+        for sco in scos:
+            sco.delete()
+        for cc in ccs:
+            cc.delete()
+
     # Game.scores
     def test_game_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
