@@ -8,4 +8,5 @@
 <form method="post" action={% url 'enter_sc_owners' tournament.id game.name %}>
     {% include "formset_table.html" %}
 </form>
+<p>{% trans "Note that Supply Centre counts will be updated to reflect what is entered here" %}</p>
 {% endblock %}

@@ -6,7 +6,7 @@
 {% block content %}
 <h1>{{ tournament }}</h1>
 <ul>
-  <li><a href="{% url 'tournament_overview' tournament.id %}">{% trans "Overview" %}</a></li>
+  <li><a href="{% url 'tournament_overview' tournament.id %}">{% trans "Overview (cycles between standings, game summary, and best country standings)" %}</a></li>
   {% if tournament.is_finished %}
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Final Standings" %}</a></li>
   {% else %}
@@ -15,14 +15,18 @@
   <li><a href="{% url 'tournament_best_countries_refresh' tournament.id %}">{% trans "Best Countries" %}</a></li>
   <li><a href="{% url 'tournament_game_results_refresh' tournament.id %}">{% trans "Game Summary" %}</a></li>
   {% for round in tournament.round_set.all %}
-    {% for game in round.game_set.all %}
-      <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with round=round.number game=game.name %}Round {{ round }} Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
-      {% if game.gameimage_set.count > 1 %}
-        <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% blocktrans with round=round.number game=game.name %}Round {{ round }} Game {{ game }} Position Timelapse{% endblocktrans %}</a></li>
-      {% endif %}
-    {% empty %}
-      <li>{% blocktrans with n=round.number %}No games in round {{ n }}.{% endblocktrans %}</li>
-    {% endfor %}
+    <li>{% trans "Round" %} {{ round.number }}</li>
+      <ul>
+        {% for game in round.game_set.all %}
+          <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
+          {% if game.gameimage_set.count > 1 %}
+            <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Position Timelapse{% endblocktrans %}</a></li>
+          {% endif %}
+        {% empty %}
+          <li>{% blocktrans with n=round.number %}No games in round {{ n }}.{% endblocktrans %}</li>
+        {% endfor %}
+       </ul>
+    </li>
   {% empty %}
     <li>{% trans "No rounds in tournament." %}</li>
   {% endfor %}
