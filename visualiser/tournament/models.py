@@ -77,7 +77,9 @@ MASK_GAINERS = 1<<1
 MASK_LOSERS = 1<<2
 MASK_DRAW_VOTES = 1<<3
 MASK_ELIMINATIONS = 1<<4
-MASK_ALL_NEWS = (1<<5)-1
+MASK_SC_CHANGES = 1<<5
+MASK_SC_CHANGE_COUNTS = 1<<6
+MASK_ALL_NEWS = (1<<7)-1
 
 class InvalidScoringSystem(Exception):
     pass
@@ -831,6 +833,41 @@ class Game(models.Model):
             retval[power] = [gp.player for gp in ps]
         return retval
 
+    def _sc_gains_and_losses(self, prev_scos, current_scos):
+        """
+        Returns two dicts (gains then losses), indexed by GreatPower, of
+        2-tuples containing SupplyCentre and other Power (previous owner
+        (None if neutral) or new owner).
+        Parameters are two QuerySets for last year and this year's SupplyCentreOwnerships.
+        """
+        # Extract the info we need into two sets that can be operated on
+        prev = set()
+        for sco in prev_scos.all():
+            prev.add((sco.sc, sco.owner))
+        current = set()
+        for sco in current_scos.all():
+            current.add((sco.sc, sco.owner))
+        gains = {}
+        losses = {}
+        for sc, owner in prev - current:
+            for s,o in current:
+                if s == sc:
+                    new_owner = o
+                    break
+            if owner not in losses:
+                losses[owner] = []
+            losses[owner].append((sc, new_owner))
+        for sc, owner in current - prev:
+            prev_owner = None
+            for s,o in prev:
+                if s == sc:
+                    prev_owner = o
+                    break
+            if owner not in gains:
+                gains[owner] = []
+            gains[owner].append((sc, prev_owner))
+        return gains, losses
+
     def news(self, include_game_name=False, mask=MASK_ALL_NEWS):
         """
         Returns a list of strings the describe the latest events in the game
@@ -844,8 +881,10 @@ class Game(models.Model):
             return [self.result_str(include_game_name) + '.']
         player_dict = self.players(latest=True)
         centres_set = self.centrecount_set.order_by('-year')
+        # Which is the most recent year we have info for ?
         last_year = centres_set[0].year
         current_scs = centres_set.filter(year=last_year)
+        current_scos = self.supplycentreownership_set.filter(year=last_year)
         results = []
         if (mask & MASK_BOARD_TOP) != 0:
             # Who's topping the board ?
@@ -858,9 +897,13 @@ class Game(models.Model):
                                                                                           'player': first_str})
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
+            prev_scos = self.supplycentreownership_set.filter(year=last_year-1)
+            sc_gains, sc_losses = self._sc_gains_and_losses(prev_scos, current_scos)
         else:
             # We only look for differences, so just force no differences
             prev_scs = current_scs
+            sc_gains = {}
+            sc_losses = {}
         for scs in current_scs:
             power = scs.power
             prev = prev_scs.get(power=power)
@@ -875,11 +918,44 @@ class Game(models.Model):
             # Who lost 2 or more centres in the last year ?
             if (mask & MASK_LOSERS) != 0:
                 if prev.count - scs.count > 1:
-                    results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centres%(game)s.') % {'player': player_dict[power][0],
-                                                                                                                   'power': _(power.abbreviation),
-                                                                                                                   'old': prev.count,
-                                                                                                                   'new': scs.count,
-                                                                                                                   'game': gn_str})
+                    results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s.') % {'player': player_dict[power][0],
+                                                                                                                     'power': _(power.abbreviation),
+                                                                                                                     'old': prev.count,
+                                                                                                                     'new': scs.count,
+                                                                                                                     'game': gn_str})
+            # Who took 2 or more, lost 2 or more, or had a total of 4 or more gains and losses?
+            if (mask & MASK_SC_CHANGES) != 0:
+                try:
+                    gains = sc_gains[power]
+                except KeyError:
+                    gains = []
+                try:
+                    losses = sc_losses[power]
+                except KeyError:
+                    losses = []
+                if (len(gains) > 2) or (len(losses) > 2) or (len(gains) + len(losses) > 3):
+                    if len(gains) == 0:
+                        gains_str = _('no centres')
+                    else:
+                        gains_str = ', '.join(_('%(sc)s (from %(power)s)' % {'sc': s.abbreviation,
+                                                                             'power': p.abbreviation}) for s,p in gains)
+                    if len(losses) == 0:
+                        losses_str = _('no centres')
+                    else:
+                        losses_str = ', '.join(_('%(sc)s (to %(power)s)' % {'sc': s.abbreviation,
+                                                                              'power': p.abbreviation}) for s,p in losses)
+                    results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.') % {'player': player_dict[power][0],
+          'power': _(power.abbreviation),
+          'gains': gains_str,
+          'losses': losses_str,
+          'game': gn_str})
+        # How many non-neutrals were captured?
+        if (last_year > 1900) and ((mask & MASK_SC_CHANGE_COUNTS) != 0):
+            count = 0
+            for l in sc_losses.values():
+                count += len(l)
+            results.append(_('%(count)d non-neutral centre(s) changed hands%(game)s.' % {'count': count,
+                                                                                         'game': gn_str}))
         if (mask & MASK_DRAW_VOTES) != 0:
             # What draw votes failed recently ?
             # Note that it's fairly arbitrary where we draw the line here
