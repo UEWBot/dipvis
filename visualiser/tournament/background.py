@@ -378,12 +378,15 @@ class WDD_Background():
                         else:
                             # Sometimes multiple awards were won at one tournament, encoded as a nested table
                             # (Multiple best country awards will be in separate tables)
-                            for t in td.find_all('td'):
-                                if t.string:
-                                    new_res = dict(result)
-                                    new_res[key] = str(t.string)
-                                    results['Awards'].append(new_res)
-                            result = {}
+                            # Also sometimes fields like SCs or Score are empty
+                            if td.find('tr'):
+                                for t in td.find_all('td'):
+                                    if t.string:
+                                        new_res = dict(result)
+                                        new_res[key] = str(t.string)
+                                        results['Awards'].append(new_res)
+                                # We added them all individually above
+                                result = {}
                     # Don't add empty dicts
                     if result == {}:
                         continue
