@@ -21,8 +21,12 @@
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'game_sc_chart' tournament.id game.name %}">{% trans "Supply Centre Chart" %}</a></li>
-  <li><a href="{% url 'game_sc_owners' tournament.id game.name %}">{% trans "Supply Centre Ownership" %}</a></li>
-  <li><a href="{% url 'current_game_image' tournament.id game.name %}">{% trans "Latest Position" %}</a></li>
+  {% if game.supplycentreownership_set.count > 22 %}
+    <li><a href="{% url 'game_sc_owners' tournament.id game.name %}">{% trans "Supply Centre Ownership" %}</a></li>
+  {% endif %}
+  {% if game.gameimage_set.count > 1 %}
+    <li><a href="{% url 'current_game_image' tournament.id game.name %}">{% trans "Latest Position" %}</a></li>
+  {% endif %}
   <li><a href="{% url 'game_news' tournament.id game.name %}">{% trans "News" %}</a></li>
   {% if game.gameimage_set.count > 1 %}
     <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% trans "Position Timelapse" %}</a></li>
