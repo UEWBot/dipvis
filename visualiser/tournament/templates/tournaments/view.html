@@ -19,6 +19,7 @@
       <ul>
         {% for game in round.game_set.all %}
           <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
+          <li><a href="{% url 'game_sc_owners_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Ownership{% endblocktrans %}</a></li>
           {% if game.gameimage_set.count > 1 %}
             <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Position Timelapse{% endblocktrans %}</a></li>
           {% endif %}

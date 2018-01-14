@@ -21,6 +21,7 @@
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'game_sc_chart' tournament.id game.name %}">{% trans "Supply Centre Chart" %}</a></li>
+  <li><a href="{% url 'game_sc_owners' tournament.id game.name %}">{% trans "Supply Centre Ownership" %}</a></li>
   <li><a href="{% url 'current_game_image' tournament.id game.name %}">{% trans "Latest Position" %}</a></li>
   <li><a href="{% url 'game_news' tournament.id game.name %}">{% trans "News" %}</a></li>
   {% if game.gameimage_set.count > 1 %}
@@ -33,6 +34,9 @@
 <ul>
   {% if perms.tournament.add_centrecount %}
     <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a> - {% trans "Use this to update the supply centre chart for the game." %}</li>
+  {% endif %}
+  {% if perms.tournament.add_supplycentreownership %}
+    <li><a href="{% url 'enter_sc_owners' tournament.id game.name %}">{% trans "Enter SC Ownership" %}</a> - {% trans "Use this to update the supply centre ownership for the game." %}</li>
   {% endif %}
   {% if perms.tournament.add_gameimage %}
     <li><a href="{% url 'add_game_image' tournament.id game.name %}">{% trans "Upload Game Image" %}</a> - {% trans "Use this to add a picture of the game in progress." %}</li>
