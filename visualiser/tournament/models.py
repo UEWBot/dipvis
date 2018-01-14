@@ -575,7 +575,9 @@ class TournamentPlayer(models.Model):
         # Update background info when a player is added to the Tournament (only)
         if is_new:
             add_player_bg(self.player)
-            add_local_player_bg(self.player)
+            # This caused problems when the local tournament did make it into the WDD
+            # because the duplication isn't always obvious
+            #add_local_player_bg(self.player)
 
 class Round(models.Model):
     """
