@@ -19,7 +19,7 @@ from django.contrib import admin
 from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
 from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
-from tournament.players import Player
+from tournament.players import Player, PlayerTournamentRanking, PlayerGameResult, PlayerAward, PlayerRanking
 
 class SetPowerInline(admin.TabularInline):
     model = SetPower
@@ -116,3 +116,7 @@ admin.site.register(CentreCount)
 admin.site.register(TournamentPlayer)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(Game, GameAdmin)
+admin.site.register(PlayerTournamentRanking)
+admin.site.register(PlayerGameResult)
+admin.site.register(PlayerAward)
+admin.site.register(PlayerRanking)
