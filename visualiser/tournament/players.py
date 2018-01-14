@@ -620,7 +620,7 @@ class PlayerAward(models.Model):
         unique_together = ('player', 'tournament', 'date', 'name')
 
     def __str__(self):
-        s = _('%(player)s won %(award)s in %(tourney)s') % {'player': self.player,
+        s = _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
                                                             'award': self.name,
                                                             'tourney': self.tournament}
         if self.tournament[-4] != str(self.date.year):
