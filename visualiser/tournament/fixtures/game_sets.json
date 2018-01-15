@@ -4,8 +4,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "A", 
-        "name": "Austria-Hungary",
-        "starting_centres": 3
+        "name": "Austria-Hungary"
     }
 },
 {
@@ -13,8 +12,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "E", 
-        "name": "England",
-        "starting_centres": 3
+        "name": "England"
     }
 },
 {
@@ -22,8 +20,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "F", 
-        "name": "France",
-        "starting_centres": 3
+        "name": "France"
     }
 },
 {
@@ -31,8 +28,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "G", 
-        "name": "Germany",
-        "starting_centres": 3
+        "name": "Germany"
     }
 },
 {
@@ -40,8 +36,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "I", 
-        "name": "Italy",
-        "starting_centres": 3
+        "name": "Italy"
     }
 },
 {
@@ -49,8 +44,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "R", 
-        "name": "Russia",
-        "starting_centres": 4
+        "name": "Russia"
     }
 },
 {
@@ -58,8 +52,7 @@
     "model": "tournament.greatpower", 
     "fields": {
         "abbreviation": "T", 
-        "name": "Turkey",
-        "starting_centres": 3
+        "name": "Turkey"
     }
 },
 {
