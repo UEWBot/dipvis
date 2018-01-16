@@ -129,7 +129,7 @@ class WDD_Background():
         """
         Returns a list of tournament placings.
         Each entry is a dict.
-        Keys are Position, Date, Country, Tournament, and Type.
+        Keys are Position, Date, Country, Tournament, WDD URL, and Type.
         Can raise InvalidWDDId
         """
         # Individual Prize List
@@ -172,6 +172,9 @@ class WDD_Background():
                         result[key] = str(td.string)
                     else:
                         result[key] = img_to_country(td.img['src'])
+                    # Add URLs to the results dict
+                    if key == u'Tournament':
+                        result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
                 results.append(result)
         return results
 
@@ -332,7 +335,7 @@ class WDD_Background():
     def awards(self):
         """
         Returns a dict, keyed by power name or 'Awards' of arrays of dicts.
-        Keys for the inner dict are always 'Date', 'Country', 'Tournament', and 'Type'
+        Keys for the inner dict are always 'Date', 'Country', 'Tournament', WDD URL, and 'Type'
         plus either 'SCs' and 'Score' (for best country awards) or 'Name' (for other awards)
         Can raise InvalidWDDId
         """
@@ -387,6 +390,9 @@ class WDD_Background():
                                         results['Awards'].append(new_res)
                                 # We added them all individually above
                                 result = {}
+                        # Add URLs to the results dict
+                        if key == u'Tournament':
+                            result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
                     # Don't add empty dicts
                     if result == {}:
                         continue
