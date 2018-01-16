@@ -417,15 +417,17 @@ class TournamentModelTests(TestCase):
     def test_validate_sc_count_35(self):
         self.assertRaises(ValidationError, validate_sc_count, 35)
 
-    # validate_wdd_id()
-    def test_validate_wdd_id_me(self):
-        self.assertIsNone(validate_wdd_id(CHRIS_BRAND_WDD_ID))
+    # validate_wdd_player_id()
+    def test_validate_wdd_player_id_me(self):
+        self.assertIsNone(validate_wdd_player_id(CHRIS_BRAND_WDD_ID))
 
-    def test_validate_wdd_id_1(self):
+    def test_validate_wdd_player_id_1(self):
         # 1 is known to be unused
         # Note that this test will fail if the WDD can't be reached
         # (in that case, we assume the id is valid)
-        self.assertRaises(ValidationError, validate_wdd_id, 1)
+        self.assertRaises(ValidationError, validate_wdd_player_id, 1)
+
+    # TODO validate_wdd_tournament_id()
 
     # validate_game_name()
     def test_validate_game_name_spaces(self):

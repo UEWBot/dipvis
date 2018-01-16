@@ -29,7 +29,7 @@ from tournament.background import Wikipedia_Background, WDD_Background, WDD_BASE
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy import WINNING_SCS, GreatPower, validate_year
 
-import urllib.request, random, traceback
+import urllib.request, random, traceback, re
 
 # These happen to co-incide with the coding used by the WDD
 WIN = 'W'
@@ -87,9 +87,9 @@ TITLE_MAP = {
     'Third' : 3,
 }
 
-def validate_wdd_id(value):
+def validate_wdd_player_id(value):
     """
-    Checks a WDD id
+    Checks a WDD player id
     """
     url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % value
     try:
@@ -98,7 +98,20 @@ def validate_wdd_id(value):
         # Most likely WDD is not available - assume the value is ok
         return
     if p.geturl() != url:
-        raise ValidationError(_(u'%(value)d is not a valid WDD Id'), params = {'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid WDD player Id'), params = {'value': value})
+
+def validate_wdd_tournament_id(value):
+    """
+    Checks a WDD tournament id
+    """
+    url = WDD_BASE_URL + 'tournament_class.php?id_tournament==%d' % value
+    try:
+        p = urllib.request.urlopen(url)
+    except urllib.request.URLError:
+        # Most likely WDD is not available - assume the value is ok
+        return
+    if p.geturl() != url:
+        raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'), params = {'value': value})
 
 def player_picture_location(instance, filename):
     """
@@ -106,6 +119,17 @@ def player_picture_location(instance, filename):
     """
     # Stuff them all into one directory
     return 'player_pictures/%s' % filename
+
+def wdd_url_to_id(url):
+    """
+    Extracts the tournament id from a WDD tournament URL
+    """
+    # The numbers at the end of the string
+    m = re.search(r'(\d+)$', url)
+    if m:
+        return int(m.group(1))
+    else:
+        return 0
 
 def add_player_bg(player):
     """
@@ -159,6 +183,11 @@ def add_player_bg(player):
                                                                       position=finish['Position'],
                                                                       year=d[:4])
             i.date = d
+            # Ignore if not present
+            try:
+                i.wdd_tournament_id = wdd_url_to_id(finish['WDD URL'])
+            except KeyError:
+                pass
             i.save()
         except:
             # Handle all exceptions
@@ -179,6 +208,11 @@ def add_player_bg(player):
                                                                       position=t['Rank'],
                                                                       year=d[:4])
             i.date = d
+            # Ignore if not present
+            try:
+                i.wdd_tournament_id = wdd_url_to_id(t['WDD URL'])
+            except KeyError:
+                pass
             i.save()
         except KeyError:
             # No rank implies they were the TD or similar - just ignore that tournament
@@ -228,6 +262,10 @@ def add_player_bg(player):
                 pass
             try:
                 i.year_eliminated = b['Elimination year']
+            except KeyError:
+                pass
+            try:
+                i.wdd_tournament_id = wdd_url_to_id(b['WDD Tournament URL'])
             except KeyError:
                 pass
             i.save()
@@ -280,6 +318,10 @@ def add_player_bg(player):
                     pass
                 try:
                     i.final_sc_count = a['SCs']
+                except KeyError:
+                    pass
+                try:
+                    i.wdd_tournament_id = wdd_url_to_id(a['WDD URL'])
                 except KeyError:
                     pass
                 i.save()
@@ -335,7 +377,7 @@ class Player(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     wdd_player_id = models.PositiveIntegerField(unique=True,
-                                                validators = [validate_wdd_id],
+                                                validators = [validate_wdd_player_id],
                                                 verbose_name=_(u'WDD player id'),
                                                 blank=True,
                                                 null=True)
@@ -568,6 +610,10 @@ class PlayerTournamentRanking(models.Model):
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
     title = models.CharField(max_length=30, blank=True)
+    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+                                                    verbose_name=_(u'WDD tournament id'),
+                                                    blank=True,
+                                                    null=True)
 
     def __str__(self):
         pos = position_str(self.position)
@@ -594,6 +640,10 @@ class PlayerGameResult(models.Model):
     final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
     result = models.CharField(max_length=2, choices=GAME_RESULT, blank=True)
     year_eliminated = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
+    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+                                                    verbose_name=_(u'WDD tournament id'),
+                                                    blank=True,
+                                                    null=True)
 
     class Meta:
         unique_together = ('tournament_name', 'game_name', 'player', 'power')
@@ -615,6 +665,10 @@ class PlayerAward(models.Model):
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE, blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
+    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+                                                    verbose_name=_(u'WDD tournament id'),
+                                                    blank=True,
+                                                    null=True)
 
     class Meta:
         unique_together = ('player', 'tournament', 'date', 'name')

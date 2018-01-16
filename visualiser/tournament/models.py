@@ -28,7 +28,9 @@ from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
-from tournament.players import validate_wdd_id, player_picture_location, TO_GAME_RESULT, LOSS
+from tournament.players import validate_wdd_player_id, player_picture_location, TO_GAME_RESULT, LOSS
+# For historical reasons
+from tournament.players import validate_wdd_player_id as validate_wdd_id
 
 import urllib.request, random, os
 from operator import attrgetter, itemgetter
