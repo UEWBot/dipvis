@@ -143,7 +143,7 @@ def add_player_bg(player):
                                                                           title['Tournament'],
                                                                           pos,
                                                                           title['Year']))
-                traceback.printexc()
+                traceback.print_exc()
     # Do we have a WDD id for this player?
     wdd = player.wdd_player_id
     if not wdd:
@@ -168,7 +168,7 @@ def add_player_bg(player):
                                                                       finish['Tournament'],
                                                                       finish['Position'],
                                                                       d[:4]))
-            traceback.printexc()
+            traceback.print_exc()
     # Tournaments
     tournaments = bg.tournaments()
     for t in tournaments:
@@ -191,7 +191,7 @@ def add_player_bg(player):
                                                                       t['Name of the tournament'],
                                                                       t['Rank'],
                                                                       d[:4]))
-            traceback.printexc()
+            traceback.print_exc()
     # Boards
     boards = bg.boards()
     for b in boards:
@@ -241,7 +241,7 @@ def add_player_bg(player):
                                                                                                    str(p),
                                                                                                    b['Position'],
                                                                                                    b['Date']))
-            traceback.printexc()
+            traceback.print_exc()
     # Awards
     awards = bg.awards()
     for k,v in awards.items():
@@ -291,7 +291,7 @@ def add_player_bg(player):
                                                                       a['Tournament'],
                                                                       date_str,
                                                                       award_name))
-                traceback.printexc()
+                traceback.print_exc()
     # Rankings
     rankings = bg.rankings()
     for r in rankings:
@@ -307,7 +307,7 @@ def add_player_bg(player):
             # This way, we fail to add/update the single ranking rather than all the background
             print("Failed to save PlayerRanking")
             print("player=%s, system=%s" % (str(player), r['Name']))
-            traceback.printexc()
+            traceback.print_exc()
 
 def position_str(position):
     """
