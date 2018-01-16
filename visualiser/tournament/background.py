@@ -229,7 +229,7 @@ class WDD_Background():
                     elif td.string:
                         result[key] = str(td.string)
                     elif td.img:
-                        result[key] = td.img['src']
+                        result[key] = img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Name of the tournament':
                         result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
@@ -320,7 +320,7 @@ class WDD_Background():
                         except ValueError:
                             result[key] = str(td.string)
                     elif td.img:
-                        result[key] = td.img['src']
+                        result[key] = img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Name of the tournament':
                         result[u'WDD Tournament URL'] = WDD_BASE_URL + td.a['href']
