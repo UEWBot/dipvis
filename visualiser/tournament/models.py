@@ -887,6 +887,9 @@ class Game(models.Model):
         centres_set = self.centrecount_set.order_by('-year')
         # Which is the most recent year we have info for ?
         last_year = centres_set[0].year
+        # If the game just started, there is no news, so return the background instead
+        if last_year == 1900:
+            return self.background()
         current_scs = centres_set.filter(year=last_year)
         current_scos = self.supplycentreownership_set.filter(year=last_year)
         results = []
