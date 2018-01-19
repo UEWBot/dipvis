@@ -28,7 +28,8 @@ from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
-from tournament.players import validate_wdd_player_id, player_picture_location, TO_GAME_RESULT, LOSS
+from tournament.players import player_picture_location, TO_GAME_RESULT, LOSS
+from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
 # For historical reasons
 from tournament.players import validate_wdd_player_id as validate_wdd_id
 
@@ -354,6 +355,11 @@ class Tournament(models.Model):
                                     default=SECRET)
     is_published = models.BooleanField(default=False, help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User, help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
+    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+                                                    verbose_name=_("This tournament's id in the WDD"),
+                                                    blank=True,
+                                                    null=True,
+                                                    help_text=_('Add this after the tournament is complete and results have been uploaded to the WDD'))
 
     class Meta:
         ordering = ['-start_date']
@@ -547,6 +553,12 @@ class Tournament(models.Model):
             if not r.is_finished():
                 return False
         return True
+
+    def wdd_url(self):
+        """URL for this tournament in the World Diplomacy Database, if known."""
+        if self.wdd_tournament_id:
+            return WDD_BASE_URL + 'tournament_class.php?id_tournament==%d' % self.wdd_tournament_id
+        return u''
 
     def get_absolute_url(self):
         return reverse('tournament_detail', args=[str(self.id)])
