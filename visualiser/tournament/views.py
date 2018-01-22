@@ -415,7 +415,7 @@ def tournament_simple(request, tournament_id, template):
 def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    tps = t.tournamentplayer_set.order_by('-score')
+    tps = t.tournamentplayer_set.order_by('-score', 'player__last_name', 'player__first_name')
     rds = t.round_set.all()
     rounds = [r.number() for r in rds]
     # Grab the scores for each round once.
@@ -436,11 +436,7 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
             except KeyError:
                 # This player didn't play this round
                 rs.append('')
-        try:
-            scores.append(['%d' % t_positions_and_scores[p.player][0]] + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_positions_and_scores[p.player][1]])
-        except KeyError:
-            # This player didn't play at all
-            rs.append('')
+        scores.append(['%d' % t_positions_and_scores[p.player][0]] + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_positions_and_scores[p.player][1]])
     # sort rows by tournament score (they'll retain the alphabetic sorting if equal)
     scores.sort(key = lambda row: float(row[-1]), reverse=True)
     # Add one final row showing whether each round is ongoing or not

@@ -360,7 +360,7 @@ class Tournament(models.Model):
 
     def scores(self, force_recalculation=False):
         """
-        Returns the scores for everyone who played in the tournament.
+        Returns the scores for everyone registered for the tournament.
         Dict, keyed by player, of floats.
         """
         # If the tournament is over, report the stored scores unless we're told to recalculate
@@ -374,11 +374,16 @@ class Tournament(models.Model):
         system = find_tournament_scoring_system(self.tournament_scoring_system)
         if not system:
             raise InvalidScoringSystem(self.tournament_scoring_system)
-        return system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
+        scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
+        # Now add in anyone who has yet to attend a round
+        for tp in self.tournamentplayer_set.all():
+            if tp.player not in scores:
+                scores[tp.player] = 0.0
+        return scores
 
     def positions_and_scores(self):
         """
-        Returns the positions and scores of all the players.
+        Returns the positions and scores of everyone registered.
         Dict, keyed by player, of 2-tuples containing integer rankings (1 for first place, etc) and float scores.
         """
         result = {}

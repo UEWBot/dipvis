@@ -556,6 +556,12 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.scores()
 
+    def test_tournament_scores_before_start(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
+        t.scores()
+
     def test_tournament_scores_recalculate(self):
         t = Tournament.objects.get(name='t3')
         # TODO Validate results
