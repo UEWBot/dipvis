@@ -41,9 +41,11 @@ class PlayerTests(TestCase):
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
     # validate_wdd_player_id()
+    @tag('wdd')
     def test_validate_wdd_player_id_me(self):
         self.assertIsNone(validate_wdd_player_id(CHRIS_BRAND_WDD_ID))
 
+    @tag('wdd')
     def test_validate_wdd_player_id_1(self):
         # 1 is known to be unused
         # Note that this test will fail if the WDD can't be reached
@@ -52,6 +54,7 @@ class PlayerTests(TestCase):
 
     # TODO validate_wdd_tournament_id()
 
+    @tag('wdd')
     # Player.wdd_name()
     def test_player_wdd_name(self):
         p = Player.objects.get(pk=1)
@@ -74,7 +77,7 @@ class PlayerTests(TestCase):
         # TODO Validate results
         p.wdd_url()
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     # Player.background()
     def test_player_background(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
@@ -82,7 +85,7 @@ class PlayerTests(TestCase):
         # TODO Validate results
         p.background()
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     def test_player_background_no_wins(self):
         # Spiros has yet to win a tournament
         p, created = Player.objects.get_or_create(first_name='Spiros',
@@ -94,20 +97,20 @@ class PlayerTests(TestCase):
         p.background()
         p.delete()
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     def test_player_background_mask(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
         self.assertEqual([], p.background(mask=0))
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     def test_player_background_with_power(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
         # TODO Validate results
         p.background(power=self.germany)
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     def test_player_background_td(self):
         # Matt has tournaments listings for tournaments when he was TD
         p, created = Player.objects.get_or_create(first_name='Matt',
@@ -120,7 +123,7 @@ class PlayerTests(TestCase):
         p.background(power=self.germany)
         p.delete()
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     def test_player_background_non_std(self):
         # Matt has tournaments listings for non-Standard games
         p, created = Player.objects.get_or_create(first_name='Matt',
@@ -133,7 +136,7 @@ class PlayerTests(TestCase):
         p.background()
         p.delete()
 
-    @tag('slow')
+    @tag('slow', 'wdd')
     def test_player_background_non_std_2(self):
         # Nate has tournaments listings for non-Standard games,
         # where power names match Standard powers (France)
@@ -153,6 +156,7 @@ class PlayerTests(TestCase):
         # TODO Validate results
         p.background()
 
+    @tag('slow', 'wdd')
     # PlayerRanking.national_str()
     def test_playerranking_national_str(self):
         p = Player.objects.first()

@@ -20,6 +20,7 @@ from tournament.background import WDD_Background, InvalidWDDId
 
 INVALID_WDD_ID = 1
 
+@tag('wdd')
 class WDDBackgroundTests(TestCase):
     # Wikipedia_Background.titles() gets tested implicitly when Players are created
 
