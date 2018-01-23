@@ -19,8 +19,6 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from tournament.models import *
-from tournament.background import WDD_Background, InvalidWDDId
-from tournament.players import PlayerRanking
 
 from datetime import timedelta
 
@@ -29,13 +27,6 @@ HOURS_9 = timedelta(hours=9)
 HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
-
-CHRIS_BRAND_WDD_ID = 4173
-INVALID_WDD_ID = 1
-MATT_SHIELDS_WDD_ID = 588
-MATT_SUNDSTROM_WDD_ID = 8355
-NATE_COCKERILL_WDD_ID = 5009
-SPIROS_BOBETSIS_WDD_ID = 12304
 
 class TournamentModelTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -156,213 +147,6 @@ class TournamentModelTests(TestCase):
         # Add a RoundPlayer to r32
         rp2 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r32, score=47.3)
 
-    # GScoringSolos
-    def test_g_scoring_solos_no_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('Solo or bust')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for s in scores.values():
-            self.assertEqual(s, 0)
-
-    def test_g_scoring_solos_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
-        system = find_game_scoring_system('Solo or bust')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            if sc.count == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-
-    # GScoringDrawSize
-    def test_g_scoring_draws_no_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for s in scores.values():
-            self.assertEqual(s, 100.0/7)
-
-    def test_g_scoring_draws_7way_draw(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for s in scores.values():
-            self.assertEqual(s, 100.0/7)
-
-    def test_g_scoring_draws_4way_draw(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.russia,
-                                         power_4=self.germany)
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p in GreatPower.objects.all():
-            if (p == self.austria) or (p == self.england) or (p == self.russia) or (p == self.germany):
-                self.assertEqual(scores[p], 100.0/4)
-            else:
-                self.assertEqual(scores[p], 0.0)
-
-    def test_g_scoring_draws_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
-        system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            if sc.count == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-
-    # GScoringCDiplo
-    def test_g_scoring_cdiplo_no_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('CDiplo 100')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sc.count == 4:
-                self.assertEqual(s, 1 + 4)
-            else:
-                self.assertEqual(s, 1 + (38 + 14 + 7) / 4 + 5)
-        # With 2 neutrals, the total of all scores should be 100-2=98
-        self.assertEqual(sum(scores.values()), 100 - 2)
-
-    def test_g_scoring_cdiplo_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
-        system = find_game_scoring_system('CDiplo 100')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            if sc.count == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-
-    def test_g_scoring_cdiplo80_no_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('CDiplo 80')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sc.count == 4:
-                self.assertEqual(s, 4)
-            else:
-                self.assertEqual(s, (25 + 14 + 7) / 4 + 5)
-        # With 2 neutrals, the total of all scores should be 80-2=78
-        self.assertEqual(sum(scores.values()), 80 - 2)
-
-    def test_g_scoring_cdiplo80_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
-        system = find_game_scoring_system('CDiplo 80')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            if sc.count == 18:
-                self.assertEqual(s, 80)
-            else:
-                self.assertEqual(s, 0)
-
-    # GScoringSumOfSquares
-    def test_g_scoring_squares_no_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('Sum of Squares')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sc.count == 4:
-                self.assertEqual(s, 100.0 * 16 / 148)
-            else:
-                self.assertEqual(s, 100.0 * 25 / 148)
-        # Total of all scores should always be very close to 100
-        self.assertAlmostEqual(sum(scores.values()), 100)
-
-    def test_g_scoring_squares_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
-        system = find_game_scoring_system('Sum of Squares')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            if sc.count == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-
-    # GScoringCarnage
-    def test_g_scoring_carnage_simple(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
-        system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sc.count == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + 4)
-            else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + 5)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-
-    def test_g_scoring_carnage_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
-        system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(scs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.get(power=p)
-            if sc.count == 18:
-                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-            else:
-                self.assertEqual(s, 0)
-
-    # TODO test Carnage scoring with eliminations but no solo
-
     # TODO RScoringBest
 
     # TODO TScoringSum
@@ -378,32 +162,6 @@ class TournamentModelTests(TestCase):
     def test_find_t_scoring_system_invalid(self):
         self.assertEqual(None, find_tournament_scoring_system('Invalid System'))
 
-    # validate_year()
-    def test_validate_year_negative(self):
-        self.assertRaises(ValidationError, validate_year, -1)
-
-    def test_validate_year_1899(self):
-        self.assertRaises(ValidationError, validate_year, 1899)
-
-    def test_validate_year_1900(self):
-        self.assertRaises(ValidationError, validate_year, 1900)
-
-    def test_validate_year_1901(self):
-        self.assertIsNone(validate_year(1901))
-
-    # validate_year_including_start()
-    def test_validate_year_inc_start_negative(self):
-        self.assertRaises(ValidationError, validate_year_including_start, -1)
-
-    def test_validate_year_inc_start_1899(self):
-        self.assertRaises(ValidationError, validate_year_including_start, 1899)
-
-    def test_validate_year_inc_start_1900(self):
-        self.assertIsNone(validate_year_including_start(1900))
-
-    def test_validate_year_inc_start_1901(self):
-        self.assertIsNone(validate_year_including_start(1901))
-
     # validate_sc_count()
     def test_validate_sc_count_negative(self):
         self.assertRaises(ValidationError, validate_sc_count, -1)
@@ -417,125 +175,12 @@ class TournamentModelTests(TestCase):
     def test_validate_sc_count_35(self):
         self.assertRaises(ValidationError, validate_sc_count, 35)
 
-    # validate_wdd_player_id()
-    def test_validate_wdd_player_id_me(self):
-        self.assertIsNone(validate_wdd_player_id(CHRIS_BRAND_WDD_ID))
-
-    def test_validate_wdd_player_id_1(self):
-        # 1 is known to be unused
-        # Note that this test will fail if the WDD can't be reached
-        # (in that case, we assume the id is valid)
-        self.assertRaises(ValidationError, validate_wdd_player_id, 1)
-
-    # TODO validate_wdd_tournament_id()
-
     # validate_game_name()
     def test_validate_game_name_spaces(self):
         self.assertRaises(ValidationError, validate_game_name, u'space name')
 
     def test_validate_game_name_valid(self):
         self.assertIsNone(validate_game_name(u'ok'))
-
-    # Player.wdd_name()
-    def test_player_wdd_name(self):
-        p = Player.objects.get(pk=1)
-        # TODO Validate results
-        p.wdd_name()
-
-    def test_player_wdd_name_no_id(self):
-        p = Player.objects.create(first_name='John', last_name='Smith')
-        # TODO Validate results
-        p.wdd_name()
-
-    # Player.wdd_url()
-    def test_player_wdd_url(self):
-        p = Player.objects.get(pk=1)
-        # TODO Validate results
-        p.wdd_url()
-
-    def test_player_wdd_url_no_id(self):
-        p = Player.objects.create(first_name='John', last_name='Smith')
-        # TODO Validate results
-        p.wdd_url()
-
-    @tag('slow')
-    # Player.background()
-    def test_player_background(self):
-        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
-
-    @tag('slow')
-    def test_player_background_no_wins(self):
-        # Spiros has yet to win a tournament
-        p, created = Player.objects.get_or_create(first_name='Spiros',
-                                                  last_name='Bobetsis',
-                                                  wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
-        p.delete()
-
-    @tag('slow')
-    def test_player_background_mask(self):
-        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        add_player_bg(p)
-        self.assertEqual([], p.background(mask=0))
-
-    @tag('slow')
-    def test_player_background_with_power(self):
-        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        add_player_bg(p)
-        # TODO Validate results
-        p.background(power=self.germany)
-
-    @tag('slow')
-    def test_player_background_td(self):
-        # Matt has tournaments listings for tournaments when he was TD
-        p, created = Player.objects.get_or_create(first_name='Matt',
-                                                  last_name='Shields',
-                                                  wdd_player_id=MATT_SHIELDS_WDD_ID)
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        # WAC 10 he played Germany
-        p.background(power=self.germany)
-        p.delete()
-
-    @tag('slow')
-    def test_player_background_non_std(self):
-        # Matt has tournaments listings for non-Standard games
-        p, created = Player.objects.get_or_create(first_name='Matt',
-                                                  last_name='Sundstrom',
-                                                  wdd_player_id=MATT_SUNDSTROM_WDD_ID)
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        # Windy City Weasels 2012 he played United Kingdom
-        p.background()
-        p.delete()
-
-    @tag('slow')
-    def test_player_background_non_std_2(self):
-        # Nate has tournaments listings for non-Standard games,
-        # where power names match Standard powers (France)
-        p, created = Player.objects.get_or_create(first_name='Nate',
-                                                  last_name='Cockerill',
-                                                  wdd_player_id=NATE_COCKERILL_WDD_ID)
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        # Windy City Weasels 2012 he played France
-        p.background(power=self.france)
-        p.delete()
-
-    def test_player_background_unknown(self):
-        p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
 
     # Tournament.scores()
     def test_tournament_scores_invalid(self):
@@ -1556,42 +1201,3 @@ class TournamentModelTests(TestCase):
         cc1.save()
         self.assertRaises(ValidationError, cc2.clean)
         cc1.delete()
-
-    # Wikipedia_Background.titles() gets tested implicitly
-
-    # WDD_Background mostly gets tested implictly. Explicitly test invalid wdd ids
-    # WDD_Background.wdd_name()
-    def test_wdd_background_wdd_name_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.wdd_name)
-
-    # WDD_Background.finishes()
-    def test_wdd_background_finishes_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.finishes)
-
-    # WDD_Background.tournaments()
-    def test_wdd_background_tournaments_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.tournaments)
-
-    # WDD_Background.boards()
-    def test_wdd_background_boards_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.boards)
-
-    # WDD_Background.awards()
-    def test_wdd_background_awards_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.awards)
-
-    # WDD_Background.rankings()
-    def test_wdd_background_awards_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.rankings)
-
-    # PlayerRanking.national_str()
-    def test_playerranking_national_str(self):
-        pr = PlayerRanking.objects.get(pk=1)
-        # TODO Validate results
-        pr.national_str()
