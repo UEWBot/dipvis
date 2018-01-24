@@ -138,14 +138,14 @@ class TournamentModelTests(TestCase):
         gp12t = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g12, power=cls.turkey)
 
         # For t3 (the finished tournament), we want TournamentPlayers and RoundPlayers
-        # Unfortunately, adding these slows down the test dramatically
-        # due to adding background?
+        # Avoid hitting the WDD by not providing a WDD id
+        p = Player.objects.create(first_name='John', last_name='Smith')
         # Add a TournamentPlayer to t3
-        tp1 = TournamentPlayer.objects.create(player=Player.objects.get(pk=1), tournament=t3, score=147.3)
+        tp1 = TournamentPlayer.objects.create(player=p, tournament=t3, score=147.3)
         # Add a RoundPlayer to r31
-        rp1 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r31, score=100.0)
+        rp1 = RoundPlayer.objects.create(player=p, the_round=r31, score=100.0)
         # Add a RoundPlayer to r32
-        rp2 = RoundPlayer.objects.create(player=Player.objects.get(pk=1), the_round=r32, score=47.3)
+        rp2 = RoundPlayer.objects.create(player=p, the_round=r32, score=47.3)
 
     # TODO RScoringBest
 
@@ -304,7 +304,8 @@ class TournamentModelTests(TestCase):
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):
         t = Tournament.objects.get(name='t3')
-        tp = t.tournamentplayer_set.filter(player__pk=1).get()
+        # Should only be one
+        tp = t.tournamentplayer_set.first()
         self.assertEqual(tp.position(), 1)
 
     # Round.scores()
@@ -994,7 +995,6 @@ class TournamentModelTests(TestCase):
         self.assertEqual(gp.elimination_year(), None)
 
     # GamePlayer.clean()
-    @tag('slow')
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
