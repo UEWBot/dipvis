@@ -7,6 +7,7 @@ from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import tournament.models
+import tournament.players
 
 
 class Migration(migrations.Migration):
@@ -105,8 +106,8 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('first_name', models.CharField(max_length=30)),
                 ('last_name', models.CharField(max_length=30)),
-                ('wdd_player_id', models.PositiveIntegerField(blank=True, null=True, unique=True, validators=[tournament.models.validate_wdd_id], verbose_name='WDD player id')),
-                ('picture', models.ImageField(blank=True, null=True, upload_to=tournament.models.player_picture_location)),
+                ('wdd_player_id', models.PositiveIntegerField(blank=True, null=True, unique=True, validators=[tournament.players.validate_wdd_player_id], verbose_name='WDD player id')),
+                ('picture', models.ImageField(blank=True, null=True, upload_to=tournament.players.player_picture_location)),
             ],
             options={
                 'ordering': ['last_name', 'first_name'],

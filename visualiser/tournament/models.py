@@ -30,9 +30,6 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
 from tournament.players import TO_GAME_RESULT, LOSS, WIN, validate_wdd_tournament_id
-# Used in tournament/migrations/0001_initial.py
-from tournament.players import player_picture_location
-from tournament.players import validate_wdd_player_id as validate_wdd_id
 
 import random, os
 from operator import attrgetter, itemgetter
