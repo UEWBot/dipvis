@@ -26,7 +26,7 @@ from tournament.models import Tournament, Round, Game, DrawProposal, GameImage, 
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, SECRET, COUNTS, SPRING, ADJUSTMENTS
 from tournament.models import find_game_scoring_system, find_round_scoring_system, find_tournament_scoring_system
-from tournament.models import validate_game_name, validate_sc_count
+from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
 
 from datetime import timedelta
@@ -190,6 +190,19 @@ class TournamentModelTests(TestCase):
 
     def test_validate_game_name_valid(self):
         self.assertIsNone(validate_game_name(u'ok'))
+
+    # validate_vote_count()
+    def test_validate_vote_count_negative(self):
+        self.assertRaises(ValidationError, validate_vote_count, -1)
+
+    def test_validate_vote_count_8(self):
+        self.assertRaises(ValidationError, validate_vote_count, 8)
+
+    def test_validate_vote_count_1(self):
+        self.assertIsNone(validate_vote_count(1))
+
+    def test_validate_vote_count_7(self):
+        self.assertIsNone(validate_vote_count(7))
 
     # Tournament.scores()
     def test_tournament_scores_invalid(self):
