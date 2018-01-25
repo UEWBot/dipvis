@@ -94,7 +94,6 @@ class GScoringDrawSize(GameScoringSystem):
         """
         retval = {}
         the_game = self._the_game(centre_counts)
-        is_dias = the_game.is_dias()
         draw = the_game.passed_draw()
         survivors = self._survivor_count(centre_counts)
         final_scs = self._final_year_scs(centre_counts)

@@ -14,11 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 
-from tournament.models import *
+from tournament.diplomacy import validate_year, validate_year_including_start
 
 class DiplomacyTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']

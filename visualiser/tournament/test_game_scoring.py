@@ -14,10 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase, tag
+from django.test import TestCase
 from django.utils import timezone
 
-from tournament.models import *
+from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.diplomacy import GameSet, GreatPower, TOTAL_SCS
+from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
+from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, SECRET
+from tournament.models import find_game_scoring_system
 
 from datetime import timedelta
 
@@ -48,17 +52,17 @@ class GameScoringTests(TestCase):
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
         r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
         r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
-        r14 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=cls.set1)
-        g12 = Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=cls.set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=cls.set1)
         # Add Games to r12
-        g13 = Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=cls.set1)
-        g14 = Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=cls.set1)
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=cls.set1)
         # Add Games to r13
-        g15 = Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
-        g16 = Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -70,21 +74,21 @@ class GameScoringTests(TestCase):
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
         # Add CentreCounts to g11
-        sc1101a = CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
-        sc1101e = CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
-        sc1101f = CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
-        sc1101g = CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
-        sc1101i = CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
-        sc1101r = CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
-        sc1101t = CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
-        sc1104a = CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
-        sc1104e = CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
-        sc1104f = CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
-        sc1104g = CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
-        sc1104i = CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=2)
-        sc1104r = CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
-        sc1104t = CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=2)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
@@ -125,9 +129,9 @@ class GameScoringTests(TestCase):
     def test_g_scoring_draws_7way_draw(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
+                                    power_1=self.austria, power_2=self.england, power_3=self.france,
+                                    power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
@@ -138,9 +142,9 @@ class GameScoringTests(TestCase):
     def test_g_scoring_draws_4way_draw(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.russia,
-                                         power_4=self.germany)
+        DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
+                                    power_1=self.austria, power_2=self.england, power_3=self.russia,
+                                    power_4=self.germany)
         scs = g.centrecount_set.filter(year=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)

@@ -17,8 +17,9 @@
 from django.test import TestCase, tag
 from django.core.exceptions import ValidationError
 
-from tournament.models import *
-from tournament.players import PlayerRanking
+from tournament.diplomacy import GreatPower
+from tournament.players import Player, PlayerRanking
+from tournament.players import validate_wdd_player_id, add_player_bg
 
 CHRIS_BRAND_WDD_ID = 4173
 MATT_SHIELDS_WDD_ID = 588

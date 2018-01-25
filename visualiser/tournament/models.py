@@ -17,25 +17,25 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.urls import reverse
-from django.db.models import Max, Min, Sum, Q
+from django.db.models import Sum
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 from django.contrib.auth.models import User
 
+from tournament.background import WDD_BASE_URL
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
-from tournament.players import player_picture_location, TO_GAME_RESULT, LOSS
-from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
-# For historical reasons
+from tournament.players import TO_GAME_RESULT, LOSS, WIN, validate_wdd_tournament_id
+# Used in tournament/migrations/0001_initial.py
+from tournament.players import player_picture_location
 from tournament.players import validate_wdd_player_id as validate_wdd_id
 
-import urllib.request, random, os
+import random, os
 from operator import attrgetter, itemgetter
-from math import isclose
 
 SPRING = 'S'
 FALL = 'F'
@@ -186,7 +186,6 @@ class TScoringSum(TournamentScoringSystem):
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
             if p in retval:
                 continue
-            score = 0
             # Find just their rounds
             player_rounds = round_players.filter(player=p)
             # Extract the scores into a sorted list, highest first
@@ -250,7 +249,7 @@ def validate_vote_count(value):
     Checks for a valid vote count
     """
     if value < 0 or value > 7:
-        raise VaidationError(_('%(value)d is not a valid vote count'), {'value': value})
+        raise ValidationError(_('%(value)d is not a valid vote count'), {'value': value})
 
 def game_image_location(instance, filename):
     """

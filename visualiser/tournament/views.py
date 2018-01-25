@@ -20,16 +20,20 @@ from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.urls import reverse
 from django.views import generic
-from django.forms.models import inlineformset_factory
 from django import forms
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.forms import ModelForm
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError
 
-from tournament.players import *
-from tournament.diplomacy import *
-from tournament.models import *
+from tournament.players import Player
+from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
+from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
+from tournament.models import Tournament, Round, Game, DrawProposal, GameImage, SupplyCentreOwnership, CentreCount
+from tournament.models import SPRING, SECRET, POWER_ASSIGNS, COUNTS, SEASONS
+from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.models import SCOwnershipsNotFound
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15
@@ -430,7 +434,6 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
     for p in tps:
         rs = []
         for r in rds:
-            rp = p.player.roundplayer_set.filter(the_round=r)
             try:
                 rs.append('%.2f' % round_scores[r][p.player])
             except KeyError:
@@ -718,7 +721,7 @@ def roll_call(request, tournament_id):
                 try:
                     i.full_clean()
                 except ValidationError as e:
-                    form.add_error(form.fields[r_name], e)
+                    form.add_error(form.fields['player'], e)
                     i.delete()
                     return render(request,
                                   'tournaments/round_players.html',
@@ -1533,7 +1536,7 @@ def view_classification_csv(request, tournament_id):
                     'NAME': p.last_name,
                     'HOMONYME': '1', # User Guide says "Set to 1"
                     'RANK': t_positions_and_scores[p][0],
-                    'EXAEQUO': len([s for p,s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
+                    'EXAEQUO': len([s for x,s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
                     'SCORE': p_score,
                    }
         # Add in round score for each round played

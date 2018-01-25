@@ -51,6 +51,6 @@ class WDDBackgroundTests(TestCase):
         self.assertRaises(InvalidWDDId, b.awards)
 
     # WDD_Background.rankings()
-    def test_wdd_background_awards_invalid(self):
+    def test_wdd_background_rankings_invalid(self):
         b = WDD_Background(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.rankings)

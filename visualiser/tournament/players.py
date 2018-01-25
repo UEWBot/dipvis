@@ -22,14 +22,14 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.urls import reverse
-from django.db.models import Max, Min, Sum, Q
+from django.db.models import Max, Min, Q
 from django.utils.translation import ugettext as _
 
 from tournament.background import Wikipedia_Background, WDD_Background, WDD_BASE_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy import WINNING_SCS, GreatPower, validate_year
 
-import urllib.request, random, traceback, re
+import urllib.request, traceback, re
 
 # These happen to co-incide with the coding used by the WDD
 WIN = 'W'
