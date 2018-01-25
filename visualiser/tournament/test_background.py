@@ -16,41 +16,41 @@
 
 from django.test import TestCase, tag
 
-from tournament.background import WDD_Background, InvalidWDDId
+from tournament.background import WDDBackground, InvalidWDDId
 
 INVALID_WDD_ID = 1
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
-    # Wikipedia_Background.titles() gets tested implicitly when Players are created
+    # WikipediaBackground.titles() gets tested implicitly when Players are created
 
-    # WDD_Background mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
-    # WDD_Background.wdd_name()
+    # WDDBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
+    # WDDBackground.wdd_name()
     def test_wdd_background_wdd_name_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
+        b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.wdd_name)
 
-    # WDD_Background.finishes()
+    # WDDBackground.finishes()
     def test_wdd_background_finishes_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
+        b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.finishes)
 
-    # WDD_Background.tournaments()
+    # WDDBackground.tournaments()
     def test_wdd_background_tournaments_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
+        b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.tournaments)
 
-    # WDD_Background.boards()
+    # WDDBackground.boards()
     def test_wdd_background_boards_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
+        b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.boards)
 
-    # WDD_Background.awards()
+    # WDDBackground.awards()
     def test_wdd_background_awards_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
+        b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.awards)
 
-    # WDD_Background.rankings()
+    # WDDBackground.rankings()
     def test_wdd_background_rankings_invalid(self):
-        b = WDD_Background(INVALID_WDD_ID)
+        b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.rankings)

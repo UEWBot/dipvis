@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -18,8 +18,16 @@
 # about Diplomacy players. Currently reads Wikipedia for titles and the World
 # Diplomacy Database for lots of stuff.
 
-from bs4 import BeautifulSoup
+"""
+This module is dedicated to extracting background information about a player
+from online sources.
+
+Currently those sources are Wikipedia for titles and the World Diplomacy
+Database for everything else.
+"""
+
 import urllib.request
+from bs4 import BeautifulSoup
 
 WDD_BASE_URL = 'http://world-diplomacy-database.com/php/results/'
 WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
@@ -28,12 +36,14 @@ MAP = {'Name of the tournament': 'Tournament',
       }
 
 class InvalidWDDId(Exception):
+    """The WDD id provided for the player is unused on the WDD."""
     pass
 
 class WDDNotAccessible(Exception):
+    """The WWD website cannot currently be accessed."""
     pass
 
-class Wikipedia_Background():
+class WikipediaBackground():
     """
     Get background on a player from wikipedia.
     """
@@ -57,6 +67,7 @@ class Wikipedia_Background():
         page = urllib.request.urlopen(url)
         soup = BeautifulSoup(page.read())
         # Find the first H2 with a span inside
+        h2 = None
         for h2 in soup.find_all('h2'):
             span = h2.span
             if span:
@@ -78,9 +89,9 @@ class Wikipedia_Background():
                     if not row:
                         break
                     result = {'Tournament': tournament}
-                    for key,td in zip(columns, row.find_all('td')):
+                    for key, td in zip(columns, row.find_all('td')):
                         val = list(td.stripped_strings)
-                        if len(val) > 0:
+                        if val:
                             val = val[0]
                             try:
                                 val = int(val)
@@ -100,7 +111,7 @@ def img_to_country(img):
     path, sep, filename = img.rpartition('/')
     return filename[:-4]
 
-class WDD_Background():
+class WDDBackground():
     """
     Get background on a player from the World Diplomacy Database.
     """
@@ -144,7 +155,7 @@ class WDD_Background():
             return []
         # Check that we have the "Tournament" rather than "Circuit" table
         header = table.find('th')
-        if not 'ournament' in header.string:
+        if 'ournament' not in header.string:
             # No such table
             return []
         row = header.find_parent()
@@ -215,7 +226,7 @@ class WDD_Background():
                 continue
             if c[0].startswith('row_'):
                 result = {}
-                for key,td in zip(columns, row.find_all('td')):
+                for key, td in zip(columns, row.find_all('td')):
                     if key == u'Rank':
                         # Split the two separate pieces of info
                         try:
@@ -283,7 +294,7 @@ class WDD_Background():
                 continue
             if c[0].startswith('row_'):
                 result = {}
-                for key,td in zip(columns, row.find_all('td')):
+                for key, td in zip(columns, row.find_all('td')):
                     if key == u'Rank':
                         # stripped_strings here could produce a number of different things:
                         # '3'
@@ -291,8 +302,8 @@ class WDD_Background():
                         # '4', '2ex', '(D3)'
                         # '4 (L)'
                         # The Rank column actually encodes up to three separate pieces of info
-                        for key,s in zip([u'Position', u'Position sharing', u'Game end'],
-                                         td.stripped_strings):
+                        for key, s in zip([u'Position', u'Position sharing', u'Game end'],
+                                          td.stripped_strings):
                             if 'ex' in s:
                                 result[key] = int(s[:-2])
                             elif s[0] == '(':
@@ -379,7 +390,8 @@ class WDD_Background():
                         elif td.img:
                             result[key] = img_to_country(td.img['src'])
                         else:
-                            # Sometimes multiple awards were won at one tournament, encoded as a nested table
+                            # Sometimes multiple awards were won at one tournament,
+                            # encoded as a nested table
                             # (Multiple best country awards will be in separate tables)
                             # Also sometimes fields like SCs or Score are empty
                             if td.find('tr'):
@@ -433,4 +445,3 @@ class WDD_Background():
                 if '20' not in result['Name']:
                     results.append(result)
         return results
-

@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,10 +29,12 @@ round_patterns = [
 game_patterns = [
     url(r'^$', views.game_detail, name='game_detail'),
     url(r'^sc_chart/$', views.game_sc_chart, name='game_sc_chart'),
-    url(r'^sc_chart_refresh/$', views.game_sc_chart, {'refresh': True}, name='game_sc_chart_refresh'),
+    url(r'^sc_chart_refresh/$', views.game_sc_chart,
+        {'refresh': True}, name='game_sc_chart_refresh'),
     url(r'^enter_scs/$', views.sc_counts, name='enter_scs'),
     url(r'^sc_owners/$', views.game_sc_owners, name='game_sc_owners'),
-    url(r'^sc_owners_refresh/$', views.game_sc_owners, {'refresh': True}, name='game_sc_owners_refresh'),
+    url(r'^sc_owners_refresh/$', views.game_sc_owners,
+        {'refresh': True}, name='game_sc_owners_refresh'),
     url(r'^enter_sc_owners/$', views.sc_owners, name='enter_sc_owners'),
     # Always the latest position
     url(r'^positions/latest/$', views.game_image,
@@ -66,33 +68,47 @@ game_patterns = [
 ]
 
 tournament_patterns = [
-    url(r'^framesets/$', views.tournament_simple, {'template': 'frameset_picker'}, name='framesets'),
-    url(r'^frameset_3x3/$', views.tournament_simple, {'template': 'frameset_3x3'}, name='frameset_3x3'),
-    url(r'^frameset_top_board/$', views.tournament_simple, {'template': 'frameset_top_board'}, name='frameset_top_board'),
-    url(r'^frameset_2x2/$', views.tournament_simple, {'template': 'frameset_2x2'}, name='frameset_2x2'),
-    url(r'^frameset_1x1/$', views.tournament_simple, {'template': 'frameset_1x1'}, name='frameset_1x1'),
-    url(r'^views/$', views.tournament_simple, {'template': 'view'}, name='tournament_views'),
+    url(r'^framesets/$', views.tournament_simple,
+        {'template': 'frameset_picker'}, name='framesets'),
+    url(r'^frameset_3x3/$', views.tournament_simple,
+        {'template': 'frameset_3x3'}, name='frameset_3x3'),
+    url(r'^frameset_top_board/$', views.tournament_simple,
+        {'template': 'frameset_top_board'}, name='frameset_top_board'),
+    url(r'^frameset_2x2/$', views.tournament_simple,
+        {'template': 'frameset_2x2'}, name='frameset_2x2'),
+    url(r'^frameset_1x1/$', views.tournament_simple,
+        {'template': 'frameset_1x1'}, name='frameset_1x1'),
+    url(r'^views/$', views.tournament_simple,
+        {'template': 'view'}, name='tournament_views'),
     # These three go together as a cycle
     url(r'^overview/$', views.tournament_scores,
-        {'refresh': True, 'redirect_url_name': 'tournament_overview_2'}, name='tournament_overview'),
+        {'refresh': True, 'redirect_url_name': 'tournament_overview_2'},
+        name='tournament_overview'),
     url(r'^overview2/$', views.tournament_game_results,
-        {'refresh': True, 'redirect_url_name': 'tournament_overview_3'}, name='tournament_overview_2'),
+        {'refresh': True, 'redirect_url_name': 'tournament_overview_3'},
+        name='tournament_overview_2'),
     url(r'^overview3/$', views.tournament_best_countries,
-        {'refresh': True, 'redirect_url_name': 'tournament_overview'}, name='tournament_overview_3'),
+        {'refresh': True, 'redirect_url_name': 'tournament_overview'},
+        name='tournament_overview_3'),
     url(r'^scores/$', views.tournament_scores, name='tournament_scores'),
-    url(r'^scores_refresh/$', views.tournament_scores, {'refresh': True}, name='tournament_scores_refresh'),
+    url(r'^scores_refresh/$', views.tournament_scores,
+        {'refresh': True}, name='tournament_scores_refresh'),
     url(r'^game_results/$', views.tournament_game_results, name='tournament_game_results'),
-    url(r'^game_results_refresh/$', views.tournament_game_results, {'refresh': True}, name='tournament_game_results_refresh'),
+    url(r'^game_results_refresh/$', views.tournament_game_results,
+        {'refresh': True}, name='tournament_game_results_refresh'),
     url(r'^best_countries/$', views.tournament_best_countries, name='tournament_best_countries'),
-    url(r'^best_countries_refresh/$', views.tournament_best_countries, {'refresh': True}, name='tournament_best_countries_refresh'),
+    url(r'^best_countries_refresh/$', views.tournament_best_countries,
+        {'refresh': True}, name='tournament_best_countries_refresh'),
     url(r'^enter_scores/$', views.round_scores, name='enter_scores'),
     url(r'^roll_call/$', views.roll_call, name='roll_call'),
     url(r'^current_round/$', views.tournament_round, name='tournament_round'),
     url(r'^game_image/$', views.add_game_image, name='add_game_image'),
     url(r'^news/$', views.tournament_news, name='tournament_news'),
-    url(r'^news_ticker/$', views.tournament_news, {'as_ticker': True}, name='tournament_news_ticker'),
+    url(r'^news_ticker/$', views.tournament_news,
+        {'as_ticker': True}, name='tournament_news_ticker'),
     url(r'^background/$', views.tournament_background, name='tournament_background'),
-    url(r'^ticker/$', views.tournament_simple, {'template': 'ticker'}, name='tournament_ticker'),
+    url(r'^ticker/$', views.tournament_simple,
+        {'template': 'ticker'}, name='tournament_ticker'),
     url(r'^background_ticker/$', views.tournament_background,
         {'as_ticker': True}, name='tournament_background_ticker'),
     url(r'^rounds/$', views.round_index, name='round_index'),
@@ -104,6 +120,7 @@ tournament_patterns = [
 
 urlpatterns = [
     url(r'^$', views.tournament_index, name='index'),
-    url(r'^(?P<tournament_id>\d+)/$', views.tournament_simple, {'template': 'detail'}, name='tournament_detail'),
+    url(r'^(?P<tournament_id>\d+)/$', views.tournament_simple,
+        {'template': 'detail'}, name='tournament_detail'),
     url(r'^(?P<tournament_id>\d+)/', include(tournament_patterns)),
 ]

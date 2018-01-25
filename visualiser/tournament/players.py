@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -19,17 +19,24 @@
 # used to cache background information about players' Diplomacy
 # tournament history.
 
+"""
+This module provides classes to describe Diplomacy players.
+
+Most of the code is dedicated to storing background information
+about a player and retrieving it as needed.
+"""
+
+import urllib.request, traceback, re
+
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.db.models import Max, Min, Q
 from django.utils.translation import ugettext as _
 
-from tournament.background import Wikipedia_Background, WDD_Background, WDD_BASE_URL
+from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy import WINNING_SCS, GreatPower, validate_year
-
-import urllib.request, traceback, re
 
 # These happen to co-incide with the coding used by the WDD
 WIN = 'W'
@@ -98,7 +105,8 @@ def validate_wdd_player_id(value):
         # Most likely WDD is not available - assume the value is ok
         return
     if p.geturl() != url:
-        raise ValidationError(_(u'%(value)d is not a valid WDD player Id'), params = {'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
+                              params = {'value': value})
 
 def validate_wdd_tournament_id(value):
     """
@@ -111,7 +119,8 @@ def validate_wdd_tournament_id(value):
         # Most likely WDD is not available - assume the value is ok
         return
     if p.geturl() != url:
-        raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'), params = {'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
+                              params = {'value': value})
 
 def player_picture_location(instance, filename):
     """
@@ -128,21 +137,20 @@ def wdd_url_to_id(url):
     m = re.search(r'(\d+)$', url)
     if m:
         return int(m.group(1))
-    else:
-        return 0
+    return 0
 
 def add_player_bg(player):
     """
     Cache background data for the player
     """
     # First check wikipedia
-    bg = Wikipedia_Background('%s %s' % (player.first_name, player.last_name))
+    bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
     # Titles won
     titles = bg.titles()
     for title in titles:
         pos = None
         the_title = None
-        for key,val in TITLE_MAP.items():
+        for key, val in TITLE_MAP.items():
             try:
                 if title[key] == str(player):
                     pos = val
@@ -172,16 +180,16 @@ def add_player_bg(player):
     wdd = player.wdd_player_id
     if not wdd:
         return
-    bg = WDD_Background(wdd)
+    bg = WDDBackground(wdd)
     # Podium finishes
     finishes = bg.finishes()
     for finish in finishes:
         d = finish['Date']
         try:
-            i,created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                      tournament=finish['Tournament'],
-                                                                      position=finish['Position'],
-                                                                      year=d[:4])
+            i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                       tournament=finish['Tournament'],
+                                                                       position=finish['Position'],
+                                                                       year=d[:4])
             i.date = d
             # Ignore if not present
             try:
@@ -203,10 +211,10 @@ def add_player_bg(player):
     for t in tournaments:
         d = t['Date']
         try:
-            i,created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                      tournament=t['Name of the tournament'],
-                                                                      position=t['Rank'],
-                                                                      year=d[:4])
+            i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                       tournament=t['Name of the tournament'],
+                                                                       position=t['Rank'],
+                                                                       year=d[:4])
             i.date = d
             # Ignore if not present
             try:
@@ -231,17 +239,17 @@ def add_player_bg(player):
     for b in boards:
         try:
             power = b['Country']
-            p=GreatPower.objects.get(name__contains=power)
+            p = GreatPower.objects.get(name__contains=power)
         except GreatPower.DoesNotExist:
             # Apparently not a Standard game
             continue
         try:
-            i,created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
-                                                               game_name=b['Round / Board'],
-                                                               player=player,
-                                                               power=p,
-                                                               date = b['Date'],
-                                                               position = b['Position'])
+            i, created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
+                                                                game_name=b['Round / Board'],
+                                                                player=player,
+                                                                power=p,
+                                                                date = b['Date'],
+                                                                position = b['Position'])
             # If there's no 'Position sharing', they were alone at that position
             try:
                 i.position_equals = b['Position sharing']
@@ -282,7 +290,7 @@ def add_player_bg(player):
             traceback.print_exc()
     # Awards
     awards = bg.awards()
-    for k,v in awards.items():
+    for k, v in awards.items():
         # Go through the list of awards
         for a in v:
             if k == 'Awards':
@@ -340,9 +348,9 @@ def add_player_bg(player):
         try:
             i, created = PlayerRanking.objects.get_or_create(player=player,
                                                              system=r['Name'])
-            i.score=float(r['Score'])
-            i.international_rank=r['International rank']
-            i.national_rank=r['National rank']
+            i.score = float(r['Score'])
+            i.international_rank = r['International rank']
+            i.national_rank = r['National rank']
             i.save()
         except:
             # Handle all exceptions
@@ -397,7 +405,7 @@ class Player(models.Model):
         """Name for this player in the World Diplomacy Database."""
         if not self.wdd_player_id:
             return u''
-        bg = WDD_Background(self.wdd_player_id)
+        bg = WDDBackground(self.wdd_player_id)
         try:
             return bg.wdd_name()
         except WDDNotAccessible:
@@ -405,7 +413,8 @@ class Player(models.Model):
             return u''
         except InvalidWDDId:
             # This can only happen if we couldn't get to the WDD when the Player was created
-            raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'), params = {'wdd_id': self.wdd_player_id})
+            raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
+                                  params = {'wdd_id': self.wdd_player_id})
 
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
@@ -573,7 +582,7 @@ class Player(models.Model):
                                                                                                                                                   'percentage': 100.0*float(eliminations)/float(games)})
             else:
                 results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.') % {'name': self,
-                                                                                                   'power': c_str})
+                                                                                                    'power': c_str})
         if (mask & MASK_BOARD_TOP_COUNT) != 0:
             query = Q(result=WIN) | Q(position=1)
             board_tops = results_set.filter(query).count()
@@ -585,7 +594,7 @@ class Player(models.Model):
                                                                                                                                                   'percentage': 100.0*float(board_tops)/float(games)})
             else:
                 results.append(_(u'%(name)s has yet to top the board%(power)s at a tournament.') % {'name': self,
-                                                                                                   'power': c_str})
+                                                                                                    'power': c_str})
         return results
 
     def background(self, power=None, mask=MASK_ALL_BG):
@@ -597,6 +606,7 @@ class Player(models.Model):
         return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
     def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
         return reverse('player_detail', args=[str(self.id)])
 
 class PlayerTournamentRanking(models.Model):
@@ -698,6 +708,7 @@ class PlayerRanking(models.Model):
         unique_together = ('player', 'system')
 
     def national_str(self):
+        """Returns a string describing the national_rank"""
         s = _('%(player)s is ranked %(ranking)s in their country in the %(system)s') % {'player': self.player,
                                                                                         'ranking': self.international_rank,
                                                                                         'system': self.system}
@@ -708,4 +719,3 @@ class PlayerRanking(models.Model):
                                                                                        'ranking': self.international_rank,
                                                                                        'system': self.system}
         return s
-

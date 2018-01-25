@@ -1,18 +1,25 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Django models file for the Diplomacy Tournament Visualiser.
+"""
+
+import random, os
+from operator import attrgetter, itemgetter
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -30,9 +37,6 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
 from tournament.players import TO_GAME_RESULT, LOSS, WIN, validate_wdd_tournament_id
-
-import random, os
-from operator import attrgetter, itemgetter
 
 SPRING = 'S'
 FALL = 'F'
@@ -82,12 +86,15 @@ MASK_SC_CHANGE_COUNTS = 1<<6
 MASK_ALL_NEWS = (1<<7)-1
 
 class InvalidScoringSystem(Exception):
+    """The specified scoring systm name is not recognised"""
     pass
 
 class InvalidYear(Exception):
+    """The year provided is not a valid game year"""
     pass
 
 class SCOwnershipsNotFound(Exception):
+    """The required SupplyCentreOwnership objects were not found in the database."""
     pass
 
 class RoundScoringSystem():
@@ -216,15 +223,28 @@ def find_scoring_system(name, the_list):
     return None
 
 def find_game_scoring_system(name):
+    """
+    Searches for a scoring system with the given name.
+    Returns either the GameScoringSystem object or None.
+    """
     return find_scoring_system(name, G_SCORING_SYSTEMS)
 
 def find_round_scoring_system(name):
+    """
+    Searches for a scoring system with the given name.
+    Returns either the RoundScoringSystem object or None.
+    """
     return find_scoring_system(name, R_SCORING_SYSTEMS)
 
 def find_tournament_scoring_system(name):
+    """
+    Searches for a scoring system with the given name.
+    Returns either the TournamentScoringSystem object or None.
+    """
     return find_scoring_system(name, T_SCORING_SYSTEMS)
 
 def get_scoring_systems(systems):
+    """Returns a list of two-tuples, suitable for use in a Django CharField.choices parameter."""
     return sorted([(s.name, s.name) for s in systems if not s.is_abstract])
 
 def validate_sc_count(value):
@@ -232,7 +252,8 @@ def validate_sc_count(value):
     Checks for a valid SC count
     """
     if value < 0 or value > TOTAL_SCS:
-        raise ValidationError(_(u'%(value)d is not a valid SC count'), params = {'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid SC count'),
+                              params = {'value': value})
 
 def validate_game_name(value):
     """
@@ -246,7 +267,8 @@ def validate_vote_count(value):
     Checks for a valid vote count
     """
     if value < 0 or value > 7:
-        raise ValidationError(_('%(value)d is not a valid vote count'), {'value': value})
+        raise ValidationError(_('%(value)d is not a valid vote count'),
+                              params = {'value': value})
 
 def game_image_location(instance, filename):
     """
@@ -297,12 +319,12 @@ def add_local_player_bg(player):
         # Also add PlayerGameResult for each board played
         for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).distinct():
             pos = gp.game.positions()
-            i,created = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
-                                                               game_name=gp.game.name,
-                                                               player=player,
-                                                               power=gp.power,
-                                                               date = gp.game.the_round.start.date(),
-                                                               position = pos[gp.power])
+            i, created = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
+                                                                game_name=gp.game.name,
+                                                                player=player,
+                                                                power=gp.power,
+                                                                date = gp.game.the_round.start.date(),
+                                                                position = pos[gp.power])
             # Set additional info
             i.score = gp.score
             i.year_eliminated = gp.elimination_year()
@@ -391,7 +413,7 @@ class Tournament(models.Model):
         result = {}
         scores = self.scores()
         last_score = None
-        for i,(k,v) in enumerate(sorted([(k,v) for k,v in scores.items()], key=itemgetter(1), reverse=True)):
+        for i, (k, v) in enumerate(sorted([(k, v) for k, v in scores.items()], key=itemgetter(1), reverse=True)):
             if v != last_score:
                 place, last_score = i + 1, v
             result[k] = (place, v)
@@ -420,7 +442,7 @@ class Tournament(models.Model):
                         retval[gp.power].append(gp)
                     except KeyError:
                         retval[gp.power] = [gp]
-        for power in retval.keys():
+        for power in retval:
             # Find the best score for this power in the whole tournament
             # First, sort by descending score
             retval[power].sort(key=attrgetter('score'), reverse=True)
@@ -485,18 +507,18 @@ class Tournament(models.Model):
                 if len(gps) == 1:
                     sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
                     results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.') % {'player': str(gp.player),
-          'country': power.name,
-          'dots': sc.count,
-          'score': gp.score,
-          'game': gp.game.name,
-          'round': gp.game.the_round.number()})
+                                                                                                                                                                  'country': power.name,
+                                                                                                                                                                  'dots': sc.count,
+                                                                                                                                                                  'score': gp.score,
+                                                                                                                                                                  'game': gp.game.name,
+                                                                                                                                                                  'round': gp.game.the_round.number()})
                 else:
                     # Tie for best power
                     winner_str = ', '.join([str(p.player) for p in gps])
                     results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.') % {'country': power.name,
-                   'winner_str': winner_str,
-                   'dots': gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count,
-                   'score': gp.score})
+                                                                                                                                                 'winner_str': winner_str,
+                                                                                                                                                 'dots': gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count,
+                                                                                                                                                 'score': gp.score})
         else:
             # which rounds have been played ?
             played_rounds = len([r for r in self.round_set.all() if r.is_finished()])
@@ -514,12 +536,12 @@ class Tournament(models.Model):
                 include_leader = True
         if include_leader:
             the_scores = self.scores()
-            if len(the_scores) > 0:
+            if the_scores:
                 max_score = max(the_scores.values())
-                winners = [str(k) for k,v in the_scores.items() if v == max_score]
+                winners = [str(k) for k, v in the_scores.items() if v == max_score]
                 player_str = ', '.join(winners)
-                results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % { 'score': max_score,
-                                                                                                                          'players': player_str})
+                results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % {'score': max_score,
+                                                                                                                             'players': player_str})
             # Include the top score from each previous round (if any)
             for r in self.round_set.all():
                 if r.is_finished():
@@ -540,9 +562,13 @@ class Tournament(models.Model):
         return None
 
     def is_finished(self):
+        """
+        Returns True if the tournament has rounds, and they are all finished.
+        Returns False otherwise.
+        """
         rds = self.round_set.all()
         # If there are no rounds, the tournament can't have started
-        if len(rds) == 0:
+        if not rds:
             return False
         # Look for any unfinished round
         for r in rds:
@@ -557,6 +583,7 @@ class Tournament(models.Model):
         return u''
 
     def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
         return reverse('tournament_detail', args=[str(self.id)])
 
     def __str__(self):
@@ -633,8 +660,12 @@ class Round(models.Model):
         return system.scores(GamePlayer.objects.filter(game__the_round=self).distinct())
 
     def is_finished(self):
+        """
+        Returns True if the Round has games, and they have all finished.
+        Returns False otherwise.
+        """
         gs = self.game_set.all()
-        if len(gs) == 0:
+        if not gs:
             # Rounds with no games can't have started
             return False
         for g in gs:
@@ -657,19 +688,19 @@ class Round(models.Model):
         Returns a news string detailing the person with the best score for the round.
         """
         the_scores = self.scores()
-        if len(the_scores) == 0:
+        if not the_scores:
             return None
         max_score = max(the_scores.values())
-        winners = [k for k,v in the_scores.items() if v == max_score]
+        winners = [k for k, v in the_scores.items() if v == max_score]
         if self.is_finished():
             done_str = _(u'Final')
         else:
             done_str = _(u'Current')
         player_str = ', '.join([str(w) for w in winners])
         return _(u'%(done)s top score for round %(r_num)d is %(score).2f for %(players)s.') % {'done': done_str,
-                                                                                                       'r_num': self.number(),
-                                                                                                       'score': max_score,
-                                                                                                       'players': player_str}
+                                                                                               'r_num': self.number(),
+                                                                                               'score': max_score,
+                                                                                               'players': player_str}
 
     def news(self):
         """
@@ -730,13 +761,17 @@ class Round(models.Model):
         return results
 
     def clean(self):
-        # Must provide either both end times, or neither
+        """
+        Validate the object.
+        Must have either both end times, or neither.
+        """
         if self.earliest_end_time and not self.latest_end_time:
             raise ValidationError(_(u'Earliest end time specified without latest end time'))
         if self.latest_end_time and not self.earliest_end_time:
             raise ValidationError(_(u'Latest end time specified without earliest end time'))
 
     def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
         return reverse('round_detail',
                        args=[str(self.tournament.id), str(self.number())])
 
@@ -816,7 +851,7 @@ class Game(models.Model):
         """
         result = {}
         last_score = None
-        for i,(k,v) in enumerate(sorted([(k,v) for k,v in self.scores().items()], key=itemgetter(1), reverse=True)):
+        for i, (k, v) in enumerate(sorted([(k, v) for k, v in self.scores().items()], key=itemgetter(1), reverse=True)):
             if v != last_score:
                 place, last_score = i + 1, v
             result[k] = place
@@ -867,7 +902,7 @@ class Game(models.Model):
         gains = {}
         losses = {}
         for sc, owner in prev - current:
-            for s,o in current:
+            for s, o in current:
                 if s == sc:
                     new_owner = o
                     break
@@ -876,7 +911,7 @@ class Game(models.Model):
             losses[owner].append((sc, new_owner))
         for sc, owner in current - prev:
             prev_owner = None
-            for s,o in prev:
+            for s, o in prev:
                 if s == sc:
                     prev_owner = o
                     break
@@ -957,21 +992,21 @@ class Game(models.Model):
                 except KeyError:
                     losses = []
                 if (len(gains) > 2) or (len(losses) > 2) or (len(gains) + len(losses) > 3):
-                    if len(gains) == 0:
-                        gains_str = _('no centres')
-                    else:
+                    if gains:
                         gains_str = ', '.join(_('%(sc)s (from %(power)s)' % {'sc': s.abbreviation,
-                                                                             'power': p.abbreviation}) for s,p in gains)
-                    if len(losses) == 0:
-                        losses_str = _('no centres')
+                                                                             'power': p.abbreviation}) for s, p in gains)
                     else:
+                        gains_str = _('no centres')
+                    if losses:
                         losses_str = ', '.join(_('%(sc)s (to %(power)s)' % {'sc': s.abbreviation,
-                                                                              'power': p.abbreviation}) for s,p in losses)
+                                                                            'power': p.abbreviation}) for s, p in losses)
+                    else:
+                        losses_str = _('no centres')
                     results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.') % {'player': player_dict[power][0],
-          'power': _(power.abbreviation),
-          'gains': gains_str,
-          'losses': losses_str,
-          'game': gn_str})
+                                                                                                              'power': _(power.abbreviation),
+                                                                                                              'gains': gains_str,
+                                                                                                              'losses': losses_str,
+                                                                                                              'game': gn_str})
         # How many non-neutrals were captured?
         if (last_year > 1900) and ((mask & MASK_SC_CHANGE_COUNTS) != 0):
             count = 0
@@ -1012,7 +1047,7 @@ class Game(models.Model):
         if (mask & MASK_ELIMINATIONS) != 0:
             # Who has been eliminated so far, and when ?
             zeroes = centres_set.filter(count=0).reverse()
-            while len(zeroes):
+            while zeroes:
                 scs = zeroes[0]
                 power = scs.power
                 zeroes = zeroes.exclude(power=power)
@@ -1030,7 +1065,7 @@ class Game(models.Model):
         """
         players_by_power = self.players(latest=True)
         results = []
-        for c,players in players_by_power.items():
+        for c, players in players_by_power.items():
             for p in players:
                 results += p.background(c, mask=mask)
         # Shuffle the resulting list
@@ -1140,7 +1175,10 @@ class Game(models.Model):
         return None
 
     def clean(self):
-        # Game names must be unique within the tournament
+        """
+        Validate the object.
+        Game names must be unique within the tournament.
+        """
         games = Game.objects.filter(the_round__tournament=self.the_round.tournament).distinct()
         for g in games:
             if (self != g) and (self.name == g.name):
@@ -1207,6 +1245,7 @@ class Game(models.Model):
                     p.save()
 
     def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
         return reverse('game_detail',
                        args=[str(self.the_round.tournament.id), self.name])
 
@@ -1249,6 +1288,9 @@ class DrawProposal(models.Model):
     votes_in_favour = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_vote_count])
 
     def draw_size(self):
+        """
+        Returns the number of powers included in the DrawProposal.
+        """
         return len(self.powers())
 
     def powers(self):
@@ -1295,9 +1337,19 @@ class DrawProposal(models.Model):
             raise TypeError(_('This DrawProposal only has pass/fail, not vote counts'))
 
     def clean(self):
+        """
+        Validate the object.
+        The Power_N attributes must be used in numerical order.
+        Each GreatPower must only appear a maximum of once in the Power_N attributes.
+        Only one DrawProposal for a given Game can be successful.
+        A successful DrawProposal for a Game cannot happen after any CentreCount.
+        Dead powers cannot be included.
+        If the Tournament has its draw_secrecy attribute set to SECRET, the passed attribute must be set.
+        If the Tournament has its draw_secrecy attribute set to COUNTS, the votes_in_favour attribute must be set.
+        """
         # No skipping powers
         found_null = False
-        for n in range(1,8):
+        for n in range(1, 8):
             if not self.__dict__['power_%d_id' % n]:
                 found_null = True
             elif found_null:
@@ -1308,7 +1360,8 @@ class DrawProposal(models.Model):
             if value and name.startswith('power_'):
                 power = GreatPower.objects.get(pk=value)
                 if power in powers:
-                    raise ValidationError(_(u'%(power)s present more than once'), params = {'power':  power})
+                    raise ValidationError(_(u'%(power)s present more than once'),
+                                          params = {'power':  power})
                 powers.add(power)
         # Only one successful draw proposal
         if self.passed:
@@ -1321,7 +1374,8 @@ class DrawProposal(models.Model):
         # No successful proposal prior to the latest SC count
         final_year = self.game.final_year()
         if self.passed and (self.year <= final_year):
-            raise ValidationError(_(u'Game already has a centre count for %(year)d'), params = {'year': final_year})
+            raise ValidationError(_(u'Game already has a centre count for %(year)d'),
+                                  params = {'year': final_year})
         # No dead powers included
         # If DIAS, all alive powers must be included
         dias = self.game.is_dias()
@@ -1332,10 +1386,12 @@ class DrawProposal(models.Model):
         for sc in scs:
             if sc.power in powers:
                 if sc.count == 0:
-                    raise ValidationError(_(u'Dead power %(power)s included in proposal'), params = {'power': sc.power})
+                    raise ValidationError(_(u'Dead power %(power)s included in proposal'),
+                                          params = {'power': sc.power})
             else:
                 if dias and sc.count > 0:
-                    raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'), params = {'power': sc.power})
+                    raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
+                                          params = {'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
         if self.game.the_round.tournament.draw_secrecy == SECRET:
             if not self.passed:
@@ -1373,7 +1429,10 @@ class RoundPlayer(models.Model):
         ordering = ['player']
 
     def clean(self):
-        # Player should already be in the tournament
+        """
+        Validate the object.
+        There must already be a corresponding TournamentPlayer.
+        """
         t = self.the_round.tournament
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError(_(u'Player is not yet in the tournament'))
@@ -1417,6 +1476,12 @@ class GamePlayer(models.Model):
         return e_year
 
     def clean(self):
+        """
+        Validate the object.
+        There must already be a corresponding TournamentPlayer.
+        If either of the last_year and last_season attributes are set, both must be set.
+        Only one Player can be playing this power at any given point in the Game.
+        """
         # Player should already be in the tournament
         t = self.game.the_round.tournament
         tp = self.player.tournamentplayer_set.filter(tournament=t)
@@ -1514,10 +1579,15 @@ class GameImage(models.Model):
         return u'%s%d%s' % (self.season, self.year, phase_str[self.phase])
 
     def clean(self):
+        """
+        Validate the object.
+        The phase attribute can only be set to ADJUSTMENTS when the season attribute is set to FALL.
+        """
         if self.season == SPRING and self.phase == ADJUSTMENTS:
             raise ValidationError(_(u'No adjustment phase in spring'))
 
     def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
         return reverse('game_image', args=[str(self.game.the_round.tournament.id), self.game.name, self.turn_str()])
 
     def __str__(self):
@@ -1537,10 +1607,17 @@ class CentreCount(models.Model):
         ordering = ['game', 'year']
 
     def clean(self):
+        """
+        Validate the object.
+        The year attribute must pre-date the Round's final_year attribute, if any.
+        The count attribute cannot be more than double that for the same power in the previous year.
+        If the count for this power for any preivous year was zero, the count attribute must be zero.
+        """
         # Is this for a year that is supposed to be played ?
         final_year = self.game.the_round.final_year
         if final_year and self.year > final_year:
-                raise ValidationError(_(u'Games in this round end with %(year)d'), params = {'year': final_year})
+            raise ValidationError(_(u'Games in this round end with %(year)d'),
+                                  params = {'year': final_year})
         # Not possible to more than double your count in one year
         # or to recover from an elimination
         try:
@@ -1555,4 +1632,3 @@ class CentreCount(models.Model):
 
     def __str__(self):
         return u'%s %d %s %d' % (self.game, self.year, _(self.power.abbreviation), self.count)
-

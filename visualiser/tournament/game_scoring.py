@@ -1,20 +1,22 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This file contains scoring systems for individual diplomacy games.
+"""
+This module contains scoring systems for individual diplomacy games.
+"""
 
 from django.utils.translation import ugettext as _
 
@@ -122,7 +124,7 @@ def adjust_rank_score(centre_counts, rank_points):
     Where two or more powers have the same number of SCs, the ranking points for their positions
     are shared eveny between them.
     """
-    if len(rank_points) == 0:
+    if not rank_points:
         # The rest of them get zero points
         return [] + [0.0] * len(centre_counts)
     # First count up how many powers tied at the top
@@ -136,7 +138,7 @@ def adjust_rank_score(centre_counts, rank_points):
             points += rank_points[i]
         i += 1
     # Now share the points between those tied players
-    for j in range(0,i):
+    for j in range(0, i):
         if j < len(rank_points):
             rank_points[j] = points / count
         else:

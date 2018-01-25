@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -18,12 +18,19 @@
 # Which powers exist, how many Supply Centres there are, which colour
 # represents each power, etc.
 
+"""
+This module provides classes describing the core Diplomacy board game.
+
+If we ever want to support variants, then these are the definitions
+that will need to differ for different variants.
+"""
+
+import os
+
 from django.db import models
 from django.utils.translation import ugettext as _
 
 from django.core.exceptions import ValidationError
-
-import os
 
 TOTAL_SCS = 34
 WINNING_SCS = ((TOTAL_SCS/2)+1)
@@ -35,14 +42,16 @@ def validate_year(value):
     Checks for a valid game year
     """
     if value < FIRST_YEAR:
-        raise ValidationError(_(u'%(value)d is not a valid game year'), params = {'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid game year'),
+                              params = {'value': value})
 
 def validate_year_including_start(value):
     """
     Checks for a valid game year, allowing 1900, too
     """
     if value < FIRST_YEAR-1:
-        raise ValidationError(_(u'%(value)d is not a valid game year'), params = {'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid game year'),
+                              params = {'value': value})
 
 def game_image_location(instance, filename):
     """
@@ -95,7 +104,8 @@ class SetPower(models.Model):
         unique_together = ('the_set', 'power')
 
     def __str__(self):
-        return _(u'%(power)s in %(the_set)s' % {'power': self.power.name, 'the_set': self.the_set.name})
+        return _(u'%(power)s in %(the_set)s' % {'power': self.power.name,
+                                                'the_set': self.the_set.name})
 
 class SupplyCentre(models.Model):
     """

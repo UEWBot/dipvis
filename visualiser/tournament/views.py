@@ -1,18 +1,22 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Views for the Diplomacy Tournament Visualiser.
+"""
 
 import csv
 
@@ -56,7 +60,7 @@ class DrawForm(forms.Form):
         if not is_dias:
             self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
                                                                    to_field_name='name',
-                                                                   widget=forms.SelectMultiple(attrs={'size':'7'}))
+                                                                   widget=forms.SelectMultiple(attrs={'size': '7'}))
         if secrecy == SECRET:
             self.fields['passed'] = forms.BooleanField(initial=False, required=False)
         elif secrecy == COUNTS:
@@ -120,10 +124,10 @@ class GamePlayersForm(forms.Form):
             c = power.name
             player = cleaned_data.get(c)
             # If the field itself didn't validate, drop out
-            if player == None:
+            if player is None:
                 return cleaned_data
             if player in players:
-                raise forms.ValidationError(_('Player %(player)s appears more than once') % {'player':player})
+                raise forms.ValidationError(_('Player %(player)s appears more than once') % {'player': player})
             players.append(player)
 
         return cleaned_data
@@ -213,7 +217,7 @@ class SCCountForm(forms.Form):
             c = power.name
             dots = cleaned_data.get(c)
             # If the field itself didn't validate, drop out
-            if dots == None:
+            if dots is None:
                 return cleaned_data
             total_scs += dots
         if total_scs > TOTAL_SCS:
@@ -313,7 +317,7 @@ class TournamentPlayerChoiceField(forms.ModelChoiceField):
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
     tp_id = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
-                                            widget=forms.HiddenInput(attrs={'readonly':'readonly'}))
+                                        widget=forms.HiddenInput(attrs={'readonly': 'readonly'}))
     player = forms.CharField(max_length=20)
 
     def __init__(self, *args, **kwargs):
@@ -332,7 +336,7 @@ class PlayerRoundScoreForm(forms.Form):
             readonly = (i < self.this_round)
             if not readonly:
                 # Create an additional field to show the game scores for that round
-                game_scores_name = 'game_scores_%d' %i
+                game_scores_name = 'game_scores_%d' % i
                 self.fields[game_scores_name] = forms.CharField(max_length=10,
                                                                 required=False)
                 attrs = self.fields[game_scores_name].widget.attrs
@@ -483,8 +487,11 @@ def tournament_game_results(request, tournament_id, refresh=False, redirect_url_
                 # Is this game one that this player played in?
                 try:
                     gp = gps.filter(game=g).get()
+                except GamePlayer.DoesNotExist:
+                    pass
+                else:
                     # New line if they played multiple games in this round
-                    if len(gs):
+                    if gs:
                         gs += '<br>'
                     # Final year of the game as a whole
                     final_year = g.centrecount_set.order_by('-year').first().year
@@ -539,8 +546,6 @@ def tournament_game_results(request, tournament_id, refresh=False, redirect_url_
                         gs += _(' [Top Board]')
                     if not g.is_finished:
                         gs += _(' [Ongoing]')
-                except GamePlayer.DoesNotExist:
-                    pass
             rs.append(gs)
         results.append(['<a href=%s>%s</a>' % (p.player.get_absolute_url(), p.player)] + rs)
     # Add one final row showing whether each round is ongoing or not
@@ -566,7 +571,7 @@ def tournament_best_countries(request, tournament_id, refresh=False, redirect_ur
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
     rows = []
-    while len(gps) > 0:
+    while gps:
         row = []
         for p in set_powers:
             # Find the first in gps for this power
@@ -596,8 +601,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
         context['redirect_url'] = reverse('tournament_ticker',
                                           args=(tournament_id,))
         return render(request, 'tournaments/info_ticker.html', context)
-    else:
-        return render(request, 'tournaments/info.html', context)
+    return render(request, 'tournaments/info.html', context)
 
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
@@ -608,8 +612,7 @@ def tournament_news(request, tournament_id, as_ticker=False):
         context['redirect_url'] = reverse('tournament_ticker',
                                           args=(tournament_id,))
         return render(request, 'tournaments/info_ticker.html', context)
-    else:
-        return render(request, 'tournaments/info.html', context)
+    return render(request, 'tournaments/info.html', context)
 
 def tournament_round(request, tournament_id):
     """Display details of the currently in-progress round of a tournament"""
@@ -634,7 +637,7 @@ def round_scores(request, tournament_id):
         if formset.is_valid():
             for form in formset:
                 tp = form.cleaned_data['tp_id']
-                for r_name,value in form.cleaned_data.items():
+                for r_name, value in form.cleaned_data.items():
                     # Skip if no score was entered
                     if not value:
                         continue
@@ -682,13 +685,13 @@ def round_scores(request, tournament_id):
         data = []
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
-            current = {'tp_id': tp, 'player': tp.player, 'overall_score':tp.score}
+            current = {'tp_id': tp, 'player': tp.player, 'overall_score': tp.score}
             for rp in tp.player.roundplayer_set.filter(the_round__tournament=t).all():
-                current['round_%d'%rp.the_round.number()] = rp.score
+                current['round_%d' % rp.the_round.number()] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
                                                   game__the_round=rp.the_round).distinct()
-                current['game_scores_%d'%rp.the_round.number()] = ', '.join([str(g.score) for g in games])
+                current['game_scores_%d' % rp.the_round.number()] = ', '.join([str(g.score) for g in games])
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
@@ -730,7 +733,7 @@ def roll_call(request, tournament_id):
                                    'post_url': reverse('roll_call', args=(tournament_id,)),
                                    'formset' : formset})
                 i.save()
-                for r_name,value in form.cleaned_data.items():
+                for r_name, value in form.cleaned_data.items():
                     # Ignore non-bool fields and ones that aren't True
                     if value != True:
                         # TODO Ideally, we should delete any corresponding RoundPlayer here
@@ -762,13 +765,12 @@ def roll_call(request, tournament_id):
         data = []
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
-            current = {'player':tp.player}
+            current = {'player': tp.player}
             # And each round of the Tournament
             for r in t.round_set.all():
-                i = r.number()
                 # Is this player listed as playing this round ?
                 played = r.roundplayer_set.filter(player=tp.player).exists()
-                current['round_%d'%i] = played
+                current['round_%d' % r.number()] = played
             data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
 
@@ -978,6 +980,7 @@ def game_simple(request, tournament_id, game_name, template):
 
 # TODO Replace with return game_simple(request, tournament_id, game_name, 'detail') ?
 def game_detail(request, tournament_id, game_name):
+    """Display an overview of the game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
@@ -1012,7 +1015,7 @@ def game_sc_owners(request,
     rows = []
     for year in years:
         yscos = scos.filter(year=year)
-        if len(yscos) == 0:
+        if not yscos:
             # This year we have no data
             no_data_str = '?'
         else:
@@ -1126,7 +1129,7 @@ def sc_owners(request, tournament_id, game_name):
                         i = SupplyCentreOwnership.objects.get(sc=dot,
                                                               game=g,
                                                               year=year)
-                        if value == None:
+                        if value is None:
                             # There is an owner in the db, but now we want this dot to be neutral
                             i.delete()
                             continue
@@ -1134,7 +1137,7 @@ def sc_owners(request, tournament_id, game_name):
                             # Ensure the owner has the value we want
                             i.owner = value
                     except SupplyCentreOwnership.DoesNotExist:
-                        if value == None:
+                        if value is None:
                             # Still neutral
                             continue
                         i = SupplyCentreOwnership(sc=dot,
@@ -1274,8 +1277,7 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
         context['redirect_url'] = reverse('game_ticker',
                                           args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
-    else:
-        return render(request, 'games/info.html', context)
+    return render(request, 'games/info.html', context)
 
 def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
@@ -1287,8 +1289,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
         context['redirect_url'] = reverse('game_ticker',
                                           args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
-    else:
-        return render(request, 'games/info.html', context)
+    return render(request, 'games/info.html', context)
 
 @permission_required('tournament.add_drawproposal')
 def draw_vote(request, tournament_id, game_name):
@@ -1325,8 +1326,8 @@ def draw_vote(request, tournament_id, game_name):
 
         # Create a dict from countries, to pass as kwargs
         kwargs = {}
-        for i in range(0,len(countries)):
-            kwargs['power_%d'%(i+1)] = countries[i]
+        for i, c in enumerate(countries, start=1):
+            kwargs['power_%d' % i] = c
 
         try:
             passed = form.cleaned_data['passed']
@@ -1501,8 +1502,8 @@ def view_classification_csv(request, tournament_id):
                'EXAEQUO', # Last of the mandatory ones
                'SCORE',
               ]
-    # Centre count for each year (extras don't matter)
-    for i in range(1,9):
+    # Score for each round (extras don't matter)
+    for i in range(1, 9):
         headers.append('R%d' % i)
     # Best country stuff
     for p in GreatPower.objects.all():
@@ -1536,7 +1537,7 @@ def view_classification_csv(request, tournament_id):
                     'NAME': p.last_name,
                     'HOMONYME': '1', # User Guide says "Set to 1"
                     'RANK': t_positions_and_scores[p][0],
-                    'EXAEQUO': len([s for x,s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
+                    'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
                     'SCORE': p_score,
                    }
         # Add in round score for each round played
@@ -1544,7 +1545,7 @@ def view_classification_csv(request, tournament_id):
             for rp in r.roundplayer_set.filter(player=p):
                 row_dict['R%d' % r.number()] = rp.score
         # Add best country fields if any
-        for power,bc in best_countries.items():
+        for power, bc in best_countries.items():
             # Did this player win best country with this power?
             for gp in bc:
                 if gp.player == p:
@@ -1594,7 +1595,7 @@ def view_boards_csv(request, tournament_id):
                'DRAW',
               ]
     # Centre count for each year (extras don't matter)
-    for i in range(1,21):
+    for i in range(1, 21):
         headers.append('CT_%02d' % i)
 
     response = HttpResponse(content_type='text/csv')
