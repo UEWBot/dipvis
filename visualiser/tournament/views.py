@@ -1337,10 +1337,12 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     if turn == '':
+        # With the URLs as they stand, turn='' only occurs with timelapse=True
+        if not timelapse:
+            raise Http404
         # Always display the latest image
         this_image = g.gameimage_set.last()
-        if timelapse:
-            next_image_str = ''
+        next_image_str = ''
     else:
         # Look for the specified image for that game
         # And while we're at it, also find the one that follows it
