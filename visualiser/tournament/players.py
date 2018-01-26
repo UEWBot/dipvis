@@ -710,7 +710,7 @@ class PlayerRanking(models.Model):
     def national_str(self):
         """Returns a string describing the national_rank"""
         s = _('%(player)s is ranked %(ranking)s in their country in the %(system)s') % {'player': self.player,
-                                                                                        'ranking': self.international_rank,
+                                                                                        'ranking': self.national_rank,
                                                                                         'system': self.system}
         return s
 
