@@ -980,7 +980,11 @@ def game_detail(request, tournament_id, game_name):
     context = {'tournament': t, 'game': g}
     return render(request, 'games/detail.html', context)
 
-def game_sc_owners(request, tournament_id, game_name, refresh=False):
+def game_sc_owners(request,
+                   tournament_id,
+                   game_name,
+                   refresh=False,
+                   redirect_url_name='game_sc_owners_refresh'):
     """Display the SupplyCentre ownership for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
@@ -990,6 +994,17 @@ def game_sc_owners(request, tournament_id, game_name, refresh=False):
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
+    context = {'game': g, 'centres': scs}
+    # If we don't have ownership data for the current year,
+    # and we're refreshing to somewhere else, just move straight along
+    this_year = years[0]
+    if refresh and redirect_url_name != 'game_sc_owners_refresh' and not scos.filter(year=this_year).exists():
+        context['rows'] = []
+        context['refresh'] = True
+        context['redirect_time'] = 0
+        context['redirect_url'] = reverse(redirect_url_name,
+                                          args=(tournament_id, game_name))
+        return render(request, 'games/sc_owners.html', context)
     # Create a list of rows, each with a year and each supply centre's owner
     rows = []
     for year in years:
@@ -1013,15 +1028,19 @@ def game_sc_owners(request, tournament_id, game_name, refresh=False):
         # Only add this year if there is some SC ownership recorded
         if len(row) > 1:
             rows.append(row)
-    context = {'game': g, 'centres': scs, 'rows': rows}
+    context['rows'] = rows
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
-        context['redirect_url'] = reverse('game_sc_owners_refresh',
+        context['redirect_url'] = reverse(redirect_url_name,
                                           args=(tournament_id, game_name))
     return render(request, 'games/sc_owners.html', context)
 
-def game_sc_chart(request, tournament_id, game_name, refresh=False):
+def game_sc_chart(request,
+                  tournament_id,
+                  game_name,
+                  refresh=False,
+                  redirect_url_name='game_sc_chart_refresh'):
     """Display the SupplyCentre chart for a game"""
     #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -1064,7 +1083,7 @@ def game_sc_chart(request, tournament_id, game_name, refresh=False):
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
-        context['redirect_url'] = reverse('game_sc_chart_refresh',
+        context['redirect_url'] = reverse(redirect_url_name,
                                           args=(tournament_id, game_name))
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
@@ -1332,17 +1351,31 @@ def draw_vote(request, tournament_id, game_name):
                    'game': g,
                    'form' : form})
 
-def game_image(request, tournament_id, game_name, turn='', timelapse=False):
+def game_image(request,
+               tournament_id,
+               game_name,
+               turn='',
+               timelapse=False,
+               redirect_url_name='game_image_seq'):
     """Display the image for the game at the specified time"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # Display each image for a short time
+    refresh_time = INTER_IMAGE_TIME
     if turn == '':
         # With the URLs as they stand, turn='' only occurs with timelapse=True
         if not timelapse:
             raise Http404
+        # If we're just showing the current position, use the standard refresh time
+        refresh_time = REFRESH_TIME
         # Always display the latest image
         this_image = g.gameimage_set.last()
         next_image_str = ''
+        this_year = g.years_played()[-1]
+        # If we don't have any image for the current year,
+        # and we're refreshing to somewhere else, just move straight along
+        if redirect_url_name != 'game_image_seq' and not g.gameimage_set.filter(year=this_year).exists():
+            refresh_time = 0
     else:
         # Look for the specified image for that game
         # And while we're at it, also find the one that follows it
@@ -1365,18 +1398,19 @@ def game_image(request, tournament_id, game_name, turn='', timelapse=False):
     context = {'tournament': t, 'image': this_image}
     if timelapse:
         context['refresh'] = True
-        # Display each image for a short time
-        context['redirect_time'] = INTER_IMAGE_TIME
-        # If we're just showing the current position, use the standard refresh time
-        if turn == '':
-            context['redirect_time'] = REFRESH_TIME
+        context['redirect_time'] = refresh_time
         # Note that this works even if there is just one image.
         # In that case, this becomes a refresh, which will then check
         # for new images at the redirect time
-        context['redirect_url'] = reverse('game_image_seq',
-                                          args=(tournament_id,
-                                                game_name,
-                                                next_image_str))
+        if redirect_url_name == 'game_image_seq':
+            context['redirect_url'] = reverse(redirect_url_name,
+                                              args=(tournament_id,
+                                                    game_name,
+                                                    next_image_str))
+        else:
+            context['redirect_url'] = reverse(redirect_url_name,
+                                              args=(tournament_id,
+                                                    game_name))
     return render(request, 'games/image.html', context)
 
 @permission_required('tournament.add_gameimage')

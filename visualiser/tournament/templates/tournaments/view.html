@@ -18,6 +18,7 @@
     <li>{% trans "Round" %} {{ round.number }}</li>
       <ul>
         {% for game in round.game_set.all %}
+          <li><a href="{% url 'game_overview' tournament.id game.name %}">{% trans "Overview (cycles between SC chart, SC ownership, and latest position)" %}</a></li>
           <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
           <li><a href="{% url 'game_sc_owners_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Ownership (Not all tournaments record this info){% endblocktrans %}</a></li>
           {% if game.gameimage_set.count > 1 %}

@@ -56,6 +56,13 @@ game_patterns = [
     url(r'^ticker/$', views.game_simple, {'template': 'ticker'}, name='game_ticker'),
     url(r'^draw_vote/$', views.draw_vote, name='draw_vote'),
     url(r'^views/$', views.game_simple, {'template': 'view'}, name='game_views'),
+    # These three go together as a cycle
+    url(r'^overview/$', views.game_sc_chart,
+        {'refresh': True, 'redirect_url_name': 'game_overview_2'}, name='game_overview'),
+    url(r'^overview2/$', views.game_sc_owners,
+        {'refresh': True, 'redirect_url_name': 'game_overview_3'}, name='game_overview_2'),
+    url(r'^overview3/$', views.game_image,
+        {'timelapse': True, 'redirect_url_name': 'game_overview'}, name='game_overview_3'),
 ]
 
 tournament_patterns = [
