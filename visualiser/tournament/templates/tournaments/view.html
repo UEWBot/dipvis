@@ -21,7 +21,7 @@
           <li><a href="{% url 'game_sc_chart_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Chart{% endblocktrans %}</a></li>
           <li><a href="{% url 'game_sc_owners_refresh' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Supply Centre Ownership (Not all tournaments record this info){% endblocktrans %}</a></li>
           {% if game.gameimage_set.count > 1 %}
-            <li><a href="{% url 'game_timelapse' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Position Timelapse{% endblocktrans %}</a></li>
+            <li><a href="{% url 'current_game_image' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Current Position{% endblocktrans %}</a></li>
           {% endif %}
         {% empty %}
           <li>{% blocktrans with n=round.number %}No games in round {{ n }}.{% endblocktrans %}</li>
