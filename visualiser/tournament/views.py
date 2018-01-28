@@ -440,7 +440,7 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
     # sort rows by tournament score (they'll retain the alphabetic sorting if equal)
     scores.sort(key = lambda row: float(row[-1]), reverse=True)
     # Add one final row showing whether each round is ongoing or not
-    row = ['']
+    row = ['', '']
     for r in rds:
         if r.is_finished():
             row.append(_(u'Final'))
