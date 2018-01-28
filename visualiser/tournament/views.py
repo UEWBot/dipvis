@@ -680,7 +680,7 @@ def round_scores(request, tournament_id):
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
             current = {'tp_id': tp, 'player': tp.player, 'overall_score':tp.score}
-            for rp in tp.player.roundplayer_set.all():
+            for rp in tp.player.roundplayer_set.filter(the_round__tournament=t).all():
                 current['round_%d'%rp.the_round.number()] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
