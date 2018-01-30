@@ -686,7 +686,7 @@ def round_scores(request, tournament_id):
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
             current = {'tp_id': tp, 'player': tp.player, 'overall_score': tp.score}
-            for rp in tp.player.roundplayer_set.filter(the_round__tournament=t).all():
+            for rp in tp.roundplayers():
                 current['round_%d' % rp.the_round.number()] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
@@ -766,10 +766,11 @@ def roll_call(request, tournament_id):
         # Go through each player in the Tournament
         for tp in t.tournamentplayer_set.all():
             current = {'player': tp.player}
+            rps = tp.roundplayers()
             # And each round of the Tournament
             for r in t.round_set.all():
                 # Is this player listed as playing this round ?
-                played = r.roundplayer_set.filter(player=tp.player).exists()
+                played = rps.filter(the_round=r).exists()
                 current['round_%d' % r.number()] = played
             data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
@@ -1483,8 +1484,6 @@ def view_classification_csv(request, tournament_id):
     tps = t.tournamentplayer_set.order_by('-score')
     # Grab the tournament scores and positions, which will also be "if it ended now"
     t_positions_and_scores = t.positions_and_scores()
-    # Grab the tournament rounds
-    rds = t.round_set.all()
     # Grab the best country rankings
     best_countries = t.best_countries()
     # Grab the top board, if any
@@ -1541,9 +1540,8 @@ def view_classification_csv(request, tournament_id):
                     'SCORE': p_score,
                    }
         # Add in round score for each round played
-        for r in rds:
-            for rp in r.roundplayer_set.filter(player=p):
-                row_dict['R%d' % r.number()] = rp.score
+        for rp in tp.roundplayers():
+            row_dict['R%d' % rp.the_round.number()] = rp.score
         # Add best country fields if any
         for power, bc in best_countries.items():
             # Did this player win best country with this power?

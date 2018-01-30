@@ -330,6 +330,13 @@ class TournamentModelTests(TestCase):
         tp = t.tournamentplayer_set.first()
         self.assertEqual(tp.position(), 1)
 
+    # TournamentPlayer.roundplayers()
+    def test_tournamentplayer_roundplayers(self):
+        t = Tournament.objects.get(name='t3')
+        tp = t.tournamentplayer_set.first()
+        rps = tp.roundplayers()
+        self.assertEqual(rps.count(), 2)
+
     # TODO TournamentPlayer.save()
 
     # Round.scores()

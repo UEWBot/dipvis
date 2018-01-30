@@ -607,6 +607,12 @@ class TournamentPlayer(models.Model):
         """
         return self.tournament.positions_and_scores()[self.player][0]
 
+    def roundplayers(self):
+        """
+        Returns a QuerySet for the corresponding RoundPlayers.
+        """
+        return self.player.roundplayer_set.filter(the_round__tournament=self.tournament).distinct()
+
     def __str__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
 
