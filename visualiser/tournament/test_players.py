@@ -92,8 +92,6 @@ class PlayerTests(TestCase):
                                                   last_name='Bobetsis',
                                                   wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
         p.save()
-        # TODO I think this is redundant with p.save(), above
-        add_player_bg(p)
         # TODO Validate results
         p.background()
         p.delete()
@@ -118,8 +116,6 @@ class PlayerTests(TestCase):
                                                   last_name='Shields',
                                                   wdd_player_id=MATT_SHIELDS_WDD_ID)
         p.save()
-        # TODO I think this is redundant with p.save(), above
-        add_player_bg(p)
         # TODO Validate results
         # WAC 10 he played Germany
         p.background(power=self.germany)
@@ -132,8 +128,6 @@ class PlayerTests(TestCase):
                                                   last_name='Sundstrom',
                                                   wdd_player_id=MATT_SUNDSTROM_WDD_ID)
         p.save()
-        # TODO I think this is redundant with p.save(), above
-        add_player_bg(p)
         # TODO Validate results
         # Windy City Weasels 2012 he played United Kingdom
         p.background()
@@ -147,8 +141,6 @@ class PlayerTests(TestCase):
                                                   last_name='Cockerill',
                                                   wdd_player_id=NATE_COCKERILL_WDD_ID)
         p.save()
-        # TODO I think this is redundant with p.save(), above
-        add_player_bg(p)
         # TODO Validate results
         # Windy City Weasels 2012 he played France
         p.background(power=self.france)
