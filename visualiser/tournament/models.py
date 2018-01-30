@@ -413,9 +413,12 @@ class Tournament(models.Model):
         result = {}
         scores = self.scores()
         last_score = None
-        for i, (k, v) in enumerate(sorted([(k, v) for k, v in scores.items()], key=itemgetter(1), reverse=True)):
+        for i, (k, v) in enumerate(sorted([(k, v) for k, v in scores.items()],
+                                          key=itemgetter(1),
+                                          reverse=True),
+                                   start=1):
             if v != last_score:
-                place, last_score = i + 1, v
+                place, last_score = i, v
             result[k] = (place, v)
         return result
 
@@ -496,7 +499,8 @@ class Tournament(models.Model):
         # If the tournament is over, just report the top three players, plus best countries
         elif self.is_finished():
             # TODO There are potentially ties here
-            for scores_reported, p in enumerate(self.tournamentplayer_set.all().order_by('-score')[:3], 1):
+            for scores_reported, p in enumerate(self.tournamentplayer_set.all().order_by('-score')[:3],
+                                                start=1):
                 results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.') % {'player': str(p.player),
                                                                                               'pos':  position_str(scores_reported),
                                                                                               'score':  p.score})
@@ -856,9 +860,12 @@ class Game(models.Model):
         """
         result = {}
         last_score = None
-        for i, (k, v) in enumerate(sorted([(k, v) for k, v in self.scores().items()], key=itemgetter(1), reverse=True)):
+        for i, (k, v) in enumerate(sorted([(k, v) for k, v in self.scores().items()],
+                                          key=itemgetter(1),
+                                          reverse=True),
+                                   start=1):
             if v != last_score:
-                place, last_score = i + 1, v
+                place, last_score = i, v
             result[k] = place
         return result
 
