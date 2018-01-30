@@ -132,7 +132,7 @@ class WDDBackground():
             raise WDDNotAccessible
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
+            raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         return soup.title.string[6:]
 
@@ -148,7 +148,7 @@ class WDDBackground():
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
+            raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         table = soup.find('table', width='65%')
         if not table:
@@ -202,7 +202,7 @@ class WDDBackground():
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
+            raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         results = []
         # This page really confuses BeautifulSoup. Have to just find all th and td tags
@@ -267,7 +267,7 @@ class WDDBackground():
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
+            raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         results = []
         # This page really confuses BeautifulSoup. Have to just find all th and td tags
@@ -354,7 +354,7 @@ class WDDBackground():
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
+            raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         results = {}
         for table in soup.find_all('table', width='65%'):
@@ -424,7 +424,7 @@ class WDDBackground():
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
-            raise InvalidWDDId
+            raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         results = []
         for table in soup.find_all('table', width='70%'):
