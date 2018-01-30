@@ -464,10 +464,9 @@ class Tournament(models.Model):
         """
         Returns a list of background strings for the tournament
         """
-        players = Player.objects.filter(tournamentplayer__tournament = self).distinct()
         results = []
-        for p in players:
-            results += p.background(mask=mask)
+        for tp in self.tournamentplayer_set.all():
+            results += tp.player.background(mask=mask)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
