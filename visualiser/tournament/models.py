@@ -918,7 +918,10 @@ class Game(models.Model):
             sc_losses = {}
         for scs in current_scs:
             power = scs.power
-            prev = prev_scs.get(power=power)
+            try:
+                prev = prev_scs.get(power=power)
+            except CentreCount.DoesNotExist:
+                continue
             # Who gained 2 or more centres in the last year ?
             if (mask & MASK_GAINERS) != 0:
                 if scs.count - prev.count > 1:
@@ -1541,19 +1544,6 @@ class CentreCount(models.Model):
             raise ValidationError(_(u'SC count for a power cannot increase from zero'))
         elif self.count > 2 * prev.count:
             raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
-
-    def save(self, *args, **kwargs):
-        super(CentreCount, self).save(*args, **kwargs)
-        # Does this complete the game ?
-        final_year = self.game.the_round.final_year
-        if final_year and self.year == final_year:
-            # Final game year has been played
-            self.game.is_finished = True
-            self.game.save()
-        if self.count >= WINNING_SCS:
-            # Somebody won the game
-            self.game.is_finished = True
-            self.game.save()
 
     def __str__(self):
         return u'%s %d %s %d' % (self.game, self.year, _(self.power.abbreviation), self.count)

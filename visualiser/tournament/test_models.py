@@ -308,6 +308,8 @@ class TournamentModelTests(TestCase):
         tp = t.tournamentplayer_set.first()
         self.assertEqual(tp.position(), 1)
 
+    # TODO TournamentPlayer.save()
+
     # Round.scores()
     def test_round_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
@@ -838,6 +840,8 @@ class TournamentModelTests(TestCase):
                   the_set=g1.the_set)
         self.assertRaises(ValidationError, g2.clean)
 
+    # TODO Game.save()
+
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
         g = Game.objects.get(pk=1)
@@ -970,6 +974,8 @@ class TournamentModelTests(TestCase):
     # TODO DrawProposal.clean() with passed not set in a tournament with SECRET draw votes
     # TODO DrawProposal.clean() with votes_in_favour not set in a tournament with COUNTS draw votes
     # TODO DrawProposal.clean() sets passed from votes_in_favour correctly
+
+    # TODO DrawProposal.save()
 
     # RoundPlayer.clean()
     def test_roundplayer_clean(self):
@@ -1201,3 +1207,106 @@ class TournamentModelTests(TestCase):
         cc1.save()
         self.assertRaises(ValidationError, cc2.clean)
         cc1.delete()
+
+    # Make sure that Issue #44 hasn't re-appeared
+    # We should be able to save the CentreCounts for all 7 powers for the final game year
+    def test_issue_44_1(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(4)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Sum of Squares',
+                                 dias=True,
+                                 start=t.start_date + HOURS_24,
+                                 final_year=1910)
+        g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
+        gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
+        gp2 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
+        gp3 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
+        gp4 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g, power=self.italy)
+        gp6 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g, power=self.russia)
+        gp7 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g, power=self.turkey)
+        cc0 = CentreCount(game=g, count=0, power=self.austria, year=r.final_year - 1)
+        cc0.save()
+        cc1 = CentreCount(game=g, count=0, power=self.austria, year=r.final_year)
+        cc1.save()
+        cc2 = CentreCount(game=g, count=0, power=self.england, year=r.final_year)
+        cc2.save()
+        cc3 = CentreCount(game=g, count=9, power=self.france, year=r.final_year)
+        cc3.save()
+        cc4 = CentreCount(game=g, count=9, power=self.germany, year=r.final_year)
+        cc4.save()
+        cc5 = CentreCount(game=g, count=2, power=self.italy, year=r.final_year)
+        cc5.save()
+        cc6 = CentreCount(game=g, count=7, power=self.russia, year=r.final_year)
+        cc6.save()
+        cc7 = CentreCount(game=g, count=7, power=self.turkey, year=r.final_year)
+        cc7.save()
+        # We no longer expect CentreCount.save() to update Game.is_finished
+        self.assertFalse(g.is_finished)
+        cc0.delete()
+        cc1.delete()
+        cc2.delete()
+        cc3.delete()
+        cc4.delete()
+        cc5.delete()
+        cc6.delete()
+        cc7.delete()
+        gp1.delete()
+        gp2.delete()
+        gp3.delete()
+        gp4.delete()
+        gp5.delete()
+        gp6.delete()
+        gp7.delete()
+        g.delete()
+        r.delete()
+
+    # We should be able to save the CentreCounts for all 7 powers for a game with a soloer
+    def test_issue_44_2(self):
+        t = Tournament.objects.get(name='t1')
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Sum of Squares',
+                                 dias=True,
+                                 start=t.start_date + HOURS_24,
+                                 final_year=1910)
+        g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
+        gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
+        gp2 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
+        gp3 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
+        gp4 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g, power=self.italy)
+        gp6 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g, power=self.russia)
+        gp7 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g, power=self.turkey)
+        cc1 = CentreCount(game=g, count=0, power=self.austria, year=r.final_year)
+        cc1.save()
+        cc2 = CentreCount(game=g, count=0, power=self.england, year=r.final_year)
+        cc2.save()
+        cc3 = CentreCount(game=g, count=7, power=self.france, year=r.final_year)
+        cc3.save()
+        cc4 = CentreCount(game=g, count=7, power=self.germany, year=r.final_year)
+        cc4.save()
+        cc5 = CentreCount(game=g, count=2, power=self.italy, year=r.final_year)
+        cc5.save()
+        cc6 = CentreCount(game=g, count=18, power=self.russia, year=r.final_year)
+        cc6.save()
+        cc7 = CentreCount(game=g, count=0, power=self.turkey, year=r.final_year)
+        cc7.save()
+        # We no longer expect CentreCount.save() to update Game.is_finished
+        self.assertFalse(g.is_finished)
+        cc1.delete()
+        cc2.delete()
+        cc3.delete()
+        cc4.delete()
+        cc5.delete()
+        cc6.delete()
+        cc7.delete()
+        gp1.delete()
+        gp2.delete()
+        gp3.delete()
+        gp4.delete()
+        gp5.delete()
+        gp6.delete()
+        gp7.delete()
+        g.delete()
+        r.delete()

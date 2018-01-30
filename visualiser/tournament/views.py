@@ -1156,6 +1156,10 @@ def sc_owners(request, tournament_id, game_name):
                 except SCOwnershipsNotFound:
                     # We have a blank row
                     continue
+                if (year == final_year) or (g.soloer() is not None):
+                    # We now have final CentreCounts
+                    g.is_finished = True
+                    g.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_owners',
                                                 args=(tournament_id, game_name)))
@@ -1200,11 +1204,14 @@ def sc_counts(request, tournament_id, game_name):
                 except KeyError:
                     # Must be one of the extra forms, still blank
                     continue
+                solo = False
                 for name, value in form.cleaned_data.items():
                     try:
                         power = GreatPower.objects.get(name=name)
                     except:
                         continue
+                    if value >= WINNING_SCS:
+                        solo = True
                     # Can't use get_or_create() here,
                     # because count has no default and may have changed
                     try:
@@ -1230,6 +1237,10 @@ def sc_counts(request, tournament_id, game_name):
                                        'game': g})
 
                     i.save()
+                if (year == final_year) or solo:
+                    # We now have final CentreCounts
+                    g.is_finished = True
+                    g.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_chart',
                                                 args=(tournament_id, game_name)))
