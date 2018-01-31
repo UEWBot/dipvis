@@ -596,7 +596,7 @@ class Tournament(models.Model):
     def wdd_url(self):
         """URL for this tournament in the World Diplomacy Database, if known."""
         if self.wdd_tournament_id:
-            return WDD_BASE_URL + 'tournament_class.php?id_tournament==%d' % self.wdd_tournament_id
+            return WDD_BASE_URL + 'tournament_class.php?id_tournament=%d' % self.wdd_tournament_id
         return u''
 
     def get_absolute_url(self):
