@@ -34,7 +34,8 @@ from django.core.exceptions import ValidationError
 from tournament.players import Player
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
-from tournament.models import Tournament, Round, Game, DrawProposal, GameImage, SupplyCentreOwnership, CentreCount
+from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
+from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING, SECRET, POWER_ASSIGNS, COUNTS, SEASONS
 from tournament.models import UNRANKED
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -63,9 +64,11 @@ class DrawForm(forms.Form):
                                                                    to_field_name='name',
                                                                    widget=forms.SelectMultiple(attrs={'size': '7'}))
         if secrecy == SECRET:
-            self.fields['passed'] = forms.BooleanField(initial=False, required=False)
+            self.fields['passed'] = forms.BooleanField(initial=False,
+                                                       required=False)
         elif secrecy == COUNTS:
-            self.fields['votes_in_favour'] = forms.IntegerField(min_value = 0, max_value = 7)
+            self.fields['votes_in_favour'] = forms.IntegerField(min_value = 0,
+                                                                max_value = 7)
         else:
             assert 0, 'Unexpected draw secrecy value %c' % secrecy
 
@@ -98,8 +101,10 @@ class RoundPlayerChoiceField(forms.ModelChoiceField):
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
     game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
-    the_set = forms.ModelChoiceField(label=_(u'Game Set'), queryset=GameSet.objects.all())
-    power_assignment = forms.ChoiceField(label=_(u'Power Assignment'), choices=POWER_ASSIGNS)
+    the_set = forms.ModelChoiceField(label=_(u'Game Set'),
+                                     queryset=GameSet.objects.all())
+    power_assignment = forms.ChoiceField(label=_(u'Power Assignment'),
+                                         choices=POWER_ASSIGNS)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one player field per Great Power"""
@@ -128,7 +133,8 @@ class GamePlayersForm(forms.Form):
             if player is None:
                 return cleaned_data
             if player in players:
-                raise forms.ValidationError(_('Player %(player)s appears more than once') % {'player': player})
+                raise forms.ValidationError(_('Player %(player)s appears more than once')
+                                            % {'player': player})
             players.append(player)
 
         return cleaned_data
@@ -169,7 +175,8 @@ class SCOwnerForm(forms.Form):
 
         # Create the right country fields
         for sc in SupplyCentre.objects.all():
-            self.fields[sc.name] = forms.ModelChoiceField(GreatPower.objects.all(), required=False)
+            self.fields[sc.name] = forms.ModelChoiceField(GreatPower.objects.all(),
+                                                          required=False)
 
 class BaseSCOwnerFormset(BaseFormSet):
     def clean(self):
@@ -185,7 +192,8 @@ class BaseSCOwnerFormset(BaseFormSet):
             if not year:
                 continue
             if year in years:
-                raise forms.ValidationError(_('Year %(year)s appears more than once') % {'year': year})
+                raise forms.ValidationError(_('Year %(year)s appears more than once')
+                                            % {'year': year})
         # TODO check that SCs never become neutral
 
 class SCCountForm(forms.Form):
@@ -222,9 +230,10 @@ class SCCountForm(forms.Form):
                 return cleaned_data
             total_scs += dots
         if total_scs > TOTAL_SCS:
-            raise forms.ValidationError(_("Total SC count for %(year)d is %(dots)d, more than %(max)d") % {'year': year,
-                                                                                                           'dots': total_scs,
-                                                                                                           'max': TOTAL_SCS})
+            raise forms.ValidationError(_("Total SC count for %(year)d is %(dots)d, more than %(max)d")
+                                        % {'year': year,
+                                           'dots': total_scs,
+                                           'max': TOTAL_SCS})
         # Add a pseudo-field with the number of neutrals, for convenience
         self.cleaned_data['neutral'] = TOTAL_SCS - total_scs
 
@@ -245,16 +254,18 @@ class BaseSCCountFormset(BaseFormSet):
             if not year:
                 continue
             if year in years:
-                raise forms.ValidationError(_('Year %(year)s appears more than once') % {'year': year})
+                raise forms.ValidationError(_('Year %(year)s appears more than once')
+                                            % {'year': year})
             # For convenience, store the number of neutrals left each year
             years[year] = form.cleaned_data.get('neutral')
         # Now check that the number of neutrals only goes down
         neutrals = TOTAL_SCS
         for year in sorted(years.keys()):
             if years[year] > neutrals:
-                raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d') % {'before': neutrals,
-                                                                                                                'after': years[year],
-                                                                                                                'year': year})
+                raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d')
+                                            % {'before': neutrals,
+                                               'after': years[year],
+                                               'year': year})
             neutrals = years[year]
 
 class PlayerRoundForm(forms.Form):
@@ -291,7 +302,8 @@ class BasePlayerRoundFormset(BaseFormSet):
             if not player:
                 continue
             if player in players:
-                raise forms.ValidationError(_('Player %(player)s appears more than once') % {'player': player})
+                raise forms.ValidationError(_('Player %(player)s appears more than once')
+                                            % {'player': player})
             players.append(player)
 
     def __init__(self, *args, **kwargs):
@@ -424,7 +436,10 @@ def tournament_simple(request, tournament_id, template):
     context = {'tournament': t}
     return render(request, 'tournaments/%s.html' % template, context)
 
-def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='tournament_scores_refresh'):
+def tournament_scores(request,
+                      tournament_id,
+                      refresh=False,
+                      redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('-score', 'player__last_name', 'player__first_name')
@@ -447,7 +462,10 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
             except KeyError:
                 # This player didn't play this round
                 rs.append('')
-        scores.append(['%d' % t_positions_and_scores[p.player][0]] + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_positions_and_scores[p.player][1]])
+        scores.append(['%d' % t_positions_and_scores[p.player][0]]
+                      + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)]
+                      + rs
+                      + ['%.2f' % t_positions_and_scores[p.player][1]])
     # sort rows by position (they'll retain the alphabetic sorting if equal)
     scores.sort(key = lambda row: float(row[0]))
     # After sorting, replace UNRANKED with suitable text
@@ -472,7 +490,10 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/scores.html', context)
 
-def tournament_game_results(request, tournament_id, refresh=False, redirect_url_name='tournament_game_results_refresh'):
+def tournament_game_results(request,
+                            tournament_id,
+                            refresh=False,
+                            redirect_url_name='tournament_game_results_refresh'):
     """Display the results of all the games of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name')
@@ -547,7 +568,8 @@ def tournament_game_results(request, tournament_id, refresh=False, redirect_url_
                                                                                         'dot_str': centre_str,
                                                                                         'dots': final_sc.count}
                     # game name and link
-                    gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name, 'url': g.get_absolute_url()}
+                    gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name,
+                                                                     'url': g.get_absolute_url()}
                     # Additional info
                     if g.is_top_board:
                         gs += _(' [Top Board]')
@@ -570,7 +592,10 @@ def tournament_game_results(request, tournament_id, refresh=False, redirect_url_
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/game_results.html', context)
 
-def tournament_best_countries(request, tournament_id, refresh=False, redirect_url_name='tournament_best_countries_refresh'):
+def tournament_best_countries(request,
+                              tournament_id,
+                              refresh=False,
+                              redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score').distinct())
@@ -586,11 +611,12 @@ def tournament_best_countries(request, tournament_id, refresh=False, redirect_ur
                 if gp.power == p.power:
                     gps.remove(gp)
                     break
-            row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f' % (gp.player.get_absolute_url(),
-                                                                               gp.player,
-                                                                               gp.game.get_absolute_url(),
-                                                                               gp.game.name,
-                                                                               gp.game.scores()[gp.power]))
+            row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f'
+                       % (gp.player.get_absolute_url(),
+                          gp.player,
+                          gp.game.get_absolute_url(),
+                          gp.game.name,
+                          gp.game.scores()[gp.power]))
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
@@ -667,7 +693,8 @@ def round_scores(request, tournament_id):
                                           'tournaments/round_players.html',
                                           {'title': 'Scores',
                                            'tournament': t,
-                                           'post_url': reverse('enter_scores', args=(tournament_id,)),
+                                           'post_url': reverse('enter_scores',
+                                                               args=(tournament_id,)),
                                            'formset' : formset})
 
                         i.save()
@@ -682,7 +709,8 @@ def round_scores(request, tournament_id):
                                           'tournaments/round_players.html',
                                           {'title': 'Scores',
                                            'tournament': t,
-                                           'post_url': reverse('enter_scores', args=(tournament_id,)),
+                                           'post_url': reverse('enter_scores',
+                                                               args=(tournament_id,)),
                                            'formset' : formset})
                         tp.save()
             # Redirect to the read-only version
@@ -767,7 +795,8 @@ def roll_call(request, tournament_id):
                     i.save()
             # Next job is almost certainly to create the actual games
             return HttpResponseRedirect(reverse('create_games',
-                                                args=(tournament_id, t.current_round().number())))
+                                                args=(tournament_id,
+                                                      t.current_round().number())))
     else:
         data = []
         # Go through each player in the Tournament
@@ -886,7 +915,9 @@ def create_games(request, tournament_id, round_num):
         games = r.game_set.all()
         data = []
         for g in games:
-            current = {'game_name': g.name, 'power_assignment': g.power_assignment, 'the_set': g.the_set}
+            current = {'game_name': g.name,
+                       'power_assignment': g.power_assignment,
+                       'the_set': g.the_set}
             for gp in g.gameplayer_set.all():
                 current[gp.power.name] = gp.roundplayer()
             data.append(current)
@@ -1068,7 +1099,8 @@ def game_sc_chart(request,
     players = g.players(latest=False)
     ps = []
     for sp in set_powers:
-        power_players = ['<a href="%s">%s</a>' % (p.get_absolute_url(), p) for p in players[sp.power]]
+        power_players = ['<a href="%s">%s</a>'
+                         % (p.get_absolute_url(), p) for p in players[sp.power]]
         names = '<br>'.join(map(str, power_players))
         ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
@@ -1534,7 +1566,8 @@ def view_classification_csv(request, tournament_id):
         headers.append('COUNTRY_TOPBOARD')
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="%s%dclassification.csv"' % (t.name, t.start_date.year)
+    response['Content-Disposition'] = 'attachment; filename="%s%dclassification.csv"' % (t.name,
+                                                                                         t.start_date.year)
 
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()
@@ -1611,7 +1644,8 @@ def view_boards_csv(request, tournament_id):
         headers.append('CT_%02d' % i)
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="%s%dboards.csv"' % (t.name, t.start_date.year)
+    response['Content-Disposition'] = 'attachment; filename="%s%dboards.csv"' % (t.name,
+                                                                                 t.start_date.year)
 
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()
@@ -1664,4 +1698,3 @@ def view_boards_csv(request, tournament_id):
                 writer.writerow(row_dict)
 
     return response
-

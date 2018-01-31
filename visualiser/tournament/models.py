@@ -36,7 +36,8 @@ from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.players import Player, MASK_ALL_BG, add_player_bg, position_str, MASK_ROUND_ENDPOINTS
+from tournament.players import Player, add_player_bg, position_str
+from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
 from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
 from tournament.players import TO_GAME_RESULT, LOSS, WIN, validate_wdd_tournament_id
 
@@ -313,7 +314,8 @@ def add_local_player_bg(player):
                     i, created = PlayerAward.objects.get_or_create(player=player,
                                                                    tournament = t.name,
                                                                    date=t.start_date,
-                                                                   name=_('Best %(country)s') % {'country': power})
+                                                                   name=_('Best %(country)s')
+                                                                   % {'country': power})
                     i.power = power
                     i.score = gp.score
                     i.final_sc_count = sc.count
@@ -373,8 +375,10 @@ class Tournament(models.Model):
                                     verbose_name=_(u'What players are told about failed draw votes'),
                                     choices=DRAW_SECRECY,
                                     default=SECRET)
-    is_published = models.BooleanField(default=False, help_text=_(u'Whether the tournament is visible to all site visitors'))
-    managers = models.ManyToManyField(User, help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
+    is_published = models.BooleanField(default=False,
+                                       help_text=_(u'Whether the tournament is visible to all site visitors'))
+    managers = models.ManyToManyField(User,
+                                      help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
     wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
                                                     verbose_name=_("This tournament's id in the WDD"),
                                                     blank=True,
@@ -498,14 +502,16 @@ class Tournament(models.Model):
             tense_str = _('were')
         else:
             tense_str = _('are')
-        results.append(_('%(count)d players %(are)s registered to play in the tournament.') % {'count': self.tournamentplayer_set.count(),
-                                                                                               'are': tense_str})
+        results.append(_('%(count)d players %(are)s registered to play in the tournament.')
+                       % {'count': self.tournamentplayer_set.count(),
+                          'are': tense_str})
         if current_round:
             # Include who is leading the tournament
             include_leader = True
             # And which round is currently being played
-            results.append(_(u'Round %(r_num)d of %(rounds)d is currently being played.') % {'r_num': current_round.number(),
-                                                                                             'rounds': self.round_set.count()})
+            results.append(_(u'Round %(r_num)d of %(rounds)d is currently being played.')
+                           % {'r_num': current_round.number(),
+                              'rounds': self.round_set.count()})
             # Get the news for the current round
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
@@ -513,29 +519,32 @@ class Tournament(models.Model):
             # TODO There are potentially ties here
             for scores_reported, p in enumerate(self.tournamentplayer_set.all().order_by('-score')[:3],
                                                 start=1):
-                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.') % {'player': str(p.player),
-                                                                                              'pos':  position_str(scores_reported),
-                                                                                              'score':  p.score})
+                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
+                               % {'player': str(p.player),
+                                  'pos':  position_str(scores_reported),
+                                  'score':  p.score})
             # Add best countries
             for power, gps in self.best_countries().items():
                 gp = gps[0]
                 if len(gps) == 1:
                     sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
                                                      power=power)
-                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.') % {'player': str(gp.player),
-                                                                                                                                                                  'country': power.name,
-                                                                                                                                                                  'dots': sc.count,
-                                                                                                                                                                  'score': gp.score,
-                                                                                                                                                                  'game': gp.game.name,
-                                                                                                                                                                  'round': gp.game.the_round.number()})
+                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.')
+                                   % {'player': str(gp.player),
+                                      'country': power.name,
+                                      'dots': sc.count,
+                                      'score': gp.score,
+                                      'game': gp.game.name,
+                                      'round': gp.game.the_round.number()})
                 else:
                     # Tie for best power
                     winner_str = ', '.join([str(p.player) for p in gps])
-                    results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.') % {'country': power.name,
-                                                                                                                                                 'winner_str': winner_str,
-                                                                                                                                                 'dots': gp.game.centrecount_set.get(year=gp.game.final_year(),
-                                                                                                                                                                                     power=power).count,
-                                                                                                                                                 'score': gp.score})
+                    results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.')
+                                   % {'country': power.name,
+                                      'winner_str': winner_str,
+                                      'dots': gp.game.centrecount_set.get(year=gp.game.final_year(),
+                                                                          power=power).count,
+                                      'score': gp.score})
         else:
             # which rounds have been played ?
             played_rounds = len([r for r in self.round_set.all() if r.is_finished()])
@@ -546,9 +555,10 @@ class Tournament(models.Model):
                     have_str = u'has'
                 else:
                     have_str = u'have'
-                results.append(_(u'%(r_num)d of %(rounds)d rounds %(have)s been played.') % {'r_num': played_rounds,
-                                                                                             'rounds': self.round_set.count(),
-                                                                                             'have': have_str})
+                results.append(_(u'%(r_num)d of %(rounds)d rounds %(have)s been played.')
+                               % {'r_num': played_rounds,
+                                  'rounds': self.round_set.count(),
+                                  'have': have_str})
                 # Include who is leading the tournament
                 include_leader = True
         if include_leader:
@@ -557,8 +567,9 @@ class Tournament(models.Model):
                 max_score = max(the_scores.values())
                 winners = [str(k) for k, v in the_scores.items() if v == max_score]
                 player_str = ', '.join(winners)
-                results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.') % {'score': max_score,
-                                                                                                                             'players': player_str})
+                results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.')
+                               % {'score': max_score,
+                                  'players': player_str})
             # Include the top score from each previous round (if any)
             for r in self.round_set.all():
                 if r.is_finished():
@@ -661,7 +672,9 @@ class Round(models.Model):
                                       help_text=_(u'How to calculate a score for one game'))
     dias = models.BooleanField(verbose_name=_(u'Draws Include All Survivors'))
     start = models.DateTimeField()
-    final_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
+    final_year = models.PositiveSmallIntegerField(blank=True,
+                                                  null=True,
+                                                  validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
 
@@ -743,8 +756,9 @@ class Round(models.Model):
             tense_str = _('were')
         else:
             tense_str = _('are')
-        results.append(_('%(count)d players %(are)s registered to play in the round.') % {'count': self.roundplayer_set.count(),
-                                                                                          'are': tense_str})
+        results.append(_('%(count)d players %(are)s registered to play in the round.')
+                       % {'count': self.roundplayer_set.count(),
+                          'are': tense_str})
         # Get the news for every game in the round
         done_games = 0
         for g in self.game_set.all():
@@ -760,9 +774,10 @@ class Round(models.Model):
                 done_str = _(u'None')
             else:
                 done_str = u'%d' % done_games
-            results.append(_(u'%(done)s of the %(total_num)d games in round %(r_num)d have ended.') % {'done': done_str,
-                                                                                                       'r_num': self.number(),
-                                                                                                       'total_num': self.game_set.count()})
+            results.append(_(u'%(done)s of the %(total_num)d games in round %(r_num)d have ended.')
+                           % {'done': done_str,
+                              'r_num': self.number(),
+                              'total_num': self.game_set.count()})
             # TODO Add time played in the round so far (difficult to internationalise ?)
         # Shuffle the resulting list
         random.shuffle(results)
@@ -774,14 +789,17 @@ class Round(models.Model):
         """
         results = []
         if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.earliest_end_time:
-            results.append(_(u'Round %(round)d could end as early as %(time)s.') % {'round': self.number(),
-                                                                                    'time': self.earliest_end_time.strftime("%H:%M")})
+            results.append(_(u'Round %(round)d could end as early as %(time)s.')
+                           % {'round': self.number(),
+                              'time': self.earliest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.latest_end_time:
-            results.append(_(u'Round %(round)d could end as late as %(time)s.') % {'round': self.number(),
-                                                                                   'time': self.latest_end_time.strftime("%H:%M")})
+            results.append(_(u'Round %(round)d could end as late as %(time)s.')
+                           % {'round': self.number(),
+                              'time': self.latest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.final_year:
-            results.append(_(u'Round %(round)d will end after playing year %(year)d.') % {'round': self.number(),
-                                                                                          'year': self.final_year})
+            results.append(_(u'Round %(round)d will end after playing year %(year)d.')
+                           % {'round': self.number(),
+                              'year': self.final_year})
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -802,7 +820,8 @@ class Round(models.Model):
                        args=[str(self.tournament.id), str(self.number())])
 
     def __str__(self):
-        return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number()}
+        return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament,
+                                                       'round': self.number()}
 
 def _sc_gains_and_losses(prev_scos, current_scos):
     """
@@ -976,9 +995,10 @@ class Game(models.Model):
             first = current_scs.order_by('-count').filter(count=max_scs)
             first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
                                                 _(scs.power.abbreviation)) for scs in list(first)])
-            results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.') % {'game': gn_str,
-                                                                                          'dots': max_scs,
-                                                                                          'player': first_str})
+            results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.')
+                           % {'game': gn_str,
+                              'dots': max_scs,
+                              'player': first_str})
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
             prev_scos = self.supplycentreownership_set.filter(year=last_year-1)
@@ -997,19 +1017,21 @@ class Game(models.Model):
             # Who gained 2 or more centres in the last year ?
             if (mask & MASK_GAINERS) != 0:
                 if scs.count - prev.count > 1:
-                    results.append(_(u'%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s.') % {'player': player_dict[power][0],
-                                                                                                                 'power': _(power.abbreviation),
-                                                                                                                 'old': prev.count,
-                                                                                                                 'new': scs.count,
-                                                                                                                 'game': gn_str})
+                    results.append(_(u'%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s.')
+                                   % {'player': player_dict[power][0],
+                                      'power': _(power.abbreviation),
+                                      'old': prev.count,
+                                      'new': scs.count,
+                                      'game': gn_str})
             # Who lost 2 or more centres in the last year ?
             if (mask & MASK_LOSERS) != 0:
                 if prev.count - scs.count > 1:
-                    results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s.') % {'player': player_dict[power][0],
-                                                                                                                     'power': _(power.abbreviation),
-                                                                                                                     'old': prev.count,
-                                                                                                                     'new': scs.count,
-                                                                                                                     'game': gn_str})
+                    results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s.')
+                                   % {'player': player_dict[power][0],
+                                      'power': _(power.abbreviation),
+                                      'old': prev.count,
+                                      'new': scs.count,
+                                      'game': gn_str})
             # Who took 2 or more, lost 2 or more, or had a total of 4 or more gains and losses?
             if (mask & MASK_SC_CHANGES) != 0:
                 try:
@@ -1031,18 +1053,20 @@ class Game(models.Model):
                                                                             'power': p.abbreviation}) for s, p in losses)
                     else:
                         losses_str = _('no centres')
-                    results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.') % {'player': player_dict[power][0],
-                                                                                                              'power': _(power.abbreviation),
-                                                                                                              'gains': gains_str,
-                                                                                                              'losses': losses_str,
-                                                                                                              'game': gn_str})
+                    results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.')
+                                   % {'player': player_dict[power][0],
+                                      'power': _(power.abbreviation),
+                                      'gains': gains_str,
+                                      'losses': losses_str,
+                                      'game': gn_str})
         # How many non-neutrals were captured?
         if (last_year > 1900) and ((mask & MASK_SC_CHANGE_COUNTS) != 0):
             count = 0
             for l in sc_losses.values():
                 count += len(l)
-            results.append(_('%(count)d non-neutral centre(s) changed hands%(game)s.' % {'count': count,
-                                                                                         'game': gn_str}))
+            results.append(_('%(count)d non-neutral centre(s) changed hands%(game)s.')
+                           % {'count': count,
+                              'game': gn_str})
         if (mask & MASK_DRAW_VOTES) != 0:
             # What draw votes failed recently ?
             # Note that it's fairly arbitrary where we draw the line here
@@ -1080,10 +1104,11 @@ class Game(models.Model):
                 scs = zeroes[0]
                 power = scs.power
                 zeroes = zeroes.exclude(power=power)
-                results.append(_(u'%(player)s (%(power)s) was eliminated in %(year)d%(game)s.') % {'player': player_dict[power][0],
-                                                                                                   'power': _(power.abbreviation),
-                                                                                                   'year': scs.year,
-                                                                                                   'game': gn_str})
+                results.append(_(u'%(player)s (%(power)s) was eliminated in %(year)d%(game)s.')
+                               % {'player': player_dict[power][0],
+                                  'power': _(power.abbreviation),
+                                  'year': scs.year,
+                                  'game': gn_str})
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -1296,7 +1321,10 @@ class SupplyCentreOwnership(models.Model):
         ordering = ['game', 'year']
 
     def __str__(self):
-        return "%s in %s was owned by %s at the end of %d" % (self.sc, self.game, self.owner, self.year)
+        return "%s in %s was owned by %s at the end of %d" % (self.sc,
+                                                              self.game,
+                                                              self.owner,
+                                                              self.year)
 
 class DrawProposal(models.Model):
     """
@@ -1308,13 +1336,39 @@ class DrawProposal(models.Model):
     passed = models.NullBooleanField(blank=True, null=True)
     proposer = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     power_1 = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    power_2 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
-    power_3 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
-    power_4 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
-    power_5 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
-    power_6 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
-    power_7 = models.ForeignKey(GreatPower, blank=True, null=True, related_name='+', on_delete=models.CASCADE)
-    votes_in_favour = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_vote_count])
+    power_2 = models.ForeignKey(GreatPower,
+                                blank=True,
+                                null=True,
+                                related_name='+',
+                                on_delete=models.CASCADE)
+    power_3 = models.ForeignKey(GreatPower,
+                                blank=True,
+                                null=True,
+                                related_name='+',
+                                on_delete=models.CASCADE)
+    power_4 = models.ForeignKey(GreatPower,
+                                blank=True,
+                                null=True,
+                                related_name='+',
+                                on_delete=models.CASCADE)
+    power_5 = models.ForeignKey(GreatPower,
+                                blank=True,
+                                null=True,
+                                related_name='+',
+                                on_delete=models.CASCADE)
+    power_6 = models.ForeignKey(GreatPower,
+                                blank=True,
+                                null=True,
+                                related_name='+',
+                                on_delete=models.CASCADE)
+    power_7 = models.ForeignKey(GreatPower,
+                                blank=True,
+                                null=True,
+                                related_name='+',
+                                on_delete=models.CASCADE)
+    votes_in_favour = models.PositiveSmallIntegerField(blank=True,
+                                                       null=True,
+                                                       validators=[validate_vote_count])
 
     def draw_size(self):
         """
@@ -1483,9 +1537,12 @@ class GamePlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR, validators=[validate_year])
+    first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR,
+                                                  validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
-    last_year = models.PositiveSmallIntegerField(blank=True, null=True, validators=[validate_year])
+    last_year = models.PositiveSmallIntegerField(blank=True,
+                                                 null=True,
+                                                 validators=[validate_year])
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(default=0.0)
     # What order did this player choose their GreatPower ?
@@ -1636,7 +1693,9 @@ class GameImage(models.Model):
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
-        return reverse('game_image', args=[str(self.game.the_round.tournament.id), self.game.name, self.turn_str()])
+        return reverse('game_image', args=[str(self.game.the_round.tournament.id),
+                                           self.game.name,
+                                           self.turn_str()])
 
     def __str__(self):
         return _(u'%(game)s %(turn)s image') % {'game': self.game, 'turn': self.turn_str()}
