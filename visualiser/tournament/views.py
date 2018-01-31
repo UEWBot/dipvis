@@ -365,9 +365,12 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         # Pass the three special args down to the form itself
         kwargs['tournament'] = self.tournament
         kwargs['rounds'] = self.tournament.round_set.count()
-        # current_round() could return None, if all rounds are over,
-        # but that just gives us a blank form, which is fine
-        kwargs['this_round'] = self.tournament.current_round().number()
+        # current_round() could return None, if all rounds are over
+        cr = kwargs['this_round'] = self.tournament.current_round()
+        if cr:
+            kwargs['this_round'] = cr.number()
+        else:
+            kwargs['this_round'] = -1
         return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
 
 class GameImageForm(ModelForm):
