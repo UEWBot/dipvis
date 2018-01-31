@@ -1525,9 +1525,9 @@ class GamePlayer(models.Model):
         Only one Player can be playing this power at any given point in the Game.
         """
         # Player should already be in the tournament
-        t = self.game.the_round.tournament
-        tp = self.player.tournamentplayer_set.filter(tournament=t)
-        if not tp:
+        try:
+            self.tournamentplayer()
+        except TournamentPlayer.DoesNotExist:
             raise ValidationError(_(u'Player is not yet in the tournament'))
         # Need either both or neither of last_year and last_season
         if self.last_season == '' and self.last_year:
