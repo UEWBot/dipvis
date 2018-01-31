@@ -588,7 +588,7 @@ class Tournament(models.Model):
         return reverse('tournament_detail', args=[str(self.id)])
 
     def __str__(self):
-        return self.name
+        return '%s %d' % (self.name, self.start_date.year)
 
 class TournamentPlayer(models.Model):
     """
