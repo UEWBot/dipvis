@@ -64,7 +64,7 @@ phase_str = {
 # Power assignment methods
 RANDOM = 'R'
 FRENCH_METHOD = 'F'
-POWER_ASSIGNS =  (
+POWER_ASSIGNS = (
     (RANDOM, _('Random')),
     (FRENCH_METHOD, _('French method')),
 )
@@ -804,6 +804,41 @@ class Round(models.Model):
     def __str__(self):
         return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament, 'round': self.number()}
 
+def _sc_gains_and_losses(prev_scos, current_scos):
+    """
+    Returns two dicts (gains then losses), indexed by GreatPower, of
+    2-tuples containing SupplyCentre and other Power (previous owner
+    (None if neutral) or new owner).
+    Parameters are two QuerySets for last year and this year's SupplyCentreOwnerships.
+    """
+    # Extract the info we need into two sets that can be operated on
+    prev = set()
+    for sco in prev_scos.all():
+        prev.add((sco.sc, sco.owner))
+    current = set()
+    for sco in current_scos.all():
+        current.add((sco.sc, sco.owner))
+    gains = {}
+    losses = {}
+    for sc, owner in prev - current:
+        for s, o in current:
+            if s == sc:
+                new_owner = o
+                break
+        if owner not in losses:
+            losses[owner] = []
+        losses[owner].append((sc, new_owner))
+    for sc, owner in current - prev:
+        prev_owner = None
+        for s, o in prev:
+            if s == sc:
+                prev_owner = o
+                break
+        if owner not in gains:
+            gains[owner] = []
+        gains[owner].append((sc, prev_owner))
+    return gains, losses
+
 class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
@@ -914,41 +949,6 @@ class Game(models.Model):
             retval[power] = [gp.player for gp in ps]
         return retval
 
-    def _sc_gains_and_losses(self, prev_scos, current_scos):
-        """
-        Returns two dicts (gains then losses), indexed by GreatPower, of
-        2-tuples containing SupplyCentre and other Power (previous owner
-        (None if neutral) or new owner).
-        Parameters are two QuerySets for last year and this year's SupplyCentreOwnerships.
-        """
-        # Extract the info we need into two sets that can be operated on
-        prev = set()
-        for sco in prev_scos.all():
-            prev.add((sco.sc, sco.owner))
-        current = set()
-        for sco in current_scos.all():
-            current.add((sco.sc, sco.owner))
-        gains = {}
-        losses = {}
-        for sc, owner in prev - current:
-            for s, o in current:
-                if s == sc:
-                    new_owner = o
-                    break
-            if owner not in losses:
-                losses[owner] = []
-            losses[owner].append((sc, new_owner))
-        for sc, owner in current - prev:
-            prev_owner = None
-            for s, o in prev:
-                if s == sc:
-                    prev_owner = o
-                    break
-            if owner not in gains:
-                gains[owner] = []
-            gains[owner].append((sc, prev_owner))
-        return gains, losses
-
     def news(self, include_game_name=False, mask=MASK_ALL_NEWS):
         """
         Returns a list of strings the describe the latest events in the game
@@ -982,7 +982,7 @@ class Game(models.Model):
         if last_year > 1900:
             prev_scs = centres_set.filter(year=last_year-1)
             prev_scos = self.supplycentreownership_set.filter(year=last_year-1)
-            sc_gains, sc_losses = self._sc_gains_and_losses(prev_scos, current_scos)
+            sc_gains, sc_losses = _sc_gains_and_losses(prev_scos, current_scos)
         else:
             # We only look for differences, so just force no differences
             prev_scs = current_scs
