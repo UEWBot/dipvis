@@ -493,7 +493,7 @@ def tournament_game_results(request, tournament_id, refresh=False, redirect_url_
             for g in round_games[r]:
                 # Is this game one that this player played in?
                 try:
-                    gp = gps.filter(game=g).get()
+                    gp = gps.get(game=g)
                 except GamePlayer.DoesNotExist:
                     pass
                 else:
@@ -858,7 +858,8 @@ def create_games(request, tournament_id, round_num):
                         continue
                     # Is there already a player for this power in this game ?
                     try:
-                        i = GamePlayer.objects.filter(game=g).filter(power=p).get()
+                        i = GamePlayer.objects.get(game=g,
+                                                   power=p)
                     except GamePlayer.DoesNotExist:
                         # Create one (default first_season and first_year)
                         i = GamePlayer(player=field.player, game=g, power=p)
@@ -929,7 +930,8 @@ def game_scores(request, tournament_id, round_num):
                         continue
                     # Find the matching GamePlayer
                     # TODO This will fail if there was a replacement
-                    i = GamePlayer.objects.get(game=g, power=p)
+                    i = GamePlayer.objects.get(game=g,
+                                               power=p)
                     # Set the score
                     i.score = field
                     try:
@@ -975,7 +977,8 @@ def game_index(request, tournament_id, round_num):
 def get_game_or_404(tournament, game_name):
     """Return the specified game of the specified tournament or raise Http404."""
     try:
-        return Game.objects.filter(name=game_name, the_round__tournament=tournament).get()
+        return Game.objects.get(name=game_name,
+                                the_round__tournament=tournament)
     except Game.DoesNotExist:
         raise Http404
 
@@ -1033,7 +1036,7 @@ def game_sc_owners(request,
         row.append(year)
         for sc in scs:
             try:
-                sco = yscos.filter(sc=sc).get()
+                sco = yscos.get(sc=sc)
                 row.append({'color': set_powers.get(power=sco.owner).colour,
                             'text': sco.owner.abbreviation})
             except SupplyCentreOwnership.DoesNotExist:
@@ -1086,7 +1089,7 @@ def game_sc_chart(request,
         row.append(year)
         for sp in set_powers:
             try:
-                sc = yscs.filter(power=sp.power).get()
+                sc = yscs.get(power=sp.power)
                 row.append(sc.count)
             except CentreCount.DoesNotExist:
                 # This is presumably because they were eliminated
@@ -1495,7 +1498,8 @@ def view_classification_csv(request, tournament_id):
     best_countries = t.best_countries()
     # Grab the top board, if any
     try:
-        top_board = Game.objects.filter(is_top_board=True).filter(the_round__tournament=t).get()
+        top_board = Game.objects.get(is_top_board=True,
+                                     the_round__tournament=t)
         tb_positions = top_board.positions()
         tb_dots = top_board.centrecount_set.filter(year__gt=1900)
     except Game.DoesNotExist:
@@ -1569,7 +1573,7 @@ def view_classification_csv(request, tournament_id):
         # Add top board fields if applicable
         if top_board:
             try:
-                gp = top_board.gameplayer_set.filter(player=p).get()
+                gp = top_board.gameplayer_set.get(player=p)
                 row_dict['NAME_TOPBOARD'] = 'A' # This seems to be arbitrary
                 row_dict['HEAT_TOPBOARD'] = top_board.the_round.number()
                 row_dict['BOARD_TOPBOARD'] = top_board.id

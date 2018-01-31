@@ -293,7 +293,7 @@ def add_local_player_bg(player):
             continue
         # Get the corresponding TournamentPlayer (if any)
         try:
-            tp = t.tournamentplayer_set.filter(player=player).get()
+            tp = t.tournamentplayer_set.get(player=player)
         except TournamentPlayer.DoesNotExist:
             continue
         # Add a PlayerTournamentRanking
@@ -308,7 +308,8 @@ def add_local_player_bg(player):
         for power, gps in t.best_countries().items():
             for gp in gps:
                 if gp.player == player:
-                    sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                    sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
+                                                     power=power)
                     i, created = PlayerAward.objects.get_or_create(player=player,
                                                                    tournament = t.name,
                                                                    date=t.start_date,
@@ -466,9 +467,11 @@ class Tournament(models.Model):
                 # Resolve the tie by comparing centrecounts
                 best_dots = 0
                 for gp in retval[power]:
-                    sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                    sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
+                                                     power=power)
                     best_dots = max([best_dots, sc.count])
-                winners = [gp for gp in retval[power] if gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count == best_dots]
+                winners = [gp for gp in retval[power] if gp.game.centrecount_set.get(year=gp.game.final_year(),
+                                                                                     power=power).count == best_dots]
                 retval[power] = winners
         return retval
 
@@ -517,7 +520,8 @@ class Tournament(models.Model):
             for power, gps in self.best_countries().items():
                 gp = gps[0]
                 if len(gps) == 1:
-                    sc = gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get()
+                    sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
+                                                     power=power)
                     results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.') % {'player': str(gp.player),
                                                                                                                                                                   'country': power.name,
                                                                                                                                                                   'dots': sc.count,
@@ -529,7 +533,8 @@ class Tournament(models.Model):
                     winner_str = ', '.join([str(p.player) for p in gps])
                     results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.') % {'country': power.name,
                                                                                                                                                  'winner_str': winner_str,
-                                                                                                                                                 'dots': gp.game.centrecount_set.filter(year=gp.game.final_year()).filter(power=power).get().count,
+                                                                                                                                                 'dots': gp.game.centrecount_set.get(year=gp.game.final_year(),
+                                                                                                                                                                                     power=power).count,
                                                                                                                                                  'score': gp.score})
         else:
             # which rounds have been played ?
@@ -1049,7 +1054,7 @@ class Game(models.Model):
                 incl = []
                 for power in powers:
                     # TODO This looks broken if there were replacements
-                    game_player = self.gameplayer_set.filter(power=power).get()
+                    game_player = self.gameplayer_set.get(power=power)
                     incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                                 'power': _(power.abbreviation)})
                 incl_str = ', '.join(incl)
@@ -1102,7 +1107,7 @@ class Game(models.Model):
         """
         # Did a draw proposal pass ?
         try:
-            return self.drawproposal_set.filter(passed=True).get()
+            return self.drawproposal_set.get(passed=True)
         except DrawProposal.DoesNotExist:
             return None
 
@@ -1140,7 +1145,7 @@ class Game(models.Model):
         scs = self.centrecount_set.order_by('-count')
         if scs[0].count >= WINNING_SCS:
             # TODO This looks like it fails if the soloer was a replacement player
-            return self.gameplayer_set.filter(power=scs[0].power).get()
+            return self.gameplayer_set.get(power=scs[0].power)
         return None
 
     def survivors(self, year=None):
@@ -1175,7 +1180,7 @@ class Game(models.Model):
             winners = []
             for power in powers:
                 # TODO This looks broken if there were replacements
-                game_player = self.gameplayer_set.filter(power=power).get()
+                game_player = self.gameplayer_set.get(power=power)
                 winners.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                                'power': _(power.abbreviation)})
             return retval + ', '.join(winners)
@@ -1390,7 +1395,8 @@ class DrawProposal(models.Model):
         # Only one successful draw proposal
         if self.passed:
             try:
-                p = DrawProposal.objects.filter(game=self.game, passed=True).get()
+                p = DrawProposal.objects.get(game=self.game,
+                                             passed=True)
                 if p != self:
                     raise ValidationError(_(u'Game already has a successful draw proposal'))
             except DrawProposal.DoesNotExist:
@@ -1657,7 +1663,9 @@ class CentreCount(models.Model):
         # Not possible to more than double your count in one year
         # or to recover from an elimination
         try:
-            prev = CentreCount.objects.filter(power=self.power, game=self.game, year=self.year-1).get()
+            prev = CentreCount.objects.get(power=self.power,
+                                           game=self.game,
+                                           year=self.year - 1)
         except CentreCount.DoesNotExist:
             # We're either missing a year, or this is the first year - let that go
             return
