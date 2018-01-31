@@ -18,6 +18,8 @@
 Django models file for the Diplomacy Tournament Visualiser.
 """
 
+from abc import ABC, abstractmethod
+import inspect
 import random, os
 from operator import attrgetter, itemgetter
 
@@ -97,28 +99,26 @@ class SCOwnershipsNotFound(Exception):
     """The required SupplyCentreOwnership objects were not found in the database."""
     pass
 
-class RoundScoringSystem():
+class RoundScoringSystem(ABC):
     """
     A scoring system for a Round.
     Provides a method to calculate a score for each player of one round.
     """
     name = u''
-    # True for classes that provide building blocks rather than full scoring systems
-    is_abstract = True
 
+    @abstractmethod
     def scores(self, game_players):
         """
         Takes the set of GamePlayer objects of interest.
         Returns a dict, indexed by player key, of scores.
         """
-        return {}
+        pass
 
 class RScoringBest(RoundScoringSystem):
     """
     Take the best of any game scores for that round.
     """
     def __init__(self):
-        self.is_abstract = False
         self.name = _(u'Best game counts')
 
     def scores(self, game_players):
@@ -146,22 +146,21 @@ R_SCORING_SYSTEMS = [
     RScoringBest(),
 ]
 
-class TournamentScoringSystem():
+class TournamentScoringSystem(ABC):
     """
     A scoring system for a Tournament.
     Provides a method to calculate a score for each player of tournament.
     """
     name = u''
-    # True for classes that provide building blocks rather than full scoring systems
-    is_abstract = True
 
+    @abstractmethod
     def scores(self, round_players):
         """
         Takes the set of RoundPlayer objects of interest.
         Combines the score attribute of ones for each player into an overall score for that player.
         Returns a dict, indexed by player key, of scores.
         """
-        return {}
+        pass
 
 class TScoringSum(TournamentScoringSystem):
     """
@@ -170,7 +169,6 @@ class TScoringSum(TournamentScoringSystem):
     scored_rounds = 0
 
     def __init__(self, name, scored_rounds):
-        self.is_abstract = False
         self.name = name
         self.scored_rounds = scored_rounds
 
@@ -218,7 +216,7 @@ def find_scoring_system(name, the_list):
     """
     for s in the_list:
         # There shouldn't be any abstract systems in here, but just in case...
-        if not s.is_abstract and s.name == name:
+        if (s.name == name) and not inspect.isabstract(s):
             return s
     return None
 
@@ -245,7 +243,7 @@ def find_tournament_scoring_system(name):
 
 def get_scoring_systems(systems):
     """Returns a list of two-tuples, suitable for use in a Django CharField.choices parameter."""
-    return sorted([(s.name, s.name) for s in systems if not s.is_abstract])
+    return sorted([(s.name, s.name) for s in systems if not inspect.isabstract(s)])
 
 def validate_sc_count(value):
     """

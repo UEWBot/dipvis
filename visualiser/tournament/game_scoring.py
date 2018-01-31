@@ -17,43 +17,43 @@
 """
 This module contains scoring systems for individual diplomacy games.
 """
+from abc import ABC, abstractmethod
 
 from django.utils.translation import ugettext as _
 
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
 
-class GameScoringSystem():
+def _the_game(centre_counts):
+    """Returns the game in question."""
+    return centre_counts.first().game
+
+def _final_year(centre_counts):
+    """Returns the most recent year we have centre counts for."""
+    return centre_counts.order_by('-year')[0].year
+
+def _final_year_scs(centre_counts):
+    """Returns the CentreCounts for the most recent year only, ordered largest-to-smallest."""
+    return centre_counts.filter(year=_final_year(centre_counts)).order_by('-count')
+
+def _survivor_count(centre_counts):
+    """Returns the number of surviving powers"""
+    return _final_year_scs(centre_counts).filter(count__gt=0).count()
+
+class GameScoringSystem(ABC):
     # TODO This doesn't deal with multiple players playing one power
     """
     A scoring system for a Game.
     Provides a method to calculate a score for each player of one game.
     """
     name = u''
-    # True for classes that provide building blocks rather than full scoring systems
-    is_abstract = True
 
-    def _the_game(self, centre_counts):
-        """Returns the game in question."""
-        return centre_counts.first().game
-
-    def _final_year(self, centre_counts):
-        """Returns the most recent year we have centre counts for."""
-        return centre_counts.order_by('-year')[0].year
-
-    def _final_year_scs(self, centre_counts):
-        """Returns the CentreCounts for the most recent year only, ordered largest-to-smallest."""
-        return centre_counts.filter(year=self._final_year(centre_counts)).order_by('-count')
-
-    def _survivor_count(self, centre_counts):
-        """Returns the number of surviving powers"""
-        return self._final_year_scs(centre_counts).filter(count__gt=0).count()
-
+    @abstractmethod
     def scores(self, centre_counts):
         """
         Takes the set of CentreCount objects for one Game.
         Returns a dict, indexed by power id, of scores.
         """
-        return {}
+        pass
 
 class GScoringSolos(GameScoringSystem):
     """
@@ -61,7 +61,6 @@ class GScoringSolos(GameScoringSystem):
     Other results score 0.
     """
     def __init__(self):
-        self.is_abstract = False
         self.name = _(u'Solo or bust')
 
     def scores(self, centre_counts):
@@ -72,7 +71,7 @@ class GScoringSolos(GameScoringSystem):
         """
         retval = {}
         # We only care about the most recent centrecounts
-        for sc in self._final_year_scs(centre_counts):
+        for sc in _final_year_scs(centre_counts):
             retval[sc.power] = 0
             if sc.count >= WINNING_SCS:
                 retval[sc.power] = 100.0
@@ -84,7 +83,6 @@ class GScoringDrawSize(GameScoringSystem):
     Draw sharers split 100 points between them.
     """
     def __init__(self):
-        self.is_abstract = False
         self.name = _(u'Draw size')
 
     def scores(self, centre_counts):
@@ -95,10 +93,10 @@ class GScoringDrawSize(GameScoringSystem):
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        the_game = self._the_game(centre_counts)
+        the_game = _the_game(centre_counts)
         draw = the_game.passed_draw()
-        survivors = self._survivor_count(centre_counts)
-        final_scs = self._final_year_scs(centre_counts)
+        survivors = _survivor_count(centre_counts)
+        final_scs = _final_year_scs(centre_counts)
         soloed = final_scs[0].count >= WINNING_SCS
         # We only care about the most recent centrecounts
         for sc in final_scs:
@@ -160,7 +158,6 @@ class GScoringCDiplo(GameScoringSystem):
     - if powers are tied for rank, they split the points for their ranks.
     """
     def __init__(self, name, soloer_pts, played_pts, first_pts, second_pts, third_pts, loss_pts=0):
-        self.is_abstract = False
         self.name = name
         self.soloer_pts = soloer_pts
         self.played_pts = played_pts
@@ -169,7 +166,7 @@ class GScoringCDiplo(GameScoringSystem):
 
     def scores(self, centre_counts):
         retval = {}
-        final_scs = self._final_year_scs(centre_counts)
+        final_scs = _final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
         rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
         for i, sc in enumerate(final_scs):
@@ -193,12 +190,11 @@ class GScoringCarnage(GameScoringSystem):
     def __init__(self):
         self.name = _('Carnage with dead equal')
         self.position_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
-        self.is_abstract = False
 
     # TODO There's a lot of overlap with CDiplo here
     def scores(self, centre_counts):
         retval = {}
-        final_scs = self._final_year_scs(centre_counts)
+        final_scs = _final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
         rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
         for i, sc in enumerate(final_scs):
@@ -218,13 +214,12 @@ class GScoringSumOfSquares(GameScoringSystem):
     """
     def __init__(self):
         self.name = _(u'Sum of Squares')
-        self.is_abstract = False
 
     def scores(self, centre_counts):
         retval = {}
         retval_solo = {}
         solo_found = False
-        final_scs = self._final_year_scs(centre_counts)
+        final_scs = _final_year_scs(centre_counts)
         sum_of_squares = 0
         for sc in final_scs:
             retval_solo[sc.power] = 0
@@ -249,4 +244,3 @@ G_SCORING_SYSTEMS = [
     GScoringSumOfSquares(),
     GScoringCarnage(),
 ]
-
