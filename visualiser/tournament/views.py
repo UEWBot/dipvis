@@ -36,6 +36,7 @@ from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage, SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING, SECRET, POWER_ASSIGNS, COUNTS, SEASONS
+from tournament.models import UNRANKED
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import SCOwnershipsNotFound
 
@@ -447,8 +448,11 @@ def tournament_scores(request, tournament_id, refresh=False, redirect_url_name='
                 # This player didn't play this round
                 rs.append('')
         scores.append(['%d' % t_positions_and_scores[p.player][0]] + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)] + rs + ['%.2f' % t_positions_and_scores[p.player][1]])
-    # sort rows by tournament score (they'll retain the alphabetic sorting if equal)
-    scores.sort(key = lambda row: float(row[-1]), reverse=True)
+    # sort rows by position (they'll retain the alphabetic sorting if equal)
+    scores.sort(key = lambda row: float(row[0]))
+    # After sorting, replace UNRANKED with suitable text
+    for row in scores:
+        row[0] = row[0].replace('%d' % UNRANKED, 'Unranked')
     # Add one final row showing whether each round is ongoing or not
     row = ['', '']
     for r in rds:
@@ -1534,11 +1538,14 @@ def view_classification_csv(request, tournament_id):
     for tp in tps:
         p = tp.player
         p_score = t_positions_and_scores[p][1]
+        rank = t_positions_and_scores[p][0]
+        if rank == UNRANKED:
+            rank = '999'
         # First the stuff that is global to the tournament and applies to all players
         row_dict = {'FIRST NAME': p.first_name,
                     'NAME': p.last_name,
                     'HOMONYME': '1', # User Guide says "Set to 1"
-                    'RANK': t_positions_and_scores[p][0],
+                    'RANK': rank,
                     'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
                     'SCORE': p_score,
                    }

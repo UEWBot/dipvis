@@ -25,6 +25,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage, SupplyCentreOwnership, CentreCount
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, SECRET, COUNTS, SPRING, ADJUSTMENTS
+from tournament.models import UNRANKED
 from tournament.models import find_game_scoring_system, find_round_scoring_system, find_tournament_scoring_system
 from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
@@ -117,6 +118,7 @@ class TournamentModelTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
+        # Solo victory for Germany in 1904
         CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
         CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
         CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
@@ -125,36 +127,62 @@ class TournamentModelTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
 
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
         # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
         # Add GamePlayers to g11
-        GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g11, power=cls.austria, last_year=1903, last_season='F')
-        GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g11, power=cls.austria, first_year=1903, first_season='X')
-        GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g11, power=cls.england)
-        GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g11, power=cls.france)
-        GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g11, power=cls.germany)
-        GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g11, power=cls.italy)
-        GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g11, power=cls.russia)
-        GamePlayer.objects.create(player=Player.objects.get(pk=8), game=g11, power=cls.turkey)
+        GamePlayer.objects.create(player=p1, game=g11, power=cls.austria, last_year=1903, last_season='F')
+        GamePlayer.objects.create(player=p2, game=g11, power=cls.austria, first_year=1903, first_season='X')
+        GamePlayer.objects.create(player=p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
+        GamePlayer.objects.create(player=p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=p8, game=g11, power=cls.turkey)
         # Add GamePlayers to g12
-        GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g12, power=cls.austria)
-        GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g12, power=cls.england)
-        GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g12, power=cls.france)
-        GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g12, power=cls.germany)
-        GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g12, power=cls.italy)
-        GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g12, power=cls.russia)
-        GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g12, power=cls.turkey)
+        GamePlayer.objects.create(player=p7, game=g12, power=cls.austria)
+        GamePlayer.objects.create(player=p6, game=g12, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
+        GamePlayer.objects.create(player=p4, game=g12, power=cls.germany)
+        GamePlayer.objects.create(player=p3, game=g12, power=cls.italy)
+        GamePlayer.objects.create(player=p2, game=g12, power=cls.russia)
+        GamePlayer.objects.create(player=p1, game=g12, power=cls.turkey)
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=p1, the_round=r11)
+        RoundPlayer.objects.create(player=p2, the_round=r11)
+        RoundPlayer.objects.create(player=p3, the_round=r11)
+        RoundPlayer.objects.create(player=p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=p6, the_round=r11)
+        RoundPlayer.objects.create(player=p7, the_round=r11)
+        RoundPlayer.objects.create(player=p8, the_round=r11)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=p1, tournament=t1)
+        TournamentPlayer.objects.create(player=p2, tournament=t1)
+        TournamentPlayer.objects.create(player=p3, tournament=t1)
+        TournamentPlayer.objects.create(player=p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=p6, tournament=t1)
+        TournamentPlayer.objects.create(player=p7, tournament=t1)
+        TournamentPlayer.objects.create(player=p8, tournament=t1)
 
-        # For t3 (the finished tournament), we want TournamentPlayers and RoundPlayers
-        # Avoid hitting the WDD by not providing a WDD id
-        p = Player.objects.create(first_name='John', last_name='Smith')
         # Add a TournamentPlayer to t3
-        TournamentPlayer.objects.create(player=p, tournament=t3, score=147.3)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
         # Add a RoundPlayer to r31
-        RoundPlayer.objects.create(player=p, the_round=r31, score=100.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=100.0)
         # Add a RoundPlayer to r32
-        RoundPlayer.objects.create(player=p, the_round=r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r32, score=47.3)
 
     # TODO RScoringBest
 
@@ -245,6 +273,11 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.positions_and_scores()
 
+    def test_tournament_positions_and_scores_with_unranked(self):
+        t = Tournament.objects.get(name='t1')
+        p_and_s = t.positions_and_scores()
+        self.assertEqual(p_and_s[self.p5][0], UNRANKED)
+
     # Tournament.round_numbered()
     def test_tourney_round_numbered_negative(self):
         t = Tournament.objects.get(name='t1')
@@ -263,6 +296,13 @@ class TournamentModelTests(TestCase):
     def test_tournament_best_countries_without_games(self):
         t = Tournament.objects.get(name='t3')
         self.assertEqual({}, t.best_countries())
+
+    def test_tournament_best_countries_with_unranked(self):
+        t = Tournament.objects.get(name='t1')
+        bc = t.best_countries()
+        # The German solo should not be included
+        for gp in bc[self.germany]:
+            self.assertFalse(gp.player == self.p5)
 
     # Tournament.background()
     def test_tournament_background_without_players(self):
@@ -787,7 +827,7 @@ class TournamentModelTests(TestCase):
     def test_game_soloer_somebody(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        self.assertEqual(g.soloer().player, Player.objects.get(pk=5))
+        self.assertEqual(g.soloer().player, self.p5)
         self.assertEqual(g.soloer().game, g)
 
     def test_game_soloer_nobody(self):

@@ -87,6 +87,9 @@ MASK_SC_CHANGES = 1<<5
 MASK_SC_CHANGE_COUNTS = 1<<6
 MASK_ALL_NEWS = (1<<7)-1
 
+# Flag value to use for players who are excluded from the rankings
+UNRANKED = 999999
+
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -415,6 +418,10 @@ class Tournament(models.Model):
                                           key=itemgetter(1),
                                           reverse=True),
                                    start=1):
+            # Check for unranked player
+            if self.tournamentplayer_set.get(player=k).unranked:
+                result[k] = (UNRANKED, v)
+                continue
             if v != last_score:
                 place, last_score = i, v
             result[k] = (place, v)
@@ -440,6 +447,9 @@ class Tournament(models.Model):
         for r in self.round_set.all():
             for g in r.game_set.all():
                 for gp in g.gameplayer_set.all():
+                    # Skip this player if they are unranked in the event
+                    if gp.tournamentplayer().unranked:
+                        continue
                     try:
                         retval[gp.power].append(gp)
                     except KeyError:
@@ -598,6 +608,9 @@ class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
+    unranked = models.BooleanField(default=False,
+                                   verbose_name=_('Ineligible for awards'),
+                                   help_text=_('Set this to ignore this player when determining rankings'))
 
     class Meta:
         ordering = ['player']
@@ -1439,6 +1452,12 @@ class RoundPlayer(models.Model):
     class Meta:
         ordering = ['player']
 
+    def tournamentplayer(self):
+        """
+        Returns the TournamentPlayer corresponding to this RoundPlayer.
+        """
+        return self.player.tournamentplayer_set.get(tournament=self.the_round.tournament)
+
     def clean(self):
         """
         Validate the object.
@@ -1468,6 +1487,12 @@ class GamePlayer(models.Model):
     # TODO Use this
     # TODO Add validators
     power_choice_order = models.PositiveSmallIntegerField(default=1)
+
+    def tournamentplayer(self):
+        """
+        Returns the TournamentPlayer corresponding to this GamePlayer.
+        """
+        return self.player.tournamentplayer_set.get(tournament=self.game.the_round.tournament)
 
     def elimination_year(self):
         """
