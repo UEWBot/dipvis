@@ -1216,7 +1216,7 @@ class TournamentModelTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
-                                 start=t.start_date + HOURS_24,
+                                 start=timezone.now() + HOURS_24,
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
         gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
@@ -1268,7 +1268,7 @@ class TournamentModelTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
-                                 start=t.start_date + HOURS_24,
+                                 start=timezone.now() + HOURS_24,
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
         gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
