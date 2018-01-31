@@ -586,7 +586,7 @@ def tournament_best_countries(request, tournament_id, refresh=False, redirect_ur
                                                                                gp.player,
                                                                                gp.game.get_absolute_url(),
                                                                                gp.game.name,
-                                                                               gp.score))
+                                                                               gp.game.scores()[gp.power]))
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:

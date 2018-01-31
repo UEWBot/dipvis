@@ -432,7 +432,8 @@ class Tournament(models.Model):
 
     def best_countries(self):
         """
-        Returns a dict, indexed by GreatPower, of lists of the GamePlayers with the best scores for each country
+        Returns a dict, indexed by GreatPower, of lists of the GamePlayers with the best scores for each country.
+        Results are only valid if the tournament has finished.
         """
         retval = {}
         # Populate retval. Dict, keyed by GreatPower, of lists of GamePlayers
