@@ -888,7 +888,7 @@ def create_games(request, tournament_id, round_num):
         for g in games:
             current = {'game_name': g.name, 'power_assignment': g.power_assignment, 'the_set': g.the_set}
             for gp in g.gameplayer_set.all():
-                current[gp.power.name] = RoundPlayer.objects.filter(the_round=g.the_round).filter(player=gp.player).get()
+                current[gp.power.name] = gp.roundplayer()
             data.append(current)
         # Estimate the number of games for the round
         round_players = r.roundplayer_set.count()

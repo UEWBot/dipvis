@@ -1494,6 +1494,12 @@ class GamePlayer(models.Model):
     # TODO Add validators
     power_choice_order = models.PositiveSmallIntegerField(default=1)
 
+    def roundplayer(self):
+        """
+        Returns the RoundPlayer corresponding to this GamePlayer.
+        """
+        return self.player.roundplayer_set.get(the_round=self.game.the_round)
+
     def tournamentplayer(self):
         """
         Returns the TournamentPlayer corresponding to this GamePlayer.
