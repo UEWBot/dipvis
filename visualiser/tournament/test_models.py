@@ -129,54 +129,64 @@ class TournamentModelTests(TestCase):
 
         # Create some players
         # Avoid hitting the WDD by not providing a WDD id
-        p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
-        p2 = Player.objects.create(first_name='Charles', last_name='Dog')
-        p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
-        p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
         cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
-        p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
-        p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
-        p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These last two are deliberately not in any tournaments
         cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
 
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
         # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
         # Add GamePlayers to g11
-        GamePlayer.objects.create(player=p1, game=g11, power=cls.austria, last_year=1903, last_season='F')
-        GamePlayer.objects.create(player=p2, game=g11, power=cls.austria, first_year=1903, first_season='X')
-        GamePlayer.objects.create(player=p3, game=g11, power=cls.england)
-        GamePlayer.objects.create(player=p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria,
+                                  last_year=1903,
+                                  last_season='F')
+        GamePlayer.objects.create(player=cls.p2,
+                                  game=g11,
+                                  power=cls.austria,
+                                  first_year=1903,
+                                  first_season='X')
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
-        GamePlayer.objects.create(player=p6, game=g11, power=cls.italy)
-        GamePlayer.objects.create(player=p7, game=g11, power=cls.russia)
-        GamePlayer.objects.create(player=p8, game=g11, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
         # Add GamePlayers to g12
-        GamePlayer.objects.create(player=p7, game=g12, power=cls.austria)
-        GamePlayer.objects.create(player=p6, game=g12, power=cls.england)
+        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england)
         GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
-        GamePlayer.objects.create(player=p4, game=g12, power=cls.germany)
-        GamePlayer.objects.create(player=p3, game=g12, power=cls.italy)
-        GamePlayer.objects.create(player=p2, game=g12, power=cls.russia)
-        GamePlayer.objects.create(player=p1, game=g12, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
         # And the corresponding RoundPlayers
-        RoundPlayer.objects.create(player=p1, the_round=r11)
-        RoundPlayer.objects.create(player=p2, the_round=r11)
-        RoundPlayer.objects.create(player=p3, the_round=r11)
-        RoundPlayer.objects.create(player=p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
         RoundPlayer.objects.create(player=cls.p5, the_round=r11)
-        RoundPlayer.objects.create(player=p6, the_round=r11)
-        RoundPlayer.objects.create(player=p7, the_round=r11)
-        RoundPlayer.objects.create(player=p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
         # And TournamentPlayers
-        TournamentPlayer.objects.create(player=p1, tournament=t1)
-        TournamentPlayer.objects.create(player=p2, tournament=t1)
-        TournamentPlayer.objects.create(player=p3, tournament=t1)
-        TournamentPlayer.objects.create(player=p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
         TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
-        TournamentPlayer.objects.create(player=p6, tournament=t1)
-        TournamentPlayer.objects.create(player=p7, tournament=t1)
-        TournamentPlayer.objects.create(player=p8, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
         # Add a TournamentPlayer to t3
         TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
