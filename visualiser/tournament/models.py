@@ -1256,13 +1256,13 @@ class Game(models.Model):
         for power in GreatPower.objects.all():
             i, created = CentreCount.objects.get_or_create(power=power,
                                                            game=self,
-                                                           year=FIRST_YEAR-1,
+                                                           year=FIRST_YEAR - 1,
                                                            count=power.starting_centres)
             i.save()
             for sc in SupplyCentre.objects.filter(initial_owner=power):
                 i, created = SupplyCentreOwnership.objects.get_or_create(owner=power,
                                                                          game=self,
-                                                                         year=FIRST_YEAR-1,
+                                                                         year=FIRST_YEAR - 1,
                                                                          sc=sc)
                 i.save()
 

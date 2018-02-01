@@ -22,11 +22,14 @@ from django.db.models import Sum
 from tournament.diplomacy import GreatPower, SupplyCentre, GameSet
 from tournament.players import Player
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.models import Tournament, Round, Game, DrawProposal, GameImage, SupplyCentreOwnership, CentreCount
+from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
+from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, SECRET, COUNTS, SPRING, ADJUSTMENTS
-from tournament.models import UNRANKED
-from tournament.models import find_game_scoring_system, find_round_scoring_system, find_tournament_scoring_system
+from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import SECRET, COUNTS, SPRING, ADJUSTMENTS, UNRANKED
+from tournament.models import find_game_scoring_system
+from tournament.models import find_round_scoring_system
+from tournament.models import find_tournament_scoring_system
 from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
 
@@ -70,35 +73,96 @@ class TournamentModelTests(TestCase):
                                        draw_secrecy=COUNTS)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
-        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
         # Add Rounds to t2
-        r21 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date)
-        r22 = Round.objects.create(tournament=t2, scoring_system=s1, dias=False, start=t2.start_date + HOURS_8)
+        r21 = Round.objects.create(tournament=t2,
+                                   scoring_system=s1,
+                                   dias=False,
+                                   start=t2.start_date)
+        r22 = Round.objects.create(tournament=t2,
+                                   scoring_system=s1,
+                                   dias=False,
+                                   start=t2.start_date + HOURS_8)
         # Add Rounds to t3
-        r31 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date, final_year=1907)
-        r32 = Round.objects.create(tournament=t3, scoring_system=s1, dias=True, start=t3.start_date + HOURS_8,
-                                   earliest_end_time=t3.start_date + HOURS_8, latest_end_time=t3.start_date + HOURS_9)
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+        r32 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date + HOURS_8,
+                                   earliest_end_time=t3.start_date + HOURS_8,
+                                   latest_end_time=t3.start_date + HOURS_9)
 
         # Add Games to r11
-        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=cls.set1)
-        g12 = Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=cls.set1)
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
         # Add Games to r12
-        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=cls.set1)
-        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=cls.set1)
+        Game.objects.create(name='g13',
+                            started_at=r12.start,
+                            the_round=r12,
+                            is_finished=True,
+                            the_set=cls.set1)
+        Game.objects.create(name='g14',
+                            started_at=r12.start,
+                            the_round=r12,
+                            the_set=cls.set1)
         # Add Games to r13
-        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
-        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g15',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+        Game.objects.create(name='g16',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
         # Add Games to r21
-        Game.objects.create(name='g21', started_at=r21.start, the_round=r21, the_set=cls.set1)
+        Game.objects.create(name='g21',
+                            started_at=r21.start,
+                            the_round=r21,
+                            the_set=cls.set1)
         # Add Games to r22
-        Game.objects.create(name='g22', started_at=r22.start, the_round=r22, the_set=cls.set1)
+        Game.objects.create(name='g22',
+                            started_at=r22.start,
+                            the_round=r22,
+                            the_set=cls.set1)
         # Add Games to r31
-        Game.objects.create(name='g31', started_at=r31.start, the_round=r31, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
         # Add Games to r32
-        Game.objects.create(name='g32', started_at=r32.start, the_round=r32, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g32',
+                            started_at=r32.start,
+                            the_round=r32,
+                            is_finished=True,
+                            the_set=cls.set1)
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
