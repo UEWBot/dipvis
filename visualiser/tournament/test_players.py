@@ -55,8 +55,8 @@ class PlayerTests(TestCase):
 
     # TODO validate_wdd_tournament_id()
 
-    @tag('wdd')
     # Player.wdd_name()
+    @tag('slow', 'wdd')
     def test_player_wdd_name(self):
         p = Player.objects.get(pk=1)
         # TODO Validate results
