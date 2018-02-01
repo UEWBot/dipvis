@@ -993,7 +993,290 @@ class TournamentModelTests(TestCase):
                   the_set=g1.the_set)
         self.assertRaises(ValidationError, g2.clean)
 
-    # TODO Game.save()
+    # Game.save()
+    def test_game_save_new_game(self):
+        g1 = Game.objects.get(pk=1)
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(4)
+        g2 = Game(name='newgame',
+                  started_at=g1.started_at + HOURS_8,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=g1.the_set)
+        g2.save()
+        # We should now have initial image and SC ownership
+        # Starting position
+        self.assertEqual(g2.gameimage_set.count(), 1)
+        # CentreCounts for each of the 7 GreatPowers
+        self.assertEqual(g2.centrecount_set.count(), 7)
+        # 22 home SCs owned
+        self.assertEqual(g2.supplycentreownership_set.count(), 22)
+        g2.delete()
+
+    def test_game_save_end_of_game(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t, player=self.p1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p7)
+        tp.save()
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7)
+        rp.save()
+        g1 = Game(name='newgame1',
+                  started_at=r.start,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=self.set1)
+        g1.save()
+        gp = GamePlayer(game=g1, player=self.p1, power=self.austria)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p2, power=self.england)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p3, power=self.france)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p4, power=self.germany)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p5, power=self.italy)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p6, power=self.russia)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
+        gp.save()
+        # Add a second, ongoing, game
+        g2 = Game(name='newgame2',
+                  started_at=r.start,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=self.set1)
+        g2.save()
+        g1.is_finished = True
+        g1.save()
+        # Scores should be recorded for the game
+        for gp in g1.gameplayer_set.all():
+            if gp.power == self.russia:
+                self.assertEqual(gp.score, 100.0 * 16 / 70)
+            else:
+                self.assertEqual(gp.score, 100.0 * 9 / 70)
+        # But not for the Round
+        for rp in r.roundplayer_set.all():
+            self.assertEqual(rp.score, 0.0)
+        g2.delete()
+        # Note that this will also delete all GamePlayers for that Game
+        g1.delete()
+        # Note that this will also delete all RoundPlayers for that Round
+        r.delete()
+        # Note that this will also delete all TournamentPlayers for that Tournament
+        t.delete()
+
+    def test_game_save_end_of_round(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t, player=self.p1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p7)
+        tp.save()
+        r = Round(tournament=t,
+                 scoring_system='Sum of Squares',
+                 dias=True,
+                 start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7)
+        rp.save()
+        g1 = Game(name='newgame1',
+                  started_at=r.start,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=self.set1)
+        g1.save()
+        gp = GamePlayer(game=g1, player=self.p1, power=self.austria)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p2, power=self.england)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p3, power=self.france)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p4, power=self.germany)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p5, power=self.italy)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p6, power=self.russia)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
+        gp.save()
+        g1.is_finished = True
+        g1.save()
+        # Scores should be recorded for the game
+        for gp in g1.gameplayer_set.all():
+            if gp.power == self.russia:
+                self.assertEqual(gp.score, 100.0 * 16 / 70)
+            else:
+                self.assertEqual(gp.score, 100.0 * 9 / 70)
+        # And for the Round
+        for rp in r.roundplayer_set.all():
+            if rp.player == self.p6:
+                self.assertEqual(rp.score, 100.0 * 16 / 70)
+            else:
+                self.assertEqual(rp.score, 100.0 * 9 / 70)
+        # And for the Tournament
+        for tp in t.tournamentplayer_set.all():
+            if tp.player == self.p6:
+                self.assertEqual(tp.score, 100.0 * 16 / 70)
+            else:
+                self.assertEqual(tp.score, 100.0 * 9 / 70)
+        # Note that this will also delete all GamePlayers for that Game
+        g1.delete()
+        # Note that this will also delete all RoundPlayers for that Round
+        r.delete()
+        # Note that this will also delete all TournamentPlayers for that Tournament
+        t.delete()
+
+    def test_game_save_end_of_tournament(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t, player=self.p1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p7)
+        tp.save()
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7)
+        rp.save()
+        g1 = Game(name='newgame1',
+                  started_at=r.start,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=self.set1)
+        g1.save()
+        gp = GamePlayer(game=g1, player=self.p1, power=self.austria)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p2, power=self.england)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p3, power=self.france)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p4, power=self.germany)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p5, power=self.italy)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p6, power=self.russia)
+        gp.save()
+        gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
+        gp.save()
+        # Add a second, ongoing, game
+        g2 = Game(name='newgame2',
+                  started_at=r.start,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=self.set1)
+        g2.save()
+        g1.is_finished = True
+        g1.save()
+        # Scores should be recorded for the game
+        for gp in g1.gameplayer_set.all():
+            if gp.power == self.russia:
+                self.assertEqual(gp.score, 100.0 * 16 / 70)
+            else:
+                self.assertEqual(gp.score, 100.0 * 9 / 70)
+        # But not for the Round
+        for rp in r.roundplayer_set.all():
+            self.assertEqual(rp.score, 0.0)
+        g2.delete()
+        # Note that this will also delete all GamePlayers for that Game
+        g1.delete()
+        # Note that this will also delete all RoundPlayers for that Round
+        r.delete()
+        # Note that this will also delete all TournamentPlayers for that Tournament
+        t.delete()
 
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
