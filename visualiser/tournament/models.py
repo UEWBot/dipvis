@@ -111,9 +111,10 @@ class RoundScoringSystem(ABC):
     name = u''
 
     @abstractmethod
-    def scores(self, game_players):
+    def scores(self, game_players, non_players):
         """
-        Takes the set of GamePlayer objects of interest.
+        game_players is a QuerySet of GamePlayers.
+        non_players is a QuerySet of RoundPlayers who were present but agreed not to play.
         Returns a dict, indexed by player key, of scores.
         """
         pass
@@ -122,13 +123,16 @@ class RScoringBest(RoundScoringSystem):
     """
     Take the best of any game scores for that round.
     """
-    def __init__(self):
+    def __init__(self, non_player_score=0.0):
         self.name = _(u'Best game counts')
+        self.non_player_score = non_player_score
 
-    def scores(self, game_players):
+    def scores(self, game_players, non_players):
         """
         If any player played multiple games, take the best game score.
         Otherwise, just take their game score.
+        game_players is a QuerySet of GamePlayers.
+        non_players is a QuerySet of RoundPlayers who were present but agreed not to play.
         Return a dict, indexed by player key, of scores.
         """
         retval = {}
@@ -143,6 +147,9 @@ class RScoringBest(RoundScoringSystem):
             player_games = game_players.filter(player=p)
             # Find the highest score
             retval[p] = max(game_scores[g.game][g.power] for g in player_games)
+        # Give the appropriate points to anyone who agreed to sit out
+        for p in non_players:
+            retval[p.player] = self.non_player_score
         return retval
 
 # All the round scoring systems we support
@@ -197,10 +204,7 @@ class TScoringSum(TournamentScoringSystem):
             # Extract the scores into a sorted list, highest first
             player_scores = []
             for r in player_rounds:
-                try:
-                    player_scores.append(round_scores[r.the_round][r.player])
-                except KeyError:
-                    pass
+                player_scores.append(round_scores[r.the_round][r.player])
             player_scores.sort(reverse=True)
             # Add up the first N
             retval[p] = sum(player_scores[:self.scored_rounds])
@@ -684,6 +688,7 @@ class Round(models.Model):
     def scores(self, force_recalculation=False):
         """
         Returns the scores for everyone who played in the round.
+        Returns a dict, keyed by Player, of floats.
         """
         # If the round is over, report the stored scores unless we're told to recalculate
         if self.is_finished() and not force_recalculation:
@@ -696,7 +701,12 @@ class Round(models.Model):
         system = find_round_scoring_system(self.tournament.round_scoring_system)
         if not system:
             raise InvalidScoringSystem(self.tournament.round_scoring_system)
-        return system.scores(GamePlayer.objects.filter(game__the_round=self).distinct())
+        # Identify any players who were checked in but didn't play
+        gps = GamePlayer.objects.filter(game__the_round=self).distinct()
+        non_players = self.roundplayer_set.all()
+        for gp in gps:
+            non_players = non_players.exclude(player=gp.player)
+        return system.scores(gps, non_players)
 
     def is_finished(self):
         """
@@ -1278,12 +1288,7 @@ class Game(models.Model):
             if r.is_finished():
                 scores = r.scores(True)
                 for p in r.roundplayer_set.all():
-                    try:
-                        p.score = scores[p.player]
-                    except KeyError:
-                        # Player was checked at roll call but didn't play
-                        # TODO May want to add a way to give them some points
-                        pass
+                    p.score = scores[p.player]
                     p.save()
 
             # if the tournament is (now) finished, store the player scores

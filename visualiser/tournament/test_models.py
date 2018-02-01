@@ -137,6 +137,7 @@ class TournamentModelTests(TestCase):
         p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
         p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
         p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
 
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
@@ -406,6 +407,15 @@ class TournamentModelTests(TestCase):
         r = t.round_set.all()[0]
         # TODO Validate results
         r.scores(True)
+
+    def test_round_scores_with_unplayed(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        # Add a RoundPlayer who didn't play
+        rp = RoundPlayer(player=self.p9, the_round=r)
+        rp.save()
+        self.assertTrue(self.p9 in r.scores())
+        rp.delete()
 
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
