@@ -255,7 +255,7 @@ class TournamentModelTests(TestCase):
         # Add a TournamentPlayer to t3
         TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
         # Add a RoundPlayer to r31
-        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=100.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
         # Add a RoundPlayer to r32
         RoundPlayer.objects.create(player=cls.p5, the_round=r32, score=47.3)
 
@@ -307,6 +307,8 @@ class TournamentModelTests(TestCase):
     def test_validate_vote_count_7(self):
         self.assertIsNone(validate_vote_count(7))
 
+    # TODO add_local_player_bg()
+
     # Tournament.scores()
     def test_tournament_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
@@ -318,24 +320,39 @@ class TournamentModelTests(TestCase):
 
     def test_tournament_scores_finished(self):
         t = Tournament.objects.get(name='t3')
-        # TODO Validate results
-        t.scores()
+        scores = t.scores()
+        self.assertEqual(len(scores), 1)
+        # This should just be retrieved from the TournamentPlayer
+        self.assertEqual(scores[t.tournamentplayer_set.get().player], 147.3)
 
     def test_tournament_scores_unfinished(self):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
-        t.scores()
+        scores = t.scores()
 
     def test_tournament_scores_before_start(self):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
         # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
-        t.scores()
+        scores = t.scores()
 
     def test_tournament_scores_recalculate(self):
         t = Tournament.objects.get(name='t3')
-        # TODO Validate results
-        t.scores(True)
+        scores = t.scores(True)
+        self.assertEqual(len(scores), 1)
+        # This should be recalculated from the round scores
+        self.assertEqual(scores[t.tournamentplayer_set.get().player], 47.3)
+
+    def test_tournament_scores_with_non_player(self):
+        # Only interesting for unfinished tournaments
+        t = Tournament.objects.get(name='t1')
+        # Add an extra player, who didn't actually play
+        tp = TournamentPlayer(tournament=t, player=self.p10)
+        tp.save()
+        scores = t.scores()
+        # Players who didn't play should get a score of zero
+        self.assertEqual(scores[self.p10], 0.0)
+        tp.delete()
 
     # Tournament.positions_and_scores()
     def test_tournament_positions_and_scores_finished(self):
@@ -437,6 +454,21 @@ class TournamentModelTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
         self.assertFalse(t.is_finished())
+
+    # Tournament.wdd_url()
+    def test_tournament_wdd_url(self):
+        t = Tournament.objects.get(name='t3')
+        t.wdd_tournament_id = 7
+        self.assertTrue(t.wdd_url().endswith('?id_tournament=7'))
+
+    def test_tournament_wdd_url_none(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual('', t.wdd_url())
+
+    # Tournament.get_absolute_url()
+    def test_tournament_get_absolute_url(self):
+        t = Tournament.objects.get(name='t3')
+        t.get_absolute_url()
 
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):
@@ -605,6 +637,12 @@ class TournamentModelTests(TestCase):
                   start=t.start_date + HOURS_8,
                   latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
+
+    # Round.get_absolute_url()
+    def test_round_get_absolute_url(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        r.get_absolute_url()
 
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
@@ -1013,6 +1051,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(g2.supplycentreownership_set.count(), 22)
         g2.delete()
 
+    @tag('slow')
     def test_game_save_end_of_game(self):
         now = timezone.now()
         t = Tournament(name='t4',
@@ -1101,6 +1140,7 @@ class TournamentModelTests(TestCase):
         # Note that this will also delete all TournamentPlayers for that Tournament
         t.delete()
 
+    @tag('slow')
     def test_game_save_end_of_round(self):
         now = timezone.now()
         t = Tournament(name='t4',
@@ -1190,6 +1230,7 @@ class TournamentModelTests(TestCase):
         # Note that this will also delete all TournamentPlayers for that Tournament
         t.delete()
 
+    @tag('slow')
     def test_game_save_end_of_tournament(self):
         now = timezone.now()
         t = Tournament(name='t4',
@@ -1277,6 +1318,11 @@ class TournamentModelTests(TestCase):
         r.delete()
         # Note that this will also delete all TournamentPlayers for that Tournament
         t.delete()
+
+    # Game.get_absolute_url()
+    def test_game_get_absolute_url(self):
+        g = Game.objects.get(pk=1)
+        g.get_absolute_url()
 
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
@@ -1413,6 +1459,15 @@ class TournamentModelTests(TestCase):
 
     # TODO DrawProposal.save()
 
+    # RoundPlayer.tournamentplayer()
+    def test_round_player_tournamentplayer(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        rp = r.roundplayer_set.get(player=self.p8)
+        tp = rp.tournamentplayer()
+        self.assertEqual(tp.player, self.p8)
+        self.assertEqual(tp.tournament, t)
+
     # RoundPlayer.clean()
     def test_roundplayer_clean(self):
         t = Tournament.objects.get(name='t1')
@@ -1420,6 +1475,24 @@ class TournamentModelTests(TestCase):
         p = Player.objects.get(pk=1)
         rp = RoundPlayer(player=p, the_round=r)
         self.assertRaises(ValidationError, rp.clean)
+
+    # GamePlayer.roundplayer()
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        g = r.game_set.get(name='g11')
+        gp = g.gameplayer_set.get(player=self.p8)
+        rp = gp.roundplayer()
+        self.assertEqual(rp.player, self.p8)
+        self.assertEqual(rp.the_round, r)
+
+    # GamePlayer.tournamentplayer()
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        g = r.game_set.get(name='g11')
+        gp = g.gameplayer_set.get(player=self.p8)
+        tp = gp.tournamentplayer()
+        self.assertEqual(tp.player, self.p8)
+        self.assertEqual(tp.tournament, t)
 
     # GamePlayer.elimination_year()
     def test_gameplayer_elimination_year_replacement(self):
@@ -1599,6 +1672,11 @@ class TournamentModelTests(TestCase):
         gi1 = GameImage.objects.get(game=g)
         gi2 = GameImage(game=g, year=1902, season=SPRING, phase=ADJUSTMENTS, image=gi1.image)
         self.assertRaises(ValidationError, gi2.clean)
+
+    # GameImage.get_absolute_url()
+    def test_game_image_get_absolute_url(self):
+        gi = GameImage.objects.get(pk=1)
+        gi.get_absolute_url()
 
     # CentreCount.clean()
     def test_centrecount_clean_past_final_year(self):
