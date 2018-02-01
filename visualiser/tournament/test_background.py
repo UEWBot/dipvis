@@ -26,31 +26,37 @@ class WDDBackgroundTests(TestCase):
 
     # WDDBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
     # WDDBackground.wdd_name()
+    @tag('wdd')
     def test_wdd_background_wdd_name_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.wdd_name)
 
     # WDDBackground.finishes()
+    @tag('wdd')
     def test_wdd_background_finishes_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.finishes)
 
     # WDDBackground.tournaments()
+    @tag('wdd')
     def test_wdd_background_tournaments_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.tournaments)
 
     # WDDBackground.boards()
+    @tag('wdd')
     def test_wdd_background_boards_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.boards)
 
     # WDDBackground.awards()
+    @tag('wdd')
     def test_wdd_background_awards_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.awards)
 
     # WDDBackground.rankings()
+    @tag('wdd')
     def test_wdd_background_rankings_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.rankings)
