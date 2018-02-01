@@ -92,10 +92,8 @@ class PlayerTests(TestCase):
         p, created = Player.objects.get_or_create(first_name='Spiros',
                                                   last_name='Bobetsis',
                                                   wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
-        p.save()
         # TODO Validate results
         p.background()
-        p.delete()
 
     @tag('slow', 'wdd')
     def test_player_background_mask(self):
@@ -116,11 +114,9 @@ class PlayerTests(TestCase):
         p, created = Player.objects.get_or_create(first_name='Matt',
                                                   last_name='Shields',
                                                   wdd_player_id=MATT_SHIELDS_WDD_ID)
-        p.save()
         # TODO Validate results
         # WAC 10 he played Germany
         p.background(power=self.germany)
-        p.delete()
 
     @tag('slow', 'wdd')
     def test_player_background_non_std(self):
@@ -128,11 +124,9 @@ class PlayerTests(TestCase):
         p, created = Player.objects.get_or_create(first_name='Matt',
                                                   last_name='Sundstrom',
                                                   wdd_player_id=MATT_SUNDSTROM_WDD_ID)
-        p.save()
         # TODO Validate results
         # Windy City Weasels 2012 he played United Kingdom
         p.background()
-        p.delete()
 
     @tag('slow', 'wdd')
     def test_player_background_non_std_2(self):
@@ -141,11 +135,9 @@ class PlayerTests(TestCase):
         p, created = Player.objects.get_or_create(first_name='Nate',
                                                   last_name='Cockerill',
                                                   wdd_player_id=NATE_COCKERILL_WDD_ID)
-        p.save()
         # TODO Validate results
         # Windy City Weasels 2012 he played France
         p.background(power=self.france)
-        p.delete()
 
     def test_player_background_unknown(self):
         p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
