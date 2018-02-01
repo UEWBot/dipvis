@@ -1098,13 +1098,11 @@ class TournamentModelTests(TestCase):
                         power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
 
-    @tag('slow')
     def test_gameplayer_clean_player_missing_last_year(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p = Player.objects.get(pk=1)
-        tp = TournamentPlayer(player=p, tournament=t)
-        gp = GamePlayer(player=p,
+        tp = TournamentPlayer(player=self.p9, tournament=t)
+        gp = GamePlayer(player=self.p9,
                         game=g,
                         power=self.austria,
                         last_year=1909)
@@ -1112,13 +1110,11 @@ class TournamentModelTests(TestCase):
         self.assertRaises(ValidationError, gp.clean)
         tp.delete()
 
-    @tag('slow')
     def test_gameplayer_clean_player_missing_last_season(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p = Player.objects.get(pk=1)
-        tp = TournamentPlayer(player=p, tournament=t)
-        gp = GamePlayer(player=p,
+        tp = TournamentPlayer(player=self.p9, tournament=t)
+        gp = GamePlayer(player=self.p9,
                         game=g,
                         power=self.austria,
                         last_season='S')
@@ -1126,18 +1122,15 @@ class TournamentModelTests(TestCase):
         self.assertRaises(ValidationError, gp.clean)
         tp.delete()
 
-    @tag('slow')
     def test_gameplayer_clean_overlap_1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p1 = Player.objects.get(pk=1)
-        p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer(player=p1, tournament=t)
-        tp2 = TournamentPlayer(player=p2, tournament=t)
-        gp1 = GamePlayer(player=p1,
+        tp1 = TournamentPlayer(player=self.p9, tournament=t)
+        tp2 = TournamentPlayer(player=self.p10, tournament=t)
+        gp1 = GamePlayer(player=self.p9,
                          game=g,
                          power=self.austria)
-        gp2 = GamePlayer(player=p2,
+        gp2 = GamePlayer(player=self.p10,
                          game=g,
                          power=self.austria,
                          first_year=1902,
@@ -1151,20 +1144,17 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
-    @tag('slow')
     def test_gameplayer_clean_overlap_2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p1 = Player.objects.get(pk=1)
-        p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer(player=p1, tournament=t)
-        tp2 = TournamentPlayer(player=p2, tournament=t)
-        gp1 = GamePlayer(player=p1,
+        tp1 = TournamentPlayer(player=self.p9, tournament=t)
+        tp2 = TournamentPlayer(player=self.p10, tournament=t)
+        gp1 = GamePlayer(player=self.p9,
                          game=g,
                          power=self.austria,
                          last_year=1902,
                          last_season='S')
-        gp2 = GamePlayer(player=p2,
+        gp2 = GamePlayer(player=self.p10,
                          game=g,
                          power=self.austria,
                          first_year=1902,
@@ -1178,20 +1168,17 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
-    @tag('slow')
     def test_gameplayer_clean_overlap_3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p1 = Player.objects.get(pk=1)
-        p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer(player=p1, tournament=t)
-        tp2 = TournamentPlayer(player=p2, tournament=t)
-        gp1 = GamePlayer(player=p1,
+        tp1 = TournamentPlayer(player=self.p9, tournament=t)
+        tp2 = TournamentPlayer(player=self.p10, tournament=t)
+        gp1 = GamePlayer(player=self.p9,
                          game=g,
                          power=self.austria,
                          first_year=1902,
                          first_season='S')
-        gp2 = GamePlayer(player=p2,
+        gp2 = GamePlayer(player=self.p10,
                          game=g,
                          power=self.austria,
                          last_year=1902,
@@ -1205,20 +1192,17 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
-    @tag('slow')
     def test_gameplayer_clean_overlap_4(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p1 = Player.objects.get(pk=1)
-        p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer(player=p1, tournament=t)
-        tp2 = TournamentPlayer(player=p2, tournament=t)
-        gp1 = GamePlayer(player=p1,
+        tp1 = TournamentPlayer(player=self.p9, tournament=t)
+        tp2 = TournamentPlayer(player=self.p10, tournament=t)
+        gp1 = GamePlayer(player=self.p9,
                          game=g,
                          power=self.austria,
                          first_year=1902,
                          first_season='S')
-        gp2 = GamePlayer(player=p2,
+        gp2 = GamePlayer(player=self.p10,
                          game=g,
                          power=self.austria)
         tp1.save()
@@ -1230,20 +1214,17 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
-    @tag('slow')
     def test_gameplayer_clean_overlap_5(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        p1 = Player.objects.get(pk=1)
-        p2 = Player.objects.get(pk=2)
-        tp1 = TournamentPlayer(player=p1, tournament=t)
-        tp2 = TournamentPlayer(player=p2, tournament=t)
-        gp1 = GamePlayer(player=p1,
+        tp1 = TournamentPlayer(player=self.p9, tournament=t)
+        tp2 = TournamentPlayer(player=self.p10, tournament=t)
+        gp1 = GamePlayer(player=self.p9,
                          game=g,
                          power=self.austria,
                          first_year=1902,
                          first_season='S')
-        gp2 = GamePlayer(player=p2,
+        gp2 = GamePlayer(player=self.p10,
                          game=g,
                          power=self.austria,
                          first_year=1902,
