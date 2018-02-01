@@ -189,16 +189,14 @@ class TScoringSum(TournamentScoringSystem):
         Otherwise, sum all their round scores.
         Return a dict, indexed by player key, of scores.
         """
-        retval = {}
         # Retrieve all the scores for all the rounds involved.
         # This will give us "if the round ended now" scores for in-progress round(s)
         round_scores = {}
         for r in Round.objects.filter(roundplayer__in=round_players).distinct():
             round_scores[r] = r.scores()
+        retval = {}
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
-            if p in retval:
-                continue
             # Find just their rounds
             player_rounds = round_players.filter(player=p)
             # Extract the scores into a sorted list, highest first
