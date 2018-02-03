@@ -892,6 +892,7 @@ class Game(models.Model):
         Ensures that there is one CentreCount for each power for the specified year,
         and that the values match those determined by looking at the SupplyCentreOwnerships
         for that year.
+        Can raise SCOwnershipsNotFound.
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
         if not all_scos.exists():
@@ -909,6 +910,35 @@ class Game(models.Model):
                                 year=year,
                                 count=len(all_scos.filter(owner=p)))
             i.save()
+
+    def compare_sc_counts_and_ownerships(self, year):
+        """
+        Compares the SupplyCentreOwnerships and CentreCounts for the given game year.
+        Returns a list of strings describing any issues.
+        Can raise SCOwnershipsNotFound.
+        """
+        all_scos = self.supplycentreownership_set.filter(year=year)
+        if not all_scos.exists():
+            raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
+        retval = []
+        for p in GreatPower.objects.all():
+            sco_dots = len(all_scos.filter(owner=p))
+            try:
+                cc = CentreCount.objects.get(power=p,
+                                             game=self,
+                                             year=year)
+            except CentreCount.DoesNotExist:
+                retval.append(_('Missing count of %(dots)d centres for %(power)s')
+                              % {'dots': sco_dots,
+                                 'power': p})
+            else:
+                if cc.count != sco_dots:
+                    retval.append(_('%(power)s owns %(sco_dots)d centres in %(year)d, but their centrecount is %(dots)d')
+                                  % {'power': p,
+                                     'year': year,
+                                     'sco_dots': sco_dots,
+                                     'dots': cc.count})
+        return retval
 
     def scores(self, force_recalculation=False):
         """

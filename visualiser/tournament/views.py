@@ -1055,6 +1055,7 @@ def game_sc_owners(request,
         return render(request, 'games/sc_owners.html', context)
     # Create a list of rows, each with a year and each supply centre's owner
     rows = []
+    issues = []
     for year in years:
         yscos = scos.filter(year=year)
         if not yscos:
@@ -1068,15 +1069,21 @@ def game_sc_owners(request,
         for sc in scs:
             try:
                 sco = yscos.get(sc=sc)
-                row.append({'color': set_powers.get(power=sco.owner).colour,
-                            'text': sco.owner.abbreviation})
             except SupplyCentreOwnership.DoesNotExist:
                 # This is presumably because the centre was still neutral
                 row.append({'color': 'white', 'text': no_data_str})
-        # Only add this year if there is some SC ownership recorded
-        if len(row) > 1:
-            rows.append(row)
+            else:
+                row.append({'color': set_powers.get(power=sco.owner).colour,
+                            'text': sco.owner.abbreviation})
+        rows.append(row)
+        try:
+            # Check for any problems, and add them to the list
+            issues += g.compare_sc_counts_and_ownerships(year)
+        except SCOwnershipsNotFound:
+            # We have no ownership data for this year, which is fine
+            pass
     context['rows'] = rows
+    context['issues'] = issues
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
