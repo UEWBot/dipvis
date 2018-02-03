@@ -531,7 +531,7 @@ class Tournament(models.Model):
                 if len(gps) == 1:
                     sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
                                                      power=power)
-                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.')
+                    results.append(_(u'%(player)s won Best %(country)s with %(dots)d centre(s) and a score of %(score).2f in game %(game)s of round %(round)d.')
                                    % {'player': str(gp.player),
                                       'country': power.name,
                                       'dots': sc.count,
@@ -541,7 +541,7 @@ class Tournament(models.Model):
                 else:
                     # Tie for best power
                     winner_str = ', '.join([str(p.player) for p in gps])
-                    results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.')
+                    results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centre(s) and a score of %(score).2f.')
                                    % {'country': power.name,
                                       'winner_str': winner_str,
                                       'dots': gp.game.centrecount_set.get(year=gp.game.final_year(),
@@ -928,12 +928,12 @@ class Game(models.Model):
                                              game=self,
                                              year=year)
             except CentreCount.DoesNotExist:
-                retval.append(_('Missing count of %(dots)d centres for %(power)s')
+                retval.append(_('Missing count of %(dots)d centre(s) for %(power)s')
                               % {'dots': sco_dots,
                                  'power': p})
             else:
                 if cc.count != sco_dots:
-                    retval.append(_('%(power)s owns %(sco_dots)d centres in %(year)d, but their centrecount is %(dots)d')
+                    retval.append(_('%(power)s owns %(sco_dots)d centre(s) in %(year)d, but their centrecount is %(dots)d')
                                   % {'power': p,
                                      'year': year,
                                      'sco_dots': sco_dots,
