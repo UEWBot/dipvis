@@ -549,7 +549,7 @@ class Tournament(models.Model):
                                       'score': gp.score})
         else:
             # which rounds have been played ?
-            played_rounds = len([r for r in self.round_set.all() if r.is_finished()])
+            played_rounds = self.round_set.filter(is_finished=True).count()
             if played_rounds == 0:
                 results.append(_(u'Tournament has yet to start.'))
             else:
@@ -903,12 +903,12 @@ class Game(models.Model):
                 i = CentreCount.objects.get(power=p,
                                             game=self,
                                             year=year)
-                i.count = len(all_scos.filter(owner=p))
+                i.count = all_scos.filter(owner=p).count()
             except CentreCount.DoesNotExist:
                 i = CentreCount(power=p,
                                 game=self,
                                 year=year,
-                                count=len(all_scos.filter(owner=p)))
+                                count=all_scos.filter(owner=p).count())
             i.save()
 
     def compare_sc_counts_and_ownerships(self, year):
@@ -922,7 +922,7 @@ class Game(models.Model):
             raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
         retval = []
         for p in GreatPower.objects.all():
-            sco_dots = len(all_scos.filter(owner=p))
+            sco_dots = all_scos.filter(owner=p).count()
             try:
                 cc = CentreCount.objects.get(power=p,
                                              game=self,
@@ -1446,7 +1446,7 @@ class DrawProposal(models.Model):
         """
         # Get the most recent CentreCounts before the DrawProposal
         scs = self.game.centrecount_set.filter(year__lt=self.year)
-        survivors = len([sc for sc in scs if sc.count > 0])
+        survivors = scs.filter(count__gt=0).count()
         try:
             return survivors - self.votes_in_favour
         except TypeError:
@@ -1517,7 +1517,7 @@ class DrawProposal(models.Model):
             if not self.votes_in_favour:
                 raise ValidationError(_('Votes_in_favour needs a value'))
             # Derive passed from votes_in_favour and survivor count
-            survivors = len([sc for sc in scs if sc.count > 0])
+            survivors = scs.filter(count__gt=0).count()
             if self.votes_in_favour:
                 # Votes must be unanimous
                 self.passed = (self.votes_in_favour == survivors)
