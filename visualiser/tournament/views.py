@@ -103,8 +103,6 @@ class GamePlayersForm(forms.Form):
     game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
-    power_assignment = forms.ChoiceField(label=_(u'Power Assignment'),
-                                         choices=POWER_ASSIGNS)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one player field per Great Power"""
@@ -863,8 +861,7 @@ def create_games(request, tournament_id, round_num):
                 try:
                     g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
                                                             the_round=r,
-                                                            the_set=f.cleaned_data['the_set'],
-                                                            power_assignment=f.cleaned_data['power_assignment'])
+                                                            the_set=f.cleaned_data['the_set'])
                 except KeyError:
                     # This must be an extra, unused formset
                     continue
