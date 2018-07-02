@@ -1569,7 +1569,11 @@ class GamePlayer(models.Model):
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
+    power = models.ForeignKey(GreatPower,
+                              null=True,
+                              blank=True,
+                              related_name='+',
+                              on_delete=models.CASCADE)
     first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR,
                                                   validators=[validate_year])
     first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
@@ -1582,7 +1586,7 @@ class GamePlayer(models.Model):
     # 1 => first, 7 => seventh, 0 => assigned rather than chosen
     # TODO Use this
     # TODO Add validators
-    power_choice_order = models.PositiveSmallIntegerField(default=1)
+    power_choice_order = models.PositiveSmallIntegerField(default=0)
 
     def roundplayer(self):
         """
@@ -1631,7 +1635,9 @@ class GamePlayer(models.Model):
         if self.last_season != '' and not self.last_year:
             raise ValidationError(_(u'Final year must be specified with final season'))
         # Check for overlap with another player
-        others = GamePlayer.objects.filter(game=self.game, power=self.power).exclude(player=self.player)
+        others = []
+        if self.power:
+            others = GamePlayer.objects.filter(game=self.game, power=self.power).exclude(player=self.player)
         # Ensure one player at a time
         for other in others:
             # It's possible that the in-memory object has a different player than the one in the database
@@ -1692,7 +1698,10 @@ class GamePlayer(models.Model):
         # TODO Ensure no gaps - may have to be done elsewhere
 
     def __str__(self):
-        return u'%s %s %s' % (self.game, self.player, self.power)
+        if self.power:
+            return u'%s %s %s' % (self.game, self.player, self.power)
+        else:
+            return u'%s %s Power TBD' % (self.game, self.player)
 
 class GameImage(models.Model):
     """
