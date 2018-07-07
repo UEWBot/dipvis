@@ -22,6 +22,8 @@ from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.players import Player, PlayerTournamentRanking, PlayerGameResult
 from tournament.players import PlayerAward, PlayerRanking
 
+from tournament.models import RoundPlayer
+
 class SetPowerInline(admin.TabularInline):
     model = SetPower
 
@@ -122,3 +124,4 @@ admin.site.register(PlayerTournamentRanking)
 admin.site.register(PlayerGameResult)
 admin.site.register(PlayerAward)
 admin.site.register(PlayerRanking)
+admin.site.register(RoundPlayer)
