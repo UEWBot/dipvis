@@ -40,6 +40,7 @@ from tournament.models import SPRING, SECRET, POWER_ASSIGNS, COUNTS, SEASONS
 from tournament.models import UNRANKED
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import SCOwnershipsNotFound
+from tournament.game_seeder import GameSeeder
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15
@@ -158,6 +159,137 @@ class BaseGamePlayersForm(BaseFormSet):
             return []
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
+        return cleaned_data
+
+class PowerAssignForm(forms.Form):
+    """Form for players of a single game"""
+    game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
+    the_set = forms.ModelChoiceField(label=_(u'Game Set'),
+                                     queryset=GameSet.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates one GreatPower field per RoundPlayer"""
+        # Remove our special kwargs from the list
+        self.game = kwargs.pop('game')
+        super().__init__(*args, **kwargs)
+
+        attrs = self.fields['game_name'].widget.attrs
+        attrs['size'] = attrs['maxlength']
+
+        queryset = GreatPower.objects.all()
+
+        # Create the right player fields
+        for gp in self.game.gameplayer_set.all():
+            c = gp.id
+            self.fields[c] = forms.ModelChoiceField(label=str(gp.player),
+                                                    queryset=queryset)
+
+    def clean(self):
+        """Checks that no power is played by multiple players"""
+        cleaned_data = super().clean()
+        powers = []
+        for player in self.game.gameplayer_set.all():
+            c = player.id
+            power = cleaned_data.get(c)
+            # If the field itself didn't validate, drop out
+            if power is None:
+                return cleaned_data
+            if power in powers:
+                raise forms.ValidationError(_('Power %(power)s appears more than once')
+                                            % {'Power': power})
+            powers.append(power)
+
+        return cleaned_data
+
+class BasePowerAssignForm(BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwargs from the list
+        self.the_round = kwargs.pop('the_round')
+        super().__init__(*args, **kwargs)
+        self.games = self.the_round.game_set.all()
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special arg down to the form itself
+        kwargs['game'] = self.games[index]
+        return super()._construct_form(index, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Any duplicates within the page ?
+        try:
+            names = [cd['game_name'] for cd in self.cleaned_data]
+        except AttributeError:
+            # This happens when we have a form left blank
+            return []
+        if len(set(names)) != len(names):
+            raise forms.ValidationError(_('Game names must be unique within the tournament'))
+        return cleaned_data
+
+# TODO Should this be a formset?
+class GetSevenPlayersForm(forms.Form):
+    """Form to enter players to sit out or play two games"""
+
+    def __create_player_fields(self, queryset, prefix, count):
+        """Do the actual field creation"""
+        LABELS = {'sitter': _('Player sitting out'),
+                  'double': _('Player to play two games')}
+        for i in range(count):
+            self.fields['%s_%d' % (prefix, i)] = RoundPlayerChoiceField(queryset,
+                                                                        required = False,
+                                                                        label = LABELS[prefix])
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates the specified number of player fields"""
+        # Remove our special kwargs from the list
+        self.the_round = kwargs.pop('the_round')
+        super(GetSevenPlayersForm, self).__init__(*args, **kwargs)
+
+        queryset = self.the_round.roundplayer_set.all()
+        # Figure out how many sitters and doubles we need
+        count = queryset.count()
+        self.sitters = count % 7
+        self.doubles = (7 - self.sitters) % 7
+
+        # Create the right number of player fields
+        self.__create_player_fields(queryset, 'sitter', self.sitters)
+        self.__create_player_fields(queryset, 'double', self.doubles)
+
+    def _check_duplicates(self, cleaned_data, prefix, count):
+        """Does the check for a player entered multiple times"""
+        round_players = []
+        for i in range(count):
+            rp = cleaned_data.get('%s_%d' % (prefix, i))
+            # If the field is empty, ignore it
+            if rp is None:
+                continue
+            if rp in round_players:
+                raise forms.ValidationError(_('Player %(player)s appears more than once')
+                                            % {'player': rp.player})
+            round_players.append(rp)
+        return len(round_players)
+
+    def clean(self):
+        """
+        Checks that no player is entered more than once,
+        that we have either sitters or doubles, but not both,
+        and that we have the right number of either sitters or doubles.
+        """
+        cleaned_data = self.cleaned_data
+
+        sitters = self._check_duplicates(cleaned_data, 'sitter', self.sitters)
+        doubles = self._check_duplicates(cleaned_data, 'double', self.doubles)
+
+        if (sitters > 0) and (sitters < self.sitters):
+            raise forms.ValidationError(_('Too few players sitting out games. Got %(actual)d, expected %(expected)d')
+                                        % {'actual': sitters,
+                                           'expected' : self.sitters})
+        if (doubles > 0) and (doubles < self.doubles):
+            raise forms.ValidationError(_('Too few players playing two games. Got %(actual)d, expected %(expected)d')
+                                        % {'actual': doubles,
+                                           'expected' : self.doubles})
+        if (doubles > 0) and (sitters > 0):
+            raise forms.ValidationError(_('Either have players sit out the round or have players play two games'))
+
         return cleaned_data
 
 class SCOwnerForm(forms.Form):
@@ -791,10 +923,22 @@ def roll_call(request, tournament_id):
                                        'post_url': reverse('roll_call', args=(tournament_id,)),
                                        'formset' : formset})
                     i.save()
-            # Next job is almost certainly to create the actual games
-            return HttpResponseRedirect(reverse('create_games',
-                                                args=(tournament_id,
-                                                      t.current_round().number())))
+            if t.seed_games:
+                if (r.roundplayer_set.count() % 7) == 0:
+                    # We have an exact multiple of 7 players, so go straight to seeding
+                    return HttpResponseRedirect(reverse('seed_games',
+                                                        args=(tournament_id,
+                                                              t.current_round().number())))
+                else:
+                    # We need players to sit out or play multiple games
+                    return HttpResponseRedirect(reverse('get_seven',
+                                                        args=(tournament_id,
+                                                              t.current_round().number())))
+            else:
+                # Next job is almost certainly to create the actual games
+                return HttpResponseRedirect(reverse('create_games',
+                                                    args=(tournament_id,
+                                                          t.current_round().number())))
     else:
         data = []
         # Go through each player in the Tournament
@@ -846,6 +990,170 @@ def round_detail(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
+
+@permission_required('tournament.add_game')
+def get_seven(request, tournament_id, round_num):
+    """Provide a form to get a multiple of seven players for a round"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    count = r.roundplayer_set.count()
+    sitters = count % 7
+    doubles = 7 - sitters
+    context = {'tournament': t,
+               'round': r,
+               'count' : count,
+               'sitters' : sitters,
+               'doubles' : doubles}
+    # If we already have an exact multiple of seven players, go straight to creating games
+    if (r.roundplayer_set.count() % 7) == 0:
+        return HttpResponseRedirect(reverse('seed_games',
+                                            args=(tournament_id,
+                                                  round_num)))
+
+    form = GetSevenPlayersForm(request.POST or None,
+                               the_round=r)
+    if form.is_valid():
+        # Update RoundPlayers to indicate number of games they're playing
+        # First clear any old game_counts
+        for rp in r.roundplayer_set.exclude(game_count=1):
+            rp.game_count = 1
+            rp.save()
+        for i in range(sitters):
+            rp = form.cleaned_data['sitter_%d' % i]
+            if rp:
+                rp.game_count = 0
+                rp.save()
+        for i in range(doubles):
+            rp = form.cleaned_data['double_%d' % i]
+            if rp:
+                rp.game_count = 2
+                rp.save()
+        return HttpResponseRedirect(reverse('seed_games',
+                                            args=(tournament_id,
+                                                  round_num)))
+    context['form'] = form
+    return render(request,
+                  'rounds/get_seven.html',
+                  context)
+
+def _seed_games(tournament, the_round):
+    """Wrapper round GameSeeder to do the actual seeding for a round"""
+    t = tournament
+    r = the_round
+    # Get the set of players that haven't already been assigned to games for this round
+    rps = []
+    sitters = set()
+    two_gamers = set()
+    for rp in r.roundplayer_set.all():
+        assert rp.gameplayers().count() == 0, "%d games already exist for %s in this round" % (rp.gameplayers().count(), str(rp))
+        rps.append(rp)
+        if rp.game_count == 1:
+            continue
+        elif rp.game_count == 0:
+            # This player is sitting out this round
+            sitters.add(rp)
+        elif rp.game_count == 2:
+            # This player is playing two games this round
+            two_gamers.add(rp)
+        else:
+            assert 0, 'Unexpected game_count value %d for %s' % (rp.game_count, str(rp))
+    assert (len(sitters) == 0) or (len(two_gamers) == 0)
+    if len(sitters) > 0:
+        # Check that we have the right number of players sitting out
+        assert (len(rps) - len(sitters)) % 7 == 0
+    if len(two_gamers) > 0:
+        # Check that we have the right number of players playing two games
+        assert (len(rps) + len(two_gamers)) % 7 == 0
+    # Create the game seeder
+    seeder = GameSeeder(starts=100, iterations=10)
+    for rp in rps:
+        seeder.add_player(rp)
+    # Provide details of games already played this tournament
+    for n in range(1, r.number()):
+        rnd = t.round_numbered(n)
+        for g in rnd.game_set.all():
+            game = set()
+            for gp in g.gameplayer_set.all():
+                game.add(gp.roundplayer())
+            # TODO This doesn't deal with replacement players
+            assert len(game) == 7
+            seeder.add_played_game(game)
+    # Generate the games
+    return seeder.seed_games(omitting_players=sitters,
+                             players_doubling_up=two_gamers)
+
+@permission_required('tournament.add_game')
+def seed_games(request, tournament_id, round_num):
+    """Seed players to the games for a round"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    if request.method == 'POST':
+        PowerAssignFormset = formset_factory(PowerAssignForm,
+                                             formset=BasePowerAssignForm)
+        formset = PowerAssignFormset(request.POST, the_round=r)
+        if formset.is_valid():
+            for f in formset:
+                # Update the game
+                g = f.game
+                g.name = f.cleaned_data['game_name']
+                g.the_set = f.cleaned_data['the_set']
+                try:
+                    g.full_clean()
+                except ValidationError as e:
+                    f.add_error(None, e)
+                    return render(request,
+                                  'rounds/seeded_games.html',
+                                  {'tournament': t,
+                                   'round': r,
+                                   'formset' : formset})
+                g.save()
+                # Assign the powers to the players
+                for gp_id, field in f.cleaned_data.items():
+                    if gp_id in ['the_set', 'game_name']:
+                        continue
+                    gp = GamePlayer.objects.get(id=gp_id)
+                    gp.power = field
+                    try:
+                        gp.full_clean()
+                    except ValidationError as e:
+                        f.add_error(None, e)
+                        return render(request,
+                                      'rounds/seeded_games.html',
+                                      {'tournament': t,
+                                       'round': r,
+                                       'formset' : formset})
+                    gp.save()
+            # Redirect to the index of games in the round
+            return HttpResponseRedirect(reverse('game_index',
+                                                args=(tournament_id, round_num)))
+    else:
+        # Delete any existing Games and GamePlayers for this round
+        r.game_set.all().delete()
+        # Generate a seeding
+        games = _seed_games(t, r)
+        # Add the games and GamePlayers to the database
+        # TODO It's a bit hokey to have a fixed default GameSet here
+        default_set = GameSet.objects.get(pk=1)
+        data = []
+        for i, g in enumerate(games, start=1):
+            new_game = Game.objects.create(name='R%sG%d' % (round_num, i),
+                                           the_round=r,
+                                           the_set=default_set)
+            current = {'game_name': new_game.name,
+                       'the_set': new_game.the_set}
+            for rp in g:
+                gp = GamePlayer.objects.create(player=rp.player,
+                                               game=new_game)
+                current[gp.id] = gp.power
+            data.append(current)
+        # Create a form for each of the resulting games
+        PowerAssignFormset = formset_factory(PowerAssignForm,
+                                             formset=BasePowerAssignForm,
+                                             extra=0)
+        formset = PowerAssignFormset(the_round=r, initial=data)
+    # Note that we wait for confirmation before adding them to the database
+    context = {'tournament': t, 'round': r, 'games': games, 'formset': formset}
+    return render(request, 'rounds/seeded_games.html', context)
 
 @permission_required('tournament.add_game')
 def create_games(request, tournament_id, round_num):

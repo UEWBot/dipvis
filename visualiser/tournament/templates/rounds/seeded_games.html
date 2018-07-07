@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Games {% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Games" %}</h1>
+
+<p>{% trans "Game Names cannot contain spaces and must be unique within the round." %}</p>
+<p>{% trans "Game Set should be chosen to ensure the great power colours are as expected. If the set being used does not appear in the drop-down, you can add it (provided you have a picture of the initial position) at" %} <a href="{% url 'admin:tournament_gameset_add' %}">{% trans "this page" %}</a>.</p>
+
+<form method="post" action={% url 'seed_games' tournament.id round.number %}>
+  {% load i18n %}
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {{ formset.non_form_errors.as_ul }}
+  <table class="form">
+    <tbody>
+      {% for form in formset.forms %}
+        <tr class="{% cycle row1 row2 %}">
+          {{ form.non_field_errors }}
+          {% for field in form.visible_fields %}
+            <td>
+              {% if forloop.first %}
+                {% for hidden in form.hidden_fields %}
+                  {{ hidden }}
+                {% endfor %}
+              {% endif %}
+              {{ field.errors.as_ul }}
+              {{ field.label }}<br/>
+              {{ field }}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <input type="submit" value="Submit" />
+</form>
+{% endblock %}

@@ -21,6 +21,8 @@ from tournament import views
 round_patterns = [
     url(r'^$', views.round_detail, name='round_detail'),
     url(r'^create_games/$', views.create_games, name='create_games'),
+    url(r'^get_seven/$', views.get_seven, name='get_seven'),
+    url(r'^seed_games/$', views.seed_games, name='seed_games'),
     url(r'^game_scores/$', views.game_scores, name='game_scores'),
     url(r'^games/$', views.game_index, name='game_index'),
     url(r'^views/$', views.round_simple, {'template': 'view'}, name='round_views'),

@@ -386,6 +386,8 @@ class Tournament(models.Model):
                                                     blank=True,
                                                     null=True,
                                                     help_text=_('Add this after the tournament is complete and results have been uploaded to the WDD'))
+    seed_games = models.BooleanField(default=False,
+                                     help_text=_('Check to let the software seed players to games'))
 
     class Meta:
         ordering = ['-start_date']
@@ -1541,6 +1543,8 @@ class RoundPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
+    game_count = models.PositiveIntegerField(default=1,
+                                             help_text=_('number of games being played this round'))
 
     class Meta:
         ordering = ['player']
@@ -1550,6 +1554,12 @@ class RoundPlayer(models.Model):
         Returns the TournamentPlayer corresponding to this RoundPlayer.
         """
         return self.player.tournamentplayer_set.get(tournament=self.the_round.tournament)
+
+    def gameplayers(self):
+        """
+        Returns a QuerySet for the corresponding GamePlayers.
+        """
+        return self.player.gameplayer_set.filter(game__the_round=self.the_round).distinct()
 
     def clean(self):
         """

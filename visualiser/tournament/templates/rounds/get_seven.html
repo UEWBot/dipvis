@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Game Seeding {% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Game Seeding" %}</h1>
+
+<form method="post" action={% url 'get_seven' tournament.id round.number %}>
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% if sitters == 1 %}
+    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> 1 player to sit out the round:{% endblocktrans %}</p>
+  {% else %}
+    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> {{ sitters }} players to sit out the round:{% endblocktrans %}</p>
+  {% endif %}
+  {% for field in form %}
+    {% if 'double' in field.name %}
+      {% if doubles == 1 %}
+        <p>{% blocktrans with doubles=doubles %}<b>or</b> 1 player to play in two games:{% endblocktrans %}</p>
+      {% else %}
+        <p>{% blocktrans with doubles=doubles %}<b>or</b> {{ doubles }} players to each play in two games:{% endblocktrans %}</p>
+      {% endif %}
+    {% endif %}
+    <p>{{ field.errors }}
+    {{ field.label_tag }}
+    {{ field }}</p>
+  {% endfor %}
+  <input type="submit" value="Submit">
+</form>
+{% endblock %}

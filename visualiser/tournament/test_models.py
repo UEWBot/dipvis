@@ -1519,6 +1519,21 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.player, self.p8)
         self.assertEqual(tp.tournament, t)
 
+    # RoundPlayer.gameplayers()
+    def test_roundplayer_gameplayers_1(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        rp = RoundPlayer.objects.get(player=self.p8, the_round=r)
+        # Player 8 is only in game g11
+        self.assertEqual(rp.gameplayers().count(), 1)
+
+    def test_roundplayer_gameplayers_2(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        rp = RoundPlayer.objects.get(player=self.p1, the_round=r)
+        # Player 2 is in games g11 and g12
+        self.assertEqual(rp.gameplayers().count(), 2)
+
     # RoundPlayer.clean()
     def test_roundplayer_clean(self):
         t = Tournament.objects.get(name='t1')

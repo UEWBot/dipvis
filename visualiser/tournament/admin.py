@@ -57,7 +57,8 @@ class TournamentAdmin(admin.ModelAdmin):
     fields = ('name',
               ('start_date', 'end_date'),
               ('tournament_scoring_system', 'round_scoring_system'),
-              ('managers', 'is_published', 'draw_secrecy'))
+              ('managers', 'is_published'),
+              ('seed_games', 'draw_secrecy'))
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
