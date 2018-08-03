@@ -62,14 +62,6 @@ phase_str = {
     ADJUSTMENTS: 'A',
 }
 
-# Power assignment methods
-RANDOM = 'R'
-FRENCH_METHOD = 'F'
-POWER_ASSIGNS = (
-    (RANDOM, _('Random')),
-    (FRENCH_METHOD, _('French method')),
-)
-
 # Draw secrecy levels
 SECRET = 'S'
 COUNTS = 'C'
@@ -880,11 +872,6 @@ class Game(models.Model):
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
-    # TODO Use this
-    power_assignment = models.CharField(max_length=1,
-                                        verbose_name=_(u'Power assignment method'),
-                                        choices=POWER_ASSIGNS,
-                                        default=RANDOM)
 
     class Meta:
         ordering = ['name']
@@ -1592,11 +1579,6 @@ class GamePlayer(models.Model):
                                                  validators=[validate_year])
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(default=0.0)
-    # What order did this player choose their GreatPower ?
-    # 1 => first, 7 => seventh, 0 => assigned rather than chosen
-    # TODO Use this
-    # TODO Add validators
-    power_choice_order = models.PositiveSmallIntegerField(default=0)
 
     def roundplayer(self):
         """

@@ -36,7 +36,7 @@ from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount
-from tournament.models import SPRING, SECRET, POWER_ASSIGNS, COUNTS, SEASONS
+from tournament.models import SPRING, SECRET, COUNTS, SEASONS
 from tournament.models import UNRANKED
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import SCOwnershipsNotFound
