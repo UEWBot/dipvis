@@ -53,6 +53,33 @@ def validate_year_including_start(value):
         raise ValidationError(_(u'%(value)d is not a valid game year'),
                               params = {'value': value})
 
+def validate_ranking(value):
+    """
+    Checks for a valid power rank - 1..7
+    """
+    if value < 1:
+        raise ValidationError(_('%(value)d is not a valid ranking'),
+                              params = {'value': value})
+    if value > GreatPower.objects.count():
+        raise ValidationError(_('%(value)d is not a valid ranking'),
+                              params = {'value': value})
+
+def validate_preference_string(the_string):
+    # Convert the preference string to all uppercase
+    the_string = the_string.upper()
+    # Check for duplicated powers in the string
+    if len(the_string) != len(set(the_string)):
+        raise ValidationError(_('%(prefs)s contains duplicate characters'),
+                              params = {'prefs': the_string})
+    # Check for invalid powers in the string
+    all_powers = set()
+    for p in GreatPower.objects.all():
+        all_powers.add(p.abbreviation)
+    invalid = set(the_string) - all_powers
+    if len(invalid):
+        raise ValidationError(_('%(prefs)s contains invalid character(s)'),
+                              params = {'prefs': the_string})
+
 def game_image_location(instance, filename):
     """
     Function that determines where to store the file.

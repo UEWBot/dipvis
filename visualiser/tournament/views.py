@@ -19,6 +19,7 @@ Views for the Diplomacy Tournament Visualiser.
 """
 
 import csv
+from io import StringIO
 
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -29,22 +30,52 @@ from django.forms.formsets import formset_factory, BaseFormSet
 from django.forms import ModelForm
 from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import permission_required
+from django.contrib import messages
 from django.core.exceptions import ValidationError
 
 from tournament.players import Player
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
+from tournament.diplomacy import validate_preference_string
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING, SECRET, COUNTS, SEASONS
 from tournament.models import UNRANKED
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import SCOwnershipsNotFound
+from tournament.models import SCOwnershipsNotFound, InvalidPreferenceList
 from tournament.game_seeder import GameSeeder
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15
 REFRESH_TIME = 60
+
+class PrefsForm(forms.Form):
+    """Form for one TournamentPlayer's Preferences"""
+    prefs = forms.CharField(max_length=7,
+                            strip=True,
+                            required=False,
+                            validators=[validate_preference_string])
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tp = kwargs.pop('tp')
+        super().__init__(*args, **kwargs)
+        self.fields['prefs'].label = str(self.tp.player)
+        # TODO Do we need this at all?
+        self.fields['prefs'].initial = self.tp.prefs_string()
+
+class BasePrefsFormset(BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament')
+        super().__init__(*args, **kwargs)
+        # Now get the list of TournamentPlayers
+        self.tps = list(self.tournament.tournamentplayer_set.all())
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special arg down to the form itself
+        kwargs['tp'] = self.tps[index]
+        return super()._construct_form(index, **kwargs)
 
 class DrawForm(forms.Form):
     """Form for a draw vote"""
@@ -961,6 +992,128 @@ def roll_call(request, tournament_id):
                    'post_url': reverse('roll_call', args=(tournament_id,)),
                    'formset' : formset})
 
+@permission_required('tournament.add_preference')
+def enter_prefs(request, tournament_id):
+    """Provide a form to enter player country preferences"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    PrefsFormset = formset_factory(PrefsForm,
+                                   extra=0,
+                                   formset=BasePrefsFormset)
+    if request.method == 'POST':
+        formset = PrefsFormset(request.POST, tournament=t)
+        if formset.is_valid():
+            for form in formset:
+                tp = form.tp
+                ps = form.cleaned_data['prefs']
+                # Set preferences for this TournamentPlayer
+                tp.create_preferences_from_string(ps)
+            # If all went well, re-direct
+            return HttpResponseRedirect(reverse('tournament_detail',
+                                        args=(tournament_id,)))
+    else:
+        # put together initial data
+        data = []
+        for tp in t.tournamentplayer_set.all():
+            data.append({'prefs': tp.prefs_string()})
+        formset = PrefsFormset(tournament=t, initial=data)
+    return render(request,
+                  'tournaments/enter_prefs.html',
+                  { 'tournament': t,
+                   'formset' : formset})
+
+@permission_required('tournament.add_preference')
+def upload_prefs(request, tournament_id):
+    """Upload a CSV file to enter player country preferences"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    if 'GET' == request.method:
+        return render(request,
+                      'tournaments/upload_prefs.html',
+                      {'tournament':t})
+    try:
+        csv_file = request.FILES['csv_file']
+        if csv_file.multiple_chunks():
+            messages.error(request, 'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
+            return HttpResponseRedirect(reverse('upload_prefs'),
+                                                args=(tournament_id,))
+        # TODO How do I know what charset to use?
+        fp = StringIO(csv_file.read().decode('utf8'))
+        reader = csv.DictReader(fp)
+        for row in reader:
+            try:
+                tp = TournamentPlayer.objects.get(pk=row['Id'])
+            except KeyError:
+                messages.error(request, 'Failed to find player Id')
+                return HttpResponseRedirect(reverse('upload_prefs'),
+                                                    args=(tournament_id,))
+            p = tp.player
+            try:
+                if p.first_name != row['First Name']:
+                    messages.error(request, "Player first name doesn't match id")
+                    return HttpResponseRedirect(reverse('upload_prefs'),
+                                                        args=(tournament_id,))
+            except KeyError:
+                messages.error(request, 'Failed to find player First Name')
+                return HttpResponseRedirect(reverse('upload_prefs'),
+                                                    args=(tournament_id,))
+            try:
+                if p.last_name != row['Last Name']:
+                    messages.error(request, "Player last name doesn't match id")
+                    return HttpResponseRedirect(reverse('upload_prefs'),
+                                                        args=(tournament_id,))
+            except KeyError:
+                messages.error(request, 'Failed to find player Last Name')
+                return HttpResponseRedirect(reverse('upload_prefs'),
+                                                    args=(tournament_id,))
+            # Player data matches, so go ahead and parse the preferences
+            try:
+                ps = row['Preferences']
+            except KeyError:
+                messages.error(request, 'Failed to find player Preferences')
+                return HttpResponseRedirect(reverse('upload_prefs'),
+                                                    args=(tournament_id,))
+            try:
+                tp.create_preferences_from_string(ps)
+            except InvalidPreferenceList:
+                messages.error(request, 'Invalid preference string %s' % ps)
+                return HttpResponseRedirect(reverse('upload_prefs'),
+                                                    args=(tournament_id,))
+    except Exception as e:
+        messages.error(request, 'Unable to upload file: ' + repr(e))
+
+    return HttpResponseRedirect(reverse('enter_prefs',
+                                args=(tournament_id,)))
+
+def prefs_csv(request, tournament_id):
+    """Download a template CSV file to enter player country preferences"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    # Want the default player order
+    tps = t.tournamentplayer_set.all()
+    # What fields we want to write
+    headers = ['Id',
+               'First Name',
+               'Last Name',
+               'Preferences',
+              ]
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="%s_%d_prefs.csv"' % (t.name,
+                                                                                  t.start_date.year)
+
+    writer = csv.DictWriter(response, fieldnames=headers)
+    writer.writeheader()
+    # One row per player (row order and field order don't matter)
+    for tp in tps:
+        p = tp.player
+        row_dict = {'Id': tp.id,
+                    'First Name': p.first_name,
+                    'Last Name': p.last_name,
+                    'Preferences': tp.prefs_string(),
+                   }
+        # Write this player's row out
+        writer.writerow(row_dict)
+
+    return response
+
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -1152,6 +1305,12 @@ def seed_games(request, tournament_id, round_num):
             for tp in g:
                 gp = GamePlayer.objects.create(player=tp.player,
                                                game=new_game)
+            # If we're auto-assigning powers, do so now
+            if t.powers_assigned_from_prefs():
+                new_game.assign_powers_from_prefs()
+            for tp in g:
+                gp = GamePlayer.objects.get(player=tp.player,
+                                            game=new_game)
                 current[gp.id] = gp.power
             data.append(current)
         # Create a form for each of the resulting games

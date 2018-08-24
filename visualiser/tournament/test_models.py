@@ -23,15 +23,16 @@ from tournament.diplomacy import GreatPower, SupplyCentre, GameSet
 from tournament.players import Player
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
-from tournament.models import SupplyCentreOwnership, CentreCount
+from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SECRET, COUNTS, SPRING, ADJUSTMENTS, UNRANKED
+from tournament.models import SECRET, COUNTS, SPRING, ADJUSTMENTS, UNRANKED, PREFERENCES
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
 from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
+from tournament.models import InvalidPreferenceList
 
 from datetime import timedelta
 
@@ -342,6 +343,20 @@ class TournamentModelTests(TestCase):
 
     # TODO add_local_player_bg()
 
+    # Tournament.powers_assigned_from_prefs()
+    def test_tournament_powers_Assigned_from_prefs_false(self):
+        t = Tournament.objects.get(pk=1)
+        self.assertEqual(t.powers_assigned_from_prefs(), False)
+
+    def test_tournament_powers_Assigned_from_prefs_true(self):
+        t = Tournament(name='Test Tournament',
+                       start_date=timezone.now(),
+                       end_date=timezone.now(),
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       power_assignment=PREFERENCES)
+        self.assertEqual(t.powers_assigned_from_prefs(), True)
+
     # Tournament.scores()
     def test_tournament_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
@@ -521,7 +536,105 @@ class TournamentModelTests(TestCase):
         rps = tp.roundplayers()
         self.assertEqual(rps.count(), 2)
 
+    # TournamentPlayer.create_preferences_from_string()
+    # some of these also test prefs_string(), for convenience
+    def test_tp_create_preferences_from_string_invalid(self):
+        tp = TournamentPlayer.objects.get(pk=1)
+        self.assertEqual(tp.preference_set.count(), 0)
+        self.assertRaises(InvalidPreferenceList,
+                          tp.create_preferences_from_string,
+                          'TPIAFGE')
+        # Check that no Preferences were created
+        self.assertEqual(tp.preference_set.count(), 0)
+
+    def test_tp_create_preferences_from_string_duplicates(self):
+        tp = TournamentPlayer.objects.get(pk=1)
+        self.assertEqual(tp.preference_set.count(), 0)
+        self.assertRaises(InvalidPreferenceList,
+                          tp.create_preferences_from_string,
+                          'TRRAFGE')
+        # Check that no Preferences were created
+        self.assertEqual(tp.preference_set.count(), 0)
+
+    def test_tp_create_preferences_from_string_replace(self):
+        tp = TournamentPlayer.objects.get(pk=1)
+        self.assertEqual(tp.preference_set.count(), 0)
+        tp.create_preferences_from_string('TRIAFGE')
+        self.assertEqual(tp.preference_set.count(), 7)
+        tp.create_preferences_from_string('AEFGI')
+        self.assertEqual(tp.preference_set.count(), 5)
+        # Check that the Preferences are correct
+        prefs = list(tp.preference_set.all())
+        self.assertEqual(prefs[0].ranking, 1)
+        self.assertEqual(prefs[0].power, self.austria)
+        self.assertEqual(prefs[1].ranking, 2)
+        self.assertEqual(prefs[1].power, self.england)
+        self.assertEqual(prefs[2].ranking, 3)
+        self.assertEqual(prefs[2].power, self.france)
+        self.assertEqual(prefs[3].ranking, 4)
+        self.assertEqual(prefs[3].power, self.germany)
+        self.assertEqual(prefs[4].ranking, 5)
+        self.assertEqual(prefs[4].power, self.italy)
+        self.assertEqual(tp.prefs_string(), 'AEFGI')
+        tp.preference_set.all().delete()
+
+    def test_tp_create_preferences_from_string_lowercase(self):
+        tp = TournamentPlayer.objects.get(pk=1)
+        self.assertEqual(tp.preference_set.count(), 0)
+        tp.create_preferences_from_string('triafge')
+        self.assertEqual(tp.preference_set.count(), 7)
+        # Check that the Preferences are correct
+        prefs = list(tp.preference_set.all())
+        self.assertEqual(prefs[0].ranking, 1)
+        self.assertEqual(prefs[0].power, self.turkey)
+        self.assertEqual(prefs[1].ranking, 2)
+        self.assertEqual(prefs[1].power, self.russia)
+        self.assertEqual(prefs[2].ranking, 3)
+        self.assertEqual(prefs[2].power, self.italy)
+        self.assertEqual(prefs[3].ranking, 4)
+        self.assertEqual(prefs[3].power, self.austria)
+        self.assertEqual(prefs[4].ranking, 5)
+        self.assertEqual(prefs[4].power, self.france)
+        self.assertEqual(prefs[5].ranking, 6)
+        self.assertEqual(prefs[5].power, self.germany)
+        self.assertEqual(prefs[6].ranking, 7)
+        self.assertEqual(prefs[6].power, self.england)
+        self.assertEqual(tp.prefs_string(), 'TRIAFGE')
+        tp.preference_set.all().delete()
+
+    def test_tp_create_preferences_from_string_uppercase(self):
+        tp = TournamentPlayer.objects.get(pk=1)
+        self.assertEqual(tp.preference_set.count(), 0)
+        tp.create_preferences_from_string('TRIAFGE')
+        self.assertEqual(tp.preference_set.count(), 7)
+        # Check that the Preferences are correct
+        prefs = list(tp.preference_set.all())
+        self.assertEqual(prefs[0].ranking, 1)
+        self.assertEqual(prefs[0].power, self.turkey)
+        self.assertEqual(prefs[1].ranking, 2)
+        self.assertEqual(prefs[1].power, self.russia)
+        self.assertEqual(prefs[2].ranking, 3)
+        self.assertEqual(prefs[2].power, self.italy)
+        self.assertEqual(prefs[3].ranking, 4)
+        self.assertEqual(prefs[3].power, self.austria)
+        self.assertEqual(prefs[4].ranking, 5)
+        self.assertEqual(prefs[4].power, self.france)
+        self.assertEqual(prefs[5].ranking, 6)
+        self.assertEqual(prefs[5].power, self.germany)
+        self.assertEqual(prefs[6].ranking, 7)
+        self.assertEqual(prefs[6].power, self.england)
+        self.assertEqual(tp.prefs_string(), 'TRIAFGE')
+        tp.preference_set.all().delete()
+
+    # TournamentPlayer.prefs_string()
+    def test_tp_prefs_string(self):
+        tp = TournamentPlayer.objects.get(pk=1)
+        self.assertEqual(tp.preference_set.count(), 0)
+        self.assertEqual(tp.prefs_string(), '')
+
     # TODO TournamentPlayer.save()
+
+    # TODO Preference
 
     # Round.scores()
     def test_round_scores_invalid(self):
@@ -716,6 +829,8 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
         r.get_absolute_url()
+
+    # TODO Game.assign_powers_from_prefs()
 
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
@@ -1633,6 +1748,9 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.player, self.p8)
         self.assertEqual(tp.tournament, t)
 
+    # TODO GamePlayer.preferences()
+    # This is indirectly tested via GamePlayer.set_power_from_prefs(), below
+
     # GamePlayer.elimination_year()
     def test_gameplayer_elimination_year_replacement(self):
         t = Tournament.objects.get(name='t1')
@@ -1647,6 +1765,100 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         gp = g.gameplayer_set.get(power=self.england)
         self.assertEqual(gp.elimination_year(), None)
+
+    # GamePlayer.set_power_from_prefs()
+    def test_gamelayer_set_power_from_prefs(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=SECRET)
+        t.save()
+        tp1 = TournamentPlayer(tournament=t, player=self.p1)
+        tp1.save()
+        tp2 = TournamentPlayer(tournament=t, player=self.p2)
+        tp2.save()
+        tp3 = TournamentPlayer(tournament=t, player=self.p3)
+        tp3.save()
+        tp4 = TournamentPlayer(tournament=t, player=self.p4)
+        tp4.save()
+        tp5 = TournamentPlayer(tournament=t, player=self.p5)
+        tp5.save()
+        tp6 = TournamentPlayer(tournament=t, player=self.p6)
+        tp6.save()
+        tp7 = TournamentPlayer(tournament=t, player=self.p7)
+        tp7.save()
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7)
+        rp.save()
+        g1 = Game(name='newgame1',
+                  started_at=r.start,
+                  the_round=r,
+                  is_finished=False,
+                  the_set=self.set1)
+        g1.save()
+        gp1 = GamePlayer(game=g1, player=self.p1)
+        gp1.save()
+        gp2 = GamePlayer(game=g1, player=self.p2)
+        gp2.save()
+        gp3 = GamePlayer(game=g1, player=self.p3)
+        gp3.save()
+        gp4 = GamePlayer(game=g1, player=self.p4)
+        gp4.save()
+        gp5 = GamePlayer(game=g1, player=self.p5)
+        gp5.save()
+        gp6 = GamePlayer(game=g1, player=self.p6)
+        gp6.save()
+        gp7 = GamePlayer(game=g1, player=self.p7)
+        gp7.save()
+        # Now add preferences for some players
+        p = Preference(player=tp1, power=self.austria, ranking=1)
+        p.save()
+        p = Preference(player=tp2, power=self.germany, ranking=1)
+        p.save()
+        p = Preference(player=tp2, power=self.turkey, ranking=2)
+        p.save()
+        p = Preference(player=tp3, power=self.austria, ranking=1)
+        p.save()
+        p = Preference(player=tp3, power=self.france, ranking=2)
+        p.save()
+        # No powers taken - get first preference
+        gp1.set_power_from_prefs()
+        self.assertEqual(gp1.power, self.austria)
+        # First preference still available, should get it
+        gp2.set_power_from_prefs()
+        self.assertEqual(gp2.power, self.germany)
+        # First preference gone, but second available, should get that
+        gp3.set_power_from_prefs()
+        self.assertEqual(gp3.power, self.france)
+        # All preferences gone, should get a random available power
+        gp4.set_power_from_prefs()
+        self.assertIn(gp4.power, [self.england, self.italy, self.russia, self.turkey])
+        # Note that this will also delete all GamePlayers for that Game
+        g1.delete()
+        # Note that this will also delete all RoundPlayers for that Round
+        r.delete()
+        # Note that this will also delete all TournamentPlayers for that Tournament
+        t.delete()
+        self.assertEqual(Preference.objects.count(), 0)
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):

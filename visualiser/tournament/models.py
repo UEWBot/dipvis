@@ -34,7 +34,8 @@ from django.contrib.auth.models import User
 from tournament.background import WDD_BASE_URL
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
-from tournament.diplomacy import validate_year_including_start, validate_year
+from tournament.diplomacy import validate_year_including_start, validate_year, validate_ranking
+from tournament.diplomacy import validate_preference_string
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, add_player_bg, position_str
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
@@ -70,6 +71,14 @@ DRAW_SECRECY = (
     (COUNTS, _('Numbers for and against')),
 )
 
+# Power assignment methods
+MANUAL = 'M'
+PREFERENCES = 'P'
+POWER_ASSIGN_METHODS = (
+    (MANUAL, _('Manually by TD or at the board')),
+    (PREFERENCES, _('Using player preferences and ranking')),
+)
+
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1<<0
 MASK_GAINERS = 1<<1
@@ -93,6 +102,14 @@ class InvalidYear(Exception):
 
 class SCOwnershipsNotFound(Exception):
     """The required SupplyCentreOwnership objects were not found in the database."""
+    pass
+
+class InvalidPreferenceList(Exception):
+    """The string does not represent a valid preference list."""
+    pass
+
+class PowerAlreadyAssigned(Exception):
+    """The GamePlayer already has a power assigned to them."""
     pass
 
 class RoundScoringSystem(ABC):
@@ -384,9 +401,20 @@ class Tournament(models.Model):
                                                     help_text=_('Add this after the tournament is complete and results have been uploaded to the WDD'))
     seed_games = models.BooleanField(default=False,
                                      help_text=_('Check to let the software seed players to games'))
+    power_assignment = models.CharField(max_length=1,
+                                        verbose_name=_('How powers are assigned'),
+                                        choices=POWER_ASSIGN_METHODS,
+                                        default=MANUAL)
 
     class Meta:
         ordering = ['-start_date']
+
+    def powers_assigned_from_prefs(self):
+        """
+        Returns True is power_assignment is PREFERENCES.
+        Intended for use in template code.
+        """
+        return self.power_assignment == PREFERENCES
 
     def scores(self, force_recalculation=False):
         """
@@ -650,6 +678,40 @@ class TournamentPlayer(models.Model):
         """
         return self.player.roundplayer_set.filter(the_round__tournament=self.tournament).distinct()
 
+    def create_preferences_from_string(self, the_string):
+        """
+        Given a string like "AEGFIRT", creates the corresponding Preferences
+        in the database.
+        Powers will be assigned a ranking from 1 for the first.
+        Excluded powers will be unranked.
+        Any pre-existing preferences for the player will be deleted.
+        Raises InvalidPreferenceList if anything is wrong with the string.
+        """
+        # Convert the preference string to all uppercase
+        the_string = the_string.upper()
+        try:
+            validate_preference_string(the_string)
+        except ValidationError as e:
+            raise InvalidPreferenceList(str(e))
+        # Remove any existing preferences for this player
+        Preference.objects.filter(player=self).delete()
+        to_power = {}
+        for p in GreatPower.objects.all():
+            to_power[p.abbreviation] = p
+        # Go through the string, creating Preferences
+        for i, c in enumerate(the_string, 1):
+            Preference.objects.create(player=self, power=to_power[c], ranking=i)
+
+    def prefs_string(self):
+        """
+        Returns the preferences for this TournamentPlayer as a string.
+        More-or-less the inverse of create_preferences_from_string().
+        """
+        ret = []
+        for p in self.preference_set.all():
+            ret.append(p.power.abbreviation)
+        return ''.join(ret)
+
     def __str__(self):
         return u'%s %s %f' % (self.tournament, self.player, self.score)
 
@@ -662,6 +724,25 @@ class TournamentPlayer(models.Model):
             # This caused problems when the local tournament did make it into the WDD
             # because the duplication isn't always obvious
             #add_local_player_bg(self.player)
+
+class Preference(models.Model):
+    """
+    How much a player wants to play a particular power.
+    """
+    player = models.ForeignKey(TournamentPlayer)
+    power = models.ForeignKey(GreatPower)
+    ranking = models.PositiveSmallIntegerField(validators=[validate_ranking])
+
+    class Meta:
+        # Each player can only have one ranking per power
+        unique_together = ('player', 'power')
+        # Every ranking by a player must be unique
+        unique_together = ('player', 'ranking')
+        # Highest-rank first
+        ordering = ['ranking']
+
+    def __str__(self):
+        return '%s ranks %s at %d' % (self.player, self.power.name, self.ranking)
 
 class Round(models.Model):
     """
@@ -895,6 +976,34 @@ class Game(models.Model):
 
     class Meta:
         ordering = ['name']
+
+    def assign_powers_from_prefs(self):
+        """
+        Assigns powers to the GamePlayers.
+        The player with the lowest tournament score gets first choice,
+        the player with the highest score gets whatever power nobody else wants.
+        If players have the same score, they are ordered randomly.
+        Raises PowerAlreadyAssigned if any GamePlayers already have assigned powers.
+        """
+        position_to_gps = {}
+        gps = self.gameplayer_set.all()
+        # Find current tournament positions (and scores)
+        ranks = self.the_round.tournament.positions_and_scores()
+        # Check for any GamePlayer that already has a power assigned
+        # and find the interesting player positions
+        for gp in gps:
+            if gp.power:
+                raise PowerAlreadyAssigned(str(gp) + ' is already assigned ' + str(gp.power))
+            pos = ranks[gp.player][0]
+            if pos not in position_to_gps:
+                position_to_gps[pos] = []
+            position_to_gps[pos].append(gp)
+        # Starting from the lowest rank, work through the whole list
+        for pos in sorted(position_to_gps.keys()):
+            # At each rank, order players randomly
+            random.shuffle(position_to_gps[pos])
+            for gp in position_to_gps[pos]:
+                gp.set_power_from_prefs()
 
     def create_or_update_sc_counts_from_ownerships(self, year):
         """
@@ -1612,6 +1721,13 @@ class GamePlayer(models.Model):
         """
         return self.player.tournamentplayer_set.get(tournament=self.game.the_round.tournament)
 
+    def preferences(self):
+        """
+        Returns the current Preferences for this player, if any,
+        ordered highest-to-lowest.
+        """
+        return self.tournamentplayer().preference_set.all()
+
     def elimination_year(self):
         """
         Year in which the player was eliminated, or None.
@@ -1628,6 +1744,31 @@ class GamePlayer(models.Model):
         elif e_year == self.last_year and self.last_season == SPRING:
             return None
         return e_year
+
+    def set_power_from_prefs(self):
+        """
+        Set the power attribute from the highest-ranked unassigned power
+        in the player's priority list for the tournament.
+        """
+        prefs = self.preferences()
+        gps = self.game.gameplayer_set.all()
+        for p in prefs:
+            if gps.filter(power=p.power).exists():
+                # This power is already taken - on to the next
+                continue
+            # Found a power that isn't taken
+            self.power = p.power
+            break
+        if self.power is None:
+            # No preferences left, so pick a power at random from the unassigned ones
+            used_powers = [gp.power for gp in gps.filter(power__isnull=False)]
+            free_powers = list(GreatPower.objects.all())
+            for p in used_powers:
+                free_powers.remove(p)
+            random.shuffle(free_powers)
+            self.power = free_powers[0]
+        assert self.power is not None
+        self.save()
 
     def clean(self):
         """

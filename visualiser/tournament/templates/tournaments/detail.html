@@ -42,6 +42,13 @@
     {% if perms.tournament.add_roundplayer %}
       <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a> - {% trans "Use this to specify which of the players at the tournament are actually playing in each round." %}</li>
     {% endif %}
+    {% if perms.tournament.add_preference %}
+      {% if tournament.powers_assigned_from_prefs %}
+        <li><a href="{% url 'upload_prefs' tournament.id %}">{% trans "Upload preferences CSV" %}</a> - {% trans "Use this to upload a CSV file listing player country preferences." %}</li>
+        <li><a href="{% url 'prefs_csv' tournament.id %}">{% trans "Download preferences CSV" %}</a> - {% trans "Use this to download a sample CSV file listing player country preferences." %}</li>
+        <li><a href="{% url 'enter_prefs' tournament.id %}">{% trans "Enter player preferences" %}</a> - {% trans "Use this to enter player country preferences using a form." %}</li>
+      {% endif %}
+    {% endif %}
     {% if perms.tournament.change_roundplayer %}
       <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a> - {% trans "Use this if you need to modify the scores that the system calculates when games end." %}</li>
     {% endif %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Upload Preferences CSV{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{{ tournament }} {% trans "Upload Preferences CSV" %}</h1>
+
+<form action="{% url 'upload_prefs' tournament.id %}" method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+    <tr><th><label for="csv_file">{% trans "File:" %}</label></th>
+    <td><input type="file" name="csv_file" id="csv_file" required="True" size="50"></td></tr>
+    <div>
+         <button class="btn btn-primary">{% trans "Upload" %}</button>
+    </div>
+</form>
+{% endblock %}

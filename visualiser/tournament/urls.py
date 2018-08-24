@@ -116,6 +116,9 @@ tournament_patterns = [
     url(r'^rounds/$', views.round_index, name='round_index'),
     url(r'^csv_classification/$', views.view_classification_csv, name='csv_classification'),
     url(r'^csv_boards/$', views.view_boards_csv, name='csv_boards'),
+    url(r'^prefs/$', views.enter_prefs, name='enter_prefs'),
+    url(r'^upload_prefs/$', views.upload_prefs, name='upload_prefs'),
+    url(r'^prefs_csv/$', views.prefs_csv, name='prefs_csv'),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),
 ]

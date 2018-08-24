@@ -18,6 +18,7 @@ from django.test import TestCase
 from django.core.exceptions import ValidationError
 
 from tournament.diplomacy import validate_year, validate_year_including_start
+from tournament.diplomacy import validate_ranking
 
 class DiplomacyTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -47,4 +48,23 @@ class DiplomacyTests(TestCase):
 
     def test_validate_year_inc_start_1901(self):
         self.assertIsNone(validate_year_including_start(1901))
+
+    # validate_ranking()
+    def test_validate_ranking_negative(self):
+        self.assertRaises(ValidationError, validate_ranking, -1)
+
+    def test_validate_ranking_zero(self):
+        self.assertRaises(ValidationError, validate_ranking, 0)
+
+    def test_validate_ranking_one(self):
+        self.assertIsNone(validate_ranking(1))
+
+    def test_validate_ranking_seven(self):
+        self.assertIsNone(validate_ranking(7))
+
+    def test_validate_ranking_eight(self):
+        self.assertRaises(ValidationError, validate_ranking, 8)
+
+    # TODO validate_preference_string()
+
 
