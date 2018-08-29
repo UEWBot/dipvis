@@ -1177,9 +1177,9 @@ class TournamentModelTests(TestCase):
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
             if gp.power == self.russia:
-                self.assertEqual(gp.score, 100.0 * 16 / 70)
+                self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
             else:
-                self.assertEqual(gp.score, 100.0 * 9 / 70)
+                self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
         # But not for the Round
         for rp in r.roundplayer_set.all():
             self.assertEqual(rp.score, 0.0)
@@ -1259,21 +1259,21 @@ class TournamentModelTests(TestCase):
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
             if gp.power == self.russia:
-                self.assertEqual(gp.score, 100.0 * 16 / 70)
+                self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
             else:
-                self.assertEqual(gp.score, 100.0 * 9 / 70)
+                self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
         # And for the Round
         for rp in r.roundplayer_set.all():
             if rp.player == self.p6:
-                self.assertEqual(rp.score, 100.0 * 16 / 70)
+                self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
             else:
-                self.assertEqual(rp.score, 100.0 * 9 / 70)
+                self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
         # And for the Tournament
         for tp in t.tournamentplayer_set.all():
             if tp.player == self.p6:
-                self.assertEqual(tp.score, 100.0 * 16 / 70)
+                self.assertAlmostEqual(tp.score, 100.0 * 16 / 70)
             else:
-                self.assertEqual(tp.score, 100.0 * 9 / 70)
+                self.assertAlmostEqual(tp.score, 100.0 * 9 / 70)
         # Note that this will also delete all GamePlayers for that Game
         g1.delete()
         # Note that this will also delete all RoundPlayers for that Round
@@ -1356,9 +1356,9 @@ class TournamentModelTests(TestCase):
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
             if gp.power == self.russia:
-                self.assertEqual(gp.score, 100.0 * 16 / 70)
+                self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
             else:
-                self.assertEqual(gp.score, 100.0 * 9 / 70)
+                self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
         # But not for the Round
         for rp in r.roundplayer_set.all():
             self.assertEqual(rp.score, 0.0)
