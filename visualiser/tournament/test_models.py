@@ -345,7 +345,7 @@ class TournamentModelTests(TestCase):
 
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
-        t = Tournament.objects.get(pk=1)
+        t = Tournament.objects.first()
         self.assertEqual(t.powers_assigned_from_prefs(), False)
 
     def test_tournament_powers_Assigned_from_prefs_true(self):
@@ -539,7 +539,7 @@ class TournamentModelTests(TestCase):
     # TournamentPlayer.create_preferences_from_string()
     # some of these also test prefs_string(), for convenience
     def test_tp_create_preferences_from_string_invalid(self):
-        tp = TournamentPlayer.objects.get(pk=1)
+        tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         self.assertRaises(InvalidPreferenceList,
                           tp.create_preferences_from_string,
@@ -548,7 +548,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.preference_set.count(), 0)
 
     def test_tp_create_preferences_from_string_duplicates(self):
-        tp = TournamentPlayer.objects.get(pk=1)
+        tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         self.assertRaises(InvalidPreferenceList,
                           tp.create_preferences_from_string,
@@ -557,7 +557,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.preference_set.count(), 0)
 
     def test_tp_create_preferences_from_string_replace(self):
-        tp = TournamentPlayer.objects.get(pk=1)
+        tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         tp.create_preferences_from_string('TRIAFGE')
         self.assertEqual(tp.preference_set.count(), 7)
@@ -579,7 +579,7 @@ class TournamentModelTests(TestCase):
         tp.preference_set.all().delete()
 
     def test_tp_create_preferences_from_string_lowercase(self):
-        tp = TournamentPlayer.objects.get(pk=1)
+        tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         tp.create_preferences_from_string('triafge')
         self.assertEqual(tp.preference_set.count(), 7)
@@ -603,7 +603,7 @@ class TournamentModelTests(TestCase):
         tp.preference_set.all().delete()
 
     def test_tp_create_preferences_from_string_uppercase(self):
-        tp = TournamentPlayer.objects.get(pk=1)
+        tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         tp.create_preferences_from_string('TRIAFGE')
         self.assertEqual(tp.preference_set.count(), 7)
@@ -628,7 +628,7 @@ class TournamentModelTests(TestCase):
 
     # TournamentPlayer.prefs_string()
     def test_tp_prefs_string(self):
-        tp = TournamentPlayer.objects.get(pk=1)
+        tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         self.assertEqual(tp.prefs_string(), '')
 
@@ -835,7 +835,7 @@ class TournamentModelTests(TestCase):
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
         # Arbitrary game
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         self.assertRaises(SCOwnershipsNotFound, g.create_or_update_sc_counts_from_ownerships, 1901)
 
     def test_create_sc_count(self):
@@ -1002,7 +1002,7 @@ class TournamentModelTests(TestCase):
 
     # Game.positions()
     def test_game_positions(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         # TODO Validate results
         g.positions()
 
@@ -1055,18 +1055,18 @@ class TournamentModelTests(TestCase):
 
     # Game.news()
     def test_game_news(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         # TODO Validate results
         g.news()
 
     def test_game_news_with_name(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         # TODO Validate results
         g.news(include_game_name=True)
 
     # Game.background()
     def test_game_background(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         # TODO Validate results
         g.background()
 
@@ -1260,7 +1260,7 @@ class TournamentModelTests(TestCase):
 
     # Game.clean()
     def test_game_clean_non_unique_name(self):
-        g1 = Game.objects.get(pk=1)
+        g1 = Game.objects.first()
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(4)
         g2 = Game(name='g13',
@@ -1272,7 +1272,7 @@ class TournamentModelTests(TestCase):
 
     # Game.save()
     def test_game_save_new_game(self):
-        g1 = Game.objects.get(pk=1)
+        g1 = Game.objects.first()
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(4)
         g2 = Game(name='newgame',
@@ -1560,18 +1560,18 @@ class TournamentModelTests(TestCase):
 
     # Game.get_absolute_url()
     def test_game_get_absolute_url(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         g.get_absolute_url()
 
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria)
         self.assertEqual(dp.draw_size(), 1)
 
     def test_draw_proposal_draw_size_all(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria, power_2=self.england, power_3=self.france,
                           power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
@@ -1579,13 +1579,13 @@ class TournamentModelTests(TestCase):
 
     # DrawProposal.powers()
     def test_draw_proposal_powers_one(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria)
         self.assertEqual(len(dp.powers()), 1)
 
     def test_draw_proposal_powers_all(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria, power_2=self.england, power_3=self.france,
                           power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
@@ -1593,7 +1593,7 @@ class TournamentModelTests(TestCase):
 
     # DrawProposal.power_is_part()
     def test_draw_proposal_power_is_part_one(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria)
         self.assertEqual(dp.power_is_part(self.austria), True)
@@ -1605,7 +1605,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(dp.power_is_part(self.turkey), False)
 
     def test_draw_proposal_power_is_part_all(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria, power_2=self.england, power_3=self.france,
                           power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
@@ -1644,13 +1644,13 @@ class TournamentModelTests(TestCase):
 
     # DrawProposal.clean()
     def test_draw_proposal_clean_with_duplicates(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria, power_2=self.austria)
         self.assertRaises(ValidationError, dp.clean)
 
     def test_draw_proposal_clean_with_gap(self):
-        g = Game.objects.get(pk=1)
+        g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria, power_3=self.england)
         self.assertRaises(ValidationError, dp.clean)
@@ -1726,7 +1726,7 @@ class TournamentModelTests(TestCase):
     def test_roundplayer_clean(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
-        p = Player.objects.get(pk=1)
+        p = Player.objects.first()
         rp = RoundPlayer(player=p, the_round=r)
         self.assertRaises(ValidationError, rp.clean)
 
@@ -1864,7 +1864,7 @@ class TournamentModelTests(TestCase):
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(2).game_set.get(name='g13')
-        gp = GamePlayer(player=Player.objects.get(pk=1),
+        gp = GamePlayer(player=Player.objects.first(),
                         game=g,
                         power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
@@ -2026,7 +2026,7 @@ class TournamentModelTests(TestCase):
 
     # GameImage.get_absolute_url()
     def test_game_image_get_absolute_url(self):
-        gi = GameImage.objects.get(pk=1)
+        gi = GameImage.objects.first()
         gi.get_absolute_url()
 
     # CentreCount.clean()
@@ -2065,6 +2065,7 @@ class TournamentModelTests(TestCase):
                                  start=timezone.now() + HOURS_24,
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
+        # TODO Remove reliance on primary keys
         gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
         gp2 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
         gp3 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
@@ -2117,6 +2118,7 @@ class TournamentModelTests(TestCase):
                                  start=timezone.now() + HOURS_24,
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
+        # TODO Remove reliance on primary keys
         gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
         gp2 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
         gp3 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)

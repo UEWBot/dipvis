@@ -58,7 +58,7 @@ class PlayerTests(TestCase):
     # Player.wdd_name()
     @tag('slow', 'wdd')
     def test_player_wdd_name(self):
-        p = Player.objects.get(pk=1)
+        p = Player.objects.first()
         # TODO Validate results
         p.wdd_name()
 
@@ -69,7 +69,7 @@ class PlayerTests(TestCase):
 
     # Player.wdd_url()
     def test_player_wdd_url(self):
-        p = Player.objects.get(pk=1)
+        p = Player.objects.first()
         # TODO Validate results
         p.wdd_url()
 
@@ -152,6 +152,6 @@ class PlayerTests(TestCase):
     def test_playerranking_national_str(self):
         p = Player.objects.first()
         add_player_bg(p)
-        pr = PlayerRanking.objects.get(pk=1)
+        pr = PlayerRanking.objects.first()
         # TODO Validate results
         pr.national_str()
