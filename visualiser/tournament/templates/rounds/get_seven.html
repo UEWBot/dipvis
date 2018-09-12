@@ -10,18 +10,16 @@
   {% csrf_token %}
   {{ form.non_field_errors }}
   {% if sitters == 1 %}
-    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> 1 player to sit out the round:{% endblocktrans %}</p>
+    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> 1 player to sit out the round,{% endblocktrans %}</p>
   {% else %}
-    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> {{ sitters }} players to sit out the round:{% endblocktrans %}</p>
+    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> {{ sitters }} players to sit out the round,{% endblocktrans %}</p>
+  {% endif %}
+  {% if doubles == 1 %}
+    <p>{% blocktrans with doubles=doubles %}<b>or</b> 1 player to play in two games.{% endblocktrans %}</p>
+  {% else %}
+    <p>{% blocktrans with doubles=doubles %}<b>or</b> {{ doubles }} players to each play in two games.{% endblocktrans %}</p>
   {% endif %}
   {% for field in form %}
-    {% if 'double' in field.name %}
-      {% if doubles == 1 %}
-        <p>{% blocktrans with doubles=doubles %}<b>or</b> 1 player to play in two games:{% endblocktrans %}</p>
-      {% else %}
-        <p>{% blocktrans with doubles=doubles %}<b>or</b> {{ doubles }} players to each play in two games:{% endblocktrans %}</p>
-      {% endif %}
-    {% endif %}
     <p>{{ field.errors }}
     {{ field.label_tag }}
     {{ field }}</p>
