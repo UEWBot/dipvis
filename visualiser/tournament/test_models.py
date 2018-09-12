@@ -121,15 +121,15 @@ class TournamentModelTests(TestCase):
                                   the_round=r11,
                                   the_set=cls.set1)
         # Add Games to r12
-        Game.objects.create(name='g13',
-                            started_at=r12.start,
-                            the_round=r12,
-                            is_finished=True,
-                            the_set=cls.set1)
-        Game.objects.create(name='g14',
-                            started_at=r12.start,
-                            the_round=r12,
-                            the_set=cls.set1)
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  is_finished=True,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
         # Add Games to r13
         Game.objects.create(name='g15',
                             started_at=r13.start,
@@ -233,6 +233,31 @@ class TournamentModelTests(TestCase):
         GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
         GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
         GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
+        # Add GamePlayers to g13
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g13,
+                                  power=cls.austria,
+                                  last_year=1903,
+                                  last_season='F')
+        GamePlayer.objects.create(player=cls.p2,
+                                  game=g13,
+                                  power=cls.austria,
+                                  first_year=1903,
+                                  first_season='X')
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
+        # Add GamePlayers to g14
+        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
         # And the corresponding RoundPlayers
         RoundPlayer.objects.create(player=cls.p1, the_round=r11)
         RoundPlayer.objects.create(player=cls.p2, the_round=r11)
@@ -242,6 +267,14 @@ class TournamentModelTests(TestCase):
         RoundPlayer.objects.create(player=cls.p6, the_round=r11)
         RoundPlayer.objects.create(player=cls.p7, the_round=r11)
         RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
         # And TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
         TournamentPlayer.objects.create(player=cls.p2, tournament=t1)
@@ -427,10 +460,14 @@ class TournamentModelTests(TestCase):
     def test_tourney_current_round(self):
         t = Tournament.objects.get(name='t1')
         r = t.current_round()
-        # All earlier rounds should be finished
+        rounds = t.round_set.count()
+        # All earlier rounds should be finished or in progress
         for i in range(1, r.number()):
-            # TODO coverage shows that this line is never hit
-            self.assertTrue(t.round_numbered(i).is_finished(), 'round %d' % i)
+            self.assertTrue(t.round_numbered(i).is_finished() or t.round_numbered(i).in_progress(),
+                            'round %d' % i)
+        # All later rounds should be not in progress
+        for i in range(r.number() + 1, rounds + 1):
+            self.assertFalse(t.round_numbered(i).in_progress(), 'round %d' % i)
         # This round should be unfinished
         self.assertFalse(r.is_finished())
 
@@ -546,6 +583,42 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
         self.assertFalse(r4.is_finished())
+
+    # Round.in_progress()
+    def test_round_in_progress_no_games_over(self):
+        t = Tournament.objects.get(name='t1')
+        r1 = t.round_numbered(1)
+        self.assertTrue(r1.in_progress())
+
+    def test_round_in_progress_some_games_over(self):
+        t = Tournament.objects.get(name='t1')
+        r2 = t.round_numbered(2)
+        self.assertTrue(r2.in_progress())
+
+    def test_round_in_progress_all_games_over(self):
+        t = Tournament.objects.get(name='t1')
+        r3 = t.round_numbered(3)
+        self.assertFalse(r3.in_progress())
+
+    def test_round_in_progress_no_games(self):
+        """
+        Rounds with round players but no games are just starting,
+        and so are deemed to be "in progress".
+        """
+        t = Tournament.objects.get(name='t1')
+        r4 = t.round_numbered(4)
+        rp = RoundPlayer(player=self.p9, the_round=r4)
+        rp.save()
+        self.assertTrue(r4.in_progress())
+        rp.delete()
+
+    def test_round_in_progress_no_round_players(self):
+        """
+        Rounds with no round players haven't started
+        """
+        t = Tournament.objects.get(name='t1')
+        r4 = t.round_numbered(4)
+        self.assertFalse(r4.in_progress())
 
     # Round.number()
     def test_round_number_11(self):
@@ -860,7 +933,7 @@ class TournamentModelTests(TestCase):
 
     def test_game_players_none(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
+        g = t.round_numbered(3).game_set.get(name='g15')
         self.assertEqual(len(g.players()), 7)
         for gp in g.players().values():
             self.assertEqual(len(gp), 0)
@@ -1610,7 +1683,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_1(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
+        g = t.round_numbered(3).game_set.get(name='g15')
         tp1 = TournamentPlayer(player=self.p9, tournament=t)
         tp2 = TournamentPlayer(player=self.p10, tournament=t)
         gp1 = GamePlayer(player=self.p9,
@@ -1632,7 +1705,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_2(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
+        g = t.round_numbered(3).game_set.get(name='g15')
         tp1 = TournamentPlayer(player=self.p9, tournament=t)
         tp2 = TournamentPlayer(player=self.p10, tournament=t)
         gp1 = GamePlayer(player=self.p9,
@@ -1656,7 +1729,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_3(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
+        g = t.round_numbered(3).game_set.get(name='g15')
         tp1 = TournamentPlayer(player=self.p9, tournament=t)
         tp2 = TournamentPlayer(player=self.p10, tournament=t)
         gp1 = GamePlayer(player=self.p9,
@@ -1680,7 +1753,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_4(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
+        g = t.round_numbered(3).game_set.get(name='g15')
         tp1 = TournamentPlayer(player=self.p9, tournament=t)
         tp2 = TournamentPlayer(player=self.p10, tournament=t)
         gp1 = GamePlayer(player=self.p9,
@@ -1702,7 +1775,7 @@ class TournamentModelTests(TestCase):
 
     def test_gameplayer_clean_overlap_5(self):
         t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
+        g = t.round_numbered(3).game_set.get(name='g15')
         tp1 = TournamentPlayer(player=self.p9, tournament=t)
         tp2 = TournamentPlayer(player=self.p10, tournament=t)
         gp1 = GamePlayer(player=self.p9,

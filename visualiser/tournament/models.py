@@ -583,6 +583,11 @@ class Tournament(models.Model):
         Returns the Round in progress, or None
         """
         # Rely on the default ordering
+        rds = self.round_set.reverse()
+        for r in rds:
+            if r.in_progress():
+                return r
+        # If no round is in progress, return the first unfinished round
         rds = self.round_set.all()
         for r in rds:
             if not r.is_finished():
@@ -717,6 +722,17 @@ class Round(models.Model):
             if not g.is_finished:
                 return False
         return True
+
+    def in_progress(self):
+        """
+        Returns True if the Round has RoundPlayers (i.e. roll call has happened)
+        or Games, and it hasn't finished.
+        """
+        if not self.roundplayer_set.exists() and not self.game_set.exists():
+            # Not yet started
+            return False
+        # Started, so in_progress unless already finished
+        return not self.is_finished()
 
     def number(self):
         """
