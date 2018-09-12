@@ -923,22 +923,23 @@ def roll_call(request, tournament_id):
                                        'post_url': reverse('roll_call', args=(tournament_id,)),
                                        'formset' : formset})
                     i.save()
+            r = t.current_round()
             if t.seed_games:
                 if (r.roundplayer_set.count() % 7) == 0:
                     # We have an exact multiple of 7 players, so go straight to seeding
                     return HttpResponseRedirect(reverse('seed_games',
                                                         args=(tournament_id,
-                                                              t.current_round().number())))
+                                                              r.number())))
                 else:
                     # We need players to sit out or play multiple games
                     return HttpResponseRedirect(reverse('get_seven',
                                                         args=(tournament_id,
-                                                              t.current_round().number())))
+                                                              r.number())))
             else:
                 # Next job is almost certainly to create the actual games
                 return HttpResponseRedirect(reverse('create_games',
                                                     args=(tournament_id,
-                                                          t.current_round().number())))
+                                                          r.number())))
     else:
         data = []
         # Go through each player in the Tournament
