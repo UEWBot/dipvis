@@ -930,30 +930,35 @@ def roll_call(request, tournament_id):
                                    'formset' : formset})
                 i.save()
                 for r_name, value in form.cleaned_data.items():
-                    # Ignore non-bool fields and ones that aren't True
-                    if value != True:
-                        # TODO Ideally, we should delete any corresponding RoundPlayer here
-                        # This could be a player who was previously checked-off in error
+                    if r_name is 'player':
+                        # This column is just for the user
                         continue
                     # Extract the round number from the field name
                     i = int(r_name[6:])
                     # Find that Round
                     r = t.round_numbered(i)
-                    # Ensure that we have a corresponding RoundPlayer
-                    i, created = RoundPlayer.objects.get_or_create(player=p,
-                                                                   the_round=r)
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        form.add_error(None, e)
-                        i.delete()
-                        return render(request,
-                                      'tournaments/round_players.html',
-                                      {'title': 'Roll Call',
-                                       'tournament': t,
-                                       'post_url': reverse('roll_call', args=(tournament_id,)),
-                                       'formset' : formset})
-                    i.save()
+                    # Ignore non-bool fields and ones that aren't True
+                    if value is True:
+                        # Ensure that we have a corresponding RoundPlayer
+                        i, created = RoundPlayer.objects.get_or_create(player=p,
+                                                                       the_round=r)
+                        try:
+                            i.full_clean()
+                        except ValidationError as e:
+                            form.add_error(None, e)
+                            i.delete()
+                            return render(request,
+                                          'tournaments/round_players.html',
+                                          {'title': 'Roll Call',
+                                           'tournament': t,
+                                           'post_url': reverse('roll_call', args=(tournament_id,)),
+                                           'formset' : formset})
+                        i.save()
+                    else:
+                        # delete any corresponding RoundPlayer
+                        # This could be a player who was previously checked-off in error
+                        RoundPlayer.objects.filter(player=p,
+                                                   the_round=r).delete()
             r = t.current_round()
             if t.seed_games:
                 if (r.roundplayer_set.count() % 7) == 0:
