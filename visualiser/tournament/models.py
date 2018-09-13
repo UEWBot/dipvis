@@ -136,9 +136,13 @@ class RScoringBest(RoundScoringSystem):
         # for each player who played any of the specified games
         for p in Player.objects.filter(gameplayer__in=game_players).distinct():
             # Find just their games
-            player_games = game_players.filter(player=p)
+            # filter out games where they haven't been assigned a power
+            player_games = game_players.filter(player=p).filter(power__isnull=False)
             # Find the highest score
-            retval[p] = max(game_scores[g.game][g.power] for g in player_games)
+            if player_games.exists():
+                retval[p] = max(game_scores[g.game][g.power] for g in player_games)
+            else:
+                retval[p] = 0.0
         # Give the appropriate points to anyone who agreed to sit out
         for p in non_players:
             retval[p.player] = self.non_player_score
