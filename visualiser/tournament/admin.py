@@ -106,7 +106,7 @@ class SCOwnershipInline(admin.TabularInline):
     extra = 34
 
 class GameAdmin(admin.ModelAdmin):
-    fields = ['the_round', 'name', 'is_top_board', 'power_assignment', 'started_at', 'is_finished']
+    fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
     inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
 
 # Register models
