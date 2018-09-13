@@ -1041,21 +1041,22 @@ def _seed_games(tournament, the_round):
     """Wrapper round GameSeeder to do the actual seeding for a round"""
     t = tournament
     r = the_round
+    round_players = r.roundplayer_set.all()
     # Get the set of players that haven't already been assigned to games for this round
     rps = []
     sitters = set()
     two_gamers = set()
-    for rp in r.roundplayer_set.all():
+    for rp in round_players:
         assert rp.gameplayers().count() == 0, "%d games already exist for %s in this round" % (rp.gameplayers().count(), str(rp))
         rps.append(rp)
         if rp.game_count == 1:
             continue
         elif rp.game_count == 0:
             # This player is sitting out this round
-            sitters.add(rp)
+            sitters.add(rp.tournamentplayer())
         elif rp.game_count == 2:
             # This player is playing two games this round
-            two_gamers.add(rp)
+            two_gamers.add(rp.tournamentplayer())
         else:
             assert 0, 'Unexpected game_count value %d for %s' % (rp.game_count, str(rp))
     assert (len(sitters) == 0) or (len(two_gamers) == 0)
@@ -1065,17 +1066,23 @@ def _seed_games(tournament, the_round):
     if len(two_gamers) > 0:
         # Check that we have the right number of players playing two games
         assert (len(rps) + len(two_gamers)) % 7 == 0
+    # We also need to flag any players who aren't present for this round as sitting out
+    for tp in t.tournamentplayer_set.all():
+        if not round_players.filter(player=tp.player).exists():
+            sitters.add(tp)
     # Create the game seeder
     seeder = GameSeeder(starts=100, iterations=10)
-    for rp in rps:
-        seeder.add_player(rp)
+    # Tell the seeder about every player in the tournament
+    # (regardless of whether they're playing this round - they may have played already)
+    for tp in t.tournamentplayer_set.all():
+        seeder.add_player(tp)
     # Provide details of games already played this tournament
     for n in range(1, r.number()):
         rnd = t.round_numbered(n)
         for g in rnd.game_set.all():
             game = set()
             for gp in g.gameplayer_set.all():
-                game.add(gp.roundplayer())
+                game.add(gp.tournamentplayer())
             # TODO This doesn't deal with replacement players
             assert len(game) == 7
             seeder.add_played_game(game)
@@ -1142,8 +1149,8 @@ def seed_games(request, tournament_id, round_num):
                                            the_set=default_set)
             current = {'game_name': new_game.name,
                        'the_set': new_game.the_set}
-            for rp in g:
-                gp = GamePlayer.objects.create(player=rp.player,
+            for tp in g:
+                gp = GamePlayer.objects.create(player=tp.player,
                                                game=new_game)
                 current[gp.id] = gp.power
             data.append(current)
