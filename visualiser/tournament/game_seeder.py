@@ -72,7 +72,7 @@ class GameSeeder:
         if seed_method == SeedMethod.RANDOM:
             self.starts = starts
             self.iterations = iterations
-        # List of players to use to seed games. May include duplicates
+        # List of players to use to seed games
         self.players = []
         # Dict, keyed by player, of dicts, keyed by (other) player, of integer counts of shared games
         self.games_played_matrix = {}
@@ -116,12 +116,10 @@ class GameSeeder:
         The value returned is twice the number of times each pair of players has played together already.
         game is a set of 7 players (player can be any type as long as it's the same in all calls to this object).
         """
-        # Take a copy of game, because we want to replace duplicates
-        g = set(game)
         f = 0
         # Sum the number of times each pair of players has played together already
-        for p in g:
-            for q in g:
+        for p in game:
+            for q in game:
                 if p != q:
                     try:
                         f += self.games_played_matrix[p][q]
@@ -160,7 +158,6 @@ class GameSeeder:
         """
         Calculate a total fitness score for this list of games.
         Range is 0-(42 * len(games)). Lower is better.
-        Can raise InvalidPlayer if any player is unknown or duplicated.
         """
         fitness = 0
         for g in games:
@@ -213,7 +210,6 @@ class GameSeeder:
     def _all_possible_seedings(self, players):
         """
         Returns a list of all possible seedings (each being a list of sets of 7 players).
-        This will include seedings with players playing their duplicates.
         It will also include seedings with the same games in different orders.
         Note that this will take a long time for large numbers of players.
         """
