@@ -729,8 +729,8 @@ class Preference(models.Model):
     """
     How much a player wants to play a particular power.
     """
-    player = models.ForeignKey(TournamentPlayer)
-    power = models.ForeignKey(GreatPower)
+    player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE)
+    power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
     ranking = models.PositiveSmallIntegerField(validators=[validate_ranking])
 
     class Meta:
