@@ -26,7 +26,7 @@ from operator import attrgetter, itemgetter
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.urls import reverse
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from django.utils.translation import ugettext as _
 from django.utils import timezone
 from django.contrib.auth.models import User
@@ -1316,7 +1316,7 @@ class Game(models.Model):
         """
         Returns the last complete year of the game, whether the game is completed or ongoing
         """
-        return self.years_played()[-1]
+        return self.centrecount_set.all().aggregate(Max('year'))['year__max']
 
     def soloer(self):
         """
