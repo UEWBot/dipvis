@@ -830,7 +830,132 @@ class TournamentModelTests(TestCase):
         r = t.round_set.all()[0]
         r.get_absolute_url()
 
-    # TODO Game.assign_powers_from_prefs()
+    # Game.assign_powers_from_prefs()
+    def test_game_assign_powers_from_prefs(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=SECRET)
+        t.save()
+        tp1 = TournamentPlayer(tournament=t, player=self.p1)
+        tp1.save()
+        tp2 = TournamentPlayer(tournament=t, player=self.p2)
+        tp2.save()
+        tp3 = TournamentPlayer(tournament=t, player=self.p3)
+        tp3.save()
+        tp4 = TournamentPlayer(tournament=t, player=self.p4)
+        tp4.save()
+        tp5 = TournamentPlayer(tournament=t, player=self.p5)
+        tp5.save()
+        tp6 = TournamentPlayer(tournament=t, player=self.p6)
+        tp6.save()
+        tp7 = TournamentPlayer(tournament=t, player=self.p7)
+        tp7.save()
+        # We need a previous round with a finished game
+        r1 = Round(tournament=t,
+                   scoring_system='Sum of Squares',
+                   dias=True,
+                   start=t.start_date)
+        r1.save()
+        g1 = Game(name='newgame1',
+                  started_at=r1.start,
+                  the_round=r1,
+                  is_finished=True,
+                  the_set=self.set1)
+        g1.save()
+        rp = RoundPlayer(the_round=r1, player=self.p1, score=30.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r1, player=self.p2, score=25.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r1, player=self.p3, score=20.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r1, player=self.p4, score=10.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r1, player=self.p5, score=7.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r1, player=self.p6, score=7.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r1, player=self.p7, score=1.0)
+        rp.save()
+        # Now we can do the round for the game we want to seed
+        r2 = Round(tournament=t,
+                   scoring_system='Sum of Squares',
+                   dias=True,
+                   start=t.start_date + HOURS_8)
+        r2.save()
+        rp = RoundPlayer(the_round=r2, player=self.p1)
+        rp.save()
+        rp = RoundPlayer(the_round=r2, player=self.p2)
+        rp.save()
+        rp = RoundPlayer(the_round=r2, player=self.p3)
+        rp.save()
+        rp = RoundPlayer(the_round=r2, player=self.p4)
+        rp.save()
+        rp = RoundPlayer(the_round=r2, player=self.p5)
+        rp.save()
+        rp = RoundPlayer(the_round=r2, player=self.p6)
+        rp.save()
+        rp = RoundPlayer(the_round=r2, player=self.p7)
+        rp.save()
+        g2 = Game(name='newgame2',
+                  started_at=r2.start,
+                  the_round=r2,
+                  is_finished=False,
+                  the_set=self.set1)
+        g2.save()
+        gp = GamePlayer(game=g2, player=self.p1)
+        gp.save()
+        gp = GamePlayer(game=g2, player=self.p2)
+        gp.save()
+        gp = GamePlayer(game=g2, player=self.p3)
+        gp.save()
+        gp = GamePlayer(game=g2, player=self.p4)
+        gp.save()
+        gp = GamePlayer(game=g2, player=self.p5)
+        gp.save()
+        gp = GamePlayer(game=g2, player=self.p6)
+        gp.save()
+        gp = GamePlayer(game=g2, player=self.p7)
+        gp.save()
+        # Now add preferences for some players
+        p = Preference(player=tp1, power=self.austria, ranking=1)
+        p.save()
+        p = Preference(player=tp2, power=self.germany, ranking=1)
+        p.save()
+        p = Preference(player=tp2, power=self.turkey, ranking=2)
+        p.save()
+        p = Preference(player=tp3, power=self.austria, ranking=1)
+        p.save()
+        p = Preference(player=tp3, power=self.france, ranking=2)
+        p.save()
+        g2.assign_powers_from_prefs()
+        # We need to retrieve the GamePlayers from the database to see the updates
+        # No powers taken - get first preference
+        gp = GamePlayer.objects.get(game=g2, player=self.p1)
+        self.assertEqual(gp.power, self.austria)
+        # First preference still available, should get it
+        gp = GamePlayer.objects.get(game=g2, player=self.p2)
+        self.assertEqual(gp.power, self.germany)
+        # First preference gone, but second available, should get that
+        gp = GamePlayer.objects.get(game=g2, player=self.p3)
+        self.assertEqual(gp.power, self.france)
+        # All preferences gone, should get a random available power
+        for p in [self.p4, self.p5, self.p6, self.p7]:
+            gp = GamePlayer.objects.get(game=g2, player=p)
+            self.assertIn(gp.power, [self.england, self.italy, self.russia, self.turkey])
+        # Note that this will also delete all GamePlayers for that Game
+        g2.delete()
+        g1.delete()
+        # Note that this will also delete all RoundPlayers for that Round
+        r2.delete()
+        r1.delete()
+        # Note that this will also delete all TournamentPlayers for that Tournament
+        t.delete()
+        self.assertEqual(Preference.objects.count(), 0)
+
 
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
@@ -1767,7 +1892,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(gp.elimination_year(), None)
 
     # GamePlayer.set_power_from_prefs()
-    def test_gamelayer_set_power_from_prefs(self):
+    def test_gameplayer_set_power_from_prefs(self):
         now = timezone.now()
         t = Tournament(name='t4',
                        start_date=now,
