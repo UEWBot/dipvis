@@ -1157,18 +1157,18 @@ def get_seven(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     count = r.roundplayer_set.count()
     sitters = count % 7
+    # If we already have an exact multiple of seven players, go straight to creating games
+    if sitters == 0:
+        return HttpResponseRedirect(reverse('seed_games',
+                                            args=(tournament_id,
+                                                  round_num)))
+
     doubles = 7 - sitters
     context = {'tournament': t,
                'round': r,
                'count' : count,
                'sitters' : sitters,
                'doubles' : doubles}
-    # If we already have an exact multiple of seven players, go straight to creating games
-    if (r.roundplayer_set.count() % 7) == 0:
-        return HttpResponseRedirect(reverse('seed_games',
-                                            args=(tournament_id,
-                                                  round_num)))
-
     form = GetSevenPlayersForm(request.POST or None,
                                the_round=r)
     if form.is_valid():
