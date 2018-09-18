@@ -11,7 +11,8 @@ You can test out the system as follows:
    a web browser and add a tournament by filling in the fields. Optionally
    add players to the tournament. Note that adding a player to a tournament
    can take a while because the system copies information from the WDD to
-   its own database.
+   its own database. This can be avoided by not providing WDD Ids for
+   TournamentPlayers.
 5. Open the tournament's page "http://127.0.0.1:8000/tournaments/1/" in a
    web browser and try out some of the links.
 6. Open the Roll Call URL "http://127.0.0.1:8000/tournaments/1/roll_call/"
