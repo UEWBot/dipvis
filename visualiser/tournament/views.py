@@ -357,6 +357,10 @@ class BaseSCOwnerFormset(BaseFormSet):
                                             % {'year': year})
         # TODO check that SCs never become neutral
 
+class GameEndedForm(forms.Form):
+    """Form that just provides a checkbox to indicate that a Game is over"""
+    is_finished = forms.BooleanField(required=False, initial=False)
+
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count
@@ -1729,8 +1733,9 @@ def sc_counts(request, tournament_id, game_name):
                                      extra=years_to_go,
                                      formset=BaseSCCountFormset)
     if request.method == 'POST':
-        formset = SCCountFormset(request.POST)
-        if formset.is_valid():
+        formset = SCCountFormset(request.POST, prefix='scs')
+        end_form = GameEndedForm(request.POST, prefix='end')
+        if formset.is_valid() and end_form.is_valid():
             for form in formset:
                 try:
                     year = form.cleaned_data['year']
@@ -1766,6 +1771,7 @@ def sc_counts(request, tournament_id, game_name):
                         return render(request,
                                       'games/sc_counts_form.html',
                                       {'formset': formset,
+                                       'end_form': end_form,
                                        'tournament': t,
                                        'game': g})
 
@@ -1774,6 +1780,10 @@ def sc_counts(request, tournament_id, game_name):
                     # We now have final CentreCounts
                     g.is_finished = True
                     g.save()
+            # Set the "game over" flag as appropriate
+            # TODO May not want this to override the determination above
+            g.is_finished = end_form.cleaned_data['is_finished']
+            g.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_chart',
                                                 args=(tournament_id, game_name)))
@@ -1786,11 +1796,14 @@ def sc_counts(request, tournament_id, game_name):
             for c in counts:
                 scs[c.power.name] = c.count
             data.append(scs)
-        formset = SCCountFormset(initial=data)
+        formset = SCCountFormset(prefix='scs', initial=data)
+        end_form = GameEndedForm(prefix='end',
+                                 initial={'is_finished': g.is_finished})
 
     return render(request,
                   'games/sc_counts_form.html',
                   {'formset': formset,
+                   'end_form': end_form,
                    'tournament': t,
                    'game': g})
 
