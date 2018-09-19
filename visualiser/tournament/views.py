@@ -210,7 +210,7 @@ class PowerAssignForm(forms.Form):
         queryset = GreatPower.objects.all()
 
         # Create the right player fields
-        for gp in self.game.gameplayer_set.all():
+        for gp in self.game.gameplayer_set.all().order_by('power__abbreviation'):
             c = gp.id
             self.fields[c] = forms.ModelChoiceField(label=str(gp.player),
                                                     queryset=queryset)
