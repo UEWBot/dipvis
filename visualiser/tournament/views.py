@@ -1248,6 +1248,12 @@ def _seed_games(tournament, the_round):
             # TODO This doesn't deal with replacement players
             assert len(game) == 7
             seeder.add_played_game(game)
+    # Add in any biases
+    for tp in t.tournamentplayer_set.all():
+        # Just use seederbias_set so we only get each SeederBias once
+        # because we only look at their player1
+        for sb in tp.seederbias_set.all():
+            seeder.add_bias(sb.player1, sb.player2, sb.weight)
     # Generate the games
     return seeder.seed_games(omitting_players=sitters,
                              players_doubling_up=two_gamers)

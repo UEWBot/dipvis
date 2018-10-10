@@ -24,6 +24,7 @@ from tournament.players import Player
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
+from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SECRET, COUNTS, SPRING, ADJUSTMENTS, UNRANKED, PREFERENCES
@@ -633,6 +634,46 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.prefs_string(), '')
 
     # TODO TournamentPlayer.save()
+
+    # validate_weight()
+    def test_validate_weight_0(self):
+        self.assertRaises(ValidationError, validate_weight, 0)
+
+    def test_validate_weight_1(self):
+        validate_weight(1)
+
+    def test_validate_weight_10(self):
+        validate_weight(10)
+
+    # SeederBias.clean()
+    def test_seederbias_clean_clone(self):
+        '''Same player twice'''
+        t = Tournament.objects.get(name='t1')
+        tp1 = t.tournamentplayer_set.first()
+        sb = SeederBias(player1=tp1,
+                        player2=tp1,
+                        weight=3)
+        self.assertRaises(ValidationError, sb.clean)
+
+    def test_seederbias_clean_mixup(self):
+        '''Two players from different tournaments'''
+        t = Tournament.objects.get(name='t1')
+        tp1 = t.tournamentplayer_set.first()
+        t = Tournament.objects.get(name='t3')
+        tp2 = t.tournamentplayer_set.first()
+        sb = SeederBias(player1=tp1,
+                        player2=tp2,
+                        weight=3)
+        self.assertRaises(ValidationError, sb.clean)
+
+    def test_seederbias_clean_ok(self):
+        t = Tournament.objects.get(name='t1')
+        tp1 = t.tournamentplayer_set.first()
+        tp2 = t.tournamentplayer_set.last()
+        sb = SeederBias(player1=tp1,
+                        player2=tp2,
+                        weight=3)
+        sb.clean()
 
     # TODO Preference
 

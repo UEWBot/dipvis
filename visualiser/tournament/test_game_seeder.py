@@ -85,6 +85,53 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('H')
         self.assertRaises(InvalidPlayerCount, seeder.add_played_game, set(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']))
 
+    # add_bias()
+    def test_add_bias_same_player(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        self.assertRaises(InvalidPlayerPairing, seeder.add_bias, 'A', 'A', 1)
+
+    def test_add_bias_invalid_weight(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        seeder.add_player('B')
+        self.assertRaises(InvalidWeight, seeder.add_bias, 'A', 'B', 0)
+
+    def test_add_bias_unknown_player1(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        self.assertRaises(InvalidPlayer, seeder.add_bias, 'B', 'A', 1)
+
+    def test_add_bias_unknown_player2(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        self.assertRaises(InvalidPlayer, seeder.add_bias, 'A', 'B', 1)
+
+    def test_add_bias(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        seeder.add_player('G')
+        seeder.add_player('H')
+        seeder.add_player('I')
+        seeder.add_player('J')
+        seeder.add_player('K')
+        seeder.add_player('L')
+        seeder.add_player('M')
+        seeder.add_player('N')
+        seeder.add_bias('A', 'B', 1)
+        # That should suffice to keep those players apart
+        r = seeder.seed_games()
+        for g in r:
+            if 'A' in g:
+                self.assertNotIn('B', g)
+            if 'B' in g:
+                self.assertNotIn('A', g)
+
     # _fitness_score()
     def test_fitness_score_no_games(self):
         seeder = GameSeeder()

@@ -725,6 +725,41 @@ class TournamentPlayer(models.Model):
             # because the duplication isn't always obvious
             #add_local_player_bg(self.player)
 
+def validate_weight(value):
+    """
+    Checks a SeederBias weight.
+    """
+    if value < 1:
+        raise ValidationError(_('%(value)d is not a valid weighting'),
+                              params = {'value': value})
+
+class SeederBias(models.Model):
+    """
+    Tell the game seeder to avoid putting two players in the same game.
+    """
+    player1 = models.ForeignKey(TournamentPlayer,
+                                on_delete=models.CASCADE)
+    player2 = models.ForeignKey(TournamentPlayer,
+                                on_delete=models.CASCADE,
+                                related_name='second_seederbias_set')
+    weight = models.PositiveSmallIntegerField(validators=[validate_weight],
+                                              help_text=_("Number of games to pretend they've already played together"))
+
+    class Meta:
+        # Only one weighting per pair of players
+        unique_together = ('player1', 'player2')
+
+    def clean(self):
+        """
+        Validate the object.
+        player1 != player2.
+        All players are from the same Tournament.
+        """
+        if self.player1 == self.player2:
+            raise ValidationError(_('The players must differ'))
+        if self.player1.tournament != self.player2.tournament:
+            raise ValidationError(_('The players must be playing the same tournament'))
+
 class Preference(models.Model):
     """
     How much a player wants to play a particular power.

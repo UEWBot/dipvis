@@ -36,6 +36,14 @@ class InvalidPlayerCount(Exception):
     """An invalid number of players. Diplomacy is a seven-player game."""
     pass
 
+class InvalidPlayerPairing(Exception):
+    """It is meaningless to pair a player with themselves."""
+    pass
+
+class InvalidWeight(Exception):
+    """It is meaningless to add a bias with a weight of zero."""
+    pass
+
 class _AssignmentFailed(Exception):
     """Internal exception used when we end up with an invalid assignment of players to games."""
     pass
@@ -108,6 +116,30 @@ class GameSeeder:
                         if q not in self.games_played_matrix:
                             raise InvalidPlayer(str(q))
                         self.games_played_matrix[p][q] = 1
+        self.games_played = True
+
+    def add_bias(self, player1, player2, weight):
+        """
+        Add a bias to take into account.
+        This effectively says "treat player1 and player2 as if they have already played weight games together".
+        It is intended to be used to keep pairs of players apart, e.g. family members.
+        Could also be used to make pairs of players more likely to play together if weight is negative.
+        Can raise InvalidPlayer if any player is unknown.
+        Raises InvalidPlayerPairing if player1 == player2.
+        """
+        if player1 == player2:
+            raise InvalidPlayerPairing(str(player1))
+        if weight == 0:
+            raise InvalidWeight(str(weight))
+        if player1 not in self.games_played_matrix:
+            raise InvalidPlayer(str(player1))
+        if player2 not in self.games_played_matrix:
+            raise InvalidPlayer(str(player2))
+        try:
+            self.games_played_matrix[player1][player2] += weight
+        except KeyError:
+            self.games_played_matrix[player1][player2] = weight
+        # fitness is now meaningful
         self.games_played = True
 
     def _fitness_score(self, game):

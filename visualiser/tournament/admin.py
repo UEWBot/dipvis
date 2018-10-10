@@ -18,6 +18,7 @@ from django.contrib import admin
 
 from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
+from tournament.models import SeederBias
 from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.players import Player, PlayerTournamentRanking, PlayerGameResult
 from tournament.players import PlayerAward, PlayerRanking
@@ -126,3 +127,4 @@ admin.site.register(PlayerGameResult)
 admin.site.register(PlayerAward)
 admin.site.register(PlayerRanking)
 admin.site.register(RoundPlayer)
+admin.site.register(SeederBias)
