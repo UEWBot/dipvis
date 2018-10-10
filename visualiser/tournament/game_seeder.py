@@ -67,7 +67,7 @@ class GameSeeder:
         starts is the number of initial seedings to generate. Not used with EXHAUSTIVE seed_method.
         iterations is the number of times to modify each initial seeding in an attempt to improve it. Not used with EXHAUSTIVE seed_method.
         """
-        self.games_played = 0
+        self.games_played = False
         self.seed_method = seed_method
         if seed_method == SeedMethod.RANDOM:
             self.starts = starts
@@ -108,7 +108,7 @@ class GameSeeder:
                         if q not in self.games_played_matrix:
                             raise InvalidPlayer(str(q))
                         self.games_played_matrix[p][q] = 1
-        self.games_played += 1
+        self.games_played = True
 
     def _fitness_score(self, game):
         """
@@ -270,10 +270,10 @@ class GameSeeder:
             raise InvalidPlayerCount("%d total plus %d duplicated minus %d omitted" % (len(self.games_played_matrix), len(players_doubling_up), len(omitting_players)))
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
-        if self.games_played == 0:
-            fitness = 0
-        else:
+        if self.games_played:
             res, fitness = self._improve_fitness(res)
+        else:
+            fitness = 0
         # Return the resulting list of games
         return res, fitness
 
@@ -289,11 +289,11 @@ class GameSeeder:
         """
         # Generate the specified number of seedings
         # Use the random method if no games have been played yet, because any seeding is fine
-        if (self.games_played == 0) or (self.seed_method == SeedMethod.RANDOM):
+        if (not self.games_played) or (self.seed_method == SeedMethod.RANDOM):
             seedings = []
             # No point generating multiples if they're all equally good
             starts = 1
-            if self.games_played > 0:
+            if self.games_played:
                 starts = self.starts
             for i in range(starts):
                 # This gives us a list of 2-tuples with (seeding, fitness)
