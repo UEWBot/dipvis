@@ -10,7 +10,7 @@
 {% endif %}
 <p>{% trans "WDD Id:" %} {% if player.wdd_player_id %}<a href="{{ player.wdd_url }}">{{ player.wdd_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
 <ul>
-  {% for t in player.tournamentplayer_set.all %}
+  {% for t in player.tournamentplayers %}
     <li><a href="{{ t.tournament.get_absolute_url }}">{{ t.tournament }} {{ t.tournament.start_date.year }}</a> {{ t.score|floatformat:2 }}</li>
   {% empty %}
     <li>{% trans "No tournaments in the database" %}</li>

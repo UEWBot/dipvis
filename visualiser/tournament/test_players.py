@@ -16,10 +16,13 @@
 
 from django.test import TestCase, tag
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from tournament.diplomacy import GreatPower
 from tournament.players import Player, PlayerRanking
 from tournament.players import validate_wdd_player_id, add_player_bg
+from tournament.models import Tournament, TournamentPlayer
+from tournament.models import SECRET, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 
 CHRIS_BRAND_WDD_ID = 4173
 MATT_SHIELDS_WDD_ID = 588
@@ -77,6 +80,44 @@ class PlayerTests(TestCase):
         p = Player.objects.create(first_name='John', last_name='Smith')
         # TODO Validate results
         p.wdd_url()
+
+    # Player.tournamentplayers()
+    def test_player_tournamentplayers(self):
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=SECRET,
+                                       is_published=True)
+        t1.save()
+        t2 = Tournament.objects.create(name='t2',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=SECRET,
+                                       is_published=False)
+        t2.save()
+        # Now we need a player that played in both tournaments
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='Schmoe')
+        p.save()
+        tp1 = TournamentPlayer.objects.create(tournament=t1,
+                                              player=p)
+        tp1.save()
+        tp2 = TournamentPlayer.objects.create(tournament=t2,
+                                              player=p)
+        tp2.save()
+        self.assertEqual(1, p.tournamentplayers(including_unpublished=False).count())
+        self.assertEqual(2, p.tournamentplayers(including_unpublished=True).count())
+        tp2.delete()
+        tp1.delete()
+        p.delete()
+        t2.delete()
+        t1.delete()
 
     @tag('slow', 'wdd')
     # Player.background()

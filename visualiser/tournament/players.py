@@ -423,6 +423,12 @@ class Player(models.Model):
             return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
         return u''
 
+    def tournamentplayers(self, including_unpublished=False):
+        """Returns the set of TournamentPlayers for this Player."""
+        if including_unpublished:
+            return self.tournamentplayer_set.all()
+        return self.tournamentplayer_set.filter(tournament__is_published=True)
+
     def _rankings(self, mask=MASK_ALL_BG):
         """List of all rankings"""
         results = []
