@@ -1050,9 +1050,10 @@ def upload_prefs(request, tournament_id):
     try:
         csv_file = request.FILES['csv_file']
         if csv_file.multiple_chunks():
-            messages.error(request, 'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
-            return HttpResponseRedirect(reverse('upload_prefs'),
-                                                args=(tournament_id,))
+            messages.error(request,
+                           'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
+            return HttpResponseRedirect(reverse('upload_prefs',
+                                                args=(tournament_id,)))
         # TODO How do I know what charset to use?
         fp = StringIO(csv_file.read().decode('utf8'))
         reader = csv.DictReader(fp)
@@ -1061,40 +1062,40 @@ def upload_prefs(request, tournament_id):
                 tp = TournamentPlayer.objects.get(pk=row['Id'])
             except KeyError:
                 messages.error(request, 'Failed to find player Id')
-                return HttpResponseRedirect(reverse('upload_prefs'),
-                                                    args=(tournament_id,))
+                return HttpResponseRedirect(reverse('upload_prefs',
+                                                    args=(tournament_id,)))
             p = tp.player
             try:
                 if p.first_name != row['First Name']:
                     messages.error(request, "Player first name doesn't match id")
-                    return HttpResponseRedirect(reverse('upload_prefs'),
-                                                        args=(tournament_id,))
+                    return HttpResponseRedirect(reverse('upload_prefs',
+                                                        args=(tournament_id,)))
             except KeyError:
                 messages.error(request, 'Failed to find player First Name')
-                return HttpResponseRedirect(reverse('upload_prefs'),
-                                                    args=(tournament_id,))
+                return HttpResponseRedirect(reverse('upload_prefs',
+                                                    args=(tournament_id,)))
             try:
                 if p.last_name != row['Last Name']:
                     messages.error(request, "Player last name doesn't match id")
-                    return HttpResponseRedirect(reverse('upload_prefs'),
-                                                        args=(tournament_id,))
+                    return HttpResponseRedirect(reverse('upload_prefs',
+                                                        args=(tournament_id,)))
             except KeyError:
                 messages.error(request, 'Failed to find player Last Name')
-                return HttpResponseRedirect(reverse('upload_prefs'),
-                                                    args=(tournament_id,))
+                return HttpResponseRedirect(reverse('upload_prefs',
+                                                    args=(tournament_id,)))
             # Player data matches, so go ahead and parse the preferences
             try:
                 ps = row['Preferences']
             except KeyError:
                 messages.error(request, 'Failed to find player Preferences')
-                return HttpResponseRedirect(reverse('upload_prefs'),
-                                                    args=(tournament_id,))
+                return HttpResponseRedirect(reverse('upload_prefs',
+                                                    args=(tournament_id,)))
             try:
                 tp.create_preferences_from_string(ps)
             except InvalidPreferenceList:
                 messages.error(request, 'Invalid preference string %s' % ps)
-                return HttpResponseRedirect(reverse('upload_prefs'),
-                                                    args=(tournament_id,))
+                return HttpResponseRedirect(reverse('upload_prefs',
+                                                    args=(tournament_id,)))
     except Exception as e:
         messages.error(request, 'Unable to upload file: ' + repr(e))
 
