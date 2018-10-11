@@ -695,7 +695,7 @@ class TournamentPlayer(models.Model):
         except ValidationError as e:
             raise InvalidPreferenceList(str(e))
         # Remove any existing preferences for this player
-        Preference.objects.filter(player=self).delete()
+        self.preference_set.all().delete()
         to_power = {}
         for p in GreatPower.objects.all():
             to_power[p.abbreviation] = p
@@ -821,9 +821,7 @@ class Round(models.Model):
             raise InvalidScoringSystem(self.tournament.round_scoring_system)
         # Identify any players who were checked in but didn't play
         gps = GamePlayer.objects.filter(game__the_round=self).distinct()
-        non_players = self.roundplayer_set.all()
-        for gp in gps:
-            non_players = non_players.exclude(player=gp.player)
+        non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
         return system.scores(gps, non_players)
 
     def is_finished(self):
@@ -1052,17 +1050,10 @@ class Game(models.Model):
         if not all_scos.exists():
             raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
         for p in GreatPower.objects.all():
-            # We can't use get_or_create() here because count may not match
-            try:
-                i = CentreCount.objects.get(power=p,
-                                            game=self,
-                                            year=year)
-                i.count = all_scos.filter(owner=p).count()
-            except CentreCount.DoesNotExist:
-                i = CentreCount(power=p,
-                                game=self,
-                                year=year,
-                                count=all_scos.filter(owner=p).count())
+            i = CentreCount.objects.update_or_create(power=p,
+                                                     game=self,
+                                                     year=year,
+                                                     defaults={'count': all_scos.filter(owner=p).count()})[0]
             i.save()
 
     def compare_sc_counts_and_ownerships(self, year):
@@ -1815,9 +1806,8 @@ class GamePlayer(models.Model):
         Only one Player can be playing this power at any given point in the Game.
         """
         # Player should already be in the tournament
-        try:
-            self.tournamentplayer()
-        except TournamentPlayer.DoesNotExist:
+        t = self.game.the_round.tournament
+        if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError(_(u'Player is not yet in the tournament'))
         # Need either both or neither of last_year and last_season
         if self.last_season == '' and self.last_year:
