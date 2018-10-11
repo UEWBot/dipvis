@@ -26,7 +26,9 @@ Most of the code is dedicated to storing background information
 about a player and retrieving it as needed.
 """
 
-import urllib.request, traceback, re
+import re
+import traceback
+import urllib.request
 
 from django.db import models
 from django.core.exceptions import ValidationError

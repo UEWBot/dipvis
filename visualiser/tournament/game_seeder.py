@@ -18,7 +18,9 @@
 Assign players to Diplomacy games in a tournament setting.
 """
 
-import copy, random, itertools
+import copy
+import itertools
+import random
 from operator import itemgetter
 #No auto until python 3.6
 #from enum import Enum, auto

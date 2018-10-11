@@ -20,7 +20,8 @@ Django models file for the Diplomacy Tournament Visualiser.
 
 from abc import ABC, abstractmethod
 import inspect
-import random, os
+import os
+import random
 from operator import attrgetter, itemgetter
 
 from django.db import models
