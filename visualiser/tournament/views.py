@@ -65,6 +65,7 @@ class PrefsForm(forms.Form):
         self.fields['prefs'].initial = self.tp.prefs_string()
 
 class BasePrefsFormset(BaseFormSet):
+    """Form to spcify Preferences for every TournamentPlayer"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
@@ -127,6 +128,7 @@ class GameScoreForm(forms.Form):
             attrs['maxlength'] = 10
 
 class RoundPlayerChoiceField(forms.ModelChoiceField):
+    """Field to pick a RoundPlayer"""
     def label_from_instance(self, obj):
         return obj.player.__str__()
 
@@ -170,6 +172,7 @@ class GamePlayersForm(forms.Form):
         return cleaned_data
 
 class BaseGamePlayersForm(BaseFormSet):
+    """Form to specify GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
@@ -233,6 +236,7 @@ class PowerAssignForm(forms.Form):
         return cleaned_data
 
 class BasePowerAssignForm(BaseFormSet):
+    """Form to assign GreatPowers to all GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
@@ -340,6 +344,7 @@ class SCOwnerForm(forms.Form):
                                                           required=False)
 
 class BaseSCOwnerFormset(BaseFormSet):
+    """Form to specify who owned which SupplyCentre when for a Game"""
     def clean(self):
         """
         Checks that no year appears more than once
@@ -405,6 +410,7 @@ class SCCountForm(forms.Form):
         return cleaned_data
 
 class BaseSCCountFormset(BaseFormSet):
+    """Form to spcify SC counts for a Game"""
     def clean(self):
         """
         Checks that no year appears more than once,
@@ -456,6 +462,7 @@ class PlayerRoundForm(forms.Form):
                 self.fields[name].widget.attrs['readonly'] = 'readonly'
 
 class BasePlayerRoundFormset(BaseFormSet):
+    """Form to specify which players are playing in each round"""
     def clean(self):
         """Checks that no player appears more than once"""
         if any(self.errors):
@@ -489,6 +496,7 @@ class BasePlayerRoundFormset(BaseFormSet):
         return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
 
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
+    """Field to pick a TournamentPlayer"""
     def label_from_instance(self, obj):
         return obj.player.__str__()
 
@@ -534,6 +542,7 @@ class PlayerRoundScoreForm(forms.Form):
         attrs['maxlength'] = 10
 
 class BasePlayerRoundScoreFormset(BaseFormSet):
+    """Form to enter round scores for all players"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
@@ -552,6 +561,7 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
 
 class GameImageForm(ModelForm):
+    """Form for a single GameImage"""
     class Meta:
         model = GameImage
         fields = ('game', 'year', 'season', 'phase', 'image')
@@ -2004,11 +2014,13 @@ def add_game_image(request, tournament_id, game_name=''):
 # Player views
 
 class PlayerIndexView(generic.ListView):
+    """Player index"""
     model = Player
     template_name = 'players/index.html'
     context_object_name = 'player_list'
 
 class PlayerDetailView(generic.DetailView):
+    """Details of a single player"""
     model = Player
     template_name = 'players/detail.html'
 

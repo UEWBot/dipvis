@@ -65,6 +65,11 @@ def validate_ranking(value):
                               params = {'value': value})
 
 def validate_preference_string(the_string):
+    """
+    Checks that the string represents a valid power preference list.
+    It must only consist of the single-letter abbreviations for the great powers
+    (upper or lower case), with each present at most once.
+    """
     # Convert the preference string to all uppercase
     the_string = the_string.upper()
     # Check for duplicated powers in the string

@@ -49,6 +49,11 @@ class _AssignmentFailed(Exception):
     pass
 
 class SeedMethod(Enum):
+    """
+    Method to use to seed games
+    RANDOM - try a number of random seedings plus modifications and pick the best
+    EXHAUSTIVE - try every possible seeding and pick the best (slow)
+    """
     #RANDOM = auto()
     #EXHAUSTIVE = auto()
     RANDOM = 1

@@ -36,6 +36,7 @@ class SetPowerInline(admin.TabularInline):
         return 7
 
 class GameSetAdmin(admin.ModelAdmin):
+    """Include SetPower as part of GameSet"""
     inlines = [SetPowerInline]
 
 class RoundInline(admin.StackedInline):
@@ -56,6 +57,7 @@ class TournamentPlayerInline(admin.TabularInline):
     extra = 7
 
 class TournamentAdmin(admin.ModelAdmin):
+    """Include Round and TournamentPlayer as part of Tournament"""
     inlines = [RoundInline, TournamentPlayerInline]
     fields = ('name',
               ('start_date', 'end_date'),
@@ -108,6 +110,7 @@ class SCOwnershipInline(admin.TabularInline):
     extra = 34
 
 class GameAdmin(admin.ModelAdmin):
+    """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
     fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
     inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
 
