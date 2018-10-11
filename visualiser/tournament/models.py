@@ -1887,8 +1887,7 @@ class GamePlayer(models.Model):
     def __str__(self):
         if self.power:
             return u'%s %s %s' % (self.game, self.player, self.power)
-        else:
-            return u'%s %s Power TBD' % (self.game, self.player)
+        return u'%s %s Power TBD' % (self.game, self.player)
 
 class GameImage(models.Model):
     """

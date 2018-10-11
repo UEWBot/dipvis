@@ -980,11 +980,10 @@ def roll_call(request, tournament_id):
                     return HttpResponseRedirect(reverse('seed_games',
                                                         args=(tournament_id,
                                                               r.number())))
-                else:
-                    # We need players to sit out or play multiple games
-                    return HttpResponseRedirect(reverse('get_seven',
-                                                        args=(tournament_id,
-                                                              r.number())))
+                # We need players to sit out or play multiple games
+                return HttpResponseRedirect(reverse('get_seven',
+                                                    args=(tournament_id,
+                                                          r.number())))
             else:
                 # Next job is almost certainly to create the actual games
                 return HttpResponseRedirect(reverse('create_games',
