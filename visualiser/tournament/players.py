@@ -160,10 +160,10 @@ def add_player_bg(player):
                 pass
         if pos:
             try:
-                i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                           tournament=title['Tournament'],
-                                                                           position=pos,
-                                                                           year=title['Year'])
+                i = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                                  tournament=title['Tournament'],
+                                                                  position=pos,
+                                                                  year=title['Year'])[0]
                 if the_title:
                     i.title = the_title
                 i.save()
@@ -186,10 +186,10 @@ def add_player_bg(player):
     for finish in finishes:
         d = finish['Date']
         try:
-            i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                       tournament=finish['Tournament'],
-                                                                       position=finish['Position'],
-                                                                       year=d[:4])
+            i = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                              tournament=finish['Tournament'],
+                                                              position=finish['Position'],
+                                                              year=d[:4])[0]
             i.date = d
             # Ignore if not present
             try:
@@ -211,10 +211,10 @@ def add_player_bg(player):
     for t in tournaments:
         d = t['Date']
         try:
-            i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                       tournament=t['Name of the tournament'],
-                                                                       position=t['Rank'],
-                                                                       year=d[:4])
+            i = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                              tournament=t['Name of the tournament'],
+                                                              position=t['Rank'],
+                                                              year=d[:4])[0]
             i.date = d
             # Ignore if not present
             try:
@@ -244,12 +244,12 @@ def add_player_bg(player):
             # Apparently not a Standard game
             continue
         try:
-            i, created = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
-                                                                game_name=b['Round / Board'],
-                                                                player=player,
-                                                                power=p,
-                                                                date = b['Date'],
-                                                                position = b['Position'])
+            i = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
+                                                       game_name=b['Round / Board'],
+                                                       player=player,
+                                                       power=p,
+                                                       date=b['Date'],
+                                                       position=b['Position'])[0]
             # If there's no 'Position sharing', they were alone at that position
             try:
                 i.position_equals = b['Position sharing']
@@ -314,10 +314,10 @@ def add_player_bg(player):
                 print('Ignoring award with no date %s' % str(a))
                 continue
             try:
-                i, created = PlayerAward.objects.get_or_create(player=player,
-                                                               tournament=a['Tournament'],
-                                                               date=date_str,
-                                                               name=award_name)
+                i = PlayerAward.objects.get_or_create(player=player,
+                                                      tournament=a['Tournament'],
+                                                      date=date_str,
+                                                      name=award_name)[0]
                 if k != 'Awards':
                     i.power = p
                 # Ignore any of these that aren't present
@@ -347,8 +347,8 @@ def add_player_bg(player):
     rankings = bg.rankings()
     for r in rankings:
         try:
-            i, created = PlayerRanking.objects.get_or_create(player=player,
-                                                             system=r['Name'])
+            i = PlayerRanking.objects.get_or_create(player=player,
+                                                    system=r['Name'])[0]
             i.score = float(r['Score'])
             i.international_rank = r['International rank']
             i.national_rank = r['National rank']

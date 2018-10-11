@@ -108,7 +108,7 @@ def img_to_country(img):
     """
     Convert a WDD flag image name to a country name.
     """
-    path, sep, filename = img.rpartition('/')
+    filename = img.rpartition('/')[2]
     return filename[:-4]
 
 class WDDBackground():

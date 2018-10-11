@@ -313,10 +313,10 @@ def add_local_player_bg(player):
         except TournamentPlayer.DoesNotExist:
             continue
         # Add a PlayerTournamentRanking
-        i, created = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                   tournament=t.name,
-                                                                   position=tp.position(),
-                                                                   year=t.start_date.year)
+        i = PlayerTournamentRanking.objects.get_or_create(player=player,
+                                                          tournament=t.name,
+                                                          position=tp.position(),
+                                                          year=t.start_date.year)[0]
         # Ensure that the date is set
         i.date = t.start_date
         i.save()
@@ -326,11 +326,11 @@ def add_local_player_bg(player):
                 if gp.player == player:
                     sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
                                                      power=power)
-                    i, created = PlayerAward.objects.get_or_create(player=player,
-                                                                   tournament = t.name,
-                                                                   date=t.start_date,
-                                                                   name=_('Best %(country)s')
-                                                                   % {'country': power})
+                    i = PlayerAward.objects.get_or_create(player=player,
+                                                          tournament=t.name,
+                                                          date=t.start_date,
+                                                          name=_('Best %(country)s')
+                                                          % {'country': power})[0]
                     i.power = power
                     i.score = gp.score
                     i.final_sc_count = sc.count
@@ -338,12 +338,12 @@ def add_local_player_bg(player):
         # Also add PlayerGameResult for each board played
         for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).distinct():
             pos = gp.game.positions()
-            i, created = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
-                                                                game_name=gp.game.name,
-                                                                player=player,
-                                                                power=gp.power,
-                                                                date = gp.game.the_round.start.date(),
-                                                                position = pos[gp.power])
+            i = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
+                                                       game_name=gp.game.name,
+                                                       player=player,
+                                                       power=gp.power,
+                                                       date=gp.game.the_round.start.date(),
+                                                       position=pos[gp.power])[0]
             # Set additional info
             i.score = gp.score
             i.year_eliminated = gp.elimination_year()
@@ -1436,24 +1436,24 @@ class Game(models.Model):
         # Auto-create 1900 SC counts (unless they already exist)
         # Auto-create SC Ownership (unless they already exist)
         for power in GreatPower.objects.all():
-            i, created = CentreCount.objects.get_or_create(power=power,
-                                                           game=self,
-                                                           year=FIRST_YEAR - 1,
-                                                           count=power.starting_centres)
+            i = CentreCount.objects.get_or_create(power=power,
+                                                  game=self,
+                                                  year=FIRST_YEAR - 1,
+                                                  count=power.starting_centres)[0]
             i.save()
             for sc in SupplyCentre.objects.filter(initial_owner=power):
-                i, created = SupplyCentreOwnership.objects.get_or_create(owner=power,
-                                                                         game=self,
-                                                                         year=FIRST_YEAR - 1,
-                                                                         sc=sc)
+                i = SupplyCentreOwnership.objects.get_or_create(owner=power,
+                                                                game=self,
+                                                                year=FIRST_YEAR - 1,
+                                                                sc=sc)[0]
                 i.save()
 
         # Auto-create S1901M image (if it doesn't exist)
-        i, created = GameImage.objects.get_or_create(game=self,
-                                                     year=FIRST_YEAR,
-                                                     season=SPRING,
-                                                     phase=MOVEMENT,
-                                                     image=self.the_set.initial_image)
+        i = GameImage.objects.get_or_create(game=self,
+                                            year=FIRST_YEAR,
+                                            season=SPRING,
+                                            phase=MOVEMENT,
+                                            image=self.the_set.initial_image)[0]
         i.save()
 
         # If the game is (now) finished, store the player scores

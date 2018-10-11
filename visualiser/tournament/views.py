@@ -856,8 +856,8 @@ def round_scores(request, tournament_id):
                         # Find that Round
                         r = t.round_numbered(i)
                         # Update the score
-                        i, created = RoundPlayer.objects.get_or_create(player=tp.player,
-                                                                       the_round=r)
+                        i = RoundPlayer.objects.get_or_create(player=tp.player,
+                                                              the_round=r)[0]
                         i.score = value
                         try:
                             i.full_clean()
@@ -929,8 +929,8 @@ def roll_call(request, tournament_id):
                     # This must be one of the extra forms, still empty
                     continue
                 # Ensure that this Player is in the Tournament
-                i, created = TournamentPlayer.objects.get_or_create(player=p,
-                                                                    tournament=t)
+                i = TournamentPlayer.objects.get_or_create(player=p,
+                                                           tournament=t)[0]
                 try:
                     i.full_clean()
                 except ValidationError as e:
@@ -954,8 +954,8 @@ def roll_call(request, tournament_id):
                     # Ignore non-bool fields and ones that aren't True
                     if value is True:
                         # Ensure that we have a corresponding RoundPlayer
-                        i, created = RoundPlayer.objects.get_or_create(player=p,
-                                                                       the_round=r)
+                        i = RoundPlayer.objects.get_or_create(player=p,
+                                                              the_round=r)[0]
                         try:
                             i.full_clean()
                         except ValidationError as e:
@@ -1360,9 +1360,9 @@ def create_games(request, tournament_id, round_num):
             for f in formset:
                 # Update/create the game
                 try:
-                    g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
-                                                            the_round=r,
-                                                            the_set=f.cleaned_data['the_set'])
+                    g = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
+                                                   the_round=r,
+                                                   the_set=f.cleaned_data['the_set'])[0]
                 except KeyError:
                     # This must be an extra, unused formset
                     continue
