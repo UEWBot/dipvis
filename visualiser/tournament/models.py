@@ -58,7 +58,7 @@ PHASES = (
     (RETREATS, _('retreats')),
     (ADJUSTMENTS, _('adjustments')),
 )
-phase_str = {
+PHASE_STR = {
     MOVEMENT: 'M',
     RETREATS: 'R',
     ADJUSTMENTS: 'A',
@@ -1910,7 +1910,7 @@ class GameImage(models.Model):
         Short string version of season/year/phase
         e.g. 'S1901M'
         """
-        return u'%s%d%s' % (self.season, self.year, phase_str[self.phase])
+        return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
 
     def clean(self):
         """
