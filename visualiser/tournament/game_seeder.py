@@ -174,7 +174,7 @@ class GameSeeder:
         """
         res = []
         game = set()
-        while len(players) > 0:
+        while players:
             if (len(players)) == 7 and (len(set(players)) < 7):
                 # We have just seven players left, but not seven unique players
                 raise _AssignmentFailed

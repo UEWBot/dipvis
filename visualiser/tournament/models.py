@@ -1837,15 +1837,12 @@ class GamePlayer(models.Model):
             elif self.first_year == other.first_year:
                 if self.first_season == other.first_season:
                     raise ValidationError(_(u'%(player1)s and %(player2)s both start playing %(power)s %(season)s %(year)d'),
-                                          params = {'player1': other.player,
-                                                    'player2': self.player,
-                                                    'power': self.power,
-                                                    'season': self.first_season,
-                                                    'year': self.first_year})
-                if self.first_season == SPRING:
-                    we_were_first = True
-                else:
-                    we_were_first = False
+                                          params={'player1': other.player,
+                                                  'player2': self.player,
+                                                  'power': self.power,
+                                                  'season': self.first_season,
+                                                  'year': self.first_year})
+                we_were_first = bool(self.first_season == SPRING)
             else:
                 we_were_first = False
             if we_were_first:

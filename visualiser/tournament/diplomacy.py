@@ -81,7 +81,7 @@ def validate_preference_string(the_string):
     for p in GreatPower.objects.all():
         all_powers.add(p.abbreviation)
     invalid = set(the_string) - all_powers
-    if len(invalid):
+    if invalid:
         raise ValidationError(_('%(prefs)s contains invalid character(s)'),
                               params={'prefs': the_string})
 
