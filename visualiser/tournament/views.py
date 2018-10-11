@@ -100,8 +100,8 @@ class DrawForm(forms.Form):
             self.fields['passed'] = forms.BooleanField(initial=False,
                                                        required=False)
         elif secrecy == COUNTS:
-            self.fields['votes_in_favour'] = forms.IntegerField(min_value = 0,
-                                                                max_value = 7)
+            self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
+                                                                max_value=7)
         else:
             assert 0, 'Unexpected draw secrecy value %c' % secrecy
 
@@ -270,8 +270,8 @@ class GetSevenPlayersForm(forms.Form):
                   'double': _('Player to play two games')}
         for i in range(count):
             self.fields['%s_%d' % (prefix, i)] = RoundPlayerChoiceField(queryset,
-                                                                        required = False,
-                                                                        label = LABELS[prefix])
+                                                                        required=False,
+                                                                        label=LABELS[prefix])
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates the specified number of player fields"""
@@ -642,7 +642,7 @@ def tournament_scores(request,
                       + rs
                       + ['%.2f' % t_positions_and_scores[p.player][1]])
     # sort rows by position (they'll retain the alphabetic sorting if equal)
-    scores.sort(key = lambda row: float(row[0]))
+    scores.sort(key=lambda row: float(row[0]))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
         row[0] = row[0].replace('%d' % UNRANKED, 'Unranked')
@@ -1028,7 +1028,7 @@ def enter_prefs(request, tournament_id):
                 tp.create_preferences_from_string(ps)
             # If all went well, re-direct
             return HttpResponseRedirect(reverse('tournament_detail',
-                                        args=(tournament_id,)))
+                                                args=(tournament_id,)))
     else:
         # put together initial data
         data = []
@@ -1037,7 +1037,7 @@ def enter_prefs(request, tournament_id):
         formset = PrefsFormset(tournament=t, initial=data)
     return render(request,
                   'tournaments/enter_prefs.html',
-                  { 'tournament': t,
+                  {'tournament': t,
                    'formset' : formset})
 
 @permission_required('tournament.add_preference')
@@ -1100,7 +1100,7 @@ def upload_prefs(request, tournament_id):
         messages.error(request, 'Unable to upload file: ' + repr(e))
 
     return HttpResponseRedirect(reverse('enter_prefs',
-                                args=(tournament_id,)))
+                                        args=(tournament_id,)))
 
 def prefs_csv(request, tournament_id):
     """Download a template CSV file to enter player country preferences"""
@@ -1219,7 +1219,8 @@ def _seed_games(tournament, the_round):
     sitters = set()
     two_gamers = set()
     for rp in round_players:
-        assert rp.gameplayers().count() == 0, "%d games already exist for %s in this round" % (rp.gameplayers().count(), str(rp))
+        assert rp.gameplayers().count() == 0, "%d games already exist for %s in this round" % (rp.gameplayers().count(),
+                                                                                               str(rp))
         rps.append(rp)
         if rp.game_count == 1:
             continue
@@ -1865,9 +1866,9 @@ def draw_vote(request, tournament_id, game_name):
         year = last_image.year
         season = last_image.season
     form = DrawForm(request.POST or None,
-                    dias = g.is_dias(),
-                    secrecy = t.draw_secrecy,
-                    initial = {'year': year, 'season' : season})
+                    dias=g.is_dias(),
+                    secrecy=t.draw_secrecy,
+                    initial={'year': year, 'season' : season})
     if form.is_valid():
         year = form.cleaned_data['year']
         try:
@@ -1896,11 +1897,11 @@ def draw_vote(request, tournament_id, game_name):
 
         # Create the DrawProposal
         dp = DrawProposal(game=g,
-                          year = year,
-                          season = form.cleaned_data['season'],
-                          passed = passed,
-                          votes_in_favour = votes_in_favour,
-                          proposer = form.cleaned_data['proposer'],
+                          year=year,
+                          season=form.cleaned_data['season'],
+                          passed=passed,
+                          votes_in_favour=votes_in_favour,
+                          proposer=form.cleaned_data['proposer'],
                           **kwargs)
         try:
             dp.full_clean()

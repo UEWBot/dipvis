@@ -270,7 +270,7 @@ def validate_sc_count(value):
     """
     if value < 0 or value > TOTAL_SCS:
         raise ValidationError(_(u'%(value)d is not a valid SC count'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def validate_game_name(value):
     """
@@ -285,7 +285,7 @@ def validate_vote_count(value):
     """
     if value < 0 or value > 7:
         raise ValidationError(_('%(value)d is not a valid vote count'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def game_image_location(instance, filename):
     """
@@ -394,7 +394,7 @@ class Tournament(models.Model):
                                        help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
                                       help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
-    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+    wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_("This tournament's id in the WDD"),
                                                     blank=True,
                                                     null=True,
@@ -731,7 +731,7 @@ def validate_weight(value):
     """
     if value < 1:
         raise ValidationError(_('%(value)d is not a valid weighting'),
-                              params = {'value': value})
+                              params={'value': value})
 
 class SeederBias(models.Model):
     """
@@ -1373,7 +1373,7 @@ class Game(models.Model):
         scs = self.centrecount_set.all().order_by('-year')
         if not year:
             year = scs.first().year
-        final_scs = scs.filter(year = year)
+        final_scs = scs.filter(year=year)
         return [sc for sc in final_scs if sc.count > 0]
 
     def result_str(self, include_game_name=False):
@@ -1392,7 +1392,8 @@ class Game(models.Model):
             if sz == 1:
                 retval = _(u'Game%(game)s conceded to ') % {'game': gn_str}
             else:
-                retval = _(u'Vote passed to end game%(game)s as a %(n)d-way draw between ') % {'game': gn_str, 'n': sz}
+                retval = _(u'Vote passed to end game%(game)s as a %(n)d-way draw between ') % {'game': gn_str,
+                                                                                               'n': sz}
             winners = []
             for power in powers:
                 # TODO This looks broken if there were replacements
@@ -1630,7 +1631,7 @@ class DrawProposal(models.Model):
                 power = GreatPower.objects.get(pk=value)
                 if power in powers:
                     raise ValidationError(_(u'%(power)s present more than once'),
-                                          params = {'power':  power})
+                                          params={'power':  power})
                 powers.add(power)
         # Only one successful draw proposal
         if self.passed:
@@ -1645,7 +1646,7 @@ class DrawProposal(models.Model):
         final_year = self.game.final_year()
         if self.passed and (self.year <= final_year):
             raise ValidationError(_(u'Game already has a centre count for %(year)d'),
-                                  params = {'year': final_year})
+                                  params={'year': final_year})
         # No dead powers included
         # If DIAS, all alive powers must be included
         dias = self.game.is_dias()
@@ -1657,11 +1658,11 @@ class DrawProposal(models.Model):
             if sc.power in powers:
                 if sc.count == 0:
                     raise ValidationError(_(u'Dead power %(power)s included in proposal'),
-                                          params = {'power': sc.power})
+                                          params={'power': sc.power})
             else:
                 if dias and sc.count > 0:
                     raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
-                                          params = {'power': sc.power})
+                                          params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
         if self.game.the_round.tournament.draw_secrecy == SECRET:
             if not self.passed:
@@ -1852,37 +1853,37 @@ class GamePlayer(models.Model):
                 err_str = _(u'%(player)s is listed as playing %(power)s in game %(game)s from %(season)s %(year)d')
                 if not self.last_year or self.last_year > other.first_year:
                     raise ValidationError(err_str,
-                                          params = {'player': other.player,
-                                                    'power': other.power,
-                                                    'game': other.game.name,
-                                                    'season': other.first_season,
-                                                    'year': other.first_year})
+                                          params={'player': other.player,
+                                                  'power': other.power,
+                                                  'game': other.game.name,
+                                                  'season': other.first_season,
+                                                  'year': other.first_year})
                 if self.last_year == other.first_year:
                     if self.last_season != SPRING or other.first_season != FALL:
                         raise ValidationError(err_str,
-                                              params = {'player': other.player,
-                                                        'power': other.power,
-                                                        'game': other.game.name,
-                                                        'season': other.first_season,
-                                                        'year': other.first_year})
+                                              params={'player': other.player,
+                                                      'power': other.power,
+                                                      'game': other.game.name,
+                                                      'season': other.first_season,
+                                                      'year': other.first_year})
             else:
                 # Their term must finish before ours started
                 err_str = _(u'%(player)s is listed as still playing %(power)s in game %(game)s from %(season)s %(year)d')
                 if not other.last_year or other.last_year > self.first_year:
                     raise ValidationError(err_str,
-                                          params = {'player': other.player,
-                                                    'power': other.power,
-                                                    'game': other.game,
-                                                    'season': other.first_season,
-                                                    'year': other.first_year})
+                                          params={'player': other.player,
+                                                  'power': other.power,
+                                                  'game': other.game,
+                                                  'season': other.first_season,
+                                                  'year': other.first_year})
                 if other.last_year == self.first_year:
                     if other.last_season != SPRING or self.first_season != FALL:
                         raise ValidationError(err_str,
-                                              params = {'player': other.player,
-                                                        'power': other.power,
-                                                        'game': other.game,
-                                                        'season': other.first_season,
-                                                        'year': other.first_year})
+                                              params={'player': other.player,
+                                                      'power': other.power,
+                                                      'game': other.game,
+                                                      'season': other.first_season,
+                                                      'year': other.first_year})
         # TODO Ensure no gaps - may have to be done elsewhere
 
     def __str__(self):
@@ -1954,7 +1955,7 @@ class CentreCount(models.Model):
         final_year = self.game.the_round.final_year
         if final_year and self.year > final_year:
             raise ValidationError(_(u'Games in this round end with %(year)d'),
-                                  params = {'year': final_year})
+                                  params={'year': final_year})
         # Not possible to more than double your count in one year
         # or to recover from an elimination
         try:

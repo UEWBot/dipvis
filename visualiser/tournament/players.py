@@ -106,7 +106,7 @@ def validate_wdd_player_id(value):
         return
     if p.geturl() != url:
         raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def validate_wdd_tournament_id(value):
     """
@@ -120,7 +120,7 @@ def validate_wdd_tournament_id(value):
         return
     if p.geturl() != url:
         raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def player_picture_location(instance, filename):
     """
@@ -386,7 +386,7 @@ class Player(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     wdd_player_id = models.PositiveIntegerField(unique=True,
-                                                validators = [validate_wdd_player_id],
+                                                validators=[validate_wdd_player_id],
                                                 verbose_name=_(u'WDD player id'),
                                                 blank=True,
                                                 null=True)
@@ -415,7 +415,7 @@ class Player(models.Model):
         except InvalidWDDId:
             # This can only happen if we couldn't get to the WDD when the Player was created
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                  params = {'wdd_id': self.wdd_player_id})
+                                  params={'wdd_id': self.wdd_player_id})
 
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
@@ -647,7 +647,7 @@ class PlayerTournamentRanking(models.Model):
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
     title = models.CharField(max_length=30, blank=True)
-    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+    wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
@@ -679,7 +679,7 @@ class PlayerGameResult(models.Model):
     year_eliminated = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
                                                        validators=[validate_year])
-    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+    wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
@@ -708,7 +708,7 @@ class PlayerAward(models.Model):
                               null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
-    wdd_tournament_id = models.PositiveIntegerField(validators = [validate_wdd_tournament_id],
+    wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)

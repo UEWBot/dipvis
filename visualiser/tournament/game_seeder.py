@@ -210,24 +210,24 @@ class GameSeeder:
         best_fitness = self._set_fitness(games)
         # The more iterations, the better the result, but the longer it takes
         for t in range(self.iterations):
-           # Try swapping a random player between two random games
-           g1 = random.choice(games)
-           g2 = random.choice(games)
-           p1 = g1.pop()
-           p2 = g2.pop()
-           if (p1 in g2) or (p2 in g1):
-               # Don't try to create games with players playing themselves
-               g1.add(p1)
-               g2.add(p2)
-               continue
-           g1.add(p2)
-           g2.add(p1)
-           fitness = self._set_fitness(games)
-           if fitness < best_fitness:
-               #print("Improving fitness from %d to %d" % (best_fitness, fitness))
-               #print(games)
-               best_fitness = fitness
-               best_set = copy.deepcopy(games)
+            # Try swapping a random player between two random games
+            g1 = random.choice(games)
+            g2 = random.choice(games)
+            p1 = g1.pop()
+            p2 = g2.pop()
+            if (p1 in g2) or (p2 in g1):
+                # Don't try to create games with players playing themselves
+                g1.add(p1)
+                g2.add(p2)
+                continue
+            g1.add(p2)
+            g2.add(p1)
+            fitness = self._set_fitness(games)
+            if fitness < best_fitness:
+                #print("Improving fitness from %d to %d" % (best_fitness, fitness))
+                #print(games)
+                best_fitness = fitness
+                best_set = copy.deepcopy(games)
         return best_set, best_fitness
 
     def _assign_players_wrapper(self, players):
@@ -304,7 +304,10 @@ class GameSeeder:
         players = self._player_pool(omitting_players, players_doubling_up)
         # Check that we have a multiple of seven players
         if len(players) % 7 != 0:
-            raise InvalidPlayerCount("%d total plus %d duplicated minus %d omitted" % (len(self.games_played_matrix), len(players_doubling_up), len(omitting_players)))
+            raise InvalidPlayerCount("%d total plus %d duplicated minus %d omitted"
+                                     % (len(self.games_played_matrix),
+                                        len(players_doubling_up),
+                                        len(omitting_players)))
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
         if self.games_played:
@@ -350,7 +353,8 @@ class GameSeeder:
             bg_str = "With starts=%d and iterations=%d" % (self.starts, self.iterations)
         else:
             bg_str = "With Exhaustive seeding"
-        print("%s, best fitness score is %d in %d seedings" % (bg_str, seedings[0][1], len(seedings)))
+        print("%s, best fitness score is %d in %d seedings" % (bg_str,
+                                                               seedings[0][1],
+                                                               len(seedings)))
         # Return the best (we don't care if multiple seedings are equally good)
         return seedings[0][0]
-

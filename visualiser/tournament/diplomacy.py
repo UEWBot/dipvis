@@ -43,7 +43,7 @@ def validate_year(value):
     """
     if value < FIRST_YEAR:
         raise ValidationError(_(u'%(value)d is not a valid game year'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def validate_year_including_start(value):
     """
@@ -51,7 +51,7 @@ def validate_year_including_start(value):
     """
     if value < FIRST_YEAR-1:
         raise ValidationError(_(u'%(value)d is not a valid game year'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def validate_ranking(value):
     """
@@ -59,10 +59,10 @@ def validate_ranking(value):
     """
     if value < 1:
         raise ValidationError(_('%(value)d is not a valid ranking'),
-                              params = {'value': value})
+                              params={'value': value})
     if value > GreatPower.objects.count():
         raise ValidationError(_('%(value)d is not a valid ranking'),
-                              params = {'value': value})
+                              params={'value': value})
 
 def validate_preference_string(the_string):
     """
@@ -75,7 +75,7 @@ def validate_preference_string(the_string):
     # Check for duplicated powers in the string
     if len(the_string) != len(set(the_string)):
         raise ValidationError(_('%(prefs)s contains duplicate characters'),
-                              params = {'prefs': the_string})
+                              params={'prefs': the_string})
     # Check for invalid powers in the string
     all_powers = set()
     for p in GreatPower.objects.all():
@@ -83,7 +83,7 @@ def validate_preference_string(the_string):
     invalid = set(the_string) - all_powers
     if len(invalid):
         raise ValidationError(_('%(prefs)s contains invalid character(s)'),
-                              params = {'prefs': the_string})
+                              params={'prefs': the_string})
 
 def game_image_location(instance, filename):
     """
