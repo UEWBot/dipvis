@@ -1043,7 +1043,7 @@ def enter_prefs(request, tournament_id):
 def upload_prefs(request, tournament_id):
     """Upload a CSV file to enter player country preferences"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    if 'GET' == request.method:
+    if request.method == 'GET':
         return render(request,
                       'tournaments/upload_prefs.html',
                       {'tournament':t})
