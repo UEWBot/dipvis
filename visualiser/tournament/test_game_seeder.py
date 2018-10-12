@@ -390,7 +390,7 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
     # TODO This is a copy-paste from the class above, then modified. Should share code
     def check_game_set(self, game_set, players):
         game_count = len(game_set)
-        self.assertEqual(game_count, players / 7)
+        self.assertEqual(game_count, players // 7)
         # Every game should be valid by itself
         for g in game_set:
             self.check_game(g)
