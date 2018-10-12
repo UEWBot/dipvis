@@ -33,7 +33,7 @@ from django.utils.translation import ugettext as _
 from django.core.exceptions import ValidationError
 
 TOTAL_SCS = 34
-WINNING_SCS = ((TOTAL_SCS/2)+1)
+WINNING_SCS = ((TOTAL_SCS//2)+1)
 
 FIRST_YEAR = 1901
 
