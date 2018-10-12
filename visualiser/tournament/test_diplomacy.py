@@ -19,9 +19,18 @@ from django.core.exceptions import ValidationError
 
 from tournament.diplomacy import validate_year, validate_year_including_start
 from tournament.diplomacy import validate_ranking
+from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
 
 class DiplomacyTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
+
+    # TOTAL_SCS
+    def test_total_scs(self):
+        self.assertEqual(TOTAL_SCS, 34)
+
+    # WINNING_SCS
+    def test_total_scs(self):
+        self.assertEqual(WINNING_SCS, 18)
 
     # validate_year()
     def test_validate_year_negative(self):
