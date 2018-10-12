@@ -352,10 +352,7 @@ class GameSeeder:
             players = self._player_pool(omitting_players, players_doubling_up)
             seedings = []
             for s in self._all_possible_seedings(players):
-                try:
-                    fitness = self._set_fitness(s)
-                except InvalidPlayer:
-                    continue
+                fitness = self._set_fitness(s)
                 seedings.append((s, fitness))
         # Sort them by fitness
         seedings.sort(key=itemgetter(1))
