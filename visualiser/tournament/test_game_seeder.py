@@ -419,5 +419,30 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
                 # Check that game_set has the expected fitness score
                 self.assertEqual(seeder._set_fitness(r), fitness)
 
+    def test_exhaustive_with_dups(self):
+        seeder = GameSeeder(seed_method=SeedMethod.EXHAUSTIVE)
+        for i in range(13):
+            seeder.add_player('%dp' %i)
+        dup = '%dp' % 2
+        r = seeder.seed_games(players_doubling_up=set([dup]))
+        # We should have two valid games, with player <dup> in both
+        self.assertEqual(len(r), 2)
+        for g in r:
+            self.check_game(g)
+            self.assertIn(dup, g)
+        self.assertEqual(seeder._set_fitness(r), 0)
+        # Add those games as played
+        for g in r:
+            seeder.add_played_game(g)
+        dup = '%dp' % 3
+        r = seeder.seed_games(players_doubling_up=set([dup]))
+        # We should again have two valid games, again with (different) player <dup> in both
+        self.assertEqual(len(r), 2)
+        for g in r:
+            self.check_game(g)
+            self.assertIn(dup, g)
+        # Check that game_set has the expected fitness score
+        self.assertEqual(seeder._set_fitness(r), 42)
+
 if __name__ == '__main__':
     unittest.main()

@@ -251,9 +251,13 @@ class GameSeeder:
         Returns a list of all possible seedings (each being a list of sets of 7 players).
         It will also include seedings with the same games in different orders.
         Note that this will take a long time for large numbers of players.
+        Raises _AssignmentFailed if no valid games can be formed from the specified players.
         """
         if len(players) % 7 != 0:
             raise InvalidPlayerCount("%d is not an exact multiple of 7" % len(players))
+        if len(set(players)) < 7:
+            # We've ended up with a group of players that we can't make a valid game from
+            raise _AssignmentFailed
         if len(players) == 7:
             # With 7 players, there is exactly one possible game,
             # and therefore exactly one possible seeding
@@ -270,9 +274,13 @@ class GameSeeder:
             for p in game:
                 p2.remove(p)
             # Now we can create each possible set that includes this game
-            for s in self._all_possible_seedings(p2):
-                s.append(game)
-                res.append(s)
+            try:
+                for s in self._all_possible_seedings(p2):
+                    s.append(game)
+                    res.append(s)
+            except _AssignmentFailed:
+                # No possible valid games with the remaining players
+                continue
         return res
 
     def _player_pool(self, omitting_players, players_doubling_up):
