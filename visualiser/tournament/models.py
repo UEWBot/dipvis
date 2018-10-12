@@ -444,18 +444,19 @@ class Tournament(models.Model):
         """
         Returns the positions and scores of everyone registered.
         Dict, keyed by player, of 2-tuples containing integer rankings (1 for first place, etc) and float scores.
+        Players who are flagged as unranked in the tournament get the special place UNRANKED.
         """
         result = {}
         scores = self.scores()
+        # First, deal with any unranked players
+        for tp in self.tournamentplayer_set.filter(unranked=True):
+            # Take it out of scores and add it to result
+            result[tp.player] = (UNRANKED, scores.pop(tp.player))
         last_score = None
         for i, (k, v) in enumerate(sorted([(k, v) for k, v in scores.items()],
                                           key=itemgetter(1),
                                           reverse=True),
                                    start=1):
-            # Check for unranked player
-            if self.tournamentplayer_set.get(player=k).unranked:
-                result[k] = (UNRANKED, v)
-                continue
             if v != last_score:
                 place, last_score = i, v
             result[k] = (place, v)

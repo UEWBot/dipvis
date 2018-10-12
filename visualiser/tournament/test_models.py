@@ -417,7 +417,12 @@ class TournamentModelTests(TestCase):
     def test_tournament_positions_and_scores_with_unranked(self):
         t = Tournament.objects.get(name='t1')
         p_and_s = t.positions_and_scores()
+        # The unranked player should have a special position
         self.assertEqual(p_and_s[self.p5][0], UNRANKED)
+        # As everyone else has the same score, they should all be ranked (joint) first
+        for k in p_and_s:
+            if k != self.p5:
+                self.assertEqual(p_and_s[k][0], 1)
 
     # Tournament.round_numbered()
     def test_tourney_round_numbered_negative(self):
