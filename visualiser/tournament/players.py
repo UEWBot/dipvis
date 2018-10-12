@@ -114,7 +114,7 @@ def validate_wdd_tournament_id(value):
     """
     Checks a WDD tournament id
     """
-    url = WDD_BASE_URL + 'tournament_class.php?id_tournament==%d' % value
+    url = WDD_BASE_URL + 'tournament_class.php?id_tournament=%d' % value
     try:
         p = urllib.request.urlopen(url)
     except urllib.request.URLError:

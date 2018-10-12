@@ -20,7 +20,8 @@ from django.utils import timezone
 
 from tournament.diplomacy import GreatPower
 from tournament.players import Player, PlayerRanking
-from tournament.players import validate_wdd_player_id, add_player_bg
+from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
+from tournament.players import add_player_bg
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import SECRET, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 
@@ -56,7 +57,17 @@ class PlayerTests(TestCase):
         # (in that case, we assume the id is valid)
         self.assertRaises(ValidationError, validate_wdd_player_id, 1)
 
-    # TODO validate_wdd_tournament_id()
+    # validate_wdd_tournament_id()
+    @tag('wdd')
+    def test_validate_wdd_tournament_id_cascadia(self):
+        self.assertIsNone(validate_wdd_tournament_id(1545))
+
+    @tag('wdd')
+    def test_validate_wdd_tournament_id_0(self):
+        # 0 is known to be unused
+        # Note that this test will fail if the WDD can't be reached
+        # (in that case, we assume the id is valid)
+        self.assertRaises(ValidationError, validate_wdd_tournament_id, 0)
 
     # Player.wdd_name()
     @tag('slow', 'wdd')
