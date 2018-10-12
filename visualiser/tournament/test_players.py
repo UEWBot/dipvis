@@ -130,8 +130,8 @@ class PlayerTests(TestCase):
         t2.delete()
         t1.delete()
 
-    @tag('slow', 'wdd')
     # Player.background()
+    @tag('slow', 'wdd')
     def test_player_background(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
@@ -199,8 +199,8 @@ class PlayerTests(TestCase):
 
     # TODO Player.save()
 
-    @tag('slow', 'wdd')
     # PlayerRanking.national_str()
+    @tag('slow', 'wdd')
     def test_playerranking_national_str(self):
         p = Player.objects.first()
         add_player_bg(p)
