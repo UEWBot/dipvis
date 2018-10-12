@@ -82,6 +82,14 @@ class GameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=6)
+
         CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
         CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
         CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
@@ -154,6 +162,20 @@ class GameScoringTests(TestCase):
                 self.assertEqual(scores[p], 100.0/4)
             else:
                 self.assertEqual(scores[p], 0.0)
+
+    def test_g_scoring_draws_eliminations(self):
+        """No draw, no solo, but with powers eliminated"""
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1903)
+        system = find_game_scoring_system('Draw size')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p in GreatPower.objects.all():
+            if p == self.austria:
+                self.assertEqual(scores[p], 0.0)
+            else:
+                self.assertEqual(scores[p], 100.0/6)
 
     def test_g_scoring_draws_solo(self):
         t = Tournament.objects.get(name='t1')

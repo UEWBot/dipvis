@@ -19,7 +19,8 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower
-from tournament.players import Player, PlayerRanking
+from tournament.players import Player, PlayerRanking, PlayerAward
+from tournament.players import PlayerGameResult, PlayerTournamentRanking
 from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
 from tournament.players import add_player_bg
 from tournament.models import Tournament, TournamentPlayer
@@ -68,6 +69,14 @@ class PlayerTests(TestCase):
         # Note that this test will fail if the WDD can't be reached
         # (in that case, we assume the id is valid)
         self.assertRaises(ValidationError, validate_wdd_tournament_id, 0)
+
+    # TODO player_picture_location()
+
+    # TODO wdd_url_to_id()
+
+    # TODO add_player_bg()
+
+    # TODO position_str()
 
     # Player.wdd_name()
     @tag('slow', 'wdd')
@@ -199,6 +208,50 @@ class PlayerTests(TestCase):
 
     # TODO Player.save()
 
+    # TODO Player.get_absolute_url()
+
+    # PlayerTournamentRanking
+    # PlayerTournamentRanking.__str__()
+    @tag('slow', 'wdd')
+    def test_playertournamentranking_str(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        ptr = PlayerTournamentRanking.objects.first()
+        p_str = str(ptr)
+        # We expect to find player name and tournament name
+        self.assertIn(ptr.player.first_name, p_str)
+        self.assertIn(ptr.player.last_name, p_str)
+        self.assertIn(ptr.tournament, p_str)
+
+    # PlayerGameResult
+    # PlayerGameResult.__str__()
+    @tag('slow', 'wdd')
+    def test_playergameresult_str(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pgr = PlayerGameResult.objects.first()
+        p_str = str(pgr)
+        # We expect to find player name and power name
+        self.assertIn(pgr.player.first_name, p_str)
+        self.assertIn(pgr.player.last_name, p_str)
+        self.assertIn(pgr.power.name, p_str)
+
+    # PlayerAward
+    # PlayerAward.__str__()
+    @tag('slow', 'wdd')
+    def test_playeraward_str(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pa = PlayerAward.objects.first()
+        p_str = str(pa)
+        # We expect to find player name, award name, and tournament name
+        self.assertIn(pa.player.first_name, p_str)
+        self.assertIn(pa.player.last_name, p_str)
+        self.assertIn(pa.name, p_str)
+        self.assertIn(pa.tournament, p_str)
+
+    # PlayerRanking
+
     # PlayerRanking.national_str()
     @tag('slow', 'wdd')
     def test_playerranking_national_str(self):
@@ -207,3 +260,12 @@ class PlayerTests(TestCase):
         pr = PlayerRanking.objects.first()
         # TODO Validate results
         pr.national_str()
+
+    # PlayerRanking.__str__()
+    @tag('slow', 'wdd')
+    def test_playerranking_str(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pr = PlayerRanking.objects.first()
+        # TODO Validate results
+        str(pr)

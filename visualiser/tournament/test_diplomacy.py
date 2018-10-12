@@ -19,6 +19,7 @@ from django.core.exceptions import ValidationError
 
 from tournament.diplomacy import validate_year, validate_year_including_start
 from tournament.diplomacy import validate_ranking
+from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
 
 class DiplomacyTests(TestCase):
@@ -76,4 +77,37 @@ class DiplomacyTests(TestCase):
 
     # TODO validate_preference_string()
 
+    # TODO game_image_location()
 
+    # GreatPower
+    # GreatPower.starting_centres
+    def test_greatpower_starting_centres(self):
+        for gp in GreatPower.objects.all():
+            if gp.abbreviation == 'R':
+                self.assertEqual(gp.starting_centres, 4)
+            else:
+                self.assertEqual(gp.starting_centres, 3)
+
+    # GreatPower.__str__()
+    def test_greatpower_str(self):
+        for gp in GreatPower.objects.all():
+            self.assertEqual(gp.name, str(gp))
+
+    # GameSet
+    # GameSet.__str__()
+    def test_gameset_str(self):
+        for gs in GameSet.objects.all():
+            self.assertEqual(gs.name, str(gs))
+
+    # SetPower
+    # SetPower.__str__()
+    def test_setpower_str(self):
+        for sp in SetPower.objects.all():
+            self.assertIn(sp.the_set.name, str(sp))
+            self.assertIn(sp.power.name, str(sp))
+
+    # SupplyCentre
+    # SupplyCentre.__str__()
+    def test_supplycentre_str(self):
+        for sc in SupplyCentre.objects.all():
+            self.assertEqual(sc.name, str(sc))

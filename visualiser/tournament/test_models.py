@@ -342,6 +342,8 @@ class TournamentModelTests(TestCase):
     def test_validate_vote_count_7(self):
         self.assertIsNone(validate_vote_count(7))
 
+    # TODO game_image_location()
+
     # TODO add_local_player_bg()
 
     # Tournament.powers_assigned_from_prefs()

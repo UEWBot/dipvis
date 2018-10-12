@@ -367,6 +367,16 @@ class GameSeederSeedingTest(unittest.TestCase):
         r = s.seed_games(players_doubling_up=dups)
         self.check_game_set(r, 21, duplicates=dups)
 
+    def test_seed_games_invalid_dup(self):
+        s = create_seeder()
+        dups = set(['X'])
+        self.assertRaises(InvalidPlayer, s.seed_games, players_doubling_up=dups)
+
+    def test_seed_games_invalid_sit(self):
+        s = create_seeder()
+        sits = set(['X'])
+        self.assertRaises(InvalidPlayer, s.seed_games, omitting_players=sits)
+
 class ExhaustiveGameSeederTest(unittest.TestCase):
     """
     Validate an exhaustive GameSeeder seeding games
@@ -443,6 +453,12 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
             self.assertIn(dup, g)
         # Check that game_set has the expected fitness score
         self.assertEqual(seeder._set_fitness(r), 42)
+
+    def test_exhaustive_wrong_count(self):
+        seeder = GameSeeder(seed_method=SeedMethod.EXHAUSTIVE)
+        for i in range(13):
+            seeder.add_player('%dp' %i)
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games)
 
 if __name__ == '__main__':
     unittest.main()
