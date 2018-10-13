@@ -546,13 +546,12 @@ class Tournament(models.Model):
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
         elif self.is_finished():
-            # TODO There are potentially ties here
-            for scores_reported, p in enumerate(self.tournamentplayer_set.all().order_by('-score')[:3],
-                                                start=1):
-                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
-                               % {'player': str(p.player),
-                                  'pos':  position_str(scores_reported),
-                                  'score':  p.score})
+            for player, (rank, score) in self.positions_and_scores().items():
+                if rank in [1, 2, 3]:
+                    results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
+                                   % {'player': str(player),
+                                      'pos':  position_str(rank),
+                                      'score':  score})
             # Add best countries
             for power, gps in self.best_countries().items():
                 gp = gps[0]
