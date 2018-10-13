@@ -696,6 +696,7 @@ class TournamentPlayer(models.Model):
             raise InvalidPreferenceList(str(e))
         # Remove any existing preferences for this player
         self.preference_set.all().delete()
+        # This is a single SELECT, versus one per power if we do it below
         to_power = {}
         for p in GreatPower.objects.all():
             to_power[p.abbreviation] = p
@@ -709,7 +710,7 @@ class TournamentPlayer(models.Model):
         More-or-less the inverse of create_preferences_from_string().
         """
         ret = []
-        for p in self.preference_set.all():
+        for p in self.preference_set.select_related('power').all():
             ret.append(p.power.abbreviation)
         return ''.join(ret)
 
