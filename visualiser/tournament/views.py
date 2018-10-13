@@ -1232,7 +1232,7 @@ def _seed_games(tournament, the_round):
             two_gamers.add(rp.tournamentplayer())
         else:
             assert 0, 'Unexpected game_count value %d for %s' % (rp.game_count, str(rp))
-    assert sitters or two_gamers
+    assert (not sitters) or (not two_gamers)
     if sitters:
         # Check that we have the right number of players sitting out
         assert (len(rps) - len(sitters)) % 7 == 0
