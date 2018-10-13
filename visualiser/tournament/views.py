@@ -1214,6 +1214,7 @@ def _seed_games(tournament, the_round):
     t = tournament
     r = the_round
     round_players = r.roundplayer_set.all()
+    tourney_players = t.tournamentplayer_set.all()
     # Get the set of players that haven't already been assigned to games for this round
     rps = []
     sitters = set()
@@ -1240,14 +1241,14 @@ def _seed_games(tournament, the_round):
         # Check that we have the right number of players playing two games
         assert (len(rps) + len(two_gamers)) % 7 == 0
     # We also need to flag any players who aren't present for this round as sitting out
-    for tp in t.tournamentplayer_set.all():
+    for tp in tourney_players:
         if not round_players.filter(player=tp.player).exists():
             sitters.add(tp)
     # Create the game seeder
     seeder = GameSeeder(starts=100, iterations=10)
     # Tell the seeder about every player in the tournament
     # (regardless of whether they're playing this round - they may have played already)
-    for tp in t.tournamentplayer_set.all():
+    for tp in tourney_players:
         seeder.add_player(tp)
     # Provide details of games already played this tournament
     for n in range(1, r.number()):
@@ -1260,7 +1261,7 @@ def _seed_games(tournament, the_round):
             assert len(game) == 7
             seeder.add_played_game(game)
     # Add in any biases
-    for tp in t.tournamentplayer_set.all():
+    for tp in tourney_players:
         # Just use seederbias_set so we only get each SeederBias once
         # because we only look at their player1
         for sb in tp.seederbias_set.all():
