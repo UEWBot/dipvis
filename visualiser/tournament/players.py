@@ -581,9 +581,8 @@ class Player(models.Model):
                            % {'name': self,
                               'dots': best,
                               'power': c_str})
-            solo_set = results_set.filter(final_sc_count__gte=WINNING_SCS)
         if (mask & MASK_SOLO_COUNT) != 0:
-            solos = solo_set.count()
+            solos = results_set.filter(final_sc_count__gte=WINNING_SCS).count()
             if solos > 0:
                 results.append(_(u'%(name)s has soloed %(solos)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).')
                                % {'name': self,
