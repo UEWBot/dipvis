@@ -583,8 +583,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(prefs[3].power, self.germany)
         self.assertEqual(prefs[4].ranking, 5)
         self.assertEqual(prefs[4].power, self.italy)
-        with self.assertNumQueries(1):
-            self.assertEqual(tp.prefs_string(), 'AEFGI')
+        self.assertEqual(tp.prefs_string(), 'AEFGI')
         tp.preference_set.all().delete()
 
     def test_tp_create_preferences_from_string_lowercase(self):
@@ -1877,8 +1876,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         rp = r.roundplayer_set.get(player=self.p8)
-        with self.assertNumQueries(1):
-            tp = rp.tournamentplayer()
+        tp = rp.tournamentplayer()
         self.assertEqual(tp.player, self.p8)
         self.assertEqual(tp.tournament, t)
 
@@ -1888,16 +1886,14 @@ class TournamentModelTests(TestCase):
         r = t.round_numbered(1)
         rp = RoundPlayer.objects.get(player=self.p8, the_round=r)
         # Player 8 is only in game g11
-        with self.assertNumQueries(1):
-            self.assertEqual(rp.gameplayers().count(), 1)
+        self.assertEqual(rp.gameplayers().count(), 1)
 
     def test_roundplayer_gameplayers_2(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         rp = RoundPlayer.objects.get(player=self.p1, the_round=r)
         # Player 2 is in games g11 and g12
-        with self.assertNumQueries(1):
-            self.assertEqual(rp.gameplayers().count(), 2)
+        self.assertEqual(rp.gameplayers().count(), 2)
 
     # RoundPlayer.clean()
     def test_roundplayer_clean(self):

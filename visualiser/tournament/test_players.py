@@ -131,10 +131,8 @@ class PlayerTests(TestCase):
         tp2 = TournamentPlayer.objects.create(tournament=t2,
                                               player=p)
         tp2.save()
-        with self.assertNumQueries(1):
-            self.assertEqual(1, p.tournamentplayers(including_unpublished=False).count())
-        with self.assertNumQueries(1):
-            self.assertEqual(2, p.tournamentplayers(including_unpublished=True).count())
+        self.assertEqual(1, p.tournamentplayers(including_unpublished=False).count())
+        self.assertEqual(2, p.tournamentplayers(including_unpublished=True).count())
         tp2.delete()
         tp1.delete()
         p.delete()
