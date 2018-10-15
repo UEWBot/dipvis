@@ -1536,8 +1536,7 @@ def game_sc_owners(request,
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     scs = SupplyCentre.objects.all()
-    scos = SupplyCentreOwnership.objects.filter(game=g)
-    set_powers = g.the_set.setpower_set.all()
+    scos = g.supplycentreownership_set.all()
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
@@ -1552,6 +1551,10 @@ def game_sc_owners(request,
         context['redirect_url'] = reverse(redirect_url_name,
                                           args=(tournament_id, game_name))
         return render(request, 'games/sc_owners.html', context)
+    set_powers = g.the_set.setpower_set.all()
+    power_to_colour = {}
+    for o in set_powers:
+        power_to_colour[o.power] = o.colour
     # Create a list of rows, each with a year and each supply centre's owner
     rows = []
     issues = []
@@ -1572,7 +1575,7 @@ def game_sc_owners(request,
                 # This is presumably because the centre was still neutral
                 row.append({'color': 'white', 'text': no_data_str})
             else:
-                row.append({'color': set_powers.get(power=sco.owner).colour,
+                row.append({'color': power_to_colour[sco.owner],
                             'text': sco.owner.abbreviation})
         rows.append(row)
         try:
