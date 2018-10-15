@@ -696,8 +696,6 @@ def tournament_game_results(request,
                     # New line if they played multiple games in this round
                     if gs:
                         gs += '<br>'
-                    # Final year of the game as a whole
-                    final_year = g.centrecount_set.order_by('-year').first().year
                     # Final CentreCount for this player in this game
                     final_sc = g.centrecount_set.filter(power=gp.power).order_by('-year').first()
                     if final_sc.count == 0:
@@ -710,6 +708,8 @@ def tournament_game_results(request,
                             centre_str = _('centre')
                         else:
                             centre_str = _('centres')
+                        # Final year of the game as a whole
+                        final_year = g.centrecount_set.order_by('-year').first().year
                         # Was the game soloed ?
                         soloer = g.soloer()
                         if gp == soloer:
@@ -722,26 +722,27 @@ def tournament_game_results(request,
                                                                                                   'power': gp.power.name,
                                                                                                   'dot_str': centre_str,
                                                                                                   'dots': final_sc.count}
-                        # Did a draw vote pass ?
-                        res = g.passed_draw()
-                        if res:
-                            if gp.power in res.powers():
-                                gs += _('%(n)d-way draw as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'n': res.draw_size(),
-                                                                                                                'power': gp.power.name,
-                                                                                                                'dots': final_sc.count,
-                                                                                                                'dot_str': centre_str,
-                                                                                                                'year': final_year}
-                            else:
-                                gs += _('Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_sc.year,
-                                                                                                      'power': gp.power.name,
-                                                                                                      'dot_str': centre_str,
-                                                                                                      'dots': final_sc.count}
                         else:
-                            # Game is either ongoing or reached a timed end
-                            gs += _('%(dots)d %(dot_str)s as %(power)s in %(year)d') % {'year': final_sc.year,
-                                                                                        'power': gp.power.name,
-                                                                                        'dot_str': centre_str,
-                                                                                        'dots': final_sc.count}
+                            # Did a draw vote pass ?
+                            res = g.passed_draw()
+                            if res:
+                                if gp.power in res.powers():
+                                    gs += _('%(n)d-way draw as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'n': res.draw_size(),
+                                                                                                                    'power': gp.power.name,
+                                                                                                                    'dots': final_sc.count,
+                                                                                                                    'dot_str': centre_str,
+                                                                                                                    'year': final_year}
+                                else:
+                                    gs += _('Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_sc.year,
+                                                                                                          'power': gp.power.name,
+                                                                                                          'dot_str': centre_str,
+                                                                                                          'dots': final_sc.count}
+                            else:
+                                # Game is either ongoing or reached a timed end
+                                gs += _('%(dots)d %(dot_str)s as %(power)s in %(year)d') % {'year': final_sc.year,
+                                                                                            'power': gp.power.name,
+                                                                                            'dot_str': centre_str,
+                                                                                            'dots': final_sc.count}
                     # game name and link
                     gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name,
                                                                      'url': g.get_absolute_url()}
