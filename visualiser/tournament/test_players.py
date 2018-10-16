@@ -23,7 +23,7 @@ from tournament.players import Player, PlayerRanking, PlayerAward
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
 from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
 from tournament.players import add_player_bg
-from tournament.players import MASK_SOLO_COUNT
+from tournament.players import MASK_ALL_BG
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import SECRET, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 
@@ -167,8 +167,13 @@ class PlayerTests(TestCase):
     def test_player_background_mask_2(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         add_player_bg(p)
-        # TODO Validate results
-        p.background(mask=MASK_SOLO_COUNT)
+        # Test each mask bit individually
+        mask = 1
+        while mask <= MASK_ALL_BG:
+            with self.subTest(mask=mask):
+                # TODO Validate results
+                p.background(mask=mask)
+                mask *= 2
 
     @tag('slow', 'wdd')
     def test_player_background_with_power(self):

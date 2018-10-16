@@ -20,12 +20,13 @@ from django.utils import timezone
 from django.db.models import Sum
 
 from tournament.diplomacy import GreatPower, SupplyCentre, GameSet
-from tournament.players import Player
+from tournament.players import Player, MASK_ALL_BG
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.models import MASK_ALL_NEWS
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SECRET, COUNTS, SPRING, ADJUSTMENTS, UNRANKED, PREFERENCES
 from tournament.models import find_game_scoring_system
@@ -463,6 +464,16 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         t.background()
 
+    def test_tournament_background_mask(self):
+        t = Tournament.objects.get(name='t3')
+        # Test each mask bit individually
+        mask = 1
+        while mask <= MASK_ALL_BG:
+            with self.subTest(mask=mask):
+                # TODO Validate results
+                t.background(mask=mask)
+                mask *= 2
+
     # Tournament.news()
     def test_tournament_news_in_progress(self):
         t = Tournament.objects.get(name='t1')
@@ -851,6 +862,17 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         r.background()
 
+    def test_round_background_mask(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_set.all()[0]
+        # Test each mask bit individually
+        mask = 1
+        while mask <= MASK_ALL_BG:
+            with self.subTest(mask=mask):
+                # TODO Validate results
+                r.background(mask=mask)
+                mask *= 2
+
     # Round.clean()
     def test_round_clean_missing_earliest_end(self):
         t = Tournament.objects.get(name='t1')
@@ -1237,11 +1259,31 @@ class TournamentModelTests(TestCase):
         # TODO Validate results
         g.news(include_game_name=True)
 
+    def test_game_news_mask(self):
+        g = Game.objects.first()
+        # Test each mask bit individually
+        mask = 1
+        while mask <= MASK_ALL_NEWS:
+            with self.subTest(mask=mask):
+                # TODO Validate results
+                g.news(mask=mask)
+                mask *= 2
+
     # Game.background()
     def test_game_background(self):
         g = Game.objects.first()
         # TODO Validate results
         g.background()
+
+    def test_game_background_mask(self):
+        g = Game.objects.first()
+        # Test each mask bit individually
+        mask = 1
+        while mask <= MASK_ALL_BG:
+            with self.subTest(mask=mask):
+                # TODO Validate results
+                g.background(mask=mask)
+                mask *= 2
 
     # Game.passed_draw()
     def test_game_passed_draw_none(self):
