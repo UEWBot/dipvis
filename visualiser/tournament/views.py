@@ -905,11 +905,13 @@ def round_scores(request, tournament_id):
         for tp in t.tournamentplayer_set.all():
             current = {'tp_id': tp, 'player': tp.player, 'overall_score': tp.score}
             for rp in tp.roundplayers():
-                current['round_%d' % rp.the_round.number()] = rp.score
+                r = rp.the_round
+                round_num = r.number()
+                current['round_%d' % round_num] = rp.score
                 # Scores for any games in the round
                 games = GamePlayer.objects.filter(player=tp.player,
-                                                  game__the_round=rp.the_round).distinct()
-                current['game_scores_%d' % rp.the_round.number()] = ', '.join([str(g.score) for g in games])
+                                                  game__the_round=r).distinct()
+                current['game_scores_%d' % round_num] = ', '.join([str(g.score) for g in games])
             data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
