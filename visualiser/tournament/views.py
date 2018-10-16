@@ -939,8 +939,8 @@ def roll_call(request, tournament_id):
                     # This must be one of the extra forms, still empty
                     continue
                 # Ensure that this Player is in the Tournament
-                i = TournamentPlayer.objects.get_or_create(player=p,
-                                                           tournament=t)[0]
+                i, created = TournamentPlayer.objects.get_or_create(player=p,
+                                                                    tournament=t)
                 try:
                     i.full_clean()
                 except ValidationError as e:
@@ -952,7 +952,8 @@ def roll_call(request, tournament_id):
                                    'tournament': t,
                                    'post_url': reverse('roll_call', args=(tournament_id,)),
                                    'formset' : formset})
-                i.save()
+                if created:
+                    i.save()
                 for r_name, value in form.cleaned_data.items():
                     if r_name is 'player':
                         # This column is just for the user
@@ -964,8 +965,8 @@ def roll_call(request, tournament_id):
                     # Ignore non-bool fields and ones that aren't True
                     if value is True:
                         # Ensure that we have a corresponding RoundPlayer
-                        i = RoundPlayer.objects.get_or_create(player=p,
-                                                              the_round=r)[0]
+                        i, created = RoundPlayer.objects.get_or_create(player=p,
+                                                                       the_round=r)
                         try:
                             i.full_clean()
                         except ValidationError as e:
@@ -977,7 +978,8 @@ def roll_call(request, tournament_id):
                                            'tournament': t,
                                            'post_url': reverse('roll_call', args=(tournament_id,)),
                                            'formset' : formset})
-                        i.save()
+                        if created:
+                            i.save()
                     else:
                         # delete any corresponding RoundPlayer
                         # This could be a player who was previously checked-off in error
@@ -1371,9 +1373,9 @@ def create_games(request, tournament_id, round_num):
             for f in formset:
                 # Update/create the game
                 try:
-                    g = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
-                                                   the_round=r,
-                                                   the_set=f.cleaned_data['the_set'])[0]
+                    g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
+                                                            the_round=r,
+                                                            the_set=f.cleaned_data['the_set'])
                 except KeyError:
                     # This must be an extra, unused formset
                     continue
@@ -1387,7 +1389,8 @@ def create_games(request, tournament_id, round_num):
                                   {'tournament': t,
                                    'round': r,
                                    'formset' : formset})
-                g.save()
+                if created:
+                    g.save()
                 # Assign the players to the game
                 for power, field in f.cleaned_data.items():
                     try:
