@@ -775,10 +775,17 @@ def tournament_best_countries(request,
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score').distinct())
+    # We're going to need all the scores and URLs for every game in the tournament
+    # Best to avoid deriving this information seven times for each game
+    all_games = Game.objects.filter(the_round__tournament=t)
+    all_urls_and_scores = {}
+    for g in all_games:
+        all_urls_and_scores[g] = (g.get_absolute_url(), g.name, g.scores())
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
     rows = []
+    # Add a row at a time, containing the best remaining result for each power
     while gps:
         row = []
         for p in set_powers:
@@ -790,9 +797,9 @@ def tournament_best_countries(request,
             row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f'
                        % (gp.player.get_absolute_url(),
                           gp.player,
-                          gp.game.get_absolute_url(),
-                          gp.game.name,
-                          gp.game.scores()[gp.power]))
+                          all_urls_and_scores[gp.game][0], # URL
+                          all_urls_and_scores[gp.game][1], # name
+                          all_urls_and_scores[gp.game][2][gp.power])) # score
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
