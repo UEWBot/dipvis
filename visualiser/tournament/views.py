@@ -620,13 +620,8 @@ def tournament_scores(request,
     tps = t.tournamentplayer_set.order_by('-score', 'player__last_name', 'player__first_name')
     rds = t.round_set.all()
     rounds = [r.number() for r in rds]
-    # Grab the scores for each round once.
-    # This will get us the "if the round ended now" scores
-    round_scores = {}
-    for r in rds:
-        round_scores[r] = r.scores()
-    # Grab the tournament scores and positions, which will also be "if it ended now"
-    t_positions_and_scores = t.positions_and_scores()
+    # Grab the tournament scores and positions and round scores, all "if it ended now"
+    t_positions_and_scores, round_scores = t.positions_and_scores()
     # Construct a list of lists with [position, player name, round 1 score, ..., round n score, tournament score]
     scores = []
     for p in tps:
@@ -2057,8 +2052,8 @@ def view_classification_csv(request, tournament_id):
     """Return a WDD-compatible "classification" CSV file for the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('-score')
-    # Grab the tournament scores and positions, which will also be "if it ended now"
-    t_positions_and_scores = t.positions_and_scores()
+    # Grab the tournament scores and positions, "if it ended now"
+    t_positions_and_scores = t.positions_and_scores()[0]
     # Grab the best country rankings
     best_countries = t.best_countries()
     # Grab the top board, if any

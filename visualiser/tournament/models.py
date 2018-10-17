@@ -179,11 +179,12 @@ class TournamentScoringSystem(ABC):
     name = u''
 
     @abstractmethod
-    def scores(self, round_players):
+    def scores_detail(self, round_players):
         """
-        Takes the set of RoundPlayer objects of interest.
-        Combines the score attribute of ones for each player into an overall score for that player.
-        Returns a dict, indexed by player key, of scores.
+        This is the same as scores(), excpet that it also returns the Round scores.
+        Returns a 2-tuple:
+        - a dict, indexed by player key, of tournament scores
+        - a list, indexed by round, of dicts, indexed by player key, of round scores
         """
         pass
 
@@ -197,18 +198,20 @@ class TScoringSum(TournamentScoringSystem):
         self.name = name
         self.scored_rounds = scored_rounds
 
-    def scores(self, round_players):
+    def scores_detail(self, round_players):
         """
         If a player played more than N rounds, sum the best N round scores.
         Otherwise, sum all their round scores.
-        Return a dict, indexed by player key, of scores.
+        Return a 2-tuple:
+        - a dict, indexed by player key, of tournament scores
+        - a dict, indexed by round, of dicts, indexed by player key, of round scores
         """
         # Retrieve all the scores for all the rounds involved.
         # This will give us "if the round ended now" scores for in-progress round(s)
         round_scores = {}
         for r in Round.objects.filter(roundplayer__in=round_players).distinct():
             round_scores[r] = r.scores()
-        retval = {}
+        t_scores = {}
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
             # Find just their rounds
@@ -219,8 +222,8 @@ class TScoringSum(TournamentScoringSystem):
                 player_scores.append(round_scores[r.the_round][r.player])
             player_scores.sort(reverse=True)
             # Add up the first N
-            retval[p] = sum(player_scores[:self.scored_rounds])
-        return retval
+            t_scores[p] = sum(player_scores[:self.scored_rounds])
+        return (t_scores, round_scores)
 
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [
@@ -417,50 +420,75 @@ class Tournament(models.Model):
         """
         return self.power_assignment == PREFERENCES
 
-    def scores(self, force_recalculation=False):
+    def _scores_detail_calculated(self):
         """
-        Returns the scores for everyone registered for the tournament.
-        Dict, keyed by player, of floats.
+        Calculate the scores.
+        Return a 2-tuple:
+        - Dict, keyed by player, of float tournament scores.
+        - Dict, keyed by round, of dicts, keyed by player, of float round scores
         """
-        # If the tournament is over, report the stored scores unless we're told to recalculate
-        if self.is_finished() and not force_recalculation:
-            retval = {}
-            for p in self.tournamentplayer_set.all():
-                retval[p.player] = p.score
-            return retval
-
         # Find the scoring system to combine round scores into a tournament score
         system = find_tournament_scoring_system(self.tournament_scoring_system)
         if not system:
             raise InvalidScoringSystem(self.tournament_scoring_system)
-        scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
+        t_scores, r_scores = system.scores_detail(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
         # Now add in anyone who has yet to attend a round
         for tp in self.tournamentplayer_set.all():
-            if tp.player not in scores:
-                scores[tp.player] = 0.0
-        return scores
+            if tp.player not in t_scores:
+                t_scores[tp.player] = 0.0
+                # TODO Do we need to tweak r_scores here, too?
+        return t_scores, r_scores
+
+    def calculated_scores(self):
+        """
+        Calculates the scores for everyone registered for the tournament.
+        Return a dict, keyed by player, of floats.
+        """
+        return self._scores_detail_calculated()[0]
+
+    def scores_detail(self):
+        """
+        Returns the scores for everyone registered for the tournament.
+        If the tournament is over, this will be the stored scores.
+        If the tournament is ongoing, it will calculate the "if all games ended now" scores.
+        Return a 2-tuple:
+        - Dict, keyed by player, of float tournament scores.
+        - Dict, keyed by round, of dicts, keyed by player, of float round scores
+        """
+        # If the tournament is over, report the stored scores
+        if self.is_finished():
+            t_scores = {}
+            for p in self.tournamentplayer_set.all():
+                t_scores[p.player] = p.score
+            r_scores = {}
+            for r in self.round_set.all():
+                r_scores[r] = r.scores()
+            return t_scores, r_scores
+        return self._scores_detail_calculated()
 
     def positions_and_scores(self):
         """
         Returns the positions and scores of everyone registered.
-        Dict, keyed by player, of 2-tuples containing integer rankings (1 for first place, etc) and float scores.
-        Players who are flagged as unranked in the tournament get the special place UNRANKED.
+        Return a 2-tuple:
+        - Dict, keyed by player, of 2-tuples containing integer rankings (1 for first place, etc) and float tournament scores.
+          Players who are flagged as unranked in the tournament get the special place UNRANKED.
+        - Dict, keyed by round, of dicts, keyed by player, of float round scores
         """
         result = {}
-        scores = self.scores()
+        t_scores, r_scores = self.scores_detail()
         # First, deal with any unranked players
         for tp in self.tournamentplayer_set.filter(unranked=True):
             # Take it out of scores and add it to result
-            result[tp.player] = (UNRANKED, scores.pop(tp.player))
+            result[tp.player] = (UNRANKED, t_scores.pop(tp.player))
         last_score = None
-        for i, (k, v) in enumerate(sorted([(k, v) for k, v in scores.items()],
+        for i, (k, v) in enumerate(sorted([(k, v) for k, v in t_scores.items()],
                                           key=itemgetter(1),
                                           reverse=True),
                                    start=1):
             if v != last_score:
                 place, last_score = i, v
             result[k] = (place, v)
-        return result
+        return result, r_scores
 
     def round_numbered(self, number):
         """
@@ -479,8 +507,8 @@ class Tournament(models.Model):
         """
         retval = {}
         # Populate retval. Dict, keyed by GreatPower, of lists of GamePlayers
-        for r in self.round_set.all():
-            for g in r.game_set.all():
+        for r in self.round_set.all().prefetch_related('game_set'):
+            for g in r.game_set.all().prefetch_related('gameplayer_set'):
                 for gp in g.gameplayer_set.all():
                     # Skip this player if they are unranked in the event
                     if gp.tournamentplayer().unranked:
@@ -546,7 +574,7 @@ class Tournament(models.Model):
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
         elif self.is_finished():
-            for player, (rank, score) in self.positions_and_scores().items():
+            for player, (rank, score) in self.positions_and_scores()[0].items():
                 if rank in [1, 2, 3]:
                     results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
                                    % {'player': str(player),
@@ -591,7 +619,7 @@ class Tournament(models.Model):
                 # Include who is leading the tournament
                 include_leader = True
         if include_leader:
-            the_scores = self.scores()
+            the_scores = self.scores_detail()[0]
             if the_scores:
                 max_score = max(the_scores.values())
                 winners = [str(k) for k, v in the_scores.items() if v == max_score]
@@ -671,7 +699,7 @@ class TournamentPlayer(models.Model):
         """
         Where is the player (currently) ranked overall in the tournament?
         """
-        return self.tournament.positions_and_scores()[self.player][0]
+        return self.tournament.positions_and_scores()[0][self.player][0]
 
     def roundplayers(self):
         """
@@ -1022,7 +1050,7 @@ class Game(models.Model):
         position_to_gps = {}
         gps = self.gameplayer_set.all()
         # Find current tournament positions (and scores)
-        ranks = self.the_round.tournament.positions_and_scores()
+        ranks = self.the_round.tournament.positions_and_scores()[0]
         # Check for any GamePlayer that already has a power assigned
         # and find the interesting player positions
         for gp in gps:
@@ -1162,13 +1190,13 @@ class Game(models.Model):
         if self.is_finished:
             # Just report the final result
             return [self.result_str(include_game_name) + '.']
-        player_dict = self.players(latest=True)
         centres_set = self.centrecount_set.order_by('-year')
         # Which is the most recent year we have info for ?
         last_year = centres_set[0].year
         # If the game just started, there is no news, so return the background instead
         if last_year == 1900:
             return self.background()
+        player_dict = self.players(latest=True)
         current_scs = centres_set.filter(year=last_year)
         current_scos = self.supplycentreownership_set.filter(year=last_year)
         results = []
@@ -1323,11 +1351,9 @@ class Game(models.Model):
         """
         Returns a list of CentreCounts for the current leader(s)
         """
-        centres_set = self.centrecount_set.order_by('-year')
-        last_year = centres_set[0].year
-        current_scs = centres_set.filter(year=last_year)
-        max_scs = current_scs.order_by('-count')[0].count
-        first = current_scs.order_by('-count').filter(count=max_scs)
+        current_scs = self.centrecount_set.filter(year=self.final_year()).order_by('-count')
+        max_scs = current_scs[0].count
+        first = current_scs.filter(count=max_scs)
         return list(first)
 
     def neutrals(self, year=None):
@@ -1362,10 +1388,9 @@ class Game(models.Model):
         If a year is provided, it returns a list of the powers that survived that whole year.
         If a year is provided for which there are no CentreCounts, an empty list will be returned.
         """
-        scs = self.centrecount_set.all().order_by('-year')
         if not year:
-            year = scs.first().year
-        final_scs = scs.filter(year=year)
+            year = self.final_year()
+        final_scs = self.centrecount_set.filter(year=year)
         return [sc for sc in final_scs if sc.count > 0]
 
     def result_str(self, include_game_name=False):
@@ -1468,7 +1493,7 @@ class Game(models.Model):
             # if the tournament is (now) finished, store the player scores
             t = self.the_round.tournament
             if t.is_finished():
-                scores = t.scores(True)
+                scores = t.calculated_scores()
                 for p in t.tournamentplayer_set.all():
                     try:
                         p.score = scores[p.player]
