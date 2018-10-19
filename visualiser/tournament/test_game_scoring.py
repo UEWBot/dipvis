@@ -303,8 +303,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
 
-    # GScoringCarnage
-    def test_g_scoring_carnage_simple(self):
+    # GScoringCarnage (with dead equal)
+    def test_g_scoring_carnage1_simple(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year=1901)
@@ -321,7 +321,7 @@ class GameScoringTests(TestCase):
         # 2 SCs are still neutral
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
 
-    def test_g_scoring_carnage_solo(self):
+    def test_g_scoring_carnage1_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year=1907)
@@ -336,7 +336,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
 
-    def test_g_scoring_carnage_eliminations(self):
+    def test_g_scoring_carnage1_eliminations(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year=1906)
@@ -355,4 +355,60 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
             else:
                 self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    # Carnage with elimination order
+    def test_g_scoring_carnage2_simple(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Carnage with elimination order')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.get(power=p)
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+            if sc.count == 4:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+            else:
+                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
+
+    def test_g_scoring_carnage2_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1907)
+        system = find_game_scoring_system('Carnage with elimination order')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.get(power=p)
+            if sc.count == 18:
+                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+            else:
+                self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    def test_g_scoring_carnage2_eliminations(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1906)
+        system = find_game_scoring_system('Carnage with elimination order')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.get(power=p)
+            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
+            if sc.count == 17:
+                self.assertEqual(s, 7000 + sc.count)
+            elif sc.count == 7:
+                self.assertEqual(s, 6000 + sc.count)
+            elif sc.count == 5:
+                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
+            else:
+                # Austria died in 1905, France and Italy in 1906
+                if p in [self.france, self.italy]:
+                    self.assertEqual(s, (3000 + 2000) / 2 + sc.count)
+                else:
+                    self.assertEqual(s, 1000 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)

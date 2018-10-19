@@ -17,6 +17,8 @@
 """
 This module contains scoring systems for individual diplomacy games.
 """
+import operator
+
 from abc import ABC, abstractmethod
 
 from django.utils.translation import ugettext as _
@@ -113,7 +115,7 @@ class GScoringDrawSize(GameScoringSystem):
                 retval[sc.power] = 100.0 / survivors
         return retval
 
-def adjust_rank_score(centre_counts, rank_points):
+def _adjust_rank_score(centre_counts, rank_points):
     """
     Takes a list of CentreCounts for one year of one game, ordered highest-to-lowest
     and a list of ranking points for positions, ordered from first place to last.
@@ -142,7 +144,7 @@ def adjust_rank_score(centre_counts, rank_points):
         else:
             rank_points.append(points / count)
     # And recursively continue
-    return rank_points[0:i] + adjust_rank_score(centre_counts[i:], rank_points[i:])
+    return rank_points[0:i] + _adjust_rank_score(centre_counts[i:], rank_points[i:])
 
 class GScoringCDiplo(GameScoringSystem):
     """
@@ -168,7 +170,7 @@ class GScoringCDiplo(GameScoringSystem):
         retval = {}
         final_scs = _final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
-        rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
+        rank_pts = _adjust_rank_score(list(final_scs), self.position_pts)
         for i, sc in enumerate(final_scs):
             if final_scs[0].count >= WINNING_SCS:
                 retval[sc.power] = self.loss_pts
@@ -177,6 +179,15 @@ class GScoringCDiplo(GameScoringSystem):
             else:
                 retval[sc.power] = self.played_pts + sc.count + rank_pts[i]
         return retval
+
+class _DummySC(object):
+    """
+    Used by Carnage scoring with elimination ordering.
+    Just has power and count attributes.
+    """
+    def __init__(self, power, count):
+        self.power = power
+        self.count = count
 
 class GScoringCarnage(GameScoringSystem):
     """
@@ -187,23 +198,56 @@ class GScoringCarnage(GameScoringSystem):
     case the soloer gets the 34 SC points.
     """
     # TODO Add support for dead powers scoring based on elimination order
-    def __init__(self):
-        self.name = _('Carnage with dead equal')
+    def __init__(self, name, dead_equal=True):
+        self.name = name
+        self.dead_equal = dead_equal
         self.position_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
 
-    # TODO There's a lot of overlap with CDiplo here
     def scores(self, centre_counts):
         retval = {}
         final_scs = _final_year_scs(centre_counts)
-        # Tweak the ranking points to allow for ties
-        rank_pts = adjust_rank_score(list(final_scs), list(self.position_pts))
-        for i, sc in enumerate(final_scs):
-            if final_scs[0].count >= WINNING_SCS:
+
+        # Solos are special
+        if final_scs[0].count >= WINNING_SCS:
+            retval[final_scs[0].power] = sum(self.position_pts) + TOTAL_SCS
+            for sc in final_scs[1:]:
                 retval[sc.power] = 0
-                if sc.count >= WINNING_SCS:
-                    retval[sc.power] = sum(self.position_pts) + TOTAL_SCS
-            else:
+            return retval
+
+        # Giving all the dead powers equal scores is easy
+        if self.dead_equal:
+            # Tweak the ranking points to allow for ties
+            rank_pts = _adjust_rank_score(list(final_scs), list(self.position_pts))
+            for i, sc in enumerate(final_scs):
                 retval[sc.power] = sc.count + rank_pts[i]
+            return retval
+
+        # Split out the eliminated powers
+        live_scs = list(final_scs.exclude(count=0))
+        pos_pts = list(self.position_pts)
+        pos_pts_1 = pos_pts[:len(live_scs)]
+        # Tweak the alive powers points to allow for ties
+        rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
+        for i, sc in enumerate(live_scs):
+            retval[sc.power] = sc.count + rank_pts[i]
+
+        # If nobody was eliminated, we're done
+        if len(pos_pts) == len(pos_pts_1):
+            return retval
+
+        dead_scs = final_scs.filter(count=0)
+        pos_pts_2 = pos_pts[len(pos_pts_1)-len(pos_pts):]
+        # Find when the dead powers died
+        dummys = []
+        for sc in dead_scs:
+            p = sc.power
+            year = sc.game.centrecount_set.filter(power=p).filter(count=0).order_by('year').first().year
+            # For both year and SC count, higher is better
+            dummys.append(_DummySC(p, year))
+        dummys.sort(key=operator.attrgetter('count'), reverse=True)
+        rank_pts = _adjust_rank_score(dummys, pos_pts_2)
+        for i, sc in enumerate(dummys):
+            retval[sc.power] = rank_pts[i]
         return retval
 
 class GScoringSumOfSquares(GameScoringSystem):
@@ -242,5 +286,6 @@ G_SCORING_SYSTEMS = [
     GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
     GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringSumOfSquares(),
-    GScoringCarnage(),
+    GScoringCarnage(_('Carnage with dead equal'), True),
+    GScoringCarnage(_('Carnage with elimination order'), False),
 ]
