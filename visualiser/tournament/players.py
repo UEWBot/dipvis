@@ -557,7 +557,7 @@ class Player(models.Model):
     def _results(self, power=None, mask=MASK_ALL_BG):
         """ List of tournament game achievements, optionally with one Great Power """
         results = []
-        results_set = self.playergameresult_set.order_by('year')
+        results_set = self.playergameresult_set.all()
         if power:
             results_set = results_set.filter(power=power)
             c_str = _(u' as %(power)s') % {'power': power}
