@@ -364,7 +364,9 @@ class BaseSCOwnerFormset(BaseFormSet):
 
 class GameEndedForm(forms.Form):
     """Form that just provides a checkbox to indicate that a Game is over"""
-    is_finished = forms.BooleanField(required=False, initial=False)
+    is_finished = forms.BooleanField(label=_('Game ended'),
+                                     required=False,
+                                     initial=False)
 
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
