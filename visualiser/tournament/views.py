@@ -1812,8 +1812,8 @@ def sc_counts(request, tournament_id, game_name):
                     g.is_finished = True
                     g.save()
             # Set the "game over" flag as appropriate
-            # TODO May not want this to override the determination above
-            g.is_finished = end_form.cleaned_data['is_finished']
+            # Game is over if it reached the final year, somebody won, or the checkbox was checked
+            g.is_finished = g.is_finished or end_form.cleaned_data['is_finished']
             g.save()
             # Redirect to the read-only version
             return HttpResponseRedirect(reverse('game_sc_chart',
