@@ -196,7 +196,7 @@ class GScoringCarnage(GameScoringSystem):
         retval = {}
         final_scs = _final_year_scs(centre_counts)
         # Tweak the ranking points to allow for ties
-        rank_pts = adjust_rank_score(list(final_scs), self.position_pts)
+        rank_pts = adjust_rank_score(list(final_scs), list(self.position_pts))
         for i, sc in enumerate(final_scs):
             if final_scs[0].count >= WINNING_SCS:
                 retval[sc.power] = 0

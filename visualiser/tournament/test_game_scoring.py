@@ -82,21 +82,29 @@ class GameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=3)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=13)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=3)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=4)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=6)
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
 
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=2)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
@@ -112,7 +120,7 @@ class GameScoringTests(TestCase):
     def test_g_scoring_solos_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year=1907)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -133,6 +141,7 @@ class GameScoringTests(TestCase):
         self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
+        self.assertAlmostEqual(sum(scores.values()), 100)
 
     def test_g_scoring_draws_7way_draw(self):
         t = Tournament.objects.get(name='t1')
@@ -146,6 +155,7 @@ class GameScoringTests(TestCase):
         self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
+        self.assertAlmostEqual(sum(scores.values()), 100)
 
     def test_g_scoring_draws_4way_draw(self):
         t = Tournament.objects.get(name='t1')
@@ -162,12 +172,14 @@ class GameScoringTests(TestCase):
                 self.assertEqual(scores[p], 100.0/4)
             else:
                 self.assertEqual(scores[p], 0.0)
+        # 2 neutrals don't matter
+        self.assertEqual(sum(scores.values()), 100)
 
     def test_g_scoring_draws_eliminations(self):
         """No draw, no solo, but with powers eliminated"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1903)
+        scs = g.centrecount_set.filter(year=1905)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -176,11 +188,12 @@ class GameScoringTests(TestCase):
                 self.assertEqual(scores[p], 0.0)
             else:
                 self.assertEqual(scores[p], 100.0/6)
+        self.assertAlmostEqual(sum(scores.values()), 100)
 
     def test_g_scoring_draws_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year=1907)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -190,6 +203,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 100)
             else:
                 self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 100)
 
     # GScoringCDiplo
     def test_g_scoring_cdiplo_no_solo(self):
@@ -212,7 +226,7 @@ class GameScoringTests(TestCase):
     def test_g_scoring_cdiplo_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year=1907)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -222,6 +236,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 100)
             else:
                 self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 100)
 
     def test_g_scoring_cdiplo80_no_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -243,7 +258,7 @@ class GameScoringTests(TestCase):
     def test_g_scoring_cdiplo80_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year=1907)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -253,6 +268,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 80)
             else:
                 self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 80)
 
     # GScoringSumOfSquares
     def test_g_scoring_squares_no_solo(self):
@@ -275,7 +291,7 @@ class GameScoringTests(TestCase):
     def test_g_scoring_squares_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year=1907)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -285,6 +301,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 100)
             else:
                 self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 100)
 
     # GScoringCarnage
     def test_g_scoring_carnage_simple(self):
@@ -298,15 +315,16 @@ class GameScoringTests(TestCase):
             sc = scs.get(power=p)
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + 4)
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
             else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + 5)
+                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
+        # 2 SCs are still neutral
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
 
     def test_g_scoring_carnage_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year=1907)
         system = find_game_scoring_system('Carnage with dead equal')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -316,6 +334,25 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
             else:
                 self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
 
-    # TODO test Carnage scoring with eliminations but no solo
-
+    def test_g_scoring_carnage_eliminations(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1906)
+        system = find_game_scoring_system('Carnage with dead equal')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+        for p,s in scores.items():
+            sc = scs.get(power=p)
+            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
+            if sc.count == 17:
+                self.assertEqual(s, 7000 + sc.count)
+            elif sc.count == 7:
+                self.assertEqual(s, 6000 + sc.count)
+            elif sc.count == 5:
+                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
+            else:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
