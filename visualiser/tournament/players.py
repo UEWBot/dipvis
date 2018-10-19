@@ -577,10 +577,12 @@ class Player(models.Model):
                               'power': c_str})
         if (mask & MASK_BEST_SC_COUNT) != 0:
             best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
-            results.append(_(u'%(name)s has finished with as many as %(dots)d centres%(power)s in tournament games.')
-                           % {'name': self,
-                              'dots': best,
-                              'power': c_str})
+            # SC count is optional
+            if best:
+                results.append(_(u'%(name)s has finished with as many as %(dots)d centres%(power)s in tournament games.')
+                               % {'name': self,
+                                  'dots': best,
+                                  'power': c_str})
         if (mask & MASK_SOLO_COUNT) != 0:
             solos = results_set.filter(final_sc_count__gte=WINNING_SCS).count()
             if solos > 0:

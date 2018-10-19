@@ -219,6 +219,21 @@ class PlayerTests(TestCase):
         # TODO Validate results
         p.background()
 
+    def test_player_background_no_sc_count(self):
+        p = Player(first_name='Joe',
+                   last_name='Bloggs')
+        p.save()
+        # Nofinal_sc_count (or other optional fields)
+        pgr = PlayerGameResult(tournament_name='Best Tournament',
+                               game_name='Top Board',
+                               player=p,
+                               power=self.austria,
+                               date=timezone.now(),
+                               position=2)
+        pgr.save()
+        # TODO validate results
+        p.background()
+
     # TODO Player.save()
 
     # TODO Player.get_absolute_url()
