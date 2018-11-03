@@ -725,6 +725,16 @@ class TournamentModelTests(TestCase):
                         weight=3)
         sb.clean()
 
+    # SeederBias.__str__()
+    def test_seederbias_str(self):
+        t = Tournament.objects.get(name='t1')
+        tp1 = t.tournamentplayer_set.first()
+        tp2 = t.tournamentplayer_set.last()
+        sb = SeederBias(player1=tp1,
+                        player2=tp2,
+                        weight=3)
+        str(sb)
+
     # TODO Preference
 
     # Round.scores()

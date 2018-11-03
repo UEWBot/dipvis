@@ -788,6 +788,10 @@ class SeederBias(models.Model):
             raise ValidationError(_('The players must differ'))
         if self.player1.tournament != self.player2.tournament:
             raise ValidationError(_('The players must be playing the same tournament'))
+    def __str__(self):
+        return "%s and %s in %s" % (self.player1.player,
+                                    self.player2.player,
+                                    self.player1.tournament)
 
 class Preference(models.Model):
     """
