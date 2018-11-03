@@ -566,10 +566,16 @@ class Tournament(models.Model):
         if current_round:
             # Include who is leading the tournament
             include_leader = True
-            # And which round is currently being played
-            results.append(_(u'Round %(r_num)d of %(rounds)d is currently being played.')
-                           % {'r_num': current_round.number(),
-                              'rounds': self.round_set.count()})
+            if current_round.in_progress():
+                # And which round is currently being played
+                results.append(_(u'Round %(r_num)d of %(rounds)d is currently being played.')
+                               % {'r_num': current_round.number(),
+                                  'rounds': self.round_set.count()})
+            else:
+                results.append(_(u'Round %(r_num)d of %(rounds)d will start at %(time)s.')
+                               % {'r_num': current_round.number(),
+                                  'rounds': self.round_set.count(),
+                                  'date': str(current_round.start)})
             # Get the news for the current round
             results += current_round.news()
         # If the tournament is over, just report the top three players, plus best countries
@@ -937,6 +943,8 @@ class Round(models.Model):
         # Note if the round has finished
         if self.is_finished():
             results.append(_(u'Round %(r_num)d has ended.') % {'r_num': self.number()})
+        elif not self.in_progress:
+            results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': self.number()})
         else:
             # Otherwise, add a count of completed games
             if done_games == 0:
