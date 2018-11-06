@@ -2031,6 +2031,7 @@ def add_game_image(request, tournament_id, game_name=''):
 class PlayerIndexView(generic.ListView):
     """Player index"""
     model = Player
+    paginate_by = 25
     template_name = 'players/index.html'
     context_object_name = 'player_list'
 
