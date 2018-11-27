@@ -144,8 +144,10 @@ class GameSeeder:
             raise InvalidPlayer(str(player2))
         try:
             self.games_played_matrix[player1][player2] += weight
+            self.games_played_matrix[player2][player1] += weight
         except KeyError:
             self.games_played_matrix[player1][player2] = weight
+            self.games_played_matrix[player2][player1] = weight
         # fitness is now meaningful
         self.games_played = True
 
