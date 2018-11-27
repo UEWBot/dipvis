@@ -153,8 +153,8 @@ class GameSeeder:
 
     def _fitness_score(self, game):
         """
-        Returns a fitness score (0-42) for a game. Lower is better.
-        The value returned is twice the number of times each pair of players has played together already.
+        Returns a fitness score (0-??) for a game. Lower is better.
+        The value returned is twice the square of the number of times each pair of players has played together already.
         game is a set of 7 players (player can be any type as long as it's the same in all calls to this object).
         """
         f = 0
@@ -163,7 +163,7 @@ class GameSeeder:
             for q in game:
                 if p != q:
                     try:
-                        f += self.games_played_matrix[p][q]
+                        f += (self.games_played_matrix[p][q] ** 2)
                     except KeyError:
                         # These players have not played each other
                         pass

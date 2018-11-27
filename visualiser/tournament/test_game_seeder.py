@@ -217,6 +217,30 @@ class GameSeederSetupTest(unittest.TestCase):
         game = set(['A', 'C', 'D', 'H', 'I', 'J', 'K'])
         self.assertEqual(6, seeder._fitness_score(game))
 
+    def test_fitness_score_third_round(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        seeder.add_player('G')
+        seeder.add_player('H')
+        seeder.add_player('I')
+        seeder.add_player('J')
+        seeder.add_player('K')
+        seeder.add_player('L')
+        seeder.add_player('M')
+        seeder.add_player('N')
+        seeder.add_player('O')
+        seeder.add_player('P')
+        seeder.add_player('Q')
+        seeder.add_played_game(set(['A', 'B', 'C', 'D', 'E', 'F', 'G']))
+        seeder.add_played_game(set(['A', 'B', 'H', 'I', 'J', 'K', 'L']))
+        game = set(['A', 'B', 'M', 'N', 'O', 'P', 'Q'])
+        self.assertEqual(8, seeder._fitness_score(game))
+
 def create_seeder(starts=1, iterations=1000):
     # As there's no way to remove players or duplicates, we'll re-create the seeder in each test
     seeder = GameSeeder(starts, iterations)
