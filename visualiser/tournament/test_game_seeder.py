@@ -132,6 +132,18 @@ class GameSeederSetupTest(unittest.TestCase):
             if 'B' in g:
                 self.assertNotIn('A', g)
 
+    def test_add_bias_fitness(self):
+        seeder = GameSeeder()
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        seeder.add_player('G')
+        seeder.add_bias('A', 'B', 3)
+        self.assertEqual(18, seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
+
     # _fitness_score()
     def test_fitness_score_no_games(self):
         seeder = GameSeeder()
