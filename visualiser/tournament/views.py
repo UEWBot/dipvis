@@ -1254,7 +1254,9 @@ def _seed_games(tournament, the_round):
         if not round_players.filter(player=tp.player).exists():
             sitters.add(tp)
     # Create the game seeder
-    seeder = GameSeeder(starts=100, iterations=10)
+    seeder = GameSeeder(GreatPower.objects.all(),
+                        starts=100,
+                        iterations=10)
     # Tell the seeder about every player in the tournament
     # (regardless of whether they're playing this round - they may have played already)
     for tp in tourney_players:
@@ -1265,7 +1267,7 @@ def _seed_games(tournament, the_round):
         for g in rnd.game_set.all():
             game = set()
             for gp in g.gameplayer_set.all():
-                game.add(gp.tournamentplayer())
+                game.add((gp.tournamentplayer(), gp.power))
             # TODO This doesn't deal with replacement players
             assert len(game) == 7
             seeder.add_played_game(game)

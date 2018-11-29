@@ -46,6 +46,10 @@ class InvalidWeight(Exception):
     """It is meaningless to add a bias with a weight of zero."""
     pass
 
+class PowersNotUnique(Exception):
+    """Each player has to play a distinct power."""
+    pass
+
 class _AssignmentFailed(Exception):
     """Internal exception used when we end up with an invalid assignment of players to games."""
     pass
@@ -74,8 +78,9 @@ class GameSeeder:
         The number of candidate seedings and the number of iterations can both be specified.
     In both cases, a fitness measure is used to determine the best candidate seeding.
     """
-    def __init__(self, starts=1, iterations=1000, seed_method=SeedMethod.RANDOM):
+    def __init__(self, powers, starts=1, iterations=1000, seed_method=SeedMethod.RANDOM):
         """
+        powers is a list of powers that can be played. Anything unique can be used to identify a power.
         seed_method specifies the algorithm used to find a candidate seeding:
             RANDOM - pick sets of players at random
             EXHAUSTIVE - try every possible seeding
@@ -91,6 +96,9 @@ class GameSeeder:
         self.players = []
         # Dict, keyed by player, of dicts, keyed by (other) player, of integer counts of shared games
         self.games_played_matrix = {}
+        self.powers = powers
+        # Dict, keyed by player, of dicts, keyed by power, of integer counts of games the player has played that power
+        self.powers_played = {}
 
     def add_player(self, player):
         """
@@ -102,27 +110,34 @@ class GameSeeder:
             raise InvalidPlayer(str(player))
         self.players.append(player)
         self.games_played_matrix[player] = {}
+        self.powers_played[player] = {}
+        for p in self.powers:
+            self.powers_played[player][p] = 0
 
     def add_played_game(self, game):
         """
         Add a previously-played game to take into account.
-        game is a set of 7 players (player can be any type as long as it's the same in all calls to this object).
+        game is a set of 7 (player, power) 2-tuples (player can be any type as long as it's the same in all calls to this object).
         Can raise InvalidPlayer if any player is unknown.
         Raises InvalidPlayerCount if the games doesn't have seven players.
         """
         if len(game) != 7:
             raise InvalidPlayerCount(str(len(game)))
-        for p in game:
-            if p not in self.games_played_matrix:
-                raise InvalidPlayer(str(p))
-            for q in game:
-                if p != q:
+        # Check that each power is only present once
+        if len(set([power for player, power in game])) != 7:
+            raise PowersNotUnique()
+        for player1, power1 in game:
+            if player1 not in self.games_played_matrix:
+                raise InvalidPlayer(str(player1))
+            for player2, power2 in game:
+                if player1 != player2:
                     try:
-                        self.games_played_matrix[p][q] += 1
+                        self.games_played_matrix[player1][player2] += 1
                     except KeyError:
-                        if q not in self.games_played_matrix:
-                            raise InvalidPlayer(str(q))
-                        self.games_played_matrix[p][q] = 1
+                        if player2 not in self.games_played_matrix:
+                            raise InvalidPlayer(str(player2))
+                        self.games_played_matrix[player1][player2] = 1
+            self.powers_played[player1][power1] += 1
         self.games_played = True
 
     def add_bias(self, player1, player2, weight):
@@ -151,9 +166,21 @@ class GameSeeder:
         # fitness is now meaningful
         self.games_played = True
 
+    def _power_fitness(self, game):
+        """
+        Returns a fitness score (0-??) for a game. Lower is better.
+        In this case, a game is a set of (player, power) 2-tuples.
+        The value returned is the sum of the number of times each player has previously played the specified power.
+        """
+        f = 0
+        for player, power in game:
+            f += self.powers_played[player][power]
+        return f
+
     def _fitness_score(self, game):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
+        In this case, a game is just a set of seven players.
         The value returned is twice the square of the number of times each pair of players has played together already.
         game is a set of 7 players (player can be any type as long as it's the same in all calls to this object).
         """
