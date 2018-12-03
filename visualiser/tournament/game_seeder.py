@@ -97,6 +97,7 @@ class GameSeeder:
         # Dict, keyed by player, of dicts, keyed by (other) player, of integer counts of shared games
         self.games_played_matrix = {}
         self.powers = powers
+        self.num_powers = len(powers)
         # Dict, keyed by player, of dicts, keyed by power, of integer counts of games the player has played that power
         self.powers_played = {}
 
@@ -117,14 +118,14 @@ class GameSeeder:
     def add_played_game(self, game):
         """
         Add a previously-played game to take into account.
-        game is a set of 7 (player, power) 2-tuples (player can be any type as long as it's the same in all calls to this object).
+        game is a set of (player, power) 2-tuples (player can be any type as long as it's the same in all calls to this object).
         Can raise InvalidPlayer if any player is unknown.
         Raises InvalidPlayerCount if the games doesn't have seven players.
         """
-        if len(game) != 7:
+        if len(game) != self.num_powers:
             raise InvalidPlayerCount(str(len(game)))
         # Check that each power is only present once
-        if len(set([power for player, power in game])) != 7:
+        if len(set([power for player, power in game])) != self.num_powers:
             raise PowersNotUnique()
         for player1, power1 in game:
             if player1 not in self.games_played_matrix:
@@ -182,7 +183,7 @@ class GameSeeder:
         Returns a fitness score (0-??) for a game. Lower is better.
         In this case, a game is just a set of seven players.
         The value returned is twice the square of the number of times each pair of players has played together already.
-        game is a set of 7 players (player can be any type as long as it's the same in all calls to this object).
+        game is a set of players (player can be any type as long as it's the same in all calls to this object).
         """
         f = 0
         # Sum the number of times each pair of players has played together already
@@ -199,14 +200,14 @@ class GameSeeder:
     def _assign_players_to_games_randomly(self, players):
         """
         Assign all the players provided to games completely at random, with no weighting.
-        Returns a list of sets of 7 players.
-        len(players) must be a multiple of 7.
+        Returns a list of sets of players.
+        len(players) must be a multiple of the number of powers.
         Raises _AssignmentFailed if the algorithm messes up.
         """
         res = []
         game = set()
         while players:
-            if (len(players)) == 7 and (len(set(players)) < 7):
+            if (len(players)) == self.num_powers and (len(set(players)) < self.num_powers):
                 # We have just seven players left, but not seven unique players
                 raise _AssignmentFailed
             # Pick a random player to add to the current game
@@ -216,7 +217,7 @@ class GameSeeder:
                 continue
             players.remove(p)
             game.add(p)
-            if len(game) == 7:
+            if len(game) == self.num_powers:
                 # Done with this game. Start a new one
                 res.append(game)
                 game = set()
@@ -277,25 +278,25 @@ class GameSeeder:
 
     def _all_possible_seedings(self, players):
         """
-        Returns a list of all possible seedings (each being a list of sets of 7 players).
+        Returns a list of all possible seedings (each being a list of sets of players).
         It will also include seedings with the same games in different orders.
         Note that this will take a long time for large numbers of players.
         Raises _AssignmentFailed if no valid games can be formed from the specified players.
         """
-        if len(players) % 7 != 0:
-            raise InvalidPlayerCount("%d is not an exact multiple of 7" % len(players))
-        if len(set(players)) < 7:
+        if len(players) % self.num_powers != 0:
+            raise InvalidPlayerCount("%d is not an exact multiple of %d" % (len(players), self.num_powers))
+        if len(set(players)) < self.num_powers:
             # We've ended up with a group of players that we can't make a valid game from
             raise _AssignmentFailed
-        if len(players) == 7:
-            # With 7 players, there is exactly one possible game,
+        if len(players) == self.num_powers:
+            # With this number of players, there is exactly one possible game,
             # and therefore exactly one possible seeding
             return [[set(players)]]
         res = []
         # Go through all possible combinations for the first game:
-        for t in itertools.combinations(players, 7):
+        for t in itertools.combinations(players, self.num_powers):
             game = set(t)
-            if len(game) != 7:
+            if len(game) != self.num_powers:
                 # Can't have any players playing themselves
                 continue
             # Make a copy of players, and remove the players in game
@@ -334,15 +335,15 @@ class GameSeeder:
 
     def _seed_games(self, omitting_players, players_doubling_up):
         """
-        Returns a list of games, where each game is a set of 7 players, and the fitness score for the set.
+        Returns a list of games, where each game is a set of players, and the fitness score for the set.
         omitting_players is a set of previously-added players not to assign to games.
         players_doubling_up is an optional set of previously-added players to assign to two games each.
         Can raise InvalidPlayer if any player in omitting_players or players_doubling_up is unknown.
-        Can raise InvalidPlayerCount if the resulting number of players isn't an exact multiple of 7.
+        Can raise InvalidPlayerCount if the resulting number of players isn't an exact multiple of the number of powers.
         """
         players = self._player_pool(omitting_players, players_doubling_up)
         # Check that we have a multiple of seven players
-        if len(players) % 7 != 0:
+        if len(players) % self.num_powers != 0:
             raise InvalidPlayerCount("%d total plus %d duplicated minus %d omitted"
                                      % (len(self.games_played_matrix),
                                         len(players_doubling_up),
@@ -358,13 +359,13 @@ class GameSeeder:
 
     def seed_games(self, omitting_players=set(), players_doubling_up=set()):
         """
-        Returns a list of games, where each game is a set of 7 players.
+        Returns a list of games, where each game is a set of players.
         omitting_players is an optional set of previously-added players not to assign to games.
         players_doubling_up is an optional set of previously-added players to assign to two games each.
         Internally, this will generate the number of sets specified when the class was instantiated,
         and return the best one.
         Can raise InvalidPlayer if any player in omitting_players is unknown.
-        Can raise InvalidPlayerCount if the resulting number of players isn't an exact multiple of 7.
+        Can raise InvalidPlayerCount if the resulting number of players isn't an exact multiple of the number of powers.
         """
         # Generate the specified number of seedings
         # Use the random method if no games have been played yet, because any seeding is fine
