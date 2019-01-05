@@ -237,6 +237,84 @@ class GameSeederSetupTest(unittest.TestCase):
                                                        ('F', '6'),
                                                        ('G', '7')])))
 
+    # _assign_some_powers()
+    def test_assign_some_powers(self):
+        seeder=GameSeeder(self.powers)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        seeder.add_player('G')
+        games = seeder._assign_some_powers(['A', 'B', 'C', 'D', 'E', 'F', 'G'],
+                                           self.powers)
+        self.assertEqual(len(games), 7*6*5*4*3*2)
+        # Ideally, we'd also check for duplicate seedings
+
+    # _assign_powers()
+    def test_assign_powers(self):
+        seeder=GameSeeder(self.powers)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        seeder.add_player('G')
+        # Add games so that every player has played six powers once each,
+        # leaving just one ideal game where they each play the unplayed power
+        seeder.add_played_game(set([('A', '1'),
+                                    ('B', '2'),
+                                    ('C', '3'),
+                                    ('D', '4'),
+                                    ('E', '5'),
+                                    ('F', '6'),
+                                    ('G', '7')]))
+        seeder.add_played_game(set([('A', '2'),
+                                    ('B', '3'),
+                                    ('C', '4'),
+                                    ('D', '5'),
+                                    ('E', '6'),
+                                    ('F', '7'),
+                                    ('G', '1')]))
+        seeder.add_played_game(set([('A', '3'),
+                                    ('B', '4'),
+                                    ('C', '5'),
+                                    ('D', '6'),
+                                    ('E', '7'),
+                                    ('F', '1'),
+                                    ('G', '2')]))
+        seeder.add_played_game(set([('A', '4'),
+                                    ('B', '5'),
+                                    ('C', '6'),
+                                    ('D', '7'),
+                                    ('E', '1'),
+                                    ('F', '2'),
+                                    ('G', '3')]))
+        seeder.add_played_game(set([('A', '5'),
+                                    ('B', '6'),
+                                    ('C', '7'),
+                                    ('D', '1'),
+                                    ('E', '2'),
+                                    ('F', '3'),
+                                    ('G', '4')]))
+        seeder.add_played_game(set([('A', '6'),
+                                    ('B', '7'),
+                                    ('C', '1'),
+                                    ('D', '2'),
+                                    ('E', '3'),
+                                    ('F', '4'),
+                                    ('G', '5')]))
+        game = seeder._assign_powers(set(['A', 'B', 'C', 'D', 'E', 'F', 'G']))
+        self.assertTrue(('A', '7') in game)
+        self.assertTrue(('B', '1') in game)
+        self.assertTrue(('C', '2') in game)
+        self.assertTrue(('D', '3') in game)
+        self.assertTrue(('E', '4') in game)
+        self.assertTrue(('F', '5') in game)
+        self.assertTrue(('G', '6') in game)
+
     # _fitness_score()
     def test_fitness_score_no_games(self):
         seeder = GameSeeder(self.powers)
@@ -413,6 +491,8 @@ def create_seeder(starts=1, iterations=1000):
     seeder.add_player('S')
     seeder.add_player('T')
     return seeder
+
+# TODO test seed_games_and_powers()
 
 def with_powers(game):
     # Convert a set of seven players to a set of seven (player, power) 2-tuples

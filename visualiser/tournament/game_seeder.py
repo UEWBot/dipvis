@@ -178,6 +178,49 @@ class GameSeeder:
             f += self.powers_played[player][power]
         return f
 
+    def _assign_some_powers(self, players, powers):
+        """
+        Returns a list of sets of (player, power) 2- tuples.
+        This is the set of all possible games with that player and power list.
+        """
+        assert(len(players) == len(powers))
+        # If there's just one player left, there's only one possible game
+        if len(players) == 1:
+            pair = (players[0], powers[0])
+            game = set()
+            game.add(pair)
+            result = list()
+            result.append(game)
+            return result
+        result = list()
+        player = players.pop(0)
+        for power in powers:
+            pair = (player, power)
+            powers2 = powers.copy()
+            powers2.remove(power)
+            for game in self._assign_some_powers(players.copy(), powers2):
+                game.add(pair)
+                result.append(game)
+        return result
+
+    def _assign_powers(self, game):
+        """
+        Returns a set of (player, power) 2-tuples.
+        game is a set of players.
+        """
+        # Try every combination of power assignments in a random order, and keep the best
+        best_fitness = 99999
+        player_list = list(game)
+        power_list = list(self.powers)
+        random.shuffle(player_list)
+        games = self._assign_some_powers(player_list, power_list)
+        for game in games:
+            score = self._power_fitness(game)
+            if score < best_fitness:
+                best_fitness = score
+                best_result = game
+        return best_result
+
     def _fitness_score(self, game):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
@@ -356,6 +399,17 @@ class GameSeeder:
             fitness = 0
         # Return the resulting list of games
         return res, fitness
+
+    def seed_games_and_powers(self, omitting_players=set(), players_doubling_up=set()):
+        """
+        Returns a list of games, where each game is a set of (player, power) 2-tuples.
+        Parameters and exceptions are the same as seed_games()
+        """
+        result = list()
+        games = self.seed_games(omitting_players, players_doubling_up)
+        for game in games:
+            result.append(self._assign_powers(game))
+        return result
 
     def seed_games(self, omitting_players=set(), players_doubling_up=set()):
         """
