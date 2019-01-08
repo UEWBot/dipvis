@@ -1218,12 +1218,10 @@ def get_seven(request, tournament_id, round_num):
                   'rounds/get_seven.html',
                   context)
 
-def _seed_games(tournament, the_round):
-    """Wrapper round GameSeeder to do the actual seeding for a round"""
-    t = tournament
-    r = the_round
-    round_players = r.roundplayer_set.all()
-    tourney_players = t.tournamentplayer_set.all()
+def _sitters_and_two_gamers(tournament, the_round):
+    """ Return a (sitters, two_gamers) 2-tuple"""
+    tourney_players = tournament.tournamentplayer_set.all()
+    round_players = the_round.roundplayer_set.all()
     # Get the set of players that haven't already been assigned to games for this round
     rps = []
     sitters = set()
@@ -1253,6 +1251,11 @@ def _seed_games(tournament, the_round):
     for tp in tourney_players:
         if not round_players.filter(player=tp.player).exists():
             sitters.add(tp)
+    return sitters, two_gamers
+
+def _create_game_seeder(tournament, round_number):
+    """Return a GameSeeder that knows about the tournament so far"""
+    tourney_players = tournament.tournamentplayer_set.all()
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
                         starts=100,
@@ -1262,8 +1265,8 @@ def _seed_games(tournament, the_round):
     for tp in tourney_players:
         seeder.add_player(tp)
     # Provide details of games already played this tournament
-    for n in range(1, r.number()):
-        rnd = t.round_numbered(n)
+    for n in range(1, round_number):
+        rnd = tournament.round_numbered(n)
         for g in rnd.game_set.all():
             game = set()
             for gp in g.gameplayer_set.all():
@@ -1271,12 +1274,18 @@ def _seed_games(tournament, the_round):
             # TODO This doesn't deal with replacement players
             assert len(game) == 7
             seeder.add_played_game(game)
-    # Add in any biases
+    # Add in any biases now that all players have been added
     for tp in tourney_players:
         # Just use seederbias_set so we only get each SeederBias once
         # because we only look at their player1
         for sb in tp.seederbias_set.all():
             seeder.add_bias(sb.player1, sb.player2, sb.weight)
+    return seeder
+
+def _seed_games(tournament, the_round):
+    """Wrapper round GameSeeder to do the actual seeding for a round"""
+    seeder = _create_game_seeder(tournament, the_round.number())
+    sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
     # Generate the games
     return seeder.seed_games(omitting_players=sitters,
                              players_doubling_up=two_gamers)
