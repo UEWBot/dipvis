@@ -73,9 +73,11 @@ DRAW_SECRECY = (
 )
 
 # Power assignment methods
+AUTO = 'A'
 MANUAL = 'M'
 PREFERENCES = 'P'
 POWER_ASSIGN_METHODS = (
+    (AUTO, _('Minimising playing the same power')),
     (MANUAL, _('Manually by TD or at the board')),
     (PREFERENCES, _('Using player preferences and ranking')),
 )
