@@ -466,6 +466,12 @@ class GameSeederSetupTest(unittest.TestCase):
         game = set(['A', 'B', 'M', 'N', 'O', 'P', 'Q'])
         self.assertEqual(8, seeder._fitness_score(game))
 
+    # seed_games() (with no players)
+    def test_seed_games_no_players(self):
+        seeder = GameSeeder(self.powers)
+        games = seeder.seed_games()
+        self.assertEqual(len(games), 0)
+
 def create_seeder(starts=1, iterations=1000):
     # As there's no way to remove players or duplicates, we'll re-create the seeder in each test
     seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)

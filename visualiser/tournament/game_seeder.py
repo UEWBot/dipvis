@@ -385,6 +385,8 @@ class GameSeeder:
         Can raise InvalidPlayerCount if the resulting number of players isn't an exact multiple of the number of powers.
         """
         players = self._player_pool(omitting_players, players_doubling_up)
+        if not len(players):
+            return [], 0
         # Check that we have a multiple of seven players
         if len(players) % self.num_powers != 0:
             raise InvalidPlayerCount("%d total plus %d duplicated minus %d omitted"
