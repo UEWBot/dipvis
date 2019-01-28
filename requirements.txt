@@ -1,0 +1,10 @@
+beautifulsoup4==4.7.1
+bs4==0.0.1
+Django==1.11.6
+django-extensions==2.1.4
+django-slowtests==0.5.1
+Pillow==5.4.1
+pytz==2018.9
+six==1.12.0
+soupsieve==1.7.3
+sqlparse==0.2.4
