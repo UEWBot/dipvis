@@ -771,13 +771,19 @@ def tournament_best_countries(request,
                               redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).order_by('-score').distinct())
     # We're going to need all the scores and URLs for every game in the tournament
     # Best to avoid deriving this information seven times for each game
     all_games = Game.objects.filter(the_round__tournament=t)
     all_urls_and_scores = {}
     for g in all_games:
         all_urls_and_scores[g] = (g.get_absolute_url(), g.name, g.scores())
+    # gps is a list of all gameplayers, sorted by current score for each power
+    # GamePlayer.score only gets a value when the game has ended
+    # so we have to do the sort manually
+    gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).distinct())
+    gps.sort(key=lambda gp: all_urls_and_scores[gp.game][2][gp.power], reverse=True)
+    # Shift any unranked players to the end of the list, regardless of score
+    gps.sort(key=lambda gp: t.tournamentplayer_set.get(player=gp.player).unranked)
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
