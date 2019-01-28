@@ -473,7 +473,7 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(len(games), 0)
 
 def create_seeder(starts=1, iterations=1000):
-    # As there's no way to remove players or duplicates, we'll re-create the seeder in each test
+    # As there's no way to remove players, we'll re-create the seeder in each test
     seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
     # 20 players to start with
     seeder.add_player('A')
