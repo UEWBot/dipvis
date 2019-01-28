@@ -1311,6 +1311,59 @@ class TournamentModelTests(TestCase):
                 g.news(mask=mask)
                 mask *= 2
 
+    def test_game_news_sc_gains_losses(self):
+        # Austria lost three, flagging it as interesting
+        # France gained three, making it interesting
+        # Germany gained two and lost two, making it interesting
+        # Italy gained three, and so is interesting
+        # The rest are uninteresting, having only gained one or two
+        # Both neutral dots and owned dots make powers interesting
+        test_data = {
+                     SupplyCentre.objects.get(abbreviation='Lon'): self.england,
+                     SupplyCentre.objects.get(abbreviation='Lvp'): self.england,
+                     SupplyCentre.objects.get(abbreviation='Edi'): self.england,
+                     SupplyCentre.objects.get(abbreviation='Nwy'): self.england,
+                     SupplyCentre.objects.get(abbreviation='Bre'): self.france,
+                     SupplyCentre.objects.get(abbreviation='Par'): self.france,
+                     SupplyCentre.objects.get(abbreviation='Mar'): self.france,
+                     SupplyCentre.objects.get(abbreviation='Spa'): self.france,
+                     SupplyCentre.objects.get(abbreviation='Por'): self.france,
+                     SupplyCentre.objects.get(abbreviation='Mun'): self.france,
+                     SupplyCentre.objects.get(abbreviation='Den'): self.germany,
+                     SupplyCentre.objects.get(abbreviation='Hol'): self.germany,
+                     SupplyCentre.objects.get(abbreviation='Kie'): self.germany,
+                     SupplyCentre.objects.get(abbreviation='Ven'): self.italy,
+                     SupplyCentre.objects.get(abbreviation='Rom'): self.italy,
+                     SupplyCentre.objects.get(abbreviation='Nap'): self.italy,
+                     SupplyCentre.objects.get(abbreviation='Tri'): self.italy,
+                     SupplyCentre.objects.get(abbreviation='Vie'): self.italy,
+                     SupplyCentre.objects.get(abbreviation='Gre'): self.italy,
+                     SupplyCentre.objects.get(abbreviation='Ber'): self.russia,
+                     SupplyCentre.objects.get(abbreviation='StP'): self.russia,
+                     SupplyCentre.objects.get(abbreviation='War'): self.russia,
+                     SupplyCentre.objects.get(abbreviation='Mos'): self.russia,
+                     SupplyCentre.objects.get(abbreviation='Sev'): self.russia,
+                     SupplyCentre.objects.get(abbreviation='Bud'): self.russia,
+                     SupplyCentre.objects.get(abbreviation='Con'): self.turkey,
+                     SupplyCentre.objects.get(abbreviation='Ank'): self.turkey,
+                     SupplyCentre.objects.get(abbreviation='Smy'): self.turkey,
+                     SupplyCentre.objects.get(abbreviation='Bul'): self.turkey,
+                    }
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        # Add some SC ownerships that give us gains and losses
+        for k,v in test_data.items():
+            sco = SupplyCentreOwnership(sc=k, owner=v, year=1901, game=g)
+            sco.save()
+        g.create_or_update_sc_counts_from_ownerships(1901)
+        # TODO Validate the result
+        g.news()
+        # Remove everything we added to the database
+        for sco in g.supplycentreownership_set.filter(year=1901):
+            sco.delete()
+        for sc in g.centrecount_set.filter(year=1901):
+            sc.delete()
+
     # Game.background()
     def test_game_background(self):
         g = Game.objects.first()

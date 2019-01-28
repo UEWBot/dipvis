@@ -1269,8 +1269,15 @@ class Game(models.Model):
                     losses = []
                 if (len(gains) > 2) or (len(losses) > 2) or (len(gains) + len(losses) > 3):
                     if gains:
-                        gains_str = ', '.join(_('%(sc)s (from %(power)s)' % {'sc': s.abbreviation,
-                                                                             'power': p.abbreviation}) for s, p in gains)
+                        gains_str = ''
+                        for s, p in gains:
+                            if len(gains_str):
+                                gains_str += ', '
+                            if p:
+                                gains_str += _('%(sc)s (from %(power)s)' % {'sc': s.abbreviation,
+                                                                            'power': p.abbreviation})
+                            else:
+                                gains_str += _('%(sc)s (neutral)' % {'sc': s.abbreviation})
                     else:
                         gains_str = _('no centres')
                     if losses:
