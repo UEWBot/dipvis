@@ -683,6 +683,12 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.preference_set.count(), 0)
         self.assertEqual(tp.prefs_string(), '')
 
+    # TournamentPlayer.__str__()
+    def test_tournamentplayer_str(self):
+        tp = TournamentPlayer.objects.first()
+        # TODO Validate result
+        str(tp)
+
     # TODO TournamentPlayer.save()
 
     # validate_weight()
@@ -733,9 +739,18 @@ class TournamentModelTests(TestCase):
         sb = SeederBias(player1=tp1,
                         player2=tp2,
                         weight=3)
+        # TODO Validate result
         str(sb)
 
-    # TODO Preference
+    # Preference._str__()
+    def test_preference_str(self):
+        tp = TournamentPlayer.objects.first()
+        self.assertEqual(tp.preference_set.count(), 0)
+        tp.create_preferences_from_string('TRIAFGE')
+        p = Preference.objects.first()
+        # TODO Validate result
+        str(p)
+        tp.preference_set.all().delete()
 
     # Round.scores()
     def test_round_scores_invalid(self):
@@ -942,6 +957,12 @@ class TournamentModelTests(TestCase):
         r = t.round_set.all()[0]
         r.get_absolute_url()
 
+    # Round.__str__()
+    def test_round_str(self):
+        r = Round.objects.first()
+        # TODO Validate result
+        str(r)
+
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):
         now = timezone.now()
@@ -1068,6 +1089,7 @@ class TournamentModelTests(TestCase):
         t.delete()
         self.assertEqual(Preference.objects.count(), 0)
 
+    # TODO Game.assign_powers_from_prefs() raising PowerAlreadyAssigned
 
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
@@ -1173,6 +1195,10 @@ class TournamentModelTests(TestCase):
             sco.delete()
         for cc in ccs:
             cc.delete()
+
+    # TODO Game.compare_sc_counts_and_ownerships() raises SCOwnershipsNotFound
+
+    # TODO Game.compare_sc_counts_and_ownerships() with missing CentreCount
 
     # Game.scores
     def test_update_sc_count(self):
@@ -1803,6 +1829,9 @@ class TournamentModelTests(TestCase):
         tp.save()
         tp = TournamentPlayer(tournament=t, player=self.p7)
         tp.save()
+        # Include a player who didn't play any games
+        tp = TournamentPlayer(tournament=t, player=self.p8)
+        tp.save()
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
@@ -1872,6 +1901,14 @@ class TournamentModelTests(TestCase):
     def test_game_get_absolute_url(self):
         g = Game.objects.first()
         g.get_absolute_url()
+
+    # SupplyCentreOwnership.__str__()
+    def test_supplycentreownership_str(self):
+        g = Game.objects.first()
+        sc = SupplyCentre.objects.get(abbreviation='Mun')
+        sco = SupplyCentreOwnership.objects.create(sc=sc, owner=self.austria, year=1909, game=g)
+        # TODO validate result
+        str(sco)
 
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
@@ -2008,6 +2045,17 @@ class TournamentModelTests(TestCase):
 
     # TODO DrawProposal.save()
 
+    # DrawProposal.__str__()
+    def test_drawproposal_str(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        dp = DrawProposal.objects.create(game=g, year=1901, season='F', passed=True, proposer=self.austria,
+                                         power_1=self.austria, power_2=self.england, power_3=self.france,
+                                         power_4=self.germany, power_5=self.italy, power_6=self.russia,
+                                         power_7=self.turkey)
+        # TODO Validate result
+        str(dp)
+
     # RoundPlayer.tournamentplayer()
     def test_round_player_tournamentplayer(self):
         t = Tournament.objects.get(name='t1')
@@ -2040,7 +2088,14 @@ class TournamentModelTests(TestCase):
         rp = RoundPlayer(player=p, the_round=r)
         self.assertRaises(ValidationError, rp.clean)
 
+    # RoundPlayer.__str__()
+    def test_roundplayer_str(self):
+        rp = RoundPlayer.objects.first()
+        # TODO Validate result
+        str(rp)
+
     # GamePlayer.roundplayer()
+    def test_gameplayer_roundplayer(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         g = r.game_set.get(name='g11')
@@ -2050,6 +2105,7 @@ class TournamentModelTests(TestCase):
         self.assertEqual(rp.the_round, r)
 
     # GamePlayer.tournamentplayer()
+    def test_gameplayer_tournamentplayer(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         g = r.game_set.get(name='g11')
@@ -2319,6 +2375,18 @@ class TournamentModelTests(TestCase):
         tp2.delete()
         tp1.delete()
 
+    # GamePlayer.__str__()
+    def test_gameplayer_str_with_power(self):
+        gp = GamePlayer.objects.filter(power__isnull=False).first()
+        # TODO Validate result
+        str(gp)
+
+    def test_gameplayer_str_no_power(self):
+        g = Game.objects.first()
+        gp = GamePlayer.objects.create(player=self.p8, game=g)
+        # TODO Validate result
+        str(gp)
+
     # GameImage.turn_str()
     def test_gameimage_turn_str(self):
         t = Tournament.objects.get(name='t1')
@@ -2338,6 +2406,12 @@ class TournamentModelTests(TestCase):
     def test_game_image_get_absolute_url(self):
         gi = GameImage.objects.first()
         gi.get_absolute_url()
+
+    # GameImage.__str__()
+    def test_gameimage_str(self):
+        gi = GameImage.objects.first()
+        # TODO Validate result
+        str(gi)
 
     # CentreCount.clean()
     def test_centrecount_clean_past_final_year(self):
@@ -2468,3 +2542,9 @@ class TournamentModelTests(TestCase):
         gp7.delete()
         g.delete()
         r.delete()
+
+    # CentreCount.__str__()
+    def test_centrecount_str(self):
+        sc = CentreCount.objects.first()
+        # TODO Validate result
+        str(sc)
