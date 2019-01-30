@@ -607,6 +607,15 @@ def get_visible_tournament_or_404(pk, user):
     # Default to not visible
     raise Http404
 
+def get_modifiable_tournament_or_404(pk, user):
+    """
+    Get the specified Tournament object, if it exists, and check that it is editable by the user.
+    If it doesn't exist or isn't editable, raise Http404.
+    """
+    t = get_visible_tournament_or_404(pk, user)
+    # TODO Check for completed Tournament
+    return t
+
 def tournament_simple(request, tournament_id, template):
     """Just render the specified template with the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -847,7 +856,7 @@ def tournament_round(request, tournament_id):
 @permission_required('tournament.change_roundplayer')
 def round_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
                                               extra=0,
                                               formset=BasePlayerRoundScoreFormset)
@@ -928,7 +937,7 @@ def round_scores(request, tournament_id):
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id):
     """Provide a form to specify which players are playing each round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
@@ -1028,7 +1037,7 @@ def roll_call(request, tournament_id):
 @permission_required('tournament.add_preference')
 def enter_prefs(request, tournament_id):
     """Provide a form to enter player country preferences"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PrefsFormset = formset_factory(PrefsForm,
                                    extra=0,
                                    formset=BasePrefsFormset)
@@ -1057,7 +1066,7 @@ def enter_prefs(request, tournament_id):
 @permission_required('tournament.add_preference')
 def upload_prefs(request, tournament_id):
     """Upload a CSV file to enter player country preferences"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if request.method == 'GET':
         return render(request,
                       'tournaments/upload_prefs.html',
@@ -1182,7 +1191,7 @@ def round_detail(request, tournament_id, round_num):
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
     """Provide a form to get a multiple of seven players for a round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     count = r.roundplayer_set.count()
     sitters = count % 7
@@ -1307,7 +1316,7 @@ def _seed_games_and_powers(tournament, the_round):
 @permission_required('tournament.add_game')
 def seed_games(request, tournament_id, round_num):
     """Seed players to the games for a round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         PowerAssignFormset = formset_factory(PowerAssignForm,
@@ -1402,7 +1411,7 @@ def seed_games(request, tournament_id, round_num):
 @permission_required('tournament.add_game')
 def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         GamePlayersFormset = formset_factory(GamePlayersForm, formset=BaseGamePlayersForm)
@@ -1490,7 +1499,7 @@ def create_games(request, tournament_id, round_num):
 @permission_required('tournament.change_gameplayer')
 def game_scores(request, tournament_id, round_num):
     """Provide a form to enter scores for all the games in a round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     GameScoreFormset = formset_factory(GameScoreForm,
                                        extra=0)
@@ -1699,7 +1708,7 @@ def game_sc_chart(request,
 @permission_required('tournament.add_centrecount')
 def sc_owners(request, tournament_id, game_name):
     """Provide a form to enter SC ownership for a game"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them two
@@ -1791,7 +1800,7 @@ def sc_owners(request, tournament_id, game_name):
 @permission_required('tournament.add_centrecount')
 def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them two
@@ -1905,7 +1914,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
 @permission_required('tournament.add_drawproposal')
 def draw_vote(request, tournament_id, game_name):
     """Provide a form to enter a draw vote for a game"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     last_image = g.gameimage_set.last()
     years_played = g.years_played()
@@ -2042,7 +2051,7 @@ def game_image(request,
 @permission_required('tournament.add_gameimage')
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if request.method == 'POST':
         form = GameImageForm(request.POST, request.FILES)
         if form.is_valid():
