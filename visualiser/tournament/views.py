@@ -613,8 +613,9 @@ def get_modifiable_tournament_or_404(pk, user):
     If it doesn't exist or isn't editable, raise Http404.
     """
     t = get_visible_tournament_or_404(pk, user)
-    # TODO Check for completed Tournament
-    return t
+    if t.editable():
+        return t
+    raise Http404
 
 def tournament_simple(request, tournament_id, template):
     """Just render the specified template with the tournament"""

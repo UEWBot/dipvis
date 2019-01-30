@@ -415,6 +415,13 @@ class Tournament(models.Model):
     class Meta:
         ordering = ['-start_date']
 
+    def editable(self):
+        """
+        Returns a Boolean indicating whether the Tournament can be changed.
+        Currently always returns True.
+        """
+        return True
+
     def powers_assigned_from_prefs(self):
         """
         Returns True is power_assignment is PREFERENCES.

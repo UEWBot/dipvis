@@ -33,7 +33,7 @@
   {% endif %}
   <li><a href="{% url 'game_background' tournament.id game.name %}">{% trans "Background" %}</a></li>
 </ul>
-{% if user.is_active %}
+{% if user.is_active and tournament.editable %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   {% if perms.tournament.add_centrecount %}

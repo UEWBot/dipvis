@@ -31,7 +31,7 @@
   <li><a href="{% url 'game_index' tournament.id round.number %}">{% trans "Game Index" %}</a></li>
 </ul>
 
-{% if user.is_active %}
+{% if user.is_active and tournament.editable %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   {% if perms.tournament.create_game %}
