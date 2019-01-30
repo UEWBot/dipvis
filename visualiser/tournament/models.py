@@ -750,7 +750,8 @@ class TournamentPlayer(models.Model):
         return ''.join(ret)
 
     def __str__(self):
-        return u'%s %s %f' % (self.tournament, self.player, self.score)
+        return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
+                                                 'player': self.player}
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -783,6 +784,7 @@ class SeederBias(models.Model):
                                               help_text=_("Number of games to pretend they've already played together"))
 
     class Meta:
+        verbose_name_plural = 'Seeder biases'
         # Only one weighting per pair of players
         unique_together = ('player1', 'player2')
 
@@ -796,10 +798,11 @@ class SeederBias(models.Model):
             raise ValidationError(_('The players must differ'))
         if self.player1.tournament != self.player2.tournament:
             raise ValidationError(_('The players must be playing the same tournament'))
+
     def __str__(self):
-        return "%s and %s in %s" % (self.player1.player,
-                                    self.player2.player,
-                                    self.player1.tournament)
+        return _("%(p1)s and %(p2)s at %(tourney)s") % {'p1': self.player1.player,
+                                                        'p2': self.player2.player,
+                                                        'tourney': self.player1.tournament}
 
 class Preference(models.Model):
     """
@@ -818,7 +821,9 @@ class Preference(models.Model):
         ordering = ['ranking']
 
     def __str__(self):
-        return '%s ranks %s at %d' % (self.player, self.power.name, self.ranking)
+        return _('%(player)s ranks %(power)s at %(rank)d') % {'player': self.player,
+                                                              'power': self.power.name,
+                                                              'rank': self.ranking}
 
 class Round(models.Model):
     """
@@ -999,7 +1004,7 @@ class Round(models.Model):
                        args=[str(self.tournament.id), str(self.number())])
 
     def __str__(self):
-        return _(u'%(tournament)s Round %(round)d') % {'tournament': self.tournament,
+        return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament,
                                                        'round': self.number()}
 
 def _sc_gains_and_losses(prev_scos, current_scos):
@@ -1529,7 +1534,8 @@ class Game(models.Model):
                        args=[str(self.the_round.tournament.id), self.name])
 
     def __str__(self):
-        return self.name
+        return _('%(game)s at %(tourney)s') % {'game': self.name,
+                                               'tourney': self.the_round.tournament}
 
 class SupplyCentreOwnership(models.Model):
     """
@@ -1546,10 +1552,10 @@ class SupplyCentreOwnership(models.Model):
         ordering = ['game', 'year']
 
     def __str__(self):
-        return "%s in %s was owned by %s at the end of %d" % (self.sc,
-                                                              self.game,
-                                                              self.owner,
-                                                              self.year)
+        return _("%(dot)s in %(game)s was owned by %(power)s at the end of %(year)d") % {'dot': self.sc,
+                                                                                         'game': self.game,
+                                                                                         'power': self.owner,
+                                                                                         'year': self.year}
 
 class DrawProposal(models.Model):
     """
@@ -1724,7 +1730,9 @@ class DrawProposal(models.Model):
             self.game.save()
 
     def __str__(self):
-        return u'%s %d%s' % (self.game, self.year, self.season)
+        return '%(game)s %(year)d%(season)s' % {'game': self.game,
+                                                'year': self.year,
+                                                'season': self.season}
 
 class RoundPlayer(models.Model):
     """
@@ -1761,7 +1769,8 @@ class RoundPlayer(models.Model):
             raise ValidationError(_(u'Player is not yet in the tournament'))
 
     def __str__(self):
-        return _(u'%(player)s in %(round)s') % {'player': self.player, 'round': self.the_round}
+        return _(u'%(player)s in %(round)s') % {'player': self.player,
+                                                'round': self.the_round}
 
 class GamePlayer(models.Model):
     """
@@ -1922,8 +1931,11 @@ class GamePlayer(models.Model):
 
     def __str__(self):
         if self.power:
-            return u'%s %s %s' % (self.game, self.player, self.power)
-        return u'%s %s Power TBD' % (self.game, self.player)
+            return _('%(player)s as %(power)s in %(game)s') % {'game': self.game,
+                                                               'player': self.player,
+                                                               'power': self.power}
+        return _('%(player)s in %(game)s Power TBD') % {'game': self.game,
+                                                        'player': self.player}
 
 class GameImage(models.Model):
     """
@@ -1962,7 +1974,8 @@ class GameImage(models.Model):
                                            self.turn_str()])
 
     def __str__(self):
-        return _(u'%(game)s %(turn)s image') % {'game': self.game, 'turn': self.turn_str()}
+        return _(u'%(game)s %(turn)s image') % {'game': self.game,
+                                                'turn': self.turn_str()}
 
 class CentreCount(models.Model):
     """
@@ -2004,4 +2017,6 @@ class CentreCount(models.Model):
             raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
 
     def __str__(self):
-        return u'%s %d %s %d' % (self.game, self.year, _(self.power.abbreviation), self.count)
+        return u'%(game)s %(year)d %(power)s' % {'game': self.game,
+                                                 'year': self.year,
+                                                 'power': _(self.power.abbreviation)}

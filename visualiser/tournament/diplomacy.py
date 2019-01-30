@@ -136,8 +136,8 @@ class SetPower(models.Model):
         unique_together = ('the_set', 'power')
 
     def __str__(self):
-        return _(u'%(power)s in %(the_set)s' % {'power': self.power.name,
-                                                'the_set': self.the_set.name})
+        return _(u'%(power)s in %(the_set)s') % {'power': self.power.name,
+                                                 'the_set': self.the_set.name}
 
 class SupplyCentre(models.Model):
     """

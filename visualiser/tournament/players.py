@@ -691,9 +691,10 @@ class PlayerGameResult(models.Model):
         unique_together = ('tournament_name', 'game_name', 'player', 'power')
 
     def __str__(self):
-        return _(u'%(player)s played %(power)s in %(game)s') % {'player': self.player,
-                                                                'power': self.power,
-                                                                'game': self.game_name}
+        return _(u'%(player)s played %(power)s in %(game)s at %(tourney)s') % {'player': self.player,
+                                                                               'power': self.power,
+                                                                               'game': self.game_name,
+                                                                               'tourney': self.tournament_name}
 
 class PlayerAward(models.Model):
     """
@@ -720,14 +721,9 @@ class PlayerAward(models.Model):
         unique_together = ('player', 'tournament', 'date', 'name')
 
     def __str__(self):
-        s = _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
-                                                            'award': self.name,
-                                                            'tourney': self.tournament}
-        if self.tournament[-4] != str(self.date.year):
-            s += _(' in %(year)d') % {'year': self.date.year}
-        if self.final_sc_count:
-            s += _(' with %(dots)d supply centres') % {'dots': self.final_sc_count}
-        return s
+        return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
+                                                               'award': self.name,
+                                                               'tourney': self.tournament}
 
 class PlayerRanking(models.Model):
     """
