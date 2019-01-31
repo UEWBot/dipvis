@@ -877,7 +877,7 @@ def round_scores(request, tournament_id):
                             i.delete()
                             return render(request,
                                           'tournaments/round_players.html',
-                                          {'title': 'Scores',
+                                          {'title': _('Scores'),
                                            'tournament': t,
                                            'post_url': reverse('enter_scores',
                                                                args=(tournament_id,)),
@@ -893,7 +893,7 @@ def round_scores(request, tournament_id):
                             form.add_error(form.fields[r_name], e)
                             return render(request,
                                           'tournaments/round_players.html',
-                                          {'title': 'Scores',
+                                          {'title': _('Scores'),
                                            'tournament': t,
                                            'post_url': reverse('enter_scores',
                                                                args=(tournament_id,)),
@@ -920,7 +920,7 @@ def round_scores(request, tournament_id):
 
     return render(request,
                   'tournaments/round_players.html',
-                  {'title': 'Scores',
+                  {'title': _('Scores'),
                    'tournament': t,
                    'post_url': reverse('enter_scores', args=(tournament_id,)),
                    'formset' : formset})
@@ -951,7 +951,7 @@ def roll_call(request, tournament_id):
                     i.delete()
                     return render(request,
                                   'tournaments/round_players.html',
-                                  {'title': 'Roll Call',
+                                  {'title': _('Roll Call'),
                                    'tournament': t,
                                    'post_url': reverse('roll_call', args=(tournament_id,)),
                                    'formset' : formset})
@@ -977,7 +977,7 @@ def roll_call(request, tournament_id):
                             i.delete()
                             return render(request,
                                           'tournaments/round_players.html',
-                                          {'title': 'Roll Call',
+                                          {'title': _('Roll Call'),
                                            'tournament': t,
                                            'post_url': reverse('roll_call', args=(tournament_id,)),
                                            'formset' : formset})
@@ -1020,7 +1020,7 @@ def roll_call(request, tournament_id):
 
     return render(request,
                   'tournaments/round_players.html',
-                  {'title': 'Roll Call',
+                  {'title': _('Roll Call'),
                    'tournament': t,
                    'post_url': reverse('roll_call', args=(tournament_id,)),
                    'formset' : formset})
