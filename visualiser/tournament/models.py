@@ -303,78 +303,6 @@ def game_image_location(instance, filename):
     directory = os.path.join(tournament.name, str(tournament.start_date), game.name)
     return os.path.join('games', directory, filename)
 
-def add_local_player_bg(player):
-    """
-    Add background for the player from earlier tournaments in the system,
-    unless they have already been added (e.g. because those results are
-    in the WDD).
-    """
-    for t in Tournament.objects.all():
-        # Not interested in ongoing tournaments
-        if not t.is_finished():
-            continue
-        # Get the corresponding TournamentPlayer (if any)
-        try:
-            tp = t.tournamentplayer_set.get(player=player)
-        except TournamentPlayer.DoesNotExist:
-            continue
-        # Add a PlayerTournamentRanking
-        i = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                          tournament=t.name,
-                                                          position=tp.position(),
-                                                          year=t.start_date.year)[0]
-        # Ensure that the date is set
-        i.date = t.start_date
-        i.save()
-        # Add a PlayerAward for each best country
-        for power, gps in t.best_countries().items():
-            for gp in gps:
-                if gp.player == player:
-                    sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
-                                                     power=power)
-                    i = PlayerAward.objects.get_or_create(player=player,
-                                                          tournament=t.name,
-                                                          date=t.start_date,
-                                                          name=_('Best %(country)s')
-                                                          % {'country': power})[0]
-                    i.power = power
-                    i.score = gp.score
-                    i.final_sc_count = sc.count
-                    i.save()
-        # Also add PlayerGameResult for each board played
-        for gp in GamePlayer.objects.filter(player=player).filter(game__the_round__tournament=t).distinct():
-            pos = gp.game.positions()
-            i = PlayerGameResult.objects.get_or_create(tournament_name=t.name,
-                                                       game_name=gp.game.name,
-                                                       player=player,
-                                                       power=gp.power,
-                                                       date=gp.game.the_round.start.date(),
-                                                       position=pos[gp.power])[0]
-            # Set additional info
-            i.score = gp.score
-            i.year_eliminated = gp.elimination_year()
-            i.final_sc_count = gp.game.centrecount_set.filter(power=gp.power).order_by('-year').first().count
-            s = gp.game.soloer()
-            d = gp.game.passed_draw()
-            if s:
-                if s == gp:
-                    i.result = WIN
-                else:
-                    i.result = LOSS
-            elif d:
-                if d.power_is_part(gp.power):
-                    i.result = TO_GAME_RESULT[d.draw_size()]
-                else:
-                    i.result = LOSS
-            else:
-                if i.year_eliminated:
-                    i.result = LOSS
-                else:
-                    i.result = TO_GAME_RESULT[len(gp.game.survivors())]
-            # TODO This is broken if there were replacement players, but so is scoring...
-            i.position_equals = len([v for v in pos.values() if v == pos[gp.power]])
-            i.save()
-
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -761,9 +689,6 @@ class TournamentPlayer(models.Model):
         # Update background info when a player is added to the Tournament (only)
         if is_new:
             add_player_bg(self.player)
-            # This caused problems when the local tournament did make it into the WDD
-            # because the duplication isn't always obvious
-            #add_local_player_bg(self.player)
 
 def validate_weight(value):
     """
