@@ -411,16 +411,11 @@ class Tournament(models.Model):
                                         verbose_name=_('How powers are assigned'),
                                         choices=POWER_ASSIGN_METHODS,
                                         default=MANUAL)
+    editable = models.BooleanField(default=True,
+                                   help_text=_('Check to disallow any further changes to the tournament'))
 
     class Meta:
         ordering = ['-start_date']
-
-    def editable(self):
-        """
-        Returns a Boolean indicating whether the Tournament can be changed.
-        Currently always returns True.
-        """
-        return True
 
     def powers_assigned_from_prefs(self):
         """
