@@ -2160,8 +2160,9 @@ def view_classification_csv(request, tournament_id):
         if rank == UNRANKED:
             rank = '999'
         # First the stuff that is global to the tournament and applies to all players
-        row_dict = {'FIRST NAME': p.first_name,
-                    'NAME': p.last_name,
+        names = p.wdd_firstname_lastname()
+        row_dict = {'FIRST NAME': names[0],
+                    'NAME': names[1],
                     'HOMONYME': '1', # User Guide says "Set to 1"
                     'RANK': rank,
                     'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
@@ -2246,9 +2247,10 @@ def view_boards_csv(request, tournament_id):
             soloer = g.soloer()
             # TODO This is broken with replacement players
             for gp in g.gameplayer_set.all():
+                names = gp.player.wdd_firstname_lastname
                 row_dict = g_row_dict.copy()
-                row_dict['FIRST NAME'] = gp.player.first_name
-                row_dict['NAME'] = gp.player.last_name
+                row_dict['FIRST NAME'] = names[0]
+                row_dict['NAME'] = names[1]
                 row_dict['COUNTRY'] = _power_name_to_wdd(gp.power.name)
                 row_dict['SCORE'] = gp.score
                 rank = positions[gp.power]

@@ -31,6 +31,24 @@ class WDDBackgroundTests(TestCase):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.wdd_name)
 
+    def test_wdd_background_wdd_firstname_lastname(self):
+        cases = {13747: ('Benjy', 'AARONS-RICHARDSON'),
+                 13747: ('Vincent', '?'),
+                 7089: ('Jo Andre', 'AAKVIK'),
+                 1664: ('Emmanuel', 'AH-CHIOW'),
+                 4640: ('Stéphane', 'AIT OUHFOUR'),
+                 2785: ('Espen H.', 'ANDERSEN'),
+                 7699: ('J.C.', 'BLISS'),
+                 6505: ('Ray J', 'DION'),
+                 10835: ('John Mark', 'EDMUNDSON'),
+                 2859: ('Henri', 'FLOTTE DE POUZOLS'),
+                 2749: ('Jorn R. T.', 'GRANDE'),
+                 7189: ('A Dash', 'GREENTREE'),
+                }
+        for id in cases.keys():
+            b = WDDBackground(id)
+            self.assertEqual(b.wdd_firstname_lastname(), cases[id])
+
     # WDDBackground.finishes()
     @tag('wdd')
     def test_wdd_background_finishes_invalid(self):

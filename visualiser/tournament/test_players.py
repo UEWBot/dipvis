@@ -91,6 +91,18 @@ class PlayerTests(TestCase):
         # TODO Validate results
         p.wdd_name()
 
+    # Player.wdd_firstname_lastname()
+    @tag('slow', 'wdd')
+    def test_player_wdd_firstname_lastname(self):
+        p = Player.objects.first()
+        # TODO Validate results
+        p.wdd_firstname_lastname()
+
+    def test_player_wdd_firstname_lastname_no_id(self):
+        p = Player.objects.create(first_name='John', last_name='Smith')
+        # TODO Validate results
+        p.wdd_firstname_lastname()
+
     # Player.wdd_url()
     def test_player_wdd_url(self):
         p = Player.objects.first()

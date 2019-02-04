@@ -43,6 +43,10 @@ class WDDNotAccessible(Exception):
     """The WWD website cannot currently be accessed."""
     pass
 
+class UnableToSplitName(Exception):
+    """The name retrieved from the WDD is a single word."""
+    pass
+
 class WikipediaBackground():
     """
     Get background on a player from wikipedia.
@@ -135,6 +139,28 @@ class WDDBackground():
             raise InvalidWDDId(self.wdd_id)
         soup = BeautifulSoup(page.read())
         return soup.title.string[6:]
+
+    def wdd_firstname_lastname(self):
+        """
+        Returns a 2-tuple containsin the name of the player, as read from the WDD
+        Can raise WDDNotAccessible, InvalidWDDId, or UnableToSplitName
+        """
+        name = self.wdd_name()
+        name_parts = name.split()
+        if len(name_parts) < 2:
+            raise UnableToSplitName
+        first_name = name_parts.pop(0)
+        last_name = name_parts.pop()
+        while len(name_parts):
+            word = name_parts.pop(0)
+            if word.isupper() and not word.endswith('.') and not len(word) == 1:
+                # This is likely part of the last name
+                last_name = ' '.join([word] + name_parts + [last_name])
+                name_parts = []
+            else:
+                # Likely part of the first name
+                first_name = first_name + ' ' + word
+        return (first_name, last_name)
 
     def finishes(self):
         """

@@ -425,6 +425,20 @@ class Player(models.Model):
             return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
         return u''
 
+    def wdd_firstname_lastname(self):
+        """Name for this player as a 2-tuple, as in the WDD in preference."""
+        if not self.wdd_player_id:
+            return (self.first_name, self.last_name)
+        bg = WDDBackground(self.wdd_player_id)
+        try:
+            return bg.wdd_firstname_lastname()
+        except InvalidWDDId:
+            # This can only happen if we couldn't get to the WDD when the Player was created
+            raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
+                                  params={'wdd_id': self.wdd_player_id})
+        except:
+            return (self.first_name, self.last_name)
+
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""
         if including_unpublished:
