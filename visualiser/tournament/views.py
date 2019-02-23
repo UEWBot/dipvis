@@ -613,7 +613,7 @@ def get_modifiable_tournament_or_404(pk, user):
     If it doesn't exist or isn't editable, raise Http404.
     """
     t = get_visible_tournament_or_404(pk, user)
-    if t.editable():
+    if t.editable:
         return t
     raise Http404
 
