@@ -32,6 +32,8 @@ from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import permission_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.conf import settings
 
 from tournament.players import Player
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
@@ -1189,6 +1191,36 @@ def round_detail(request, tournament_id, round_num):
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
 
+def send_board_call(the_round):
+    """Send an email to all players in the round with the board calls"""
+    # TODO Translation?
+    subject = 'Board call for %(tourney)s Round %(round)d' % {'tourney': the_round.tournament,
+                                                              'round': the_round.number()}
+    email_from = settings.EMAIL_HOST_USER
+    # We want to include all the boards in the message,
+    # with each player's board at the top of their message
+    # Start off with a list of (description, player_email) 2-tuples, one per board
+    games = []
+    for g in the_round.game_set.all():
+        game_text = 'Board %(game)s:\n' % {'game': g.name}
+        recipients = []
+        for gp in g.gameplayer_set.order_by('power'):
+            game_text += '%(power)s: %(player)s\n' % {'power': gp.power,
+                                                      'player': gp.player}
+            if gp.player.email:
+                recipients.append(gp.player.email)
+        games.append((game_text, recipients))
+    # Put together the common body of the message
+    all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
+    # Create one message per game
+    # TODO Don't re-open the connection for each message
+    # TODO Put recipients in BCC: Rather than To:
+    messages = []
+    for game_text, recipients in games:
+        msg_text = 'Your game:\n' + game_text + '\n' + all_games
+        if len(recipients):
+            send_mail( subject, msg_text, email_from, recipients )
+
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
     """Provide a form to get a multiple of seven players for a round"""
@@ -1355,6 +1387,8 @@ def seed_games(request, tournament_id, round_num):
                                        'round': r,
                                        'formset' : formset})
                     gp.save()
+            # Notify the players
+            send_board_call(r)
             # Redirect to the index of games in the round
             return HttpResponseRedirect(reverse('game_index',
                                                 args=(tournament_id, round_num)))
@@ -1467,6 +1501,8 @@ def create_games(request, tournament_id, round_num):
                                        'round': r,
                                        'formset' : formset})
                     i.save()
+            # Notify the players
+            send_board_call(r)
             # Redirect to the index of games in the round
             return HttpResponseRedirect(reverse('game_index',
                                                 args=(tournament_id, round_num)))
