@@ -32,7 +32,7 @@ from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import permission_required
 from django.contrib import messages
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 from django.conf import settings
 
 from tournament.players import Player
@@ -1214,12 +1214,15 @@ def send_board_call(the_round):
     all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
     # Create one message per game
     # TODO Don't re-open the connection for each message
-    # TODO Put recipients in BCC: Rather than To:
-    messages = []
     for game_text, recipients in games:
         msg_text = 'Your game:\n' + game_text + '\n' + all_games
         if len(recipients):
-            send_mail( subject, msg_text, email_from, recipients )
+            email = EmailMessage(subject=subject,
+                                 body=msg_text,
+                                 from_email=email_from,
+                                 to=[email_from,],
+                                 bcc=recipients_list)
+            email.send()
 
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
