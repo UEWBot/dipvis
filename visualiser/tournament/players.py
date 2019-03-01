@@ -30,10 +30,10 @@ import re
 import traceback
 import urllib.request
 
-from django.db import models
 from django.core.exceptions import ValidationError
-from django.urls import reverse
+from django.db import models
 from django.db.models import Max, Min, Q
+from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_URL

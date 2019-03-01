@@ -17,8 +17,8 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.diplomacy import GameSet, GreatPower, TOTAL_SCS
+from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, SECRET
 from tournament.models import find_game_scoring_system

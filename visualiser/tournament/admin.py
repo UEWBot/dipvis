@@ -16,14 +16,13 @@
 
 from django.contrib import admin
 
+from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
+from tournament.models import RoundPlayer
 from tournament.models import SeederBias
-from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.players import Player, PlayerTournamentRanking, PlayerGameResult
 from tournament.players import PlayerAward, PlayerRanking
-
-from tournament.models import RoundPlayer
 
 class SetPowerInline(admin.TabularInline):
     model = SetPower

@@ -27,10 +27,9 @@ that will need to differ for different variants.
 
 import os
 
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext as _
-
-from django.core.exceptions import ValidationError
 
 TOTAL_SCS = 34
 WINNING_SCS = ((TOTAL_SCS//2)+1)

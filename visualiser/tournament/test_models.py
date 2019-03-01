@@ -14,13 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase, tag
 from django.core.exceptions import ValidationError
-from django.utils import timezone
 from django.db.models import Sum
+from django.test import TestCase, tag
+from django.utils import timezone
 
 from tournament.diplomacy import GreatPower, SupplyCentre, GameSet
-from tournament.players import Player, MASK_ALL_BG
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
@@ -35,6 +34,7 @@ from tournament.models import find_tournament_scoring_system
 from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
 from tournament.models import InvalidPreferenceList
+from tournament.players import Player, MASK_ALL_BG
 
 from datetime import timedelta
 

@@ -14,18 +14,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase, tag
 from django.core.exceptions import ValidationError
+from django.test import TestCase, tag
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower
+from tournament.models import Tournament, TournamentPlayer
+from tournament.models import SECRET, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player, PlayerRanking, PlayerAward
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
 from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
 from tournament.players import add_player_bg
 from tournament.players import MASK_ALL_BG
-from tournament.models import Tournament, TournamentPlayer
-from tournament.models import SECRET, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 
 CHRIS_BRAND_WDD_ID = 4173
 MATT_SHIELDS_WDD_ID = 588

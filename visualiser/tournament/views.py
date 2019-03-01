@@ -21,32 +21,32 @@ Views for the Diplomacy Tournament Visualiser.
 import csv
 from io import StringIO
 
-from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.urls import reverse
-from django.views import generic
 from django import forms
-from django.forms.formsets import formset_factory, BaseFormSet
-from django.forms import ModelForm
-from django.utils.translation import ugettext as _
-from django.contrib.auth.decorators import permission_required
+from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage
-from django.core import mail
-from django.conf import settings
+from django.forms import ModelForm
+from django.forms.formsets import formset_factory, BaseFormSet
+from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
+from django.utils.translation import ugettext as _
+from django.views import generic
 
-from tournament.players import Player
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
 from tournament.diplomacy import validate_preference_string
+from tournament.game_seeder import GameSeeder
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING, SECRET, COUNTS, SEASONS
 from tournament.models import UNRANKED, AUTO, PREFERENCES
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import SCOwnershipsNotFound, InvalidPreferenceList
-from tournament.game_seeder import GameSeeder
+from tournament.players import Player
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15

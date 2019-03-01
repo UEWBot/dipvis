@@ -21,10 +21,10 @@ Assign players to Diplomacy games in a tournament setting.
 import copy
 import itertools
 import random
-from operator import itemgetter
 #No auto until python 3.6
 #from enum import Enum, auto
 from enum import Enum
+from operator import itemgetter
 
 class InvalidPlayer(Exception):
     """A player is invalid in some way (unknown, already present, etc)."""

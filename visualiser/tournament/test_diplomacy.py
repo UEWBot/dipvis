@@ -14,8 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.test import TestCase
 from django.core.exceptions import ValidationError
+from django.test import TestCase
 
 from tournament.diplomacy import validate_year, validate_year_including_start
 from tournament.diplomacy import validate_ranking

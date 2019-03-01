@@ -20,17 +20,17 @@ Django models file for the Diplomacy Tournament Visualiser.
 
 from abc import ABC, abstractmethod
 import inspect
+from operator import attrgetter, itemgetter
 import os
 import random
-from operator import attrgetter, itemgetter
 
-from django.db import models
-from django.core.exceptions import ValidationError
-from django.urls import reverse
-from django.db.models import Sum, Max
-from django.utils.translation import ugettext as _
-from django.utils import timezone
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.db.models import Sum, Max
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.translation import ugettext as _
 
 from tournament.background import WDD_BASE_URL
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
