@@ -23,7 +23,9 @@ import inspect
 from operator import attrgetter, itemgetter
 import os
 import random
+import uuid
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -37,6 +39,7 @@ from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy import validate_year_including_start, validate_year, validate_ranking
 from tournament.diplomacy import validate_preference_string
+from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, add_player_bg, position_str
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
@@ -624,6 +627,7 @@ class TournamentPlayer(models.Model):
     unranked = models.BooleanField(default=False,
                                    verbose_name=_('Ineligible for awards'),
                                    help_text=_('Set this to ignore this player when determining rankings'))
+    uuid_str = models.CharField(max_length=36, blank=True)
 
     class Meta:
         ordering = ['player']
@@ -676,6 +680,23 @@ class TournamentPlayer(models.Model):
             ret.append(p.power.abbreviation)
         return ''.join(ret)
 
+    def get_prefs_url(self):
+        """
+        Returns the absolute URL to update the preferences for this TournamentPlayer.
+        """
+        if not self.uuid_str:
+            self._generate_uuid()
+        path = reverse('player_prefs',
+                        args=[str(self.tournament.id), self.uuid_str])
+        return 'https://%(host)s%(path)s' % {'host': settings.HOSTNAME,
+                                             'path': path}
+
+    def _generate_uuid(self):
+        """
+        Populates the uuid_str attribute.
+        """
+        self.uuid_str = str(uuid.uuid4())
+
     def __str__(self):
         return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
                                                  'player': self.player}
@@ -685,6 +706,7 @@ class TournamentPlayer(models.Model):
         super(TournamentPlayer, self).save(*args, **kwargs)
         # Update background info when a player is added to the Tournament (only)
         if is_new:
+            send_prefs_email(self)
             add_player_bg(self.player)
 
 def validate_weight(value):

@@ -610,7 +610,7 @@ def get_visible_tournament_or_404(pk, user):
 
 def get_modifiable_tournament_or_404(pk, user):
     """
-    Get the specified Tournament object, if it exists, and check that it is editable by the user.
+    Get the specified Tournament object, if it exists, and check that it is visible to the user and editable.
     If it doesn't exist or isn't editable, raise Http404.
     """
     t = get_visible_tournament_or_404(pk, user)
@@ -1035,6 +1035,39 @@ def roll_call(request, tournament_id):
                    'tournament': t,
                    'post_url': reverse('roll_call', args=(tournament_id,)),
                    'formset' : formset})
+
+# Note: No permission_required decorator
+# because this one should be available to any who have the URL
+def player_prefs(request, tournament_id, uuid):
+    """
+    Display the current preferences for a single TournamentPlayer,
+    and give them the ability to change them.
+    TournamentPlayer is (indirectly) identified by the uuid string.
+    """
+    # Note that this effectively means that the URL only works for a published Tournament
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    # Fail if the preferences would be ignored anyway
+    r = t.round_set.last()
+    if r and r.in_progress():
+        raise Http404
+    # Find the TournamentPlayer in question
+    try:
+        tp = t.tournamentplayer_set.get(uuid_str=uuid)
+    except TournamentPlayer.DoesNotExist:
+        raise Http404
+    form = PrefsForm(request.POST or None,
+                     tp=tp,
+                     initial={'prefs': tp.prefs_string()})
+    if form.is_valid():
+        ps = form.cleaned_data['prefs']
+        # Set preferences for this TournamentPlayer
+        tp.create_preferences_from_string(ps)
+    return render(request,
+                  'tournaments/player_prefs.html',
+                  {'tournament': t,
+                   'uuid': uuid,
+                   'prefs_list': tp.preference_set.all(),
+                   'form' : form})
 
 @permission_required('tournament.add_preference')
 def enter_prefs(request, tournament_id):

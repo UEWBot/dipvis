@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Country Preferences" %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Country Preferences" %}</h1>
+
+<h2>{% trans "Current Preferences" %}</h2>
+
+{% if prefs_list %}
+  <ol>
+  {% for p in prefs_list %}
+  <li>{% if forloop.first %}
+        {% trans "(Highest priority)" %}
+      {% endif %}{{ p.power }}</li>
+  {% endfor %}
+  </ol>
+  <p>{% trans "Remaining power(s) (if any) equal lowest priority." %}</p>
+{% else %}
+  <p>{% trans "No power preference." %}</p>
+{% endif %}
+
+<h2>{% trans "Change Preferences" %}</h2>
+
+<p>{% trans "Enter the initial of each power, in order, from highest to lowest preference." %}</p>
+<p>{% trans "Missing powers will be ranked equal last." %}</p>
+
+<form method="post" action={% url 'player_prefs' tournament.id uuid %}>
+  {% csrf_token %}
+  <table class="form">
+    {{ form }}
+  </table>
+  <input type="submit" value="Submit" />
+</form>
+{% endblock %}

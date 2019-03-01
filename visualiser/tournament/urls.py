@@ -132,6 +132,8 @@ tournament_patterns = [
     url(r'^prefs/$', views.enter_prefs, name='enter_prefs'),
     url(r'^upload_prefs/$', views.upload_prefs, name='upload_prefs'),
     url(r'^prefs_csv/$', views.prefs_csv, name='prefs_csv'),
+    url(r'^player_prefs/(?P<uuid>[^/]+)/$', views.player_prefs,
+        name='player_prefs'),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),
 ]

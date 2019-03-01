@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.test import TestCase, tag
@@ -49,6 +50,8 @@ class TournamentModelTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        settings.HOSTNAME = 'example.com'
+
         cls.set1 = GameSet.objects.get(name='Avalon Hill')
         cls.set2 = GameSet.objects.get(name='Gibsons')
 
@@ -682,6 +685,20 @@ class TournamentModelTests(TestCase):
         tp = TournamentPlayer.objects.first()
         self.assertEqual(tp.preference_set.count(), 0)
         self.assertEqual(tp.prefs_string(), '')
+
+    # TournamentPlayer.get_prefs_url()
+    def test_tp_get_prefs_url(self):
+        # A TournamentPlayer with a uuid_str
+        tp = TournamentPlayer.objects.filter(uuid_str='').first()
+        tp._generate_uuid()
+        self.assertIn('https://', tp.get_prefs_url())
+
+    def test_tp_get_prefs_url_no_uuid(self):
+        # A TournamentPlayer without a uuid_str
+        tp = TournamentPlayer.objects.filter(uuid_str='').first()
+        self.assertIn('https://', tp.get_prefs_url())
+
+    # TODO TournamentPlayer.send_prefs_email()
 
     # TournamentPlayer.__str__()
     def test_tournamentplayer_str(self):

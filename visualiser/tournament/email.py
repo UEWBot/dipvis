@@ -20,7 +20,7 @@ Email-related functions for the Diplomacy Tournament Visualiser.
 
 from django.conf import settings
 from django.core import mail
-from django.core.mail import EmailMessage
+from django.core.mail import send_mail, EmailMessage
 
 def send_board_call(the_round):
     """Send an email to all players in the round with the board calls"""
@@ -58,3 +58,45 @@ def send_board_call(the_round):
             messages.append(email)
     if len(messages):
         mail.get_connection().send_messages(messages)
+
+PREFS_EMAIL = """
+Hi,
+You're receiving this because you are registered for the %(tourney)s Diplomacy tournament.
+The tournament is using player preferences to assign Great Powers.
+To enter or update your preferences, go to the following web page:
+%(url)s
+Note 1: this address is unique to you - if you share it with anyone, they will be able to change your preferences!
+Note 2: you will get a "Page Not Found" error before the tournament starts.
+
+Enter your preferences as a simple list of power letters, e.g. "FTERGAI".
+The first power listed is your first preference, the second is your second choice, and so on.
+If you enter fewer than 7 powers, any omitted powers will be prioritised equal last.
+You can change your preference list at any time.
+The list at the time of board call for each round is the one that will be used for that round.
+"""
+
+def send_prefs_email(tournamentplayer, force=False):
+    """
+    Email the URL to enter preferences to the TournamentPlayer.
+    Won't send an email unless the Tournament.power_assignment is PREFERENCES.
+    Unless force is True, will only send the email if one hasn't already been sent.
+    Note that if force is True, any previous URL will no longer be valid.
+    """
+    t = tournamentplayer.tournament
+    addr = tournamentplayer.player.email
+    # Bail if preferences aren't needed for the Tournament
+    if not t.powers_assigned_from_prefs():
+        return
+    # Can't do anything unless we have an email address for the player
+    if not addr:
+        return
+    # Don't send again, unless told to
+    if tournamentplayer.uuid_str and not force:
+        return
+    # Create the email and send it
+    msg_body = PREFS_EMAIL % {'tourney': t,
+                              'url': tournamentplayer.get_prefs_url()}
+    send_mail('Specify power preferences for %s' % t,
+              msg_body,
+              settings.EMAIL_HOST_USER,
+              [addr,])
