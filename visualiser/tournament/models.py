@@ -445,10 +445,7 @@ class Tournament(models.Model):
                     # Skip this player if they are unranked in the event
                     if gp.tournamentplayer().unranked:
                         continue
-                    try:
-                        retval[gp.power].append(gp)
-                    except KeyError:
-                        retval[gp.power] = [gp]
+                    retval.setdefault(gp.power, []).append(gp)
         for power in retval:
             # Find the best score for this power in the whole tournament
             # First, sort by descending score
@@ -955,18 +952,14 @@ def _sc_gains_and_losses(prev_scos, current_scos):
             if s == sc:
                 new_owner = o
                 break
-        if owner not in losses:
-            losses[owner] = []
-        losses[owner].append((sc, new_owner))
+        losses.setdefault(owner, []).append((sc, new_owner))
     for sc, owner in current - prev:
         prev_owner = None
         for s, o in prev:
             if s == sc:
                 prev_owner = o
                 break
-        if owner not in gains:
-            gains[owner] = []
-        gains[owner].append((sc, prev_owner))
+        gains.setdefault(owner, []).append((sc, prev_owner))
     return gains, losses
 
 class Game(models.Model):
@@ -1003,9 +996,7 @@ class Game(models.Model):
             if gp.power:
                 raise PowerAlreadyAssigned(str(gp) + ' is already assigned ' + str(gp.power))
             pos = ranks[gp.player][0]
-            if pos not in position_to_gps:
-                position_to_gps[pos] = []
-            position_to_gps[pos].append(gp)
+            position_to_gps.setdefault(pos, []).append(gp)
         # Starting from the lowest rank, work through the whole list
         for pos in sorted(position_to_gps.keys()):
             # At each rank, order players randomly
@@ -1191,14 +1182,8 @@ class Game(models.Model):
                                       'game': gn_str})
             # Who took 2 or more, lost 2 or more, or had a total of 4 or more gains and losses?
             if (mask & MASK_SC_CHANGES) != 0:
-                try:
-                    gains = sc_gains[power]
-                except KeyError:
-                    gains = []
-                try:
-                    losses = sc_losses[power]
-                except KeyError:
-                    losses = []
+                gains = sc_gains.get(power, [])
+                losses = sc_losses.get(power, [])
                 if (len(gains) > 2) or (len(losses) > 2) or (len(gains) + len(losses) > 3):
                     if gains:
                         gains_str = ''

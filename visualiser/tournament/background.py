@@ -189,10 +189,7 @@ class WDDBackground():
         row = row.find_next_sibling()
         columns = []
         for th in row.find_all('th'):
-            try:
-                col = MAP[th.string]
-            except KeyError:
-                col = str(th.string)
+            col = MAP.get(th.string, str(th.string))
             columns.append(col)
         results = []
         for row in row.next_siblings:
@@ -398,10 +395,7 @@ class WDDBackground():
                 row = row.find_next_sibling()
                 columns = []
                 for th in row.find_all('th'):
-                    try:
-                        col = MAP[th.string]
-                    except KeyError:
-                        col = str(th.string)
+                    col = MAP.get(th.string, str(th.string))
                     columns.append(col)
                 if awards_table:
                     results['Awards'] = []
@@ -456,10 +450,7 @@ class WDDBackground():
         for table in soup.find_all('table', width='70%'):
             columns = []
             for th in table.find_all('th'):
-                try:
-                    col = MAP[th.string]
-                except KeyError:
-                    col = str(th.string)
+                col = MAP.get(th.string, str(th.string))
                 columns.append(col)
             row = th.find_parent()
             for row in row.next_siblings:

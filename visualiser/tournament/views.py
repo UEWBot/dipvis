@@ -1992,14 +1992,8 @@ def draw_vote(request, tournament_id, game_name):
         for i, c in enumerate(countries, start=1):
             kwargs['power_%d' % i] = c
 
-        try:
-            passed = form.cleaned_data['passed']
-        except KeyError:
-            passed = None
-        try:
-            votes_in_favour = form.cleaned_data['votes_in_favour']
-        except KeyError:
-            votes_in_favour = None
+        passed = form.cleaned_data.get('passed')
+        votes_in_favour = form.cleaned_data.get('votes_in_favour')
 
         # Create the DrawProposal
         dp = DrawProposal(game=g,

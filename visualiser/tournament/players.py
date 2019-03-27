@@ -526,9 +526,7 @@ class Player(models.Model):
             titles = {}
             for ranking in ranking_set:
                 if ranking.title:
-                    if ranking.title not in titles:
-                        titles[ranking.title] = []
-                    titles[ranking.title].append(ranking.year)
+                    titles.setdefault(ranking.title, []).append(ranking.year)
             for key, lst in titles.items():
                 results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         if (mask & MASK_FIRST_TOURNEY) != 0:
