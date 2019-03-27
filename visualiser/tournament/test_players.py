@@ -245,6 +245,25 @@ class PlayerTests(TestCase):
         pgr.save()
         # TODO validate results
         p.background()
+        pgr.delete()
+        p.delete()
+
+    def test_player_background_game_count(self):
+        p = Player(first_name='Joe',
+                   last_name='Bloggs')
+        p.save()
+        # Nofinal_sc_count (or other optional fields)
+        pgr = PlayerGameResult(tournament_name='Best Tournament',
+                               game_name='Top Board',
+                               player=p,
+                               power=self.austria,
+                               date=timezone.now(),
+                               position=2)
+        pgr.save()
+        bg = p.background()
+        self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
+        pgr.delete()
+        p.delete()
 
     # TODO Player.save()
 
