@@ -1222,7 +1222,7 @@ def send_board_call(the_round):
                                  body=msg_text,
                                  from_email=email_from,
                                  to=[email_from,],
-                                 bcc=recipients_list)
+                                 bcc=recipients)
             messages.append(email)
     if len(messages):
         mail.get_connection().send_messages(messages)
