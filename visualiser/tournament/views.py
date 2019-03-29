@@ -22,12 +22,9 @@ import csv
 from io import StringIO
 
 from django import forms
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.core import mail
 from django.core.exceptions import ValidationError
-from django.core.mail import EmailMessage
 from django.forms import ModelForm
 from django.forms.formsets import formset_factory, BaseFormSet
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -39,6 +36,7 @@ from django.views import generic
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR, WINNING_SCS
 from tournament.diplomacy import validate_preference_string
+from tournament.email import send_board_call
 from tournament.game_seeder import GameSeeder
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount
@@ -1191,41 +1189,6 @@ def round_detail(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
-
-def send_board_call(the_round):
-    """Send an email to all players in the round with the board calls"""
-    # TODO Translation?
-    subject = 'Board call for %(tourney)s Round %(round)d' % {'tourney': the_round.tournament,
-                                                              'round': the_round.number()}
-    email_from = settings.EMAIL_HOST_USER
-    # We want to include all the boards in the message,
-    # with each player's board at the top of their message
-    # Start off with a list of (description, player_email) 2-tuples, one per board
-    games = []
-    for g in the_round.game_set.all():
-        game_text = 'Board %(game)s:\n' % {'game': g.name}
-        recipients = []
-        for gp in g.gameplayer_set.order_by('power'):
-            game_text += '%(power)s: %(player)s\n' % {'power': gp.power,
-                                                      'player': gp.player}
-            if gp.player.email:
-                recipients.append(gp.player.email)
-        games.append((game_text, recipients))
-    # Put together the common body of the message
-    all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
-    # Create one message per game
-    messages = []
-    for game_text, recipients in games:
-        msg_text = 'Your game:\n' + game_text + '\n' + all_games
-        if len(recipients):
-            email = EmailMessage(subject=subject,
-                                 body=msg_text,
-                                 from_email=email_from,
-                                 to=[email_from,],
-                                 bcc=recipients)
-            messages.append(email)
-    if len(messages):
-        mail.get_connection().send_messages(messages)
 
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
