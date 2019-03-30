@@ -450,6 +450,7 @@ class PlayerRoundForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
+        # TODO - self.tournament looks unused - remove?
         self.tournament = kwargs.pop('tournament')
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
