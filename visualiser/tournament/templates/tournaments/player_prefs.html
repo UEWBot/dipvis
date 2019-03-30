@@ -30,7 +30,18 @@
 <form method="post" action={% url 'player_prefs' tournament.id uuid %}>
   {% csrf_token %}
   <table class="form">
-    {{ form }}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <div class=fieldWrapper">
+        <tr>
+          {{ field.errors }}
+          {{ field }}
+          {% if field.help_text %}
+            <p class="help">{{ field.help_text|safe }}</p>
+          {% endif %}
+        </tr>
+      </div>
+    {% endfor %}
   </table>
   <input type="submit" value="Submit" />
 </form>
