@@ -1,0 +1,222 @@
+# Diplomacy Tournament Visualiser
+# Copyright (C) 2014, 2016-2019 Chris Brand
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+WDD Views for the Diplomacy Tournament Visualiser.
+"""
+
+import csv
+
+from django.http import HttpResponse
+
+from tournament.diplomacy import GreatPower
+from tournament.diplomacy import FIRST_YEAR
+from tournament.models import Game
+from tournament.models import UNRANKED
+from tournament.models import GamePlayer
+from tournament.tournament_views import get_visible_tournament_or_404
+
+# CSV export for WDD
+
+def _power_name_to_wdd(name):
+    """Map a power name to a WDD country code"""
+    # 0 for variant (standard), plus first two letters of the country name (in English)
+    return '0%s' % name[0:2].upper()
+
+def _centrecount_year_to_wdd(year):
+    """Map a year to a WDD centrecount column name"""
+    return 'CT_%02d' % (year % (FIRST_YEAR-1))
+
+def view_classification_csv(request, tournament_id):
+    """Return a WDD-compatible "classification" CSV file for the tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    tps = t.tournamentplayer_set.order_by('-score')
+    # Grab the tournament scores and positions, "if it ended now"
+    t_positions_and_scores = t.positions_and_scores()[0]
+    # Grab the best country rankings
+    best_countries = t.best_countries()
+    # Grab the top board, if any
+    try:
+        top_board = Game.objects.get(is_top_board=True,
+                                     the_round__tournament=t)
+        tb_positions = top_board.positions()
+        tb_dots = top_board.centrecount_set.filter(year__gt=1900)
+    except Game.DoesNotExist:
+        top_board = None
+    # What fields we want to write
+    headers = ['FIRST NAME',
+               'NAME',
+               'HOMONYME',
+               'RANK',
+               'EXAEQUO', # Last of the mandatory ones
+               'SCORE',
+              ]
+    # Score for each round (extras don't matter)
+    for i in range(1, 9):
+        headers.append('R%d' % i)
+    # Best country stuff
+    for p in GreatPower.objects.all():
+        wdd_pwr = _power_name_to_wdd(p.name)
+        headers.append('RK_%s' % wdd_pwr)
+        headers.append('PT_%s' % wdd_pwr)
+        headers.append('CT_%s' % wdd_pwr)
+        headers.append('HEAT_%s' % wdd_pwr)
+        headers.append('BOARD_%s' % wdd_pwr)
+    # Top Board stuff
+    # Only add these headers if there was a top board
+    if top_board:
+        headers.append('NAME_TOPBOARD')
+        headers.append('HEAT_TOPBOARD')
+        headers.append('BOARD_TOPBOARD')
+        headers.append('RK_TOPBOARD')
+        headers.append('CT_TOPBOARD')
+        headers.append('COUNTRY_TOPBOARD')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="%s%dclassification.csv"' % (t.name,
+                                                                                         t.start_date.year)
+
+    writer = csv.DictWriter(response, fieldnames=headers)
+    writer.writeheader()
+    # One row per player (row order and field order don't matter)
+    for tp in tps:
+        p = tp.player
+        p_score = t_positions_and_scores[p][1]
+        rank = t_positions_and_scores[p][0]
+        if rank == UNRANKED:
+            rank = '999'
+        # First the stuff that is global to the tournament and applies to all players
+        names = p.wdd_firstname_lastname()
+        row_dict = {'FIRST NAME': names[0],
+                    'NAME': names[1],
+                    'HOMONYME': '1', # User Guide says "Set to 1"
+                    'RANK': rank,
+                    'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
+                    'SCORE': p_score,
+                   }
+        # Add in round score for each round played
+        for rp in tp.roundplayers():
+            row_dict['R%d' % rp.the_round.number()] = rp.score
+        # Add best country fields if any
+        for power, bc in best_countries.items():
+            # Did this player win best country with this power?
+            for gp in bc:
+                if gp.player == p:
+                    wdd_pwr = _power_name_to_wdd(power.name)
+                    row_dict['RK_%s' % wdd_pwr] = 1
+                    row_dict['PT_%s' % wdd_pwr] = gp.score
+                    row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=power).last().count
+                    row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
+                    # We store boards as names, not numbers
+                    # g.id is globally-unique. What we really want is number within the round
+                    row_dict['BOARD_%s' % wdd_pwr] = gp.game.id
+                    break
+        # Add top board fields if applicable
+        if top_board:
+            try:
+                gp = top_board.gameplayer_set.get(player=p)
+                row_dict['NAME_TOPBOARD'] = 'A' # This seems to be arbitrary
+                row_dict['HEAT_TOPBOARD'] = top_board.the_round.number()
+                row_dict['BOARD_TOPBOARD'] = top_board.id
+                row_dict['RK_TOPBOARD'] = tb_positions[gp.power]
+                row_dict['CT_TOPBOARD'] = tb_dots.filter(power=gp.power).last().count
+                # TODO Not certain that this is the correct value
+                row_dict['COUNTRY_TOPBOARD'] = _power_name_to_wdd(gp.power.name)
+            except GamePlayer.DoesNotExist:
+                # This player did not make the top board
+                pass
+        # Write this player's row out
+        writer.writerow(row_dict)
+
+    return response
+
+def view_boards_csv(request, tournament_id):
+    """Return a WDD-compatible "boards" CSV file for the tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    # What fields we want to write
+    headers = ['FIRST NAME',
+               'NAME',
+               'HOMONYME',
+               'ROUND',
+               'BOARD',
+               'COUNTRY',
+               'RANK',
+               'EXAEQUO', # Last of the mandatrory ones
+               'SCORE',
+               'NB_CENTRE',
+               'YEAR_ELIMINATION',
+               'DRAW',
+              ]
+    # Centre count for each year (extras don't matter)
+    for i in range(1, 21):
+        headers.append('CT_%02d' % i)
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="%s%dboards.csv"' % (t.name,
+                                                                                 t.start_date.year)
+
+    writer = csv.DictWriter(response, fieldnames=headers)
+    writer.writeheader()
+
+    # One row per game, per player
+    r_row_dict = {}
+    r_row_dict['HOMONYME'] = '1' # User Guide says "Set to 1"
+    for r in t.round_set.all():
+        r_row_dict['ROUND'] = r.number()
+        g_row_dict = r_row_dict.copy()
+        for g in r.game_set.all():
+            # We store boards as names, not numbers
+            # g.id is globally-unique. What we really want is number within the round
+            g_row_dict['BOARD'] = g.id
+            positions = g.positions()
+            draw = g.passed_draw()
+            soloer = g.soloer()
+            # TODO This is broken with replacement players
+            for gp in g.gameplayer_set.all():
+                names = gp.player.wdd_firstname_lastname
+                row_dict = g_row_dict.copy()
+                row_dict['FIRST NAME'] = names[0]
+                row_dict['NAME'] = names[1]
+                row_dict['COUNTRY'] = _power_name_to_wdd(gp.power.name)
+                row_dict['SCORE'] = gp.score
+                rank = positions[gp.power]
+                row_dict['RANK'] = rank
+                row_dict['EXAEQUO'] = len([r for r in positions.values() if r == rank])
+                dots = g.centrecount_set.filter(power=gp.power).filter(year__gt=1900)
+                # How did the game end?
+                if soloer is not None:
+                    if soloer == gp:
+                        # This player won
+                        row_dict['DRAW'] = 1
+                    else:
+                        # Another player won
+                        row_dict['DRAW'] = 0
+                if draw is not None:
+                    if draw.power_is_part(gp.power):
+                        row_dict['DRAW'] = draw.draw_size()
+                    else:
+                        row_dict['DRAW'] = 0
+                row_dict['NB_CENTRE'] = dots.last().count
+                elim = gp.elimination_year()
+                if elim is not None:
+                    row_dict['YEAR_ELIMINATION'] = elim % (FIRST_YEAR-1)
+                # Add in centre counts
+                for cc in dots:
+                    row_dict[_centrecount_year_to_wdd(cc.year)] = cc.count
+                # Write a row for this player in this game
+                writer.writerow(row_dict)
+
+    return response
