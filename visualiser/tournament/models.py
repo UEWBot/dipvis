@@ -43,8 +43,7 @@ from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, add_player_bg, position_str
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
-from tournament.players import PlayerTournamentRanking, PlayerAward, PlayerGameResult
-from tournament.players import TO_GAME_RESULT, LOSS, WIN, validate_wdd_tournament_id
+from tournament.players import validate_wdd_tournament_id
 
 SPRING = 'S'
 FALL = 'F'
