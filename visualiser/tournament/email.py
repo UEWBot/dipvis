@@ -49,14 +49,14 @@ def send_board_call(the_round):
     messages = []
     for game_text, recipients in games:
         msg_text = 'Your game:\n' + game_text + '\n' + all_games
-        if len(recipients):
+        if recipients:
             email = EmailMessage(subject=subject,
                                  body=msg_text,
                                  from_email=email_from,
                                  to=[email_from,],
                                  bcc=recipients)
             messages.append(email)
-    if len(messages):
+    if messages:
         mail.get_connection().send_messages(messages)
 
 PREFS_EMAIL = """

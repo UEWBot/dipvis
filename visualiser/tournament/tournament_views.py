@@ -111,14 +111,14 @@ def tournament_scores(request,
     rds = t.round_set.all()
     rounds = [r.number() for r in rds]
     # Grab the tournament scores and positions and round scores, all "if it ended now"
-    t_positions_and_scores, round_scores = t.positions_and_scores()
+    t_positions_and_scores, r_scores = t.positions_and_scores()
     # Construct a list of lists with [position, player name, round 1 score, ..., round n score, tournament score]
     scores = []
     for p in tps:
         rs = []
         for r in rds:
             try:
-                rs.append('%.2f' % round_scores[r][p.player])
+                rs.append('%.2f' % r_scores[r][p.player])
             except KeyError:
                 # This player didn't play this round
                 rs.append('')
@@ -446,7 +446,7 @@ def roll_call(request, tournament_id):
                 if created:
                     i.save()
                 for r_name, value in form.cleaned_data.items():
-                    if r_name is 'player':
+                    if r_name == 'player':
                         # This column is just for the user
                         continue
                     # Extract the round number from the field name

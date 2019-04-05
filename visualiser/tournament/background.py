@@ -151,7 +151,7 @@ class WDDBackground():
             raise UnableToSplitName
         first_name = name_parts.pop(0)
         last_name = name_parts.pop()
-        while len(name_parts):
+        while name_parts:
             word = name_parts.pop(0)
             if word.isupper() and not word.endswith('.') and not len(word) == 1:
                 # This is likely part of the last name

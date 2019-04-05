@@ -686,7 +686,7 @@ class TournamentPlayer(models.Model):
         if not self.uuid_str:
             self._generate_uuid()
         path = reverse('player_prefs',
-                        args=[str(self.tournament.id), self.uuid_str])
+                       args=[str(self.tournament.id), self.uuid_str])
         return 'https://%(host)s%(path)s' % {'host': settings.HOSTNAME,
                                              'path': path}
 

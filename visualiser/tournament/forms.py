@@ -246,14 +246,15 @@ class BasePowerAssignForm(BaseFormSet):
 class GetSevenPlayersForm(forms.Form):
     """Form to enter players to sit out or play two games"""
 
+    LABELS = {'sitter': _('Player sitting out'),
+              'double': _('Player to play two games')}
+
     def __create_player_fields(self, queryset, prefix, count):
         """Do the actual field creation"""
-        LABELS = {'sitter': _('Player sitting out'),
-                  'double': _('Player to play two games')}
         for i in range(count):
             self.fields['%s_%d' % (prefix, i)] = RoundPlayerChoiceField(queryset,
                                                                         required=False,
-                                                                        label=LABELS[prefix])
+                                                                        label=self.LABELS[prefix])
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates the specified number of player fields"""
