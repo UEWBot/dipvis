@@ -298,7 +298,6 @@ class EmailTests(TestCase):
 
     def test_send_prefs_email_prefs_done(self):
         tp = self.t2.tournamentplayer_set.first()
-        print('uuid_str is "%s"' % tp.uuid_str)
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
