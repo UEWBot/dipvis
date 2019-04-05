@@ -30,7 +30,7 @@ class DiplomacyTests(TestCase):
         self.assertEqual(TOTAL_SCS, 34)
 
     # WINNING_SCS
-    def test_total_scs(self):
+    def test_winning_scs(self):
         self.assertEqual(WINNING_SCS, 18)
 
     # validate_year()
