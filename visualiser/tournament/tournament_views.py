@@ -533,9 +533,8 @@ def player_prefs(request, tournament_id, uuid):
     except TournamentPlayer.DoesNotExist:
         raise Http404
     form = PrefsForm(request.POST or None,
-                     tp=tp,
-                     initial={'prefs': tp.prefs_string()})
-    if form.is_valid():
+                     tp=tp)
+    if form.is_valid() and form.has_changed():
         ps = form.cleaned_data['prefs']
         # Set preferences for this TournamentPlayer
         tp.create_preferences_from_string(ps)
@@ -557,10 +556,11 @@ def enter_prefs(request, tournament_id):
         formset = PrefsFormset(request.POST, tournament=t)
         if formset.is_valid():
             for form in formset:
-                tp = form.tp
-                ps = form.cleaned_data['prefs']
-                # Set preferences for this TournamentPlayer
-                tp.create_preferences_from_string(ps)
+                if form.has_changed():
+                    tp = form.tp
+                    ps = form.cleaned_data['prefs']
+                    # Set preferences for this TournamentPlayer
+                    tp.create_preferences_from_string(ps)
             # If all went well, re-direct
             return HttpResponseRedirect(reverse('tournament_detail',
                                                 args=(tournament_id,)))

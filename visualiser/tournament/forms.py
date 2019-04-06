@@ -41,6 +41,9 @@ class PrefsForm(forms.Form):
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tp = kwargs.pop('tp')
+        # Overridable default initial value, like ModelForm
+        if 'initial' not in kwargs.keys():
+            kwargs['initial'] = {'prefs': self.tp.prefs_string()}
         super().__init__(*args, **kwargs)
         # Set the label to the player's name
         self.fields['prefs'].label = str(self.tp.player)
@@ -50,13 +53,17 @@ class BasePrefsFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
-        # Now get the list of TournamentPlayers
+        # Get the list of TournamentPlayers
         self.tps = list(self.tournament.tournamentplayer_set.all())
-        # And construct inital data from it
-        initial = []
-        for tp in self.tps:
-            initial.append({'prefs': tp.prefs_string})
-        super().__init__(*args, initial=initial, **kwargs)
+        # Create initial if not provided
+        if 'initial' not in kwargs.keys():
+            # And construct inital data from it
+            # __init__() uses len(initial) to decide how many forms to create
+            initial = []
+            for tp in self.tps:
+                initial.append({'prefs': tp.prefs_string()})
+            kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself
