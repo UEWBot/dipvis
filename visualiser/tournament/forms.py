@@ -42,18 +42,21 @@ class PrefsForm(forms.Form):
         # Remove our special kwarg from the list
         self.tp = kwargs.pop('tp')
         super().__init__(*args, **kwargs)
+        # Set the label to the player's name
         self.fields['prefs'].label = str(self.tp.player)
-        # TODO Do we need this at all?
-        self.fields['prefs'].initial = self.tp.prefs_string()
 
 class BasePrefsFormset(BaseFormSet):
     """Form to spcify Preferences for every TournamentPlayer"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
-        super().__init__(*args, **kwargs)
         # Now get the list of TournamentPlayers
         self.tps = list(self.tournament.tournamentplayer_set.all())
+        # And construct inital data from it
+        initial = []
+        for tp in self.tps:
+            initial.append({'prefs': tp.prefs_string})
+        super().__init__(*args, initial=initial, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself

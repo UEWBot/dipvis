@@ -565,11 +565,7 @@ def enter_prefs(request, tournament_id):
             return HttpResponseRedirect(reverse('tournament_detail',
                                                 args=(tournament_id,)))
     else:
-        # put together initial data
-        data = []
-        for tp in t.tournamentplayer_set.all():
-            data.append({'prefs': tp.prefs_string()})
-        formset = PrefsFormset(tournament=t, initial=data)
+        formset = PrefsFormset(tournament=t)
     return render(request,
                   'tournaments/enter_prefs.html',
                   {'tournament': t,
