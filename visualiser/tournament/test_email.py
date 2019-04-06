@@ -14,9 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf import settings
 from django.core import mail
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower, GameSet
@@ -28,18 +27,15 @@ from tournament.models import G_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, SECRET, PREFERENCES
 from tournament.players import Player
 
+TD_EMAIL = 'td@example.com'
+
+@override_settings(HOSTNAME='example.com')
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class EmailTests(TestCase):
     fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
-        settings.HOSTNAME = 'example.com'
-        # Use the memory email backend
-        settings.EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
-        # Email comes from the TD
-        cls.td_email = 'td@example.com'
-        settings.EMAIL_HOST_USER = cls.td_email
-
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
         cls.england = GreatPower.objects.get(abbreviation='E')
@@ -254,6 +250,7 @@ class EmailTests(TestCase):
                                         email='u.vitamin@example.com')
 
     # send_board_call()
+    @override_settings(EMAIL_HOST_USER=TD_EMAIL)
     def test_send_board_call(self):
         r = Round.objects.first()
         send_board_call(r)
@@ -261,10 +258,10 @@ class EmailTests(TestCase):
         self.assertEqual(len(mail.outbox), 2)
         for m in mail.outbox:
             # Both should be "from" the TD
-            self.assertEqual(m.from_email, self.td_email)
+            self.assertEqual(m.from_email, TD_EMAIL)
             # Both should have just the TD in "To:"
             self.assertEqual(len(m.to), 1)
-            self.assertEqual(m.to[0], self.td_email)
+            self.assertEqual(m.to[0], TD_EMAIL)
             # Both should have nobody in "CC:"
             self.assertEqual(len(m.cc), 0)
             # Player emails should be in "BCC:"

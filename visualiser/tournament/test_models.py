@@ -14,10 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
-from django.test import TestCase, tag
+from django.test import TestCase, tag, override_settings
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower, SupplyCentre, GameSet
@@ -45,13 +44,12 @@ HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
+@override_settings(HOSTNAME='example.com')
 class TournamentModelTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
     @classmethod
     def setUpTestData(cls):
-        settings.HOSTNAME = 'example.com'
-
         cls.set1 = GameSet.objects.get(name='Avalon Hill')
         cls.set2 = GameSet.objects.get(name='Gibsons')
 
