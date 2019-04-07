@@ -22,12 +22,15 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 from django.utils import timezone
 
+from tournament.diplomacy import GreatPower
+from tournament.models import SECRET, COUNTS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS, SECRET
 from tournament.models import Tournament
 from tournament.models import TournamentPlayer
 from tournament.players import Player
 
-from tournament.forms import PrefsForm, BasePrefsFormset
+from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
+from tournament.forms import GameScoreForm
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -117,3 +120,71 @@ class PrefsFormsetTest(TestCase):
         for form in formset:
             self.assertEqual(form['prefs'].initial, 'EF')
         self.assertEqual(len(formset), len(initial))
+
+class DrawFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    # Common validation method
+    def check_common_fields(self, form):
+        for field in ('year', 'season', 'proposer'):
+            with self.subTest(field=field):
+                self.assertIn(field, form.fields)
+
+    def test_init_missing_dias(self):
+        with self.assertRaises(KeyError):
+            DrawForm(secrecy=SECRET)
+
+    def test_init_missing_secrecy(self):
+        with self.assertRaises(KeyError):
+            DrawForm(dias=True)
+
+    def test_init_invalid_secrecy(self):
+        with self.assertRaises(AssertionError):
+            DrawForm(dias=True, secrecy='Q')
+
+    def test_dias_secret(self):
+        form = DrawForm(dias=True, secrecy=SECRET)
+        # Form should have year, season, proposer, and passed
+        self.check_common_fields(form)
+        self.assertIn('passed', form.fields)
+
+    def test_non_dias_secret(self):
+        form = DrawForm(dias=False, secrecy=SECRET)
+        # Form should have year, season, proposer, powers, and passed
+        self.check_common_fields(form)
+        for field in ('powers', 'passed'):
+            with self.subTest(field=field):
+                self.assertIn(field, form.fields)
+
+    def test_dias_counts(self):
+        form = DrawForm(dias=True, secrecy=COUNTS)
+        # Form should have year, season, proposer, and votes_in_favour
+        self.check_common_fields(form)
+        self.assertIn('votes_in_favour', form.fields)
+
+    def test_non_dias_counts(self):
+        form = DrawForm(dias=False, secrecy=COUNTS)
+        # Form should have year, season, proposer, powers, and votes_in_favour
+        self.check_common_fields(form)
+        for field in ('powers', 'votes_in_favour'):
+            with self.subTest(field=field):
+                self.assertIn(field, form.fields)
+
+class GameScoreFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    def test_game_name_field_disabled(self):
+        form = GameScoreForm()
+        self.assertTrue(form.fields['game_name'].disabled)
+
+    def test_power_fields_exist(self):
+        form = GameScoreForm()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power.name):
+                self.assertIn(power.name, form.fields)
+
+    def test_power_fields_optional(self):
+        form = GameScoreForm()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power.name):
+                self.assertFalse(form.fields[power.name].required)
