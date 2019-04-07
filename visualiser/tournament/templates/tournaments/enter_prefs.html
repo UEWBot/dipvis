@@ -7,6 +7,9 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Country Preferences" %}</h1>
 
+<p>{% trans "Enter the initial of each power, in order, from highest to lowest preference." %}</p>
+<p>{% trans "Missing powers will be ranked equal last." %}</p>
+
 <form method="post" action={% url 'enter_prefs' tournament.id %}>
   {% csrf_token %}
   <table class="form">
