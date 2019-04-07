@@ -339,8 +339,21 @@ def round_scores(request, tournament_id):
     PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
                                               extra=0,
                                               formset=BasePlayerRoundScoreFormset)
+    data = []
+    # Go through each player in the Tournament
+    for tp in t.tournamentplayer_set.all():
+        current = {'tp_id': tp, 'player': tp.player, 'overall_score': tp.score}
+        for rp in tp.roundplayers():
+            r = rp.the_round
+            round_num = r.number()
+            current['round_%d' % round_num] = rp.score
+            # Scores for any games in the round
+            games = GamePlayer.objects.filter(player=tp.player,
+                                              game__the_round=r).distinct()
+            current['game_scores_%d' % round_num] = ', '.join([str(g.score) for g in games])
+        data.append(current)
     if request.method == 'POST':
-        formset = PlayerRoundScoreFormset(request.POST, tournament=t)
+        formset = PlayerRoundScoreFormset(request.POST, tournament=t, initial=data)
         if formset.is_valid():
             for form in formset:
                 tp = form.cleaned_data['tp_id']
@@ -391,19 +404,6 @@ def round_scores(request, tournament_id):
             return HttpResponseRedirect(reverse('tournament_scores',
                                                 args=(tournament_id)))
     else:
-        data = []
-        # Go through each player in the Tournament
-        for tp in t.tournamentplayer_set.all():
-            current = {'tp_id': tp, 'player': tp.player, 'overall_score': tp.score}
-            for rp in tp.roundplayers():
-                r = rp.the_round
-                round_num = r.number()
-                current['round_%d' % round_num] = rp.score
-                # Scores for any games in the round
-                games = GamePlayer.objects.filter(player=tp.player,
-                                                  game__the_round=r).distinct()
-                current['game_scores_%d' % round_num] = ', '.join([str(g.score) for g in games])
-            data.append(current)
         formset = PlayerRoundScoreFormset(tournament=t, initial=data)
 
     return render(request,
@@ -420,8 +420,19 @@ def roll_call(request, tournament_id):
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
+    data = []
+    # Go through each player in the Tournament
+    for tp in t.tournamentplayer_set.all():
+        current = {'player': tp.player}
+        rps = tp.roundplayers()
+        # And each round of the Tournament
+        for r in t.round_set.all():
+            # Is this player listed as playing this round ?
+            played = rps.filter(the_round=r).exists()
+            current['round_%d' % r.number()] = played
+        data.append(current)
     if request.method == 'POST':
-        formset = PlayerRoundFormset(request.POST, tournament=t)
+        formset = PlayerRoundFormset(request.POST, tournament=t, initial=data)
         if formset.is_valid():
             for form in formset:
                 try:
@@ -493,17 +504,6 @@ def roll_call(request, tournament_id):
                                                     args=(tournament_id,
                                                           r.number())))
     else:
-        data = []
-        # Go through each player in the Tournament
-        for tp in t.tournamentplayer_set.all():
-            current = {'player': tp.player}
-            rps = tp.roundplayers()
-            # And each round of the Tournament
-            for r in t.round_set.all():
-                # Is this player listed as playing this round ?
-                played = rps.filter(the_round=r).exists()
-                current['round_%d' % r.number()] = played
-            data.append(current)
         formset = PlayerRoundFormset(tournament=t, initial=data)
 
     return render(request,

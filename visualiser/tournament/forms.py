@@ -99,16 +99,16 @@ class DrawForm(forms.Form):
 
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
-    game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
+    game_name = forms.CharField(label=_(u'Game Name'),
+                                max_length=10,
+                                disabled=True)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one score field per Great Power"""
         super(GameScoreForm, self).__init__(*args, **kwargs)
 
-        # No changing the game name !
         attrs = self.fields['game_name'].widget.attrs
         attrs['size'] = attrs['maxlength']
-        attrs['readonly'] = 'readonly'
 
         # Create the right country fields
         for power in GreatPower.objects.all():
@@ -454,8 +454,7 @@ class PlayerRoundForm(forms.Form):
             readonly = (i < self.this_round)
             self.fields[name] = forms.BooleanField(required=False, initial=False)
             if readonly:
-                # "readonly" on checkboxes is purely visual, but good enough for now
-                self.fields[name].widget.attrs['readonly'] = 'readonly'
+                self.fields[name].disabled = True
 
 class BasePlayerRoundFormset(BaseFormSet):
     """Form to specify which players are playing in each round"""
@@ -499,8 +498,9 @@ class TournamentPlayerChoiceField(forms.ModelChoiceField):
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
     tp_id = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
-                                        widget=forms.HiddenInput(attrs={'readonly': 'readonly'}))
-    player = forms.CharField(max_length=20)
+                                        widget=forms.HiddenInput(),
+                                        disabled=True)
+    player = forms.CharField(max_length=20, disabled=True)
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
@@ -510,7 +510,6 @@ class PlayerRoundScoreForm(forms.Form):
         super(PlayerRoundScoreForm, self).__init__(*args, **kwargs)
 
         self.fields['tp_id'].queryset = self.tournament.tournamentplayer_set.all()
-        self.fields['player'].widget.attrs['readonly'] = 'readonly'
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.rounds):
@@ -520,16 +519,14 @@ class PlayerRoundScoreForm(forms.Form):
                 # Create an additional field to show the game scores for that round
                 game_scores_name = 'game_scores_%d' % i
                 self.fields[game_scores_name] = forms.CharField(max_length=10,
-                                                                required=False)
-                attrs = self.fields[game_scores_name].widget.attrs
-                attrs['readonly'] = 'readonly'
+                                                                required=False,
+                                                                disabled=True)
             self.fields[name] = forms.FloatField(required=False)
             attrs = self.fields[name].widget.attrs
             attrs['size'] = 10
             attrs['maxlength'] = 10
             if readonly:
-                # "readonly" on checkboxes is purely visual, but good enough for now
-                self.fields[name].widget.attrs['readonly'] = 'readonly'
+                self.fields[name].disabled = True
 
         # Last field is for the overall tournament score
         self.fields['overall_score'] = forms.FloatField(required=False)

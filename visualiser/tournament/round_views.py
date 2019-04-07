@@ -385,8 +385,16 @@ def game_scores(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     GameScoreFormset = formset_factory(GameScoreForm,
                                        extra=0)
+    # Initial data
+    data = []
+    the_list = r.game_set.all()
+    for game in the_list:
+        content = {'game_name': game.name}
+        for gp in game.gameplayer_set.all():
+            content[gp.power.name] = gp.score
+        data.append(content)
     if request.method == 'POST':
-        formset = GameScoreFormset(request.POST)
+        formset = GameScoreFormset(request.POST, initial=data)
         if formset.is_valid():
             for f in formset:
                 # Find the game
@@ -412,27 +420,19 @@ def game_scores(request, tournament_id, round_num):
                         return render(request,
                                       'rounds/game_score.html',
                                       {'tournament': t,
-                                       'round': r,
+                                       'round': round_num,
                                        'formset' : formset})
                     i.save()
             # Redirect to the round index
             return HttpResponseRedirect(reverse('round_index',
                                                 args=(tournament_id)))
     else:
-        # Initial data
-        data = []
-        the_list = r.game_set.all()
-        for game in the_list:
-            content = {'game_name': game.name}
-            for gp in game.gameplayer_set.all():
-                content[gp.power.name] = gp.score
-            data.append(content)
         formset = GameScoreFormset(initial=data)
 
     return render(request,
                   'rounds/game_score.html',
                   {'tournament': t,
-                   'round': r,
+                   'round': round_num,
                    'formset' : formset})
 
 def game_index(request, tournament_id, round_num):
