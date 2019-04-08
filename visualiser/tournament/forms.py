@@ -26,7 +26,7 @@ from django.utils.translation import ugettext as _
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy import validate_preference_string
-from tournament.models import GameImage
+from tournament.models import Game, GameImage
 from tournament.models import SECRET, COUNTS, SEASONS
 from tournament.models import TournamentPlayer
 from tournament.players import Player
@@ -558,3 +558,9 @@ class GameImageForm(ModelForm):
     class Meta:
         model = GameImage
         fields = ('game', 'year', 'season', 'phase', 'image')
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwargs from the list
+        tournament = kwargs.pop('tournament')
+        super().__init__(*args, **kwargs)
+        self.fields['game'].queryset = Game.objects.filter(the_round__tournament=tournament).distinct()

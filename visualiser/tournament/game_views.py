@@ -534,6 +534,7 @@ def add_game_image(request, tournament_id, game_name=''):
         initial = {'game': g, 'year': next_year}
     form = GameImageForm(request.POST or None,
                          request.FILES or None,
+                         tournament=t,
                          initial=initial)
     if form.is_valid():
         # Create the new image in the database
