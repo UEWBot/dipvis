@@ -352,59 +352,58 @@ def round_scores(request, tournament_id):
                                               game__the_round=r).distinct()
             current['game_scores_%d' % round_num] = ', '.join([str(g.score) for g in games])
         data.append(current)
-    if request.method == 'POST':
-        formset = PlayerRoundScoreFormset(request.POST, tournament=t, initial=data)
-        if formset.is_valid():
-            for form in formset:
-                tp = form.cleaned_data['tp_id']
-                for r_name, value in form.cleaned_data.items():
-                    # Skip if no score was entered
-                    if not value:
-                        continue
-                    # We're only interested in the round score fields
-                    if r_name.startswith('round_'):
-                        # Extract the round number from the field name
-                        i = int(r_name[6:])
-                        # Find that Round
-                        r = t.round_numbered(i)
-                        # Update the score
-                        i = RoundPlayer.objects.get_or_create(player=tp.player,
-                                                              the_round=r)[0]
-                        i.score = value
-                        try:
-                            i.full_clean()
-                        except ValidationError as e:
-                            form.add_error(form.fields[r_name], e)
-                            i.delete()
-                            return render(request,
-                                          'tournaments/round_players.html',
-                                          {'title': _('Scores'),
-                                           'tournament': t,
-                                           'post_url': reverse('enter_scores',
-                                                               args=(tournament_id,)),
-                                           'formset' : formset})
+    formset = PlayerRoundScoreFormset(request.POST or None,
+                                      tournament=t,
+                                      initial=data)
+    if formset.is_valid():
+        for form in formset:
+            tp = form.cleaned_data['tp_id']
+            for r_name, value in form.cleaned_data.items():
+                # Skip if no score was entered
+                if not value:
+                    continue
+                # We're only interested in the round score fields
+                if r_name.startswith('round_'):
+                    # Extract the round number from the field name
+                    i = int(r_name[6:])
+                    # Find that Round
+                    r = t.round_numbered(i)
+                    # Update the score
+                    i = RoundPlayer.objects.get_or_create(player=tp.player,
+                                                          the_round=r)[0]
+                    i.score = value
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        form.add_error(form.fields[r_name], e)
+                        i.delete()
+                        return render(request,
+                                      'tournaments/round_players.html',
+                                      {'title': _('Scores'),
+                                       'tournament': t,
+                                       'post_url': reverse('enter_scores',
+                                                           args=(tournament_id,)),
+                                       'formset' : formset})
 
-                        i.save()
-                    elif r_name == 'overall_score':
-                        # Store the player's tournament score
-                        tp.score = value
-                        try:
-                            tp.full_clean()
-                        except ValidationError as e:
-                            form.add_error(form.fields[r_name], e)
-                            return render(request,
-                                          'tournaments/round_players.html',
-                                          {'title': _('Scores'),
-                                           'tournament': t,
-                                           'post_url': reverse('enter_scores',
-                                                               args=(tournament_id,)),
-                                           'formset' : formset})
-                        tp.save()
-            # Redirect to the read-only version
-            return HttpResponseRedirect(reverse('tournament_scores',
-                                                args=(tournament_id)))
-    else:
-        formset = PlayerRoundScoreFormset(tournament=t, initial=data)
+                    i.save()
+                elif r_name == 'overall_score':
+                    # Store the player's tournament score
+                    tp.score = value
+                    try:
+                        tp.full_clean()
+                    except ValidationError as e:
+                        form.add_error(form.fields[r_name], e)
+                        return render(request,
+                                      'tournaments/round_players.html',
+                                      {'title': _('Scores'),
+                                       'tournament': t,
+                                       'post_url': reverse('enter_scores',
+                                                           args=(tournament_id,)),
+                                       'formset' : formset})
+                    tp.save()
+        # Redirect to the read-only version
+        return HttpResponseRedirect(reverse('tournament_scores',
+                                            args=(tournament_id)))
 
     return render(request,
                   'tournaments/round_players.html',
@@ -431,80 +430,77 @@ def roll_call(request, tournament_id):
             played = rps.filter(the_round=r).exists()
             current['round_%d' % r.number()] = played
         data.append(current)
-    if request.method == 'POST':
-        formset = PlayerRoundFormset(request.POST, tournament=t, initial=data)
-        if formset.is_valid():
-            for form in formset:
-                try:
-                    p = form.cleaned_data['player']
-                except KeyError:
-                    # This must be one of the extra forms, still empty
+    formset = PlayerRoundFormset(request.POST or None, tournament=t, initial=data)
+    if formset.is_valid():
+        for form in formset:
+            try:
+                p = form.cleaned_data['player']
+            except KeyError:
+                # This must be one of the extra forms, still empty
+                continue
+            # Ensure that this Player is in the Tournament
+            i, created = TournamentPlayer.objects.get_or_create(player=p,
+                                                                tournament=t)
+            try:
+                i.full_clean()
+            except ValidationError as e:
+                form.add_error(form.fields['player'], e)
+                i.delete()
+                return render(request,
+                              'tournaments/round_players.html',
+                              {'title': _('Roll Call'),
+                               'tournament': t,
+                               'post_url': reverse('roll_call', args=(tournament_id,)),
+                               'formset' : formset})
+            if created:
+                i.save()
+            for r_name, value in form.cleaned_data.items():
+                if r_name == 'player':
+                    # This column is just for the user
                     continue
-                # Ensure that this Player is in the Tournament
-                i, created = TournamentPlayer.objects.get_or_create(player=p,
-                                                                    tournament=t)
-                try:
-                    i.full_clean()
-                except ValidationError as e:
-                    form.add_error(form.fields['player'], e)
-                    i.delete()
-                    return render(request,
-                                  'tournaments/round_players.html',
-                                  {'title': _('Roll Call'),
-                                   'tournament': t,
-                                   'post_url': reverse('roll_call', args=(tournament_id,)),
-                                   'formset' : formset})
-                if created:
-                    i.save()
-                for r_name, value in form.cleaned_data.items():
-                    if r_name == 'player':
-                        # This column is just for the user
-                        continue
-                    # Extract the round number from the field name
-                    i = int(r_name[6:])
-                    # Find that Round
-                    r = t.round_numbered(i)
-                    # Ignore non-bool fields and ones that aren't True
-                    if value is True:
-                        # Ensure that we have a corresponding RoundPlayer
-                        i, created = RoundPlayer.objects.get_or_create(player=p,
-                                                                       the_round=r)
-                        try:
-                            i.full_clean()
-                        except ValidationError as e:
-                            form.add_error(None, e)
-                            i.delete()
-                            return render(request,
-                                          'tournaments/round_players.html',
-                                          {'title': _('Roll Call'),
-                                           'tournament': t,
-                                           'post_url': reverse('roll_call', args=(tournament_id,)),
-                                           'formset' : formset})
-                        if created:
-                            i.save()
-                    else:
-                        # delete any corresponding RoundPlayer
-                        # This could be a player who was previously checked-off in error
-                        RoundPlayer.objects.filter(player=p,
-                                                   the_round=r).delete()
-            r = t.current_round()
-            if t.seed_games:
-                if (r.roundplayer_set.count() % 7) == 0:
-                    # We have an exact multiple of 7 players, so go straight to seeding
-                    return HttpResponseRedirect(reverse('seed_games',
-                                                        args=(tournament_id,
-                                                              r.number())))
-                # We need players to sit out or play multiple games
-                return HttpResponseRedirect(reverse('get_seven',
+                # Extract the round number from the field name
+                i = int(r_name[6:])
+                # Find that Round
+                r = t.round_numbered(i)
+                # Ignore non-bool fields and ones that aren't True
+                if value is True:
+                    # Ensure that we have a corresponding RoundPlayer
+                    i, created = RoundPlayer.objects.get_or_create(player=p,
+                                                                   the_round=r)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        form.add_error(None, e)
+                        i.delete()
+                        return render(request,
+                                      'tournaments/round_players.html',
+                                      {'title': _('Roll Call'),
+                                       'tournament': t,
+                                       'post_url': reverse('roll_call', args=(tournament_id,)),
+                                       'formset' : formset})
+                    if created:
+                        i.save()
+                else:
+                    # delete any corresponding RoundPlayer
+                    # This could be a player who was previously checked-off in error
+                    RoundPlayer.objects.filter(player=p,
+                                               the_round=r).delete()
+        r = t.current_round()
+        if t.seed_games:
+            if (r.roundplayer_set.count() % 7) == 0:
+                # We have an exact multiple of 7 players, so go straight to seeding
+                return HttpResponseRedirect(reverse('seed_games',
                                                     args=(tournament_id,
                                                           r.number())))
-            else:
-                # Next job is almost certainly to create the actual games
-                return HttpResponseRedirect(reverse('create_games',
-                                                    args=(tournament_id,
-                                                          r.number())))
-    else:
-        formset = PlayerRoundFormset(tournament=t, initial=data)
+            # We need players to sit out or play multiple games
+            return HttpResponseRedirect(reverse('get_seven',
+                                                args=(tournament_id,
+                                                      r.number())))
+        else:
+            # Next job is almost certainly to create the actual games
+            return HttpResponseRedirect(reverse('create_games',
+                                                args=(tournament_id,
+                                                      r.number())))
 
     return render(request,
                   'tournaments/round_players.html',
@@ -552,20 +548,17 @@ def enter_prefs(request, tournament_id):
     PrefsFormset = formset_factory(PrefsForm,
                                    extra=0,
                                    formset=BasePrefsFormset)
-    if request.method == 'POST':
-        formset = PrefsFormset(request.POST, tournament=t)
-        if formset.is_valid():
-            for form in formset:
-                if form.has_changed():
-                    tp = form.tp
-                    ps = form.cleaned_data['prefs']
-                    # Set preferences for this TournamentPlayer
-                    tp.create_preferences_from_string(ps)
-            # If all went well, re-direct
-            return HttpResponseRedirect(reverse('tournament_detail',
-                                                args=(tournament_id,)))
-    else:
-        formset = PrefsFormset(tournament=t)
+    formset = PrefsFormset(request.POST or None, tournament=t)
+    if formset.is_valid():
+        for form in formset:
+            if form.has_changed():
+                tp = form.tp
+                ps = form.cleaned_data['prefs']
+                # Set preferences for this TournamentPlayer
+                tp.create_preferences_from_string(ps)
+        # If all went well, re-direct
+        return HttpResponseRedirect(reverse('tournament_detail',
+                                            args=(tournament_id,)))
     return render(request,
                   'tournaments/enter_prefs.html',
                   {'tournament': t,

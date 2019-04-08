@@ -215,68 +215,65 @@ def sc_owners(request, tournament_id, game_name):
         for o in owners:
             scs[o.sc.name] = o.owner
         data.append(scs)
-    if request.method == 'POST':
-        formset = SCOwnerFormset(request.POST, initial=data)
-        if formset.is_valid():
-            for form in formset:
+    formset = SCOwnerFormset(request.POST or None, initial=data)
+    if formset.is_valid():
+        for form in formset:
+            try:
+                year = form.cleaned_data['year']
+            except KeyError:
+                # Must be one of the extra forms, still blank
+                continue
+            for name, value in form.cleaned_data.items():
                 try:
-                    year = form.cleaned_data['year']
-                except KeyError:
-                    # Must be one of the extra forms, still blank
+                    dot = SupplyCentre.objects.get(name=name)
+                except:
                     continue
-                for name, value in form.cleaned_data.items():
-                    try:
-                        dot = SupplyCentre.objects.get(name=name)
-                    except:
-                        continue
-                    # Can't use get_or_create() here,
-                    # because owner has no default and may have changed
-                    try:
-                        i = SupplyCentreOwnership.objects.get(sc=dot,
-                                                              game=g,
-                                                              year=year)
-                        if value is None:
-                            # There is an owner in the db, but now we want this dot to be neutral
-                            i.delete()
-                            continue
-                        else:
-                            # Ensure the owner has the value we want
-                            i.owner = value
-                    except SupplyCentreOwnership.DoesNotExist:
-                        if value is None:
-                            # Still neutral
-                            continue
-                        i = SupplyCentreOwnership(sc=dot,
-                                                  game=g,
-                                                  year=year,
-                                                  owner=value)
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        form.add_error(None, e)
+                # Can't use get_or_create() here,
+                # because owner has no default and may have changed
+                try:
+                    i = SupplyCentreOwnership.objects.get(sc=dot,
+                                                          game=g,
+                                                          year=year)
+                    if value is None:
+                        # There is an owner in the db, but now we want this dot to be neutral
                         i.delete()
-                        return render(request,
-                                      'games/sc_owners_form.html',
-                                      {'formset': formset,
-                                       'tournament': t,
-                                       'game': g})
-
-                    i.save()
-                # Ensure that CentreCounts for this year match
+                        continue
+                    else:
+                        # Ensure the owner has the value we want
+                        i.owner = value
+                except SupplyCentreOwnership.DoesNotExist:
+                    if value is None:
+                        # Still neutral
+                        continue
+                    i = SupplyCentreOwnership(sc=dot,
+                                              game=g,
+                                              year=year,
+                                              owner=value)
                 try:
-                    g.create_or_update_sc_counts_from_ownerships(year)
-                except SCOwnershipsNotFound:
-                    # We have a blank row
-                    continue
-                if (year == final_year) or (g.soloer() is not None):
-                    # We now have final CentreCounts
-                    g.is_finished = True
-                    g.save()
-            # Redirect to the read-only version
-            return HttpResponseRedirect(reverse('game_sc_owners',
-                                                args=(tournament_id, game_name)))
-    else:
-        formset = SCOwnerFormset(initial=data)
+                    i.full_clean()
+                except ValidationError as e:
+                    form.add_error(None, e)
+                    i.delete()
+                    return render(request,
+                                  'games/sc_owners_form.html',
+                                  {'formset': formset,
+                                   'tournament': t,
+                                   'game': g})
+
+                i.save()
+            # Ensure that CentreCounts for this year match
+            try:
+                g.create_or_update_sc_counts_from_ownerships(year)
+            except SCOwnershipsNotFound:
+                # We have a blank row
+                continue
+            if (year == final_year) or (g.soloer() is not None):
+                # We now have final CentreCounts
+                g.is_finished = True
+                g.save()
+        # Redirect to the read-only version
+        return HttpResponseRedirect(reverse('game_sc_owners',
+                                            args=(tournament_id, game_name)))
 
     return render(request,
                   'games/sc_owners_form.html',
@@ -307,67 +304,62 @@ def sc_counts(request, tournament_id, game_name):
         for c in counts:
             scs[c.power.name] = c.count
         data.append(scs)
-    if request.method == 'POST':
-        formset = SCCountFormset(request.POST, prefix='scs', initial=data)
-        end_form = GameEndedForm(request.POST,
-                                 prefix='end',
-                                 initial={'is_finished': g.is_finished})
-        if formset.is_valid() and end_form.is_valid():
-            for form in formset:
+    formset = SCCountFormset(request.POST or None, prefix='scs', initial=data)
+    end_form = GameEndedForm(request.POST or None,
+                             prefix='end',
+                             initial={'is_finished': g.is_finished})
+    if formset.is_valid() and end_form.is_valid():
+        for form in formset:
+            try:
+                year = form.cleaned_data['year']
+            except KeyError:
+                # Must be one of the extra forms, still blank
+                continue
+            solo = False
+            for name, value in form.cleaned_data.items():
                 try:
-                    year = form.cleaned_data['year']
-                except KeyError:
-                    # Must be one of the extra forms, still blank
+                    power = GreatPower.objects.get(name=name)
+                except:
                     continue
-                solo = False
-                for name, value in form.cleaned_data.items():
-                    try:
-                        power = GreatPower.objects.get(name=name)
-                    except:
-                        continue
-                    if value >= WINNING_SCS:
-                        solo = True
-                    # Can't use get_or_create() here,
-                    # because count has no default and may have changed
-                    try:
-                        i = CentreCount.objects.get(power=power,
-                                                    game=g,
-                                                    year=year)
-                        # Ensure the count has the value we want
-                        i.count = value
-                    except CentreCount.DoesNotExist:
-                        i = CentreCount(power=power,
-                                        game=g,
-                                        year=year,
-                                        count=value)
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        form.add_error(form.fields[name], e)
-                        i.delete()
-                        return render(request,
-                                      'games/sc_counts_form.html',
-                                      {'formset': formset,
-                                       'end_form': end_form,
-                                       'tournament': t,
-                                       'game': g})
+                if value >= WINNING_SCS:
+                    solo = True
+                # Can't use get_or_create() here,
+                # because count has no default and may have changed
+                try:
+                    i = CentreCount.objects.get(power=power,
+                                                game=g,
+                                                year=year)
+                    # Ensure the count has the value we want
+                    i.count = value
+                except CentreCount.DoesNotExist:
+                    i = CentreCount(power=power,
+                                    game=g,
+                                    year=year,
+                                    count=value)
+                try:
+                    i.full_clean()
+                except ValidationError as e:
+                    form.add_error(form.fields[name], e)
+                    i.delete()
+                    return render(request,
+                                  'games/sc_counts_form.html',
+                                  {'formset': formset,
+                                   'end_form': end_form,
+                                   'tournament': t,
+                                   'game': g})
 
-                    i.save()
-                if (year == final_year) or solo:
-                    # We now have final CentreCounts
-                    g.is_finished = True
-                    g.save()
-            # Set the "game over" flag as appropriate
-            # Game is over if it reached the final year, somebody won, or the checkbox was checked
-            g.is_finished = g.is_finished or end_form.cleaned_data['is_finished']
-            g.save()
-            # Redirect to the read-only version
-            return HttpResponseRedirect(reverse('game_sc_chart',
-                                                args=(tournament_id, game_name)))
-    else:
-        formset = SCCountFormset(prefix='scs', initial=data)
-        end_form = GameEndedForm(prefix='end',
-                                 initial={'is_finished': g.is_finished})
+                i.save()
+            if (year == final_year) or solo:
+                # We now have final CentreCounts
+                g.is_finished = True
+                g.save()
+        # Set the "game over" flag as appropriate
+        # Game is over if it reached the final year, somebody won, or the checkbox was checked
+        g.is_finished = g.is_finished or end_form.cleaned_data['is_finished']
+        g.save()
+        # Redirect to the read-only version
+        return HttpResponseRedirect(reverse('game_sc_chart',
+                                            args=(tournament_id, game_name)))
 
     return render(request,
                   'games/sc_counts_form.html',
@@ -540,17 +532,16 @@ def add_game_image(request, tournament_id, game_name=''):
         g = get_game_or_404(t, game_name)
         next_year = g.final_year() + 1
         initial = {'game': g, 'year': next_year}
-    if request.method == 'POST':
-        form = GameImageForm(request.POST, request.FILES, initial=initial)
-        if form.is_valid():
-            # Create the new image in the database
-            image = form.save()
-            return HttpResponseRedirect(reverse('game_image',
-                                                args=(tournament_id,
-                                                      image.game.name,
-                                                      image.turn_str())))
-    else:
-        form = GameImageForm(initial=initial)
+    form = GameImageForm(request.POST or None,
+                         request.FILES or None,
+                         initial=initial)
+    if form.is_valid():
+        # Create the new image in the database
+        image = form.save()
+        return HttpResponseRedirect(reverse('game_image',
+                                            args=(tournament_id,
+                                                  image.game.name,
+                                                  image.turn_str())))
 
     return render(request,
                   'games/add_image.html',

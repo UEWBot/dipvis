@@ -309,71 +309,67 @@ def create_games(request, tournament_id, round_num):
     # This can happen if there are no RoundPlayers for this round
     if expected_games < 1:
         expected_games = 1
-    if request.method == 'POST':
-        GamePlayersFormset = formset_factory(GamePlayersForm,
-                                             extra=expected_games - games.count(),
-                                             formset=BaseGamePlayersForm)
-        formset = GamePlayersFormset(request.POST, the_round=r, initial=data)
-        if formset.is_valid():
-            for f in formset:
-                # Update/create the game
+    GamePlayersFormset = formset_factory(GamePlayersForm,
+                                         extra=expected_games - games.count(),
+                                         formset=BaseGamePlayersForm)
+    formset = GamePlayersFormset(request.POST or None,
+                                 the_round=r,
+                                 initial=data)
+    if formset.is_valid():
+        for f in formset:
+            # Update/create the game
+            try:
+                g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
+                                                        the_round=r,
+                                                        the_set=f.cleaned_data['the_set'])
+            except KeyError:
+                # This must be an extra, unused formset
+                continue
+            try:
+                g.full_clean()
+            except ValidationError as e:
+                f.add_error(None, e)
+                g.delete()
+                return render(request,
+                              'rounds/create_games.html',
+                              {'tournament': t,
+                               'round': r,
+                               'formset' : formset})
+            if created:
+                g.save()
+            # Assign the players to the game
+            for power, field in f.cleaned_data.items():
                 try:
-                    g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
-                                                            the_round=r,
-                                                            the_set=f.cleaned_data['the_set'])
-                except KeyError:
-                    # This must be an extra, unused formset
+                    p = GreatPower.objects.get(name=power)
+                except GreatPower.DoesNotExist:
                     continue
+                # Is there already a player for this power in this game ?
                 try:
-                    g.full_clean()
+                    i = GamePlayer.objects.get(game=g,
+                                               power=p)
+                except GamePlayer.DoesNotExist:
+                    # Create one (default first_season and first_year)
+                    i = GamePlayer(player=field.player, game=g, power=p)
+                else:
+                    # Change the player (if necessary)
+                    i.player = field.player
+                try:
+                    i.full_clean()
                 except ValidationError as e:
                     f.add_error(None, e)
-                    g.delete()
+                    # TODO Not 100% certain that this is the right thing to do here
+                    i.delete()
                     return render(request,
                                   'rounds/create_games.html',
                                   {'tournament': t,
                                    'round': r,
                                    'formset' : formset})
-                if created:
-                    g.save()
-                # Assign the players to the game
-                for power, field in f.cleaned_data.items():
-                    try:
-                        p = GreatPower.objects.get(name=power)
-                    except GreatPower.DoesNotExist:
-                        continue
-                    # Is there already a player for this power in this game ?
-                    try:
-                        i = GamePlayer.objects.get(game=g,
-                                                   power=p)
-                    except GamePlayer.DoesNotExist:
-                        # Create one (default first_season and first_year)
-                        i = GamePlayer(player=field.player, game=g, power=p)
-                    else:
-                        # Change the player (if necessary)
-                        i.player = field.player
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        f.add_error(None, e)
-                        # TODO Not 100% certain that this is the right thing to do here
-                        i.delete()
-                        return render(request,
-                                      'rounds/create_games.html',
-                                      {'tournament': t,
-                                       'round': r,
-                                       'formset' : formset})
-                    i.save()
-            # Notify the players
-            send_board_call(r)
-            # Redirect to the index of games in the round
-            return HttpResponseRedirect(reverse('game_index',
-                                                args=(tournament_id, round_num)))
-    else:
-        GamePlayersFormset = formset_factory(GamePlayersForm,
-                                             extra=expected_games - games.count(),
-                                             formset=BaseGamePlayersForm)
-        formset = GamePlayersFormset(the_round=r, initial=data)
+                i.save()
+        # Notify the players
+        send_board_call(r)
+        # Redirect to the index of games in the round
+        return HttpResponseRedirect(reverse('game_index',
+                                            args=(tournament_id, round_num)))
 
     return render(request,
                   'rounds/create_games.html',
@@ -396,41 +392,38 @@ def game_scores(request, tournament_id, round_num):
         for gp in game.gameplayer_set.all():
             content[gp.power.name] = gp.score
         data.append(content)
-    if request.method == 'POST':
-        formset = GameScoreFormset(request.POST, initial=data)
-        if formset.is_valid():
-            for f in formset:
-                # Find the game
-                g = Game.objects.get(name=f.cleaned_data['game_name'],
-                                     the_round=r)
-                # Set the score for each player
-                for power, field in f.cleaned_data.items():
-                    # Ignore non-GreatPower fields (game_name)
-                    try:
-                        p = GreatPower.objects.get(name=power)
-                    except GreatPower.DoesNotExist:
-                        continue
-                    # Find the matching GamePlayer
-                    # TODO This will fail if there was a replacement
-                    i = GamePlayer.objects.get(game=g,
-                                               power=p)
-                    # Set the score
-                    i.score = field
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        f.add_error(None, e)
-                        return render(request,
-                                      'rounds/game_score.html',
-                                      {'tournament': t,
-                                       'round': round_num,
-                                       'formset' : formset})
-                    i.save()
-            # Redirect to the round index
-            return HttpResponseRedirect(reverse('round_index',
-                                                args=(tournament_id)))
-    else:
-        formset = GameScoreFormset(initial=data)
+    formset = GameScoreFormset(request.POST or None, initial=data)
+    if formset.is_valid():
+        for f in formset:
+            # Find the game
+            g = Game.objects.get(name=f.cleaned_data['game_name'],
+                                 the_round=r)
+            # Set the score for each player
+            for power, field in f.cleaned_data.items():
+                # Ignore non-GreatPower fields (game_name)
+                try:
+                    p = GreatPower.objects.get(name=power)
+                except GreatPower.DoesNotExist:
+                    continue
+                # Find the matching GamePlayer
+                # TODO This will fail if there was a replacement
+                i = GamePlayer.objects.get(game=g,
+                                           power=p)
+                # Set the score
+                i.score = field
+                try:
+                    i.full_clean()
+                except ValidationError as e:
+                    f.add_error(None, e)
+                    return render(request,
+                                  'rounds/game_score.html',
+                                  {'tournament': t,
+                                   'round': round_num,
+                                   'formset' : formset})
+                i.save()
+        # Redirect to the round index
+        return HttpResponseRedirect(reverse('round_index',
+                                            args=(tournament_id)))
 
     return render(request,
                   'rounds/game_score.html',
