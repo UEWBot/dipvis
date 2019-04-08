@@ -279,19 +279,7 @@ class EmailTests(TestCase):
             # p12 shouldn't get any email (not in any Game in the Round)
             self.assertNotIn(self.p12.email, m.bcc)
 
-    # send_prefs_email()
-    def test_send_prefs_email_no_address(self):
-        # Send without forcing to a Player without email in a Tournament with prefs
-        tp = self.t2.tournamentplayer_set.filter(player__email='').first()
-        send_prefs_email(tp)
-        self.assertEqual(len(mail.outbox), 0)
-
-    def test_send_prefs_email_no_prefs_done(self):
-        # Send without forcing to a Player with email in a Tournament without prefs
-        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
-        send_prefs_email(tp)
-        self.assertEqual(len(mail.outbox), 0)
-
+    # TournamentPlayer.save() calls send_prefs_email()
     def test_send_prefs_email_no_prefs_new(self):
         # Save a TournamentPlayer with email in a tournament without prefs
         tp = TournamentPlayer.objects.create(player=self.p24,
@@ -309,18 +297,6 @@ class EmailTests(TestCase):
         self.assertEqual(len(mail.outbox), 0)
         tp.delete()
 
-    def test_send_prefs_email_no_prefs_force(self):
-        # Call with force=True for a Player with an email, but for a Tournament without prefs
-        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
-        send_prefs_email(tp, force=True)
-        self.assertEqual(len(mail.outbox), 0)
-
-    def test_send_prefs_email_prefs_done(self):
-        # Call without force for a Player with email in Tournament with prefs
-        tp = self.t2.tournamentplayer_set.exclude(player__email='').first()
-        send_prefs_email(tp)
-        self.assertEqual(len(mail.outbox), 0)
-
     def test_send_prefs_email_prefs_new(self):
         # Save a TournamentPlayer with email in a Tournament with prefs
         tp = TournamentPlayer.objects.create(player=self.p24,
@@ -329,8 +305,34 @@ class EmailTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         tp.delete()
 
+    # send_prefs_email()
+    def test_send_prefs_email_no_prefs_done(self):
+        # Send without forcing to a Player with email in a Tournament without prefs
+        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
+        send_prefs_email(tp)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_send_prefs_email_no_address(self):
+        # Send without forcing to a Player without email in a Tournament with prefs
+        tp = self.t2.tournamentplayer_set.filter(player__email='').first()
+        send_prefs_email(tp)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_send_prefs_email_prefs_done(self):
+        # Call without force for a Player with email in Tournament with prefs
+        tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
+        send_prefs_email(tp)
+        self.assertEqual(len(mail.outbox), 0)
+
+    # send_prefs_email(force=True)
+    def test_send_prefs_email_no_prefs_force(self):
+        # Call with force=True for a Player with an email, but for a Tournament without prefs
+        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
+        send_prefs_email(tp, force=True)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_send_prefs_email_prefs_force(self):
         # Call with force=True, for a Player with an email, for a Tournament with prefs
-        tp = self.t2.tournamentplayer_set.exclude(player__email='').first()
+        tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         send_prefs_email(tp, force=True)
         self.assertEqual(len(mail.outbox), 1)
