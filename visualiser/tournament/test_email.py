@@ -277,28 +277,33 @@ class EmailTests(TestCase):
 
     # send_prefs_email()
     def test_send_prefs_email_no_prefs_done(self):
-        # We need a TournamentPlayer from t1 and a Player with an email address
-        tp = self.t1.tournamentplayer_set.get(player=self.p15)
+        # Send without forcing to a Player with email in a Tournament without prefs
+        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_no_prefs_new(self):
+        # Save a TournamentPlayer with email in a tournament without prefs
         tp = TournamentPlayer.objects.create(player=self.p24,
                                              tournament=self.t1)
         tp.save()
         self.assertEqual(len(mail.outbox), 0)
+        tp.delete()
 
     def test_send_prefs_email_no_prefs_force(self):
-        tp = self.t1.tournamentplayer_set.get(player=self.p15)
+        # Call with force=True for a Player with an email, but for a Tournament without prefs
+        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         send_prefs_email(tp, force=True)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_prefs_done(self):
-        tp = self.t2.tournamentplayer_set.first()
+        # Call without force for a Player with email in Tournament with prefs
+        tp = self.t2.tournamentplayer_set.exclude(player__email='').first()
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_prefs_new(self):
+        # Save a TournamentPlayer with email in a Tournament with prefs
         tp = TournamentPlayer.objects.create(player=self.p24,
                                              tournament=self.t2)
         tp.save()
@@ -306,6 +311,7 @@ class EmailTests(TestCase):
         tp.delete()
 
     def test_send_prefs_email_prefs_force(self):
-        tp = self.t2.tournamentplayer_set.first()
+        # Call with force=True, for a Player with an email, for a Tournament with prefs
+        tp = self.t2.tournamentplayer_set.exclude(player__email='').first()
         send_prefs_email(tp, force=True)
         self.assertEqual(len(mail.outbox), 1)
