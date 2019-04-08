@@ -253,6 +253,12 @@ class EmailTests(TestCase):
                                     last_name='Xenophobe')
         tp = TournamentPlayer.objects.create(player=p25, tournament=cls.t2)
 
+        # Another TournamentPlayer in t2, with no uuid_str
+        p26 = Player.objects.create(first_name='Yorrick',
+                                    last_name='Zebra',
+                                    email='y.zebra@example.com')
+        tp = TournamentPlayer.objects.create(player=p26, tournament=cls.t2)
+
     # send_board_call()
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
     def test_send_board_call(self):
@@ -323,6 +329,12 @@ class EmailTests(TestCase):
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
+
+    def test_send_prefs_email_prefs_done(self):
+        # Call without force for a Player with email in Tournament with prefs
+        tp = self.t2.tournamentplayer_set.filter(uuid_str='').exclude(player__email='').first()
+        send_prefs_email(tp)
+        self.assertEqual(len(mail.outbox), 1)
 
     # send_prefs_email(force=True)
     def test_send_prefs_email_no_prefs_force(self):
