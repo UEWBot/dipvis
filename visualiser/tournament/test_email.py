@@ -227,7 +227,6 @@ class EmailTests(TestCase):
         GamePlayer.objects.create(player=p22, game=g3, power=austria)
 
         # Tournament with preferences
-        # All t2 Players have email addresses
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=now,
                                            end_date=now,
@@ -248,6 +247,11 @@ class EmailTests(TestCase):
         cls.p24 = Player.objects.create(first_name='Ulysses',
                                         last_name='Vitamin',
                                         email='u.vitamin@example.com')
+
+        # One Player with no email
+        p25 = Player.objects.create(first_name='Wendy',
+                                    last_name='Xenophobe')
+        tp = TournamentPlayer.objects.create(player=p25, tournament=cls.t2)
 
     # send_board_call()
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
@@ -276,6 +280,12 @@ class EmailTests(TestCase):
             self.assertNotIn(self.p12.email, m.bcc)
 
     # send_prefs_email()
+    def test_send_prefs_email_no_address(self):
+        # Send without forcing to a Player without email in a Tournament with prefs
+        tp = self.t2.tournamentplayer_set.filter(player__email='').first()
+        send_prefs_email(tp)
+        self.assertEqual(len(mail.outbox), 0)
+
     def test_send_prefs_email_no_prefs_done(self):
         # Send without forcing to a Player with email in a Tournament without prefs
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
@@ -286,6 +296,15 @@ class EmailTests(TestCase):
         # Save a TournamentPlayer with email in a tournament without prefs
         tp = TournamentPlayer.objects.create(player=self.p24,
                                              tournament=self.t1)
+        tp.save()
+        self.assertEqual(len(mail.outbox), 0)
+        tp.delete()
+
+    def test_send_prefs_email_no_email_new(self):
+        # Save a TournamentPlayer with no email in a Tournament with prefs
+        p = Player.objects.filter(email='').first()
+        tp = TournamentPlayer.objects.create(player=self.p6,
+                                             tournament=self.t2)
         tp.save()
         self.assertEqual(len(mail.outbox), 0)
         tp.delete()
