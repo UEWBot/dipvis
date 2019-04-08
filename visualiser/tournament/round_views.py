@@ -198,7 +198,8 @@ def seed_games(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         PowerAssignFormset = formset_factory(PowerAssignForm,
-                                             formset=BasePowerAssignForm)
+                                             formset=BasePowerAssignForm,
+                                             extra=0)
         formset = PowerAssignFormset(request.POST, the_round=r)
         if formset.is_valid():
             for f in formset:
@@ -293,9 +294,26 @@ def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
+    # Do any games already exist for the round ?
+    games = r.game_set.all()
+    data = []
+    for g in games:
+        current = {'game_name': g.name,
+                   'the_set': g.the_set}
+        for gp in g.gameplayer_set.all():
+            current[gp.power.name] = gp.roundplayer()
+        data.append(current)
+    # Estimate the number of games for the round
+    round_players = r.roundplayer_set.count()
+    expected_games = (round_players + 6) // 7
+    # This can happen if there are no RoundPlayers for this round
+    if expected_games < 1:
+        expected_games = 1
     if request.method == 'POST':
-        GamePlayersFormset = formset_factory(GamePlayersForm, formset=BaseGamePlayersForm)
-        formset = GamePlayersFormset(request.POST, the_round=r)
+        GamePlayersFormset = formset_factory(GamePlayersForm,
+                                             extra=expected_games - games.count(),
+                                             formset=BaseGamePlayersForm)
+        formset = GamePlayersFormset(request.POST, the_round=r, initial=data)
         if formset.is_valid():
             for f in formset:
                 # Update/create the game
@@ -352,21 +370,6 @@ def create_games(request, tournament_id, round_num):
             return HttpResponseRedirect(reverse('game_index',
                                                 args=(tournament_id, round_num)))
     else:
-        # Do any games already exist for the round ?
-        games = r.game_set.all()
-        data = []
-        for g in games:
-            current = {'game_name': g.name,
-                       'the_set': g.the_set}
-            for gp in g.gameplayer_set.all():
-                current[gp.power.name] = gp.roundplayer()
-            data.append(current)
-        # Estimate the number of games for the round
-        round_players = r.roundplayer_set.count()
-        expected_games = (round_players + 6) // 7
-        # This can happen if there are no RoundPlayers for this round
-        if expected_games < 1:
-            expected_games = 1
         GamePlayersFormset = formset_factory(GamePlayersForm,
                                              extra=expected_games - games.count(),
                                              formset=BaseGamePlayersForm)

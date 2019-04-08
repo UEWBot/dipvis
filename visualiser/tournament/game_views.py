@@ -207,8 +207,16 @@ def sc_owners(request, tournament_id, game_name):
     SCOwnerFormset = formset_factory(SCOwnerForm,
                                      extra=years_to_go,
                                      formset=BaseSCOwnerFormset)
+    # Put in all the existing SupplyCentreOwnerships for this game
+    data = []
+    for year in g.years_played():
+        scs = {'year': year}
+        owners = g.supplycentreownership_set.filter(year=year)
+        for o in owners:
+            scs[o.sc.name] = o.owner
+        data.append(scs)
     if request.method == 'POST':
-        formset = SCOwnerFormset(request.POST)
+        formset = SCOwnerFormset(request.POST, initial=data)
         if formset.is_valid():
             for form in formset:
                 try:
@@ -268,14 +276,6 @@ def sc_owners(request, tournament_id, game_name):
             return HttpResponseRedirect(reverse('game_sc_owners',
                                                 args=(tournament_id, game_name)))
     else:
-        # Put in all the existing SupplyCentreOwnerships for this game
-        data = []
-        for year in g.years_played():
-            scs = {'year': year}
-            owners = g.supplycentreownership_set.filter(year=year)
-            for o in owners:
-                scs[o.sc.name] = o.owner
-            data.append(scs)
         formset = SCOwnerFormset(initial=data)
 
     return render(request,
@@ -299,9 +299,19 @@ def sc_counts(request, tournament_id, game_name):
     SCCountFormset = formset_factory(SCCountForm,
                                      extra=years_to_go,
                                      formset=BaseSCCountFormset)
+    # Put in all the existing CentreCounts for this game
+    data = []
+    for year in g.years_played():
+        scs = {'year': year}
+        counts = g.centrecount_set.filter(year=year)
+        for c in counts:
+            scs[c.power.name] = c.count
+        data.append(scs)
     if request.method == 'POST':
-        formset = SCCountFormset(request.POST, prefix='scs')
-        end_form = GameEndedForm(request.POST, prefix='end')
+        formset = SCCountFormset(request.POST, prefix='scs', initial=data)
+        end_form = GameEndedForm(request.POST,
+                                 prefix='end',
+                                 initial={'is_finished': g.is_finished})
         if formset.is_valid() and end_form.is_valid():
             for form in formset:
                 try:
@@ -355,14 +365,6 @@ def sc_counts(request, tournament_id, game_name):
             return HttpResponseRedirect(reverse('game_sc_chart',
                                                 args=(tournament_id, game_name)))
     else:
-        # Put in all the existing CentreCounts for this game
-        data = []
-        for year in g.years_played():
-            scs = {'year': year}
-            counts = g.centrecount_set.filter(year=year)
-            for c in counts:
-                scs[c.power.name] = c.count
-            data.append(scs)
         formset = SCCountFormset(prefix='scs', initial=data)
         end_form = GameEndedForm(prefix='end',
                                  initial={'is_finished': g.is_finished})
@@ -533,8 +535,13 @@ def game_image(request,
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    initial = {}
+    if game_name != '':
+        g = get_game_or_404(t, game_name)
+        next_year = g.final_year() + 1
+        initial = {'game': g, 'year': next_year}
     if request.method == 'POST':
-        form = GameImageForm(request.POST, request.FILES)
+        form = GameImageForm(request.POST, request.FILES, initial=initial)
         if form.is_valid():
             # Create the new image in the database
             image = form.save()
@@ -543,12 +550,6 @@ def add_game_image(request, tournament_id, game_name=''):
                                                       image.game.name,
                                                       image.turn_str())))
     else:
-        initial = {}
-        if game_name != '':
-            g = get_game_or_404(t, game_name)
-            #last_image = g.gameimage_set.last()
-            next_year = g.final_year() + 1
-            initial = {'game': g, 'year': next_year}
         form = GameImageForm(initial=initial)
 
     return render(request,
