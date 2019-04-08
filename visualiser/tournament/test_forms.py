@@ -17,20 +17,21 @@
 """
 Forms Tests for the Diplomacy Tournament Visualiser.
 """
+from datetime import timedelta
 
 from django.forms.formsets import formset_factory
 from django.test import TestCase
 from django.utils import timezone
 
-from tournament.diplomacy import GreatPower
-from tournament.models import SECRET, COUNTS
+from tournament.diplomacy import GreatPower, GameSet
+from tournament.models import SECRET, COUNTS, G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS, SECRET
-from tournament.models import Tournament
-from tournament.models import TournamentPlayer
+from tournament.models import Tournament, Round
+from tournament.models import TournamentPlayer, RoundPlayer
 from tournament.players import Player
 
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
-from tournament.forms import GameScoreForm
+from tournament.forms import GameScoreForm, GamePlayersForm
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -188,3 +189,157 @@ class GameScoreFormTest(TestCase):
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
                 self.assertFalse(form.fields[power.name].required)
+
+class GamePlayersFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # We need a Tournament with a Round, and some RoundPlayers to choose from
+        # We'll also create some extra TournamentPlayers and Players
+        # to ensure that the form doesn't pick them up
+        HOURS_8 = timedelta(hours=8)
+        t = Tournament.objects.create(name='t1',
+                                      start_date=timezone.now(),
+                                      end_date=timezone.now(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=SECRET)
+        cls.r1 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date)
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=t.start_date + HOURS_8)
+        p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+        p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
+        p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
+        p4 = Player.objects.create(first_name='Douglas', last_name='Dragnet')
+        p7 = Player.objects.create(first_name='Georgette', last_name='Giant')
+        p8 = Player.objects.create(first_name='Harold', last_name='Homeless')
+        p9 = Player.objects.create(first_name='Irene', last_name='Imp')
+        p10 = Player.objects.create(first_name='Julia', last_name='Jug')
+        # Deliberately create these two out of alphabetical order
+        p5 = Player.objects.create(first_name='Edwina', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Frank', last_name='Furious')
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp3 = TournamentPlayer.objects.create(player=p3, tournament=t)
+        tp4 = TournamentPlayer.objects.create(player=p4, tournament=t)
+        tp5 = TournamentPlayer.objects.create(player=p5, tournament=t)
+        tp6 = TournamentPlayer.objects.create(player=p6, tournament=t)
+        tp7 = TournamentPlayer.objects.create(player=p7, tournament=t)
+        tp8 = TournamentPlayer.objects.create(player=p8, tournament=t)
+        tp9 = TournamentPlayer.objects.create(player=p9, tournament=t)
+        cls.rp1 = RoundPlayer.objects.create(player=p1, the_round=cls.r1)
+        cls.rp2 = RoundPlayer.objects.create(player=p2, the_round=cls.r1)
+        cls.rp3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1)
+        cls.rp5 = RoundPlayer.objects.create(player=p5, the_round=cls.r1)
+        cls.rp6 = RoundPlayer.objects.create(player=p6, the_round=cls.r1)
+        cls.rp7 = RoundPlayer.objects.create(player=p7, the_round=cls.r1)
+        # Again, create this one out of alphabetical order
+        cls.rp4 = RoundPlayer.objects.create(player=p4, the_round=cls.r1)
+        cls.rp8 = RoundPlayer.objects.create(player=p8, the_round=cls.r1)
+        rp9 = RoundPlayer.objects.create(player=p9, the_round=r2)
+
+    def test_init_needs_round(self):
+        with self.assertRaises(KeyError):
+            GamePlayersForm()
+
+    def test_game_name_field(self):
+        form = GamePlayersForm(the_round=self.r1)
+        self.assertIn('game_name', form.fields)
+
+    def test_set_field(self):
+        form = GamePlayersForm(the_round=self.r1)
+        self.assertIn('the_set', form.fields)
+
+    def test_power_fields(self):
+        form = GamePlayersForm(the_round=self.r1)
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power.name):
+                self.assertTrue(form.fields[power.name].required)
+
+    def test_power_choices(self):
+        form = GamePlayersForm(the_round=self.r1)
+        # Pick a GreatPower at random - they will all be the same
+        the_choices = list(form.fields['England'].choices)
+        # We should have one per RoundPlayer, plus the initial empty choice
+        self.assertEqual(len(the_choices), self.r1.roundplayer_set.count() + 1)
+        # The keys should be the RoundPlayer pks
+        self.assertEqual(the_choices[1][0], self.rp1.pk)
+        # and the values should be the Player names, in alphabetical order
+        self.assertEqual(the_choices[1][1], str(self.rp1.player))
+        self.assertEqual(the_choices[2][1], str(self.rp2.player))
+        self.assertEqual(the_choices[3][1], str(self.rp3.player))
+        self.assertEqual(the_choices[4][1], str(self.rp4.player))
+        self.assertEqual(the_choices[5][1], str(self.rp5.player))
+        self.assertEqual(the_choices[6][1], str(self.rp6.player))
+        self.assertEqual(the_choices[7][1], str(self.rp7.player))
+        self.assertEqual(the_choices[8][1], str(self.rp8.player))
+
+    def test_success(self):
+        data = {'game_name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertTrue(form.is_valid())
+
+    def test_field_error(self):
+        data = {'game_name': 'R1G1',
+                'the_set': 'Non-existent set',
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('That choice is not one of the available choices', form.errors['the_set'][0])
+
+    def test_player_error(self):
+        data = {'game_name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': 'None',
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('That choice is not one of the available choices', form.errors['France'][0])
+
+    def test_reject_duplicate_players(self):
+        data = {'game_name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp1.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('appears more than once', form.errors['__all__'][0])
+        # We should see the Player, not the RoundPlayer, in any error
+        self.assertNotIn(str(self.rp1), form.errors['__all__'][0])

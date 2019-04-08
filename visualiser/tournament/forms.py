@@ -149,17 +149,17 @@ class GamePlayersForm(forms.Form):
     def clean(self):
         """Checks that no player is playing multiple powers"""
         cleaned_data = self.cleaned_data
-        players = []
+        r_players = []
         for power in GreatPower.objects.all():
             c = power.name
-            player = cleaned_data.get(c)
+            r_player = cleaned_data.get(c)
             # If the field itself didn't validate, drop out
-            if player is None:
+            if r_player is None:
                 return cleaned_data
-            if player in players:
+            if r_player in r_players:
                 raise forms.ValidationError(_('Player %(player)s appears more than once')
-                                            % {'player': player})
-            players.append(player)
+                                            % {'player': r_player.player})
+            r_players.append(r_player)
 
         return cleaned_data
 
