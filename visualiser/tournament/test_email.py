@@ -37,13 +37,13 @@ class EmailTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Easy access to all the GreatPowers
-        cls.austria = GreatPower.objects.get(abbreviation='A')
-        cls.england = GreatPower.objects.get(abbreviation='E')
-        cls.france = GreatPower.objects.get(abbreviation='F')
-        cls.germany = GreatPower.objects.get(abbreviation='G')
-        cls.italy = GreatPower.objects.get(abbreviation='I')
-        cls.russia = GreatPower.objects.get(abbreviation='R')
-        cls.turkey = GreatPower.objects.get(abbreviation='T')
+        austria = GreatPower.objects.get(abbreviation='A')
+        england = GreatPower.objects.get(abbreviation='E')
+        france = GreatPower.objects.get(abbreviation='F')
+        germany = GreatPower.objects.get(abbreviation='G')
+        italy = GreatPower.objects.get(abbreviation='I')
+        russia = GreatPower.objects.get(abbreviation='R')
+        turkey = GreatPower.objects.get(abbreviation='T')
 
         # We need a Round in a Tournament, with 3 Games
 
@@ -77,82 +77,82 @@ class EmailTests(TestCase):
                                  the_set=s)
 
         # A whole lot of players
-        cls.p1 = Player.objects.create(first_name='Abbey',
-                                       last_name='Brown',
-                                       email = 'a.brown@example.com')
-        TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p1, the_round=r)
-        GamePlayer.objects.create(player=cls.p1, game=g1, power=cls.austria)
+        p1 = Player.objects.create(first_name='Abbey',
+                                   last_name='Brown',
+                                   email = 'a.brown@example.com')
+        TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p1, the_round=r)
+        GamePlayer.objects.create(player=p1, game=g1, power=austria)
 
-        cls.p2 = Player.objects.create(first_name='Charles',
-                                       last_name='Dog',
-                                       email = 'c.dog@example.com')
-        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r)
-        GamePlayer.objects.create(player=cls.p2, game=g1, power=cls.england)
+        p2 = Player.objects.create(first_name='Charles',
+                                   last_name='Dog',
+                                   email = 'c.dog@example.com')
+        TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p2, the_round=r)
+        GamePlayer.objects.create(player=p2, game=g1, power=england)
 
-        cls.p3 = Player.objects.create(first_name='Ethel',
-                                       last_name='Frankenstein',
-                                       email = 'e.frankenstein@example.com')
-        TournamentPlayer.objects.create(player=cls.p3, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r)
-        GamePlayer.objects.create(player=cls.p3, game=g1, power=cls.france)
+        p3 = Player.objects.create(first_name='Ethel',
+                                   last_name='Frankenstein',
+                                   email = 'e.frankenstein@example.com')
+        TournamentPlayer.objects.create(player=p3, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p3, the_round=r)
+        GamePlayer.objects.create(player=p3, game=g1, power=france)
 
-        cls.p4 = Player.objects.create(first_name='George',
-                                       last_name='Hotel',
-                                       email = 'g.hotel@example.com')
-        TournamentPlayer.objects.create(player=cls.p4, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r)
-        GamePlayer.objects.create(player=cls.p4, game=g1, power=cls.germany)
+        p4 = Player.objects.create(first_name='George',
+                                   last_name='Hotel',
+                                   email = 'g.hotel@example.com')
+        TournamentPlayer.objects.create(player=p4, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p4, the_round=r)
+        GamePlayer.objects.create(player=p4, game=g1, power=germany)
 
-        cls.p5 = Player.objects.create(first_name='Iris',
-                                       last_name='Jackson',
-                                       email = 'i.jackson@example.com')
-        TournamentPlayer.objects.create(player=cls.p5, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r)
-        GamePlayer.objects.create(player=cls.p5, game=g1, power=cls.italy)
+        p5 = Player.objects.create(first_name='Iris',
+                                   last_name='Jackson',
+                                   email = 'i.jackson@example.com')
+        TournamentPlayer.objects.create(player=p5, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p5, the_round=r)
+        GamePlayer.objects.create(player=p5, game=g1, power=italy)
 
         # This one in Game 1 has no email address
         cls.p6 = Player.objects.create(first_name='Kevin',
                                        last_name='Lame')
         TournamentPlayer.objects.create(player=cls.p6, tournament=cls.t1)
         RoundPlayer.objects.create(player=cls.p6, the_round=r)
-        GamePlayer.objects.create(player=cls.p6, game=g1, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p6, game=g1, power=russia)
 
-        cls.p7 = Player.objects.create(first_name='Michelle',
-                                       last_name='Nobody',
-                                       email = 'm.nobody@example.com')
-        TournamentPlayer.objects.create(player=cls.p7, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r)
-        GamePlayer.objects.create(player=cls.p7, game=g2, power=cls.turkey)
+        p7 = Player.objects.create(first_name='Michelle',
+                                   last_name='Nobody',
+                                   email = 'm.nobody@example.com')
+        TournamentPlayer.objects.create(player=p7, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p7, the_round=r)
+        GamePlayer.objects.create(player=p7, game=g2, power=turkey)
 
-        cls.p8 = Player.objects.create(first_name='Owen',
-                                       last_name='Pennies',
-                                       email = 'o.pennies@example.com')
-        TournamentPlayer.objects.create(player=cls.p8, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r)
-        GamePlayer.objects.create(player=cls.p8, game=g2, power=cls.russia)
+        p8 = Player.objects.create(first_name='Owen',
+                                   last_name='Pennies',
+                                   email = 'o.pennies@example.com')
+        TournamentPlayer.objects.create(player=p8, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p8, the_round=r)
+        GamePlayer.objects.create(player=p8, game=g2, power=russia)
 
-        cls.p9 = Player.objects.create(first_name='Queenie',
-                                       last_name='Radiation',
-                                       email = 'q.radiation@example.com')
-        TournamentPlayer.objects.create(player=cls.p9, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p9, the_round=r)
-        GamePlayer.objects.create(player=cls.p9, game=g2, power=cls.italy)
+        p9 = Player.objects.create(first_name='Queenie',
+                                   last_name='Radiation',
+                                   email = 'q.radiation@example.com')
+        TournamentPlayer.objects.create(player=p9, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p9, the_round=r)
+        GamePlayer.objects.create(player=p9, game=g2, power=italy)
 
-        cls.p10 = Player.objects.create(first_name='Sebastian',
-                                        last_name='Twinkie',
-                                        email = 's.twinkie@example.com')
-        TournamentPlayer.objects.create(player=cls.p10, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p10, the_round=r)
-        GamePlayer.objects.create(player=cls.p10, game=g2, power=cls.germany)
+        p10 = Player.objects.create(first_name='Sebastian',
+                                    last_name='Twinkie',
+                                    email = 's.twinkie@example.com')
+        TournamentPlayer.objects.create(player=p10, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p10, the_round=r)
+        GamePlayer.objects.create(player=p10, game=g2, power=germany)
 
-        cls.p11 = Player.objects.create(first_name='Ursula',
-                                        last_name='Valentine',
-                                        email = 'u.valentine@example.com')
-        TournamentPlayer.objects.create(player=cls.p11, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p11, the_round=r)
-        GamePlayer.objects.create(player=cls.p11, game=g2, power=cls.france)
+        p11 = Player.objects.create(first_name='Ursula',
+                                    last_name='Valentine',
+                                    email = 'u.valentine@example.com')
+        TournamentPlayer.objects.create(player=p11, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p11, the_round=r)
+        GamePlayer.objects.create(player=p11, game=g2, power=france)
 
         # This one is in the Tournament and the Round, but not any Games
         cls.p12 = Player.objects.create(first_name='Wallace',
@@ -167,16 +167,16 @@ class EmailTests(TestCase):
                                         email = 'y.zombie@example.com')
         TournamentPlayer.objects.create(player=cls.p13, tournament=cls.t1)
         RoundPlayer.objects.create(player=cls.p13, the_round=r)
-        GamePlayer.objects.create(player=cls.p13, game=g1, power=cls.turkey)
-        GamePlayer.objects.create(player=cls.p13, game=g2, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p13, game=g1, power=turkey)
+        GamePlayer.objects.create(player=cls.p13, game=g2, power=austria)
 
         # This one in Game 2 and Game 3 has no email address
-        cls.p14 = Player.objects.create(first_name='Arthur',
-                                        last_name='Bottom')
-        TournamentPlayer.objects.create(player=cls.p14, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p14, the_round=r)
-        GamePlayer.objects.create(player=cls.p14, game=g2, power=cls.england)
-        GamePlayer.objects.create(player=cls.p14, game=g3, power=cls.austria)
+        p14 = Player.objects.create(first_name='Arthur',
+                                    last_name='Bottom')
+        TournamentPlayer.objects.create(player=p14, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p14, the_round=r)
+        GamePlayer.objects.create(player=p14, game=g2, power=england)
+        GamePlayer.objects.create(player=p14, game=g3, power=austria)
 
         # This one has an email address, is in the Tournament, but not this Round
         cls.p15 = Player.objects.create(first_name='Charlotte',
@@ -190,41 +190,41 @@ class EmailTests(TestCase):
                                         email = 'e.fancypant@example.com')
 
         # Game 3 has no players with email addresses at all
-        cls.p17 = Player.objects.create(first_name='Geraldine',
-                                        last_name='Hogwash')
-        TournamentPlayer.objects.create(player=cls.p17, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p17, the_round=r)
-        GamePlayer.objects.create(player=cls.p17, game=g3, power=cls.austria)
+        p17 = Player.objects.create(first_name='Geraldine',
+                                    last_name='Hogwash')
+        TournamentPlayer.objects.create(player=p17, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p17, the_round=r)
+        GamePlayer.objects.create(player=p17, game=g3, power=austria)
 
-        cls.p18 = Player.objects.create(first_name='Idiot',
-                                        last_name='Jalopy')
-        TournamentPlayer.objects.create(player=cls.p18, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p18, the_round=r)
-        GamePlayer.objects.create(player=cls.p18, game=g3, power=cls.austria)
+        p18 = Player.objects.create(first_name='Idiot',
+                                    last_name='Jalopy')
+        TournamentPlayer.objects.create(player=p18, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p18, the_round=r)
+        GamePlayer.objects.create(player=p18, game=g3, power=austria)
 
-        cls.p19 = Player.objects.create(first_name='Keith',
-                                        last_name='Llama')
-        TournamentPlayer.objects.create(player=cls.p19, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p19, the_round=r)
-        GamePlayer.objects.create(player=cls.p19, game=g3, power=cls.austria)
+        p19 = Player.objects.create(first_name='Keith',
+                                    last_name='Llama')
+        TournamentPlayer.objects.create(player=p19, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p19, the_round=r)
+        GamePlayer.objects.create(player=p19, game=g3, power=austria)
 
-        cls.p20 = Player.objects.create(first_name='Markus',
-                                        last_name='Nucleotide')
-        TournamentPlayer.objects.create(player=cls.p20, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p20, the_round=r)
-        GamePlayer.objects.create(player=cls.p20, game=g3, power=cls.austria)
+        p20 = Player.objects.create(first_name='Markus',
+                                    last_name='Nucleotide')
+        TournamentPlayer.objects.create(player=p20, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p20, the_round=r)
+        GamePlayer.objects.create(player=p20, game=g3, power=austria)
 
-        cls.p21 = Player.objects.create(first_name='Olivia',
-                                        last_name='Petticoat')
-        TournamentPlayer.objects.create(player=cls.p21, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p21, the_round=r)
-        GamePlayer.objects.create(player=cls.p21, game=g3, power=cls.austria)
+        p21 = Player.objects.create(first_name='Olivia',
+                                    last_name='Petticoat')
+        TournamentPlayer.objects.create(player=p21, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p21, the_round=r)
+        GamePlayer.objects.create(player=p21, game=g3, power=austria)
 
-        cls.p22 = Player.objects.create(first_name='Quentin',
-                                        last_name='Radish')
-        TournamentPlayer.objects.create(player=cls.p22, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p22, the_round=r)
-        GamePlayer.objects.create(player=cls.p22, game=g3, power=cls.austria)
+        p22 = Player.objects.create(first_name='Quentin',
+                                    last_name='Radish')
+        TournamentPlayer.objects.create(player=p22, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p22, the_round=r)
+        GamePlayer.objects.create(player=p22, game=g3, power=austria)
 
         # Tournament with preferences
         # All t2 Players have email addresses
@@ -237,10 +237,10 @@ class EmailTests(TestCase):
                                            power_assignment=PREFERENCES)
 
         # One TournamentPlayer in t2
-        cls.p23 = Player.objects.create(first_name='Shirley',
-                                        last_name='Turkey',
-                                        email='s.turkey@example.com')
-        tp = TournamentPlayer.objects.create(player=cls.p23, tournament=cls.t2)
+        p23 = Player.objects.create(first_name='Shirley',
+                                    last_name='Turkey',
+                                    email='s.turkey@example.com')
+        tp = TournamentPlayer.objects.create(player=p23, tournament=cls.t2)
         # Explicitly call save() to generate UUID
         tp.save()
 
