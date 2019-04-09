@@ -225,7 +225,7 @@ class PowerAssignForm(forms.Form):
                 return cleaned_data
             if power in powers:
                 raise forms.ValidationError(_('Power %(power)s appears more than once')
-                                            % {'Power': power})
+                                            % {'power': power})
             powers.append(power)
 
         return cleaned_data
