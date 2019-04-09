@@ -25,7 +25,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from tournament.forms import BaseGamePlayersForm
+from tournament.forms import BaseGamePlayersFormset
 from tournament.forms import BasePowerAssignForm
 from tournament.forms import GamePlayersForm
 from tournament.forms import GameScoreForm
@@ -311,7 +311,7 @@ def create_games(request, tournament_id, round_num):
         expected_games = 1
     GamePlayersFormset = formset_factory(GamePlayersForm,
                                          extra=expected_games - games.count(),
-                                         formset=BaseGamePlayersForm)
+                                         formset=BaseGamePlayersFormset)
     formset = GamePlayersFormset(request.POST or None,
                                  the_round=r,
                                  initial=data)

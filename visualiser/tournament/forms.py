@@ -163,29 +163,32 @@ class GamePlayersForm(forms.Form):
 
         return cleaned_data
 
-class BaseGamePlayersForm(BaseFormSet):
+class BaseGamePlayersFormset(BaseFormSet):
     """Form to specify GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
-        super(BaseGamePlayersForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself
         kwargs['the_round'] = self.the_round
-        return super(BaseGamePlayersForm, self)._construct_form(index, **kwargs)
+        return super()._construct_form(index, **kwargs)
 
     def clean(self):
-        cleaned_data = super(BaseGamePlayersForm, self).clean()
+        if any(self.errors):
+            # One or more forms is invalid anyway
+            return
         # Any duplicates within the page ?
-        try:
-            names = [cd['game_name'] for cd in self.cleaned_data]
-        except AttributeError:
-            # This happens when we have a form left blank
-            return []
+        names = []
+        for form in self.forms:
+            try:
+                names.append(form.cleaned_data['game_name'])
+            except KeyError:
+                # This happens when we have a form left blank
+                pass
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
-        return cleaned_data
 
 class PowerAssignForm(forms.Form):
     """Form for players of a single game"""
