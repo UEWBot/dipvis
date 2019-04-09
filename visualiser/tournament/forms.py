@@ -82,7 +82,7 @@ class DrawForm(forms.Form):
         # Remove our special kwargs from the list
         is_dias = kwargs.pop('dias')
         secrecy = kwargs.pop('secrecy')
-        super(DrawForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         if not is_dias:
             self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
@@ -105,7 +105,7 @@ class GameScoreForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one score field per Great Power"""
-        super(GameScoreForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         attrs = self.fields['game_name'].widget.attrs
         attrs['size'] = attrs['maxlength']
@@ -134,7 +134,7 @@ class GamePlayersForm(forms.Form):
         """Dynamically creates one player field per Great Power"""
         # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
-        super(GamePlayersForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         attrs = self.fields['game_name'].widget.attrs
         attrs['size'] = attrs['maxlength']
@@ -273,7 +273,7 @@ class GetSevenPlayersForm(forms.Form):
         """Dynamically creates the specified number of player fields"""
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
-        super(GetSevenPlayersForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         queryset = self.the_round.roundplayer_set.all()
         # Figure out how many sitters and doubles we need
@@ -330,7 +330,7 @@ class SCOwnerForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one owner field per SupplyCentre"""
-        super(SCOwnerForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['year'].widget.attrs['size'] = 4
 
@@ -371,7 +371,7 @@ class SCCountForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one count field per Great Power"""
-        super(SCCountForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['year'].widget.attrs['size'] = 4
 
@@ -449,7 +449,7 @@ class PlayerRoundForm(forms.Form):
         self.tournament = kwargs.pop('tournament')
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
-        super(PlayerRoundForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.rounds):
@@ -479,7 +479,7 @@ class BasePlayerRoundFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
-        super(BasePlayerRoundFormset, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the three special args down to the form itself
@@ -491,7 +491,7 @@ class BasePlayerRoundFormset(BaseFormSet):
             kwargs['this_round'] = cr.number()
         else:
             kwargs['this_round'] = -1
-        return super(BasePlayerRoundFormset, self)._construct_form(index, **kwargs)
+        return super()._construct_form(index, **kwargs)
 
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a TournamentPlayer"""
@@ -510,7 +510,7 @@ class PlayerRoundScoreForm(forms.Form):
         self.tournament = kwargs.pop('tournament')
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
-        super(PlayerRoundScoreForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.fields['tp_id'].queryset = self.tournament.tournamentplayer_set.all()
 
@@ -542,7 +542,7 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
-        super(BasePlayerRoundScoreFormset, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the three special args down to the form itself
@@ -554,7 +554,7 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
             kwargs['this_round'] = cr.number()
         else:
             kwargs['this_round'] = -1
-        return super(BasePlayerRoundScoreFormset, self)._construct_form(index, **kwargs)
+        return super()._construct_form(index, **kwargs)
 
 class GameImageForm(ModelForm):
     """Form for a single GameImage"""
