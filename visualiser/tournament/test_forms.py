@@ -32,7 +32,7 @@ from tournament.players import Player
 
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
-from tournament.forms import PowerAssignForm
+from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -199,7 +199,6 @@ class GamePlayersFormTest(TestCase):
         # We need a Tournament with a Round, and some RoundPlayers to choose from
         # We'll also create some extra TournamentPlayers and Players
         # to ensure that the form doesn't pick them up
-        HOURS_8 = timedelta(hours=8)
         t = Tournament.objects.create(name='t1',
                                       start_date=timezone.now(),
                                       end_date=timezone.now(),
@@ -213,7 +212,7 @@ class GamePlayersFormTest(TestCase):
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=t.start_date + HOURS_8)
+                                  start=t.start_date + timedelta(hours=8))
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
@@ -627,5 +626,189 @@ class PowerAssignFormTest(TestCase):
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
         self.assertIn('appears more than once', form.errors['__all__'][0])
+
+class BasePowerAssignFormsetTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # We need two Games with GamePlayers and a Round with no Games
+        t = Tournament.objects.create(name='t1',
+                                      start_date=timezone.now(),
+                                      end_date=timezone.now(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=SECRET)
+        cls.r1 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date)
+        cls.r2 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date + timedelta(hours=8))
+        g1 = Game.objects.create(name='Test Game 1',
+                                 the_round=cls.r1,
+                                 the_set=GameSet.objects.first())
+        g2 = Game.objects.create(name='Test Game 2',
+                                 the_round=cls.r1,
+                                 the_set=GameSet.objects.first())
+        p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+        p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
+        p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
+        p4 = Player.objects.create(first_name='Douglas', last_name='Dragnet')
+        p5 = Player.objects.create(first_name='Edwina', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Frank', last_name='Furious')
+        p7 = Player.objects.create(first_name='Georgette', last_name='Giant')
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp3 = TournamentPlayer.objects.create(player=p3, tournament=t)
+        tp4 = TournamentPlayer.objects.create(player=p4, tournament=t)
+        tp5 = TournamentPlayer.objects.create(player=p5, tournament=t)
+        tp6 = TournamentPlayer.objects.create(player=p6, tournament=t)
+        tp7 = TournamentPlayer.objects.create(player=p7, tournament=t)
+        rp1 = RoundPlayer.objects.create(player=p1, the_round=cls.r1)
+        rp2 = RoundPlayer.objects.create(player=p2, the_round=cls.r1)
+        rp3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1)
+        rp4 = RoundPlayer.objects.create(player=p4, the_round=cls.r1)
+        rp5 = RoundPlayer.objects.create(player=p5, the_round=cls.r1)
+        rp6 = RoundPlayer.objects.create(player=p6, the_round=cls.r1)
+        rp7 = RoundPlayer.objects.create(player=p7, the_round=cls.r1)
+        cls.gp1 = GamePlayer.objects.create(player=p1, game=g1)
+        cls.gp2 = GamePlayer.objects.create(player=p2, game=g1)
+        cls.gp3 = GamePlayer.objects.create(player=p3, game=g1)
+        cls.gp4 = GamePlayer.objects.create(player=p4, game=g1)
+        cls.gp5 = GamePlayer.objects.create(player=p5, game=g1)
+        cls.gp6 = GamePlayer.objects.create(player=p6, game=g1)
+        cls.gp7 = GamePlayer.objects.create(player=p7, game=g1)
+        cls.gp8 = GamePlayer.objects.create(player=p1, game=g2)
+        cls.gp9 = GamePlayer.objects.create(player=p2, game=g2)
+        cls.gp10 = GamePlayer.objects.create(player=p3, game=g2)
+        cls.gp11 = GamePlayer.objects.create(player=p4, game=g2)
+        cls.gp12 = GamePlayer.objects.create(player=p5, game=g2)
+        cls.gp13 = GamePlayer.objects.create(player=p6, game=g2)
+        cls.gp14 = GamePlayer.objects.create(player=p7, game=g2)
+
+        cls.PowerAssignFormset = formset_factory(PowerAssignForm,
+                                                 extra=0,
+                                                 formset=BasePowerAssignFormset)
+        # ManagementForm data
+        cls.data = {
+                'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '2',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                }
+        cls.initial = []
+        for game in cls.r1.game_set.all():
+            game_dict = {}
+            game_dict['game_name'] = game.name
+            game_dict['the_set'] = game.the_set
+            cls.initial.append(game_dict)
+
+    def test_formset_needs_round(self):
+        # Omit the_round constructor parameter
+        with self.assertRaises(KeyError):
+            self.PowerAssignFormset()
+
+    def test_formset_extra(self):
+        # extra must be zero
+        PowerAssignFormset = formset_factory(PowerAssignForm,
+                                             extra=1,
+                                             formset=BasePowerAssignFormset)
+        with self.assertRaises(AssertionError):
+            PowerAssignFormset(the_round=self.r1)
+
+    def test_formset_no_games(self):
+        with self.assertRaises(AssertionError):
+            self.PowerAssignFormset(the_round=self.r2)
+
+    def test_formset_success(self):
+        # Complete the form correctly
+        data = self.data.copy()
+        data['form-0-game_name'] = 'Game 1'
+        data['form-0-the_set'] = str(GameSet.objects.first().pk)
+        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
+        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
+        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
+        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
+        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
+        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
+        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data['form-1-game_name'] = 'Game 2'
+        data['form-1-the_set'] = str(GameSet.objects.first().pk)
+        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
+        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
+        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
+        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
+        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
+        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
+        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        formset = self.PowerAssignFormset(data, the_round=self.r1)
+        self.assertTrue(formset.is_valid())
+
+    def test_formset_form_error(self):
+        # Complete the form with an error in one field
+        data = self.data.copy()
+        data['form-0-game_name'] = 'Game 1'
+        data['form-0-the_set'] = str(GameSet.objects.first().pk)
+        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
+        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
+        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
+        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
+        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
+        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
+        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data['form-1-game_name'] = 'Ridiculously Long Game Name'
+        data['form-1-the_set'] = str(GameSet.objects.first().pk)
+        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
+        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
+        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
+        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
+        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
+        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
+        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        formset = self.PowerAssignFormset(data, the_round=self.r1)
+        self.assertFalse(formset.is_valid())
+        # Should have just one form error, no formset errors
+        self.assertEqual(sum(len(err) for err in formset.errors), 1)
+        self.assertEqual(formset.total_error_count(), 1)
+
+    def test_formset_duplicate_game_names(self):
+        # Give both Games the same name
+        GAME_NAME = 'Best Game'
+        data = self.data.copy()
+        data['form-0-game_name'] = GAME_NAME
+        data['form-0-the_set'] = str(GameSet.objects.first().pk)
+        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
+        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
+        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
+        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
+        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
+        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
+        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data['form-1-game_name'] = GAME_NAME
+        data['form-1-the_set'] = str(GameSet.objects.first().pk)
+        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
+        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
+        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
+        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
+        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
+        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
+        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        formset = self.PowerAssignFormset(data, the_round=self.r1)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertIn('Game names must be unique', formset.non_form_errors()[0])
 
 

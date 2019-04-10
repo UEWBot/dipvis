@@ -26,7 +26,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from tournament.forms import BaseGamePlayersFormset
-from tournament.forms import BasePowerAssignForm
+from tournament.forms import BasePowerAssignFormset
 from tournament.forms import GamePlayersForm
 from tournament.forms import GameScoreForm
 from tournament.forms import GetSevenPlayersForm
@@ -198,7 +198,7 @@ def seed_games(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         PowerAssignFormset = formset_factory(PowerAssignForm,
-                                             formset=BasePowerAssignForm,
+                                             formset=BasePowerAssignFormset,
                                              extra=0)
         formset = PowerAssignFormset(request.POST, the_round=r)
         if formset.is_valid():
@@ -282,7 +282,7 @@ def seed_games(request, tournament_id, round_num):
                 data.append(current)
         # Create a form for each of the resulting games
         PowerAssignFormset = formset_factory(PowerAssignForm,
-                                             formset=BasePowerAssignForm,
+                                             formset=BasePowerAssignFormset,
                                              extra=0)
         formset = PowerAssignFormset(the_round=r, initial=data)
     # Note that we wait for confirmation before adding them to the database

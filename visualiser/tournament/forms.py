@@ -230,13 +230,16 @@ class PowerAssignForm(forms.Form):
 
         return cleaned_data
 
-class BasePowerAssignForm(BaseFormSet):
+class BasePowerAssignFormset(BaseFormSet):
     """Form to assign GreatPowers to all GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
+        # This formset only makes sense if the Games already exist and have GamePlayers assigned
+        assert(self.extra == 0)
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
         self.games = self.the_round.game_set.all()
+        assert(len(self.games))
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself
@@ -244,16 +247,13 @@ class BasePowerAssignForm(BaseFormSet):
         return super()._construct_form(index, **kwargs)
 
     def clean(self):
-        cleaned_data = super().clean()
+        if any(self.errors):
+            # One or more forms is invalid anyway
+            return
         # Any duplicates within the page ?
-        try:
-            names = [cd['game_name'] for cd in self.cleaned_data]
-        except AttributeError:
-            # This happens when we have a form left blank
-            return []
+        names = [form.cleaned_data['game_name'] for form in self.forms]
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
-        return cleaned_data
 
 # TODO Should this be a formset?
 class GetSevenPlayersForm(forms.Form):
