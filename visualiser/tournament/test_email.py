@@ -296,7 +296,6 @@ class EmailTests(TestCase):
 
     def test_send_prefs_email_no_email_new(self):
         # Save a TournamentPlayer with no email in a Tournament with prefs
-        p = Player.objects.filter(email='').first()
         tp = TournamentPlayer.objects.create(player=self.p6,
                                              tournament=self.t2)
         tp.save()
@@ -326,12 +325,14 @@ class EmailTests(TestCase):
 
     def test_send_prefs_email_prefs_done(self):
         # Call without force for a Player with email in Tournament with prefs
+        # when previously emailed
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_send_prefs_email_prefs_done(self):
+    def test_send_prefs_email_prefs_not_done(self):
         # Call without force for a Player with email in Tournament with prefs
+        # when not previously emailed
         tp = self.t2.tournamentplayer_set.filter(uuid_str='').exclude(player__email='').first()
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 1)
@@ -345,6 +346,7 @@ class EmailTests(TestCase):
 
     def test_send_prefs_email_prefs_force(self):
         # Call with force=True, for a Player with an email, for a Tournament with prefs
+        # when previously emailed
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         send_prefs_email(tp, force=True)
         self.assertEqual(len(mail.outbox), 1)
