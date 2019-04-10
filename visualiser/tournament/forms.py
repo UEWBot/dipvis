@@ -273,9 +273,25 @@ class GetSevenPlayersForm(forms.Form):
         """Dynamically creates the specified number of player fields"""
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
-        super().__init__(*args, **kwargs)
 
         queryset = self.the_round.roundplayer_set.all()
+
+        # Overridable default initial value, like ModelForm
+        if 'initial' not in kwargs.keys():
+            initial = {}
+            sitters = 0
+            doublers = 0
+            for rp in queryset:
+                if rp.game_count == 0:
+                    initial['sitter_%d' % sitters] = rp
+                    sitters += 1
+                if rp.game_count == 2:
+                    initial['double_%d' % doublers] = rp
+                    doublers += 1
+            kwargs['initial'] = initial
+
+        super().__init__(*args, **kwargs)
+
         # Figure out how many sitters and doubles we need
         count = queryset.count()
         self.sitters = count % 7

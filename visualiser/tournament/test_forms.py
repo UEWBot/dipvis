@@ -33,6 +33,7 @@ from tournament.players import Player
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
+from tournament.forms import GetSevenPlayersForm
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -811,4 +812,226 @@ class BasePowerAssignFormsetTest(TestCase):
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('Game names must be unique', formset.non_form_errors()[0])
 
+class GetSevenPlayersFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # We need a Tournament, with 2 Rounds, one with an exact multiple of 7,
+        # and one without
+        t = Tournament.objects.create(name='t1',
+                                      start_date=timezone.now(),
+                                      end_date=timezone.now(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=SECRET)
+        cls.r1 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date)
+        cls.r2 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date + timedelta(hours=8))
+
+        p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+        p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
+        p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
+        p4 = Player.objects.create(first_name='Douglas', last_name='Dragnet')
+        p5 = Player.objects.create(first_name='Edwina', last_name='Eggplant')
+        p9 = Player.objects.create(first_name='Irene', last_name='Imp')
+        p10 = Player.objects.create(first_name='Julia', last_name='Jug')
+        # Create these out-of-order to check sorting
+        p6 = Player.objects.create(first_name='Frank', last_name='Furious')
+        p7 = Player.objects.create(first_name='Georgette', last_name='Giant')
+        p8 = Player.objects.create(first_name='Harold', last_name='Homeless')
+        tp1 = TournamentPlayer.objects.create(player=p1, tournament=t)
+        tp2 = TournamentPlayer.objects.create(player=p2, tournament=t)
+        tp3 = TournamentPlayer.objects.create(player=p3, tournament=t)
+        tp4 = TournamentPlayer.objects.create(player=p4, tournament=t)
+        tp8 = TournamentPlayer.objects.create(player=p8, tournament=t)
+        tp9 = TournamentPlayer.objects.create(player=p9, tournament=t)
+        tp10 = TournamentPlayer.objects.create(player=p10, tournament=t)
+        # Again, check sorting
+        tp5 = TournamentPlayer.objects.create(player=p5, tournament=t)
+        tp6 = TournamentPlayer.objects.create(player=p6, tournament=t)
+        tp7 = TournamentPlayer.objects.create(player=p7, tournament=t)
+        cls.rp1_1 = RoundPlayer.objects.create(player=p1, the_round=cls.r1)
+        cls.rp1_2 = RoundPlayer.objects.create(player=p2, the_round=cls.r1)
+        cls.rp1_3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1)
+        cls.rp1_4 = RoundPlayer.objects.create(player=p4, the_round=cls.r1)
+        cls.rp1_5 = RoundPlayer.objects.create(player=p5, the_round=cls.r1)
+        cls.rp1_7 = RoundPlayer.objects.create(player=p7, the_round=cls.r1)
+        cls.rp1_8 = RoundPlayer.objects.create(player=p8, the_round=cls.r1)
+        cls.rp1_9 = RoundPlayer.objects.create(player=p9, the_round=cls.r1)
+        cls.rp1_10 = RoundPlayer.objects.create(player=p10, the_round=cls.r1)
+        # Again, check sorting
+        cls.rp1_6 = RoundPlayer.objects.create(player=p6, the_round=cls.r1)
+        rp2_1 = RoundPlayer.objects.create(player=p2, the_round=cls.r2)
+        rp2_2 = RoundPlayer.objects.create(player=p3, the_round=cls.r2)
+        rp2_3 = RoundPlayer.objects.create(player=p4, the_round=cls.r2)
+        rp2_4 = RoundPlayer.objects.create(player=p5, the_round=cls.r2)
+        rp2_5 = RoundPlayer.objects.create(player=p6, the_round=cls.r2)
+        rp2_6 = RoundPlayer.objects.create(player=p7, the_round=cls.r2)
+        rp2_7 = RoundPlayer.objects.create(player=p8, the_round=cls.r2)
+
+    def test_form_needs_round(self):
+        # Omit the_round constructor parameter
+        with self.assertRaises(KeyError):
+            GetSevenPlayersForm()
+
+    def check_fields(self, prefix, count):
+        form = GetSevenPlayersForm(the_round=self.r1)
+        for i in range(0,3):
+            with self.subTest(i=i):
+                name = '%s_%d' % (prefix, i)
+                self.assertIn(name, form.fields)
+                the_choices = list(form.fields[name].choices)
+                # We should have one choice per RoundPlayer, plus the initial empty choice
+                self.assertEqual(len(the_choices), self.r1.roundplayer_set.count() + 1)
+                # The keys should be the RoundPlayer pks
+                self.assertEqual(the_choices[1][0], self.rp1_1.pk)
+                # and the values should be the Player names, in alphabetical order
+                self.assertEqual(the_choices[1][1], str(self.rp1_1.player))
+                self.assertEqual(the_choices[2][1], str(self.rp1_2.player))
+                self.assertEqual(the_choices[3][1], str(self.rp1_3.player))
+                self.assertEqual(the_choices[4][1], str(self.rp1_4.player))
+                self.assertEqual(the_choices[5][1], str(self.rp1_5.player))
+                self.assertEqual(the_choices[6][1], str(self.rp1_6.player))
+                self.assertEqual(the_choices[7][1], str(self.rp1_7.player))
+                self.assertEqual(the_choices[8][1], str(self.rp1_8.player))
+                self.assertEqual(the_choices[9][1], str(self.rp1_9.player))
+                self.assertEqual(the_choices[10][1], str(self.rp1_10.player))
+
+    def test_sitters_fields(self):
+        # We should have 3 fields for players sitting out
+        self.check_fields('sitter', 3)
+
+    def test_sitters_fields(self):
+        # We should have 4 fields for players playing two games
+        self.check_fields('double', 4)
+
+    def test_success_sitters(self):
+        # Valid form with people sitting out
+        data = {'sitter_0': str(self.rp1_10.pk),
+                'sitter_1': str(self.rp1_7.pk),
+                'sitter_2': str(self.rp1_3.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertTrue(form.is_valid())
+
+    def test_success_doublers(self):
+        # Valid form with people playing two games
+        data = {'double_0': str(self.rp1_10.pk),
+                'double_1': str(self.rp1_7.pk),
+                'double_2': str(self.rp1_3.pk),
+                'double_3': str(self.rp1_4.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertTrue(form.is_valid())
+
+    def test_existing_sitters(self):
+        # Already two people flagged as sitting out the round
+        self.rp1_3.game_count = 0
+        self.rp1_3.save()
+        self.rp1_4.game_count = 0
+        self.rp1_4.save()
+        form = GetSevenPlayersForm(the_round=self.r1)
+        # They should be listed as a sitter
+        self.assertEqual(form['sitter_0'].initial, self.rp1_3)
+        self.assertEqual(form['sitter_1'].initial, self.rp1_4)
+        # Clean up changes made
+        self.rp1_3.game_count = 1
+        self.rp1_3.save()
+        self.rp1_4.game_count = 1
+        self.rp1_4.save()
+
+    def test_existing_doublers(self):
+        # Already two people flagged as playing two games
+        self.rp1_3.game_count = 2
+        self.rp1_3.save()
+        self.rp1_4.game_count = 2
+        self.rp1_4.save()
+        form = GetSevenPlayersForm(the_round=self.r1)
+        # They should be listed as a doubler
+        self.assertEqual(form['double_0'].initial, self.rp1_3)
+        self.assertEqual(form['double_1'].initial, self.rp1_4)
+        # Clean up changes made
+        self.rp1_3.game_count = 1
+        self.rp1_3.save()
+        self.rp1_4.game_count = 1
+        self.rp1_4.save()
+
+    def test_sitting_twice(self):
+        # One person listed twice as sitting out
+        data = {'sitter_0': str(self.rp1_10.pk),
+                'sitter_1': str(self.rp1_3.pk),
+                'sitter_2': str(self.rp1_3.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('appears more than once', form.errors['__all__'][0])
+
+    def test_doubling_twice(self):
+        # One person listed twice as playing two games
+        data = {'double_0': str(self.rp1_10.pk),
+                'double_1': str(self.rp1_7.pk),
+                'double_2': str(self.rp1_10.pk),
+                'double_3': str(self.rp1_4.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('appears more than once', form.errors['__all__'][0])
+
+    def test_provide_both(self):
+        # Both people sitting out and people playing two boards
+        data = {'sitter_0': str(self.rp1_1.pk),
+                'sitter_1': str(self.rp1_2.pk),
+                'sitter_2': str(self.rp1_3.pk),
+                'double_0': str(self.rp1_4.pk),
+                'double_1': str(self.rp1_5.pk),
+                'double_2': str(self.rp1_6.pk),
+                'double_3': str(self.rp1_7.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Either have players sit out', form.errors['__all__'][0])
+
+    def test_too_few_sitters(self):
+        data = {'sitter_0': str(self.rp1_10.pk),
+                'sitter_1': str(self.rp1_7.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Too few players sitting out', form.errors['__all__'][0])
+
+    def test_too_few_doublers(self):
+        data = {'double_0': str(self.rp1_10.pk),
+                'double_1': str(self.rp1_7.pk),
+                'double_2': str(self.rp1_3.pk),
+                }
+        form = GetSevenPlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Too few players playing two', form.errors['__all__'][0])
+
+    def test_none_needed(self):
+        # Exact multiple of seven already
+        form = GetSevenPlayersForm(the_round=self.r2)
+        # Nothing needed
+        self.assertEqual(len(form.fields), 0)
 
