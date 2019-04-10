@@ -23,7 +23,7 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 from django.utils import timezone
 
-from tournament.diplomacy import GreatPower, GameSet
+from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.models import SECRET, COUNTS, G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
@@ -33,7 +33,7 @@ from tournament.players import Player
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
-from tournament.forms import GetSevenPlayersForm
+from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1034,3 +1034,130 @@ class GetSevenPlayersFormTest(TestCase):
         # Nothing needed
         self.assertEqual(len(form.fields), 0)
 
+class SCOwnerFormTest(TestCase):
+    #fixtures = ['game_sets.json']
+
+    def test_field_count(self):
+        form = SCOwnerForm()
+        self.assertEqual(len(form.fields), 1 + SupplyCentre.objects.count())
+
+    def test_required(self):
+        form = SCOwnerForm()
+        for field in form.fields:
+            with self.subTest(field=field):
+                if field == 'year':
+                    self.assertTrue(form.fields[field].required)
+                else:
+                    self.assertFalse(form.fields[field].required)
+
+    def test_year_1900(self):
+        # 1900 should be accepted
+        form = SCOwnerForm(data={'year': 1900})
+        self.assertTrue(form.is_valid())
+
+    def test_year_1899(self):
+        # 1899 should not be accepted
+        form = SCOwnerForm(data={'year': 1899})
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Ensure this value is greater than', form.errors['year'][0])
+
+class BaseSCOwnerFormsetTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        cls.SCOwnerFormset = formset_factory(SCOwnerForm,
+                                             formset=BaseSCOwnerFormset)
+        # ManagementForm data
+        cls.data = {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '0',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
+        cls.row_data = {}
+        for sc in SupplyCentre.objects.all():
+            cls.row_data[sc.name] = sc.initial_owner
+
+    def test_success(self):
+        # Everything is ok
+        data = self.data.copy()
+        for i in range(2):
+            for key, val in self.row_data.items():
+                if val:
+                    data['form-%d-%s' % (i, key)] = val.pk
+            data['form-%d-year' % i] = 1902 + i
+        data['form-0-Belgium'] = self.france.pk
+        data['form-1-Belgium'] = self.germany.pk
+        formset = self.SCOwnerFormset(data)
+        self.assertTrue(formset.is_valid())
+
+    def test_leave_one_form_blank(self):
+        # Everything is ok, one form left blank
+        data = self.data.copy()
+        for key, val in self.row_data.items():
+            if val:
+                data['form-0-%s' % key] = val.pk
+        data['form-0-year'] = 1904
+        data['form-0-Belgium'] = self.france.pk
+        formset = self.SCOwnerFormset(data)
+        self.assertTrue(formset.is_valid())
+
+    def test_form_error(self):
+        # Error in one of the forms
+        data = self.data.copy()
+        for i in range(2):
+            for key, val in self.row_data.items():
+                if val:
+                    data['form-%d-%s' % (i, key)] = val.pk
+            data['form-%d-year' % i] = 1899 + i
+        data['form-0-Belgium'] = self.france.pk
+        data['form-1-Belgium'] = self.germany.pk
+        formset = self.SCOwnerFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have just one form error, no formset errors
+        self.assertEqual(sum(len(err) for err in formset.errors), 1)
+        self.assertEqual(formset.total_error_count(), 1)
+
+    def test_duplicate_year(self):
+        # Duplicate years
+        data = self.data.copy()
+        for i in range(2):
+            for key, val in self.row_data.items():
+                if val:
+                    data['form-%d-%s' % (i, key)] = val.pk
+            data['form-%d-year' % i] = 1902
+        data['form-0-Belgium'] = self.france.pk
+        data['form-1-Belgium'] = self.germany.pk
+        formset = self.SCOwnerFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertIn('appears more than once', formset.non_form_errors()[0])
+
+    def test_scs_become_neutral(self):
+        # SC changes from owned to neutral
+        data = self.data.copy()
+        for i in range(2):
+            for key, val in self.row_data.items():
+                if val:
+                    data['form-%d-%s' % (i, key)] = val.pk
+            data['form-%d-year' % i] = 1902 + i
+        data['form-0-Belgium'] = self.france.pk
+        formset = self.SCOwnerFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have just one form error, no formset errors
+        self.assertEqual(sum(len(err) for err in formset.errors), 1)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertIn('should never change from owned', formset.errors[1]['Belgium'][0])

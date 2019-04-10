@@ -363,16 +363,35 @@ class BaseSCOwnerFormset(BaseFormSet):
         """
         if any(self.errors):
             return
-        years = {}
+        years = []
         for i in range(0, self.total_form_count()):
             form = self.forms[i]
             year = form.cleaned_data.get('year')
             if not year:
+                # Blank form
                 continue
             if year in years:
                 raise forms.ValidationError(_('Year %(year)s appears more than once')
                                             % {'year': year})
-        # TODO check that SCs never become neutral
+            years.append(year)
+        years.sort()
+        # Check that SCs never become neutral
+        for sc in SupplyCentre.objects.all():
+            # Find all the listed owners for this dot
+            owners = {}
+            for i in range(0, self.total_form_count()):
+                form = self.forms[i]
+                year = form.cleaned_data.get('year')
+                owner = form.cleaned_data.get(sc.name)
+                owners[year] = (owner, form)
+            # Check through them
+            owned = False
+            for key in years:
+                owner, form = owners[key]
+                if owner:
+                    owned = True
+                if owned and not owner:
+                    form.add_error(sc.name, _('Supply Centres should never change from owned to neutral'))
 
 class GameEndedForm(forms.Form):
     """Form that just provides a checkbox to indicate that a Game is over"""
