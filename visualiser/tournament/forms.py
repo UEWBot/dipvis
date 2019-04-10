@@ -234,12 +234,12 @@ class BasePowerAssignFormset(BaseFormSet):
     """Form to assign GreatPowers to all GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
         # This formset only makes sense if the Games already exist and have GamePlayers assigned
-        assert(self.extra == 0)
+        assert self.extra == 0
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
         self.games = self.the_round.game_set.all()
-        assert(len(self.games))
+        assert self.games
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself

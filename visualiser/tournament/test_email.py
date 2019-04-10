@@ -79,35 +79,35 @@ class EmailTests(TestCase):
         # A whole lot of players
         p1 = Player.objects.create(first_name='Abbey',
                                    last_name='Brown',
-                                   email = 'a.brown@example.com')
+                                   email='a.brown@example.com')
         TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
         RoundPlayer.objects.create(player=p1, the_round=r)
         GamePlayer.objects.create(player=p1, game=g1, power=austria)
 
         p2 = Player.objects.create(first_name='Charles',
                                    last_name='Dog',
-                                   email = 'c.dog@example.com')
+                                   email='c.dog@example.com')
         TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
         RoundPlayer.objects.create(player=p2, the_round=r)
         GamePlayer.objects.create(player=p2, game=g1, power=england)
 
         p3 = Player.objects.create(first_name='Ethel',
                                    last_name='Frankenstein',
-                                   email = 'e.frankenstein@example.com')
+                                   email='e.frankenstein@example.com')
         TournamentPlayer.objects.create(player=p3, tournament=cls.t1)
         RoundPlayer.objects.create(player=p3, the_round=r)
         GamePlayer.objects.create(player=p3, game=g1, power=france)
 
         p4 = Player.objects.create(first_name='George',
                                    last_name='Hotel',
-                                   email = 'g.hotel@example.com')
+                                   email='g.hotel@example.com')
         TournamentPlayer.objects.create(player=p4, tournament=cls.t1)
         RoundPlayer.objects.create(player=p4, the_round=r)
         GamePlayer.objects.create(player=p4, game=g1, power=germany)
 
         p5 = Player.objects.create(first_name='Iris',
                                    last_name='Jackson',
-                                   email = 'i.jackson@example.com')
+                                   email='i.jackson@example.com')
         TournamentPlayer.objects.create(player=p5, tournament=cls.t1)
         RoundPlayer.objects.create(player=p5, the_round=r)
         GamePlayer.objects.create(player=p5, game=g1, power=italy)
@@ -121,35 +121,35 @@ class EmailTests(TestCase):
 
         p7 = Player.objects.create(first_name='Michelle',
                                    last_name='Nobody',
-                                   email = 'm.nobody@example.com')
+                                   email='m.nobody@example.com')
         TournamentPlayer.objects.create(player=p7, tournament=cls.t1)
         RoundPlayer.objects.create(player=p7, the_round=r)
         GamePlayer.objects.create(player=p7, game=g2, power=turkey)
 
         p8 = Player.objects.create(first_name='Owen',
                                    last_name='Pennies',
-                                   email = 'o.pennies@example.com')
+                                   email='o.pennies@example.com')
         TournamentPlayer.objects.create(player=p8, tournament=cls.t1)
         RoundPlayer.objects.create(player=p8, the_round=r)
         GamePlayer.objects.create(player=p8, game=g2, power=russia)
 
         p9 = Player.objects.create(first_name='Queenie',
                                    last_name='Radiation',
-                                   email = 'q.radiation@example.com')
+                                   email='q.radiation@example.com')
         TournamentPlayer.objects.create(player=p9, tournament=cls.t1)
         RoundPlayer.objects.create(player=p9, the_round=r)
         GamePlayer.objects.create(player=p9, game=g2, power=italy)
 
         p10 = Player.objects.create(first_name='Sebastian',
                                     last_name='Twinkie',
-                                    email = 's.twinkie@example.com')
+                                    email='s.twinkie@example.com')
         TournamentPlayer.objects.create(player=p10, tournament=cls.t1)
         RoundPlayer.objects.create(player=p10, the_round=r)
         GamePlayer.objects.create(player=p10, game=g2, power=germany)
 
         p11 = Player.objects.create(first_name='Ursula',
                                     last_name='Valentine',
-                                    email = 'u.valentine@example.com')
+                                    email='u.valentine@example.com')
         TournamentPlayer.objects.create(player=p11, tournament=cls.t1)
         RoundPlayer.objects.create(player=p11, the_round=r)
         GamePlayer.objects.create(player=p11, game=g2, power=france)
@@ -157,14 +157,14 @@ class EmailTests(TestCase):
         # This one is in the Tournament and the Round, but not any Games
         cls.p12 = Player.objects.create(first_name='Wallace',
                                         last_name='Xavier',
-                                        email = 'w.xavier@example.com')
+                                        email='w.xavier@example.com')
         TournamentPlayer.objects.create(player=cls.p12, tournament=cls.t1)
         RoundPlayer.objects.create(player=cls.p12, the_round=r)
 
         # This one is playing in two Games and has an email address
         cls.p13 = Player.objects.create(first_name='Yugo',
                                         last_name='Zombie',
-                                        email = 'y.zombie@example.com')
+                                        email='y.zombie@example.com')
         TournamentPlayer.objects.create(player=cls.p13, tournament=cls.t1)
         RoundPlayer.objects.create(player=cls.p13, the_round=r)
         GamePlayer.objects.create(player=cls.p13, game=g1, power=turkey)
@@ -181,13 +181,13 @@ class EmailTests(TestCase):
         # This one has an email address, is in the Tournament, but not this Round
         cls.p15 = Player.objects.create(first_name='Charlotte',
                                         last_name='Dromedary',
-                                        email = 'c.dromedary@example.com')
+                                        email='c.dromedary@example.com')
         TournamentPlayer.objects.create(player=cls.p15, tournament=cls.t1)
 
         # This one has an email address but is not in the Tournament
         cls.p16 = Player.objects.create(first_name='Edward',
                                         last_name='Fancypants',
-                                        email = 'e.fancypant@example.com')
+                                        email='e.fancypant@example.com')
 
         # Game 3 has no players with email addresses at all
         p17 = Player.objects.create(first_name='Geraldine',

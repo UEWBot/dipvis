@@ -388,11 +388,11 @@ class BaseGamePlayersFormsetTest(TestCase):
                                                  formset=BaseGamePlayersFormset)
         # ManagementForm data
         cls.data = {
-                'form-TOTAL_FORMS': '2',
-                'form-INITIAL_FORMS': '0',
-                'form-MAX_NUM_FORMS': '1000',
-                'form-MIN_NUM_FORMS': '0',
-                }
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '0',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
 
     def test_formset_needs_round(self):
         # Omit the_round constructor parameter
@@ -488,9 +488,9 @@ class PowerAssignFormTest(TestCase):
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=SECRET)
         r = Round.objects.create(tournament=t,
-                                  scoring_system=G_SCORING_SYSTEMS[0].name,
-                                  dias=True,
-                                  start=t.start_date)
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=t.start_date)
         cls.g = Game.objects.create(name='Test Game',
                                     the_round=r,
                                     the_set=GameSet.objects.first())
@@ -702,11 +702,11 @@ class BasePowerAssignFormsetTest(TestCase):
                                                  formset=BasePowerAssignFormset)
         # ManagementForm data
         cls.data = {
-                'form-TOTAL_FORMS': '2',
-                'form-INITIAL_FORMS': '2',
-                'form-MAX_NUM_FORMS': '1000',
-                'form-MIN_NUM_FORMS': '0',
-                }
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
         cls.initial = []
         for game in cls.r1.game_set.all():
             game_dict = {}
@@ -881,7 +881,7 @@ class GetSevenPlayersFormTest(TestCase):
 
     def check_fields(self, prefix, count):
         form = GetSevenPlayersForm(the_round=self.r1)
-        for i in range(0,3):
+        for i in range(0, count):
             with self.subTest(i=i):
                 name = '%s_%d' % (prefix, i)
                 self.assertIn(name, form.fields)
@@ -915,7 +915,7 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'sitter_0': str(self.rp1_10.pk),
                 'sitter_1': str(self.rp1_7.pk),
                 'sitter_2': str(self.rp1_3.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertTrue(form.is_valid())
 
@@ -925,7 +925,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_1': str(self.rp1_7.pk),
                 'double_2': str(self.rp1_3.pk),
                 'double_3': str(self.rp1_4.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertTrue(form.is_valid())
 
@@ -966,7 +966,7 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'sitter_0': str(self.rp1_10.pk),
                 'sitter_1': str(self.rp1_3.pk),
                 'sitter_2': str(self.rp1_3.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
@@ -980,7 +980,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_1': str(self.rp1_7.pk),
                 'double_2': str(self.rp1_10.pk),
                 'double_3': str(self.rp1_4.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
@@ -997,7 +997,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_1': str(self.rp1_5.pk),
                 'double_2': str(self.rp1_6.pk),
                 'double_3': str(self.rp1_7.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
@@ -1008,7 +1008,7 @@ class GetSevenPlayersFormTest(TestCase):
     def test_too_few_sitters(self):
         data = {'sitter_0': str(self.rp1_10.pk),
                 'sitter_1': str(self.rp1_7.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
@@ -1020,7 +1020,7 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'double_0': str(self.rp1_10.pk),
                 'double_1': str(self.rp1_7.pk),
                 'double_2': str(self.rp1_3.pk),
-                }
+               }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
