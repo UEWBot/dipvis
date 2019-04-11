@@ -443,7 +443,7 @@ class SCCountForm(forms.Form):
         return cleaned_data
 
 class BaseSCCountFormset(BaseFormSet):
-    """Form to spcify SC counts for a Game"""
+    """Form to specify SC counts for a Game"""
     def clean(self):
         """
         Checks that no year appears more than once,
@@ -456,11 +456,12 @@ class BaseSCCountFormset(BaseFormSet):
             form = self.forms[i]
             year = form.cleaned_data.get('year')
             if not year:
+                # Blank form
                 continue
             if year in years:
                 raise forms.ValidationError(_('Year %(year)s appears more than once')
                                             % {'year': year})
-            # For convenience, store the number of neutrals left each year
+            # Remember the number of neutrals left
             years[year] = form.cleaned_data.get('neutral')
         # Now check that the number of neutrals only goes down
         neutrals = TOTAL_SCS

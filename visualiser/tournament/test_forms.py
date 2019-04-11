@@ -34,7 +34,7 @@ from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
-from tournament.forms import SCCountForm
+from tournament.forms import SCCountForm, BaseSCCountFormset
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1281,4 +1281,114 @@ class SCCountFormTest(TestCase):
         form = SCCountForm(data=data)
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['neutral'], 1)
+
+class BaseSCCountFormsetTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        cls.SCCountFormset = formset_factory(SCCountForm,
+                                             formset=BaseSCCountFormset)
+        # ManagementForm data
+        cls.data = {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '0',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
+
+    def test_success(self):
+        # Everything is ok
+        data = self.data.copy()
+        for i in range(2):
+            data['form-%d-Austria-Hungary' % i] = 4 + i
+            data['form-%d-England' % i] = 4 + i
+            data['form-%d-France' % i] = 4 + i
+            data['form-%d-Germany' % i] = 4 + i
+            data['form-%d-Italy' % i] = 4 + i
+            data['form-%d-Russia' % i] = 3 + i
+            data['form-%d-Turkey' % i] = 4 + i
+            data['form-%d-year' % i] = 1902 + i
+        formset = self.SCCountFormset(data)
+        self.assertTrue(formset.is_valid())
+
+    def test_one_form_blank(self):
+        # One form left empty
+        data = self.data.copy()
+        data['form-0-Austria-Hungary'] = 4
+        data['form-0-England'] = 4
+        data['form-0-France'] = 4
+        data['form-0-Germany'] = 4
+        data['form-0-Italy'] = 4
+        data['form-0-Russia'] = 3
+        data['form-0-Turkey'] = 4
+        data['form-0-year'] = 1902
+        formset = self.SCCountFormset(data)
+        self.assertTrue(formset.is_valid())
+
+    def test_form_error(self):
+        # Something wrong in one of the forms
+        data = self.data.copy()
+        for i in range(2):
+            data['form-%d-Austria-Hungary' % i] = 4 + i
+            data['form-%d-England' % i] = 4 + i
+            data['form-%d-France' % i] = 4 + i
+            data['form-%d-Germany' % i] = 4 + i
+            data['form-%d-Italy' % i] = 4 + i
+            data['form-%d-Russia' % i] = 3 + i
+            # Negative SC counts are not allowed
+            data['form-%d-Turkey' % i] = i - 1
+            data['form-%d-year' % i] = 1902 + i
+        formset = self.SCCountFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have just one form error, no formset errors
+        self.assertEqual(sum(len(err) for err in formset.errors), 1)
+        self.assertEqual(formset.total_error_count(), 1)
+
+    def test_duplicate_year(self):
+        # One year is repeated
+        data = self.data.copy()
+        for i in range(2):
+            data['form-%d-Austria-Hungary' % i] = 4 + i
+            data['form-%d-England' % i] = 4 + i
+            data['form-%d-France' % i] = 4 + i
+            data['form-%d-Germany' % i] = 4 + i
+            data['form-%d-Italy' % i] = 4 + i
+            data['form-%d-Russia' % i] = 3 + i
+            data['form-%d-Turkey' % i] = 4 + i
+            data['form-%d-year' % i] = 1902
+        formset = self.SCCountFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertIn('appears more than once', formset.non_form_errors()[0])
+
+    def test_neutrals_increase(self):
+        # SupplyCentres become neutral
+        data = self.data.copy()
+        for i in range(2):
+            data['form-%d-Austria-Hungary' % i] = 4
+            data['form-%d-England' % i] = 4
+            data['form-%d-France' % i] = 4
+            data['form-%d-Germany' % i] = 4
+            data['form-%d-Italy' % i] = 4
+            data['form-%d-Russia' % i] = 3
+            data['form-%d-year' % i] = 1902 + i
+        data['form-0-Turkey'] = 5
+        data['form-1-Turkey'] = 3
+        formset = self.SCCountFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertIn('Neutrals increase', formset.non_form_errors()[0])
 
