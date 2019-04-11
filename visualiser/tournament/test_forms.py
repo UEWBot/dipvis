@@ -34,6 +34,7 @@ from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
+from tournament.forms import SCCountForm
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1120,6 +1121,7 @@ class BaseSCOwnerFormsetTest(TestCase):
             for key, val in self.row_data.items():
                 if val:
                     data['form-%d-%s' % (i, key)] = val.pk
+            # First year will be 1899, which is invalid
             data['form-%d-year' % i] = 1899 + i
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
@@ -1161,3 +1163,122 @@ class BaseSCOwnerFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('should never change from owned', formset.errors[1]['Belgium'][0])
+
+class SCCountFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        pass
+
+    def test_success(self):
+        # Everything is ok
+        data = {'year': 1902,
+                'Austria-Hungary': 5,
+                'England': 6,
+                'France': 6,
+                'Germany': 2,
+                'Italy': 5,
+                'Russia': 4,
+                'Turkey': 5,
+               }
+        form = SCCountForm(data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_year_1900(self):
+        # 1900 should be accepted
+        data = {'year': 1900,
+                'Austria-Hungary': 5,
+                'England': 6,
+                'France': 6,
+                'Germany': 2,
+                'Italy': 5,
+                'Russia': 4,
+                'Turkey': 5,
+               }
+        form = SCCountForm(data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_year_1899(self):
+        # 1899 should not be accepted
+        data = {'year': 1899,
+                'Austria-Hungary': 5,
+                'England': 6,
+                'France': 6,
+                'Germany': 2,
+                'Italy': 5,
+                'Russia': 4,
+                'Turkey': 5,
+               }
+        form = SCCountForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Ensure this value is greater than', form.errors['year'][0])
+
+    def test_negative_sc_count(self):
+        # One power has lost more than all their dots
+        data = {'year': 1905,
+                'Austria-Hungary': 4,
+                'England': 5,
+                'France': -1,
+                'Germany': 5,
+                'Italy': 4,
+                'Russia': 4,
+                'Turkey': 4,
+               }
+        form = SCCountForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Ensure this value is greater than', form.errors['France'][0])
+
+    def test_power_with_too_many_dots(self):
+        # One power has more than all the dots
+        data = {'year': 1920,
+                'Austria-Hungary': 0,
+                'England': 0,
+                'France': 0,
+                'Germany': 0,
+                'Italy': 35,
+                'Russia': 0,
+                'Turkey': 0,
+               }
+        form = SCCountForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Ensure this value is less than', form.errors['Italy'][0])
+
+    def test_too_many_dots_in_total(self):
+        # More than 34 in total
+        data = {'year': 1920,
+                'Austria-Hungary': 5,
+                'England': 5,
+                'France': 5,
+                'Germany': 5,
+                'Italy': 5,
+                'Russia': 5,
+                'Turkey': 5,
+               }
+        form = SCCountForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # This includes non-field errors
+        self.assertEqual(len(form.errors), 1)
+
+    def test_fake_neutral_field(self):
+        # Ensure that the extra 'neutral' field gets added
+        data = {'year': 1902,
+                'Austria-Hungary': 5,
+                'England': 6,
+                'France': 6,
+                'Germany': 2,
+                'Italy': 5,
+                'Russia': 4,
+                'Turkey': 5,
+               }
+        form = SCCountForm(data=data)
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data['neutral'], 1)
+
