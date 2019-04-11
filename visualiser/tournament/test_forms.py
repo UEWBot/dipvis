@@ -34,7 +34,8 @@ from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
-from tournament.forms import SCCountForm, BaseSCCountFormset
+from tournament.forms import SCCountForm, BaseSCCountFormset, GameEndedForm
+from tournament.forms import PlayerRoundForm
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1164,12 +1165,14 @@ class BaseSCOwnerFormsetTest(TestCase):
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('should never change from owned', formset.errors[1]['Belgium'][0])
 
+class GameEndedFormTest(TestCase):
+
+    def test_is_finished_not_required(self):
+        form = GameEndedForm()
+        self.assertFalse(form.fields['is_finished'].required)
+
 class SCCountFormTest(TestCase):
     fixtures = ['game_sets.json']
-
-    @classmethod
-    def setUpTestData(cls):
-        pass
 
     def test_success(self):
         # Everything is ok
@@ -1392,3 +1395,56 @@ class BaseSCCountFormsetTest(TestCase):
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('Neutrals increase', formset.non_form_errors()[0])
 
+class PlayerRoundFormTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # We need a Player and a Tournament
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=timezone.now(),
+                                          end_date=timezone.now(),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=SECRET)
+
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+
+    def test_form_needs_tournament(self):
+        # Omit tournament constructor parameter
+        with self.assertRaises(KeyError):
+            PlayerRoundForm(rounds=2, this_round=1)
+
+    def test_form_needs_rounds(self):
+        # Omit rounds constructor parameter
+        with self.assertRaises(KeyError):
+            PlayerRoundForm(tournament=self.t, this_round=1)
+
+    def test_form_needs_this_round(self):
+        # Omit this_round constructor parameter
+        with self.assertRaises(KeyError):
+            PlayerRoundForm(tournament=self.t, rounds=2)
+
+    def test_success(self):
+        # Do everything right
+        data = {'player': str(self.p1.pk),
+                'round_2': 'on'}
+        initial = {'player': self.p1,
+                   'round_1': False}
+        form = PlayerRoundForm(data,
+                               initial=initial,
+                               tournament=self.t,
+                               rounds=2,
+                               this_round=1)
+        self.assertTrue(form.is_valid())
+
+    def test_round_fields(self):
+        # Check that the correct round fields are created
+        form = PlayerRoundForm(tournament=self.t,
+                               rounds=3,
+                               this_round=2)
+        # We should have three round fields, numbered 1, 2, and 3
+        self.assertEqual(len(form.fields), 4)
+        # Just the first should be disabled
+        self.assertTrue(form.fields['round_1'].disabled)
+        self.assertFalse(form.fields['round_2'].disabled)
+        self.assertFalse(form.fields['round_3'].disabled)
