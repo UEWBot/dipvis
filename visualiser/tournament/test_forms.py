@@ -24,7 +24,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
-from tournament.models import SECRET, COUNTS, G_SCORING_SYSTEMS
+from tournament.models import G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -49,7 +49,7 @@ class PrefsFormTest(TestCase):
                                       end_date=timezone.now(),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=SECRET)
+                                      draw_secrecy=Tournament.SECRET)
         cls.tp = TournamentPlayer.objects.create(player=p, tournament=t)
 
     def test_prefs_form_prefs_field_label(self):
@@ -98,7 +98,7 @@ class PrefsFormsetTest(TestCase):
                                           end_date=timezone.now(),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                          draw_secrecy=SECRET)
+                                          draw_secrecy=Tournament.SECRET)
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
         cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
@@ -136,7 +136,7 @@ class DrawFormTest(TestCase):
 
     def test_init_missing_dias(self):
         with self.assertRaises(KeyError):
-            DrawForm(secrecy=SECRET)
+            DrawForm(secrecy=Tournament.SECRET)
 
     def test_init_missing_secrecy(self):
         with self.assertRaises(KeyError):
@@ -147,13 +147,13 @@ class DrawFormTest(TestCase):
             DrawForm(dias=True, secrecy='Q')
 
     def test_dias_secret(self):
-        form = DrawForm(dias=True, secrecy=SECRET)
+        form = DrawForm(dias=True, secrecy=Tournament.SECRET)
         # Form should have year, season, proposer, and passed
         self.check_common_fields(form)
         self.assertIn('passed', form.fields)
 
     def test_non_dias_secret(self):
-        form = DrawForm(dias=False, secrecy=SECRET)
+        form = DrawForm(dias=False, secrecy=Tournament.SECRET)
         # Form should have year, season, proposer, powers, and passed
         self.check_common_fields(form)
         for field in ('powers', 'passed'):
@@ -161,13 +161,13 @@ class DrawFormTest(TestCase):
                 self.assertIn(field, form.fields)
 
     def test_dias_counts(self):
-        form = DrawForm(dias=True, secrecy=COUNTS)
+        form = DrawForm(dias=True, secrecy=Tournament.COUNTS)
         # Form should have year, season, proposer, and votes_in_favour
         self.check_common_fields(form)
         self.assertIn('votes_in_favour', form.fields)
 
     def test_non_dias_counts(self):
-        form = DrawForm(dias=False, secrecy=COUNTS)
+        form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
         # Form should have year, season, proposer, powers, and votes_in_favour
         self.check_common_fields(form)
         for field in ('powers', 'votes_in_favour'):
@@ -206,7 +206,7 @@ class GamePlayersFormTest(TestCase):
                                       end_date=timezone.now(),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=SECRET)
+                                      draw_secrecy=Tournament.SECRET)
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
@@ -356,7 +356,7 @@ class BaseGamePlayersFormsetTest(TestCase):
                                       end_date=timezone.now(),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=SECRET)
+                                      draw_secrecy=Tournament.SECRET)
         cls.r = Round.objects.create(tournament=t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
@@ -487,7 +487,7 @@ class PowerAssignFormTest(TestCase):
                                       end_date=timezone.now(),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=SECRET)
+                                      draw_secrecy=Tournament.SECRET)
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
@@ -647,7 +647,7 @@ class BasePowerAssignFormsetTest(TestCase):
                                       end_date=timezone.now(),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=SECRET)
+                                      draw_secrecy=Tournament.SECRET)
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
@@ -823,7 +823,7 @@ class GetSevenPlayersFormTest(TestCase):
                                       end_date=timezone.now(),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=SECRET)
+                                      draw_secrecy=Tournament.SECRET)
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
@@ -1403,7 +1403,7 @@ class PlayerRoundFormTest(TestCase):
                                           end_date=timezone.now(),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                          draw_secrecy=SECRET)
+                                          draw_secrecy=Tournament.SECRET)
 
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
 
@@ -1450,7 +1450,7 @@ class BasePlayerRoundFormsetTest(TestCase):
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=SECRET)
+                                           draw_secrecy=Tournament.SECRET)
         cls.r1 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
@@ -1464,7 +1464,7 @@ class BasePlayerRoundFormsetTest(TestCase):
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=SECRET)
+                                           draw_secrecy=Tournament.SECRET)
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         cls.p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
         Player.objects.create(first_name='Ethelred', last_name='Fishfinger')
@@ -1534,7 +1534,7 @@ class PlayerRoundScoreFormTest(TestCase):
                                           end_date=timezone.now(),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                          draw_secrecy=SECRET)
+                                          draw_secrecy=Tournament.SECRET)
 
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         cls.tp1 = TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t)
@@ -1593,7 +1593,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=SECRET)
+                                           draw_secrecy=Tournament.SECRET)
         r1 = Round.objects.create(tournament=cls.t1,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
@@ -1610,13 +1610,13 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=SECRET)
+                                           draw_secrecy=Tournament.SECRET)
         cls.t3 = Tournament.objects.create(name='t3',
                                            start_date=timezone.now(),
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=SECRET)
+                                           draw_secrecy=Tournament.SECRET)
         r3 = Round.objects.create(tournament=cls.t3,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,

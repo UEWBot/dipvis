@@ -20,7 +20,7 @@ from django.utils import timezone
 from tournament.diplomacy import GameSet, GreatPower, TOTAL_SCS
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, SECRET
+from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import find_game_scoring_system
 
 from datetime import timedelta
@@ -46,7 +46,7 @@ class GameScoringTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=SECRET)
+                                       draw_secrecy=Tournament.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)

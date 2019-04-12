@@ -52,14 +52,6 @@ SEASONS = (
     (FALL, _('fall')),
 )
 
-# Draw secrecy levels
-SECRET = 'S'
-COUNTS = 'C'
-DRAW_SECRECY = (
-    (SECRET, _('Pass/Fail')),
-    (COUNTS, _('Numbers for and against')),
-)
-
 # Power assignment methods
 AUTO = 'A'
 MANUAL = 'M'
@@ -295,6 +287,14 @@ class Tournament(models.Model):
     """
     A Diplomacy tournament
     """
+    # Draw secrecy levels
+    SECRET = 'S'
+    COUNTS = 'C'
+    DRAW_SECRECY = (
+        (SECRET, _('Pass/Fail')),
+        (COUNTS, _('Numbers for and against')),
+    )
+
     name = models.CharField(max_length=60)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -1627,10 +1627,10 @@ class DrawProposal(models.Model):
                     raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
                                           params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
-        if self.game.the_round.tournament.draw_secrecy == SECRET:
+        if self.game.the_round.tournament.draw_secrecy == Tournament.SECRET:
             if not self.passed:
                 raise ValidationError(_('Passed needs a value'))
-        elif self.game.the_round.tournament.draw_secrecy == COUNTS:
+        elif self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
             if not self.votes_in_favour:
                 raise ValidationError(_('Votes_in_favour needs a value'))
             # Derive passed from votes_in_favour and survivor count

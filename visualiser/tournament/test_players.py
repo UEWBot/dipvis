@@ -20,7 +20,7 @@ from django.utils import timezone
 
 from tournament.diplomacy import GreatPower
 from tournament.models import Tournament, TournamentPlayer
-from tournament.models import SECRET, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player, PlayerRanking, PlayerAward
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
 from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
@@ -123,7 +123,7 @@ class PlayerTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=SECRET,
+                                       draw_secrecy=Tournament.SECRET,
                                        is_published=True)
         t1.save()
         t2 = Tournament.objects.create(name='t2',
@@ -131,7 +131,7 @@ class PlayerTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=SECRET,
+                                       draw_secrecy=Tournament.SECRET,
                                        is_published=False)
         t2.save()
         # Now we need a player that played in both tournaments

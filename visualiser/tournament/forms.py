@@ -27,8 +27,8 @@ from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy import validate_preference_string
 from tournament.models import Game, GameImage
-from tournament.models import SECRET, COUNTS, SEASONS
-from tournament.models import TournamentPlayer
+from tournament.models import SEASONS
+from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player
 
 class PrefsForm(forms.Form):
@@ -88,10 +88,10 @@ class DrawForm(forms.Form):
             self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
                                                                    to_field_name='name',
                                                                    widget=forms.SelectMultiple(attrs={'size': '7'}))
-        if secrecy == SECRET:
+        if secrecy == Tournament.SECRET:
             self.fields['passed'] = forms.BooleanField(initial=False,
                                                        required=False)
-        elif secrecy == COUNTS:
+        elif secrecy == Tournament.COUNTS:
             self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
                                                                 max_value=7)
         else:

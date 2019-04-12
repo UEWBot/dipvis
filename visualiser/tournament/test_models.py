@@ -27,7 +27,7 @@ from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import MASK_ALL_NEWS
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SECRET, COUNTS, SPRING, UNRANKED, PREFERENCES
+from tournament.models import SPRING, UNRANKED, PREFERENCES
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -62,19 +62,19 @@ class TournamentModelTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=SECRET)
+                                       draw_secrecy=Tournament.SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=SECRET)
+                                       draw_secrecy=Tournament.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=COUNTS)
+                                       draw_secrecy=Tournament.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -986,7 +986,7 @@ class TournamentModelTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=SECRET)
+                       draw_secrecy=Tournament.SECRET)
         t.save()
         tp1 = TournamentPlayer(tournament=t, player=self.p1)
         tp1.save()
@@ -1649,7 +1649,7 @@ class TournamentModelTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=SECRET)
+                       draw_secrecy=Tournament.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
         tp.save()
@@ -1738,7 +1738,7 @@ class TournamentModelTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=SECRET)
+                       draw_secrecy=Tournament.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
         tp.save()
@@ -1828,7 +1828,7 @@ class TournamentModelTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=SECRET)
+                       draw_secrecy=Tournament.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
         tp.save()
@@ -2155,7 +2155,7 @@ class TournamentModelTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=SECRET)
+                       draw_secrecy=Tournament.SECRET)
         t.save()
         tp1 = TournamentPlayer(tournament=t, player=self.p1)
         tp1.save()
