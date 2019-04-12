@@ -1591,32 +1591,48 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # We need two Tournaments, one with TournamentPlayers and Rounds,
+        # We need three Tournaments, one with TournamentPlayers and Rounds,
+        # and one that is over
+        p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=timezone.now(),
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=SECRET)
+        r1 = Round.objects.create(tournament=cls.t1,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=cls.t1.start_date)
+        Round.objects.create(tournament=cls.t1,
+                             scoring_system=G_SCORING_SYSTEMS[0].name,
+                             dias=True,
+                             start=cls.t1.start_date + timedelta(hours=8))
+        TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
+        TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
+        RoundPlayer.objects.create(player=p1, the_round=r1)
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=timezone.now(),
                                            end_date=timezone.now(),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=SECRET)
-        cls.r1 = Round.objects.create(tournament=cls.t1,
-                                      scoring_system=G_SCORING_SYSTEMS[0].name,
-                                      dias=True,
-                                      start=cls.t1.start_date)
-        cls.r2 = Round.objects.create(tournament=cls.t1,
-                                      scoring_system=G_SCORING_SYSTEMS[0].name,
-                                      dias=True,
-                                      start=cls.t1.start_date + timedelta(hours=8))
-        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
-        cls.p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
-        cls.tp1 = TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t1)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r1)
+        cls.t3 = Tournament.objects.create(name='t3',
+                                           start_date=timezone.now(),
+                                           end_date=timezone.now(),
+                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           draw_secrecy=SECRET)
+        r3 = Round.objects.create(tournament=cls.t3,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=cls.t3.start_date)
+        Game.objects.create(name='Test Game',
+                            the_round=r3,
+                            the_set=GameSet.objects.first(),
+                            is_finished=True)
+        TournamentPlayer.objects.create(player=p1, tournament=cls.t3)
 
         cls.PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
                                                       extra=0,
@@ -1641,7 +1657,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
         data['form-0-round_1'] = '105.3'
         data['form-0-overall_score'] = '105.3'
         data['form-1-tp'] = str(self.t1.tournamentplayer_set.last().pk)
-        data['form-TOTAL_FORMS'] = '2'
+        data['form-TOTAL_FORMS'] = str(self.t1.tournamentplayer_set.count())
         initial = []
         for tp in self.t1.tournamentplayer_set.all():
             initial.append({'tp': tp,
@@ -1661,4 +1677,21 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
             'form-MIN_NUM_FORMS': '0',
         }
         formset = self.PlayerRoundScoreFormset(data, tournament=self.t2)
+        self.assertTrue(formset.is_valid())
+
+    def test_finished(self):
+        # Should be fine for a completed Tournament
+        data = self.data.copy()
+        data['form-0-tp'] = str(self.t3.tournamentplayer_set.first().pk)
+        data['form-0-round_1'] = '105.3'
+        data['form-0-overall_score'] = '105.3'
+        data['form-TOTAL_FORMS'] = str(self.t3.tournamentplayer_set.count())
+        initial = []
+        for tp in self.t3.tournamentplayer_set.all():
+            initial.append({'tp': tp,
+                            'player': tp.player,
+                            'round_1': 3.5,
+                            'overall_score': 3.5,
+                           })
+        formset = self.PlayerRoundScoreFormset(data, initial=initial, tournament=self.t3)
         self.assertTrue(formset.is_valid())
