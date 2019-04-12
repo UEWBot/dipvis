@@ -537,8 +537,7 @@ class TournamentPlayerChoiceField(forms.ModelChoiceField):
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
     tp_id = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
-                                        widget=forms.HiddenInput(),
-                                        disabled=True)
+                                        widget=forms.HiddenInput())
     player = forms.CharField(max_length=20, disabled=True)
 
     def __init__(self, *args, **kwargs):
