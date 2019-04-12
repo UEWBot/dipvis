@@ -36,6 +36,7 @@ from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
 from tournament.forms import SCCountForm, BaseSCCountFormset, GameEndedForm
 from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
+from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
 
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1534,3 +1535,135 @@ class BasePlayerRoundFormsetTest(TestCase):
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
+
+class PlayerRoundScoreFormTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        # We need a Player and a Tournament
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=timezone.now(),
+                                          end_date=timezone.now(),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=SECRET)
+
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+        cls.tp1 = TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t)
+
+    def test_form_needs_tournament(self):
+        # Omit tournament constructor parameter
+        with self.assertRaises(KeyError):
+            PlayerRoundScoreForm(rounds=2, this_round=1)
+
+    def test_form_needs_rounds(self):
+        # Omit rounds constructor parameter
+        with self.assertRaises(KeyError):
+            PlayerRoundScoreForm(tournament=self.t, this_round=1)
+
+    def test_form_needs_this_round(self):
+        # Omit this_round constructor parameter
+        with self.assertRaises(KeyError):
+            PlayerRoundScoreForm(tournament=self.t, rounds=2)
+
+    def test_success(self):
+        # Everything is ok
+        initial = {'tp': self.t.tournamentplayer_set.first(),
+                   'player': str(self.p1.pk),
+                  }
+        form = PlayerRoundScoreForm({'tp': str(self.t.tournamentplayer_set.first().pk)},
+                                    initial=initial,
+                                    tournament=self.t,
+                                    rounds=2,
+                                    this_round=1)
+        self.assertTrue(form.is_valid())
+
+    def test_fields_disabled(self):
+        # Many fields should be disabled
+        initial = {'tp': self.tp1,
+                   'player': str(self.p1.pk),
+                  }
+        form = PlayerRoundScoreForm(initial=initial,
+                                    tournament=self.t,
+                                    rounds=3,
+                                    this_round=2)
+        for field in ['player', 'round_1', 'game_scores_2', 'game_scores_3']:
+            with self.subTest(field=field):
+                self.assertTrue(form.fields[field].disabled)
+
+class BasePlayerRoundScoreFormsetTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # We need two Tournaments, one with TournamentPlayers and Rounds,
+        cls.t1 = Tournament.objects.create(name='t1',
+                                           start_date=timezone.now(),
+                                           end_date=timezone.now(),
+                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           draw_secrecy=SECRET)
+        cls.t2 = Tournament.objects.create(name='t2',
+                                           start_date=timezone.now(),
+                                           end_date=timezone.now(),
+                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           draw_secrecy=SECRET)
+        cls.r1 = Round.objects.create(tournament=cls.t1,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=cls.t1.start_date)
+        cls.r2 = Round.objects.create(tournament=cls.t1,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=cls.t1.start_date + timedelta(hours=8))
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        cls.p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
+        cls.tp1 = TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t1)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r1)
+
+        cls.PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
+                                                      extra=0,
+                                                      formset=BasePlayerRoundScoreFormset)
+        # ManagementForm data
+        cls.data = {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
+
+    def test_formset_needs_tournament(self):
+        # Omit tournament kwarg
+        with self.assertRaises(KeyError):
+            self.PlayerRoundScoreFormset()
+
+    def test_success(self):
+        # All ok
+        data = self.data.copy()
+        data['form-0-tp'] = str(self.t1.tournamentplayer_set.first().pk)
+        data['form-0-round_1'] = '105.3'
+        data['form-0-overall_score'] = '105.3'
+        data['form-1-tp'] = str(self.t1.tournamentplayer_set.last().pk)
+        data['form-TOTAL_FORMS'] = '2'
+        initial = []
+        for tp in self.t1.tournamentplayer_set.all():
+            initial.append({'tp': tp,
+                            'player': tp.player,
+                            'round_1': 3.5,
+                            'overall_score': 3.5,
+                           })
+        formset = self.PlayerRoundScoreFormset(data, initial=initial, tournament=self.t1)
+        self.assertTrue(formset.is_valid())
+
+    def test_no_players(self):
+        # Should be fine for a Tournament with no TournamentPlayers
+        data = {
+            'form-TOTAL_FORMS': '0',
+            'form-INITIAL_FORMS': '0',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
+        formset = self.PlayerRoundScoreFormset(data, tournament=self.t2)
+        self.assertTrue(formset.is_valid())
