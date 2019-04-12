@@ -480,9 +480,7 @@ class PlayerRoundForm(forms.Form):
     player = forms.ModelChoiceField(queryset=Player.objects.all())
 
     def __init__(self, *args, **kwargs):
-        # Remove our three special kwargs from the list
-        # TODO - self.tournament looks unused - remove?
-        self.tournament = kwargs.pop('tournament')
+        # Remove our special kwargs from the list
         self.rounds = kwargs.pop('rounds')
         self.this_round = kwargs.pop('this_round')
         super().__init__(*args, **kwargs)
@@ -518,8 +516,7 @@ class BasePlayerRoundFormset(BaseFormSet):
         super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
-        # Pass the three special args down to the form itself
-        kwargs['tournament'] = self.tournament
+        # Pass the special args down to the form itself
         kwargs['rounds'] = self.tournament.round_set.count()
         # current_round() could return None, if all rounds are over
         cr = kwargs['this_round'] = self.tournament.current_round()

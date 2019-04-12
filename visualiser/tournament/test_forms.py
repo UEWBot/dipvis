@@ -1407,20 +1407,15 @@ class PlayerRoundFormTest(TestCase):
 
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
 
-    def test_form_needs_tournament(self):
-        # Omit tournament constructor parameter
-        with self.assertRaises(KeyError):
-            PlayerRoundForm(rounds=2, this_round=1)
-
     def test_form_needs_rounds(self):
         # Omit rounds constructor parameter
         with self.assertRaises(KeyError):
-            PlayerRoundForm(tournament=self.t, this_round=1)
+            PlayerRoundForm(this_round=1)
 
     def test_form_needs_this_round(self):
         # Omit this_round constructor parameter
         with self.assertRaises(KeyError):
-            PlayerRoundForm(tournament=self.t, rounds=2)
+            PlayerRoundForm(rounds=2)
 
     def test_success(self):
         # Do everything right
@@ -1430,16 +1425,13 @@ class PlayerRoundFormTest(TestCase):
                    'round_1': False}
         form = PlayerRoundForm(data,
                                initial=initial,
-                               tournament=self.t,
                                rounds=2,
                                this_round=1)
         self.assertTrue(form.is_valid())
 
     def test_round_fields(self):
         # Check that the correct round fields are created
-        form = PlayerRoundForm(tournament=self.t,
-                               rounds=3,
-                               this_round=2)
+        form = PlayerRoundForm(rounds=3, this_round=2)
         # We should have three round fields, numbered 1, 2, and 3
         self.assertEqual(len(form.fields), 4)
         # Just the first should be disabled
