@@ -49,16 +49,6 @@ DRAW_5 = 'D5'
 DRAW_6 = 'D6'
 DRAW_7 = 'D7'
 LOSS = 'L'
-GAME_RESULT = (
-    (WIN, _('Win')),
-    (DRAW_2, _('2-way draw')),
-    (DRAW_3, _('3-way draw')),
-    (DRAW_4, _('4-way draw')),
-    (DRAW_5, _('5-way draw')),
-    (DRAW_6, _('6-way draw')),
-    (DRAW_7, _('7-way draw')),
-    (LOSS, _('Loss')),
-)
 
 # Mask values to choose which background strings to include
 MASK_TITLES = 1<<0
@@ -679,6 +669,17 @@ class PlayerGameResult(models.Model):
     One player's result for a tournament game.
     Used to import background information from the WDD.
     """
+    GAME_RESULT = (
+        (WIN, _('Win')),
+        (DRAW_2, _('2-way draw')),
+        (DRAW_3, _('3-way draw')),
+        (DRAW_4, _('4-way draw')),
+        (DRAW_5, _('5-way draw')),
+        (DRAW_6, _('6-way draw')),
+        (DRAW_7, _('7-way draw')),
+        (LOSS, _('Loss')),
+    )
+
     tournament_name = models.CharField(max_length=60)
     game_name = models.CharField(max_length=20)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
