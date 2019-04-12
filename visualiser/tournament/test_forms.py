@@ -90,7 +90,6 @@ class PrefsFormTest(TestCase):
         self.assertEqual(form.cleaned_data['prefs'], 'EFG')
 
 class PrefsFormsetTest(TestCase):
-    fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
@@ -128,7 +127,6 @@ class PrefsFormsetTest(TestCase):
         self.assertEqual(len(formset), len(initial))
 
 class DrawFormTest(TestCase):
-    fixtures = ['game_sets.json']
 
     # Common validation method
     def check_common_fields(self, form):
@@ -815,7 +813,6 @@ class BasePowerAssignFormsetTest(TestCase):
         self.assertIn('Game names must be unique', formset.non_form_errors()[0])
 
 class GetSevenPlayersFormTest(TestCase):
-    fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
@@ -1038,7 +1035,6 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.fields), 0)
 
 class SCOwnerFormTest(TestCase):
-    #fixtures = ['game_sets.json']
 
     def test_field_count(self):
         form = SCOwnerForm()
@@ -1451,7 +1447,6 @@ class PlayerRoundFormTest(TestCase):
         self.assertFalse(form.fields['round_3'].disabled)
 
 class BasePlayerRoundFormsetTest(TestCase):
-    fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
