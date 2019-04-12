@@ -52,16 +52,6 @@ SEASONS = (
     (FALL, _('fall')),
 )
 
-# Power assignment methods
-AUTO = 'A'
-MANUAL = 'M'
-PREFERENCES = 'P'
-POWER_ASSIGN_METHODS = (
-    (AUTO, _('Minimising playing the same power')),
-    (MANUAL, _('Manually by TD or at the board')),
-    (PREFERENCES, _('Using player preferences and ranking')),
-)
-
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1<<0
 MASK_GAINERS = 1<<1
@@ -295,6 +285,16 @@ class Tournament(models.Model):
         (COUNTS, _('Numbers for and against')),
     )
 
+    # Power assignment methods
+    AUTO = 'A'
+    MANUAL = 'M'
+    PREFERENCES = 'P'
+    POWER_ASSIGN_METHODS = (
+        (AUTO, _('Minimising playing the same power')),
+        (MANUAL, _('Manually by TD or at the board')),
+        (PREFERENCES, _('Using player preferences and ranking')),
+    )
+
     name = models.CharField(max_length=60)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -338,7 +338,7 @@ class Tournament(models.Model):
         Returns True is power_assignment is PREFERENCES.
         Intended for use in template code.
         """
-        return self.power_assignment == PREFERENCES
+        return self.power_assignment == self.PREFERENCES
 
     def _scores_detail_calculated(self):
         """

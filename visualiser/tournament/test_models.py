@@ -27,7 +27,7 @@ from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import MASK_ALL_NEWS
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SPRING, UNRANKED, PREFERENCES
+from tournament.models import SPRING, UNRANKED
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -359,7 +359,7 @@ class TournamentModelTests(TestCase):
                        end_date=timezone.now(),
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       power_assignment=PREFERENCES)
+                       power_assignment=Tournament.PREFERENCES)
         self.assertEqual(t.powers_assigned_from_prefs(), True)
 
     # Tournament.calculated_scores()

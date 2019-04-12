@@ -24,7 +24,7 @@ from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer
 from tournament.models import G_SCORING_SYSTEMS, R_SCORING_SYSTEMS
-from tournament.models import T_SCORING_SYSTEMS, PREFERENCES
+from tournament.models import T_SCORING_SYSTEMS
 from tournament.players import Player
 
 TD_EMAIL = 'td@example.com'
@@ -233,7 +233,7 @@ class EmailTests(TestCase):
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=Tournament.SECRET,
-                                           power_assignment=PREFERENCES)
+                                           power_assignment=Tournament.PREFERENCES)
 
         # One TournamentPlayer in t2
         p23 = Player.objects.create(first_name='Shirley',
