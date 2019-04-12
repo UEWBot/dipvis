@@ -342,7 +342,7 @@ def round_scores(request, tournament_id):
     data = []
     # Go through each player in the Tournament
     for tp in t.tournamentplayer_set.all():
-        current = {'tp_id': tp, 'player': tp.player, 'overall_score': tp.score}
+        current = {'tp': tp, 'player': tp.player, 'overall_score': tp.score}
         for rp in tp.roundplayers():
             r = rp.the_round
             round_num = r.number()
@@ -357,7 +357,7 @@ def round_scores(request, tournament_id):
                                       initial=data)
     if formset.is_valid():
         for form in formset:
-            tp = form.cleaned_data['tp_id']
+            tp = form.cleaned_data['tp']
             for r_name, value in form.cleaned_data.items():
                 # Skip if no score was entered
                 if not value:

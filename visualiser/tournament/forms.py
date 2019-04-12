@@ -536,8 +536,8 @@ class TournamentPlayerChoiceField(forms.ModelChoiceField):
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
-    tp_id = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
-                                        widget=forms.HiddenInput())
+    tp = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
+                                     widget=forms.HiddenInput())
     player = forms.CharField(max_length=20, disabled=True)
 
     def __init__(self, *args, **kwargs):
@@ -547,7 +547,7 @@ class PlayerRoundScoreForm(forms.Form):
         self.this_round = kwargs.pop('this_round')
         super().__init__(*args, **kwargs)
 
-        self.fields['tp_id'].queryset = self.tournament.tournamentplayer_set.all()
+        self.fields['tp'].queryset = self.tournament.tournamentplayer_set.all()
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.rounds):
