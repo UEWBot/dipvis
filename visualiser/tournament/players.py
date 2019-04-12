@@ -59,16 +59,6 @@ GAME_RESULT = (
     (DRAW_7, _('7-way draw')),
     (LOSS, _('Loss')),
 )
-# Mapping from an integer to the corresponding WIN or DRAW_n constant
-TO_GAME_RESULT = {
-    1: WIN,
-    2: DRAW_2,
-    3: DRAW_3,
-    4: DRAW_4,
-    5: DRAW_5,
-    6: DRAW_6,
-    7: DRAW_7,
-}
 
 # Mask values to choose which background strings to include
 MASK_TITLES = 1<<0
