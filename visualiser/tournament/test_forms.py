@@ -1035,6 +1035,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.fields), 0)
 
 class SCOwnerFormTest(TestCase):
+    fixtures = ['game_sets.json']
 
     def test_field_count(self):
         form = SCOwnerForm()
