@@ -51,20 +51,6 @@ SEASONS = (
     (SPRING, _('spring')),
     (FALL, _('fall')),
 )
-MOVEMENT = 'M'
-RETREATS = 'R'
-# Use X for adjustments to simplify sorting
-ADJUSTMENTS = 'X'
-PHASES = (
-    (MOVEMENT, _('movement')),
-    (RETREATS, _('retreats')),
-    (ADJUSTMENTS, _('adjustments')),
-)
-PHASE_STR = {
-    MOVEMENT: 'M',
-    RETREATS: 'R',
-    ADJUSTMENTS: 'A',
-}
 
 # Draw secrecy levels
 SECRET = 'S'
@@ -1428,7 +1414,7 @@ class Game(models.Model):
         i = GameImage.objects.get_or_create(game=self,
                                             year=FIRST_YEAR,
                                             season=SPRING,
-                                            phase=MOVEMENT,
+                                            phase=GameImage.MOVEMENT,
                                             image=self.the_set.initial_image)[0]
         i.save()
 
@@ -1875,6 +1861,23 @@ class GameImage(models.Model):
     An image depicting a Game at a certain point.
     The year, season, phase together indicate the phase that is about to played.
     """
+    MOVEMENT = 'M'
+    RETREATS = 'R'
+    # Use X for adjustments to simplify sorting
+    ADJUSTMENTS = 'X'
+
+    PHASES = (
+        (MOVEMENT, _('movement')),
+        (RETREATS, _('retreats')),
+        (ADJUSTMENTS, _('adjustments')),
+    )
+    # Map a PHASE to its human-readable form
+    PHASE_STR = {
+        MOVEMENT: 'M',
+        RETREATS: 'R',
+        ADJUSTMENTS: 'A',
+    }
+
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
@@ -1890,14 +1893,14 @@ class GameImage(models.Model):
         Short string version of season/year/phase
         e.g. 'S1901M'
         """
-        return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
+        return u'%s%d%s' % (self.season, self.year, self.PHASE_STR[self.phase])
 
     def clean(self):
         """
         Validate the object.
         The phase attribute can only be set to ADJUSTMENTS when the season attribute is set to FALL.
         """
-        if self.season == SPRING and self.phase == ADJUSTMENTS:
+        if self.season == SPRING and self.phase == self.ADJUSTMENTS:
             raise ValidationError(_(u'No adjustment phase in spring'))
 
     def get_absolute_url(self):

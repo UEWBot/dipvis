@@ -27,7 +27,7 @@ from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import MASK_ALL_NEWS
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SECRET, COUNTS, SPRING, ADJUSTMENTS, UNRANKED, PREFERENCES
+from tournament.models import SECRET, COUNTS, SPRING, UNRANKED, PREFERENCES
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -2414,7 +2414,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
         gi1 = GameImage.objects.get(game=g)
-        gi2 = GameImage(game=g, year=1902, season=SPRING, phase=ADJUSTMENTS, image=gi1.image)
+        gi2 = GameImage(game=g, year=1902, season=SPRING, phase=GameImage.ADJUSTMENTS, image=gi1.image)
         self.assertRaises(ValidationError, gi2.clean)
 
     # GameImage.get_absolute_url()
