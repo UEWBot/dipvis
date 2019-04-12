@@ -514,16 +514,19 @@ class BasePlayerRoundFormset(BaseFormSet):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
+        # Cache parameters we'll pass to each form's constructor
+        self.rounds = self.tournament.round_set.count()
+        # current_round() could return None, if all rounds are over
+        cr = self.tournament.current_round()
+        if cr:
+            self.this_round = cr.number()
+        else:
+            self.this_round = -1
 
     def _construct_form(self, index, **kwargs):
         # Pass the special args down to the form itself
-        kwargs['rounds'] = self.tournament.round_set.count()
-        # current_round() could return None, if all rounds are over
-        cr = kwargs['this_round'] = self.tournament.current_round()
-        if cr:
-            kwargs['this_round'] = cr.number()
-        else:
-            kwargs['this_round'] = -1
+        kwargs['rounds'] = self.rounds
+        kwargs['this_round'] = self.this_round
         return super()._construct_form(index, **kwargs)
 
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
@@ -575,17 +578,20 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
+        # Cache values we'll pass to each form's constructor
+        self.rounds = self.tournament.round_set.count()
+        # current_round() could return None, if all rounds are over
+        cr = self.tournament.current_round()
+        if cr:
+            self.this_round = cr.number()
+        else:
+            self.this_round = -1
 
     def _construct_form(self, index, **kwargs):
         # Pass the three special args down to the form itself
         kwargs['tournament'] = self.tournament
-        kwargs['rounds'] = self.tournament.round_set.count()
-        # current_round() could return None, if all rounds are over
-        cr = kwargs['this_round'] = self.tournament.current_round()
-        if cr:
-            kwargs['this_round'] = cr.number()
-        else:
-            kwargs['this_round'] = -1
+        kwargs['rounds'] = self.rounds
+        kwargs['this_round'] = self.this_round
         return super()._construct_form(index, **kwargs)
 
 class GameImageForm(ModelForm):
