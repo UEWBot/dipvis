@@ -1468,8 +1468,8 @@ class BasePlayerRoundFormsetTest(TestCase):
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         cls.p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
         Player.objects.create(first_name='Ethelred', last_name='Fishfinger')
-        tp1 = TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t1)
-        tp2 = TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t1)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t1)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r1)
 
         cls.PlayerRoundFormset = formset_factory(PlayerRoundForm,
