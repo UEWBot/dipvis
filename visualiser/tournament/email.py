@@ -38,7 +38,7 @@ def send_board_call(the_round):
         game_text = 'Board %(game)s:\n' % {'game': g.name}
         recipients = []
         for gp in g.gameplayer_set.order_by('power'):
-            game_text += '%(power)s: %(player)s\n' % {'power': gp.power,
+            game_text += '%(power)s: %(player)s\n' % {'power': gp.power or 'Power TBD',
                                                       'player': gp.player}
             if gp.player.email:
                 recipients.append(gp.player.email)

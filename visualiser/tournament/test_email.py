@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta
+
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.utils import timezone
@@ -46,6 +48,7 @@ class EmailTests(TestCase):
         turkey = GreatPower.objects.get(abbreviation='T')
 
         # We need a Round in a Tournament, with 3 Games
+        # Second Round is just to test Games with powers assigned at the board
 
         s = GameSet.objects.get(name='Avalon Hill')
 
@@ -58,22 +61,32 @@ class EmailTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=Tournament.SECRET)
 
-        r = Round.objects.create(tournament=cls.t1,
+        r1 = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
                                  start=cls.t1.start_date)
 
+        r2 = Round.objects.create(tournament=cls.t1,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=cls.t1.start_date + timedelta(hours=8))
+
         g1 = Game.objects.create(name='g1',
-                                 started_at=r.start,
-                                 the_round=r,
+                                 started_at=r1.start,
+                                 the_round=r1,
                                  the_set=s)
         g2 = Game.objects.create(name='g2',
-                                 started_at=r.start,
-                                 the_round=r,
+                                 started_at=r1.start,
+                                 the_round=r1,
                                  the_set=s)
         g3 = Game.objects.create(name='g3',
-                                 started_at=r.start,
-                                 the_round=r,
+                                 started_at=r1.start,
+                                 the_round=r1,
+                                 the_set=s)
+
+        g4 = Game.objects.create(name='g4',
+                                 started_at=r2.start,
+                                 the_round=r2,
                                  the_set=s)
 
         # A whole lot of players
@@ -81,77 +94,91 @@ class EmailTests(TestCase):
                                    last_name='Brown',
                                    email='a.brown@example.com')
         TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p1, the_round=r)
+        RoundPlayer.objects.create(player=p1, the_round=r1)
+        RoundPlayer.objects.create(player=p1, the_round=r2)
         GamePlayer.objects.create(player=p1, game=g1, power=austria)
+        GamePlayer.objects.create(player=p1, game=g4)
 
         p2 = Player.objects.create(first_name='Charles',
                                    last_name='Dog',
                                    email='c.dog@example.com')
         TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p2, the_round=r)
+        RoundPlayer.objects.create(player=p2, the_round=r1)
+        RoundPlayer.objects.create(player=p2, the_round=r2)
         GamePlayer.objects.create(player=p2, game=g1, power=england)
+        GamePlayer.objects.create(player=p2, game=g4)
 
         p3 = Player.objects.create(first_name='Ethel',
                                    last_name='Frankenstein',
                                    email='e.frankenstein@example.com')
         TournamentPlayer.objects.create(player=p3, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p3, the_round=r)
+        RoundPlayer.objects.create(player=p3, the_round=r1)
+        RoundPlayer.objects.create(player=p3, the_round=r2)
         GamePlayer.objects.create(player=p3, game=g1, power=france)
+        GamePlayer.objects.create(player=p3, game=g4)
 
         p4 = Player.objects.create(first_name='George',
                                    last_name='Hotel',
                                    email='g.hotel@example.com')
         TournamentPlayer.objects.create(player=p4, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p4, the_round=r)
+        RoundPlayer.objects.create(player=p4, the_round=r1)
+        RoundPlayer.objects.create(player=p4, the_round=r2)
         GamePlayer.objects.create(player=p4, game=g1, power=germany)
+        GamePlayer.objects.create(player=p4, game=g4)
 
         p5 = Player.objects.create(first_name='Iris',
                                    last_name='Jackson',
                                    email='i.jackson@example.com')
         TournamentPlayer.objects.create(player=p5, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p5, the_round=r)
+        RoundPlayer.objects.create(player=p5, the_round=r1)
+        RoundPlayer.objects.create(player=p5, the_round=r2)
         GamePlayer.objects.create(player=p5, game=g1, power=italy)
+        GamePlayer.objects.create(player=p5, game=g4)
 
         # This one in Game 1 has no email address
         cls.p6 = Player.objects.create(first_name='Kevin',
                                        last_name='Lame')
         TournamentPlayer.objects.create(player=cls.p6, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r1)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r2)
         GamePlayer.objects.create(player=cls.p6, game=g1, power=russia)
+        GamePlayer.objects.create(player=cls.p6, game=g4)
 
         p7 = Player.objects.create(first_name='Michelle',
                                    last_name='Nobody',
                                    email='m.nobody@example.com')
         TournamentPlayer.objects.create(player=p7, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p7, the_round=r)
+        RoundPlayer.objects.create(player=p7, the_round=r1)
+        RoundPlayer.objects.create(player=p7, the_round=r2)
         GamePlayer.objects.create(player=p7, game=g2, power=turkey)
+        GamePlayer.objects.create(player=p7, game=g4)
 
         p8 = Player.objects.create(first_name='Owen',
                                    last_name='Pennies',
                                    email='o.pennies@example.com')
         TournamentPlayer.objects.create(player=p8, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p8, the_round=r)
+        RoundPlayer.objects.create(player=p8, the_round=r1)
         GamePlayer.objects.create(player=p8, game=g2, power=russia)
 
         p9 = Player.objects.create(first_name='Queenie',
                                    last_name='Radiation',
                                    email='q.radiation@example.com')
         TournamentPlayer.objects.create(player=p9, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p9, the_round=r)
+        RoundPlayer.objects.create(player=p9, the_round=r1)
         GamePlayer.objects.create(player=p9, game=g2, power=italy)
 
         p10 = Player.objects.create(first_name='Sebastian',
                                     last_name='Twinkie',
                                     email='s.twinkie@example.com')
         TournamentPlayer.objects.create(player=p10, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p10, the_round=r)
+        RoundPlayer.objects.create(player=p10, the_round=r1)
         GamePlayer.objects.create(player=p10, game=g2, power=germany)
 
         p11 = Player.objects.create(first_name='Ursula',
                                     last_name='Valentine',
                                     email='u.valentine@example.com')
         TournamentPlayer.objects.create(player=p11, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p11, the_round=r)
+        RoundPlayer.objects.create(player=p11, the_round=r1)
         GamePlayer.objects.create(player=p11, game=g2, power=france)
 
         # This one is in the Tournament and the Round, but not any Games
@@ -159,14 +186,14 @@ class EmailTests(TestCase):
                                         last_name='Xavier',
                                         email='w.xavier@example.com')
         TournamentPlayer.objects.create(player=cls.p12, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p12, the_round=r)
+        RoundPlayer.objects.create(player=cls.p12, the_round=r1)
 
         # This one is playing in two Games and has an email address
         cls.p13 = Player.objects.create(first_name='Yugo',
                                         last_name='Zombie',
                                         email='y.zombie@example.com')
         TournamentPlayer.objects.create(player=cls.p13, tournament=cls.t1)
-        RoundPlayer.objects.create(player=cls.p13, the_round=r)
+        RoundPlayer.objects.create(player=cls.p13, the_round=r1)
         GamePlayer.objects.create(player=cls.p13, game=g1, power=turkey)
         GamePlayer.objects.create(player=cls.p13, game=g2, power=austria)
 
@@ -174,7 +201,7 @@ class EmailTests(TestCase):
         p14 = Player.objects.create(first_name='Arthur',
                                     last_name='Bottom')
         TournamentPlayer.objects.create(player=p14, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p14, the_round=r)
+        RoundPlayer.objects.create(player=p14, the_round=r1)
         GamePlayer.objects.create(player=p14, game=g2, power=england)
         GamePlayer.objects.create(player=p14, game=g3, power=austria)
 
@@ -193,37 +220,37 @@ class EmailTests(TestCase):
         p17 = Player.objects.create(first_name='Geraldine',
                                     last_name='Hogwash')
         TournamentPlayer.objects.create(player=p17, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p17, the_round=r)
+        RoundPlayer.objects.create(player=p17, the_round=r1)
         GamePlayer.objects.create(player=p17, game=g3, power=austria)
 
         p18 = Player.objects.create(first_name='Idiot',
                                     last_name='Jalopy')
         TournamentPlayer.objects.create(player=p18, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p18, the_round=r)
+        RoundPlayer.objects.create(player=p18, the_round=r1)
         GamePlayer.objects.create(player=p18, game=g3, power=austria)
 
         p19 = Player.objects.create(first_name='Keith',
                                     last_name='Llama')
         TournamentPlayer.objects.create(player=p19, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p19, the_round=r)
+        RoundPlayer.objects.create(player=p19, the_round=r1)
         GamePlayer.objects.create(player=p19, game=g3, power=austria)
 
         p20 = Player.objects.create(first_name='Markus',
                                     last_name='Nucleotide')
         TournamentPlayer.objects.create(player=p20, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p20, the_round=r)
+        RoundPlayer.objects.create(player=p20, the_round=r1)
         GamePlayer.objects.create(player=p20, game=g3, power=austria)
 
         p21 = Player.objects.create(first_name='Olivia',
                                     last_name='Petticoat')
         TournamentPlayer.objects.create(player=p21, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p21, the_round=r)
+        RoundPlayer.objects.create(player=p21, the_round=r1)
         GamePlayer.objects.create(player=p21, game=g3, power=austria)
 
         p22 = Player.objects.create(first_name='Quentin',
                                     last_name='Radish')
         TournamentPlayer.objects.create(player=p22, tournament=cls.t1)
-        RoundPlayer.objects.create(player=p22, the_round=r)
+        RoundPlayer.objects.create(player=p22, the_round=r1)
         GamePlayer.objects.create(player=p22, game=g3, power=austria)
 
         # Tournament with preferences
@@ -284,6 +311,15 @@ class EmailTests(TestCase):
             self.assertNotIn(self.p15.email, m.bcc)
             # p12 shouldn't get any email (not in any Game in the Round)
             self.assertNotIn(self.p12.email, m.bcc)
+
+    def test_send_board_call_powers_unassigned(self):
+        # Send the players to the board to pick powers
+        r = Round.objects.last()
+        send_board_call(r)
+        # Just one Game
+        self.assertEqual(len(mail.outbox), 1)
+        for m in mail.outbox:
+            self.assertIn('Power TBD', m.body)
 
     # TournamentPlayer.save() calls send_prefs_email()
     def test_send_prefs_email_no_prefs_new(self):
