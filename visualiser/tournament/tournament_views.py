@@ -39,7 +39,6 @@ from tournament.forms import PrefsForm
 
 from tournament.diplomacy import GameSet
 from tournament.models import Tournament, Game
-from tournament.models import UNRANKED
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList
 
@@ -130,7 +129,7 @@ def tournament_scores(request,
     scores.sort(key=lambda row: float(row[0]))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
-        row[0] = row[0].replace('%d' % UNRANKED, 'Unranked')
+        row[0] = row[0].replace('%d' % Tournament.UNRANKED, 'Unranked')
     # Add one final row showing whether each round is ongoing or not
     row = ['', '']
     for r in rds:

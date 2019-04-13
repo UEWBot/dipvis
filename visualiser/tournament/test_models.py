@@ -27,7 +27,7 @@ from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import MASK_ALL_NEWS
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SPRING, UNRANKED
+from tournament.models import SPRING
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -454,7 +454,7 @@ class TournamentModelTests(TestCase):
         # Discard the round scores
         p_and_s = t.positions_and_scores()[0]
         # The unranked player should have a special position
-        self.assertEqual(p_and_s[self.p5][0], UNRANKED)
+        self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
         # As everyone else has the same score, they should all be ranked (joint) first
         for k in p_and_s:
             if k != self.p5:

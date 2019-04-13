@@ -62,9 +62,6 @@ MASK_SC_CHANGES = 1<<5
 MASK_SC_CHANGE_COUNTS = 1<<6
 MASK_ALL_NEWS = (1<<7)-1
 
-# Flag value to use for players who are excluded from the rankings
-UNRANKED = 999999
-
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -295,6 +292,9 @@ class Tournament(models.Model):
         (PREFERENCES, _('Using player preferences and ranking')),
     )
 
+    # Flag value to use for players who are excluded from the rankings
+    UNRANKED = 999999
+
     name = models.CharField(max_length=60)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -399,7 +399,7 @@ class Tournament(models.Model):
         # First, deal with any unranked players
         for tp in self.tournamentplayer_set.filter(unranked=True):
             # Take it out of scores and add it to result
-            result[tp.player] = (UNRANKED, t_scores.pop(tp.player))
+            result[tp.player] = (Tournament.UNRANKED, t_scores.pop(tp.player))
         last_score = None
         for i, (k, v) in enumerate(sorted([(k, v) for k, v in t_scores.items()],
                                           key=itemgetter(1),
