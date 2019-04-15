@@ -1440,10 +1440,12 @@ class PlayerRoundFormTest(TestCase):
         self.assertFalse(form.fields['round_3'].disabled)
 
 class BasePlayerRoundFormsetTest(TestCase):
+    fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
-        # We need two Tournaments, one with TournamentPlayers and Rounds,
+        # We need three Tournaments, one with TournamentPlayers and Rounds,
+        # and one finished,
         # and we need at least one Player who isn't playing the Tournament
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=timezone.now(),
@@ -1471,6 +1473,20 @@ class BasePlayerRoundFormsetTest(TestCase):
         TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t1)
         TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t1)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r1)
+        cls.t3 = Tournament.objects.create(name='t3',
+                                           start_date=timezone.now(),
+                                           end_date=timezone.now(),
+                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           draw_secrecy=Tournament.SECRET)
+        cls.r3 = Round.objects.create(tournament=cls.t3,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=cls.t3.start_date)
+        cls.g = Game.objects.create(name='Test Game',
+                                    the_round=cls.r3,
+                                    the_set=GameSet.objects.first(),
+                                    is_finished=True)
 
         cls.PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                                  formset=BasePlayerRoundFormset)
@@ -1499,6 +1515,19 @@ class BasePlayerRoundFormsetTest(TestCase):
         # Should be fine for a Tournament with no TournamentPlayers
         formset = self.PlayerRoundFormset(self.data, tournament=self.t2)
         self.assertTrue(formset.is_valid())
+
+    def test_tournament_over(self):
+        # Should be fine for a Tournament that is finished
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t3)
+        self.assertTrue(formset.is_valid())
+        # All checkboxes should be disabled
+        for form in formset:
+            with self.subTest(form=form):
+                for field in form.fields:
+                    if field == 'player':
+                        continue
+                    with self.subTest(field=field):
+                        self.assertTrue(form.fields[field].disabled)
 
     def test_duplicate_players(self):
         # Don't allow the same player to be listed more than once

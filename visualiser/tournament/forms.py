@@ -521,7 +521,7 @@ class BasePlayerRoundFormset(BaseFormSet):
         if cr:
             self.this_round = cr.number()
         else:
-            self.this_round = -1
+            self.this_round = self.rounds + 1
 
     def _construct_form(self, index, **kwargs):
         # Pass the special args down to the form itself
