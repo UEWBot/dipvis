@@ -517,17 +517,21 @@ class BasePlayerRoundFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
+        round_num = kwargs.pop('round_num', None)
         super().__init__(*args, **kwargs)
         # Cache parameters we'll pass to each form's constructor
-        self.first_round_num = 1
-        self.last_round_num = self.tournament.round_set.count()
-        # current_round() could return None, if all rounds are over
-        cr = self.tournament.current_round()
-        if cr:
-            self.this_round_num = cr.number()
+        if round_num:
+            self.first_round_num = self.last_round_num = self.this_round_num = round_num
         else:
-            # Use a round number higher than all that exist
-            self.this_round_num = self.last_round_num + 1
+            self.first_round_num = 1
+            self.last_round_num = self.tournament.round_set.count()
+            # current_round() could return None, if all rounds are over
+            cr = self.tournament.current_round()
+            if cr:
+                self.this_round_num = cr.number()
+            else:
+                # Use a round number higher than all that exist
+                self.this_round_num = self.last_round_num + 1
 
     def _construct_form(self, index, **kwargs):
         # Pass the special args down to the form itself

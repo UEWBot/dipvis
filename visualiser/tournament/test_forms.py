@@ -1519,6 +1519,25 @@ class BasePlayerRoundFormsetTest(TestCase):
         formset = self.PlayerRoundFormset(self.data, tournament=self.t1)
         self.assertTrue(formset.is_valid())
 
+    def test_success_single_round(self):
+        # Single round roll call
+        data = self.data.copy()
+        data['form-0-player'] = str(self.p1.pk)
+        data['form-0-round_1'] = 'ok'
+        data['form-1-player'] = str(self.p2.pk)
+        ROUND_NUM = 2
+        formset = self.PlayerRoundFormset(self.data,
+                                          round_num=ROUND_NUM,
+                                          tournament=self.t1)
+        self.assertTrue(formset.is_valid())
+        for form in formset:
+            with self.subTest(form=form):
+                for field in form.fields:
+                    if field == 'player':
+                        continue
+                    # The only checkbox shoudl be for round_num
+                    self.assertEqual(field, 'round_%d' % ROUND_NUM)
+
     def test_no_players(self):
         # Should be fine for a Tournament with no TournamentPlayers
         formset = self.PlayerRoundFormset(self.data, tournament=self.t2)
