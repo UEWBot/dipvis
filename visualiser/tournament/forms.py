@@ -481,12 +481,16 @@ class PlayerRoundForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
+        self.first_round_num = kwargs.pop('first_round_num')
         self.last_round_num = kwargs.pop('last_round_num')
         self.this_round_num = kwargs.pop('this_round_num')
+        # Note that we may get "strange" values passed in
+        # first > last if there are no rounds
+        # this > last if all rounds are finished
         super().__init__(*args, **kwargs)
 
         # Create the right number of round fields, with the right ones read-only
-        for i in range(1, 1 + self.last_round_num):
+        for i in range(self.first_round_num, 1 + self.last_round_num):
             name = 'round_%d' % i
             readonly = (i < self.this_round_num)
             self.fields[name] = forms.BooleanField(required=False, initial=False)
@@ -515,16 +519,19 @@ class BasePlayerRoundFormset(BaseFormSet):
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
         # Cache parameters we'll pass to each form's constructor
+        self.first_round_num = 1
         self.last_round_num = self.tournament.round_set.count()
         # current_round() could return None, if all rounds are over
         cr = self.tournament.current_round()
         if cr:
             self.this_round_num = cr.number()
         else:
+            # Use a round number higher than all that exist
             self.this_round_num = self.last_round_num + 1
 
     def _construct_form(self, index, **kwargs):
         # Pass the special args down to the form itself
+        kwargs['first_round_num'] = self.first_round_num
         kwargs['last_round_num'] = self.last_round_num
         kwargs['this_round_num'] = self.this_round_num
         return super()._construct_form(index, **kwargs)
