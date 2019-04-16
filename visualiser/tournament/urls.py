@@ -28,6 +28,7 @@ round_patterns = [
     url(r'^seed_games/$', round_views.seed_games, name='seed_games'),
     url(r'^game_scores/$', round_views.game_scores, name='game_scores'),
     url(r'^games/$', round_views.game_index, name='game_index'),
+    url(r'^roll_call/$', round_views.roll_call, name='round_roll_call'),
     url(r'^views/$', round_views.round_simple,
         {'template': 'view'}, name='round_views'),
 ]
@@ -116,7 +117,7 @@ tournament_patterns = [
     url(r'^best_countries_refresh/$', tournament_views.tournament_best_countries,
         {'refresh': True}, name='tournament_best_countries_refresh'),
     url(r'^enter_scores/$', tournament_views.round_scores, name='enter_scores'),
-    url(r'^roll_call/$', tournament_views.roll_call, name='roll_call'),
+    url(r'^roll_call/$', round_views.roll_call, name='roll_call'),
     url(r'^current_round/$', tournament_views.tournament_round, name='tournament_round'),
     # TODO Why does this one calls into game_views ?
     url(r'^game_image/$', game_views.add_game_image, name='add_game_image'),

@@ -34,6 +34,9 @@
 {% if user.is_active and tournament.editable %}
 <p>{% trans "Data Entry:" %}</p>
 <ul>
+  {% if perms.tournament.add_roundplayer %}
+    <li><a href="{% url 'round_roll_call' tournament.id round.number %}">{% trans "Roll Call" %}</a> - {% trans "Use this to specify which of the players at the tournament are actually playing in this round." %}</li>
+  {% endif %}
   {% if perms.tournament.create_game %}
     {% if tournament.seed_games %}
       <li><a href="{% url 'get_seven' tournament.id round.number %}">{% trans "Control Seeding" %}</a> - {% trans "Use this to specify players who are sitting out the round or playing multiple games." %}</li>

@@ -24,12 +24,15 @@ from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.utils.translation import ugettext as _
 
 from tournament.forms import BaseGamePlayersFormset
+from tournament.forms import BasePlayerRoundFormset
 from tournament.forms import BasePowerAssignFormset
 from tournament.forms import GamePlayersForm
 from tournament.forms import GameScoreForm
 from tournament.forms import GetSevenPlayersForm
+from tournament.forms import PlayerRoundForm
 from tournament.forms import PowerAssignForm
 
 from tournament.tournament_views import get_modifiable_tournament_or_404
@@ -64,6 +67,119 @@ def round_detail(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/detail.html', context)
+
+@permission_required('tournament.add_roundplayer')
+def roll_call(request, tournament_id, round_num=None):
+    """Provide a form to specify which players are playing each round"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    PlayerRoundFormset = formset_factory(PlayerRoundForm,
+                                         extra=2,
+                                         formset=BasePlayerRoundFormset)
+    if round_num:
+        r = get_round_or_404(t, round_num)
+        round_set = t.round_set.filter(pk=r.pk)
+    else:
+        round_set = t.round_set.all()
+    data = []
+    # Go through each player in the Tournament
+    for tp in t.tournamentplayer_set.all():
+        current = {'player': tp.player}
+        rps = tp.roundplayers()
+        # And each round of the Tournament
+        for r in round_set:
+            # Is this player listed as playing this round ?
+            played = rps.filter(the_round=r).exists()
+            current['round_%d' % r.number()] = played
+        data.append(current)
+    if round_num:
+        formset = PlayerRoundFormset(request.POST or None,
+                                     tournament=t,
+                                     round_num=int(round_num),
+                                     initial=data)
+    else:
+        formset = PlayerRoundFormset(request.POST or None,
+                                     tournament=t,
+                                     initial=data)
+    if formset.is_valid():
+        for form in formset:
+            try:
+                p = form.cleaned_data['player']
+            except KeyError:
+                # This must be one of the extra forms, still empty
+                continue
+            # Ensure that this Player is in the Tournament
+            i, created = TournamentPlayer.objects.get_or_create(player=p,
+                                                                tournament=t)
+            try:
+                i.full_clean()
+            except ValidationError as e:
+                form.add_error(form.fields['player'], e)
+                i.delete()
+                return render(request,
+                              'tournaments/round_players.html',
+                              {'title': _('Roll Call'),
+                               'tournament': t,
+                               'post_url': reverse('roll_call', args=(tournament_id,)),
+                               'formset' : formset})
+            if created:
+                i.save()
+            for r_name, value in form.cleaned_data.items():
+                if r_name == 'player':
+                    # This column is just for the user
+                    continue
+                # Extract the round number from the field name
+                i = int(r_name[6:])
+                # Find that Round
+                r = t.round_numbered(i)
+                # Ignore non-bool fields and ones that aren't True
+                if value is True:
+                    # Ensure that we have a corresponding RoundPlayer
+                    i, created = RoundPlayer.objects.get_or_create(player=p,
+                                                                   the_round=r)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        form.add_error(None, e)
+                        i.delete()
+                        return render(request,
+                                      'tournaments/round_players.html',
+                                      {'title': _('Roll Call'),
+                                       'tournament': t,
+                                       'post_url': reverse('roll_call', args=(tournament_id,)),
+                                       'formset' : formset})
+                    if created:
+                        i.save()
+                else:
+                    # delete any corresponding RoundPlayer
+                    # This could be a player who was previously checked-off in error
+                    RoundPlayer.objects.filter(player=p,
+                                               the_round=r).delete()
+        r = t.current_round()
+        # If we're doing a roll call for a single round,
+        # we only want to seed boards if it's the current round
+        if not round_num or (r.number() == round_num):
+            if t.seed_games:
+                if (r.roundplayer_set.count() % 7) == 0:
+                    # We have an exact multiple of 7 players, so go straight to seeding
+                    return HttpResponseRedirect(reverse('seed_games',
+                                                        args=(tournament_id,
+                                                              r.number())))
+                # We need players to sit out or play multiple games
+                return HttpResponseRedirect(reverse('get_seven',
+                                                    args=(tournament_id,
+                                                          r.number())))
+            else:
+                # Next job is almost certainly to create the actual games
+                return HttpResponseRedirect(reverse('create_games',
+                                                    args=(tournament_id,
+                                                          r.number())))
+
+    return render(request,
+                  'tournaments/round_players.html',
+                  {'title': _('Roll Call'),
+                   'tournament': t,
+                   'post_url': reverse('roll_call', args=(tournament_id,)),
+                   'formset' : formset})
 
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
