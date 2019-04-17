@@ -24,7 +24,7 @@ from django.http import HttpResponse
 
 from tournament.diplomacy import GreatPower
 from tournament.diplomacy import FIRST_YEAR
-from tournament.models import Game
+from tournament.models import Game, Tournament
 from tournament.models import GamePlayer
 from tournament.tournament_views import get_visible_tournament_or_404
 

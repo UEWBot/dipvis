@@ -1238,7 +1238,7 @@ class Game(models.Model):
                     incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                                 'power': _(power.abbreviation)})
                 incl_str = ', '.join(incl)
-                if self.the_round.tournament.draw_secrecy == COUNTS:
+                if self.the_round.tournament.draw_secrecy == Tournament.COUNTS:
                     count_str = _(', %(for)d for, %(against)d against' % {'for': d.votes_in_favour,
                                                                           'against': d.votes_against()})
                 else:
