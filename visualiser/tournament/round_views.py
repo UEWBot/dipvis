@@ -42,7 +42,7 @@ from tournament.diplomacy import GreatPower, GameSet
 from tournament.email import send_board_call
 from tournament.game_seeder import GameSeeder
 from tournament.models import Tournament, Round, Game
-from tournament.models import GamePlayer
+from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 
 # Round views
 
