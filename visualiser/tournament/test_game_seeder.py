@@ -37,10 +37,8 @@ class GameSeederSetupTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        super().setUpClass()
         cls.powers = ['1', '2', '3', '4', '5', '6', '7']
-
-    def tearDown(self):
-        pass
 
     # add_player()
     def test_add_player_twice(self):
