@@ -527,7 +527,10 @@ class Tournament(models.Model):
                                       'score': gp.score})
         else:
             # which rounds have been played ?
-            played_rounds = self.round_set.filter(is_finished=True).count()
+            played_rounds = 0
+            for r in self.round_set.all():
+                if r.is_finished():
+                    played_rounds += 1
             if played_rounds == 0:
                 results.append(_(u'Tournament has yet to start.'))
             else:
