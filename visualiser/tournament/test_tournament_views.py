@@ -45,6 +45,10 @@ class TournamentViewTests(TestCase):
                                                  tournament=cls.t,
                                                  uuid_str=str(uuid.uuid4()))
 
+    def test_index(self):
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+
     def test_detail(self):
         response = self.client.get(reverse('tournament_detail', args=(self.t.pk,)))
         self.assertEqual(response.status_code, 200)
