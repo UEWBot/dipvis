@@ -65,14 +65,6 @@ def game_simple(request, tournament_id, game_name, template):
     context = {'tournament': t, 'game': g}
     return render(request, 'games/%s.html' % template, context)
 
-# TODO Replace with return game_simple(request, tournament_id, game_name, 'detail') ?
-def game_detail(request, tournament_id, game_name):
-    """Display an overview of the game"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
-    g = get_game_or_404(t, game_name)
-    context = {'tournament': t, 'game': g}
-    return render(request, 'games/detail.html', context)
-
 def game_sc_owners(request,
                    tournament_id,
                    game_name,

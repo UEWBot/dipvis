@@ -33,7 +33,8 @@ round_patterns = [
 ]
 
 game_patterns = [
-    url(r'^$', game_views.game_detail, name='game_detail'),
+    url(r'^$', game_views.game_simple,
+        {'template': 'detail'}, name='game_detail'),
     url(r'^sc_chart/$', game_views.game_sc_chart, name='game_sc_chart'),
     url(r'^sc_chart_refresh/$', game_views.game_sc_chart,
         {'refresh': True}, name='game_sc_chart_refresh'),
