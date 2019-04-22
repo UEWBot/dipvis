@@ -60,14 +60,6 @@ def round_simple(request, tournament_id, round_num, template):
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/%s.html' % template, context)
 
-# TODO Replace with return round_simple(request, tournament_id, round_num, 'detail') ?
-def round_detail(request, tournament_id, round_num):
-    """Display the details of a round"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
-    r = get_round_or_404(t, round_num)
-    context = {'tournament': t, 'round': r}
-    return render(request, 'rounds/detail.html', context)
-
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id, round_num=None):
     """Provide a form to specify which players are playing each round"""
