@@ -104,6 +104,31 @@ class TournamentViewTests(TestCase):
     def test_index(self):
         response = self.client.get(reverse('index'))
         self.assertEqual(response.status_code, 200)
+        # Check that we get the right tournaments listed
+        self.assertIn(b't1', response.content) # Published
+        self.assertNotIn(b't2', response.content) # Unpublished
+        self.assertNotIn(b't3', response.content) # Unpublished
+        self.assertIn(b't4', response.content) # Published
+
+    def test_index_superuser(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        # Check that we get the right tournaments listed
+        self.assertIn(b't1', response.content) # Published
+        self.assertIn(b't2', response.content) # Unpublished
+        self.assertIn(b't3', response.content) # Unpublished
+        self.assertIn(b't4', response.content) # Published
+
+    def test_index_manager(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('index'))
+        self.assertEqual(response.status_code, 200)
+        # Check that we get the right tournaments listed
+        self.assertIn(b't1', response.content) # Published
+        self.assertIn(b't2', response.content) # Unpublished, manager
+        self.assertNotIn(b't3', response.content) # Unpublished
+        self.assertIn(b't4', response.content) # Published
 
     def test_detail_invalid_tournament(self):
         response = self.client.get(reverse('tournament_detail', args=(self.INVALID_T_PK,)))
@@ -129,7 +154,7 @@ class TournamentViewTests(TestCase):
     def test_detail_superuser(self):
         # A superuser can see any tournament
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('tournament_detail', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_detail', args=(self.t3.pk,)))
         self.assertEqual(response.status_code, 200)
 
     def test_detail_manager(self):
