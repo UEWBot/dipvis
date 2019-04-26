@@ -489,7 +489,7 @@ class Tournament(models.Model):
                                % {'r_num': current_round.number(),
                                   'rounds': self.round_set.count()})
             else:
-                results.append(_(u'Round %(r_num)d of %(rounds)d will start at %(time)s.')
+                results.append(_(u'Round %(r_num)d of %(rounds)d will start at %(date)s.')
                                % {'r_num': current_round.number(),
                                   'rounds': self.round_set.count(),
                                   'date': str(current_round.start)})

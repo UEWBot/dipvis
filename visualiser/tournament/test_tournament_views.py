@@ -21,9 +21,12 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, TournamentPlayer
+from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import G_SCORING_SYSTEMS
 from tournament.players import Player
 
 class TournamentViewTests(TestCase):
@@ -31,6 +34,15 @@ class TournamentViewTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
         # A regular user with no special permissions or ownership
         cls.USERNAME1 = 'regular'
         cls.PWORD1 = 'CleverPassword'
@@ -55,8 +67,31 @@ class TournamentViewTests(TestCase):
         u3.user_permissions.add(perm)
         u3.save()
 
+        # Some Players
+        p1 = Player.objects.create(first_name='Angela',
+                                   last_name='Ampersand')
+        p2 = Player.objects.create(first_name='Bobby',
+                                   last_name='Bandersnatch')
+        p3 = Player.objects.create(first_name='Cassandra',
+                                   last_name='Cucumber')
+        p4 = Player.objects.create(first_name='Derek',
+                                   last_name='Dromedary')
+        p5 = Player.objects.create(first_name='Ethel',
+                                   last_name='Elephant')
+        p6 = Player.objects.create(first_name='Frank',
+                                   last_name='Frankfurter')
+        p7 = Player.objects.create(first_name='Georgette',
+                                   last_name='Grape')
+        p8 = Player.objects.create(first_name='Harry',
+                                   last_name='Heffalump')
+        p9 = Player.objects.create(first_name='Iris',
+                                   last_name='Ignoramus')
+        p10 = Player.objects.create(first_name='Jake',
+                                    last_name='Jalopy')
+
         now = timezone.now()
         # Published Tournament, so it's visible to all
+        # Ongoing, one round
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=now,
                                            end_date=now,
@@ -64,11 +99,16 @@ class TournamentViewTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=Tournament.SECRET,
                                            is_published=True)
-        p = Player.objects.create(first_name='Angela',
-                                  last_name='Ampersand')
-        cls.tp = TournamentPlayer.objects.create(player=p,
+        Round.objects.create(tournament=cls.t1,
+                             start=cls.t1.start_date,
+                             scoring_system=G_SCORING_SYSTEMS[0].name,
+                             dias=True)
+        # Pre-generate a UUID for player prefs
+        cls.tp = TournamentPlayer.objects.create(player=p1,
                                                  tournament=cls.t1,
                                                  uuid_str=str(uuid.uuid4()))
+        tp = TournamentPlayer.objects.create(player=p3,
+                                             tournament=cls.t1)
 
         # Unpublished Tournament, with a manager (u3)
         cls.t2 = Tournament.objects.create(name='t2',
@@ -90,6 +130,7 @@ class TournamentViewTests(TestCase):
                                            is_published=False)
 
         # Published Tournament, without a manager, but not editable
+        # One round, tournament complete
         cls.t4 = Tournament.objects.create(name='t4',
                                            start_date=now,
                                            end_date=now,
@@ -98,6 +139,63 @@ class TournamentViewTests(TestCase):
                                            draw_secrecy=Tournament.SECRET,
                                            is_published=True,
                                            editable=False)
+        cls.r1 = Round.objects.create(tournament=cls.t4,
+                                      start=cls.t4.start_date,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True)
+        g1 = Game.objects.create(name='Game1',
+                                 the_round=cls.r1,
+                                 started_at=cls.r1.start,
+                                 the_set=GameSet.objects.first(),
+                                 is_finished=True)
+        g2 = Game.objects.create(name='Game2',
+                                 the_round=cls.r1,
+                                 started_at=cls.r1.start,
+                                 the_set=GameSet.objects.first(),
+                                 is_finished=True)
+        tp = TournamentPlayer.objects.create(player=p1,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p3,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p4,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p5,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p6,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p7,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p8,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p9,
+                                             tournament=cls.t4)
+        tp = TournamentPlayer.objects.create(player=p10,
+                                             tournament=cls.t4)
+        RoundPlayer.objects.create(player=p1, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p3, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p4, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p5, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p6, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p7, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p8, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p9, the_round=cls.r1)
+        RoundPlayer.objects.create(player=p10, the_round=cls.r1)
+        GamePlayer.objects.create(player=p1, game=g1, power=cls.austria)
+        GamePlayer.objects.create(player=p3, game=g1, power=cls.england)
+        GamePlayer.objects.create(player=p4, game=g1, power=cls.france)
+        GamePlayer.objects.create(player=p5, game=g1, power=cls.germany)
+        GamePlayer.objects.create(player=p6, game=g1, power=cls.italy)
+        GamePlayer.objects.create(player=p7, game=g1, power=cls.russia)
+        GamePlayer.objects.create(player=p8, game=g1, power=cls.turkey)
+        GamePlayer.objects.create(player=p10, game=g2, power=cls.austria)
+        GamePlayer.objects.create(player=p9, game=g2, power=cls.england)
+        GamePlayer.objects.create(player=p8, game=g2, power=cls.france)
+        GamePlayer.objects.create(player=p7, game=g2, power=cls.germany)
+        GamePlayer.objects.create(player=p6, game=g2, power=cls.italy)
+        GamePlayer.objects.create(player=p5, game=g2, power=cls.russia)
+        GamePlayer.objects.create(player=p4, game=g2, power=cls.turkey)
+        # TODO Add CentreCounts - one game solo'd, a power on 1 SC, a power eliminated
+
         # Hopefully this isn't the pk for any Tournament
         cls.INVALID_T_PK = 99999
 
@@ -190,34 +288,47 @@ class TournamentViewTests(TestCase):
     def test_overview(self):
         response = self.client.get(reverse('tournament_overview', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_overview2(self):
         response = self.client.get(reverse('tournament_overview_2', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_overview3(self):
         response = self.client.get(reverse('tournament_overview_3', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_scores(self):
+        # Scores page for an in-progress Tournament
         response = self.client.get(reverse('tournament_scores', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Current Scores', response.content)
+
+    def test_scores_completed(self):
+        # Scores page for a completed Tournament
+        response = self.client.get(reverse('tournament_scores', args=(self.t4.pk,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Final Scores', response.content)
 
     def test_scores_refresh(self):
         response = self.client.get(reverse('tournament_scores_refresh', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_game_results(self):
-        response = self.client.get(reverse('tournament_game_results', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_game_results', args=(self.t4.pk,)))
         self.assertEqual(response.status_code, 200)
 
     def test_best_countries(self):
-        response = self.client.get(reverse('tournament_best_countries', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_best_countries', args=(self.t4.pk,)))
         self.assertEqual(response.status_code, 200)
 
     def test_best_countries_refresh(self):
         response = self.client.get(reverse('tournament_best_countries_refresh', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_enter_scores_not_logged_in(self):
         response = self.client.get(reverse('enter_scores', args=(self.t1.pk,)))
@@ -261,6 +372,11 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_round', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
 
+    def test_current_round_completed(self):
+        # "Current round" for a tournament that has ended
+        response = self.client.get(reverse('tournament_round', args=(self.t4.pk,)))
+        self.assertEqual(response.status_code, 200)
+
     def test_game_image_not_logged_in(self):
         response = self.client.get(reverse('add_game_image', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 302)
@@ -272,6 +388,7 @@ class TournamentViewTests(TestCase):
     def test_news_ticker(self):
         response = self.client.get(reverse('tournament_news_ticker', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_background(self):
         response = self.client.get(reverse('tournament_background', args=(self.t1.pk,)))
@@ -280,10 +397,12 @@ class TournamentViewTests(TestCase):
     def test_ticker(self):
         response = self.client.get(reverse('tournament_ticker', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_background_ticker(self):
         response = self.client.get(reverse('tournament_background_ticker', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_rounds(self):
         response = self.client.get(reverse('round_index', args=(self.t1.pk,)))
