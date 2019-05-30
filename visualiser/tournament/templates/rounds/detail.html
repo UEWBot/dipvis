@@ -44,7 +44,6 @@
   {% endif %}
   {% if perms.tournament.create_game %}
     {% if tournament.seed_games %}
-      <li><a href="{% url 'get_seven' tournament.id round.number %}">{% trans "Control Seeding" %}</a> - {% trans "Use this to specify players who are sitting out the round or playing multiple games." %}</li>
       <li><a href="{% url 'seed_games' tournament.id round.number %}">{% trans "Seed Games" %}</a> - {% trans "Use this to get the software to assign players to games." %}
       {% if round.game_set.count %}
         {% blocktrans with count=round.game_set.count %}<b>Warning!</b> Clicking this link will permanently delete the existing {{ count }} games!{% endblocktrans %}</li>

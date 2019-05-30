@@ -20,6 +20,7 @@ Round Views for the Diplomacy Tournament Visualiser.
 
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
+from django.db.models import Sum
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
@@ -151,13 +152,8 @@ def roll_call(request, tournament_id, round_num=None):
         # we only want to seed boards if it's the current round
         if not round_num or (r.number() == round_num):
             if t.seed_games:
-                if (r.roundplayer_set.count() % 7) == 0:
-                    # We have an exact multiple of 7 players, so go straight to seeding
-                    return HttpResponseRedirect(reverse('seed_games',
-                                                        args=(tournament_id,
-                                                              r.number())))
-                # We need players to sit out or play multiple games
-                return HttpResponseRedirect(reverse('get_seven',
+                # Seed the games. Note that this will redirect to 'get_seven" if necessary
+                return HttpResponseRedirect(reverse('seed_games',
                                                     args=(tournament_id,
                                                           r.number())))
             else:
@@ -346,6 +342,14 @@ def seed_games(request, tournament_id, round_num):
             return HttpResponseRedirect(reverse('game_index',
                                                 args=(tournament_id, round_num)))
     else:
+        # Check for a multiple of seven players,
+        # allowing for players sitting out or playing multiple games
+        player_count = r.roundplayer_set.aggregate(Sum('game_count'))['game_count__sum']
+        if (player_count % 7) != 0:
+            # We need players to sit out or play multiple games
+            return HttpResponseRedirect(reverse('get_seven',
+                                                args=(tournament_id,
+                                                      r.number())))
         # Delete any existing Games and GamePlayers for this round
         r.game_set.all().delete()
         # TODO It's a bit hokey to have a fixed default GameSet here
