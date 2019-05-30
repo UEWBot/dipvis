@@ -105,9 +105,9 @@ class TournamentViewTests(TestCase):
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
-        cls.tp = TournamentPlayer.objects.create(player=p1,
-                                                 tournament=cls.t1,
-                                                 uuid_str=str(uuid.uuid4()))
+        cls.tp11 = TournamentPlayer.objects.create(player=p1,
+                                                   tournament=cls.t1,
+                                                   uuid_str=str(uuid.uuid4()))
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t1)
 
@@ -296,6 +296,31 @@ class TournamentViewTests(TestCase):
 
         # Hopefully this isn't the pk for any Tournament
         cls.INVALID_T_PK = 99999
+
+        # Published Tournament, so it's visible to all
+        # Ongoing, one round that has started
+        cls.t5 = Tournament.objects.create(name='t1',
+                                           start_date=now,
+                                           end_date=now,
+                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           draw_secrecy=Tournament.SECRET,
+                                           is_published=True)
+        cls.r51 = Round.objects.create(tournament=cls.t5,
+                                       start=cls.t5.start_date,
+                                       scoring_system=G_SCORING_SYSTEMS[0].name,
+                                       dias=True)
+        # Pre-generate a UUID for player prefs
+        cls.tp51 = TournamentPlayer.objects.create(player=p1,
+                                                   tournament=cls.t5,
+                                                   uuid_str=str(uuid.uuid4()))
+        tp = TournamentPlayer.objects.create(player=p3,
+                                             tournament=cls.t5)
+        g = Game.objects.create(name='Game1',
+                                the_round=cls.r51,
+                                started_at=cls.r51.start,
+                                the_set=GameSet.objects.first(),
+                                is_finished=False)
 
     def test_index(self):
         response = self.client.get(reverse('index'))
@@ -525,5 +550,15 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_player_prefs(self):
-        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, self.tp.uuid_str)))
+        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str)))
         self.assertEqual(response.status_code, 200)
+
+    def test_player_prefs_invalid_uuid(self):
+        # Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer
+        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, uuid.uuid4())))
+        self.assertEqual(response.status_code, 404)
+
+    def test_player_prefs_too_late(self):
+        # Should get a 404 error if the final round has started
+        response = self.client.get(reverse('player_prefs', args=(self.t5.pk, self.tp51.uuid_str)))
+        self.assertEqual(response.status_code, 404)
