@@ -83,10 +83,10 @@ def send_prefs_email(tournamentplayer, force=False):
     Note that if force is True, any previous URL will no longer be valid.
     """
     t = tournamentplayer.tournament
-    addr = tournamentplayer.player.email
     # Bail if preferences aren't needed for the Tournament
     if not t.powers_assigned_from_prefs():
         return
+    addr = tournamentplayer.player.email
     # Can't do anything unless we have an email address for the player
     if not addr:
         return
