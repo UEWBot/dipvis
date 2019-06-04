@@ -18,10 +18,12 @@
 Player Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from django.views import generic
 
-from tournament.players import Player
+from tournament.players import Player, add_player_bg
 
 # Player views
 
@@ -35,6 +37,11 @@ class PlayerIndexView(generic.ListView):
 def player_detail(request, pk):
     """Details of a single player"""
     player = get_object_or_404(Player, pk=pk)
+    if request.method == 'POST':
+        add_player_bg(player)
+        # Redirect back here to flush the POST data
+        return HttpResponseRedirect(reverse('player_detail',
+                                            args=(pk,)))
     return render(request,
                   'players/detail.html',
                   {'player': player})

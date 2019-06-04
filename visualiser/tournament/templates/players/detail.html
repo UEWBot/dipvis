@@ -22,4 +22,10 @@
     <li>{{ b }}</li>
   {% endfor %}
 </ul>
+{% if perms.tournament.add_playertournamentranking %}
+  <form method="post" action={% url 'player_detail' player.pk %}>
+    {% csrf_token %}
+    <input type="submit" value="Update background" />
+  </form>
+{% endif %}
 {% endblock %}
