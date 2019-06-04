@@ -30,6 +30,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
+from tournament.email import send_prefs_email
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
 from tournament.forms import PlayerRoundScoreForm
@@ -561,6 +562,16 @@ def prefs_csv(request, tournament_id):
 def tournament_players(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    if request.method == 'POST':
+        for k in request.POST.keys():
+            if k.startswith('prefs_'):
+                # Extract the TournamentPlayer pk from the button name
+                pk = int(k[6:])
+                tp = TournamentPlayer.objects.get(pk=pk)
+                send_prefs_email(tp)
+                # Redirect back here to flush the POST data
+                return HttpResponseRedirect(reverse('tournament_players',
+                                                    args=(tournament_id,)))
     context = {'tournament': t}
     return render(request, 'tournaments/tournament_players.html', context)
 
