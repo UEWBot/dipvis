@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Registered Players{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{% blocktrans with tournament=tournament %}{{ tournament }} Registered Players{% endblocktrans %}</h1>
+
+<ul>
+  {% for tp in tournament.tournamentplayer_set.all %}
+    <li>{{ tp.player }}</li>
+  {% empty %}
+    <li>{% trans "No players yet registered" %}</li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

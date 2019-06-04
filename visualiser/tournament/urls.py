@@ -139,6 +139,8 @@ tournament_patterns = [
     url(r'^prefs_csv/$', tournament_views.prefs_csv, name='prefs_csv'),
     url(r'^player_prefs/(?P<uuid>[^/]+)/$', tournament_views.player_prefs,
         name='player_prefs'),
+    url(r'^players/$', tournament_views.tournament_players,
+        name='tournament_players'),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),
 ]

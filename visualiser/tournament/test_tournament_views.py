@@ -562,3 +562,7 @@ class TournamentViewTests(TestCase):
         # Should get a 404 error if the final round has started
         response = self.client.get(reverse('player_prefs', args=(self.t5.pk, self.tp51.uuid_str)))
         self.assertEqual(response.status_code, 404)
+
+    def test_tournament_players(self):
+        response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
+        self.assertEqual(response.status_code, 200)

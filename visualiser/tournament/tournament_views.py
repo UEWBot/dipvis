@@ -558,6 +558,12 @@ def prefs_csv(request, tournament_id):
 
     return response
 
+def tournament_players(request, tournament_id):
+    """Display a list of registered players for a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    context = {'tournament': t}
+    return render(request, 'tournaments/tournament_players.html', context)
+
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)

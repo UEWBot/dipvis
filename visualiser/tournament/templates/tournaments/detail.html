@@ -8,7 +8,7 @@
 
 <p>{{ tournament.start_date }} - {{tournament.end_date }}</p>
 
-<p>{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</p>
+<p><a href="{% url 'tournament_players' tournament.id %}">{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</a></p>
 
 <p>{% blocktrans with count=tournament.round_set.count %}{{ count }} Rounds{% endblocktrans %}</p>
 {% if tournament.draw_secrecy == "C" %}<p/><p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p><p/>{% endif %}
