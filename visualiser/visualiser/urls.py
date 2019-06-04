@@ -30,6 +30,6 @@ urlpatterns = [
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^players/$', player_views.PlayerIndexView.as_view()),
-    url(r'^players/(?P<pk>\d+)/$', player_views.PlayerDetailView.as_view(),
+    url(r'^players/(?P<pk>\d+)/$', player_views.player_detail,
         name='player_detail'),
 ]
