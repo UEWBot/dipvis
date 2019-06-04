@@ -9,6 +9,6 @@
 <form method="post" action={% url 'add_game_image' tournament.id %} enctype="multipart/form-data">
   {% csrf_token %}
   {{ form }}<br/>
-  <input type="submit" value="Submit" />
+  <input type="submit" value={% trans "Submit" %} />
 </form>
 {% endblock %}
