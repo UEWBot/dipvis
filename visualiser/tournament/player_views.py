@@ -38,6 +38,8 @@ def player_detail(request, pk):
     """Details of a single player"""
     player = get_object_or_404(Player, pk=pk)
     if request.method == 'POST':
+        # Technically, we should check permissions here,
+        # but the impact of not doing so is minor
         add_player_bg(player)
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('player_detail',

@@ -20,7 +20,7 @@
       </tr></thead>
       <tbody>
         {% for tp in tournament.tournamentplayer_set.all %}
-          <tr class="{% cycle row1 row2 %}">
+          <tr class="{% cycle 'odd_row' 'even_row' %}">
             <td>{{ tp.player }}</td>
             <td>{% if tp.player.email != "" %}{% trans "Yes"%}{% endif %}</td>
             {% if tournament.powers_assigned_from_prefs %}
@@ -37,7 +37,7 @@
 {% else %}
   <ul>
     {% for tp in tournament.tournamentplayer_set.all %}
-      <li>{{ tp.player }}</li>
+      <li><a href="{{ tp.player.get_absolute_url }}">{{ tp.player }}</a></li>
     {% empty %}
       <li>{% trans "No players yet registered" %}</li>
     {% endfor %}

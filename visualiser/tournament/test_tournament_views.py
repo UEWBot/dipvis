@@ -118,6 +118,7 @@ class TournamentViewTests(TestCase):
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=Tournament.SECRET,
+                                           power_assignment=Tournament.PREFERENCES,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        start=cls.t2.start_date,
@@ -565,4 +566,22 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_players(self):
         response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_tournament_players_editable_prefs(self):
+        # A tournament that can be edited, that uses preferences for power assignment
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('tournament_players', args=(self.t3.pk,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_tournament_players_editable_no_prefs(self):
+        # A tournament that can be edited, that doesn't use preferences for power assignment
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_tournament_players_archived(self):
+        # A tournament that the user could edit, except that it's been set to not editable
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('tournament_players', args=(self.t4.pk,)))
         self.assertEqual(response.status_code, 200)

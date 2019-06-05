@@ -563,6 +563,8 @@ def tournament_players(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     if request.method == 'POST':
+        if t.is_finished or not t.editable:
+            raise Http404
         for k in request.POST.keys():
             if k.startswith('prefs_'):
                 # Extract the TournamentPlayer pk from the button name

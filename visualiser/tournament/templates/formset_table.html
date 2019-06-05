@@ -11,7 +11,7 @@
         {% endfor %}
         </tr></thead><tbody>
     {% endif %}
-    <tr class="{% cycle row1 row2 %}">
+    <tr class="{% cycle 'odd_row' 'even_row' %}">
     {{ form.non_field_errors }}
     {% for field in form.visible_fields %}
         <td>
