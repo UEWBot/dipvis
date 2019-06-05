@@ -374,6 +374,8 @@ class Player(models.Model):
                                                 blank=True,
                                                 null=True)
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
+    # Cache of the player's name in the WDD
+    _wdd_name = models.CharField(max_length=60, blank=True)
 
     class Meta:
         ordering = ['last_name', 'first_name']
@@ -382,6 +384,16 @@ class Player(models.Model):
         return u'%s %s' % (self.first_name, self.last_name)
 
     def save(self, *args, **kwargs):
+        # Re-cache WDD Name in case WDD id has changed
+        self._wdd_name = ''
+        if self.wdd_player_id:
+            bg = WDDBackground(self.wdd_player_id)
+            try:
+                self._wdd_name = bg.wdd_name()
+            except:
+                # Handle all exceptions, because failing to set the cached name is ok
+                print("Failed to cache WDD name for player %s, wdd id %s" %
+                      (self, str(self.wdd_player_id)))
         super(Player, self).save(*args, **kwargs)
         add_player_bg(self)
 
@@ -389,16 +401,20 @@ class Player(models.Model):
         """Name for this player in the World Diplomacy Database."""
         if not self.wdd_player_id:
             return u''
-        bg = WDDBackground(self.wdd_player_id)
-        try:
-            return bg.wdd_name()
-        except WDDNotAccessible:
-            # Not much we can do in this case
-            return u''
-        except InvalidWDDId:
-            # This can only happen if we couldn't get to the WDD when the Player was created
-            raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                  params={'wdd_id': self.wdd_player_id})
+        # Read from the WDD if we haven't cached it
+        if not self._wdd_name:
+            bg = WDDBackground(self.wdd_player_id)
+            try:
+                self._wdd_name = bg.wdd_name()
+                super(Player, self).save(update_fields=['_wdd_name'])
+            except WDDNotAccessible:
+                # Not much we can do in this case
+                return u''
+            except InvalidWDDId:
+                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
+                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
+                                      params={'wdd_id': self.wdd_player_id})
+        return self._wdd_name
 
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
