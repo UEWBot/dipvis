@@ -17,6 +17,7 @@
           <th>{% trans "Prefs email sent?"%}</th>
           <th></th>
         {% endif %}
+        <th></th>
       </tr></thead>
       <tbody>
         {% for tp in tournament.tournamentplayer_set.all %}
@@ -29,10 +30,14 @@
                   <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email"%}" />
                   {% endif %}</td>
             {% endif %}
+            <td>
+              <input type="submit" name="unregister_{{ tp.pk }}" value="{% trans "Unregister player"%}" />
+            </td>
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    <p>{% trans "WARNING: You will really mess things up if you unregister a player who has played in the tournament" %}</p>
   </form>
 {% else %}
   <ul>

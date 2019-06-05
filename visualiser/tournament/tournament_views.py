@@ -571,9 +571,13 @@ def tournament_players(request, tournament_id):
                 pk = int(k[6:])
                 tp = TournamentPlayer.objects.get(pk=pk)
                 send_prefs_email(tp)
-                # Redirect back here to flush the POST data
-                return HttpResponseRedirect(reverse('tournament_players',
-                                                    args=(tournament_id,)))
+            if k.startswith('unregister_'):
+                # Extract the TournamentPlayer pk from the button name
+                pk = int(k[11:])
+                tp = TournamentPlayer.objects.delete(pk=pk)
+        # Redirect back here to flush the POST data
+        return HttpResponseRedirect(reverse('tournament_players',
+                                            args=(tournament_id,)))
     context = {'tournament': t}
     return render(request, 'tournaments/tournament_players.html', context)
 
