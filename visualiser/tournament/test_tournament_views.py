@@ -593,12 +593,15 @@ class TournamentViewTests(TestCase):
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         tp = TournamentPlayer.objects.create(player=self.p2,
                                              tournament=self.t2)
-        print("Test created TP %s" % tp)
         self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
+                          'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0})
         response = self.client.post(url,
-                                    urlencode({'unregister_%d' % tp.pk: 'Unregister player'}),
+                                    data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
@@ -612,8 +615,12 @@ class TournamentViewTests(TestCase):
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         url = reverse('tournament_players', args=(self.t4.pk,))
+        data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
+                          'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0})
         response = self.client.post(url,
-                                    urlencode({'unregister_%d' % tp.pk: 'Unregister player'}),
+                                    data,
                                     content_type='application/x-www-form-urlencoded')
         # We shouldn't be allowed to change an uneditable Tournament
         self.assertEqual(response.status_code, 404)

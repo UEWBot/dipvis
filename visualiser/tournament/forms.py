@@ -473,6 +473,10 @@ class BaseSCCountFormset(BaseFormSet):
                                                'year': year})
             neutrals = years[year]
 
+class PlayerForm(forms.Form):
+    """Form to pick a Player"""
+    player = forms.ModelChoiceField(queryset=Player.objects.all())
+
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
     # We want all Players to be available to be chosen,
