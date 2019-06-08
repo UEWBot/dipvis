@@ -113,12 +113,15 @@ class GameAdmin(admin.ModelAdmin):
     fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
     inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
 
+class PlayerAdmin(admin.ModelAdmin):
+    exclude = ('_wdd_name',)
+
 # Register models
 admin.site.register(GameImage)
 admin.site.register(GreatPower)
 admin.site.register(SupplyCentre)
 admin.site.register(GameSet, GameSetAdmin)
-admin.site.register(Player)
+admin.site.register(Player, PlayerAdmin)
 admin.site.register(DrawProposal)
 admin.site.register(CentreCount)
 admin.site.register(TournamentPlayer)
