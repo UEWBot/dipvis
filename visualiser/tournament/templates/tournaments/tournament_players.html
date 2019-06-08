@@ -4,7 +4,7 @@
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Registered Players{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with tournament=tournament %}{{ tournament }} Registered Players{% endblocktrans %}</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Registered Players" %}</h1>
 
 {% if user.is_active and tournament.editable and perms.tournament.add_tournamentplayer %}
   <form action="{% url 'tournament_players' tournament.id %}" method="post">
