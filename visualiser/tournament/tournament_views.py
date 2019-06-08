@@ -574,7 +574,10 @@ def tournament_players(request, tournament_id):
             if k.startswith('unregister_'):
                 # Extract the TournamentPlayer pk from the button name
                 pk = int(k[11:])
-                TournamentPlayer.objects.filter(pk=pk).delete()
+                tp_qs = TournamentPlayer.objects.filter(pk=pk)
+                # Also delete any corresponding RoundPlayers
+                tp_qs.get().roundplayers().delete()
+                tp_qs.delete()
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
