@@ -17,7 +17,9 @@
           <th>{% trans "Prefs email sent?"%}</th>
           <th></th>
         {% endif %}
-        <th></th>
+        {% if not t.is_finished %}
+          <th></th>
+        {% endif %}
       </tr></thead>
       <tbody>
         {% for tp in tournament.tournamentplayer_set.all %}
@@ -30,9 +32,11 @@
                   <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email"%}" />
                   {% endif %}</td>
             {% endif %}
-            <td>
-              <input type="submit" name="unregister_{{ tp.pk }}" value="{% trans "Unregister player"%}" />
-            </td>
+            {% if not t.is_finished %}
+              <td>
+                <input type="submit" name="unregister_{{ tp.pk }}" value="{% trans "Unregister player"%}" />
+              </td>
+            {% endif %}
           </tr>
         {% endfor %}
       </tbody>

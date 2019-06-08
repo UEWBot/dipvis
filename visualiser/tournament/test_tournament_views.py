@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import Permission, User
 from django.test import TestCase
@@ -69,10 +70,10 @@ class TournamentViewTests(TestCase):
         u3.save()
 
         # Some Players
-        p1 = Player.objects.create(first_name='Angela',
-                                   last_name='Ampersand')
-        p2 = Player.objects.create(first_name='Bobby',
-                                   last_name='Bandersnatch')
+        cls.p1 = Player.objects.create(first_name='Angela',
+                                       last_name='Ampersand')
+        cls.p2 = Player.objects.create(first_name='Bobby',
+                                       last_name='Bandersnatch')
         p3 = Player.objects.create(first_name='Cassandra',
                                    last_name='Cucumber')
         p4 = Player.objects.create(first_name='Derek',
@@ -105,7 +106,7 @@ class TournamentViewTests(TestCase):
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
-        cls.tp11 = TournamentPlayer.objects.create(player=p1,
+        cls.tp11 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t1,
                                                    uuid_str=str(uuid.uuid4()))
         tp = TournamentPlayer.objects.create(player=p3,
@@ -130,7 +131,7 @@ class TournamentViewTests(TestCase):
                                   the_set=GameSet.objects.first(),
                                   is_finished=False,
                                   is_top_board=True)
-        tp = TournamentPlayer.objects.create(player=p1,
+        tp = TournamentPlayer.objects.create(player=cls.p1,
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t2)
@@ -148,7 +149,7 @@ class TournamentViewTests(TestCase):
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t2)
-        RoundPlayer.objects.create(player=p1, the_round=cls.r21)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r21)
         RoundPlayer.objects.create(player=p3, the_round=cls.r21)
         RoundPlayer.objects.create(player=p4, the_round=cls.r21)
         RoundPlayer.objects.create(player=p5, the_round=cls.r21)
@@ -157,7 +158,7 @@ class TournamentViewTests(TestCase):
         RoundPlayer.objects.create(player=p8, the_round=cls.r21)
         RoundPlayer.objects.create(player=p9, the_round=cls.r21)
         RoundPlayer.objects.create(player=p10, the_round=cls.r21)
-        GamePlayer.objects.create(player=p1, game=g21, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p1, game=g21, power=cls.austria)
         GamePlayer.objects.create(player=p3, game=g21, power=cls.england)
         GamePlayer.objects.create(player=p4, game=g21, power=cls.france)
         GamePlayer.objects.create(player=p5, game=g21, power=cls.germany)
@@ -206,7 +207,7 @@ class TournamentViewTests(TestCase):
                                   started_at=cls.r41.start,
                                   the_set=GameSet.objects.first(),
                                   is_finished=True)
-        tp = TournamentPlayer.objects.create(player=p1,
+        tp = TournamentPlayer.objects.create(player=cls.p1,
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t4)
@@ -224,7 +225,7 @@ class TournamentViewTests(TestCase):
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t4)
-        RoundPlayer.objects.create(player=p1, the_round=cls.r41)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r41)
         RoundPlayer.objects.create(player=p3, the_round=cls.r41)
         RoundPlayer.objects.create(player=p4, the_round=cls.r41)
         RoundPlayer.objects.create(player=p5, the_round=cls.r41)
@@ -233,7 +234,7 @@ class TournamentViewTests(TestCase):
         RoundPlayer.objects.create(player=p8, the_round=cls.r41)
         RoundPlayer.objects.create(player=p9, the_round=cls.r41)
         RoundPlayer.objects.create(player=p10, the_round=cls.r41)
-        GamePlayer.objects.create(player=p1, game=g41, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p1, game=g41, power=cls.austria)
         GamePlayer.objects.create(player=p3, game=g41, power=cls.england)
         GamePlayer.objects.create(player=p4, game=g41, power=cls.france)
         GamePlayer.objects.create(player=p5, game=g41, power=cls.germany)
@@ -312,7 +313,7 @@ class TournamentViewTests(TestCase):
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True)
         # Pre-generate a UUID for player prefs
-        cls.tp51 = TournamentPlayer.objects.create(player=p1,
+        cls.tp51 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t5,
                                                    uuid_str=str(uuid.uuid4()))
         tp = TournamentPlayer.objects.create(player=p3,
@@ -576,7 +577,7 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_players_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
-        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
         self.assertEqual(response.status_code, 200)
 
@@ -585,3 +586,36 @@ class TournamentViewTests(TestCase):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players', args=(self.t4.pk,)))
         self.assertEqual(response.status_code, 200)
+
+    def test_tournament_players_unregister_from_editable_no_prefs(self):
+        # A tournament that can be edited, that doesn't use preferences for power assignment
+        # Add a TournamentPlayer just for this test
+        self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=self.t2)
+        print("Test created TP %s" % tp)
+        self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        response = self.client.post(url,
+                                    urlencode({'unregister_%d' % tp.pk: 'Unregister player'}),
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the TournamentPlayer should no longer exist
+        self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
+
+    def test_tournament_players_unregister_from_archived(self):
+        # A tournament that the user could edit, except that it's been set to not editable
+        # Use an existing TournamentPlayer
+        tp = self.t4.tournamentplayer_set.get(player=self.p1)
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        url = reverse('tournament_players', args=(self.t4.pk,))
+        response = self.client.post(url,
+                                    urlencode({'unregister_%d' % tp.pk: 'Unregister player'}),
+                                    content_type='application/x-www-form-urlencoded')
+        # We shouldn't be allowed to change an uneditable Tournament
+        self.assertEqual(response.status_code, 404)
+        # ... and the TournamentPlayer should still exist
+        self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())

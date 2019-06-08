@@ -563,7 +563,7 @@ def tournament_players(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     if request.method == 'POST':
-        if t.is_finished or not t.editable:
+        if t.is_finished() or not t.editable:
             raise Http404
         for k in request.POST.keys():
             if k.startswith('prefs_'):
@@ -574,7 +574,7 @@ def tournament_players(request, tournament_id):
             if k.startswith('unregister_'):
                 # Extract the TournamentPlayer pk from the button name
                 pk = int(k[11:])
-                tp = TournamentPlayer.objects.delete(pk=pk)
+                TournamentPlayer.objects.filter(pk=pk).delete()
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
