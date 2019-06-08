@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from urllib.parse import urlencode
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -58,7 +60,7 @@ class TournamentViewTests(TestCase):
         self.client.login(username=self.USERNAME, password=self.PWORD)
         player_url = reverse('player_detail', args=(self.p1.pk,))
         response = self.client.post(player_url,
-                                    {},
+                                    urlencode({}),
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same URL
         self.assertEqual(response.status_code, 302)
