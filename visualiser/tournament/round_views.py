@@ -175,6 +175,10 @@ def get_seven(request, tournament_id, round_num):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     count = r.roundplayer_set.count()
+    # If we have fewer than seven players, we're stuffed
+    if count < 7:
+        return HttpResponseRedirect(reverse('tournament_players',
+                                            args=(tournament_id)))
     sitters = count % 7
     # If we already have an exact multiple of seven players, go straight to creating games
     if sitters == 0:
