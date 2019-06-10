@@ -18,7 +18,8 @@ import uuid
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import Permission, User
-from django.test import TestCase
+from django.core import mail
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -31,6 +32,8 @@ from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import G_SCORING_SYSTEMS
 from tournament.players import Player
 
+@override_settings(HOSTNAME='example.com')
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class TournamentViewTests(TestCase):
     fixtures = ['game_sets.json']
 
@@ -71,7 +74,8 @@ class TournamentViewTests(TestCase):
 
         # Some Players
         cls.p1 = Player.objects.create(first_name='Angela',
-                                       last_name='Ampersand')
+                                       last_name='Ampersand',
+                                       email='a.ampersand@example.com')
         cls.p2 = Player.objects.create(first_name='Bobby',
                                        last_name='Bandersnatch')
         p3 = Player.objects.create(first_name='Cassandra',
@@ -133,6 +137,8 @@ class TournamentViewTests(TestCase):
                                   is_top_board=True)
         tp = TournamentPlayer.objects.create(player=cls.p1,
                                              tournament=cls.t2)
+        # Explicitly call save() to generate a UUID
+        tp.save()
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p4,
@@ -589,11 +595,14 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_players_unregister_from_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
-        # Add a TournamentPlayer just for this test
+        # Add a TournamentPlayer and RoundPlayer just for this test
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         tp = TournamentPlayer.objects.create(player=self.p2,
                                              tournament=self.t2)
         self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
+        rp = RoundPlayer.objects.create(player=self.p2,
+                                        the_round=self.t2.round_numbered(1))
+        self.assertTrue(self.t2.round_numbered(1).roundplayer_set.filter(player=self.p2).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
         data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
@@ -606,8 +615,9 @@ class TournamentViewTests(TestCase):
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, url)
-        # ... and the TournamentPlayer should no longer exist
+        # ... and the TournamentPlayer and RoundPlayer should no longer exist
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
+        self.assertFalse(self.t2.round_numbered(1).roundplayer_set.filter(player=self.p2).exists())
 
     def test_tournament_players_unregister_from_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
@@ -626,3 +636,58 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
         # ... and the TournamentPlayer should still exist
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
+
+    def test_tournament_players_register_player(self):
+        # Use the form to register a Player
+        self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0,
+                          'form-1-player': str(self.p2.pk)})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the TournamentPlayer should have been added
+        tp_qs = self.t2.tournamentplayer_set.filter(player=self.p2)
+        self.assertTrue(tp_qs.exists())
+        # Clean up
+        tp_qs.delete()
+
+    def test_tournament_players_register_registered_player(self):
+        # Use the form to register a Player who is already registered
+        self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p1).exists())
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0,
+                          'form-1-player': str(self.p1.pk)})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+
+    def test_tournament_players_resend_prefs_email(self):
+        # Use the form to re-send the preferences email to a Player
+        tp = self.t2.tournamentplayer_set.get(player=self.p1)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'prefs_%d' % tp.pk: 'Send prefs email',
+                          'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the email should be sent
+        self.assertEqual(len(mail.outbox), 1)

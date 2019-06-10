@@ -575,7 +575,7 @@ def tournament_players(request, tournament_id):
                 # Extract the TournamentPlayer pk from the button name
                 pk = int(k[6:])
                 tp = TournamentPlayer.objects.get(pk=pk)
-                send_prefs_email(tp)
+                send_prefs_email(tp, force=True)
                 break
             # Delete the specified TournamentPlayer
             if k.startswith('unregister_'):
