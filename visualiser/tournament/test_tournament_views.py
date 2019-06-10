@@ -66,9 +66,11 @@ class TournamentViewTests(TestCase):
         # We give managers the appropriate permissions
         cls.USERNAME3 = 'manager'
         cls.PWORD3 = 'MyPassword'
-        perm = Permission.objects.get(name='Can change round player')
         u3 = User.objects.create_user(username=cls.USERNAME3,
                                       password=cls.PWORD3)
+        perm = Permission.objects.get(name='Can change round player')
+        u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can add preference')
         u3.user_permissions.add(perm)
         u3.save()
 
@@ -545,9 +547,43 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('round_index', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
 
-    def test_prefs_not_logged_in(self):
+    def test_enter_prefs_not_logged_in(self):
         response = self.client.get(reverse('enter_prefs', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 302)
+
+    def test_enter_prefs_manager(self):
+        # A manager can enter preferences for players in their Tournament
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_prefs', args=(self.t2.pk,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_enter_prefs(self):
+        # A manager can enter preferences for players in their Tournament
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        data = urlencode({'form-TOTAL_FORMS': '9',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 9,
+                          'form-0-prefs': 'FART',
+                          'form-1-prefs': 'FART',
+                          'form-2-prefs': 'FART',
+                          'form-3-prefs': 'FART',
+                          'form-4-prefs': 'FART',
+                          'form-5-prefs': 'FART',
+                          'form-6-prefs': 'FART',
+                          'form-7-prefs': 'FART',
+                          'form-8-prefs': 'FART'})
+        response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the tournament_detail page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_detail', args=(self.t2.pk,)))
+        # ... and the preferences should have been set
+        for tp in self.t2.tournamentplayer_set.all():
+            self.assertEqual(tp.prefs_string(), 'FART')
+        # Clean up
+        for tp in self.t2.tournamentplayer_set.all():
+            tp.preference_set.all().delete()
 
     def test_upload_prefs_not_logged_in(self):
         response = self.client.get(reverse('upload_prefs', args=(self.t1.pk,)))
