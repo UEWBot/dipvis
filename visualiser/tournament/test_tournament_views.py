@@ -591,14 +591,14 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_players_editable_prefs(self):
         # A tournament that can be edited, that uses preferences for power assignment
-        self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('tournament_players', args=(self.t3.pk,)))
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
         self.assertEqual(response.status_code, 200)
 
     def test_tournament_players_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
-        self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('tournament_players', args=(self.t3.pk,)))
         self.assertEqual(response.status_code, 200)
 
     def test_tournament_players_archived(self):
@@ -607,8 +607,8 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_players', args=(self.t4.pk,)))
         self.assertEqual(response.status_code, 200)
 
-    def test_tournament_players_unregister_from_editable_no_prefs(self):
-        # A tournament that can be edited, that doesn't use preferences for power assignment
+    def test_tournament_players_unregister_from_editable(self):
+        # A tournament that can be edited
         # Add a TournamentPlayer and RoundPlayer just for this test
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         tp = TournamentPlayer.objects.create(player=self.p2,
