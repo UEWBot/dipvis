@@ -436,6 +436,9 @@ def player_prefs(request, tournament_id, uuid):
         ps = form.cleaned_data['prefs']
         # Set preferences for this TournamentPlayer
         tp.create_preferences_from_string(ps)
+        # Redirect back here to flush the POST data
+        return HttpResponseRedirect(reverse('player_prefs',
+                                            args=(tournament_id, uuid)))
     return render(request,
                   'tournaments/player_prefs.html',
                   {'tournament': t,

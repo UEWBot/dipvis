@@ -571,6 +571,20 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('player_prefs', args=(self.t5.pk, self.tp51.uuid_str)))
         self.assertEqual(response.status_code, 404)
 
+    def test_player_prefs_post(self):
+        url = reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str))
+        data = urlencode({'prefs': 'FART'})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the preferences should have been set
+        self.assertEqual(self.tp11.prefs_string(), 'FART')
+        # Clean up
+        self.tp11.preference_set.all().delete()
+
     def test_tournament_players(self):
         response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
