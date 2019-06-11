@@ -26,7 +26,7 @@ from django.utils.translation import ugettext as _
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy import validate_preference_string
-from tournament.models import Game, GameImage
+from tournament.models import Game, GameImage, SeederBias
 from tournament.models import SEASONS
 from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player
@@ -608,6 +608,21 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         kwargs['last_round_num'] = self.last_round_num
         kwargs['this_round_num'] = self.this_round_num
         return super()._construct_form(index, **kwargs)
+
+class SeederBiasForm(ModelForm):
+    player1 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
+    player2 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
+
+    class Meta:
+        model = SeederBias
+        fields = ['player1', 'player2', 'weight']
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament')
+        super().__init__(*args, **kwargs)
+        self.fields['player1'].queryset = self.tournament.tournamentplayer_set.all()
+        self.fields['player2'].queryset = self.tournament.tournamentplayer_set.all()
 
 class GameImageForm(ModelForm):
     """Form for a single GameImage"""

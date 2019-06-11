@@ -137,6 +137,7 @@ tournament_patterns = [
     url(r'^prefs/$', tournament_views.enter_prefs, name='enter_prefs'),
     url(r'^upload_prefs/$', tournament_views.upload_prefs, name='upload_prefs'),
     url(r'^prefs_csv/$', tournament_views.prefs_csv, name='prefs_csv'),
+    url(r'^seeder_bias/$', tournament_views.seeder_bias, name='seeder_bias'),
     url(r'^player_prefs/(?P<uuid>[^/]+)/$', tournament_views.player_prefs,
         name='player_prefs'),
     url(r'^players/$', tournament_views.tournament_players,

@@ -40,7 +40,7 @@
   <p>{% trans "Data Entry:" %}</p>
   <ul>
     {% if perms.tournament.add_seederbias %}
-      <li><a href="{% url 'admin:tournament_seederbias_add' %}">{% trans "Add bias to the game seeder" %}</a> - {% trans "Use this if you have people playing in the tournament you want to keep apart (e.g. family members)." %}</li>
+      <li><a href="{% url 'seeder_bias' tournament.id %}">{% trans "Add bias to the game seeder" %}</a> - {% trans "Use this if you have people playing in the tournament you want to keep apart (e.g. family members)." %}</li>
     {% endif %}
     {% if perms.tournament.add_roundplayer %}
       <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a> - {% trans "Use this to specify which of the players at the tournament are actually playing in each round." %}</li>

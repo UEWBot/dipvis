@@ -25,7 +25,7 @@ from django.utils import timezone
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.models import Tournament, TournamentPlayer
+from tournament.models import Tournament, TournamentPlayer, SeederBias
 from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -71,6 +71,8 @@ class TournamentViewTests(TestCase):
         perm = Permission.objects.get(name='Can change round player')
         u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add preference')
+        u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can add seeder bias')
         u3.user_permissions.add(perm)
         u3.save()
 
@@ -153,8 +155,8 @@ class TournamentViewTests(TestCase):
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p8,
                                              tournament=cls.t2)
-        tp = TournamentPlayer.objects.create(player=p9,
-                                             tournament=cls.t2)
+        cls.tp29 = TournamentPlayer.objects.create(player=p9,
+                                                   tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t2)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r21)
@@ -741,3 +743,84 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.url, url)
         # ... and the email should be sent
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_seeder_bias_not_logged_in(self):
+        response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
+        self.assertEqual(response.status_code, 302)
+
+    def test_seeder_bias_missing_perm(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
+        self.assertEqual(response.status_code, 302)
+
+    def test_seeder_bias(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_seeder_bias_add(self):
+        self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)
+        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        # Pick two suitable TournamentPlayers
+        tp1 = self.t2.tournamentplayer_set.first()
+        tp2 = self.t2.tournamentplayer_set.last()
+        url = reverse('seeder_bias', args=(self.t2.pk,))
+        data = urlencode({'player1': str(tp1.pk),
+                          'player2': str(tp2.pk),
+                          'weight': '4'})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # it should redirect back to the same URL
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the SeederBias should be created
+        sb_qs = SeederBias.objects.filter(player1__tournament=self.t2)
+        self.assertEqual(sb_qs.count(), 1)
+        sb = sb_qs.get()
+        self.assertEqual(sb.player1, tp1)
+        self.assertEqual(sb.player2, tp2)
+        self.assertEqual(sb.weight, 4)
+        # Clean up
+        sb.delete()
+
+    def test_seeder_bias_remove(self):
+        # Add two SeederBias objects just for this test
+        sb1 = SeederBias.objects.create(player1=self.t2.tournamentplayer_set.first(),
+                                        player2=self.t2.tournamentplayer_set.last(),
+                                        weight=5)
+        sb2 = SeederBias.objects.create(player1=self.t2.tournamentplayer_set.first(),
+                                        player2=self.tp29,
+                                        weight=3)
+        self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 2)
+        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        url = reverse('seeder_bias', args=(self.t2.pk,))
+        data = urlencode({'delete_%d' % sb2.pk: 'Remove Bias'})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # it should redirect back to the same URL
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the SeederBias should be deleted
+        self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 1)
+        self.assertFalse(SeederBias.objects.filter(pk=sb2.pk).exists())
+        # Clean up
+        sb1.delete()
+
+    def test_seeder_bias_archived(self):
+        # Try to add SeederBias to an archived Tournament
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        # Pick two suitable TournamentPlayers
+        tp1 = self.t4.tournamentplayer_set.first()
+        tp2 = self.t4.tournamentplayer_set.last()
+        url = reverse('seeder_bias', args=(self.t4.pk,))
+        data = urlencode({'player1': str(tp1.pk),
+                          'player2': str(tp2.pk),
+                          'weight': '4'})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 404)

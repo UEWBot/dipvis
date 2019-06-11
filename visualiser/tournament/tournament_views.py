@@ -36,9 +36,10 @@ from tournament.forms import BasePrefsFormset
 from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
+from tournament.forms import SeederBiasForm
 
 from tournament.diplomacy import GameSet
-from tournament.models import Tournament, Game
+from tournament.models import Tournament, Game, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList
 
@@ -612,6 +613,35 @@ def tournament_players(request, tournament_id):
                                             args=(tournament_id,)))
     context = {'tournament': t, 'formset': formset}
     return render(request, 'tournaments/tournament_players.html', context)
+
+@permission_required('tournament.add_seeder_bias')
+def seeder_bias(request, tournament_id):
+    """Display or add SeederBias objects for the Tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    sb_set = SeederBias.objects.filter(player1__tournament=t)
+    form = SeederBiasForm(request.POST or None,
+                          tournament=t)
+    if request.method == 'POST':
+        if t.is_finished() or not t.editable:
+            raise Http404
+        keys = request.POST.keys()
+        for k in request.POST.keys():
+            if k.startswith('delete_'):
+                # Extract the SeederBias pk from the button name
+                pk = int(k[7:])
+                SeederBias.objects.filter(pk=pk).delete()
+                # Redirect back here to flush the POST data
+                return HttpResponseRedirect(reverse('seeder_bias',
+                                                    args=(tournament_id,)))
+        if form.is_valid():
+            form.save()
+            # Redirect back here to flush the POST data
+            return HttpResponseRedirect(reverse('seeder_bias',
+                                                args=(tournament_id,)))
+    context = {'tournament': t,
+               'biases': sb_set,
+               'form': form}
+    return render(request, 'tournaments/seeder_bias.html', context)
 
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""
