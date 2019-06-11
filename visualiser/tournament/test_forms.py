@@ -560,7 +560,7 @@ class PowerAssignFormTest(TestCase):
                 self.assertEqual(the_choices[i][1], power.name)
 
     def test_player_labels(self):
-        # The label for each power choice shoudl be the Player's name
+        # The label for each power choice should be the Player's name
         form = PowerAssignForm(game=self.g)
         for gp in self.g.gameplayer_set.all():
             with self.subTest(gp=str(gp)):
