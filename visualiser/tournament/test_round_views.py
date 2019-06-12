@@ -125,8 +125,8 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_detail', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 200)
 
-    def test_create_games_not_logged_in(self):
-        response = self.client.get(reverse('create_games', args=(self.t.pk, 1)))
+    def test_roll_call_not_logged_in(self):
+        response = self.client.get(reverse('round_roll_call', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 302)
 
     def test_get_seven_not_logged_in(self):
@@ -144,14 +144,14 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('get_seven', args=(self.t.pk, 1)))
 
+    def test_create_games_not_logged_in(self):
+        response = self.client.get(reverse('create_games', args=(self.t.pk, 1)))
+        self.assertEqual(response.status_code, 302)
+
     def test_game_scores_not_logged_in(self):
         response = self.client.get(reverse('game_scores', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 302)
 
-    def test_games(self):
+    def test_game_index(self):
         response = self.client.get(reverse('game_index', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 200)
-
-    def test_roll_call_not_logged_in(self):
-        response = self.client.get(reverse('round_roll_call', args=(self.t.pk, 1)))
-        self.assertEqual(response.status_code, 302)

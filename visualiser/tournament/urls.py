@@ -24,12 +24,12 @@ from tournament import wdd_views
 round_patterns = [
     url(r'^$', round_views.round_simple,
         {'template': 'detail'}, name='round_detail'),
-    url(r'^create_games/$', round_views.create_games, name='create_games'),
+    url(r'^roll_call/$', round_views.roll_call, name='round_roll_call'),
     url(r'^get_seven/$', round_views.get_seven, name='get_seven'),
     url(r'^seed_games/$', round_views.seed_games, name='seed_games'),
+    url(r'^create_games/$', round_views.create_games, name='create_games'),
     url(r'^game_scores/$', round_views.game_scores, name='game_scores'),
     url(r'^games/$', round_views.game_index, name='game_index'),
-    url(r'^roll_call/$', round_views.roll_call, name='round_roll_call'),
 ]
 
 game_patterns = [
