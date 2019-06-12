@@ -125,13 +125,27 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_detail', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 200)
 
+    def test_detail_non_existant_round(self):
+        response = self.client.get(reverse('round_detail', args=(self.t.pk, 2)))
+        self.assertEqual(response.status_code, 404)
+
     def test_roll_call_not_logged_in(self):
         response = self.client.get(reverse('round_roll_call', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 302)
 
+    def test_roll_call(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('round_roll_call', args=(self.t.pk, 1)))
+        self.assertEqual(response.status_code, 200)
+
     def test_get_seven_not_logged_in(self):
         response = self.client.get(reverse('get_seven', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 302)
+
+    def test_get_seven(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('get_seven', args=(self.t.pk, 1)))
+        self.assertEqual(response.status_code, 200)
 
     def test_seed_games_not_logged_in(self):
         response = self.client.get(reverse('seed_games', args=(self.t.pk, 1)))
@@ -148,9 +162,19 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('create_games', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 302)
 
+    def test_create_games(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('create_games', args=(self.t.pk, 1)))
+        self.assertEqual(response.status_code, 200)
+
     def test_game_scores_not_logged_in(self):
         response = self.client.get(reverse('game_scores', args=(self.t.pk, 1)))
         self.assertEqual(response.status_code, 302)
+
+    def test_game_scores(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('game_scores', args=(self.t.pk, 1)))
+        self.assertEqual(response.status_code, 200)
 
     def test_game_index(self):
         response = self.client.get(reverse('game_index', args=(self.t.pk, 1)))
