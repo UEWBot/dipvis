@@ -505,10 +505,6 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('enter_scores', args=(self.t2.pk,)))
         self.assertEqual(response.status_code, 200)
 
-    def test_roll_call_not_logged_in(self):
-        response = self.client.get(reverse('roll_call', args=(self.t1.pk,)))
-        self.assertEqual(response.status_code, 302)
-
     def test_current_round(self):
         response = self.client.get(reverse('tournament_round', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
