@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -28,6 +29,14 @@ class RoundViewTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        # A superuser
+        cls.USERNAME1 = 'superuser'
+        cls.PWORD1 = 'l33tPw0rd'
+        u1 = User.objects.create_user(username=cls.USERNAME1,
+                                      password=cls.PWORD1,
+                                      is_superuser=True)
+        u1.save()
+
         now = timezone.now()
         # Published Tournament so it's visible to all
         cls.t = Tournament.objects.create(name='t1',
@@ -50,6 +59,10 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('game_detail', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
 
+    def test_detail_non_existant_game(self):
+        response = self.client.get(reverse('game_detail', args=(self.t.pk, 'Game42')))
+        self.assertEqual(response.status_code, 404)
+
     def test_sc_chart(self):
         response = self.client.get(reverse('game_sc_chart', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
@@ -62,6 +75,11 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('enter_scs', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 302)
 
+    def test_enter_scs(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('enter_scs', args=(self.t.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
+
     def test_sc_owners(self):
         response = self.client.get(reverse('game_sc_owners', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
@@ -73,6 +91,11 @@ class RoundViewTests(TestCase):
     def test_enter_sc_owners_not_logged_in(self):
         response = self.client.get(reverse('enter_sc_owners', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 302)
+
+    def test_enter_sc_owners(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('enter_sc_owners', args=(self.t.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
 
     def test_current_game_image(self):
         response = self.client.get(reverse('current_game_image', args=(self.t.pk, 'Game1')))
@@ -93,6 +116,11 @@ class RoundViewTests(TestCase):
     def test_add_position_not_logged_in(self):
         response = self.client.get(reverse('add_game_image', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 302)
+
+    def test_add_position(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('add_game_image', args=(self.t.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
 
     def test_news(self):
         response = self.client.get(reverse('game_news', args=(self.t.pk, 'Game1')))
@@ -117,6 +145,11 @@ class RoundViewTests(TestCase):
     def test_draw_vote_not_logged_in(self):
         response = self.client.get(reverse('draw_vote', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 302)
+
+    def test_draw_vote(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('draw_vote', args=(self.t.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
 
     def test_views(self):
         response = self.client.get(reverse('game_views', args=(self.t.pk, 'Game1')))
