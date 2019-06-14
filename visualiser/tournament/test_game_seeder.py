@@ -478,6 +478,26 @@ class GameSeederSetupTest(unittest.TestCase):
         games = seeder.seed_games()
         self.assertEqual(len(games), 0)
 
+    def test_seed_games_exhaustive_bad_count(self):
+        # Exhaustive seeding with only 6 players in the second round
+        seeder = GameSeeder(self.powers,
+                            seed_method=SeedMethod.EXHAUSTIVE)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        seeder.add_player('G')
+        seeder.add_played_game(set([('A', '1'),
+                                    ('B', '2'),
+                                    ('C', '3'),
+                                    ('D', '4'),
+                                    ('E', '5'),
+                                    ('F', '6'),
+                                    ('G', '7')]))
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games, set(['E']))
+
     def test_seed_games_impossible(self):
         # 6 players, with one playing two games
         # So we have 7 players, but still can't form a valid game
