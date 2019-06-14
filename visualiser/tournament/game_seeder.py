@@ -50,6 +50,10 @@ class PowersNotUnique(Exception):
     """Each player has to play a distinct power."""
     pass
 
+class ImpossibleToSeed(Exception):
+    """There is no valid seeding for the player set."""
+    pass
+
 class _AssignmentFailed(Exception):
     """Internal exception used when we end up with an invalid assignment of players to games."""
     pass
@@ -329,7 +333,7 @@ class GameSeeder:
 
     def _assign_players_wrapper(self, players):
         """
-        Wrapper that just keeps calling __assign_players_to_game() until it succeeds.
+        Wrapper that just keeps calling _assign_players_to_games_randomly() until it succeeds.
         """
         while True:
             # _assign_players_to_game() will empty the set of players we pass it
@@ -421,6 +425,13 @@ class GameSeeder:
                                      % (len(self.games_played_matrix),
                                         len(players_doubling_up),
                                         len(omitting_players)))
+        # If any players are playing two games, there must be at least two games
+        if players_doubling_up:
+            if len(players) < 2 * self.num_powers:
+                raise ImpossibleToSeed("%d total plus %d duplicated minus %d omitted"
+                                         % (len(self.games_played_matrix),
+                                            len(players_doubling_up),
+                                            len(omitting_players)))
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
         if self.games_played:
@@ -453,6 +464,7 @@ class GameSeeder:
         Can raise InvalidPlayer if any player in omitting_players is unknown.
         Can raise InvalidPlayerCount if the resulting number of players isn't an
         exact multiple of the number of powers.
+        Can raise ImpossibleToSeed if no valid seeding is possible.
         """
         # Generate the specified number of seedings
         # Use the random method if no games have been played yet, because any seeding is fine
@@ -468,9 +480,12 @@ class GameSeeder:
         elif self.seed_method == SeedMethod.EXHAUSTIVE:
             players = self._player_pool(omitting_players, players_doubling_up)
             seedings = []
-            for s in self._all_possible_seedings(players):
-                fitness = self._set_fitness(s)
-                seedings.append((s, fitness))
+            try:
+                for s in self._all_possible_seedings(players):
+                    fitness = self._set_fitness(s)
+                    seedings.append((s, fitness))
+            except _AssignmentFailed:
+                raise ImpossibleToSeed
         # Sort them by fitness
         seedings.sort(key=itemgetter(1))
         if self.seed_method == SeedMethod.RANDOM:
