@@ -164,6 +164,15 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('A')
         self.assertRaises(InvalidPlayer, seeder.add_bias, 'A', 'B', 1)
 
+    def test_add_bias_twice(self):
+        seeder = GameSeeder(self.powers)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_bias('A', 'B', 1)
+        seeder.add_bias('B', 'A', 3)
+        # Second call should override the first
+        self.assertEqual(seeder.games_played_matrix['A']['B'], 3)
+
     def test_add_bias(self):
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')

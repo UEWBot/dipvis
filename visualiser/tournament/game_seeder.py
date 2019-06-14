@@ -162,7 +162,8 @@ class GameSeeder:
         """
         Add a bias to take into account.
         This effectively says "treat player1 and player2 as if they have
-        already played weight games together".
+        already played weight games together". If called again with the
+        same pair of players, the second call with override the first.
         It is intended to be used to keep pairs of players apart, e.g. family
         members.
         Could also be used to make pairs of players more likely to play
@@ -178,12 +179,8 @@ class GameSeeder:
             raise InvalidPlayer(str(player1))
         if player2 not in self.games_played_matrix:
             raise InvalidPlayer(str(player2))
-        try:
-            self.games_played_matrix[player1][player2] += weight
-            self.games_played_matrix[player2][player1] += weight
-        except KeyError:
-            self.games_played_matrix[player1][player2] = weight
-            self.games_played_matrix[player2][player1] = weight
+        self.games_played_matrix[player1][player2] = weight
+        self.games_played_matrix[player2][player1] = weight
         # fitness is now meaningful
         self.games_played = True
 
