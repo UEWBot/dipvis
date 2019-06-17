@@ -99,15 +99,15 @@ class DrawForm(forms.Form):
 
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
-    game_name = forms.CharField(label=_(u'Game Name'),
-                                max_length=10,
-                                disabled=True)
+    name = forms.CharField(label=_(u'Game Name'),
+                           max_length=10,
+                           disabled=True)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one score field per Great Power"""
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['game_name'].widget.attrs
+        attrs = self.fields['name'].widget.attrs
         attrs['size'] = attrs['maxlength']
 
         # Create the right country fields
@@ -126,7 +126,7 @@ class RoundPlayerChoiceField(forms.ModelChoiceField):
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
-    game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
+    name = forms.CharField(label=_(u'Game Name'), max_length=10)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
 
@@ -136,7 +136,7 @@ class GamePlayersForm(forms.Form):
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['game_name'].widget.attrs
+        attrs = self.fields['name'].widget.attrs
         attrs['size'] = attrs['maxlength']
 
         queryset = self.the_round.roundplayer_set.all()
@@ -183,7 +183,7 @@ class BaseGamePlayersFormset(BaseFormSet):
         names = []
         for form in self.forms:
             try:
-                names.append(form.cleaned_data['game_name'])
+                names.append(form.cleaned_data['name'])
             except KeyError:
                 # This happens when we have a form left blank
                 pass
@@ -192,7 +192,7 @@ class BaseGamePlayersFormset(BaseFormSet):
 
 class PowerAssignForm(forms.Form):
     """Form for players of a single game"""
-    game_name = forms.CharField(label=_(u'Game Name'), max_length=10)
+    name = forms.CharField(label=_(u'Game Name'), max_length=10)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
 
@@ -202,7 +202,7 @@ class PowerAssignForm(forms.Form):
         self.game = kwargs.pop('game')
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['game_name'].widget.attrs
+        attrs = self.fields['name'].widget.attrs
         attrs['size'] = attrs['maxlength']
 
         queryset = GreatPower.objects.all()
@@ -251,7 +251,7 @@ class BasePowerAssignFormset(BaseFormSet):
             # One or more forms is invalid anyway
             return
         # Any duplicates within the page ?
-        names = [form.cleaned_data['game_name'] for form in self.forms]
+        names = [form.cleaned_data['name'] for form in self.forms]
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
 

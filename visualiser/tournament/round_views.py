@@ -312,7 +312,7 @@ def seed_games(request, tournament_id, round_num):
             for f in formset:
                 # Update the game
                 g = f.game
-                g.name = f.cleaned_data['game_name']
+                g.name = f.cleaned_data['name']
                 g.the_set = f.cleaned_data['the_set']
                 try:
                     g.full_clean()
@@ -326,7 +326,7 @@ def seed_games(request, tournament_id, round_num):
                 g.save()
                 # Assign the powers to the players
                 for gp_id, field in f.cleaned_data.items():
-                    if gp_id in ['the_set', 'game_name']:
+                    if gp_id in ['the_set', 'name']:
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
@@ -367,7 +367,7 @@ def seed_games(request, tournament_id, round_num):
                 new_game = Game.objects.create(name='R%sG%d' % (round_num, i),
                                                the_round=r,
                                                the_set=default_set)
-                current = {'game_name': new_game.name,
+                current = {'name': new_game.name,
                            'the_set': new_game.the_set}
                 for tp, power in g:
                     gp = GamePlayer.objects.create(player=tp.player,
@@ -382,7 +382,7 @@ def seed_games(request, tournament_id, round_num):
                 new_game = Game.objects.create(name='R%sG%d' % (round_num, i),
                                                the_round=r,
                                                the_set=default_set)
-                current = {'game_name': new_game.name,
+                current = {'name': new_game.name,
                            'the_set': new_game.the_set}
                 for tp in g:
                     gp = GamePlayer.objects.create(player=tp.player,
@@ -413,7 +413,7 @@ def create_games(request, tournament_id, round_num):
     games = r.game_set.all()
     data = []
     for g in games:
-        current = {'game_name': g.name,
+        current = {'name': g.name,
                    'the_set': g.the_set}
         for gp in g.gameplayer_set.all():
             current[gp.power.name] = gp.roundplayer()
@@ -434,7 +434,7 @@ def create_games(request, tournament_id, round_num):
         for f in formset:
             # Update/create the game
             try:
-                g, created = Game.objects.get_or_create(name=f.cleaned_data['game_name'],
+                g, created = Game.objects.get_or_create(name=f.cleaned_data['name'],
                                                         the_round=r,
                                                         the_set=f.cleaned_data['the_set'])
             except KeyError:
@@ -503,7 +503,7 @@ def game_scores(request, tournament_id, round_num):
     data = []
     the_list = r.game_set.all()
     for game in the_list:
-        content = {'game_name': game.name}
+        content = {'name': game.name}
         for gp in game.gameplayer_set.all():
             content[gp.power.name] = gp.score
         data.append(content)
@@ -511,11 +511,11 @@ def game_scores(request, tournament_id, round_num):
     if formset.is_valid():
         for f in formset:
             # Find the game
-            g = Game.objects.get(name=f.cleaned_data['game_name'],
+            g = Game.objects.get(name=f.cleaned_data['name'],
                                  the_round=r)
             # Set the score for each player
             for power, field in f.cleaned_data.items():
-                # Ignore non-GreatPower fields (game_name)
+                # Ignore non-GreatPower fields (name)
                 try:
                     p = GreatPower.objects.get(name=power)
                 except GreatPower.DoesNotExist:

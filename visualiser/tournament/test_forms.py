@@ -178,9 +178,9 @@ class DrawFormTest(TestCase):
 class GameScoreFormTest(TestCase):
     fixtures = ['game_sets.json']
 
-    def test_game_name_field_disabled(self):
+    def test_name_field_disabled(self):
         form = GameScoreForm()
-        self.assertTrue(form.fields['game_name'].disabled)
+        self.assertTrue(form.fields['name'].disabled)
 
     def test_power_fields_exist(self):
         form = GameScoreForm()
@@ -251,9 +251,9 @@ class GamePlayersFormTest(TestCase):
         with self.assertRaises(KeyError):
             GamePlayersForm()
 
-    def test_game_name_field(self):
+    def test_name_field(self):
         form = GamePlayersForm(the_round=self.r1)
-        self.assertIn('game_name', form.fields)
+        self.assertIn('name', form.fields)
 
     def test_set_field(self):
         form = GamePlayersForm(the_round=self.r1)
@@ -284,7 +284,7 @@ class GamePlayersFormTest(TestCase):
         self.assertEqual(the_choices[8][1], str(self.rp8.player))
 
     def test_success(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
                 'Austria-Hungary': str(self.rp1.pk),
                 'England': str(self.rp2.pk),
@@ -297,7 +297,7 @@ class GamePlayersFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_field_error(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': 'Non-existent set',
                 'Austria-Hungary': str(self.rp1.pk),
                 'England': str(self.rp2.pk),
@@ -313,7 +313,7 @@ class GamePlayersFormTest(TestCase):
         self.assertIn('That choice is not one of the available choices', form.errors['the_set'][0])
 
     def test_player_error(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
                 'Austria-Hungary': str(self.rp1.pk),
                 'England': str(self.rp2.pk),
@@ -329,7 +329,7 @@ class GamePlayersFormTest(TestCase):
         self.assertIn('That choice is not one of the available choices', form.errors['France'][0])
 
     def test_reject_duplicate_players(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
                 'Austria-Hungary': str(self.rp1.pk),
                 'England': str(self.rp2.pk),
@@ -409,7 +409,7 @@ class BaseGamePlayersFormsetTest(TestCase):
     def test_formset_add_one_game(self):
         # Add one Game, leave the other form blank
         data = self.data.copy()
-        data['form-0-game_name'] = 'Only Game'
+        data['form-0-name'] = 'OnlyGame'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
         data['form-0-Austria-Hungary'] = str(self.rp1.pk)
         data['form-0-England'] = str(self.rp2.pk)
@@ -424,7 +424,7 @@ class BaseGamePlayersFormsetTest(TestCase):
     def test_formset_form_error(self):
         # Add one Game with an error, leave the other form blank
         data = self.data.copy()
-        data['form-0-game_name'] = ''
+        data['form-0-name'] = ''
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
         data['form-0-Austria-Hungary'] = str(self.rp1.pk)
         data['form-0-England'] = str(self.rp2.pk)
@@ -439,11 +439,11 @@ class BaseGamePlayersFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
 
-    def test_formset_duplicate_game_names(self):
+    def test_formset_duplicate_names(self):
         # Add two Games, with the same name
         GAME_NAME = 'Best Game'
         data = self.data.copy()
-        data['form-0-game_name'] = GAME_NAME
+        data['form-0-name'] = GAME_NAME
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
         data['form-0-Austria-Hungary'] = str(self.rp1.pk)
         data['form-0-England'] = str(self.rp2.pk)
@@ -452,7 +452,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-0-Italy'] = str(self.rp5.pk)
         data['form-0-Russia'] = str(self.rp6.pk)
         data['form-0-Turkey'] = str(self.rp7.pk)
-        data['form-1-game_name'] = GAME_NAME
+        data['form-1-name'] = GAME_NAME
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-Austria-Hungary'] = str(self.rp7.pk)
         data['form-1-England'] = str(self.rp6.pk)
@@ -533,9 +533,9 @@ class PowerAssignFormTest(TestCase):
         with self.assertRaises(KeyError):
             PowerAssignForm()
 
-    def test_game_name_field(self):
+    def test_name_field(self):
         form = PowerAssignForm(game=self.g)
-        self.assertIn('game_name', form.fields)
+        self.assertIn('name', form.fields)
 
     def test_set_field(self):
         form = PowerAssignForm(game=self.g)
@@ -568,7 +568,7 @@ class PowerAssignFormTest(TestCase):
                 self.assertEqual(form.fields[gp.pk].label, str(gp.player))
 
     def test_success(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
                 self.p1.pk: str(self.turkey.pk),
                 self.p2.pk: str(self.austria.pk),
@@ -581,7 +581,7 @@ class PowerAssignFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_field_error(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': 'Non-existent set',
                 self.p1.pk: str(self.turkey.pk),
                 self.p2.pk: str(self.austria.pk),
@@ -597,7 +597,7 @@ class PowerAssignFormTest(TestCase):
         self.assertIn('That choice is not one of the available choices', form.errors['the_set'][0])
 
     def test_power_error(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
                 self.p1.pk: str(self.turkey.pk),
                 self.p2.pk: str(self.austria.pk),
@@ -613,7 +613,7 @@ class PowerAssignFormTest(TestCase):
         self.assertIn('That choice is not one of the available choices', form.errors[self.p3.pk][0])
 
     def test_reject_duplicate_powers(self):
-        data = {'game_name': 'R1G1',
+        data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
                 self.p1.pk: str(self.turkey.pk),
                 self.p2.pk: str(self.france.pk),
@@ -712,7 +712,7 @@ class BasePowerAssignFormsetTest(TestCase):
         cls.initial = []
         for game in cls.r1.game_set.all():
             game_dict = {}
-            game_dict['game_name'] = game.name
+            game_dict['name'] = game.name
             game_dict['the_set'] = game.the_set
             cls.initial.append(game_dict)
 
@@ -736,7 +736,7 @@ class BasePowerAssignFormsetTest(TestCase):
     def test_formset_success(self):
         # Complete the form correctly
         data = self.data.copy()
-        data['form-0-game_name'] = 'Game 1'
+        data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
         data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
         data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
@@ -745,7 +745,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
         data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
         data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
-        data['form-1-game_name'] = 'Game 2'
+        data['form-1-name'] = 'Game2'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
         data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
@@ -760,7 +760,7 @@ class BasePowerAssignFormsetTest(TestCase):
     def test_formset_form_error(self):
         # Complete the form with an error in one field
         data = self.data.copy()
-        data['form-0-game_name'] = 'Game 1'
+        data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
         data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
         data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
@@ -769,7 +769,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
         data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
         data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
-        data['form-1-game_name'] = 'Ridiculously Long Game Name'
+        data['form-1-name'] = 'RidiculouslyLongGameName'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
         data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
@@ -784,11 +784,11 @@ class BasePowerAssignFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
 
-    def test_formset_duplicate_game_names(self):
+    def test_formset_duplicate_names(self):
         # Give both Games the same name
-        GAME_NAME = 'Best Game'
+        GAME_NAME = 'BestGame'
         data = self.data.copy()
-        data['form-0-game_name'] = GAME_NAME
+        data['form-0-name'] = GAME_NAME
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
         data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
         data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
@@ -797,7 +797,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
         data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
         data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
-        data['form-1-game_name'] = GAME_NAME
+        data['form-1-name'] = GAME_NAME
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
         data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
