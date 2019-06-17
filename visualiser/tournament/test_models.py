@@ -1641,6 +1641,13 @@ class TournamentModelTests(TestCase):
         self.assertEqual(g2.supplycentreownership_set.count(), 22)
         g2.delete()
 
+    def test_game_save_change_set(self):
+        g1 = Game.objects.first()
+        self.assertEqual(g1.the_set, self.set1)
+        g1.the_set = self.set2
+        g1.save()
+        # TODO Verify that the initial image has been updated
+
     @tag('slow')
     def test_game_save_end_of_game(self):
         now = timezone.now()

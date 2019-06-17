@@ -1417,8 +1417,8 @@ class Game(models.Model):
         i = GameImage.objects.get_or_create(game=self,
                                             year=FIRST_YEAR,
                                             season=SPRING,
-                                            phase=GameImage.MOVEMENT,
-                                            image=self.the_set.initial_image)[0]
+                                            phase=GameImage.MOVEMENT)[0]
+        i.image=self.the_set.initial_image
         i.save()
 
         # If the game is (now) finished, store the player scores
