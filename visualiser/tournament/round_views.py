@@ -324,6 +324,11 @@ def seed_games(request, tournament_id, round_num):
                                    'round': r,
                                    'formset' : formset})
                 g.save()
+                # Unassign all GreatPowers first,
+                # so we never have two players for one power
+                for gp in g.gameplayer_set.all():
+                    gp.power = None
+                    gp.save()
                 # Assign the powers to the players
                 for gp_id, field in f.cleaned_data.items():
                     if gp_id in ['the_set', 'name']:

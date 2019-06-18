@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.contrib.auth.models import Permission, User
 from django.test import TestCase
@@ -52,24 +53,24 @@ class RoundViewTests(TestCase):
         u1.save()
 
         # Some Players
-        p1 = Player.objects.create(first_name='Angela',
-                                   last_name='Ampersand')
-        p2 = Player.objects.create(first_name='Bobby',
-                                   last_name='Bandersnatch')
-        p3 = Player.objects.create(first_name='Cassandra',
-                                   last_name='Cucumber')
-        p4 = Player.objects.create(first_name='Derek',
-                                   last_name='Dromedary')
-        p5 = Player.objects.create(first_name='Ethel',
-                                   last_name='Elephant')
-        p6 = Player.objects.create(first_name='Frank',
-                                   last_name='Frankfurter')
-        p7 = Player.objects.create(first_name='Georgette',
-                                   last_name='Grape')
-        p8 = Player.objects.create(first_name='Harry',
-                                   last_name='Heffalump')
-        p9 = Player.objects.create(first_name='Iris',
-                                   last_name='Ignoramus')
+        cls.p1 = Player.objects.create(first_name='Angela',
+                                       last_name='Ampersand')
+        cls.p2 = Player.objects.create(first_name='Bobby',
+                                       last_name='Bandersnatch')
+        cls.p3 = Player.objects.create(first_name='Cassandra',
+                                       last_name='Cucumber')
+        cls.p4 = Player.objects.create(first_name='Derek',
+                                       last_name='Dromedary')
+        cls.p5 = Player.objects.create(first_name='Ethel',
+                                       last_name='Elephant')
+        cls.p6 = Player.objects.create(first_name='Frank',
+                                       last_name='Frankfurter')
+        cls.p7 = Player.objects.create(first_name='Georgette',
+                                       last_name='Grape')
+        cls.p8 = Player.objects.create(first_name='Harry',
+                                       last_name='Heffalump')
+        cls.p9 = Player.objects.create(first_name='Iris',
+                                       last_name='Ignoramus')
         p10 = Player.objects.create(first_name='Jake',
                                     last_name='Jalopy')
         p11 = Player.objects.create(first_name='Katrina',
@@ -93,23 +94,23 @@ class RoundViewTests(TestCase):
                                        dias=True,
                                        start=cls.t1.start_date)
         # Add TournamentPlayers
-        TournamentPlayer.objects.create(player=p1,
+        TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p2,
+        TournamentPlayer.objects.create(player=cls.p2,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p3,
+        TournamentPlayer.objects.create(player=cls.p3,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p4,
+        TournamentPlayer.objects.create(player=cls.p4,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p5,
+        TournamentPlayer.objects.create(player=cls.p5,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p6,
+        TournamentPlayer.objects.create(player=cls.p6,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p7,
+        TournamentPlayer.objects.create(player=cls.p7,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p8,
+        TournamentPlayer.objects.create(player=cls.p8,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p9,
+        TournamentPlayer.objects.create(player=cls.p9,
                                         tournament=cls.t1)
         TournamentPlayer.objects.create(player=p10,
                                         tournament=cls.t1)
@@ -120,19 +121,19 @@ class RoundViewTests(TestCase):
         TournamentPlayer.objects.create(player=p13,
                                         tournament=cls.t1)
         # And RoundPlayers
-        RoundPlayer.objects.create(player=p1, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p2, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p4, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p5, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p6, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p7, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p8, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p9, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p10, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p11, the_round=cls.r11)
-        RoundPlayer.objects.create(player=p12, the_round=cls.r11, game_count=0)
-        RoundPlayer.objects.create(player=p13, the_round=cls.r11, game_count=2)
+        cls.rp11 = RoundPlayer.objects.create(player=cls.p1, the_round=cls.r11)
+        cls.rp12 = RoundPlayer.objects.create(player=cls.p2, the_round=cls.r11)
+        cls.rp13 = RoundPlayer.objects.create(player=cls.p3, the_round=cls.r11)
+        cls.rp14 = RoundPlayer.objects.create(player=cls.p4, the_round=cls.r11)
+        cls.rp15 = RoundPlayer.objects.create(player=cls.p5, the_round=cls.r11)
+        cls.rp16 = RoundPlayer.objects.create(player=cls.p6, the_round=cls.r11)
+        cls.rp17 = RoundPlayer.objects.create(player=cls.p7, the_round=cls.r11)
+        cls.rp18 = RoundPlayer.objects.create(player=cls.p8, the_round=cls.r11)
+        cls.rp19 = RoundPlayer.objects.create(player=cls.p9, the_round=cls.r11)
+        cls.rp110 = RoundPlayer.objects.create(player=p10, the_round=cls.r11)
+        cls.rp111 = RoundPlayer.objects.create(player=p11, the_round=cls.r11)
+        cls.rp112 = RoundPlayer.objects.create(player=p12, the_round=cls.r11, game_count=0)
+        cls.rp113 = RoundPlayer.objects.create(player=p13, the_round=cls.r11, game_count=2)
 
         # Published Tournament so it's visible to all. PREFERENCES power assignment
         cls.t2 = Tournament.objects.create(name='t2',
@@ -155,40 +156,40 @@ class RoundViewTests(TestCase):
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
                                        start=cls.t2.start_date + timedelta(hours=48))
-        TournamentPlayer.objects.create(player=p1,
+        TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p2,
+        TournamentPlayer.objects.create(player=cls.p2,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p3,
+        TournamentPlayer.objects.create(player=cls.p3,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p4,
+        TournamentPlayer.objects.create(player=cls.p4,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p5,
+        TournamentPlayer.objects.create(player=cls.p5,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p6,
+        TournamentPlayer.objects.create(player=cls.p6,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p7,
+        TournamentPlayer.objects.create(player=cls.p7,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p8,
+        TournamentPlayer.objects.create(player=cls.p8,
                                         tournament=cls.t2)
-        TournamentPlayer.objects.create(player=p9,
+        TournamentPlayer.objects.create(player=cls.p9,
                                         tournament=cls.t2)
         # First Round has no RoundPlayers
         # Second Round has only 6 RoundPlayers
-        RoundPlayer.objects.create(player=p3, the_round=cls.r22)
-        RoundPlayer.objects.create(player=p4, the_round=cls.r22)
-        RoundPlayer.objects.create(player=p5, the_round=cls.r22)
-        RoundPlayer.objects.create(player=p6, the_round=cls.r22)
-        RoundPlayer.objects.create(player=p7, the_round=cls.r22)
-        RoundPlayer.objects.create(player=p8, the_round=cls.r22)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r22)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r22)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r22)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r22)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r22)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r22)
         # Third Round has exactly seven RoundPlayers
-        RoundPlayer.objects.create(player=p1, the_round=cls.r23)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r23)
-        RoundPlayer.objects.create(player=p4, the_round=cls.r23)
-        RoundPlayer.objects.create(player=p5, the_round=cls.r23)
-        RoundPlayer.objects.create(player=p6, the_round=cls.r23)
-        RoundPlayer.objects.create(player=p7, the_round=cls.r23)
-        RoundPlayer.objects.create(player=p8, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r23)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r23)
 
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t3 = Tournament.objects.create(name='t3',
@@ -207,56 +208,56 @@ class RoundViewTests(TestCase):
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
                                        start=cls.t3.start_date + timedelta(hours=24))
-        TournamentPlayer.objects.create(player=p1,
+        TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t3)
-        cls.tp2 = TournamentPlayer.objects.create(player=p2,
+        cls.tp2 = TournamentPlayer.objects.create(player=cls.p2,
                                                   tournament=cls.t3)
-        cls.tp3 = TournamentPlayer.objects.create(player=p3,
+        cls.tp3 = TournamentPlayer.objects.create(player=cls.p3,
                                                   tournament=cls.t3)
-        TournamentPlayer.objects.create(player=p4,
+        TournamentPlayer.objects.create(player=cls.p4,
                                         tournament=cls.t3)
-        TournamentPlayer.objects.create(player=p5,
+        TournamentPlayer.objects.create(player=cls.p5,
                                         tournament=cls.t3)
-        TournamentPlayer.objects.create(player=p6,
+        TournamentPlayer.objects.create(player=cls.p6,
                                         tournament=cls.t3)
-        TournamentPlayer.objects.create(player=p7,
+        TournamentPlayer.objects.create(player=cls.p7,
                                         tournament=cls.t3)
-        TournamentPlayer.objects.create(player=p8,
+        TournamentPlayer.objects.create(player=cls.p8,
                                         tournament=cls.t3)
-        TournamentPlayer.objects.create(player=p9,
+        TournamentPlayer.objects.create(player=cls.p9,
                                         tournament=cls.t3)
         # Add SeederBias for a pair of players
         SeederBias.objects.create(player1=cls.tp2, player2=cls.tp3, weight=3)
         # First Round has exactly seven RoundPlayers
-        RoundPlayer.objects.create(player=p1, the_round=cls.r31)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r31)
-        RoundPlayer.objects.create(player=p4, the_round=cls.r31)
-        RoundPlayer.objects.create(player=p5, the_round=cls.r31)
-        RoundPlayer.objects.create(player=p6, the_round=cls.r31)
-        RoundPlayer.objects.create(player=p7, the_round=cls.r31)
-        RoundPlayer.objects.create(player=p8, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r31)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r31)
         # Second Round has eight RoundPlayers, one sitting out
-        RoundPlayer.objects.create(player=p1, the_round=cls.r32)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r32)
-        RoundPlayer.objects.create(player=p4, the_round=cls.r32)
-        RoundPlayer.objects.create(player=p5, the_round=cls.r32)
-        RoundPlayer.objects.create(player=p6, the_round=cls.r32)
-        RoundPlayer.objects.create(player=p7, the_round=cls.r32)
-        RoundPlayer.objects.create(player=p8, the_round=cls.r32, game_count=0)
-        RoundPlayer.objects.create(player=p9, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r32, game_count=0)
+        RoundPlayer.objects.create(player=cls.p9, the_round=cls.r32)
         # Add a single Game to the first Round
         g = Game.objects.create(name='T3R1G1',
                                 started_at=cls.t3.start_date,
                                 is_finished=True,
                                 the_round=cls.r31,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
-        GamePlayer.objects.create(player=p1, game=g, power=cls.turkey)
-        GamePlayer.objects.create(player=p3, game=g, power=cls.russia)
-        GamePlayer.objects.create(player=p4, game=g, power=cls.italy)
-        GamePlayer.objects.create(player=p5, game=g, power=cls.germany)
-        GamePlayer.objects.create(player=p6, game=g, power=cls.france)
-        GamePlayer.objects.create(player=p7, game=g, power=cls.england)
-        GamePlayer.objects.create(player=p8, game=g, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p1, game=g, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p3, game=g, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p4, game=g, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p5, game=g, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g, power=cls.france)
+        GamePlayer.objects.create(player=cls.p7, game=g, power=cls.england)
+        GamePlayer.objects.create(player=cls.p8, game=g, power=cls.austria)
 
     def test_detail(self):
         response = self.client.get(reverse('round_detail', args=(self.t1.pk, 1)))
@@ -304,6 +305,101 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('seed_games', args=(self.t2.pk, 3)))
 
+    def test_get_seven_sitters(self):
+        # get_seven where we specify people sitting out
+        # Remember the game_counts
+        initial_values = {}
+        for rp in self.r11.roundplayer_set.all():
+            initial_values[rp] = rp.game_count
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'sitter_0': str(self.rp12.pk),
+                          'sitter_1': str(self.rp13.pk),
+                          'sitter_2': str(self.rp14.pk),
+                          'sitter_3': str(self.rp15.pk),
+                          'sitter_4': str(self.rp16.pk),
+                          'sitter_5': str(self.rp17.pk)})
+        response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
+        # Check that the game_counts have been updated accordingly
+        self.rp11.refresh_from_db()
+        self.assertEqual(self.rp11.game_count, 1)
+        self.rp12.refresh_from_db()
+        self.assertEqual(self.rp12.game_count, 0)
+        self.rp13.refresh_from_db()
+        self.assertEqual(self.rp13.game_count, 0)
+        self.rp14.refresh_from_db()
+        self.assertEqual(self.rp14.game_count, 0)
+        self.rp15.refresh_from_db()
+        self.assertEqual(self.rp15.game_count, 0)
+        self.rp16.refresh_from_db()
+        self.assertEqual(self.rp16.game_count, 0)
+        self.rp17.refresh_from_db()
+        self.assertEqual(self.rp17.game_count, 0)
+        self.rp18.refresh_from_db()
+        self.assertEqual(self.rp18.game_count, 1)
+        self.rp19.refresh_from_db()
+        self.assertEqual(self.rp19.game_count, 1)
+        self.rp110.refresh_from_db()
+        self.assertEqual(self.rp110.game_count, 1)
+        self.rp111.refresh_from_db()
+        self.assertEqual(self.rp111.game_count, 1)
+        self.rp112.refresh_from_db()
+        self.assertEqual(self.rp112.game_count, 1)
+        self.rp113.refresh_from_db()
+        self.assertEqual(self.rp113.game_count, 1)
+        # Clean up
+        for rp in self.r11.roundplayer_set.all():
+            rp.game_count = initial_values[rp]
+            rp.save()
+
+    def test_get_seven_doublers(self):
+        # get_seven where we specify people playing two games
+        # Remember the game_counts
+        initial_values = {}
+        for rp in self.r11.roundplayer_set.all():
+            initial_values[rp] = rp.game_count
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'double_0': str(self.rp12.pk)})
+        response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
+        # Check that the game_counts have been updated accordingly
+        self.rp11.refresh_from_db()
+        self.assertEqual(self.rp11.game_count, 1)
+        self.rp12.refresh_from_db()
+        self.assertEqual(self.rp12.game_count, 2)
+        self.rp13.refresh_from_db()
+        self.assertEqual(self.rp13.game_count, 1)
+        self.rp14.refresh_from_db()
+        self.assertEqual(self.rp14.game_count, 1)
+        self.rp15.refresh_from_db()
+        self.assertEqual(self.rp15.game_count, 1)
+        self.rp16.refresh_from_db()
+        self.assertEqual(self.rp16.game_count, 1)
+        self.rp17.refresh_from_db()
+        self.assertEqual(self.rp17.game_count, 1)
+        self.rp18.refresh_from_db()
+        self.assertEqual(self.rp18.game_count, 1)
+        self.rp19.refresh_from_db()
+        self.assertEqual(self.rp19.game_count, 1)
+        self.rp110.refresh_from_db()
+        self.assertEqual(self.rp110.game_count, 1)
+        self.rp111.refresh_from_db()
+        self.assertEqual(self.rp111.game_count, 1)
+        self.rp112.refresh_from_db()
+        self.assertEqual(self.rp112.game_count, 1)
+        self.rp113.refresh_from_db()
+        self.assertEqual(self.rp113.game_count, 1)
+        # Clean up
+        for rp in self.r11.roundplayer_set.all():
+            rp.game_count = initial_values[rp]
+            rp.save()
+
     def test_seed_games_not_logged_in(self):
         response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 302)
@@ -333,7 +429,7 @@ class RoundViewTests(TestCase):
 
     def test_seed_games_auto_good_number(self):
         # Eight players, one sitting out, AUTO power assignment
-        self.assertEqual(self.t3.round_numbered(2).game_set.count(), 0)
+        self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games', args=(self.t3.pk, 2)))
         self.assertEqual(response.status_code, 200)
@@ -343,6 +439,190 @@ class RoundViewTests(TestCase):
         # with seven GamePlayers
         g = g_qs.get()
         self.assertEqual(g.gameplayer_set.count(), 7)
+        # Clean up
+        g.delete()
+
+    def test_seed_games_post_success(self):
+        # Eight players, one sitting out, AUTO power assignment
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # We need the Game to already exist
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.t3.start_date,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        gibsons = GameSet.objects.get(name='Gibsons')
+        powers = {gp1: self.austria,
+                  gp2: self.turkey,
+                  gp3: self.england,
+                  gp4: self.russia,
+                  gp5: self.france,
+                  gp6: self.italy,
+                  gp7: self.germany}
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'NewName',
+                'form-0-the_set': str(gibsons.pk)}
+        for gp, p in powers.items():
+            data['form-0-%d' % gp.pk] = str(p.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_index', args=(self.t3.pk, 2)))
+        # Check Game name and Set
+        g.refresh_from_db()
+        self.assertEqual(g.name, 'NewName')
+        self.assertEqual(g.the_set, gibsons)
+        # And power assignments for the 7 GamePlayers
+        for gp, p in powers.items():
+            gp.refresh_from_db()
+            self.assertEqual(gp.power, p)
+        # TODO Check that board call email was sent out
+        # Clean up
+        g.delete()
+
+    def test_seed_games_post_invalid_game_name(self):
+        # Eight players, one sitting out, AUTO power assignment
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # We need the Game to already exist
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.t3.start_date,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        gibsons = GameSet.objects.get(name='Gibsons')
+        powers = {gp1: self.austria,
+                  gp2: self.turkey,
+                  gp3: self.england,
+                  gp4: self.russia,
+                  gp5: self.france,
+                  gp6: self.italy,
+                  gp7: self.germany}
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'S P A C E',
+                'form-0-the_set': str(gibsons.pk)}
+        for gp, p in powers.items():
+            data['form-0-%d' % gp.pk] = str(p.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        # Check error(s)
+        self.assertIn('Game names cannot contain spaces',
+                      response.context['formset'].errors[0]['name'])
+        # Clean up
+        g.delete()
+
+    def test_seed_games_post_invalid_power(self):
+        # Eight players, one sitting out, AUTO power assignment
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # We need the Game to already exist
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.t3.start_date,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        gibsons = GameSet.objects.get(name='Gibsons')
+        powers = {gp1: self.austria,
+                  gp2: self.turkey,
+                  gp3: self.england,
+                  gp4: self.russia,
+                  gp5: self.france,
+                  gp6: self.italy,
+                  gp7: self.germany}
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'NewName',
+                'form-0-the_set': str(gibsons.pk)}
+        for gp, p in powers.items():
+            data['form-0-%d' % gp.pk] = str(p.pk)
+        data['form-0-%d' % gp5.pk] = '99'
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        # Check error(s)
+        self.assertIn('Select a valid choice. That choice is not one of the available choices.',
+                      response.context['formset'].errors[0][gp5.pk])
+        # Clean up
+        g.delete()
+
+    def test_seed_games_post_duplicate_power(self):
+        # Eight players, one sitting out, AUTO power assignment
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # We need the Game to already exist
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.t3.start_date,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        gibsons = GameSet.objects.get(name='Gibsons')
+        powers = {gp1: self.austria,
+                  gp2: self.turkey,
+                  gp3: self.england,
+                  gp4: self.russia,
+                  gp5: self.italy,
+                  gp6: self.italy,
+                  gp7: self.germany}
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'NewName',
+                'form-0-the_set': str(gibsons.pk)}
+        for gp, p in powers.items():
+            data['form-0-%d' % gp.pk] = str(p.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        # Check error(s)
+        self.assertIn('Power Italy appears more than once',
+                      response.context['formset'].errors[0]['__all__'])
         # Clean up
         g.delete()
 
