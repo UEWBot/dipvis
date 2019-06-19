@@ -185,7 +185,7 @@ def view_boards_csv(request, tournament_id):
             soloer = g.soloer()
             # TODO This is broken with replacement players
             for gp in g.gameplayer_set.all():
-                names = gp.player.wdd_firstname_lastname
+                names = gp.player.wdd_firstname_lastname()
                 row_dict = g_row_dict.copy()
                 row_dict['FIRST NAME'] = names[0]
                 row_dict['NAME'] = names[1]
