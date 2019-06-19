@@ -562,7 +562,7 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
-    def test_seed_games_auto_good_number(self):
+    def test_seed_games_auto_good_number_with_sitters(self):
         # Eight players, one sitting out, AUTO power assignment
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -576,6 +576,26 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         # Clean up
         g.delete()
+
+    def test_seed_games_auto_good_number_with_doublers(self):
+        # 13 players, one playing two games, AUTO power assignment
+        self.assertEqual(self.r11.game_set.count(), 0)
+        # Tweak initial data for this test
+        self.rp112.game_count = 1
+        self.rp112.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)))
+        self.assertEqual(response.status_code, 200)
+        # Two Games should have been created
+        g_qs = self.t1.round_numbered(1).game_set
+        self.assertEqual(g_qs.count(), 2)
+        # with seven GamePlayers
+        for g in g_qs.all():
+            self.assertEqual(g.gameplayer_set.count(), 7)
+        # Clean up
+        g.delete()
+        self.rp112.game_count = 0
+        self.rp112.save()
 
     def test_seed_games_post_success(self):
         # Eight players, one sitting out, AUTO power assignment
