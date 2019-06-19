@@ -71,14 +71,16 @@ class RoundViewTests(TestCase):
                                        last_name='Heffalump')
         cls.p9 = Player.objects.create(first_name='Iris',
                                        last_name='Ignoramus')
-        p10 = Player.objects.create(first_name='Jake',
-                                    last_name='Jalopy')
-        p11 = Player.objects.create(first_name='Katrina',
-                                    last_name='Kingpin')
-        p12 = Player.objects.create(first_name='Lucas',
-                                    last_name='Lemon')
-        p13 = Player.objects.create(first_name='Margaret',
-                                    last_name='Maleficent')
+        cls.p10 = Player.objects.create(first_name='Jake',
+                                        last_name='Jalopy')
+        cls.p11 = Player.objects.create(first_name='Katrina',
+                                        last_name='Kingpin')
+        cls.p12 = Player.objects.create(first_name='Lucas',
+                                        last_name='Lemon')
+        cls.p13 = Player.objects.create(first_name='Margaret',
+                                        last_name='Maleficent')
+        cls.p14 = Player.objects.create(first_name='Nigel',
+                                        last_name='Notorious')
 
         now = timezone.now()
         # Published Tournament so it's visible to all
@@ -112,13 +114,13 @@ class RoundViewTests(TestCase):
                                         tournament=cls.t1)
         TournamentPlayer.objects.create(player=cls.p9,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p10,
+        TournamentPlayer.objects.create(player=cls.p10,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p11,
+        TournamentPlayer.objects.create(player=cls.p11,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p12,
+        TournamentPlayer.objects.create(player=cls.p12,
                                         tournament=cls.t1)
-        TournamentPlayer.objects.create(player=p13,
+        TournamentPlayer.objects.create(player=cls.p13,
                                         tournament=cls.t1)
         # And RoundPlayers
         cls.rp11 = RoundPlayer.objects.create(player=cls.p1, the_round=cls.r11)
@@ -130,10 +132,10 @@ class RoundViewTests(TestCase):
         cls.rp17 = RoundPlayer.objects.create(player=cls.p7, the_round=cls.r11)
         cls.rp18 = RoundPlayer.objects.create(player=cls.p8, the_round=cls.r11)
         cls.rp19 = RoundPlayer.objects.create(player=cls.p9, the_round=cls.r11)
-        cls.rp110 = RoundPlayer.objects.create(player=p10, the_round=cls.r11)
-        cls.rp111 = RoundPlayer.objects.create(player=p11, the_round=cls.r11)
-        cls.rp112 = RoundPlayer.objects.create(player=p12, the_round=cls.r11, game_count=0)
-        cls.rp113 = RoundPlayer.objects.create(player=p13, the_round=cls.r11, game_count=2)
+        cls.rp110 = RoundPlayer.objects.create(player=cls.p10, the_round=cls.r11)
+        cls.rp111 = RoundPlayer.objects.create(player=cls.p11, the_round=cls.r11)
+        cls.rp112 = RoundPlayer.objects.create(player=cls.p12, the_round=cls.r11, game_count=0)
+        cls.rp113 = RoundPlayer.objects.create(player=cls.p13, the_round=cls.r11, game_count=2)
 
         # Published Tournament so it's visible to all. PREFERENCES power assignment
         cls.t2 = Tournament.objects.create(name='t2',
@@ -199,7 +201,8 @@ class RoundViewTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=Tournament.SECRET,
                                            power_assignment=Tournament.AUTO,
-                                           is_published=True)
+                                           is_published=True,
+                                           seed_games=True)
         cls.r31 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
@@ -280,6 +283,138 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 200)
+
+    def common_roll_call_post(self, url):
+        # roll_call() POST for t1. Because t1 only has a single Round,
+        # the test for that round and for the whole tournament are the same
+        self.assertEqual(self.t1.current_round().number(), 1)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # These are the existing 13 RoundPlayers, plus one new one and one blank
+        data = urlencode({'form-TOTAL_FORMS': '15',
+                          'form-INITIAL_FORMS': '13',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-1-player': str(self.p2.pk),
+                          'form-1-round_1': 'ok',
+                          'form-2-player': str(self.p3.pk),
+                          'form-2-round_1': 'ok',
+                          'form-3-player': str(self.p4.pk),
+                          'form-4-player': str(self.p5.pk),
+                          'form-5-player': str(self.p6.pk),
+                          'form-6-player': str(self.p7.pk),
+                          'form-7-player': str(self.p8.pk),
+                          'form-8-player': str(self.p9.pk),
+                          'form-9-player': str(self.p10.pk),
+                          'form-10-player': str(self.p11.pk),
+                          'form-11-player': str(self.p12.pk),
+                          'form-12-player': str(self.p13.pk),
+                          'form-13-player': str(self.p14.pk),
+                          'form-13-round_1': 'ok',
+                          'form-14-player': ''})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the create games page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('create_games', args=(self.t1.pk, 1)))
+        # Check that TournamentPlayers and RoundPlayers were created and deleted correctly
+        tp_qs = TournamentPlayer.objects.filter(player=self.p14)
+        self.assertTrue(tp_qs.exists())
+        self.assertEqual(self.r11.roundplayer_set.count(), 3)
+        for rp in self.r11.roundplayer_set.all():
+            self.assertIn(rp.player, [self.p2, self.p3, self.p14])
+        # Clean up
+        tp_qs.delete()
+        self.r11.roundplayer_set.filter(player=self.p14).delete()
+        self.rp11 = RoundPlayer.objects.create(player=self.p1, the_round=self.r11)
+        self.rp14 = RoundPlayer.objects.create(player=self.p4, the_round=self.r11)
+        self.rp15 = RoundPlayer.objects.create(player=self.p5, the_round=self.r11)
+        self.rp16 = RoundPlayer.objects.create(player=self.p6, the_round=self.r11)
+        self.rp17 = RoundPlayer.objects.create(player=self.p7, the_round=self.r11)
+        self.rp18 = RoundPlayer.objects.create(player=self.p8, the_round=self.r11)
+        self.rp19 = RoundPlayer.objects.create(player=self.p9, the_round=self.r11)
+        self.rp110 = RoundPlayer.objects.create(player=self.p10, the_round=self.r11)
+        self.rp111 = RoundPlayer.objects.create(player=self.p11, the_round=self.r11)
+        self.rp112 = RoundPlayer.objects.create(player=self.p12, the_round=self.r11, game_count=0)
+        self.rp113 = RoundPlayer.objects.create(player=self.p13, the_round=self.r11, game_count=2)
+
+    def test_roll_call_post_current_round_no_seeding(self):
+        self.common_roll_call_post(reverse('round_roll_call', args=(self.t1.pk, 1)))
+
+    def test_roll_call_post_no_round_no_seeding(self):
+        self.common_roll_call_post(reverse('roll_call', args=(self.t1.pk,)))
+
+    def test_roll_call_post_current_round_with_seeding(self):
+        # roll_call POST for current round of a tournament with seeding
+        self.assertTrue(self.t3.current_round().number(), 2)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # TODO Why doesn't this work?
+        #data = urlencode({'form-TOTAL_FORMS': '10',
+        data = urlencode({'form-TOTAL_FORMS': '8',
+                          'form-INITIAL_FORMS': '8',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-0-round_2': 'ok',
+                          'form-1-player': str(self.p3.pk),
+                          'form-1-round_2': 'ok',
+                          'form-2-player': str(self.p4.pk),
+                          'form-2-round_2': 'ok',
+                          'form-3-player': str(self.p5.pk),
+                          'form-3-round_2': 'ok',
+                          'form-4-player': str(self.p6.pk),
+                          'form-4-round_2': 'ok',
+                          'form-5-player': str(self.p7.pk),
+                          'form-5-round_2': 'ok',
+                          'form-6-player': str(self.p8.pk),
+                          'form-6-round_2': 'ok',
+                          'form-7-player': str(self.p9.pk),
+                          'form-7-round_2': 'ok',
+                          'form-8-player': '',
+                          'form-9-player': ''})
+        response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the seed games page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('seed_games', args=(self.t3.pk, 2)))
+        # No clean up needed because we left the same 8 players playing
+
+    def test_roll_call_post_old_round(self):
+        # POST of roll_call() for a Round that is finished
+        self.assertTrue(self.t3.round_numbered(1).is_finished())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # TODO Why doesn't this work?
+        #data = urlencode({'form-TOTAL_FORMS': '9',
+        data = urlencode({'form-TOTAL_FORMS': '7',
+                          'form-INITIAL_FORMS': '7',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-0-round_1': 'ok',
+                          'form-1-player': str(self.p3.pk),
+                          'form-1-round_1': 'ok',
+                          'form-2-player': str(self.p4.pk),
+                          'form-2-round_1': 'ok',
+                          'form-3-player': str(self.p5.pk),
+                          'form-3-round_1': 'ok',
+                          'form-4-player': str(self.p6.pk),
+                          'form-4-round_1': 'ok',
+                          'form-5-player': str(self.p7.pk),
+                          'form-5-round_1': 'ok',
+                          'form-6-player': str(self.p8.pk),
+                          'form-6-round_1': 'ok',
+                          'form-7-player': '',
+                          'form-8-player': ''})
+        url = reverse('round_roll_call', args=(self.t3.pk, 1))
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # Should redirect to the same page (as a GET)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # No clean up needed because we left the same 7 players playing
 
     def test_get_seven_not_logged_in(self):
         response = self.client.get(reverse('get_seven', args=(self.t1.pk, 1)))

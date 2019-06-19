@@ -129,6 +129,7 @@ def roll_call(request, tournament_id, round_num=None):
                     # Ensure that we have a corresponding RoundPlayer
                     i, created = RoundPlayer.objects.get_or_create(player=p,
                                                                    the_round=r)
+                    # TODO Should we set game_count to 1 here?
                     try:
                         i.full_clean()
                     except ValidationError as e:
@@ -150,7 +151,7 @@ def roll_call(request, tournament_id, round_num=None):
         r = t.current_round()
         # If we're doing a roll call for a single round,
         # we only want to seed boards if it's the current round
-        if not round_num or (r.number() == round_num):
+        if not round_num or (r.number() == int(round_num)):
             if t.seed_games:
                 # Seed the games. Note that this will redirect to 'get_seven" if necessary
                 return HttpResponseRedirect(reverse('seed_games',
@@ -161,6 +162,10 @@ def roll_call(request, tournament_id, round_num=None):
                 return HttpResponseRedirect(reverse('create_games',
                                                     args=(tournament_id,
                                                           r.number())))
+        # Back to the same page, but as a GET
+        return HttpResponseRedirect(reverse('round_roll_call',
+                                            args=(tournament_id,
+                                                  round_num)))
 
     return render(request,
                   'tournaments/round_players.html',
