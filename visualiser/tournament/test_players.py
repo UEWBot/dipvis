@@ -100,8 +100,9 @@ class PlayerTests(TestCase):
 
     def test_player_wdd_firstname_lastname_no_id(self):
         p = Player.objects.create(first_name='John', last_name='Smith')
-        # TODO Validate results
-        p.wdd_firstname_lastname()
+        name = p.wdd_firstname_lastname()
+        self.assertEqual(name[0], 'John')
+        self.assertEqual(name[1], 'Smith')
 
     # Player.wdd_url()
     def test_player_wdd_url(self):
