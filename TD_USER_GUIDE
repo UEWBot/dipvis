@@ -6,13 +6,13 @@ Before You Start
 
 You're going to need an account on a site running the software.
 The site operator needs to give you the appropriate permissions.
-Throughout ths document, we'll assume the site is https://example.com/.
+Throughout this document, we'll assume the site is https://example.com/.
 
 Concepts
 --------
 
-Most of this should be fairly familiar, but there are some subleties.
-Things will be more obvious if you have a good understnading of these concepts.
+Most of this should be fairly familiar, but there are some subtleties.
+Things will be more obvious if you have a good understanding of these concepts.
 
 A Player is a person who plays Diplomacy.
 A Tournament is an event where people play Diplomacy competitively.
@@ -28,7 +28,7 @@ replacement players - each Great Power in a Game has exactly one GamePlayer).
 Games are scored using some GameScoringSystem (the system has support for all
 the systems commonly used in North America). Scores for Games in a Round are
 combined using a RoundScoringSystem. This only matters if you have players
-playing multiple Games in a Round. The ony option here is currently "best
+playing multiple Games in a Round. The only option here is currently "best
 game counts", meaning that each player gets the score for their best Game
 in that Round. Similarly, Round scores get combined using a TournamentScoringSystem.
 The system currently support "best 2 rounds", "best 3 rounds", and "best 4 rounds".
@@ -45,7 +45,7 @@ The final concept is a SeederBias. This is used to guide the game seeding algori
 Essentially it tells the system to pretend that two TournamentPlayers have already
 played a certain number of Games against each other this Tournament. Because the
 game seeding algorithm tries to minimise the number of times each pair of Players
-play each tehr within a Tournament, this will tend to keep those players apart.
+play each other within a Tournament, this will tend to keep those players apart.
 It is intended for use when you have family members that you would prefer not to
 end up at the same board.
 
@@ -68,7 +68,7 @@ until it's over and all the data has been entered.
 
 Next you can add Rounds. For each one, you need to specify the start and end times and dates,
 and the scoring system used for games in that Round (most Tournaments will use the
-same scoring system for evey round, but the system supports deviations from that).
+same scoring system for every round, but the system supports deviations from that).
 You also need to decide whether Draws in the Round include all survivors (DIAS).
 
 That's all you need to do here. You can also add TournamentPlayers from this page,
@@ -115,7 +115,7 @@ If you're using preference lists to assign Great Powers, hopefully most players 
 provide you with an email address. In that case, when you register them, the system
 will send them an email with a unique URL where they can enter their preferences for
 the Tournament. You can see which have been sent out from the tournament player page,
-and you can aso re-send them from here if needed.
+and you can also re-send them from here if needed.
 
 For players who don't provide an email, you can enter their preferences by hand at
 https://example.com/tournaments/42/prefs. Preferences are entered as a string of
@@ -151,7 +151,7 @@ Enter CentreCounts after each game year.
 For DrawProposals, you can enter all of them or just the ones that pass.
 
 The bare minimum is the final year CentreCounts and any passed DrawProposals. These are
-needed to calcuate scores.
+needed to calculate scores.
 
 If you were to enter all the above data, people would be able to see timelapse-style
 displays of the board state, charts of SC ownership and centre counts, and textual
