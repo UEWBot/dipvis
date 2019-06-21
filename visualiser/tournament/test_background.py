@@ -32,7 +32,7 @@ class WDDBackgroundTests(TestCase):
         self.assertRaises(InvalidWDDId, b.wdd_name)
 
     def test_wdd_background_wdd_firstname_lastname(self):
-        cases = {13747: ('Benjy', 'AARONS-RICHARDSON'),
+        cases = {12108: ('Benjy', 'AARONS-RICHARDSON'),
                  13747: ('Vincent', '?'),
                  7089: ('Jo Andre', 'AAKVIK'),
                  1664: ('Emmanuel', 'AH-CHIOW'),
