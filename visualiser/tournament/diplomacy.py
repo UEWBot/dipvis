@@ -36,6 +36,7 @@ WINNING_SCS = ((TOTAL_SCS//2)+1)
 
 FIRST_YEAR = 1901
 
+
 def validate_year(value):
     """
     Checks for a valid game year
@@ -44,6 +45,7 @@ def validate_year(value):
         raise ValidationError(_(u'%(value)d is not a valid game year'),
                               params={'value': value})
 
+
 def validate_year_including_start(value):
     """
     Checks for a valid game year, allowing 1900, too
@@ -51,6 +53,7 @@ def validate_year_including_start(value):
     if value < FIRST_YEAR-1:
         raise ValidationError(_(u'%(value)d is not a valid game year'),
                               params={'value': value})
+
 
 def validate_ranking(value):
     """
@@ -63,10 +66,11 @@ def validate_ranking(value):
         raise ValidationError(_('%(value)d is not a valid ranking'),
                               params={'value': value})
 
+
 def validate_preference_string(the_string):
     """
     Checks that the string represents a valid power preference list.
-    It must only consist of the single-letter abbreviations for the great powers
+    It must only contain the single-letter abbreviations for the great powers
     (upper or lower case), with each present at most once.
     """
     # Convert the preference string to all uppercase
@@ -84,11 +88,13 @@ def validate_preference_string(the_string):
         raise ValidationError(_('%(prefs)s contains invalid character(s)'),
                               params={'prefs': the_string})
 
+
 def game_image_location(instance, filename):
     """
     Function that determines where to store the file.
     """
     return os.path.join('games', 'starting_positions', filename)
+
 
 class GreatPower(models.Model):
     """
@@ -110,12 +116,14 @@ class GreatPower(models.Model):
     def __str__(self):
         return self.name
 
+
 class GameSet(models.Model):
     """
     A Diplomacy board game set.
-    Over the years, different sets have been produced with different pieces, maps, etc.
-    The main purpose of separating this out is so that we can display SC counts with power
-    colours matching those of any photos of the board.
+    Over the years, different sets have been produced with different pieces,
+    maps, etc.
+    The main purpose of separating this out is so that we can display SC
+    counts with power colours matching those of any photos of the board.
     """
     name = models.CharField(max_length=20, unique=True)
     initial_image = models.ImageField(upload_to=game_image_location)
@@ -123,11 +131,14 @@ class GameSet(models.Model):
     def __str__(self):
         return self.name
 
+
 class SetPower(models.Model):
     """
     A single GreatPower in a given GameSet.
     """
-    the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
+    the_set = models.ForeignKey(GameSet,
+                                verbose_name=_(u'set'),
+                                on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
     colour = models.CharField(max_length=20)
 
@@ -138,13 +149,17 @@ class SetPower(models.Model):
         return _(u'%(power)s in %(the_set)s') % {'power': self.power.name,
                                                  'the_set': self.the_set.name}
 
+
 class SupplyCentre(models.Model):
     """
     A supply centre on the Diplomacy board.
     """
     name = models.CharField(max_length=20, unique=True)
     abbreviation = models.CharField(max_length=4, unique=True)
-    initial_owner = models.ForeignKey(GreatPower, on_delete=models.CASCADE, null=True, blank=True)
+    initial_owner = models.ForeignKey(GreatPower,
+                                      on_delete=models.CASCADE,
+                                      null=True,
+                                      blank=True)
 
     class Meta:
         ordering = ['name']

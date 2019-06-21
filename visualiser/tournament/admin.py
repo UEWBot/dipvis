@@ -28,7 +28,7 @@ class SetPowerInline(admin.TabularInline):
     model = SetPower
 
     def get_extra(self, request, obj=None, **kwargs):
-        if obj:
+        if obj is not None:
             # Most likely we have the set we need
             return 0
         # We're going to want 7 set powers
@@ -81,7 +81,7 @@ class GamePlayerInline(admin.TabularInline):
         }),
     )
     def get_extra(self, request, obj=None, **kwargs):
-        if obj:
+        if obj is not None:
             # Replacement players are pretty rare
             # Let them click the button if needed
             return 0

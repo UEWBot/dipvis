@@ -47,12 +47,17 @@ from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 
 # Round views
 
+
 def get_round_or_404(tournament, round_num):
-    """Return the specified numbered round of the specified tournament or raise Http404."""
+    """
+    Return the specified numbered round of the specified tournament or
+    raise Http404.
+    """
     try:
         return tournament.round_numbered(round_num)
     except Round.DoesNotExist:
         raise Http404
+
 
 def round_simple(request, tournament_id, round_num, template):
     """Just render the specified template with the round"""
@@ -61,6 +66,7 @@ def round_simple(request, tournament_id, round_num, template):
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/%s.html' % template, context)
 
+
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id, round_num=None):
     """Provide a form to specify which players are playing each round"""
@@ -68,7 +74,7 @@ def roll_call(request, tournament_id, round_num=None):
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
-    if round_num:
+    if round_num is not None:
         r = get_round_or_404(t, round_num)
         round_set = t.round_set.filter(pk=r.pk)
     else:
@@ -84,7 +90,7 @@ def roll_call(request, tournament_id, round_num=None):
             played = rps.filter(the_round=r).exists()
             current['round_%d' % r.number()] = played
         data.append(current)
-    if round_num:
+    if round_num is not None:
         formset = PlayerRoundFormset(request.POST or None,
                                      tournament=t,
                                      round_num=int(round_num),
@@ -112,8 +118,9 @@ def roll_call(request, tournament_id, round_num=None):
                               'tournaments/round_players.html',
                               {'title': _('Roll Call'),
                                'tournament': t,
-                               'post_url': reverse('roll_call', args=(tournament_id,)),
-                               'formset' : formset})
+                               'post_url': reverse('roll_call',
+                                                   args=(tournament_id,)),
+                               'formset': formset})
             if created:
                 i.save()
             for r_name, value in form.cleaned_data.items():
@@ -139,8 +146,9 @@ def roll_call(request, tournament_id, round_num=None):
                                       'tournaments/round_players.html',
                                       {'title': _('Roll Call'),
                                        'tournament': t,
-                                       'post_url': reverse('roll_call', args=(tournament_id,)),
-                                       'formset' : formset})
+                                       'post_url': reverse('roll_call',
+                                                           args=(tournament_id,)),
+                                       'formset': formset})
                     if created:
                         i.save()
                 else:
@@ -151,17 +159,16 @@ def roll_call(request, tournament_id, round_num=None):
         r = t.current_round()
         # If we're doing a roll call for a single round,
         # we only want to seed boards if it's the current round
-        if not round_num or (r.number() == int(round_num)):
+        if (round_num is None) or (r.number() == int(round_num)):
             if t.seed_games:
                 # Seed the games. Note that this will redirect to 'get_seven" if necessary
                 return HttpResponseRedirect(reverse('seed_games',
                                                     args=(tournament_id,
                                                           r.number())))
-            else:
-                # Next job is almost certainly to create the actual games
-                return HttpResponseRedirect(reverse('create_games',
-                                                    args=(tournament_id,
-                                                          r.number())))
+            # Next job is almost certainly to create the actual games
+            return HttpResponseRedirect(reverse('create_games',
+                                                args=(tournament_id,
+                                                      r.number())))
         # Back to the same page, but as a GET
         return HttpResponseRedirect(reverse('round_roll_call',
                                             args=(tournament_id,
@@ -172,7 +179,8 @@ def roll_call(request, tournament_id, round_num=None):
                   {'title': _('Roll Call'),
                    'tournament': t,
                    'post_url': reverse('roll_call', args=(tournament_id,)),
-                   'formset' : formset})
+                   'formset': formset})
+
 
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
@@ -194,9 +202,9 @@ def get_seven(request, tournament_id, round_num):
     doubles = 7 - sitters
     context = {'tournament': t,
                'round': r,
-               'count' : count,
-               'sitters' : sitters,
-               'doubles' : doubles}
+               'count': count,
+               'sitters': sitters,
+               'doubles': doubles}
     form = GetSevenPlayersForm(request.POST or None,
                                the_round=r)
     if form.is_valid():
@@ -222,6 +230,7 @@ def get_seven(request, tournament_id, round_num):
     return render(request,
                   'rounds/get_seven.html',
                   context)
+
 
 def _sitters_and_two_gamers(tournament, the_round):
     """ Return a (sitters, two_gamers) 2-tuple"""
@@ -258,6 +267,7 @@ def _sitters_and_two_gamers(tournament, the_round):
             sitters.add(tp)
     return sitters, two_gamers
 
+
 def _create_game_seeder(tournament, round_number):
     """Return a GameSeeder that knows about the tournament so far"""
     tourney_players = tournament.tournamentplayer_set.all()
@@ -287,6 +297,7 @@ def _create_game_seeder(tournament, round_number):
             seeder.add_bias(sb.player1, sb.player2, sb.weight)
     return seeder
 
+
 def _seed_games(tournament, the_round):
     """Wrapper round GameSeeder to do the actual seeding for a round"""
     seeder = _create_game_seeder(tournament, the_round.number())
@@ -295,6 +306,7 @@ def _seed_games(tournament, the_round):
     return seeder.seed_games(omitting_players=sitters,
                              players_doubling_up=two_gamers)
 
+
 def _seed_games_and_powers(tournament, the_round):
     """Wrapper round GameSeeder to do the actual seeding for a round"""
     seeder = _create_game_seeder(tournament, the_round.number())
@@ -302,6 +314,7 @@ def _seed_games_and_powers(tournament, the_round):
     # Generate the games
     return seeder.seed_games_and_powers(omitting_players=sitters,
                                         players_doubling_up=two_gamers)
+
 
 @permission_required('tournament.add_game')
 def seed_games(request, tournament_id, round_num):
@@ -327,7 +340,7 @@ def seed_games(request, tournament_id, round_num):
                                   'rounds/seeded_games.html',
                                   {'tournament': t,
                                    'round': r,
-                                   'formset' : formset})
+                                   'formset': formset})
                 g.save()
                 # Unassign all GreatPowers first,
                 # so we never have two players for one power
@@ -348,7 +361,7 @@ def seed_games(request, tournament_id, round_num):
                                       'rounds/seeded_games.html',
                                       {'tournament': t,
                                        'round': r,
-                                       'formset' : formset})
+                                       'formset': formset})
                     gp.save()
             # Notify the players
             send_board_call(r)
@@ -414,6 +427,7 @@ def seed_games(request, tournament_id, round_num):
     context = {'tournament': t, 'round': r, 'formset': formset}
     return render(request, 'rounds/seeded_games.html', context)
 
+
 @permission_required('tournament.add_game')
 def create_games(request, tournament_id, round_num):
     """Provide a form to create the games for a round"""
@@ -459,7 +473,7 @@ def create_games(request, tournament_id, round_num):
                               'rounds/create_games.html',
                               {'tournament': t,
                                'round': r,
-                               'formset' : formset})
+                               'formset': formset})
             if created:
                 g.save()
             # Assign the players to the game
@@ -488,7 +502,7 @@ def create_games(request, tournament_id, round_num):
                                   'rounds/create_games.html',
                                   {'tournament': t,
                                    'round': r,
-                                   'formset' : formset})
+                                   'formset': formset})
                 i.save()
         # Notify the players
         send_board_call(r)
@@ -500,7 +514,8 @@ def create_games(request, tournament_id, round_num):
                   'rounds/create_games.html',
                   {'tournament': t,
                    'round': r,
-                   'formset' : formset})
+                   'formset': formset})
+
 
 @permission_required('tournament.change_gameplayer')
 def game_scores(request, tournament_id, round_num):
@@ -544,7 +559,7 @@ def game_scores(request, tournament_id, round_num):
                                   'rounds/game_score.html',
                                   {'tournament': t,
                                    'round': round_num,
-                                   'formset' : formset})
+                                   'formset': formset})
                 i.save()
         # Redirect to the round index
         return HttpResponseRedirect(reverse('round_index',
@@ -554,7 +569,8 @@ def game_scores(request, tournament_id, round_num):
                   'rounds/game_score.html',
                   {'tournament': t,
                    'round': round_num,
-                   'formset' : formset})
+                   'formset': formset})
+
 
 def game_index(request, tournament_id, round_num):
     """Display a list of games in the round"""

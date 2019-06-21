@@ -24,7 +24,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tournament.diplomacy import GameSet, GreatPower
-from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, TournamentPlayer, SeederBias
 from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
@@ -328,11 +327,11 @@ class TournamentViewTests(TestCase):
                                                    uuid_str=str(uuid.uuid4()))
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t5)
-        g = Game.objects.create(name='Game1',
-                                the_round=cls.r51,
-                                started_at=cls.r51.start,
-                                the_set=GameSet.objects.first(),
-                                is_finished=False)
+        Game.objects.create(name='Game1',
+                            the_round=cls.r51,
+                            started_at=cls.r51.start,
+                            the_set=GameSet.objects.first(),
+                            is_finished=False)
 
     def test_index(self):
         response = self.client.get(reverse('index'))
@@ -648,8 +647,8 @@ class TournamentViewTests(TestCase):
         tp = TournamentPlayer.objects.create(player=self.p2,
                                              tournament=self.t2)
         self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
-        rp = RoundPlayer.objects.create(player=self.p2,
-                                        the_round=self.t2.round_numbered(1))
+        RoundPlayer.objects.create(player=self.p2,
+                                   the_round=self.t2.round_numbered(1))
         self.assertTrue(self.t2.round_numbered(1).roundplayer_set.filter(player=self.p2).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))

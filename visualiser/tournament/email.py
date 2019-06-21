@@ -22,6 +22,7 @@ from django.conf import settings
 from django.core import mail
 from django.core.mail import send_mail, EmailMessage
 
+
 def send_board_call(the_round):
     """Send an email to all players in the round with the board calls"""
     # TODO Translation is complex, because we don't want to use the language of the
@@ -53,11 +54,12 @@ def send_board_call(the_round):
             email = EmailMessage(subject=subject,
                                  body=msg_text,
                                  from_email=email_from,
-                                 to=[email_from,],
+                                 to=[email_from],
                                  bcc=recipients)
             messages.append(email)
     if messages:
         mail.get_connection().send_messages(messages)
+
 
 PREFS_EMAIL = """
 Hi,
@@ -74,6 +76,7 @@ If you enter fewer than 7 powers, any omitted powers will be prioritised equal l
 You can change your preference list at any time.
 The list at the time of board call for each round is the one that will be used for that round.
 """
+
 
 def send_prefs_email(tournamentplayer, force=False):
     """
@@ -99,4 +102,4 @@ def send_prefs_email(tournamentplayer, force=False):
     send_mail('Specify power preferences for %s' % t,
               msg_body,
               settings.EMAIL_HOST_USER,
-              [addr,])
+              [addr])

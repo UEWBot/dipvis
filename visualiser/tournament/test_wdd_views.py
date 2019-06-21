@@ -23,7 +23,7 @@ from django.utils import timezone
 from tournament.diplomacy import GreatPower, GameSet
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, G_SCORING_SYSTEMS
+from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, FALL
 from tournament.players import Player

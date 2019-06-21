@@ -30,14 +30,17 @@ from tournament.tournament_views import get_visible_tournament_or_404
 
 # CSV export for WDD
 
+
 def _power_name_to_wdd(name):
     """Map a power name to a WDD country code"""
     # 0 for variant (standard), plus first two letters of the country name (in English)
     return '0%s' % name[0:2].upper()
 
+
 def _centrecount_year_to_wdd(year):
     """Map a year to a WDD centrecount column name"""
     return 'CT_%02d' % (year % (FIRST_YEAR-1))
+
 
 def view_classification_csv(request, tournament_id):
     """Return a WDD-compatible "classification" CSV file for the tournament"""
@@ -60,7 +63,7 @@ def view_classification_csv(request, tournament_id):
                'NAME',
                'HOMONYME',
                'RANK',
-               'EXAEQUO', # Last of the mandatory ones
+               'EXAEQUO',  # Last of the mandatory ones
                'SCORE',
               ]
     # Score for each round (extras don't matter)
@@ -101,9 +104,10 @@ def view_classification_csv(request, tournament_id):
         names = p.wdd_firstname_lastname()
         row_dict = {'FIRST NAME': names[0],
                     'NAME': names[1],
-                    'HOMONYME': '1', # User Guide says "Set to 1"
+                    'HOMONYME': '1',  # User Guide says "Set to 1"
                     'RANK': rank,
-                    'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]), # No. of players with the same rank
+                    # No. of players with the same rank
+                    'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]),
                     'SCORE': p_score,
                    }
         # Add in round score for each round played
@@ -127,7 +131,7 @@ def view_classification_csv(request, tournament_id):
         if top_board:
             try:
                 gp = top_board.gameplayer_set.get(player=p)
-                row_dict['NAME_TOPBOARD'] = 'A' # This seems to be arbitrary
+                row_dict['NAME_TOPBOARD'] = 'A'  # This seems to be arbitrary
                 row_dict['HEAT_TOPBOARD'] = top_board.the_round.number()
                 row_dict['BOARD_TOPBOARD'] = top_board.id
                 row_dict['RK_TOPBOARD'] = tb_positions[gp.power]
@@ -142,6 +146,7 @@ def view_classification_csv(request, tournament_id):
 
     return response
 
+
 def view_boards_csv(request, tournament_id):
     """Return a WDD-compatible "boards" CSV file for the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -153,7 +158,7 @@ def view_boards_csv(request, tournament_id):
                'BOARD',
                'COUNTRY',
                'RANK',
-               'EXAEQUO', # Last of the mandatrory ones
+               'EXAEQUO',  # Last of the mandatory ones
                'SCORE',
                'NB_CENTRE',
                'YEAR_ELIMINATION',
@@ -172,7 +177,7 @@ def view_boards_csv(request, tournament_id):
 
     # One row per game, per player
     r_row_dict = {}
-    r_row_dict['HOMONYME'] = '1' # User Guide says "Set to 1"
+    r_row_dict['HOMONYME'] = '1'  # User Guide says "Set to 1"
     for r in t.round_set.all():
         r_row_dict['ROUND'] = r.number()
         g_row_dict = r_row_dict.copy()

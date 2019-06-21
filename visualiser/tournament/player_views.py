@@ -27,12 +27,14 @@ from tournament.players import Player, add_player_bg
 
 # Player views
 
+
 class PlayerIndexView(generic.ListView):
     """Player index"""
     model = Player
     paginate_by = 25
     template_name = 'players/index.html'
     context_object_name = 'player_list'
+
 
 def player_detail(request, pk):
     """Details of a single player"""

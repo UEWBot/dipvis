@@ -51,30 +51,31 @@ DRAW_7 = 'D7'
 LOSS = 'L'
 
 # Mask values to choose which background strings to include
-MASK_TITLES = 1<<0
-MASK_TOURNEY_COUNT = 1<<1
-MASK_FIRST_TOURNEY = 1<<2
-MASK_LAST_TOURNEY = 1<<3
-MASK_BEST_TOURNEY_RESULT = 1<<4
-MASK_GAMES_PLAYED = 1<<5
-MASK_BEST_SC_COUNT = 1<<6
-MASK_SOLO_COUNT = 1<<7
-MASK_ELIM_COUNT = 1<<8
-MASK_BOARD_TOP_COUNT = 1<<9
-MASK_ROUND_ENDPOINTS = 1<<10
-MASK_BEST_COUNTRY = 1<<11
-MASK_OTHER_AWARDS = 1<<12
-MASK_RANKINGS = 1<<13
-MASK_ALL_BG = (1<<14)-1
+MASK_TITLES = 1 << 0
+MASK_TOURNEY_COUNT = 1 << 1
+MASK_FIRST_TOURNEY = 1 << 2
+MASK_LAST_TOURNEY = 1 << 3
+MASK_BEST_TOURNEY_RESULT = 1 << 4
+MASK_GAMES_PLAYED = 1 << 5
+MASK_BEST_SC_COUNT = 1 << 6
+MASK_SOLO_COUNT = 1 << 7
+MASK_ELIM_COUNT = 1 << 8
+MASK_BOARD_TOP_COUNT = 1 << 9
+MASK_ROUND_ENDPOINTS = 1 << 10
+MASK_BEST_COUNTRY = 1 << 11
+MASK_OTHER_AWARDS = 1 << 12
+MASK_RANKINGS = 1 << 13
+MASK_ALL_BG = (1 << 14) - 1
 
 TITLE_MAP = {
-    'World Champion' : 1,
-    'North American Champion' : 1,
-    'Winner' : 1,
-    'European Champion' : 1,
-    'Second' : 2,
-    'Third' : 3,
+    'World Champion': 1,
+    'North American Champion': 1,
+    'Winner': 1,
+    'European Champion': 1,
+    'Second': 2,
+    'Third': 3,
 }
+
 
 def validate_wdd_player_id(value):
     """
@@ -90,6 +91,7 @@ def validate_wdd_player_id(value):
         raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
                               params={'value': value})
 
+
 def validate_wdd_tournament_id(value):
     """
     Checks a WDD tournament id
@@ -104,12 +106,14 @@ def validate_wdd_tournament_id(value):
         raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
                               params={'value': value})
 
+
 def player_picture_location(instance, filename):
     """
     Function that determines where to store the file.
     """
     # Stuff them all into one directory
     return 'player_pictures/%s' % filename
+
 
 def wdd_url_to_id(url):
     """
@@ -120,6 +124,7 @@ def wdd_url_to_id(url):
     if m:
         return int(m.group(1))
     return 0
+
 
 def add_player_bg(player):
     """
@@ -342,6 +347,7 @@ def add_player_bg(player):
             print("player=%s, system=%s" % (str(player), r['Name']))
             traceback.print_exc()
 
+
 def position_str(position):
     """
     Returns the string version of the position e.g. '1st', '12th'.
@@ -360,6 +366,7 @@ def position_str(position):
     else:
         result += u'th'
     return _(result)
+
 
 class Player(models.Model):
     """
@@ -457,7 +464,7 @@ class Player(models.Model):
         results = []
         award_set = self.playeraward_set.order_by('date')
         powers = GreatPower.objects.all()
-        if power:
+        if power is not None:
             award_set = award_set.filter(power=power)
             powers = [power]
         if (mask & MASK_BEST_COUNTRY) != 0:
@@ -564,10 +571,12 @@ class Player(models.Model):
         return results
 
     def _results(self, power=None, mask=MASK_ALL_BG):
-        """ List of tournament game achievements, optionally with one Great Power """
+        """
+        List of tournament game achievements, optionally with one Great Power.
+        """
         results = []
         results_set = self.playergameresult_set.all()
-        if power:
+        if power is not None:
             results_set = results_set.filter(power=power)
             c_str = _(u' as %(power)s') % {'power': power}
         else:
@@ -645,15 +654,17 @@ class Player(models.Model):
 
     def background(self, power=None, mask=MASK_ALL_BG):
         """
-        List of background strings about the player, optionally as a specific Great Power
+        List of background strings about the player,
+        optionally as a specific Great Power
         """
-        if not power:
+        if power is None:
             return self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
         return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
         return reverse('player_detail', args=[str(self.id)])
+
 
 class PlayerTournamentRanking(models.Model):
     """
@@ -679,6 +690,7 @@ class PlayerTournamentRanking(models.Model):
         if self.tournament[-4:] != str(self.year):
             s += _(u' in %(year)d') % {'year': self.year}
         return s
+
 
 class PlayerGameResult(models.Model):
     """
@@ -723,6 +735,7 @@ class PlayerGameResult(models.Model):
                                                                                'game': self.game_name,
                                                                                'tourney': self.tournament_name}
 
+
 class PlayerAward(models.Model):
     """
     An award won by a player.
@@ -751,6 +764,7 @@ class PlayerAward(models.Model):
         return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
                                                                'award': self.name,
                                                                'tourney': self.tournament}
+
 
 class PlayerRanking(models.Model):
     """

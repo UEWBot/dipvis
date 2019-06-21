@@ -25,21 +25,29 @@ from django.utils.translation import ugettext as _
 
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
 
+
 def _the_game(centre_counts):
     """Returns the game in question."""
     return centre_counts.first().game
+
 
 def _final_year(centre_counts):
     """Returns the most recent year we have centre counts for."""
     return centre_counts.order_by('-year')[0].year
 
+
 def _final_year_scs(centre_counts):
-    """Returns the CentreCounts for the most recent year only, ordered largest-to-smallest."""
+    """
+    Returns the CentreCounts for the most recent year only,
+    ordered largest-to-smallest.
+    """
     return centre_counts.filter(year=_final_year(centre_counts)).order_by('-count')
+
 
 def _survivor_count(centre_counts):
     """Returns the number of surviving powers"""
     return _final_year_scs(centre_counts).filter(count__gt=0).count()
+
 
 class GameScoringSystem(ABC):
     # TODO This doesn't deal with multiple players playing one power
@@ -56,6 +64,7 @@ class GameScoringSystem(ABC):
         Returns a dict, indexed by power id, of scores.
         """
         pass
+
 
 class GScoringSolos(GameScoringSystem):
     """
@@ -79,6 +88,7 @@ class GScoringSolos(GameScoringSystem):
                 retval[sc.power] = 100.0
         return retval
 
+
 class GScoringDrawSize(GameScoringSystem):
     """
     Solos score 100 points.
@@ -90,7 +100,8 @@ class GScoringDrawSize(GameScoringSystem):
     def scores(self, centre_counts):
         """
         If any power soloed, they get 100 points.
-        Otherwise, if a draw passed, all powers in the draw equally shared 100 points between them.
+        Otherwise, if a draw passed, all powers in the draw equally shared 100
+        points between them.
         Otherwise, all surviving powers equally share 100 points between them.
         Return a dict, indexed by power id, of scores.
         """
@@ -115,14 +126,16 @@ class GScoringDrawSize(GameScoringSystem):
                 retval[sc.power] = 100.0 / survivors
         return retval
 
+
 def _adjust_rank_score(centre_counts, rank_points):
     """
-    Takes a list of CentreCounts for one year of one game, ordered highest-to-lowest
-    and a list of ranking points for positions, ordered from first place to last.
-    Returns a list of ranking points for positions, ordered to correspond to the centre counts,
-    having made adjustments for any tied positions.
-    Where two or more powers have the same number of SCs, the ranking points for their positions
-    are shared eveny between them.
+    Takes a list of CentreCounts for one year of one game,
+    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered from first place to last.
+    Returns a list of ranking points for positions, ordered to correspond to
+    the centre counts, having made adjustments for any tied positions.
+    Where two or more powers have the same number of SCs, the ranking points
+    for their positions are shared eveny between them.
     """
     if not rank_points:
         # The rest of them get zero points
@@ -144,22 +157,28 @@ def _adjust_rank_score(centre_counts, rank_points):
         else:
             rank_points.append(points / count)
     # And recursively continue
-    return rank_points[0:i] + _adjust_rank_score(centre_counts[i:], rank_points[i:])
+    return rank_points[0:i] + _adjust_rank_score(centre_counts[i:],
+                                                 rank_points[i:])
+
 
 class GScoringCDiplo(GameScoringSystem):
     """
     If there is a solo:
     - Soloers score a set number of points (soloer_pts).
-    - Losers to a solo may optionally also score some set number of points (loss_pts).
+    - Losers to a solo may optionally also score some set number of
+      points (loss_pts).
     Otherwise:
     - Participants get some points (played_pts).
     - Everyone gets one point per centre owned.
     - Power with the most centres gets a set number of points (first_pts).
-    - Power with the second most centres gets a set number of points (second_pts).
-    - Power with the third most centres gets a set number of points (third_pts).
+    - Power with the second most centres gets a set number of
+      points (second_pts).
+    - Power with the third most centres gets a set number of
+      points (third_pts).
     - if powers are tied for rank, they split the points for their ranks.
     """
-    def __init__(self, name, soloer_pts, played_pts, first_pts, second_pts, third_pts, loss_pts=0):
+    def __init__(self, name, soloer_pts, played_pts,
+                 first_pts, second_pts, third_pts, loss_pts=0):
         self.name = name
         self.soloer_pts = soloer_pts
         self.played_pts = played_pts
@@ -180,6 +199,7 @@ class GScoringCDiplo(GameScoringSystem):
                 retval[sc.power] = self.played_pts + sc.count + rank_pts[i]
         return retval
 
+
 class _DummySC(object):
     """
     Used by Carnage scoring with elimination ordering.
@@ -189,13 +209,14 @@ class _DummySC(object):
         self.power = power
         self.count = count
 
+
 class GScoringCarnage(GameScoringSystem):
     """
-    Position grants a set number of points (7000, 6000, 5000, 4000, 3000, 20000, or 1000),
-    with ties splitting those points.
+    Position grants a set number of points (7000, 6000, 5000, 4000, 3000,
+    20000, or 1000), with ties splitting those points.
     Eliminated powers just split position points.
-    Each power gets 1 point per centre owned at the end, unless there's a solo, in which
-    case the soloer gets the 34 SC points.
+    Each power gets 1 point per centre owned at the end, unless there's
+    a solo, in which case the soloer gets the 34 SC points.
     """
     # TODO Add support for dead powers scoring based on elimination order
     def __init__(self, name, dead_equal=True):
@@ -217,7 +238,8 @@ class GScoringCarnage(GameScoringSystem):
         # Giving all the dead powers equal scores is easy
         if self.dead_equal:
             # Tweak the ranking points to allow for ties
-            rank_pts = _adjust_rank_score(list(final_scs), list(self.position_pts))
+            rank_pts = _adjust_rank_score(list(final_scs),
+                                          list(self.position_pts))
             for i, sc in enumerate(final_scs):
                 retval[sc.power] = sc.count + rank_pts[i]
             return retval
@@ -250,11 +272,12 @@ class GScoringCarnage(GameScoringSystem):
             retval[sc.power] = rank_pts[i]
         return retval
 
+
 class GScoringSumOfSquares(GameScoringSystem):
     """
     Soloer gets 100 points, everyone else gets zero.
-    If there is no solo, square each power's final centre-count and normalize those numbers to
-    sum to 100 points.
+    If there is no solo, square each power's final centre-count
+    and normalize those numbers to sum to 100 points.
     """
     def __init__(self):
         self.name = _(u'Sum of Squares')
@@ -278,6 +301,7 @@ class GScoringSumOfSquares(GameScoringSystem):
         for sc in final_scs:
             retval[sc.power] /= sum_of_squares
         return retval
+
 
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [

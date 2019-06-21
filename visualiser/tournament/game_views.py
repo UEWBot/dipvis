@@ -50,13 +50,17 @@ REFRESH_TIME = 60
 
 # Game views
 
+
 def get_game_or_404(tournament, game_name):
-    """Return the specified game of the specified tournament or raise Http404."""
+    """
+    Return the specified game of the specified tournament or raise Http404.
+    """
     try:
         return Game.objects.get(name=game_name,
                                 the_round__tournament=tournament)
     except Game.DoesNotExist:
         raise Http404
+
 
 def game_simple(request, tournament_id, game_name, template):
     """Just render the specified template with the game"""
@@ -64,6 +68,7 @@ def game_simple(request, tournament_id, game_name, template):
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
     return render(request, 'games/%s.html' % template, context)
+
 
 def game_sc_owners(request,
                    tournament_id,
@@ -82,7 +87,9 @@ def game_sc_owners(request,
     # If we don't have ownership data for the current year,
     # and we're refreshing to somewhere else, just move straight along
     this_year = years[0]
-    if refresh and redirect_url_name != 'game_sc_owners_refresh' and not scos.filter(year=this_year).exists():
+    if (refresh
+            and redirect_url_name != 'game_sc_owners_refresh'
+            and not scos.filter(year=this_year).exists()):
         context['rows'] = []
         context['refresh'] = True
         context['redirect_time'] = 0
@@ -130,6 +137,7 @@ def game_sc_owners(request,
         context['redirect_url'] = reverse(redirect_url_name,
                                           args=(tournament_id, game_name))
     return render(request, 'games/sc_owners.html', context)
+
 
 def game_sc_chart(request,
                   tournament_id,
@@ -184,6 +192,7 @@ def game_sc_chart(request,
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
 
+
 @permission_required('tournament.add_centrecount')
 def sc_owners(request, tournament_id, game_name):
     """Provide a form to enter SC ownership for a game"""
@@ -227,7 +236,8 @@ def sc_owners(request, tournament_id, game_name):
                                                           game=g,
                                                           year=year)
                     if value is None:
-                        # There is an owner in the db, but now we want this dot to be neutral
+                        # There is an owner in the db,
+                        # but now we want this dot to be neutral
                         i.delete()
                         continue
                     else:
@@ -272,6 +282,7 @@ def sc_owners(request, tournament_id, game_name):
                   {'formset': formset,
                    'tournament': t,
                    'game': g})
+
 
 @permission_required('tournament.add_centrecount')
 def sc_counts(request, tournament_id, game_name):
@@ -346,7 +357,8 @@ def sc_counts(request, tournament_id, game_name):
                 g.is_finished = True
                 g.save()
         # Set the "game over" flag as appropriate
-        # Game is over if it reached the final year, somebody won, or the checkbox was checked
+        # Game is over if it reached the final year,
+        # somebody won, or the checkbox was checked
         g.is_finished = g.is_finished or end_form.cleaned_data['is_finished']
         g.save()
         # Redirect to the read-only version
@@ -360,11 +372,15 @@ def sc_counts(request, tournament_id, game_name):
                    'tournament': t,
                    'game': g})
 
+
 def game_news(request, tournament_id, game_name, as_ticker=False):
     """Display news for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    context = {'tournament': t, 'game': g, 'subject': 'News', 'content': g.news()}
+    context = {'tournament': t,
+               'game': g,
+               'subject': 'News',
+               'content': g.news()}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
@@ -372,17 +388,22 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
         return render(request, 'games/info_ticker.html', context)
     return render(request, 'games/info.html', context)
 
+
 def game_background(request, tournament_id, game_name, as_ticker=False):
     """Display background info for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    context = {'tournament': t, 'game': g, 'subject': 'Background', 'content': g.background()}
+    context = {'tournament': t,
+               'game': g,
+               'subject': 'Background',
+               'content': g.background()}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
                                           args=(tournament_id, game_name))
         return render(request, 'games/info_ticker.html', context)
     return render(request, 'games/info.html', context)
+
 
 @permission_required('tournament.add_drawproposal')
 def draw_vote(request, tournament_id, game_name):
@@ -404,7 +425,7 @@ def draw_vote(request, tournament_id, game_name):
     form = DrawForm(request.POST or None,
                     dias=g.is_dias(),
                     secrecy=t.draw_secrecy,
-                    initial={'year': year, 'season' : season})
+                    initial={'year': year, 'season': season})
     if form.is_valid():
         year = form.cleaned_data['year']
         try:
@@ -441,7 +462,7 @@ def draw_vote(request, tournament_id, game_name):
                           'games/vote.html',
                           {'tournament': t,
                            'game': g,
-                           'form' : form})
+                           'form': form})
         dp.save()
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
@@ -451,7 +472,8 @@ def draw_vote(request, tournament_id, game_name):
                   'games/vote.html',
                   {'tournament': t,
                    'game': g,
-                   'form' : form})
+                   'form': form})
+
 
 def game_image(request,
                tournament_id,
@@ -476,7 +498,8 @@ def game_image(request,
         this_year = g.years_played()[-1]
         # If we don't have any image for the current year,
         # and we're refreshing to somewhere else, just move straight along
-        if redirect_url_name != 'game_image_seq' and not g.gameimage_set.filter(year=this_year).exists():
+        if (redirect_url_name != 'game_image_seq'
+                and not g.gameimage_set.filter(year=this_year).exists()):
             refresh_time = 0
     else:
         # Look for the specified image for that game
@@ -515,6 +538,7 @@ def game_image(request,
                                                     game_name))
     return render(request, 'games/image.html', context)
 
+
 @permission_required('tournament.add_gameimage')
 def add_game_image(request, tournament_id, game_name=''):
     """Add an image for a game"""
@@ -539,4 +563,4 @@ def add_game_image(request, tournament_id, game_name=''):
     return render(request,
                   'games/add_image.html',
                   {'tournament': t,
-                   'form' : form})
+                   'form': form})

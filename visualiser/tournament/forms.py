@@ -31,6 +31,7 @@ from tournament.models import SEASONS
 from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player
 
+
 class PrefsForm(forms.Form):
     """Form for one TournamentPlayer's Preferences"""
     prefs = forms.CharField(max_length=7,
@@ -40,6 +41,7 @@ class PrefsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
+        # TODO Why is this an attribute rather than a local variable ?
         self.tp = kwargs.pop('tp')
         # Overridable default initial value, like ModelForm
         if 'initial' not in kwargs.keys():
@@ -47,6 +49,7 @@ class PrefsForm(forms.Form):
         super().__init__(*args, **kwargs)
         # Set the label to the player's name
         self.fields['prefs'].label = str(self.tp.player)
+
 
 class BasePrefsFormset(BaseFormSet):
     """Form to spcify Preferences for every TournamentPlayer"""
@@ -69,6 +72,7 @@ class BasePrefsFormset(BaseFormSet):
         # Pass the special arg down to the form itself
         kwargs['tp'] = self.tps[index]
         return super()._construct_form(index, **kwargs)
+
 
 class DrawForm(forms.Form):
     """Form for a draw vote"""
@@ -97,6 +101,7 @@ class DrawForm(forms.Form):
         else:
             assert 0, 'Unexpected draw secrecy value %c' % secrecy
 
+
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
     name = forms.CharField(label=_(u'Game Name'),
@@ -119,10 +124,12 @@ class GameScoreForm(forms.Form):
             attrs['size'] = 10
             attrs['maxlength'] = 10
 
+
 class RoundPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a RoundPlayer"""
     def label_from_instance(self, obj):
         return obj.player.__str__()
+
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
@@ -163,6 +170,7 @@ class GamePlayersForm(forms.Form):
 
         return cleaned_data
 
+
 class BaseGamePlayersFormset(BaseFormSet):
     """Form to specify GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
@@ -189,6 +197,7 @@ class BaseGamePlayersFormset(BaseFormSet):
                 pass
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
+
 
 class PowerAssignForm(forms.Form):
     """Form for players of a single game"""
@@ -230,6 +239,7 @@ class PowerAssignForm(forms.Form):
 
         return cleaned_data
 
+
 class BasePowerAssignFormset(BaseFormSet):
     """Form to assign GreatPowers to all GamePlayers for a single Round"""
     def __init__(self, *args, **kwargs):
@@ -254,6 +264,7 @@ class BasePowerAssignFormset(BaseFormSet):
         names = [form.cleaned_data['name'] for form in self.forms]
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
+
 
 # TODO Should this be a formset?
 class GetSevenPlayersForm(forms.Form):
@@ -326,18 +337,19 @@ class GetSevenPlayersForm(forms.Form):
         sitters = self._check_duplicates(cleaned_data, 'sitter', self.sitters)
         doubles = self._check_duplicates(cleaned_data, 'double', self.doubles)
 
-        if (sitters > 0) and (sitters < self.sitters):
+        if 0 < sitters < self.sitters:
             raise forms.ValidationError(_('Too few players sitting out games. Got %(actual)d, expected %(expected)d')
                                         % {'actual': sitters,
-                                           'expected' : self.sitters})
-        if (doubles > 0) and (doubles < self.doubles):
+                                           'expected': self.sitters})
+        if 0 < doubles < self.doubles:
             raise forms.ValidationError(_('Too few players playing two games. Got %(actual)d, expected %(expected)d')
                                         % {'actual': doubles,
-                                           'expected' : self.doubles})
+                                           'expected': self.doubles})
         if (doubles > 0) and (sitters > 0):
             raise forms.ValidationError(_('Either have players sit out the round or have players play two games'))
 
         return cleaned_data
+
 
 class SCOwnerForm(forms.Form):
     """Form for Supply Centre ownership for one year"""
@@ -354,6 +366,7 @@ class SCOwnerForm(forms.Form):
         for sc in SupplyCentre.objects.all():
             self.fields[sc.name] = forms.ModelChoiceField(GreatPower.objects.all(),
                                                           required=False)
+
 
 class BaseSCOwnerFormset(BaseFormSet):
     """Form to specify who owned which SupplyCentre when for a Game"""
@@ -391,13 +404,16 @@ class BaseSCOwnerFormset(BaseFormSet):
                 if owner:
                     owned = True
                 if owned and not owner:
-                    form.add_error(sc.name, _('Supply Centres should never change from owned to neutral'))
+                    form.add_error(sc.name,
+                                   _('Supply Centres should never change from owned to neutral'))
+
 
 class GameEndedForm(forms.Form):
     """Form that just provides a checkbox to indicate that a Game is over"""
     is_finished = forms.BooleanField(label=_('Game ended'),
                                      required=False,
                                      initial=False)
+
 
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
@@ -442,6 +458,7 @@ class SCCountForm(forms.Form):
 
         return cleaned_data
 
+
 class BaseSCCountFormset(BaseFormSet):
     """Form to specify SC counts for a Game"""
     def clean(self):
@@ -473,9 +490,11 @@ class BaseSCCountFormset(BaseFormSet):
                                                'year': year})
             neutrals = years[year]
 
+
 class PlayerForm(forms.Form):
     """Form to pick a Player"""
     player = forms.ModelChoiceField(queryset=Player.objects.all())
+
 
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
@@ -500,6 +519,7 @@ class PlayerRoundForm(forms.Form):
             self.fields[name] = forms.BooleanField(required=False, initial=False)
             if readonly:
                 self.fields[name].disabled = True
+
 
 class BasePlayerRoundFormset(BaseFormSet):
     """Form to specify which players are playing in each round"""
@@ -544,10 +564,12 @@ class BasePlayerRoundFormset(BaseFormSet):
         kwargs['this_round_num'] = self.this_round_num
         return super()._construct_form(index, **kwargs)
 
+
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a TournamentPlayer"""
     def label_from_instance(self, obj):
         return obj.player.__str__()
+
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
@@ -587,6 +609,7 @@ class PlayerRoundScoreForm(forms.Form):
         attrs['size'] = 10
         attrs['maxlength'] = 10
 
+
 class BasePlayerRoundScoreFormset(BaseFormSet):
     """Form to enter round scores for all players"""
     def __init__(self, *args, **kwargs):
@@ -609,7 +632,9 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         kwargs['this_round_num'] = self.this_round_num
         return super()._construct_form(index, **kwargs)
 
+
 class SeederBiasForm(ModelForm):
+    """Form to create/update a SeederBias object"""
     player1 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
     player2 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
 
@@ -623,6 +648,7 @@ class SeederBiasForm(ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['player1'].queryset = self.tournament.tournamentplayer_set.all()
         self.fields['player2'].queryset = self.tournament.tournamentplayer_set.all()
+
 
 class GameImageForm(ModelForm):
     """Form for a single GameImage"""

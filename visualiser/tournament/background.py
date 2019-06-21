@@ -35,17 +35,21 @@ WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplo
 MAP = {'Name of the tournament': 'Tournament',
       }
 
+
 class InvalidWDDId(Exception):
     """The WDD id provided for the player is unused on the WDD."""
     pass
+
 
 class WDDNotAccessible(Exception):
     """The WWD website cannot currently be accessed."""
     pass
 
+
 class UnableToSplitName(Exception):
     """The name retrieved from the WDD is a single word."""
     pass
+
 
 class WikipediaBackground():
     """
@@ -108,12 +112,14 @@ class WikipediaBackground():
         # Filter out any that don't refer to the person we care about
         return [item for item in results if self._relevant(item)]
 
+
 def img_to_country(img):
     """
     Convert a WDD flag image name to a country name.
     """
     filename = img.rpartition('/')[2]
     return filename[:-4]
+
 
 class WDDBackground():
     """

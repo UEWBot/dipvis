@@ -24,7 +24,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
-from tournament.models import G_SCORING_SYSTEMS
+from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer

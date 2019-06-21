@@ -46,7 +46,6 @@ from tournament.models import InvalidPreferenceList
 # Redirect times are specified in seconds
 REFRESH_TIME = 60
 
-# Index of Tournaments
 
 def tournament_index(request):
     """Display a list of tournaments"""
@@ -65,11 +64,14 @@ def tournament_index(request):
     context = {'tournament_list': main_list, 'unpublished_list': unpublished_list}
     return render(request, 'tournaments/index.html', context)
 
+
 # Tournament views
+
 
 def get_visible_tournament_or_404(pk, user):
     """
-    Get the specified Tournament object, if it exists, and check that it is visible to the user.
+    Get the specified Tournament object, if it exists,
+    and check that it is visible to the user.
     If it doesn't exist or isn't visible, raise Http404.
     """
     t = get_object_or_404(Tournament, pk=pk)
@@ -85,9 +87,11 @@ def get_visible_tournament_or_404(pk, user):
     # Default to not visible
     raise Http404
 
+
 def get_modifiable_tournament_or_404(pk, user):
     """
-    Get the specified Tournament object, if it exists, and check that it is visible to the user and editable.
+    Get the specified Tournament object, if it exists,
+    and check that it is visible to the user and editable.
     If it doesn't exist or isn't editable, raise Http404.
     """
     t = get_visible_tournament_or_404(pk, user)
@@ -95,11 +99,13 @@ def get_modifiable_tournament_or_404(pk, user):
         return t
     raise Http404
 
+
 def tournament_simple(request, tournament_id, template):
     """Just render the specified template with the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     context = {'tournament': t}
     return render(request, 'tournaments/%s.html' % template, context)
+
 
 def tournament_scores(request,
                       tournament_id,
@@ -107,7 +113,9 @@ def tournament_scores(request,
                       redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    tps = t.tournamentplayer_set.order_by('-score', 'player__last_name', 'player__first_name')
+    tps = t.tournamentplayer_set.order_by('-score',
+                                          'player__last_name',
+                                          'player__first_name')
     rds = t.round_set.all()
     rounds = [r.number() for r in rds]
     # Grab the tournament scores and positions and round scores, all "if it ended now"
@@ -149,6 +157,7 @@ def tournament_scores(request,
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/scores.html', context)
+
 
 def tournament_game_results(request,
                             tournament_id,
@@ -253,6 +262,7 @@ def tournament_game_results(request,
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/game_results.html', context)
 
+
 def tournament_best_countries(request,
                               tournament_id,
                               refresh=False,
@@ -288,9 +298,9 @@ def tournament_best_countries(request,
             row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f'
                        % (gp.player.get_absolute_url(),
                           gp.player,
-                          all_urls_and_scores[gp.game][0], # URL
-                          all_urls_and_scores[gp.game][1], # name
-                          all_urls_and_scores[gp.game][2][gp.power])) # score
+                          all_urls_and_scores[gp.game][0],  # URL
+                          all_urls_and_scores[gp.game][1],  # name
+                          all_urls_and_scores[gp.game][2][gp.power]))  # score
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
@@ -298,6 +308,7 @@ def tournament_best_countries(request,
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/best_countries.html', context)
+
 
 def tournament_background(request, tournament_id, as_ticker=False):
     """Display background info for a tournament"""
@@ -310,6 +321,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
         return render(request, 'tournaments/info_ticker.html', context)
     return render(request, 'tournaments/info.html', context)
 
+
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -321,6 +333,7 @@ def tournament_news(request, tournament_id, as_ticker=False):
         return render(request, 'tournaments/info_ticker.html', context)
     return render(request, 'tournaments/info.html', context)
 
+
 def tournament_round(request, tournament_id):
     """Display details of the currently in-progress round of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -330,6 +343,7 @@ def tournament_round(request, tournament_id):
         return render(request, 'rounds/detail.html', context)
     # TODO There must be a better way than this
     return HttpResponse("No round currently being played")
+
 
 # TODO Name is confusing - sounds like it takes a round_num
 @permission_required('tournament.change_roundplayer')
@@ -383,7 +397,7 @@ def round_scores(request, tournament_id):
                                        'tournament': t,
                                        'post_url': reverse('enter_scores',
                                                            args=(tournament_id,)),
-                                       'formset' : formset})
+                                       'formset': formset})
 
                     i.save()
                 elif r_name == 'overall_score':
@@ -399,7 +413,7 @@ def round_scores(request, tournament_id):
                                        'tournament': t,
                                        'post_url': reverse('enter_scores',
                                                            args=(tournament_id,)),
-                                       'formset' : formset})
+                                       'formset': formset})
                     tp.save()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_scores',
@@ -410,7 +424,8 @@ def round_scores(request, tournament_id):
                   {'title': _('Scores'),
                    'tournament': t,
                    'post_url': reverse('enter_scores', args=(tournament_id,)),
-                   'formset' : formset})
+                   'formset': formset})
+
 
 # Note: No permission_required decorator
 # because this one should be available to any who have the URL
@@ -445,7 +460,8 @@ def player_prefs(request, tournament_id, uuid):
                   {'tournament': t,
                    'uuid': uuid,
                    'prefs_list': tp.preference_set.all(),
-                   'form' : form})
+                   'form': form})
+
 
 @permission_required('tournament.add_preference')
 def enter_prefs(request, tournament_id):
@@ -468,7 +484,8 @@ def enter_prefs(request, tournament_id):
     return render(request,
                   'tournaments/enter_prefs.html',
                   {'tournament': t,
-                   'formset' : formset})
+                   'formset': formset})
+
 
 @permission_required('tournament.add_preference')
 def upload_prefs(request, tournament_id):
@@ -477,7 +494,7 @@ def upload_prefs(request, tournament_id):
     if request.method == 'GET':
         return render(request,
                       'tournaments/upload_prefs.html',
-                      {'tournament':t})
+                      {'tournament': t})
     try:
         csv_file = request.FILES['csv_file']
         if csv_file.multiple_chunks():
@@ -533,6 +550,7 @@ def upload_prefs(request, tournament_id):
     return HttpResponseRedirect(reverse('enter_prefs',
                                         args=(tournament_id,)))
 
+
 def prefs_csv(request, tournament_id):
     """Download a template CSV file to enter player country preferences"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -563,6 +581,7 @@ def prefs_csv(request, tournament_id):
         writer.writerow(row_dict)
 
     return response
+
 
 def tournament_players(request, tournament_id):
     """Display a list of registered players for a tournament"""
@@ -614,6 +633,7 @@ def tournament_players(request, tournament_id):
     context = {'tournament': t, 'formset': formset}
     return render(request, 'tournaments/tournament_players.html', context)
 
+
 @permission_required('tournament.add_seeder_bias')
 def seeder_bias(request, tournament_id):
     """Display or add SeederBias objects for the Tournament"""
@@ -624,7 +644,6 @@ def seeder_bias(request, tournament_id):
     if request.method == 'POST':
         if t.is_finished() or not t.editable:
             raise Http404
-        keys = request.POST.keys()
         for k in request.POST.keys():
             if k.startswith('delete_'):
                 # Extract the SeederBias pk from the button name
@@ -642,6 +661,7 @@ def seeder_bias(request, tournament_id):
                'biases': sb_set,
                'form': form}
     return render(request, 'tournaments/seeder_bias.html', context)
+
 
 def round_index(request, tournament_id):
     """Display a list of rounds of a tournament"""

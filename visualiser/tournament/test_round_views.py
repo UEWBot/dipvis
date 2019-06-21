@@ -17,7 +17,7 @@
 from datetime import timedelta
 from urllib.parse import urlencode
 
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
