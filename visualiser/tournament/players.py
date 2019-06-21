@@ -154,7 +154,7 @@ def add_player_bg(player):
                 if the_title:
                     i.title = the_title
                 i.save()
-            except:
+            except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print("Failed to save PlayerTournamentRanking")
@@ -184,7 +184,7 @@ def add_player_bg(player):
             except KeyError:
                 pass
             i.save()
-        except:
+        except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single ranking rather than all the background
             print("Failed to save PlayerTournamentRanking")
@@ -212,7 +212,7 @@ def add_player_bg(player):
         except KeyError:
             # No rank implies they were the TD or similar - just ignore that tournament
             print("Ignoring unranked %s for %s" % (t['Name of the tournament'], player))
-        except:
+        except Exception:
             # Handle all other exceptions
             # This way, we fail to add/update the single ranking rather than all the background
             print("Failed to save PlayerTournamentRanking")
@@ -264,7 +264,7 @@ def add_player_bg(player):
             except KeyError:
                 pass
             i.save()
-        except:
+        except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single ranking rather than all the background
             print("Failed to save PlayerGameResult")
@@ -321,7 +321,7 @@ def add_player_bg(player):
                 except KeyError:
                     pass
                 i.save()
-            except:
+            except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print("Failed to save PlayerAward")
@@ -340,7 +340,7 @@ def add_player_bg(player):
             i.international_rank = r['International rank']
             i.national_rank = r['National rank']
             i.save()
-        except:
+        except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single ranking rather than all the background
             print("Failed to save PlayerRanking")
@@ -397,7 +397,7 @@ class Player(models.Model):
             bg = WDDBackground(self.wdd_player_id)
             try:
                 self._wdd_name = bg.wdd_name()
-            except:
+            except Exception:
                 # Handle all exceptions, because failing to set the cached name is ok
                 print("Failed to cache WDD name for player %s, wdd id %s" %
                       (self, str(self.wdd_player_id)))
@@ -440,7 +440,7 @@ class Player(models.Model):
             # This can only happen if we couldn't get to the WDD when the Player was created
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
                                   params={'wdd_id': self.wdd_player_id})
-        except:
+        except Exception:
             return (self.first_name, self.last_name)
 
     def tournamentplayers(self, including_unpublished=False):
