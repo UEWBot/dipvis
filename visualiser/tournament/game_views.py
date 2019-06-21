@@ -227,7 +227,7 @@ def sc_owners(request, tournament_id, game_name):
             for name, value in form.cleaned_data.items():
                 try:
                     dot = SupplyCentre.objects.get(name=name)
-                except:
+                except SupplyCentre.DoesNotExist:
                     continue
                 # Can't use get_or_create() here,
                 # because owner has no default and may have changed
@@ -322,7 +322,7 @@ def sc_counts(request, tournament_id, game_name):
             for name, value in form.cleaned_data.items():
                 try:
                     power = GreatPower.objects.get(name=name)
-                except:
+                except GreatPower.DoesNotExist:
                     continue
                 if value >= WINNING_SCS:
                     solo = True
