@@ -833,7 +833,7 @@ class Round(models.Model):
         Returns a dict, keyed by Player, of floats.
         """
         # If the round is over, report the stored scores unless we're told to recalculate
-        if self.is_finished() and not force_recalculation:
+        if not force_recalculation and self.is_finished():
             retval = {}
             for p in self.roundplayer_set.all():
                 retval[p.player] = p.score
@@ -1119,7 +1119,7 @@ class Game(models.Model):
         calculate the scores if the game were to end now.
         Return value is a dict, indexed by power id, of scores.
         """
-        if self.is_finished and not force_recalculation:
+        if not force_recalculation and self.is_finished:
             # Return the stored scores for the game
             retval = {}
             players = self.gameplayer_set.all()
