@@ -561,6 +561,9 @@ def game_scores(request, tournament_id, round_num):
                                    'round': round_num,
                                    'formset': formset})
                 i.save()
+        # Update the Round and Tournament scores to reflect the changes
+        r.store_scores()
+        t.store_scores()
         # Redirect to the round index
         return HttpResponseRedirect(reverse('round_index',
                                             args=(tournament_id)))

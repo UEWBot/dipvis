@@ -262,6 +262,73 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=cls.p7, game=g, power=cls.england)
         GamePlayer.objects.create(player=cls.p8, game=g, power=cls.austria)
 
+        # Published Tournament so it's visible to all. AUTO power assignment
+        cls.t4 = Tournament.objects.create(name='t4',
+                                           start_date=now,
+                                           end_date=now,
+                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           draw_secrecy=Tournament.SECRET,
+                                           power_assignment=Tournament.AUTO,
+                                           is_published=True,
+                                           seed_games=True)
+        cls.r41 = Round.objects.create(tournament=cls.t4,
+                                       scoring_system=G_SCORING_SYSTEMS[0].name,
+                                       dias=True,
+                                       start=cls.t4.start_date)
+        TournamentPlayer.objects.create(player=cls.p1,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p2,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p3,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p4,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p5,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p6,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p7,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p8,
+                                        tournament=cls.t4)
+        TournamentPlayer.objects.create(player=cls.p9,
+                                        tournament=cls.t4)
+        # Round has eight RoundPlayers, 6 playing two games
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r41)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r41, game_count=2)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r41, game_count=2)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r41, game_count=2)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r41, game_count=2)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r41, game_count=2)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r41, game_count=2)
+        RoundPlayer.objects.create(player=cls.p9, the_round=cls.r41)
+        # Add two finished Games to the Round
+        g1 = Game.objects.create(name='T4R1G1',
+                                 started_at=cls.t4.start_date,
+                                 is_finished=True,
+                                 the_round=cls.r41,
+                                 the_set=GameSet.objects.get(name='Avalon Hill'))
+        GamePlayer.objects.create(player=cls.p1, game=g1, power=cls.turkey, score=1)
+        GamePlayer.objects.create(player=cls.p3, game=g1, power=cls.russia, score=2)
+        GamePlayer.objects.create(player=cls.p4, game=g1, power=cls.italy, score=3)
+        GamePlayer.objects.create(player=cls.p5, game=g1, power=cls.germany, score=4)
+        GamePlayer.objects.create(player=cls.p6, game=g1, power=cls.france, score=5)
+        GamePlayer.objects.create(player=cls.p7, game=g1, power=cls.england, score=6)
+        GamePlayer.objects.create(player=cls.p8, game=g1, power=cls.austria, score=7)
+        g2 = Game.objects.create(name='T4R1G2',
+                                 started_at=cls.t4.start_date,
+                                 is_finished=True,
+                                 the_round=cls.r41,
+                                 the_set=GameSet.objects.get(name='Avalon Hill'))
+        GamePlayer.objects.create(player=cls.p3, game=g2, power=cls.turkey, score=1)
+        GamePlayer.objects.create(player=cls.p4, game=g2, power=cls.russia, score=2)
+        GamePlayer.objects.create(player=cls.p5, game=g2, power=cls.italy, score=3)
+        GamePlayer.objects.create(player=cls.p6, game=g2, power=cls.germany, score=4)
+        GamePlayer.objects.create(player=cls.p7, game=g2, power=cls.france, score=5)
+        GamePlayer.objects.create(player=cls.p8, game=g2, power=cls.england, score=6)
+        GamePlayer.objects.create(player=cls.p9, game=g2, power=cls.austria, score=7)
+
     def test_detail(self):
         response = self.client.get(reverse('round_detail', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 200)
@@ -808,6 +875,46 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_scores', args=(self.t3.pk, 1)))
         self.assertEqual(response.status_code, 200)
+
+    def test_game_scores_post(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        r = self.t4.round_numbered(1)
+        g1 = r.game_set.first()
+        g2 = r.game_set.last()
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '2',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0'}
+        data['form-0-name'] = g1.name
+        for gp in g1.gameplayer_set.all():
+            data['form-0-%s' % gp.power.name] = str(gp.player.pk)
+        data['form-1-name'] = g2.name
+        for gp in g2.gameplayer_set.all():
+            data['form-1-%s' % gp.power.name] = str(gp.player.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('game_scores', args=(self.t4.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # Should redirect to the round index page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('round_index', args=(self.t4.pk,)))
+        # Game scores should be saved
+        for g in r.game_set.all():
+            for gp in g.gameplayer_set.all():
+                with self.subTest(player=gp.player, game=g.name):
+                    self.assertEqual(gp.score, gp.player.pk)
+        # Round scores should be recalculated
+        for rp in r.roundplayer_set.all():
+            with self.subTest(player=rp.player):
+                self.assertEqual(rp.score, rp.player.pk)
+        # Tournament scores should be recalculated
+        for tp in self.t4.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                # p2 doesn't play at all
+                if tp.player == self.p2:
+                    self.assertEqual(tp.score, 0.0)
+                else:
+                    self.assertEqual(tp.score, tp.player.pk)
 
     def test_game_index(self):
         response = self.client.get(reverse('game_index', args=(self.t1.pk, 1)))
