@@ -1536,7 +1536,7 @@ class BasePlayerRoundFormsetTest(TestCase):
                 for field in form.fields:
                     if field == 'player':
                         continue
-                    # The only checkbox shoudl be for round_num
+                    # The only checkbox should be for round_num
                     self.assertEqual(field, 'round_%d' % ROUND_NUM)
 
     def test_no_players(self):
@@ -1599,17 +1599,12 @@ class PlayerRoundScoreFormTest(TestCase):
     def test_form_needs_tournament(self):
         # Omit tournament constructor parameter
         with self.assertRaises(KeyError):
-            PlayerRoundScoreForm(last_round_num=2, this_round_num=1)
+            PlayerRoundScoreForm(last_round_num=2)
 
     def test_form_needs_last_round_num(self):
         # Omit last_round_num constructor parameter
         with self.assertRaises(KeyError):
-            PlayerRoundScoreForm(tournament=self.t, this_round_num=1)
-
-    def test_form_needs_this_round_num(self):
-        # Omit this_round_num constructor parameter
-        with self.assertRaises(KeyError):
-            PlayerRoundScoreForm(tournament=self.t, last_round_num=2)
+            PlayerRoundScoreForm(tournament=self.t)
 
     def test_success(self):
         # Everything is ok
@@ -1619,8 +1614,7 @@ class PlayerRoundScoreFormTest(TestCase):
         form = PlayerRoundScoreForm({'tp': str(self.t.tournamentplayer_set.first().pk)},
                                     initial=initial,
                                     tournament=self.t,
-                                    last_round_num=2,
-                                    this_round_num=1)
+                                    last_round_num=2)
         self.assertTrue(form.is_valid())
 
     def test_fields_disabled(self):
@@ -1630,9 +1624,8 @@ class PlayerRoundScoreFormTest(TestCase):
                   }
         form = PlayerRoundScoreForm(initial=initial,
                                     tournament=self.t,
-                                    last_round_num=3,
-                                    this_round_num=2)
-        for field in ['player', 'round_1', 'game_scores_2', 'game_scores_3']:
+                                    last_round_num=3)
+        for field in ['player', 'game_scores_1', 'game_scores_2', 'game_scores_3']:
             with self.subTest(field=field):
                 self.assertTrue(form.fields[field].disabled)
 

@@ -581,7 +581,6 @@ class PlayerRoundScoreForm(forms.Form):
         # Remove our three special kwargs from the list
         self.tournament = kwargs.pop('tournament')
         self.last_round_num = kwargs.pop('last_round_num')
-        self.this_round_num = kwargs.pop('this_round_num')
         super().__init__(*args, **kwargs)
 
         self.fields['tp'].queryset = self.tournament.tournamentplayer_set.all()
@@ -589,19 +588,15 @@ class PlayerRoundScoreForm(forms.Form):
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.last_round_num):
             name = 'round_%d' % i
-            readonly = (i < self.this_round_num)
-            if not readonly:
-                # Create an additional field to show the game scores for that round
-                game_scores_name = 'game_scores_%d' % i
-                self.fields[game_scores_name] = forms.CharField(max_length=10,
-                                                                required=False,
-                                                                disabled=True)
+            # Create an additional field to show the game scores for that round
+            game_scores_name = 'game_scores_%d' % i
+            self.fields[game_scores_name] = forms.CharField(max_length=10,
+                                                            required=False,
+                                                            disabled=True)
             self.fields[name] = forms.FloatField(required=False)
             attrs = self.fields[name].widget.attrs
             attrs['size'] = 10
             attrs['maxlength'] = 10
-            if readonly:
-                self.fields[name].disabled = True
 
         # Last field is for the overall tournament score
         self.fields['overall_score'] = forms.FloatField(required=False)
@@ -616,20 +611,13 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
-        # Cache values we'll pass to each form's constructor
+        # Cache value we'll pass to each form's constructor
         self.last_round_num = self.tournament.round_set.count()
-        # current_round() could return None, if all rounds are over
-        cr = self.tournament.current_round()
-        if cr:
-            self.this_round_num = cr.number()
-        else:
-            self.this_round_num = -1
 
     def _construct_form(self, index, **kwargs):
         # Pass the three special args down to the form itself
         kwargs['tournament'] = self.tournament
         kwargs['last_round_num'] = self.last_round_num
-        kwargs['this_round_num'] = self.this_round_num
         return super()._construct_form(index, **kwargs)
 
 
