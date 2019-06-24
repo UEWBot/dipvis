@@ -26,10 +26,10 @@
         {% for tp in tournament.tournamentplayer_set.all %}
           <tr class="{% cycle 'odd_row' 'even_row' %}">
             <td>{{ tp.player }}</td>
-            <td>{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
+            <td style="text-align:center">{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
             <td>{% if tp.player.email != "" %}{% trans "Yes" %}{% endif %}</td>
             {% if tournament.powers_assigned_from_prefs %}
-                <td>{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
+                <td style="text-align:center">{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
                 <td>{% if tp.player.email != "" %}
                   <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email" %}" />
                   {% endif %}</td>
