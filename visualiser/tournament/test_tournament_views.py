@@ -73,6 +73,8 @@ class TournamentViewTests(TestCase):
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add seeder bias')
         cls.u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can add tournament player')
+        cls.u3.user_permissions.add(perm)
         cls.u3.save()
 
         # Some Players
@@ -628,8 +630,7 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_players_editable_prefs(self):
         # A tournament that can be edited, that uses preferences for power assignment
-        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
-        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
         self.assertEqual(response.status_code, 200)
         # Verify that the page includes buttons to send preferences emails out
