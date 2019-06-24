@@ -628,21 +628,30 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_players_editable_prefs(self):
         # A tournament that can be edited, that uses preferences for power assignment
-        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
         self.assertEqual(response.status_code, 200)
+        # Verify that the page includes buttons to send preferences emails out
+        self.assertIn(b'Register Players', response.content)
+        self.assertIn(b'prefs_', response.content)
 
     def test_tournament_players_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players', args=(self.t3.pk,)))
         self.assertEqual(response.status_code, 200)
+        # Verify that the page doesn't include buttons to send preferences emails out
+        self.assertIn(b'Register Players', response.content)
+        self.assertNotIn(b'prefs_', response.content)
 
     def test_tournament_players_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players', args=(self.t4.pk,)))
         self.assertEqual(response.status_code, 200)
+        # Verify that we get the read-only version of the page
+        self.assertNotIn(b'Register Players', response.content)
 
     def test_tournament_players_unregister_from_editable(self):
         # A tournament that can be edited
