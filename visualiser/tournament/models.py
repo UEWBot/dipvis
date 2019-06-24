@@ -446,6 +446,20 @@ class Tournament(models.Model):
             result[k] = (place, v)
         return result, r_scores
 
+    def store_scores(self):
+        """
+        Recalculate the scores for the Tournament,
+        and store them in the TournamentPlayers.
+        """
+        scores = self.calculated_scores()
+        for p in self.tournamentplayer_set.all():
+            try:
+                p.score = scores[p.player]
+            except KeyError:
+                # Player was added to the tournament but didn't play
+                p.score = 0.0
+            p.save()
+
     def round_numbered(self, number):
         """
         Return the Round (if any) of the tournament with the specified number.
@@ -847,6 +861,16 @@ class Round(models.Model):
         gps = GamePlayer.objects.filter(game__the_round=self).distinct()
         non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
         return system.scores(gps, non_players)
+
+    def store_scores(self):
+        """
+        Recalculate the scores for the Round,
+        and store them in the RoundPlayers.
+        """
+        scores = self.scores(True)
+        for p in self.roundplayer_set.all():
+            p.score = scores[p.player]
+            p.save()
 
     def is_finished(self):
         """
@@ -1497,22 +1521,12 @@ class Game(models.Model):
             # If the round is (now) finished, store the player scores
             r = self.the_round
             if r.is_finished():
-                scores = r.scores(True)
-                for p in r.roundplayer_set.all():
-                    p.score = scores[p.player]
-                    p.save()
+                r.store_scores()
 
             # if the tournament is (now) finished, store the player scores
             t = self.the_round.tournament
             if t.is_finished():
-                scores = t.calculated_scores()
-                for p in t.tournamentplayer_set.all():
-                    try:
-                        p.score = scores[p.player]
-                    except KeyError:
-                        # Player was added to the tournament but didn't play
-                        pass
-                    p.save()
+                t.store_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""

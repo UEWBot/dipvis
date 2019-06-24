@@ -460,6 +460,76 @@ class TournamentModelTests(TestCase):
             if k != self.p5:
                 self.assertEqual(p_and_s[k][0], 1)
 
+    # Tournament.store_scores()
+    def test_tourney_store_scores(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=Tournament.SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p2, score=2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p3, score=3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p4, score=4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p5, score=5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p6, score=6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p7, score=7)
+        tp.save()
+        # Include a player who didn't play any games
+        tp = TournamentPlayer(tournament=t, player=self.p8, score=8)
+        tp.save()
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1, score=7)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2, score=6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3, score=5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4, score=4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5, score=3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6, score=2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7, score=1)
+        rp.save()
+        # We need a finished Game in the Round so the Round is finished
+        g = Game(name='newgame2',
+                 started_at=r.start,
+                 the_round=r,
+                 is_finished=True,
+                 the_set=self.set1)
+        g.save()
+        t.store_scores()
+        # Score for all TournamentPlayers should be updated
+        # from the RoundPlayer scores
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                try:
+                    rp = RoundPlayer.objects.filter(player=tp.player,
+                                                    the_round__tournament=t).get()
+                    self.assertEqual(tp.score, rp.score)
+                except RoundPlayer.DoesNotExist:
+                    self.assertEqual(tp.score, 0.0)
+        g.delete()
+        # Note that this will also delete all RoundPlayers for the Round
+        r.delete()
+        # Note that this will also delete all TournamentPlayers for the Tournament
+        t.delete()
+
     # Tournament.round_numbered()
     def test_tourney_round_numbered_negative(self):
         t = Tournament.objects.get(name='t1')
@@ -803,6 +873,73 @@ class TournamentModelTests(TestCase):
         rp.save()
         self.assertTrue(self.p9 in r.scores())
         rp.delete()
+
+    # Round.store_scores()
+    def test_round_store_scores(self):
+        now = timezone.now()
+        t = Tournament(name='t4',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=Tournament.SECRET)
+        t.save()
+        # We need a round with a finished game
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1, score=40.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2, score=35.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3, score=30.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4, score=25.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5, score=20.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6, score=15.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7, score=10.0)
+        rp.save()
+        # One RoundPlayer who didn't play
+        rp = RoundPlayer(the_round=r, player=self.p8, score=5.0)
+        rp.save()
+        g = Game(name='newgame1',
+                 started_at=r.start,
+                 the_round=r,
+                 is_finished=True,
+                 the_set=self.set1)
+        g.save()
+        gp = GamePlayer(game=g, player=self.p1, power=self.austria, score=1)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p2, power=self.england, score=2)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p3, power=self.france, score=3)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p4, power=self.germany, score=4)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p5, power=self.italy, score=5)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p6, power=self.russia, score=6)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p7, power=self.turkey, score=7)
+        gp.save()
+        r.store_scores()
+        for rp in r.roundplayer_set.all():
+            with self.subTest(player=rp.player):
+                try:
+                    gp = GamePlayer.objects.filter(game=g, player=rp.player).get()
+                except GamePlayer.DoesNotExist:
+                    self.assertEqual(rp.score, 0.0)
+                else:
+                    self.assertEqual(rp.score, gp.score)
+        # Clean up
+        g.delete()
+        r.delete()
+        t.delete()
 
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
