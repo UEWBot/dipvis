@@ -626,6 +626,8 @@ def tournament_players(request, tournament_id):
                     form.add_error('player',
                                    _("Player already registered"))
                 else:
+                    # TODO t in X.all() doesn't look very efficient
+                    tp.unranked = (player.user is not None) and (t in player.user.tournament_set.all())
                     tp.save()
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('tournament_players',

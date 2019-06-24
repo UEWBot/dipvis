@@ -11,10 +11,11 @@
     {% csrf_token %}
     <table class="form">
       <thead><tr>
-        <th>{% trans "Player"%}</th>
-        <th>{% trans "Email known?"%}</th>
+        <th>{% trans "Player" %}</th>
+        <th>{% trans "Unranked?" %}</th>
+        <th>{% trans "Email known?" %}</th>
         {% if tournament.powers_assigned_from_prefs %}
-          <th>{% trans "Prefs email sent?"%}</th>
+          <th>{% trans "Prefs email sent?" %}</th>
           <th></th>
         {% endif %}
         {% if not t.is_finished %}
@@ -25,16 +26,17 @@
         {% for tp in tournament.tournamentplayer_set.all %}
           <tr class="{% cycle 'odd_row' 'even_row' %}">
             <td>{{ tp.player }}</td>
-            <td>{% if tp.player.email != "" %}{% trans "Yes"%}{% endif %}</td>
+            <td>{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
+            <td>{% if tp.player.email != "" %}{% trans "Yes" %}{% endif %}</td>
             {% if tournament.powers_assigned_from_prefs %}
-                <td>{% if tp.uuid_str != "" %}{% trans "Yes"%}{% endif %}</td>
+                <td>{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
                 <td>{% if tp.player.email != "" %}
-                  <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email"%}" />
+                  <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email" %}" />
                   {% endif %}</td>
             {% endif %}
             {% if not t.is_finished %}
               <td>
-                <input type="submit" name="unregister_{{ tp.pk }}" value="{% trans "Unregister player"%}" />
+                <input type="submit" name="unregister_{{ tp.pk }}" value="{% trans "Unregister player" %}" />
               </td>
             {% endif %}
           </tr>
@@ -49,7 +51,7 @@
 {% else %}
   <ul>
     {% for tp in tournament.tournamentplayer_set.all %}
-      <li><a href="{{ tp.player.get_absolute_url }}">{{ tp.player }}</a></li>
+      <li><a href="{{ tp.player.get_absolute_url }}">{{ tp.player }}</a>{% if tp.unranked %}{% trans "(Ineligible for awards)" %}{% endif %}</li>
     {% empty %}
       <li>{% trans "No players yet registered" %}</li>
     {% endfor %}

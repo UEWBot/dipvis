@@ -65,15 +65,15 @@ class TournamentViewTests(TestCase):
         # We give managers the appropriate permissions
         cls.USERNAME3 = 'manager'
         cls.PWORD3 = 'MyPassword'
-        u3 = User.objects.create_user(username=cls.USERNAME3,
-                                      password=cls.PWORD3)
+        cls.u3 = User.objects.create_user(username=cls.USERNAME3,
+                                          password=cls.PWORD3)
         perm = Permission.objects.get(name='Can change round player')
-        u3.user_permissions.add(perm)
+        cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add preference')
-        u3.user_permissions.add(perm)
+        cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add seeder bias')
-        u3.user_permissions.add(perm)
-        u3.save()
+        cls.u3.user_permissions.add(perm)
+        cls.u3.save()
 
         # Some Players
         cls.p1 = Player.objects.create(first_name='Angela',
@@ -97,6 +97,10 @@ class TournamentViewTests(TestCase):
                                    last_name='Ignoramus')
         p10 = Player.objects.create(first_name='Jake',
                                     last_name='Jalopy')
+        # Player that is also u3 (manager of t2)
+        cls.p11 = Player.objects.create(first_name='Kathryn',
+                                        last_name='Krispy',
+                                        user = cls.u3)
 
         now = timezone.now()
         # Published Tournament, so it's visible to all
@@ -181,7 +185,7 @@ class TournamentViewTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g21, year=1901, count=6)
         CentreCount.objects.create(power=cls.russia, game=g21, year=1901, count=7)
         CentreCount.objects.create(power=cls.turkey, game=g21, year=1901, count=5)
-        cls.t2.managers.add(u3)
+        cls.t2.managers.add(cls.u3)
 
         # Unpublished Tournament, without a manager
         cls.t3 = Tournament.objects.create(name='t3',
@@ -702,6 +706,9 @@ class TournamentViewTests(TestCase):
         # ... and the TournamentPlayer should have been added
         tp_qs = self.t2.tournamentplayer_set.filter(player=self.p2)
         self.assertTrue(tp_qs.exists())
+        # new TournamentPlayer should not be unranked
+        tp = tp_qs.get()
+        self.assertFalse(tp.unranked)
         # Clean up
         tp_qs.delete()
 
@@ -738,6 +745,30 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.url, url)
         # ... and the email should be sent
         self.assertEqual(len(mail.outbox), 1)
+
+    def test_tournament_players_flag_as_unranked(self):
+        # Adding a manager as a TournamentPlayer should flag them as unranked
+        self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p11).exists())
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0,
+                          'form-1-player': str(self.p11.pk)})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the TournamentPlayer should have been added
+        tp_qs = self.t2.tournamentplayer_set.filter(player=self.p11)
+        self.assertTrue(tp_qs.exists())
+        # new TournamentPlayer should be unranked
+        tp = tp_qs.get()
+        self.assertTrue(tp.unranked)
+        # Clean up
+        tp_qs.delete()
 
     def test_seeder_bias_not_logged_in(self):
         response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))

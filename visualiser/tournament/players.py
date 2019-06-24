@@ -30,6 +30,7 @@ import re
 import traceback
 import urllib.request
 
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Max, Min, Q
@@ -383,6 +384,11 @@ class Player(models.Model):
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
     # Cache of the player's name in the WDD
     _wdd_name = models.CharField(max_length=60, blank=True)
+    # If the Player has an account on the site, it should be recorded here
+    user = models.ForeignKey(User,
+                             blank=True,
+                             null=True,
+                             on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['last_name', 'first_name']
