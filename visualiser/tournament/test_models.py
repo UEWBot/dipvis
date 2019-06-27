@@ -458,7 +458,8 @@ class TournamentModelTests(TestCase):
         # As everyone else has the same score, they should all be ranked (joint) first
         for k in p_and_s:
             if k != self.p5:
-                self.assertEqual(p_and_s[k][0], 1)
+                with self.subTest(k=k):
+                    self.assertEqual(p_and_s[k][0], 1)
 
     # Tournament.store_scores()
     def test_tourney_store_scores(self):
@@ -554,7 +555,8 @@ class TournamentModelTests(TestCase):
         bc = t.best_countries()
         # The German solo should not be included
         for gp in bc[self.germany]:
-            self.assertFalse(gp.player == self.p5)
+            with self.subTest(power=gp.power):
+                self.assertFalse(gp.player == self.p5)
 
     # Tournament.background()
     def test_tournament_background_without_players(self):
@@ -600,11 +602,13 @@ class TournamentModelTests(TestCase):
         rounds = t.round_set.count()
         # All earlier rounds should be finished or in progress
         for i in range(1, r.number()):
-            self.assertTrue(t.round_numbered(i).is_finished() or t.round_numbered(i).in_progress(),
-                            'round %d' % i)
+            with self.subTest(round_number=i):
+                self.assertTrue(t.round_numbered(i).is_finished() or t.round_numbered(i).in_progress(),
+                                'round %d' % i)
         # All later rounds should be not in progress
         for i in range(r.number() + 1, rounds + 1):
-            self.assertFalse(t.round_numbered(i).in_progress(), 'round %d' % i)
+            with self.subTest(round_number=i):
+                self.assertFalse(t.round_numbered(i).in_progress(), 'round %d' % i)
         # This round should be unfinished
         self.assertFalse(r.is_finished())
 
@@ -687,16 +691,15 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.preference_set.count(), 5)
         # Check that the Preferences are correct
         prefs = list(tp.preference_set.all())
-        self.assertEqual(prefs[0].ranking, 1)
-        self.assertEqual(prefs[0].power, self.austria)
-        self.assertEqual(prefs[1].ranking, 2)
-        self.assertEqual(prefs[1].power, self.england)
-        self.assertEqual(prefs[2].ranking, 3)
-        self.assertEqual(prefs[2].power, self.france)
-        self.assertEqual(prefs[3].ranking, 4)
-        self.assertEqual(prefs[3].power, self.germany)
-        self.assertEqual(prefs[4].ranking, 5)
-        self.assertEqual(prefs[4].power, self.italy)
+        for i, power in enumerate([self.austria,
+                                   self.england,
+                                   self.france,
+                                   self.germany,
+                                   self.italy], 1):
+            with self.subTest(power=power):
+                pref = prefs.pop(0)
+                self.assertEqual(pref.ranking, i)
+                self.assertEqual(pref.power, power)
         self.assertEqual(tp.prefs_string(), 'AEFGI')
         tp.preference_set.all().delete()
 
@@ -707,20 +710,17 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.preference_set.count(), 7)
         # Check that the Preferences are correct
         prefs = list(tp.preference_set.all())
-        self.assertEqual(prefs[0].ranking, 1)
-        self.assertEqual(prefs[0].power, self.turkey)
-        self.assertEqual(prefs[1].ranking, 2)
-        self.assertEqual(prefs[1].power, self.russia)
-        self.assertEqual(prefs[2].ranking, 3)
-        self.assertEqual(prefs[2].power, self.italy)
-        self.assertEqual(prefs[3].ranking, 4)
-        self.assertEqual(prefs[3].power, self.austria)
-        self.assertEqual(prefs[4].ranking, 5)
-        self.assertEqual(prefs[4].power, self.france)
-        self.assertEqual(prefs[5].ranking, 6)
-        self.assertEqual(prefs[5].power, self.germany)
-        self.assertEqual(prefs[6].ranking, 7)
-        self.assertEqual(prefs[6].power, self.england)
+        for i, power in enumerate([self.turkey,
+                                   self.russia,
+                                   self.italy,
+                                   self.austria,
+                                   self.france,
+                                   self.germany,
+                                   self.england], 1):
+            with self.subTest(power=power):
+                pref = prefs.pop(0)
+                self.assertEqual(pref.ranking, i)
+                self.assertEqual(pref.power, power)
         self.assertEqual(tp.prefs_string(), 'TRIAFGE')
         tp.preference_set.all().delete()
 
@@ -731,20 +731,17 @@ class TournamentModelTests(TestCase):
         self.assertEqual(tp.preference_set.count(), 7)
         # Check that the Preferences are correct
         prefs = list(tp.preference_set.all())
-        self.assertEqual(prefs[0].ranking, 1)
-        self.assertEqual(prefs[0].power, self.turkey)
-        self.assertEqual(prefs[1].ranking, 2)
-        self.assertEqual(prefs[1].power, self.russia)
-        self.assertEqual(prefs[2].ranking, 3)
-        self.assertEqual(prefs[2].power, self.italy)
-        self.assertEqual(prefs[3].ranking, 4)
-        self.assertEqual(prefs[3].power, self.austria)
-        self.assertEqual(prefs[4].ranking, 5)
-        self.assertEqual(prefs[4].power, self.france)
-        self.assertEqual(prefs[5].ranking, 6)
-        self.assertEqual(prefs[5].power, self.germany)
-        self.assertEqual(prefs[6].ranking, 7)
-        self.assertEqual(prefs[6].power, self.england)
+        for i, power in enumerate([self.turkey,
+                                   self.russia,
+                                   self.italy,
+                                   self.austria,
+                                   self.france,
+                                   self.germany,
+                                   self.england], 1):
+            with self.subTest(power=power):
+                pref = prefs.pop(0)
+                self.assertEqual(pref.ranking, i)
+                self.assertEqual(pref.power, power)
         self.assertEqual(tp.prefs_string(), 'TRIAFGE')
         tp.preference_set.all().delete()
 
@@ -1229,8 +1226,9 @@ class TournamentModelTests(TestCase):
         self.assertEqual(gp.power, self.france)
         # All preferences gone, should get a random available power
         for p in [self.p4, self.p5, self.p6, self.p7]:
-            gp = GamePlayer.objects.get(game=g2, player=p)
-            self.assertIn(gp.power, [self.england, self.italy, self.russia, self.turkey])
+            with self.subTest(player=p):
+                gp = GamePlayer.objects.get(game=g2, player=p)
+                self.assertIn(gp.power, [self.england, self.italy, self.russia, self.turkey])
         # Note that this will also delete all GamePlayers for that Game
         g2.delete()
         g1.delete()
@@ -1290,7 +1288,8 @@ class TournamentModelTests(TestCase):
         self.assertEqual(len(ccs), 7)
         self.assertEqual(ccs.aggregate(Sum('count'))['count__sum'], len(test_data))
         for cc in ccs:
-            self.assertEqual(cc.count, res[cc.power])
+            with self.subTest(power=cc.power):
+                self.assertEqual(cc.count, res[cc.power])
         # Remove everything we added to the database
         for sco in scos:
             sco.delete()
@@ -1397,7 +1396,8 @@ class TournamentModelTests(TestCase):
         self.assertEqual(len(ccs), 7)
         self.assertEqual(ccs.aggregate(Sum('count'))['count__sum'], len(test_data))
         for cc in ccs:
-            self.assertEqual(cc.count, res[cc.power])
+            with self.subTest(power=cc.power):
+                self.assertEqual(cc.count, res[cc.power])
         # Remove everything we added to the database
         for sco in scos:
             sco.delete()
@@ -1424,7 +1424,8 @@ class TournamentModelTests(TestCase):
     # Game.is_dias()
     def test_game_is_dias(self):
         for g in Game.objects.all():
-            self.assertEqual(g.is_dias(), g.the_round.dias)
+            with self.subTest(game=g):
+                self.assertEqual(g.is_dias(), g.the_round.dias)
 
     # Game.years_played()
     def test_game_years_played_first(self):
@@ -1447,8 +1448,9 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertEqual(len(g.players()), 7)
-        for gp in g.players().values():
-            self.assertEqual(len(gp), 1)
+        for power, gps in g.players().items():
+            with self.subTest(power=power):
+                self.assertEqual(len(gps), 1)
 
     def test_game_players_all(self):
         t = Tournament.objects.get(name='t1')
@@ -1456,17 +1458,19 @@ class TournamentModelTests(TestCase):
         self.assertEqual(len(g.players(False)), 7)
         players = g.players(False)
         for power in players.keys():
-            if power.abbreviation == u'A':
-                self.assertEqual(len(players[power]), 2)
-            else:
-                self.assertEqual(len(players[power]), 1)
+            with self.subTest(power=power):
+                if power.abbreviation == u'A':
+                    self.assertEqual(len(players[power]), 2)
+                else:
+                    self.assertEqual(len(players[power]), 1)
 
     def test_game_players_none(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(3).game_set.get(name='g15')
         self.assertEqual(len(g.players()), 7)
-        for gp in g.players().values():
-            self.assertEqual(len(gp), 0)
+        for power, gps in g.players().items():
+            with self.subTest(power=power):
+                self.assertEqual(len(gps), 0)
 
     # Game.news()
     def test_game_news(self):
@@ -1859,13 +1863,15 @@ class TournamentModelTests(TestCase):
         g1.save()
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
-            if gp.power == self.russia:
-                self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
-            else:
-                self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
+            with self.subTest(player=gp.player):
+                if gp.power == self.russia:
+                    self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
         # But not for the Round
         for rp in r.roundplayer_set.all():
-            self.assertEqual(rp.score, 0.0)
+            with self.subTest(player=rp.player):
+                self.assertEqual(rp.score, 0.0)
         g2.delete()
         # Note that this will also delete all GamePlayers for that Game
         g1.delete()
@@ -1941,22 +1947,25 @@ class TournamentModelTests(TestCase):
         g1.save()
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
-            if gp.power == self.russia:
-                self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
-            else:
-                self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
+            with self.subTest(player=gp.player):
+                if gp.power == self.russia:
+                    self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
         # And for the Round
         for rp in r.roundplayer_set.all():
-            if rp.player == self.p6:
-                self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
-            else:
-                self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
+            with self.subTest(player=rp.player):
+                if rp.player == self.p6:
+                    self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
         # And for the Tournament
         for tp in t.tournamentplayer_set.all():
-            if tp.player == self.p6:
-                self.assertAlmostEqual(tp.score, 100.0 * 16 / 70)
-            else:
-                self.assertAlmostEqual(tp.score, 100.0 * 9 / 70)
+            with self.subTest(player=tp.player):
+                if tp.player == self.p6:
+                    self.assertAlmostEqual(tp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(tp.score, 100.0 * 9 / 70)
         # Note that this will also delete all GamePlayers for that Game
         g1.delete()
         # Note that this will also delete all RoundPlayers for that Round
@@ -2041,13 +2050,15 @@ class TournamentModelTests(TestCase):
         g1.save()
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
-            if gp.power == self.russia:
-                self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
-            else:
-                self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
+            with self.subTest(player=gp.player):
+                if gp.power == self.russia:
+                    self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
         # But not for the Round
         for rp in r.roundplayer_set.all():
-            self.assertEqual(rp.score, 0.0)
+            with self.subTest(player=rp.player):
+                self.assertEqual(rp.score, 0.0)
         g2.delete()
         # Note that this will also delete all GamePlayers for that Game
         g1.delete()
@@ -2102,26 +2113,20 @@ class TournamentModelTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria)
-        self.assertEqual(dp.power_is_part(self.austria), True)
-        self.assertEqual(dp.power_is_part(self.england), False)
-        self.assertEqual(dp.power_is_part(self.france), False)
-        self.assertEqual(dp.power_is_part(self.germany), False)
-        self.assertEqual(dp.power_is_part(self.italy), False)
-        self.assertEqual(dp.power_is_part(self.russia), False)
-        self.assertEqual(dp.power_is_part(self.turkey), False)
+        with self.subTest(power=self.austria):
+            self.assertEqual(dp.power_is_part(self.austria), True)
+        for power in [self.england, self.france, self.germany, self.italy, self.russia, self.turkey]:
+            with self.subTest(power=power):
+                self.assertEqual(dp.power_is_part(power), False)
 
     def test_draw_proposal_power_is_part_all(self):
         g = Game.objects.first()
         dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
                           power_1=self.austria, power_2=self.england, power_3=self.france,
                           power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
-        self.assertEqual(dp.power_is_part(self.austria), True)
-        self.assertEqual(dp.power_is_part(self.england), True)
-        self.assertEqual(dp.power_is_part(self.france), True)
-        self.assertEqual(dp.power_is_part(self.germany), True)
-        self.assertEqual(dp.power_is_part(self.italy), True)
-        self.assertEqual(dp.power_is_part(self.russia), True)
-        self.assertEqual(dp.power_is_part(self.turkey), True)
+        for power in [self.austria, self.england, self.france, self.germany, self.italy, self.russia, self.turkey]:
+            with self.subTest(power=power):
+                self.assertEqual(dp.power_is_part(self.austria), True)
 
     # DrawProposal.votes_against()
     def test_draw_proposal_votes_against_none(self):
