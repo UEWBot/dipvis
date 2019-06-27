@@ -679,6 +679,7 @@ class TournamentPlayer(models.Model):
     def position(self):
         """
         Where is the player (currently) ranked overall in the tournament?
+        Returns Tournament.UNRANKED if self.unranked is True.
         """
         return self.tournament.positions_and_scores()[0][self.player][0]
 
