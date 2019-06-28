@@ -1305,6 +1305,10 @@ class Game(models.Model):
                            % {'count': count,
                               'game': gn_str})
         if (mask & MASK_DRAW_VOTES) != 0:
+            # How many draw votes have there been ?
+            votes = self.drawproposal_set.count()
+            results.append(_('%(count)d draw vote(s) have been taken.')
+                           % {'count': votes})
             # What draw votes failed recently ?
             # Note that it's fairly arbitrary where we draw the line here
             draws_set = self.drawproposal_set.order_by('-year').filter(year__gte=last_year)
