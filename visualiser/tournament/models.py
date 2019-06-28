@@ -60,7 +60,8 @@ MASK_DRAW_VOTES = 1 << 3
 MASK_ELIMINATIONS = 1 << 4
 MASK_SC_CHANGES = 1 << 5
 MASK_SC_CHANGE_COUNTS = 1 << 6
-MASK_ALL_NEWS = (1 << 7) - 1
+MASK_SC_OWNER_COUNTS = 1 << 7
+MASK_ALL_NEWS = (1 << 8) - 1
 
 
 class InvalidScoringSystem(Exception):
@@ -1225,6 +1226,19 @@ class Game(models.Model):
         current_scs = centres_set.filter(year=last_year)
         current_scos = self.supplycentreownership_set.filter(year=last_year)
         results = []
+        if (mask & MASK_SC_OWNER_COUNTS):
+            # Which dots have had lots of owners?
+            owner_sets = {}
+            for sco in self.supplycentreownership_set.all():
+                if sco.sc not in owner_sets:
+                    owner_sets[sco.sc] = set()
+                owner_sets[sco.sc].add(sco.owner)
+            for sc, set_ in owner_sets.items():
+                if len(set_) > 3:
+                    results.append(_('%(dot)s has been owned by %(owners)d different Great Powers (%(list)s).')
+                                   % {'dot': sc,
+                                      'owners': len(set_),
+                                      'list': ','.join([p.abbreviation for p in set_])})
         if (mask & MASK_BOARD_TOP) != 0:
             # Who's topping the board ?
             max_scs = current_scs.order_by('-count')[0].count
