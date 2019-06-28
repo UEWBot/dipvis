@@ -1716,20 +1716,21 @@ class DrawProposal(models.Model):
                                           params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
         if self.game.the_round.tournament.draw_secrecy == Tournament.SECRET:
-            if not self.passed:
+            if self.passed is None:
                 raise ValidationError(_('Passed needs a value'))
         elif self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
-            if not self.votes_in_favour:
+            if self.votes_in_favour is None:
                 raise ValidationError(_('Votes_in_favour needs a value'))
-            # Derive passed from votes_in_favour and survivor count
-            survivors = scs.filter(count__gt=0).count()
-            if self.votes_in_favour:
-                # Votes must be unanimous
-                self.passed = (self.votes_in_favour == survivors)
         else:
             assert 0, 'Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy
 
     def save(self, *args, **kwargs):
+        if self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
+            # Derive passed from votes_in_favour and survivor count
+            survivors = len(self.game.survivors())
+            if self.votes_in_favour:
+                # Votes must be unanimous
+                self.passed = (self.votes_in_favour == survivors)
         super().save(*args, **kwargs)
         # Does this complete the game ?
         if self.passed:
