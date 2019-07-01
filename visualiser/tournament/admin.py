@@ -62,6 +62,12 @@ class TournamentAdmin(admin.ModelAdmin):
               ('managers', 'is_published', 'editable'),
               'wdd_tournament_id')
 
+class TournamentPlayerAdmin(admin.ModelAdmin):
+    list_filter = ('tournament', 'player', 'unranked')
+
+class RoundPlayerAdmin(admin.ModelAdmin):
+    list_filter = ('the_round__tournament', 'the_round', 'player', 'game_count')
+
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
     fieldsets = (
@@ -85,9 +91,15 @@ class GamePlayerInline(admin.TabularInline):
         # We're going to want 7 players
         return 7
 
+class GamePlayerAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'power', 'game', 'player')
+
 class CentreCountInline(admin.TabularInline):
     model = CentreCount
     extra = 7
+
+class CentreCountAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'power', 'game', 'year')
 
 class DrawProposalInline(admin.StackedInline):
     model = DrawProposal
@@ -101,9 +113,15 @@ class DrawProposalInline(admin.StackedInline):
         })
     )
 
+class DrawProposalAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
+
 class SCOwnershipInline(admin.TabularInline):
     model = SupplyCentreOwnership
     extra = 34
+
+class SCOwnershipAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'game', 'owner', 'year')
 
 class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
@@ -111,26 +129,44 @@ class GameAdmin(admin.ModelAdmin):
     inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
     list_filter = ('the_round__tournament', 'name', 'is_finished')
 
+class GameImageAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'game', 'year', 'season', 'phase')
+
 class PlayerAdmin(admin.ModelAdmin):
     exclude = ('_wdd_name',)
     list_filter = ('first_name', 'last_name')
 
+class SeederBiasAdmin(admin.ModelAdmin):
+    list_filter = ('player1__tournament', )
+
+class PlayerTournamentRankingAdmin(admin.ModelAdmin):
+    list_filter = ('player', 'tournament', 'position', 'year', 'title')
+
+class PlayerGameResultAdmin(admin.ModelAdmin):
+    list_filter = ('player', 'tournament_name', 'power', 'position', 'result')
+
+class PlayerAwardAdmin(admin.ModelAdmin):
+    list_filter = ('player', 'tournament', 'name', 'power')
+
+class PlayerRankingAdmin(admin.ModelAdmin):
+    list_filter = ('system', 'player')
+
 # Register models
-admin.site.register(GameImage)
+admin.site.register(GameImage, GameImageAdmin)
 admin.site.register(GreatPower)
 admin.site.register(SupplyCentre)
 admin.site.register(GameSet, GameSetAdmin)
 admin.site.register(Player, PlayerAdmin)
-admin.site.register(DrawProposal)
-admin.site.register(CentreCount)
-admin.site.register(SupplyCentreOwnership)
-admin.site.register(TournamentPlayer)
+admin.site.register(DrawProposal, DrawProposalAdmin)
+admin.site.register(CentreCount, CentreCountAdmin)
+admin.site.register(SupplyCentreOwnership, SCOwnershipAdmin)
+admin.site.register(TournamentPlayer, TournamentPlayerAdmin)
 admin.site.register(Tournament, TournamentAdmin)
 admin.site.register(Game, GameAdmin)
-admin.site.register(PlayerTournamentRanking)
-admin.site.register(PlayerGameResult)
-admin.site.register(PlayerAward)
-admin.site.register(PlayerRanking)
-admin.site.register(RoundPlayer)
-admin.site.register(GamePlayer)
-admin.site.register(SeederBias)
+admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
+admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
+admin.site.register(PlayerAward, PlayerAwardAdmin)
+admin.site.register(PlayerRanking, PlayerRankingAdmin)
+admin.site.register(RoundPlayer, RoundPlayerAdmin)
+admin.site.register(GamePlayer, GamePlayerAdmin)
+admin.site.register(SeederBias, SeederBiasAdmin)
