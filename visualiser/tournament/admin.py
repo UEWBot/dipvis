@@ -109,9 +109,11 @@ class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
     fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
     inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
+    list_filter = ('the_round__tournament', 'name', 'is_finished')
 
 class PlayerAdmin(admin.ModelAdmin):
     exclude = ('_wdd_name',)
+    list_filter = ('first_name', 'last_name')
 
 # Register models
 admin.site.register(GameImage)
