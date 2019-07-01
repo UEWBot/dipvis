@@ -51,13 +51,9 @@ class RoundInline(admin.StackedInline):
         }),
     )
 
-class TournamentPlayerInline(admin.TabularInline):
-    model = TournamentPlayer
-    extra = 7
-
 class TournamentAdmin(admin.ModelAdmin):
     """Include Round and TournamentPlayer as part of Tournament"""
-    inlines = [RoundInline, TournamentPlayerInline]
+    inlines = [RoundInline]
     fields = ('name',
               ('start_date', 'end_date'),
               ('tournament_scoring_system', 'round_scoring_system'),
