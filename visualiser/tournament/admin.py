@@ -94,31 +94,19 @@ class GamePlayerInline(admin.TabularInline):
 class GamePlayerAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'power', 'game', 'player')
 
-class CentreCountInline(admin.TabularInline):
-    model = CentreCount
-    extra = 7
-
 class CentreCountAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'power', 'game', 'year')
 
-class DrawProposalInline(admin.StackedInline):
-    model = DrawProposal
-    extra = 1
+class DrawProposalAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
     fieldsets = (
         (None, {
-            'fields': ('season', 'year', 'proposer', 'passed', 'votes_in_favour')
+            'fields': ('game', 'season', 'year', 'proposer', 'passed', 'votes_in_favour')
         }),
         ('Powers', {
             'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')
         })
     )
-
-class DrawProposalAdmin(admin.ModelAdmin):
-    list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
-
-class SCOwnershipInline(admin.TabularInline):
-    model = SupplyCentreOwnership
-    extra = 34
 
 class SCOwnershipAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'game', 'owner', 'year')
@@ -126,7 +114,7 @@ class SCOwnershipAdmin(admin.ModelAdmin):
 class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
     fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
-    inlines = [GamePlayerInline, CentreCountInline, DrawProposalInline, SCOwnershipInline]
+    inlines = [GamePlayerInline]
     list_filter = ('the_round__tournament', 'name', 'is_finished')
 
 class GameImageAdmin(admin.ModelAdmin):
