@@ -275,26 +275,22 @@ def tournament_best_countries(request,
     all_urls_and_scores = {}
     for g in all_games:
         all_urls_and_scores[g] = (g.get_absolute_url(), g.name, g.scores())
-    # gps is a list of all gameplayers, sorted by current score for each power
-    # GamePlayer.score only gets a value when the game has ended
-    # so we have to do the sort manually
-    gps = list(GamePlayer.objects.filter(game__the_round__tournament=t).distinct())
-    gps.sort(key=lambda gp: all_urls_and_scores[gp.game][2][gp.power], reverse=True)
-    # Shift any unranked players to the end of the list, regardless of score
-    gps.sort(key=lambda gp: t.tournamentplayer_set.get(player=gp.player).unranked)
+    # gps is a dict, keyed by power, of lists of all gameplayers,
+    # sorted by best country criterion
+    gps = t.best_countries(True)
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
     rows = []
     # Add a row at a time, containing the best remaining result for each power
-    while gps:
+    # The list for each power should be the same length
+    while gps[set_powers[0].power]:
         row = []
         for p in set_powers:
-            # Find the first in gps for this power
-            for gp in gps:
-                if gp.power == p.power:
-                    gps.remove(gp)
-                    break
+            try:
+                gp = gps[p.power].pop(0)
+            except IndexError:
+                continue
             row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f<br/>%d %s'
                        % (gp.player.get_absolute_url(),
                           gp.player,

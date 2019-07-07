@@ -58,7 +58,7 @@ class TournamentAdmin(admin.ModelAdmin):
               ('start_date', 'end_date'),
               ('tournament_scoring_system', 'round_scoring_system'),
               ('seed_games', 'power_assignment'),
-              'draw_secrecy',
+              ('draw_secrecy', 'best_country_criterion'),
               ('managers', 'is_published', 'editable'),
               'wdd_tournament_id')
 

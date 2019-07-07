@@ -324,6 +324,14 @@ class Tournament(models.Model):
         (PREFERENCES, _('Using player preferences and ranking')),
     )
 
+    # Best Country Criterion
+    SCORE = 'S'
+    DOTS = 'D'
+    BEST_COUNTRY_CRITERION = (
+        (SCORE, _('Highest score')),
+        (DOTS, _('Highest centre count')),
+    )
+
     # Flag value to use for players who are excluded from the rankings
     UNRANKED = 999999
 
@@ -361,6 +369,10 @@ class Tournament(models.Model):
                                         default=MANUAL)
     editable = models.BooleanField(default=True,
                                    help_text=_('Check to disallow any further changes to the tournament'))
+    best_country_criterion = models.CharField(max_length=1,
+                                              verbose_name=_(u'How Best Country awards are determined'),
+                                              choices=BEST_COUNTRY_CRITERION,
+                                              default=SCORE)
 
     class Meta:
         ordering = ['-start_date']
@@ -471,34 +483,66 @@ class Tournament(models.Model):
         # This allows this function to be used like QuerySet.get()
         raise Round.DoesNotExist
 
-    def best_countries(self):
+    def _sort_best_country_list(self, gp_list):
+        """
+        Take the list of (GamePlayer, score, dots, unranked) 4-tuples
+        for one country, and sort it into best country ordering
+        (highest to lowest).
+        """
+        # First sort criterion is always whether they're ranked or not
+        # Second a third are score and centre count, with the order they're
+        # used depending on how the Tournament is set up.
+        # For ranking, we want regular order (so False is before True),
+        # for the others, we want reverse order (highest first)
+        if self.best_country_criterion == self.SCORE:
+            gp_list.sort(key=itemgetter(1, 2), reverse=True)
+        else:
+            gp_list.sort(key=itemgetter(2, 1), reverse=True)
+        gp_list.sort(key=itemgetter(3))
+
+    def best_countries(self, whole_list=False):
         """
         Returns a dict, indexed by GreatPower,
-          of lists of the GamePlayers with the best scores for each country.
-        Results are only valid if the tournament has finished.
+          of lists of the GamePlayers doing best with each GreatPower.
+        If whole_list is True, returns every player of each power, in order.
+        If whole_list is False, returns just the winners (still a list, though).
         """
-        retval = {}
-        # Populate retval. Dict, keyed by GreatPower, of lists of GamePlayers
+        tuples = {}
+        # We're going to need to "if all games ended now" score for every GamePlayer
+        all_games = Game.objects.filter(the_round__tournament=self)
+        # If no Games exist, return a dict of empty lists
+        if not all_games:
+            for power in GreatPower.objects.all():
+                tuples[power] = []
+            return tuples
+        all_scores = {}
+        for g in all_games:
+            all_scores[g] = g.scores()
+        # Populate tuples. Dict, keyed by GreatPower,
+        # of lists of (GamePlayer, score, dots, unranked) 4-tuples
         for r in self.round_set.all().prefetch_related('game_set'):
             for g in r.game_set.all().prefetch_related('gameplayer_set'):
                 for gp in g.gameplayer_set.all():
-                    # Skip this player if they are unranked in the event
-                    if gp.tournamentplayer().unranked:
-                        continue
-                    retval.setdefault(gp.power, []).append(gp)
-        for power in retval:
-            # Find the best score for this power in the whole tournament
-            # First, sort by descending score
-            retval[power].sort(key=attrgetter('score'), reverse=True)
-            best = retval[power][0].score
-            # Throw away all but the top scores
-            retval[power] = [gp for gp in retval[power] if gp.score == best]
-            # Do we need to resolve a tie ?
-            if len(retval[power]) > 1:
-                # Resolve the tie by comparing centrecounts
-                best_dots = max([gp.final_sc_count() for gp in retval[power]])
-                winners = [gp for gp in retval[power] if gp.final_sc_count() == best_dots]
-                retval[power] = winners
+                    score = all_scores[gp.game][gp.power]
+                    tuple_ = (gp, score, gp.final_sc_count(), gp.tournamentplayer().unranked)
+                    tuples.setdefault(gp.power, []).append(tuple_)
+        for power in tuples:
+            self._sort_best_country_list(tuples[power])
+        retval = {}
+        # If the caller wants the whole list, that's easy
+        if whole_list:
+            for power in tuples:
+                retval[power] = [gp for gp, _, _, _ in tuples[power]]
+            return retval
+        # Filter out all except the best for each country
+        for power in tuples:
+            best_gp, best_score, best_dots, best_unranked = tuples[power].pop(0)
+            list_ = [best_gp]
+            for gp, score, dots, unranked in tuples[power]:
+                # It's only a tie if all three criteria match
+                if (score == best_score) and (dots == best_dots) and (unranked == best_unranked):
+                    list_.append(gp)
+            retval[power] = list_
         return retval
 
     def background(self, mask=MASK_ALL_BG):

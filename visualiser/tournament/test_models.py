@@ -567,6 +567,77 @@ class TournamentModelTests(TestCase):
             with self.subTest(power=gp.power):
                 self.assertFalse(gp.player == self.p5)
 
+    def test_tournament_best_countries_by_dots(self):
+        t = Tournament.objects.get(name='t1')
+        g12 = Game.objects.get(name='g12')
+        g14 = Game.objects.get(name='g14')
+        # Check that we only have the "1900" CentreCounts for the Games we're using
+        self.assertEqual(g12.centrecount_set.count(), 7)
+        self.assertEqual(g14.centrecount_set.count(), 7)
+        # Switch game scoring system to sum of squares for both games
+        round_scoring1 = g12.the_round.scoring_system
+        g12.the_round.scoring_system = 'Sum of Squares'
+        g12.the_round.save()
+        round_scoring2 = g14.the_round.scoring_system
+        g14.the_round.scoring_system = 'Sum of Squares'
+        g14.the_round.save()
+        # Ensure all players are ranked
+        gp_list = list(t.tournamentplayer_set.filter(unranked=True))
+        for gp in gp_list:
+            gp.unranked = False
+            gp.save()
+        # Add some CentreCounts to two Games
+        # to give higher score with lower dot count and vice versa
+        CentreCount.objects.create(power=self.austria, game=g12, year=1905, count=9)
+        CentreCount.objects.create(power=self.england, game=g12, year=1905, count=9)
+        CentreCount.objects.create(power=self.france, game=g12, year=1905, count=9)
+        CentreCount.objects.create(power=self.germany, game=g12, year=1905, count=7)
+        CentreCount.objects.create(power=self.italy, game=g12, year=1905, count=0)
+        CentreCount.objects.create(power=self.russia, game=g12, year=1905, count=0)
+        CentreCount.objects.create(power=self.turkey, game=g12, year=1905, count=0)
+        CentreCount.objects.create(power=self.austria, game=g14, year=1905, count=8)
+        CentreCount.objects.create(power=self.england, game=g14, year=1905, count=5)
+        CentreCount.objects.create(power=self.france, game=g14, year=1905, count=4)
+        CentreCount.objects.create(power=self.germany, game=g14, year=1905, count=4)
+        CentreCount.objects.create(power=self.italy, game=g14, year=1905, count=5)
+        CentreCount.objects.create(power=self.russia, game=g14, year=1905, count=3)
+        CentreCount.objects.create(power=self.turkey, game=g14, year=1905, count=5)
+        # Check best countries with criterion of score
+        bc = t.best_countries(True)
+        for power in GreatPower.objects.all():
+            with self.subTest(criterion=Tournament.SCORE, power=power):
+                gp1 = g12.gameplayer_set.get(power=power)
+                gp2 = g14.gameplayer_set.get(power=power)
+                if gp1.score > gp2.score:
+                    self.assertTrue(bc[power].index(gp1) < bc[power].index(gp2))
+                if gp1.score < gp2.score:
+                    self.assertTrue(bc[power].index(gp1) > bc[power].index(gp2))
+        # Change the Tournament to rank best countries by dot count
+        t.best_country_criterion = Tournament.DOTS
+        t.save()
+        # Now best countries should be different
+        bc = t.best_countries(True)
+        for power in GreatPower.objects.all():
+            with self.subTest(criterion=Tournament.DOTS, power=power):
+                gp1 = g12.gameplayer_set.get(power=power)
+                gp2 = g14.gameplayer_set.get(power=power)
+                if gp1.final_sc_count() > gp2.final_sc_count():
+                    self.assertTrue(bc[power].index(gp1) < bc[power].index(gp2))
+                if gp1.final_sc_count() < gp2.final_sc_count():
+                    self.assertTrue(bc[power].index(gp1) > bc[power].index(gp2))
+        # Clean up
+        t.best_country_criterion = Tournament.SCORE
+        t.save()
+        for gp in gp_list:
+            gp.unranked = True
+            gp.save()
+        g12.the_round.scoring_system = round_scoring1
+        g12.the_round.save()
+        g14.the_round.scoring_system = round_scoring2
+        g14.the_round.save()
+        g12.centrecount_set.filter(year=1905).delete()
+        g14.centrecount_set.filter(year=1905).delete()
+
     # Tournament.background()
     def test_tournament_background_without_players(self):
         t = Tournament.objects.get(name='t1')
@@ -1396,7 +1467,7 @@ class TournamentModelTests(TestCase):
             res[v] += 1
         # Quickly check that no CentreCounts exist already
         self.assertEqual(0, g.centrecount_set.filter(year=YEAR).count())
-        # Add some CentreCounts to be updated by the metho being tested
+        # Add some CentreCounts to be updated by the method being tested
         cc = CentreCount(power=self.england, game=g, year=YEAR, count=17)
         cc = CentreCount(power=self.turkey, game=g, year=YEAR, count=17)
         g.create_or_update_sc_counts_from_ownerships(YEAR)
