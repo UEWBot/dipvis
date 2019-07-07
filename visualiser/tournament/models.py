@@ -496,13 +496,8 @@ class Tournament(models.Model):
             # Do we need to resolve a tie ?
             if len(retval[power]) > 1:
                 # Resolve the tie by comparing centrecounts
-                best_dots = 0
-                for gp in retval[power]:
-                    sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
-                                                     power=power)
-                    best_dots = max([best_dots, sc.count])
-                winners = [gp for gp in retval[power] if gp.game.centrecount_set.get(year=gp.game.final_year(),
-                                                                                     power=power).count == best_dots]
+                best_dots = max([gp.final_sc_count() for gp in retval[power]])
+                winners = [gp for gp in retval[power] if gp.final_sc_count() == best_dots]
                 retval[power] = winners
         return retval
 
@@ -559,12 +554,10 @@ class Tournament(models.Model):
             for power, gps in self.best_countries().items():
                 gp = gps[0]
                 if len(gps) == 1:
-                    sc = gp.game.centrecount_set.get(year=gp.game.final_year(),
-                                                     power=power)
                     results.append(_(u'%(player)s won Best %(country)s with %(dots)d centre(s) and a score of %(score).2f in game %(game)s of round %(round)d.')
                                    % {'player': str(gp.player),
                                       'country': power.name,
-                                      'dots': sc.count,
+                                      'dots': gp.final_sc_count(),
                                       'score': gp.score,
                                       'game': gp.game.name,
                                       'round': gp.game.the_round.number()})
@@ -574,8 +567,7 @@ class Tournament(models.Model):
                     results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centre(s) and a score of %(score).2f.')
                                    % {'country': power.name,
                                       'winner_str': winner_str,
-                                      'dots': gp.game.centrecount_set.get(year=gp.game.final_year(),
-                                                                          power=power).count,
+                                      'dots': gp.final_sc_count(),
                                       'score': gp.score})
         else:
             # which rounds have been played ?
@@ -1855,6 +1847,21 @@ class GamePlayer(models.Model):
         if e_year == self.last_year and self.last_season == SPRING:
             return None
         return e_year
+
+    def final_sc_count(self):
+        """
+        Number of SupplyCentres held at the end of the Game,
+        or currently if the Game iss till ongoing.
+        """
+        game = self.game
+        final_year = game.final_year()
+        if self.last_year:
+            if self.last_season == SPRING:
+                final_year = self.last_year - 1
+            else:
+                final_year = self.last_year
+        return game.centrecount_set.filter(year__lte=final_year,
+                                           power=self.power).last().count
 
     def set_power_from_prefs(self):
         """

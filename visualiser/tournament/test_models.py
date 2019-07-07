@@ -186,12 +186,21 @@ class TournamentModelTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
+        # Eliminate Italy in 1903
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=10)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
+
         # Solo victory for Germany in 1904
         CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
         CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=2)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
         CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=2)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
         CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
 
@@ -1694,7 +1703,7 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         # survivors() just returns surviving players, regardless of whether they
         # lost to a solo or were excluded from a draw
-        self.assertEqual(len(g.survivors()), 6)
+        self.assertEqual(len(g.survivors()), 5)
 
     def test_game_survivors_year_1(self):
         t = Tournament.objects.get(name='t1')
@@ -1706,7 +1715,7 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         # survivors() just returns surviving players, regardless of whether they
         # lost to a solo or were excluded from a draw
-        self.assertEqual(len(g.survivors(1904)), 6)
+        self.assertEqual(len(g.survivors(1904)), 5)
 
     def test_game_survivors_invalid_year(self):
         t = Tournament.objects.get(name='t1')
@@ -2217,8 +2226,8 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g, year=1905, season='F', passed=False, proposer=self.austria,
                                          power_1=self.england, power_2=self.france,
-                                         power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                                         power_6=self.turkey)
+                                         power_3=self.germany, power_4=self.russia,
+                                         power_5=self.turkey)
         # This one should be fine
         dp.clean()
 
@@ -2227,8 +2236,8 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g, year=1905, season='F', passed=True, proposer=self.austria,
                                          power_1=self.england, power_2=self.france,
-                                         power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                                         power_6=self.turkey)
+                                         power_3=self.germany, power_4=self.russia,
+                                         power_5=self.turkey)
         # This one should be fine
         dp.clean()
 
@@ -2383,6 +2392,33 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         gp = g.gameplayer_set.get(power=self.england)
         self.assertEqual(gp.elimination_year(), None)
+
+    # GamePlayer.final_sc_count()
+    def test_gameplayer_final_sc_count_soloer(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.get(power=self.germany)
+        self.assertEqual(gp.final_sc_count(), 18)
+
+    def test_gameplayer_final_sc_eliminated(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.get(power=self.italy)
+        self.assertEqual(gp.final_sc_count(), 0)
+
+    def test_gameplayer_final_sc_count_lost_to_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.get(power=self.england)
+        self.assertEqual(gp.final_sc_count(), 4)
+
+    def test_gameplayer_final_sc_count_replacement(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.filter(power=self.austria).first()
+        self.assertEqual(gp.final_sc_count(), 5)
+        gp = g.gameplayer_set.filter(power=self.austria).last()
+        self.assertEqual(gp.final_sc_count(), 0)
 
     # GamePlayer.set_power_from_prefs()
     def test_gameplayer_set_power_from_prefs(self):
