@@ -120,6 +120,7 @@ class GameScoreForm(forms.Form):
             c = power.name
             # Don't require a score for every player
             self.fields[c] = forms.FloatField(required=False)
+            self.fields[c].label = c
             attrs = self.fields[c].widget.attrs
             attrs['size'] = 10
             attrs['maxlength'] = 10
@@ -152,6 +153,7 @@ class GamePlayersForm(forms.Form):
         for power in GreatPower.objects.all():
             c = power.name
             self.fields[c] = RoundPlayerChoiceField(queryset)
+            self.fields[c].label = c
 
     def clean(self):
         """Checks that no player is playing multiple powers"""
@@ -433,6 +435,8 @@ class SCCountForm(forms.Form):
             # and to default any not provided to zero
             # It may also make sense for that default to be in the model...
             self.fields[c] = forms.IntegerField(min_value=0, max_value=TOTAL_SCS)
+            # We don't want the default capitalisation
+            self.fields[c].label = c
             self.fields[c].widget.attrs['size'] = 2
             self.fields[c].widget.attrs['maxlength'] = 2
 
