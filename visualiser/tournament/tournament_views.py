@@ -295,12 +295,14 @@ def tournament_best_countries(request,
                 if gp.power == p.power:
                     gps.remove(gp)
                     break
-            row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f'
+            row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f<br/>%d %s'
                        % (gp.player.get_absolute_url(),
                           gp.player,
                           all_urls_and_scores[gp.game][0],  # URL
                           all_urls_and_scores[gp.game][1],  # name
-                          all_urls_and_scores[gp.game][2][gp.power]))  # score
+                          all_urls_and_scores[gp.game][2][gp.power],  # score
+                          gp.final_sc_count(),  # dots
+                          _('centre(s)')))
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
