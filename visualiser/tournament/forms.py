@@ -417,6 +417,26 @@ class GameEndedForm(forms.Form):
                                      initial=False)
 
 
+class DeathYearForm(forms.Form):
+    """Form for elimination year of each power"""
+
+    # One shared label, because we expect the form to be displayed in a table
+    label = forms.CharField(initial=_('Eliminated (optional):'),
+                            disabled=True)
+
+    def __init__(self, *args, **kwargs):
+        """Dynamically creates one year field per Great Power"""
+        super().__init__(*args, **kwargs)
+
+        # Create the right country fields
+        for power in GreatPower.objects.all():
+            c = power.name
+            self.fields[c] = forms.IntegerField(min_value=FIRST_YEAR)
+            self.fields[c].required = False
+            self.fields[c].widget.attrs['size'] = 4
+            self.fields[c].widget.attrs['maxlength'] = 4
+
+
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count

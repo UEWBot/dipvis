@@ -30,6 +30,7 @@ from tournament.forms import BaseSCCountFormset
 from tournament.forms import BaseSCOwnerFormset
 from tournament.forms import DrawForm
 from tournament.forms import GameEndedForm
+from tournament.forms import DeathYearForm
 from tournament.forms import GameImageForm
 from tournament.forms import SCCountForm
 from tournament.forms import SCOwnerForm
@@ -38,7 +39,7 @@ from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
 
 from tournament.diplomacy import GreatPower, SupplyCentre
-from tournament.diplomacy import WINNING_SCS
+from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
 from tournament.models import Game, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING
@@ -179,9 +180,11 @@ def game_sc_chart(request,
                 sc = yscs.get(power=sp.power)
                 row.append(sc.count)
             except CentreCount.DoesNotExist:
-                # This is presumably because they were eliminated
-                row.append(0)
-        row.append(g.neutrals(year))
+                row.append('?')
+        neutrals = g.neutrals(year)
+        if neutrals == TOTAL_SCS:
+            neutrals = '?'
+        row.append(neutrals)
         rows.append(row)
     context = {'game': g, 'powers': set_powers, 'players': ps, 'rows': rows}
     if refresh:
@@ -301,17 +304,23 @@ def sc_counts(request, tournament_id, game_name):
                                      formset=BaseSCCountFormset)
     # Put in all the existing CentreCounts for this game
     data = []
+    death_data = {}
     for year in g.years_played():
         scs = {'year': year}
         counts = g.centrecount_set.filter(year=year)
         for c in counts:
             scs[c.power.name] = c.count
+            if (c.count == 0) and (c.power.name not in death_data):
+                death_data[c.power.name] = year
         data.append(scs)
     formset = SCCountFormset(request.POST or None, prefix='scs', initial=data)
     end_form = GameEndedForm(request.POST or None,
                              prefix='end',
                              initial={'is_finished': g.is_finished})
-    if formset.is_valid() and end_form.is_valid():
+    death_form = DeathYearForm(request.POST or None,
+                               prefix='death',
+                               initial=death_data)
+    if formset.is_valid() and end_form.is_valid() and death_form.is_valid():
         for form in formset:
             try:
                 year = form.cleaned_data['year']
@@ -356,6 +365,45 @@ def sc_counts(request, tournament_id, game_name):
                 # We now have final CentreCounts
                 g.is_finished = True
                 g.save()
+
+        # Add eliminations for any eliminated powers, if needed
+        for name, value in death_form.cleaned_data.items():
+            if value is None:
+                continue
+            try:
+                power = GreatPower.objects.get(name=name)
+            except GreatPower.DoesNotExist:
+                continue
+            try:
+                i = CentreCount.objects.get(power=power,
+                                            game=g,
+                                            year=value)
+            except CentreCount.DoesNotExist:
+                # Create a zero-SC count
+                i = CentreCount.objects.create(power=power,
+                                               game=g,
+                                               year=value,
+                                               count=0)
+            try:
+                if i.count != 0:
+                    raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
+                                          % {'power': power,
+                                             'count': i.count,
+                                             'year': value})
+                i.full_clean()
+            except ValidationError as e:
+                death_form.add_error(form.fields[name], e)
+                i.delete()
+                return render(request,
+                              'games/sc_counts_form.html',
+                              {'formset': formset,
+                               'end_form': end_form,
+                               'death_form': death_form,
+                               'tournament': t,
+                               'game': g})
+
+            i.save()
+
         # Set the "game over" flag as appropriate
         # Game is over if it reached the final year,
         # somebody won, or the checkbox was checked
@@ -369,6 +417,7 @@ def sc_counts(request, tournament_id, game_name):
                   'games/sc_counts_form.html',
                   {'formset': formset,
                    'end_form': end_form,
+                   'death_form': death_form,
                    'tournament': t,
                    'game': g})
 

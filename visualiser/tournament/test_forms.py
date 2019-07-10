@@ -30,7 +30,7 @@ from tournament.models import Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
-from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm
+from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
@@ -1169,6 +1169,31 @@ class GameEndedFormTest(TestCase):
     def test_is_finished_not_required(self):
         form = GameEndedForm()
         self.assertFalse(form.fields['is_finished'].required)
+
+class DeathYearFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    def test_label_field_disabled(self):
+        form = DeathYearForm()
+        self.assertTrue(form.fields['label'].disabled)
+
+    def test_all_power_fields_not_required(self):
+        form = DeathYearForm()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                self.assertFalse(form.fields[power.name].required)
+
+    def test_year_1900(self):
+        data = { 'France': 1900,
+               }
+        form = DeathYearForm(data=data)
+        self.assertFalse(form.is_valid())
+
+    def test_year_1901(self):
+        data = { 'Austria-Hungary': 1901,
+               }
+        form = DeathYearForm(data=data)
+        self.assertTrue(form.is_valid())
 
 class SCCountFormTest(TestCase):
     fixtures = ['game_sets.json']
