@@ -54,6 +54,9 @@
   {% endif %}
   {% if perms.tournament.change_game %}
     <li><a href="{% url 'game_scores' tournament.id round.number %}">{% trans "Score Games" %}</a> - {% trans "Use this if you need to override the scores calculated by the system." %}</li>
+    {% if round.game_set.count %}
+      <li><a href="{% url 'create_games' tournament.id round.number %}">{% trans "Modify Games" %}</a> - {% trans "Use this to change the players assigned to games (e.g. to replace a player) or the great power assignments." %}</li>
+    {% endif %}
   {% endif %}
 </ul>
 {% endif %}
