@@ -412,3 +412,84 @@ class GameScoringTests(TestCase):
                 else:
                     self.assertEqual(s, 1000 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    # GScoringJanus
+    def test_g_scoring_janus_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1901)
+        system = find_game_scoring_system('Janus')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+                if sc.count == 4:
+                    self.assertEqual(s, 60 / 7 + 4)
+                else:
+                    self.assertEqual(s, 60 / 7 + 6 / 4 + 5)
+        # Total of all scores should be 100 minus 2 (neutrals)
+        self.assertAlmostEqual(sum(scores.values()), 98)
+
+    def test_g_scoring_janus_no_solo_2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1905)
+        system = find_game_scoring_system('Janus')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 0:
+                    self.assertEqual(s, 0)
+                elif sc.count == 3:
+                    self.assertEqual(s, 3 + 10 - 7)
+                elif sc.count == 4:
+                    self.assertEqual(s, 4 + 10 - 7)
+                elif sc.count == 5:
+                    self.assertEqual(s, 5 + 10 - 7)
+                elif sc.count == 6:
+                    self.assertEqual(s, 6 + 10 - 7)
+                else:
+                    self.assertEqual(s, 13 + 6 + 10 + 7 * 5)
+        # Total of all scores should be 100
+        self.assertAlmostEqual(sum(scores.values()), 100)
+
+    def test_g_scoring_janus_no_solo_3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1906)
+        system = find_game_scoring_system('Janus')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 0:
+                    self.assertEqual(s, 0)
+                elif sc.count == 5:
+                    self.assertEqual(s, 5 + 15 - 10)
+                elif sc.count == 7:
+                    self.assertEqual(s, 7 + 15 - 10)
+                else:
+                    self.assertEqual(s, 17 + 6 + 15 + 30)
+        # Total of all scores should be 100
+        self.assertAlmostEqual(sum(scores.values()), 100)
+
+    def test_g_scoring_janus_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1907)
+        system = find_game_scoring_system('Janus')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 18:
+                    self.assertEqual(s, 100)
+                else:
+                    self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 100)

@@ -44,11 +44,6 @@ def _final_year_scs(centre_counts):
     return centre_counts.filter(year=_final_year(centre_counts)).order_by('-count')
 
 
-def _survivor_count(centre_counts):
-    """Returns the number of surviving powers"""
-    return _final_year_scs(centre_counts).filter(count__gt=0).count()
-
-
 class GameScoringSystem(ABC):
     # TODO This doesn't deal with multiple players playing one power
     """
@@ -108,8 +103,8 @@ class GScoringDrawSize(GameScoringSystem):
         retval = {}
         the_game = _the_game(centre_counts)
         draw = the_game.passed_draw()
-        survivors = _survivor_count(centre_counts)
         final_scs = _final_year_scs(centre_counts)
+        survivors = final_scs.filter(count__gt=0).count()
         soloed = final_scs[0].count >= WINNING_SCS
         # We only care about the most recent centrecounts
         for sc in final_scs:
@@ -218,7 +213,6 @@ class GScoringCarnage(GameScoringSystem):
     Each power gets 1 point per centre owned at the end, unless there's
     a solo, in which case the soloer gets the 34 SC points.
     """
-    # TODO Add support for dead powers scoring based on elimination order
     def __init__(self, name, dead_equal=True):
         self.name = name
         self.dead_equal = dead_equal
@@ -303,6 +297,51 @@ class GScoringSumOfSquares(GameScoringSystem):
         return retval
 
 
+class GScoringJanus(GameScoringSystem):
+    """
+    1 point per dot, board leader gets 6 more (split evenly if
+    there are multiple board leaders), survivors split 60 points
+    equally between them.
+    If there's a lone board leader, every other player loses
+    a number of their survival points to the leader equal to the
+    dot gap between first and second place.
+    With a solo, soloer gets 100, everyone else gets 0.
+    """
+    def __init__(self):
+        self.name = _('Janus')
+
+    def scores(self, centre_counts):
+        retval = {}
+        final_scs = _final_year_scs(centre_counts)
+        survivors = final_scs.filter(count__gt=0).count()
+        survival_points = 60 / survivors
+        leader_scs = final_scs[0].count
+        leaders = final_scs.filter(count=leader_scs).count()
+        second_scs = final_scs[1].count
+        margin = leader_scs - second_scs
+        bonus_per_survivor = min(survival_points, margin)
+        soloed = leader_scs >= WINNING_SCS
+        for sc in final_scs:
+            if soloed:
+                if sc.count == leader_scs:
+                    retval[sc.power] = 100
+                else:
+                    retval[sc.power] = 0
+                continue
+            retval[sc.power] = sc.count
+            if sc.count == leader_scs:
+                retval[sc.power] += 6 / leaders
+            if sc.count:
+                retval[sc.power] += survival_points
+            # Is there a lone leader?
+            if margin:
+                if sc.power == final_scs[0].power:
+                    retval[sc.power] += bonus_per_survivor * (survivors - 1)
+                elif sc.count:
+                    retval[sc.power] -= bonus_per_survivor
+        return retval
+
+
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringSolos(),
@@ -312,4 +351,5 @@ G_SCORING_SYSTEMS = [
     GScoringSumOfSquares(),
     GScoringCarnage(_('Carnage with dead equal'), True),
     GScoringCarnage(_('Carnage with elimination order'), False),
+    GScoringJanus(),
 ]
