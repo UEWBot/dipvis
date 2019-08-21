@@ -4,6 +4,8 @@ Inspired by the TV coverage for sports events, the intent is to provide
 something analagous for Diplomacy tournaments, whereby spectators (and
 players) can follow the tournament.
 
+It’s been used for several tournaments already, at https://diplomacytv.com/
+
 It's all python code, HTML, and Django (https://www.djangoproject.com/) templates.
 
 You can create tournaments, consisting of a numer of rounds, add players
