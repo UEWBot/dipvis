@@ -1,0 +1,15 @@
+To run all the unit tests:
+$ cd visualiser
+$ python3 ./manage.py test
+
+To run a particular subset:
+$ cd visualiser
+$ python3 ./manage.py test tournament.<test package name>
+e.g.
+$ python3 ./manage.py test tournament.test_game_seeder
+
+To generate test coverage information:
+$ cd visualiser
+$ coverage run --source='.' ./manage.py test
+$ coverage html
+results will be generated in htmlcov/index.html
