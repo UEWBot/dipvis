@@ -114,8 +114,10 @@ class RScoringBest(RoundScoringSystem):
     Take the best of any game scores for that round.
     """
     def __init__(self, non_player_score=0.0):
-        self.name = _(u'Best game counts')
         self.non_player_score = non_player_score
+        self.name = _(u'Best game counts')
+        if non_player_score > 0.0:
+            self.name = _('Best game counts. Sitters get %(points)d') % {'points': non_player_score}
 
     def scores(self, game_players, non_players):
         """
@@ -151,6 +153,7 @@ class RScoringBest(RoundScoringSystem):
 # All the round scoring systems we support
 R_SCORING_SYSTEMS = [
     RScoringBest(),
+    RScoringBest(4005.0),
 ]
 
 
