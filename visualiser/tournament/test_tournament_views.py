@@ -510,6 +510,42 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('enter_scores', args=(self.t2.pk,)))
         self.assertEqual(response.status_code, 200)
 
+    def test_enter_scores_post(self):
+        # A manager can enter scores for their tournament
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        tp = self.t2.tournamentplayer_set.first()
+        tp_score = tp.score
+        rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
+        rp_score = rp.score
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            data['form-%d-tp' % i] = str(tp.pk)
+            data['form-%d-game_scores_1' % i] = '0.0'
+            data['form-%d-round_1' % i] = '73.5'
+            data['form-%d-overall_score' % i] = '142.8'
+        i += 1
+        data['form-TOTAL_FORMS'] = '%d' % i
+        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-0-round_1'] = '73.5'
+        data['form-0-overall_score'] = '142.8'
+        data = urlencode(data)
+        response = self.client.post(reverse('enter_scores', args=(self.t2.pk,)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the scores page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_scores', args=(self.t2.pk,)))
+        # And the scores entered should be saved
+        tp.refresh_from_db()
+        rp.refresh_from_db()
+        self.assertEqual(rp.score, 73.5)
+        self.assertEqual(tp.score, 142.8)
+        # Clean up
+        tp.score = tp_score
+        tp.save()
+        rp.score = rp_score
+        rp.save()
+
     def test_current_round(self):
         response = self.client.get(reverse('tournament_round', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
