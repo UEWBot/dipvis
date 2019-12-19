@@ -32,6 +32,7 @@ MATT_SHIELDS_WDD_ID = 588
 MATT_SUNDSTROM_WDD_ID = 8355
 NATE_COCKERILL_WDD_ID = 5009
 SPIROS_BOBETSIS_WDD_ID = 12304
+CLAESAR_WEBDIP_WDD_ID = 13317
 
 class PlayerTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -167,6 +168,15 @@ class PlayerTests(TestCase):
         p, created = Player.objects.get_or_create(first_name='Spiros',
                                                   last_name='Bobetsis',
                                                   wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
+        # TODO Validate results
+        p.background()
+
+    @tag('slow', 'wdd')
+    def test_player_background_invalid_date(self):
+        # Spiros has yet to win a tournament
+        p, created = Player.objects.get_or_create(first_name='Claesar',
+                                                  last_name='Webdip',
+                                                  wdd_player_id=CLAESAR_WEBDIP_WDD_ID)
         # TODO Validate results
         p.background()
 

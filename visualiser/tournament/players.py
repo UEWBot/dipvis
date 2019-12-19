@@ -26,6 +26,7 @@ Most of the code is dedicated to storing background information
 about a player and retrieving it as needed.
 """
 
+import datetime
 import re
 import traceback
 import urllib.request
@@ -178,7 +179,13 @@ def add_player_bg(player):
                                                                  tournament=finish['Tournament'],
                                                                  position=finish['Position'],
                                                                  year=d[:4])
-            i.date = d
+            try:
+                # WDD contains some invalid dates (e.g. '2017-09-0')
+                datetime.datetime.strptime(d, '%Y-%m-%d')
+            except ValueError:
+                pass
+            else:
+                i.date = d
             # Ignore if not present
             try:
                 i.wdd_tournament_id = wdd_url_to_id(finish['WDD URL'])
@@ -203,7 +210,13 @@ def add_player_bg(player):
                                                                  tournament=t['Name of the tournament'],
                                                                  position=t['Rank'],
                                                                  year=d[:4])
-            i.date = d
+            try:
+                # WDD contains some invalid dates (e.g. '2017-09-0')
+                datetime.datetime.strptime(d, '%Y-%m-%d')
+            except ValueError:
+                pass
+            else:
+                i.date = d
             # Ignore if not present
             try:
                 i.wdd_tournament_id = wdd_url_to_id(t['WDD URL'])
