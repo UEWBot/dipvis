@@ -1547,23 +1547,21 @@ class Game(models.Model):
         # Auto-create 1900 SC counts (unless they already exist)
         # Auto-create SC Ownership (unless they already exist)
         for power in GreatPower.objects.all():
-            i = CentreCount.objects.get_or_create(power=power,
-                                                  game=self,
-                                                  year=FIRST_YEAR - 1,
-                                                  count=power.starting_centres)[0]
-            i.save()
+            i, _ = CentreCount.objects.get_or_create(power=power,
+                                                     game=self,
+                                                     year=FIRST_YEAR - 1,
+                                                     count=power.starting_centres)
             for sc in SupplyCentre.objects.filter(initial_owner=power):
-                i = SupplyCentreOwnership.objects.get_or_create(owner=power,
-                                                                game=self,
-                                                                year=FIRST_YEAR - 1,
-                                                                sc=sc)[0]
-                i.save()
+                i, _ = SupplyCentreOwnership.objects.get_or_create(owner=power,
+                                                                   game=self,
+                                                                   year=FIRST_YEAR - 1,
+                                                                   sc=sc)
 
         # Auto-create S1901M image (if it doesn't exist)
-        i = GameImage.objects.get_or_create(game=self,
-                                            year=FIRST_YEAR,
-                                            season=SPRING,
-                                            phase=GameImage.MOVEMENT)[0]
+        i, _ = GameImage.objects.get_or_create(game=self,
+                                               year=FIRST_YEAR,
+                                               season=SPRING,
+                                               phase=GameImage.MOVEMENT)
         i.image = self.the_set.initial_image
         i.save()
 

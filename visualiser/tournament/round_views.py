@@ -121,8 +121,6 @@ def roll_call(request, tournament_id, round_num=None):
                                'post_url': reverse('roll_call',
                                                    args=(tournament_id,)),
                                'formset': formset})
-            if created:
-                i.save()
             for r_name, value in form.cleaned_data.items():
                 if r_name == 'player':
                     # This column is just for the user
@@ -149,8 +147,6 @@ def roll_call(request, tournament_id, round_num=None):
                                        'post_url': reverse('roll_call',
                                                            args=(tournament_id,)),
                                        'formset': formset})
-                    if created:
-                        i.save()
                 else:
                     # delete any corresponding RoundPlayer
                     # This could be a player who was previously checked-off in error
@@ -458,6 +454,7 @@ def create_games(request, tournament_id, round_num):
         for f in formset:
             # Update/create the game
             try:
+                # TODO What if they changed the Game's name?
                 g, created = Game.objects.get_or_create(name=f.cleaned_data['name'],
                                                         the_round=r,
                                                         the_set=f.cleaned_data['the_set'])
