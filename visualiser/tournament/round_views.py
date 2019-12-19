@@ -113,7 +113,8 @@ def roll_call(request, tournament_id, round_num=None):
                 i.full_clean()
             except ValidationError as e:
                 form.add_error(form.fields['player'], e)
-                i.delete()
+                if created:
+                    i.delete()
                 return render(request,
                               'tournaments/round_players.html',
                               {'title': _('Roll Call'),
@@ -139,7 +140,8 @@ def roll_call(request, tournament_id, round_num=None):
                         i.full_clean()
                     except ValidationError as e:
                         form.add_error(None, e)
-                        i.delete()
+                        if created:
+                            i.delete()
                         return render(request,
                                       'tournaments/round_players.html',
                                       {'title': _('Roll Call'),
@@ -465,7 +467,8 @@ def create_games(request, tournament_id, round_num):
                 g.full_clean()
             except ValidationError as e:
                 f.add_error(None, e)
-                g.delete()
+                if created:
+                    g.delete()
                 return render(request,
                               'rounds/create_games.html',
                               {'tournament': t,

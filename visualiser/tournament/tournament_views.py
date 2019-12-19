@@ -381,14 +381,15 @@ def round_scores(request, tournament_id):
                     # Find that Round
                     r = t.round_numbered(i)
                     # Update the score
-                    i = RoundPlayer.objects.get_or_create(player=tp.player,
-                                                          the_round=r)[0]
+                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
+                                                                   the_round=r)
                     i.score = value
                     try:
                         i.full_clean()
                     except ValidationError as e:
                         form.add_error(form.fields[r_name], e)
-                        i.delete()
+                        if created:
+                            i.delete()
                         return render(request,
                                       'tournaments/round_players.html',
                                       {'title': _('Scores'),
