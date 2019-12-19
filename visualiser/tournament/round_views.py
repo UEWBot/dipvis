@@ -456,11 +456,11 @@ def create_games(request, tournament_id, round_num):
             try:
                 # TODO What if they changed the Game's name?
                 g, created = Game.objects.get_or_create(name=f.cleaned_data['name'],
-                                                        the_round=r,
-                                                        the_set=f.cleaned_data['the_set'])
+                                                        the_round=r)
             except KeyError:
                 # This must be an extra, unused formset
                 continue
+            g.the_set=f.cleaned_data['the_set']
             try:
                 g.full_clean()
             except ValidationError as e:
@@ -471,8 +471,7 @@ def create_games(request, tournament_id, round_num):
                               {'tournament': t,
                                'round': r,
                                'formset': formset})
-            if created:
-                g.save()
+            g.save()
             # Assign the players to the game
             for power, field in f.cleaned_data.items():
                 try:
