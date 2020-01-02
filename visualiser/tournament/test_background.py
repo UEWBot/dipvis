@@ -19,6 +19,7 @@ from django.test import TestCase, tag
 from tournament.background import WDDBackground, InvalidWDDId
 
 INVALID_WDD_ID = 1
+BRANDON_FOGEL_WDD_ID = 13051
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
@@ -54,6 +55,13 @@ class WDDBackgroundTests(TestCase):
     def test_wdd_background_finishes_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.finishes)
+
+    @tag('wdd')
+    def test_wdd_background_finishes_no_type(self):
+        # Brandon has http://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1602
+        # listed as a tournament, and it has an empty "Type" column
+        b = WDDBackground(BRANDON_FOGEL_WDD_ID)
+        b.finishes()
 
     # WDDBackground.tournaments()
     @tag('wdd')

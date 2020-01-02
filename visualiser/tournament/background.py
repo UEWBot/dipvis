@@ -207,11 +207,12 @@ class WDDBackground():
                 # New result at that position
                 result = {'Position': position}
                 for key, td in zip(columns, row.find_all('td')):
-                    # Countries are encoded as flag images
-                    if td.string:
-                        result[key] = str(td.string)
-                    else:
-                        result[key] = img_to_country(td.img['src'])
+                    if len(td.contents):
+                        # Countries are encoded as flag images
+                        if td.string:
+                            result[key] = str(td.string)
+                        else:
+                            result[key] = img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Tournament':
                         result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
