@@ -362,7 +362,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.first()
         self.assertEqual(t.powers_assigned_from_prefs(), False)
 
-    def test_tournament_powers_Assigned_from_prefs_true(self):
+    def test_tournament_powers_assigned_from_prefs_true(self):
         t = Tournament(name='Test Tournament',
                        start_date=timezone.now(),
                        end_date=timezone.now(),

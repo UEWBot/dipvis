@@ -469,11 +469,7 @@ class Tournament(models.Model):
         """
         scores = self.calculated_scores()
         for p in self.tournamentplayer_set.all():
-            try:
-                p.score = scores[p.player]
-            except KeyError:
-                # Player was added to the tournament but didn't play
-                p.score = 0.0
+            p.score = scores[p.player]
             p.save()
 
     def round_numbered(self, number):
@@ -1896,7 +1892,7 @@ class GamePlayer(models.Model):
     def final_sc_count(self):
         """
         Number of SupplyCentres held at the end of the Game,
-        or currently if the Game iss till ongoing.
+        or currently if the Game is still ongoing.
         """
         game = self.game
         final_year = game.final_year()
