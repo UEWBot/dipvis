@@ -58,7 +58,7 @@ class GameScoringSystem(ABC):
         Takes the set of CentreCount objects for one Game.
         Returns a dict, indexed by power id, of scores.
         """
-        pass
+        raise NotImplementedError
 
 
 class GScoringSolos(GameScoringSystem):

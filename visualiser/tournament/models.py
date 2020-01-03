@@ -95,7 +95,7 @@ class RoundScoringSystem(ABC):
             not to play.
         Returns a dict, indexed by player key, of scores.
         """
-        pass
+        raise NotImplementedError
 
 
 class RScoringBest(RoundScoringSystem):
@@ -188,7 +188,7 @@ class TournamentScoringSystem(ABC):
         - a list, indexed by round, of dicts, indexed by player key,
           of round scores
         """
-        pass
+        raise NotImplementedError
 
 
 class TScoringSum(TournamentScoringSystem):
