@@ -42,6 +42,7 @@ from tournament.diplomacy import GameSet
 from tournament.models import Tournament, Game, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList
+from tournament.news import news
 
 # Redirect times are specified in seconds
 REFRESH_TIME = 60
@@ -331,7 +332,7 @@ def tournament_background(request, tournament_id, as_ticker=False):
 def tournament_news(request, tournament_id, as_ticker=False):
     """Display the latest news of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    context = {'tournament': t, 'subject': 'News', 'content': t.news()}
+    context = {'tournament': t, 'subject': 'News', 'content': news(t)}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('tournament_ticker',

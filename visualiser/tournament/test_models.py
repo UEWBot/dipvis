@@ -25,7 +25,6 @@ from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import validate_weight, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import MASK_ALL_NEWS
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
 from tournament.models import find_game_scoring_system
@@ -959,17 +958,6 @@ class TournamentModelTests(TestCase):
                 t.background(mask=mask)
                 mask *= 2
 
-    # Tournament.news()
-    def test_tournament_news_in_progress(self):
-        t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        t.news()
-
-    def test_tournament_news_ended(self):
-        t = Tournament.objects.get(name='t3')
-        # TODO Validate results
-        t.news()
-
     # Tournament.current_round()
     def test_tourney_current_round_none(self):
         # All games in t3 are finished
@@ -1409,26 +1397,6 @@ class TournamentModelTests(TestCase):
         r22 = t.round_set.all()[1]
         self.assertEqual(r22.number(), 2)
 
-    # Round.leader_str()
-    def test_round_leader_str_unfinished(self):
-        t = Tournament.objects.get(name='t1')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.leader_str()
-
-    def test_round_leader_str_finished(self):
-        t = Tournament.objects.get(name='t3')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.leader_str()
-
-    # Round.news()
-    def test_round_news_unfinished(self):
-        t = Tournament.objects.get(name='t1')
-        r = t.round_set.all()[0]
-        # TODO Validate results
-        r.news()
-
     # Round.background()
     def test_round_background(self):
         t = Tournament.objects.get(name='t1')
@@ -1851,80 +1819,6 @@ class TournamentModelTests(TestCase):
         for power, gps in g.players().items():
             with self.subTest(power=power):
                 self.assertEqual(len(gps), 0)
-
-    # Game.news()
-    def test_game_news(self):
-        g = Game.objects.first()
-        # TODO Validate results
-        g.news()
-
-    def test_game_news_with_name(self):
-        g = Game.objects.first()
-        # TODO Validate results
-        g.news(include_game_name=True)
-
-    def test_game_news_mask(self):
-        g = Game.objects.first()
-        # Test each mask bit individually
-        mask = 1
-        while mask <= MASK_ALL_NEWS:
-            with self.subTest(mask=mask):
-                # TODO Validate results
-                g.news(mask=mask)
-                mask *= 2
-
-    def test_game_news_sc_gains_losses(self):
-        # Austria lost three, flagging it as interesting
-        # France gained three, making it interesting
-        # Germany gained two and lost two, making it interesting
-        # Italy gained three, and so is interesting
-        # The rest are uninteresting, having only gained one or two
-        # Both neutral dots and owned dots make powers interesting
-        test_data = {
-                     SupplyCentre.objects.get(abbreviation='Lon'): self.england,
-                     SupplyCentre.objects.get(abbreviation='Lvp'): self.england,
-                     SupplyCentre.objects.get(abbreviation='Edi'): self.england,
-                     SupplyCentre.objects.get(abbreviation='Nwy'): self.england,
-                     SupplyCentre.objects.get(abbreviation='Bre'): self.france,
-                     SupplyCentre.objects.get(abbreviation='Par'): self.france,
-                     SupplyCentre.objects.get(abbreviation='Mar'): self.france,
-                     SupplyCentre.objects.get(abbreviation='Spa'): self.france,
-                     SupplyCentre.objects.get(abbreviation='Por'): self.france,
-                     SupplyCentre.objects.get(abbreviation='Mun'): self.france,
-                     SupplyCentre.objects.get(abbreviation='Den'): self.germany,
-                     SupplyCentre.objects.get(abbreviation='Hol'): self.germany,
-                     SupplyCentre.objects.get(abbreviation='Kie'): self.germany,
-                     SupplyCentre.objects.get(abbreviation='Ven'): self.italy,
-                     SupplyCentre.objects.get(abbreviation='Rom'): self.italy,
-                     SupplyCentre.objects.get(abbreviation='Nap'): self.italy,
-                     SupplyCentre.objects.get(abbreviation='Tri'): self.italy,
-                     SupplyCentre.objects.get(abbreviation='Vie'): self.italy,
-                     SupplyCentre.objects.get(abbreviation='Gre'): self.italy,
-                     SupplyCentre.objects.get(abbreviation='Ber'): self.russia,
-                     SupplyCentre.objects.get(abbreviation='StP'): self.russia,
-                     SupplyCentre.objects.get(abbreviation='War'): self.russia,
-                     SupplyCentre.objects.get(abbreviation='Mos'): self.russia,
-                     SupplyCentre.objects.get(abbreviation='Sev'): self.russia,
-                     SupplyCentre.objects.get(abbreviation='Bud'): self.russia,
-                     SupplyCentre.objects.get(abbreviation='Con'): self.turkey,
-                     SupplyCentre.objects.get(abbreviation='Ank'): self.turkey,
-                     SupplyCentre.objects.get(abbreviation='Smy'): self.turkey,
-                     SupplyCentre.objects.get(abbreviation='Bul'): self.turkey,
-                    }
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
-        # Add some SC ownerships that give us gains and losses
-        for k,v in test_data.items():
-            sco = SupplyCentreOwnership(sc=k, owner=v, year=1901, game=g)
-            sco.save()
-        g.create_or_update_sc_counts_from_ownerships(1901)
-        # TODO Validate the result
-        g.news()
-        # Remove everything we added to the database
-        for sco in g.supplycentreownership_set.filter(year=1901):
-            sco.delete()
-        for sc in g.centrecount_set.filter(year=1901):
-            sc.delete()
 
     # Game.background()
     def test_game_background(self):

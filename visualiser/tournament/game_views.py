@@ -44,6 +44,7 @@ from tournament.models import Game, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING
 from tournament.models import SCOwnershipsNotFound
+from tournament.news import news
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15
@@ -431,7 +432,7 @@ def game_news(request, tournament_id, game_name, as_ticker=False):
     context = {'tournament': t,
                'game': g,
                'subject': 'News',
-               'content': g.news()}
+               'content': news(g)}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
