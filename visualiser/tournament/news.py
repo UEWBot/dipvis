@@ -230,7 +230,7 @@ def _sc_gains_and_losses(prev_scos, current_scos):
     return gains, losses
 
 
-def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS):
+def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     """
     Returns a list of strings the describe the latest events in the game
     """
@@ -238,15 +238,20 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS):
         gn_str = _(u' in game %(name)s') % {'name': g.name}
     else:
         gn_str = ''
-    if g.is_finished:
+    if g.is_finished and (for_year is None):
         # Just report the final result
         return [g.result_str(include_game_name) + '.']
     centres_set = g.centrecount_set.order_by('-year')
-    # Which is the most recent year we have info for ?
-    last_year = centres_set[0].year
+    if for_year:
+        centres_set = centres_set.filter(year__lte=for_year)
+        last_year = for_year
+    else:
+        # Which is the most recent year we have info for ?
+        last_year = centres_set[0].year
     # If the game just started, there is no news, so return the background instead
     if last_year == 1900:
         return g.background()
+    # TODO This isn't right when for_year is not None and there are replacement players
     player_dict = g.players(latest=True)
     current_scs = centres_set.filter(year=last_year)
     current_scos = g.supplycentreownership_set.filter(year=last_year)
@@ -254,7 +259,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS):
     if (mask & MASK_SC_OWNER_COUNTS) != 0:
         # Which dots have had lots of owners?
         owner_sets = {}
-        for sco in g.supplycentreownership_set.all():
+        for sco in g.supplycentreownership_set.filter(year__lte=last_year):
             if sco.sc not in owner_sets:
                 owner_sets[sco.sc] = set()
             owner_sets[sco.sc].add(sco.owner)
@@ -346,12 +351,13 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS):
                           'game': gn_str})
     if (mask & MASK_DRAW_VOTES) != 0:
         # How many draw votes have there been ?
-        votes = g.drawproposal_set.count()
+        dp_queryset = g.drawproposal_set.filter(year__lte=last_year)
+        votes = dp_queryset.count()
         results.append(_('%(count)d draw vote(s) have been taken.')
                        % {'count': votes})
         # What draw votes failed recently ?
         # Note that it's fairly arbitrary where we draw the line here
-        draws_set = g.drawproposal_set.order_by('-year').filter(year__gte=last_year)
+        draws_set = dp_queryset.order_by('-year').filter(year__gte=last_year)
         # TODO Lots of overlap with result_str()
         for d in draws_set:
             powers = d.powers()
