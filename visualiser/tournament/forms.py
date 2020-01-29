@@ -356,7 +356,7 @@ class GetSevenPlayersForm(forms.Form):
 class SCOwnerForm(forms.Form):
     """Form for Supply Centre ownership for one year"""
     # Allow for an initial game-start SC ownership
-    year = forms.IntegerField(min_value=FIRST_YEAR-1)
+    year = forms.IntegerField(min_value=FIRST_YEAR-1, required=False)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one owner field per SupplyCentre"""

@@ -1046,10 +1046,7 @@ class SCOwnerFormTest(TestCase):
         form = SCOwnerForm()
         for field in form.fields:
             with self.subTest(field=field):
-                if field == 'year':
-                    self.assertTrue(form.fields[field].required)
-                else:
-                    self.assertFalse(form.fields[field].required)
+                self.assertFalse(form.fields[field].required)
 
     def test_year_1900(self):
         # 1900 should be accepted
@@ -1112,6 +1109,24 @@ class BaseSCOwnerFormsetTest(TestCase):
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
+        self.assertTrue(formset.is_valid())
+
+    def test_blank_one_form(self):
+        # With initial data (game started)
+        # Everything is ok, one form blanked
+        data = self.data.copy()
+        for key, val in self.row_data.items():
+            if val:
+                data['form-0-%s' % key] = val.pk
+        data['form-0-year'] = 1904
+        data['form-0-Belgium'] = self.france.pk
+        initial = []
+        for year in range(1901,1905):
+            scs = {'year': year}
+            for sc in SupplyCentre.objects.all():
+                scs[str(sc)] = sc.initial_owner
+            initial.append(scs)
+        formset = self.SCOwnerFormset(data, initial=initial)
         self.assertTrue(formset.is_valid())
 
     def test_form_error(self):
