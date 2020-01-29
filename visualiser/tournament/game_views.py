@@ -227,6 +227,8 @@ def sc_owners(request, tournament_id, game_name):
             except KeyError:
                 # Must be one of the extra forms, still blank
                 continue
+            if year is None:
+                continue
             for name, value in form.cleaned_data.items():
                 try:
                     dot = SupplyCentre.objects.get(name=name)
