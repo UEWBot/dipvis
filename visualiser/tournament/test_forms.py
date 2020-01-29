@@ -175,6 +175,10 @@ class DrawFormTest(TestCase):
             with self.subTest(field=field):
                 self.assertIn(field, form.fields)
 
+    def test_proposer_optional(self):
+        form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
+        self.assertFalse(form.fields['proposer'].required)
+
 class GameScoreFormTest(TestCase):
     fixtures = ['game_sets.json']
 

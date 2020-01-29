@@ -1619,7 +1619,11 @@ class DrawProposal(models.Model):
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=SEASONS)
     passed = models.NullBooleanField(blank=True, null=True)
-    proposer = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
+    proposer = models.ForeignKey(GreatPower,
+                                 blank=True,
+                                 null=True,
+                                 related_name='+',
+                                 on_delete=models.CASCADE)
     power_1 = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     power_2 = models.ForeignKey(GreatPower,
                                 blank=True,

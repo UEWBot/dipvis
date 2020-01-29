@@ -79,6 +79,7 @@ class DrawForm(forms.Form):
     year = forms.IntegerField(min_value=FIRST_YEAR)
     season = forms.ChoiceField(choices=SEASONS)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
+                                      required=False,
                                       to_field_name='name')
 
     def __init__(self, *args, **kwargs):
