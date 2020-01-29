@@ -202,8 +202,8 @@ def sc_owners(request, tournament_id, game_name):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     # If the round ends with a certain year, provide the right number of blank rows
-    # Otherwise, just give them two
-    years_to_go = 2
+    # Otherwise, just give them four
+    years_to_go = 4
     last_year_played = g.final_year()
     final_year = g.the_round.final_year
     if final_year:
