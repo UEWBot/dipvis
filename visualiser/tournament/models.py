@@ -1853,6 +1853,9 @@ class GamePlayer(models.Model):
     last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(default=0.0)
 
+    class Meta:
+        ordering = ['game', 'power', 'first_year']
+
     def roundplayer(self):
         """
         Returns the RoundPlayer corresponding to this GamePlayer.

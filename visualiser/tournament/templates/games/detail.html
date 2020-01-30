@@ -8,15 +8,19 @@
 
 {% if game.is_top_board %}<p>{% trans "Top Board for the tournament" %}</p>
 {% endif %}
+
 <p>{% with result=game.result_str %}{% if result %}{{ result }}.
    {% else %}{% trans "Game is ongoing." %}
-   {% endif %}{% endwith %}</p>
+   {% endif %}{% endwith %}</p><p>{% blocktrans with year=game.final_year %}Last year played is {{year}}.{% endblocktrans %}</p>
 
-<p>{% trans "Start time:" %} {{ game.started_at }}</p>
+<dl>
+  {% for gp in game.gameplayer_set.all %}
+    <dt>{{ gp.power }}</dt>
+    <dd>{{ gp.player }}</dd>
+  {% endfor %}
+</dl>
 
-<p>{% blocktrans with year=game.final_year %}Last year played is {{year}}.{% endblocktrans %}</p>
-
-<p>{% blocktrans with set=game.the_set %}Played with the {{ set }} set.{% endblocktrans %}</p>
+<p>{% trans "Start time:" %} {{ game.started_at }}</p><p>{% blocktrans with set=game.the_set %}Played with the {{ set }} set.{% endblocktrans %}</p>
 
 <p>{% trans "Views:" %}</p>
 <ul>
