@@ -152,6 +152,9 @@ class DrawFormTest(TestCase):
         # Form should have year, season, proposer, and passed
         self.check_common_fields(form)
         self.assertIn('passed', form.fields)
+        for field in ('powers', 'votes_in_favour'):
+            with self.subTest(field=field):
+                self.assertNotIn(field, form.fields)
 
     def test_non_dias_secret(self):
         form = DrawForm(dias=False, secrecy=Tournament.SECRET)
@@ -160,12 +163,16 @@ class DrawFormTest(TestCase):
         for field in ('powers', 'passed'):
             with self.subTest(field=field):
                 self.assertIn(field, form.fields)
+        self.assertNotIn('votes_in_favour', form.fields)
 
     def test_dias_counts(self):
         form = DrawForm(dias=True, secrecy=Tournament.COUNTS)
         # Form should have year, season, proposer, and votes_in_favour
         self.check_common_fields(form)
         self.assertIn('votes_in_favour', form.fields)
+        for field in ('powers', 'passed'):
+            with self.subTest(field=field):
+                self.assertNotIn(field, form.fields)
 
     def test_non_dias_counts(self):
         form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
@@ -174,6 +181,7 @@ class DrawFormTest(TestCase):
         for field in ('powers', 'votes_in_favour'):
             with self.subTest(field=field):
                 self.assertIn(field, form.fields)
+        self.assertNotIn('passed', form.fields)
 
     def test_proposer_optional(self):
         form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
