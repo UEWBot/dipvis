@@ -8,7 +8,7 @@
 {% if game_list %}
     <ul>
     {% for g in game_list %}
-        <li><a href="{{ g.get_absolute_url }}">{% blocktrans with game=g.name %}Game {{ game }}{% endblocktrans %}</a>
+        <li><a href="{{ g.get_absolute_url }}">{{ g.name }}</a>
             {% if g.is_finished %}
                 {% trans "(Complete)" %}
             {% endif %}

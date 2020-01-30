@@ -10,7 +10,14 @@
 
 <p><a href="{% url 'tournament_players' tournament.id %}">{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</a></p>
 
-<p>{% blocktrans with count=tournament.round_set.count %}{{ count }} Rounds{% endblocktrans %}</p>
+<p>{% blocktrans with count=tournament.round_set.count %}{{ count }} Rounds{% endblocktrans %}:</p>
+<dl>
+  {% for r in tournament.round_set.all %}
+    <dt><a href="{{ r.get_absolute_url }}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a></dt>
+    <dd>{% blocktrans with count=r.game_set.count %}{{ count }} Games.{% endblocktrans %}{% if r.is_finished %}{% trans " Completed." %}{% endif %}</dd>
+   {% endfor %}
+</dl>
+
 {% if tournament.draw_secrecy == "C" %}<p/><p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p><p/>{% endif %}
 <p>{% trans "Views:" %}</p>
 <ul>
