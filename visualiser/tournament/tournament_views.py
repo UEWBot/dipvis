@@ -126,10 +126,16 @@ def tournament_scores(request,
         rs = []
         for r in rds:
             try:
-                rs.append('%.2f' % r_scores[r][p.player])
-            except KeyError:
+                rp = p.roundplayers().get(the_round=r)
+            except RoundPlayer.DoesNotExist:
                 # This player didn't play this round
                 rs.append('')
+            else:
+                str = '%.2f'
+                if rp.game_count == 0:
+                    # This player sat out the round
+                    str += '*'
+                rs.append(str % r_scores[r][p.player])
         scores.append(['%d' % t_positions_and_scores[p.player][0]]
                       + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)]
                       + rs
