@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -34,6 +34,7 @@ NATE_COCKERILL_WDD_ID = 5009
 SPIROS_BOBETSIS_WDD_ID = 12304
 CLAESAR_WEBDIP_WDD_ID = 13317
 MELINDA_HOLLEY_WDD_ID = 5185
+
 
 class PlayerTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']

@@ -39,6 +39,7 @@ from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
 from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
 from tournament.forms import SeederBiasForm
 
+
 class PrefsFormTest(TestCase):
     fixtures = ['game_sets.json']
 
@@ -90,6 +91,7 @@ class PrefsFormTest(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['prefs'], 'EFG')
 
+
 class PrefsFormsetTest(TestCase):
 
     @classmethod
@@ -126,6 +128,7 @@ class PrefsFormsetTest(TestCase):
         for form in formset:
             self.assertEqual(form['prefs'].initial, 'EF')
         self.assertEqual(len(formset), len(initial))
+
 
 class DrawFormTest(TestCase):
 
@@ -187,6 +190,7 @@ class DrawFormTest(TestCase):
         form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
         self.assertFalse(form.fields['proposer'].required)
 
+
 class GameScoreFormTest(TestCase):
     fixtures = ['game_sets.json']
 
@@ -205,6 +209,7 @@ class GameScoreFormTest(TestCase):
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
                 self.assertFalse(form.fields[power.name].required)
+
 
 class GamePlayersFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -359,6 +364,7 @@ class GamePlayersFormTest(TestCase):
         # We should see the Player, not the RoundPlayer, in any error
         self.assertNotIn(str(self.rp1), form.errors['__all__'][0])
 
+
 class BaseGamePlayersFormsetTest(TestCase):
     fixtures = ['game_sets.json']
 
@@ -479,6 +485,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('Game names must be unique', formset.non_form_errors()[0])
+
 
 class PowerAssignFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -640,6 +647,7 @@ class PowerAssignFormTest(TestCase):
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
         self.assertIn('appears more than once', form.errors['__all__'][0])
+
 
 class BasePowerAssignFormsetTest(TestCase):
     fixtures = ['game_sets.json']
@@ -824,6 +832,7 @@ class BasePowerAssignFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('Game names must be unique', formset.non_form_errors()[0])
+
 
 class GetSevenPlayersFormTest(TestCase):
 
@@ -1047,6 +1056,7 @@ class GetSevenPlayersFormTest(TestCase):
         # Nothing needed
         self.assertEqual(len(form.fields), 0)
 
+
 class SCOwnerFormTest(TestCase):
     fixtures = ['game_sets.json']
 
@@ -1072,6 +1082,7 @@ class SCOwnerFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertIn('Ensure this value is greater than', form.errors['year'][0])
+
 
 class BaseSCOwnerFormsetTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1133,7 +1144,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         initial = []
-        for year in range(1901,1905):
+        for year in range(1901, 1905):
             scs = {'year': year}
             for sc in SupplyCentre.objects.all():
                 scs[str(sc)] = sc.initial_owner
@@ -1191,11 +1202,13 @@ class BaseSCOwnerFormsetTest(TestCase):
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('should never change from owned', formset.errors[1]['Belgium'][0])
 
+
 class GameEndedFormTest(TestCase):
 
     def test_is_finished_not_required(self):
         form = GameEndedForm()
         self.assertFalse(form.fields['is_finished'].required)
+
 
 class DeathYearFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1211,16 +1224,17 @@ class DeathYearFormTest(TestCase):
                 self.assertFalse(form.fields[power.name].required)
 
     def test_year_1900(self):
-        data = { 'France': 1900,
+        data = {'France': 1900,
                }
         form = DeathYearForm(data=data)
         self.assertFalse(form.is_valid())
 
     def test_year_1901(self):
-        data = { 'Austria-Hungary': 1901,
+        data = {'Austria-Hungary': 1901,
                }
         form = DeathYearForm(data=data)
         self.assertTrue(form.is_valid())
+
 
 class SCCountFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1336,6 +1350,7 @@ class SCCountFormTest(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['neutral'], 1)
 
+
 class BaseSCCountFormsetTest(TestCase):
     fixtures = ['game_sets.json']
 
@@ -1446,6 +1461,7 @@ class BaseSCCountFormsetTest(TestCase):
         self.assertEqual(formset.total_error_count(), 1)
         self.assertIn('Neutrals increase', formset.non_form_errors()[0])
 
+
 class PlayerRoundFormTest(TestCase):
 
     @classmethod
@@ -1499,6 +1515,7 @@ class PlayerRoundFormTest(TestCase):
         self.assertTrue(form.fields['round_1'].disabled)
         self.assertFalse(form.fields['round_2'].disabled)
         self.assertFalse(form.fields['round_3'].disabled)
+
 
 class BasePlayerRoundFormsetTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1633,6 +1650,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
 
+
 class PlayerRoundScoreFormTest(TestCase):
 
     @classmethod
@@ -1680,6 +1698,7 @@ class PlayerRoundScoreFormTest(TestCase):
         for field in ['player', 'game_scores_1', 'game_scores_2', 'game_scores_3']:
             with self.subTest(field=field):
                 self.assertTrue(form.fields[field].disabled)
+
 
 class BasePlayerRoundScoreFormsetTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1791,6 +1810,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
         formset = self.PlayerRoundScoreFormset(data, initial=initial, tournament=self.t3)
         self.assertTrue(formset.is_valid())
 
+
 class SeederBiasFormTest(TestCase):
     fixtures = ['game_sets.json']
 
@@ -1827,7 +1847,7 @@ class SeederBiasFormTest(TestCase):
         form = SeederBiasForm({'player1': str(self.tp1.pk),
                                'player2': str(self.tp2.pk),
                                'weight': '3'},
-                               tournament=self.t)
+                              tournament=self.t)
         self.assertTrue(form.is_valid())
 
     def test_self_bias(self):
@@ -1835,7 +1855,7 @@ class SeederBiasFormTest(TestCase):
         form = SeederBiasForm({'player1': str(self.tp1.pk),
                                'player2': str(self.tp1.pk),
                                'weight': '3'},
-                               tournament=self.t)
+                              tournament=self.t)
         self.assertFalse(form.is_valid())
 
     def test_player_choices(self):

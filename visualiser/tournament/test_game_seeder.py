@@ -29,6 +29,7 @@ from tournament.game_seeder import PowersNotUnique
 from tournament.game_seeder import ImpossibleToSeed
 from tournament.game_seeder import SeedMethod
 
+
 class GameSeederSetupTest(unittest.TestCase):
     """
     Validate the setup of GameSeeder - adding players, games, etc.
@@ -140,7 +141,6 @@ class GameSeederSetupTest(unittest.TestCase):
                                ('E', '2'),
                                ('F', '6'),
                                ('G', '7')]))
-
 
     # add_bias()
     def test_add_bias_same_player(self):
@@ -254,7 +254,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _assign_some_powers()
     def test_assign_some_powers(self):
-        seeder=GameSeeder(self.powers)
+        seeder = GameSeeder(self.powers)
         seeder.add_player('A')
         seeder.add_player('B')
         seeder.add_player('C')
@@ -269,7 +269,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # _assign_powers()
     def test_assign_powers(self):
-        seeder=GameSeeder(self.powers)
+        seeder = GameSeeder(self.powers)
         seeder.add_player('A')
         seeder.add_player('B')
         seeder.add_player('C')
@@ -573,6 +573,7 @@ def with_powers(game):
     # Convert a set of seven players to a set of seven (player, power) 2-tuples
     return set(zip(list(game), ['1', '2', '3', '4', '5', '6', '7']))
 
+
 class GameSeederSeedingTest(unittest.TestCase):
     """
     Validate the meat of GameSeeder - actually seeding games
@@ -592,7 +593,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         # Games should always be sets (and hence have no duplicate players)
         self.assertTrue(isinstance(game, set))
 
-    def check_game_set(self, game_set, players, omissions = set(), duplicates = set()):
+    def check_game_set(self, game_set, players, omissions=set(), duplicates=set()):
         game_count = len(game_set)
         self.assertEqual(game_count, players / 7)
         # Every game should be valid by itself
@@ -725,6 +726,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         sits = set(['X'])
         self.assertRaises(InvalidPlayer, s.seed_games, omitting_players=sits)
 
+
 class ExhaustiveGameSeederTest(unittest.TestCase):
     """
     Validate an exhaustive GameSeeder seeding games
@@ -810,6 +812,7 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         for i in range(13):
             seeder.add_player('%dp' %i)
         self.assertRaises(InvalidPlayerCount, seeder.seed_games)
+
 
 if __name__ == '__main__':
     unittest.main()

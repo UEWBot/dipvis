@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -42,6 +42,7 @@ HOURS_9 = timedelta(hours=9)
 HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
+
 
 @override_settings(HOSTNAME='example.com')
 class TournamentModelTests(TestCase):
@@ -1611,19 +1612,19 @@ class TournamentModelTests(TestCase):
         # expected results
         res = {
                   self.austria : 0,
-                  self.england: 0,
-                  self.france: 0,
-                  self.germany: 0,
-                  self.italy: 0,
-                  self.russia: 0,
+                  self.england : 0,
+                  self.france : 0,
+                  self.germany : 0,
+                  self.italy : 0,
+                  self.russia : 0,
                   self.turkey : 0,
               }
         # Arbitrary game
         g = Game.objects.first()
         # Add some SC ownerships for a far off year
-        YEAR=1920
+        YEAR = 1920
         scos = []
-        for k,v in test_data.items():
+        for k, v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
             sco.save()
             scos.append(sco)
@@ -1661,17 +1662,17 @@ class TournamentModelTests(TestCase):
         # expected results
         res = {
                   self.austria : 0,
-                  self.england: 0,
-                  self.france: 0,
-                  self.germany: 0,
-                  self.italy: 0,
-                  self.russia: 0,
+                  self.england : 0,
+                  self.france : 0,
+                  self.germany : 0,
+                  self.italy : 0,
+                  self.russia : 0,
                   self.turkey : 0,
               }
         # Arbitrary game
         g = Game.objects.first()
         # Add some SC ownerships for a far off year
-        YEAR=1920
+        YEAR = 1920
         scos = []
         for k,v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
@@ -1716,19 +1717,19 @@ class TournamentModelTests(TestCase):
         # expected results
         res = {
                   self.austria : 0,
-                  self.england: 0,
-                  self.france: 0,
-                  self.germany: 0,
-                  self.italy: 0,
-                  self.russia: 0,
+                  self.england : 0,
+                  self.france : 0,
+                  self.germany : 0,
+                  self.italy : 0,
+                  self.russia : 0,
                   self.turkey : 0,
               }
         # Arbitrary game
         g = Game.objects.first()
         # Add some SC ownerships for a far off year
-        YEAR=1920
+        YEAR = 1920
         scos = []
-        for k,v in test_data.items():
+        for k, v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
             sco.save()
             scos.append(sco)
@@ -2183,9 +2184,9 @@ class TournamentModelTests(TestCase):
         tp = TournamentPlayer(tournament=t, player=self.p7)
         tp.save()
         r = Round(tournament=t,
-                 scoring_system='Sum of Squares',
-                 dias=True,
-                 start=t.start_date)
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
         r.save()
         rp = RoundPlayer(the_round=r, player=self.p1)
         rp.save()
