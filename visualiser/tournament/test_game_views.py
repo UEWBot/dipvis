@@ -14,21 +14,33 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from urllib.parse import urlencode
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from tournament.diplomacy import GameSet
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import SPRING
 
 class RoundViewTests(TestCase):
     fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
         # A superuser
         cls.USERNAME1 = 'superuser'
         cls.PWORD1 = 'l33tPw0rd'
@@ -46,14 +58,24 @@ class RoundViewTests(TestCase):
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=Tournament.SECRET,
                                           is_published=True)
+        # One DIAS round
         cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
                                      start=cls.t.start_date)
-        Game.objects.create(name='Game1',
-                            started_at=cls.r.start,
-                            the_round=cls.r,
-                            the_set=GameSet.objects.first())
+        # And one non-DIAS round
+        r = Round.objects.create(tournament=cls.t,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=False,
+                                 start=cls.t.start_date)
+        cls.g1 = Game.objects.create(name='Game1',
+                                     started_at=cls.r.start,
+                                     the_round=cls.r,
+                                     the_set=GameSet.objects.first())
+        cls.g2 = Game.objects.create(name='Game2',
+                                     started_at=r.start,
+                                     the_round=r,
+                                     the_set=GameSet.objects.first())
 
     def test_detail(self):
         response = self.client.get(reverse('game_detail', args=(self.t.pk, 'Game1')))
@@ -146,10 +168,126 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('draw_vote', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 302)
 
+    def test_post_secret_dias_draw_vote(self):
+        self.assertEqual(self.g1.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': SPRING,
+                          'passed': False,
+                          'proposer': str(self.austria)})
+        response = self.client.post(reverse('draw_vote', args=(self.t.pk, 'Game1')),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g1.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g1.drawproposal_set.count(), 1)
+        dp = self.g1.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g1)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, SPRING)
+        self.assertFalse(dp.passed)
+        self.assertEqual(dp.proposer, self.austria)
+        # Draws in this round are DIAS, and all powers are still alive
+        self.assertEqual(dp.draw_size(), 7)
+        powers = dp.powers()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                self.assertIn(power, powers)
+        # Draws in this tournament are secret
+        self.assertIsNone(dp.votes_in_favour)
+        self.assertFalse(self.g1.is_finished)
+        # Clean up
+        dp.delete()
+
+    def test_post_secret_non_dias_draw_vote(self):
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': SPRING,
+                          'passed': False,
+                          'powers': [str(self.england), str(self.turkey)],
+                          'proposer': str(self.england)}, True)
+        response = self.client.post(reverse('draw_vote', args=(self.t.pk, 'Game2')),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g2.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g2.drawproposal_set.count(), 1)
+        dp = self.g2.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g2)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, SPRING)
+        self.assertFalse(dp.passed)
+        self.assertEqual(dp.proposer, self.england)
+        # Draws in this round are non-DIAS
+        self.assertEqual(dp.draw_size(), 2)
+        powers = dp.powers()
+        for power in [self.england, self.turkey]:
+            with self.subTest(power=power):
+                self.assertIn(power, powers)
+        for power in [self.austria, self.france, self.germany, self.italy, self.russia]:
+            with self.subTest(power=power):
+                self.assertNotIn(power, powers)
+        # Draws in this tournament are secret
+        self.assertIsNone(dp.votes_in_favour)
+        self.assertFalse(self.g2.is_finished)
+        # Clean up
+        dp.delete()
+
+    def test_post_secret_dias_draw_vote_passed(self):
+        self.assertEqual(self.g1.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': SPRING,
+                          'passed': True,
+                          'proposer': str(self.austria)})
+        response = self.client.post(reverse('draw_vote', args=(self.t.pk, 'Game1')),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g1.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g1.drawproposal_set.count(), 1)
+        dp = self.g1.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g1)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, SPRING)
+        self.assertTrue(dp.passed)
+        self.assertEqual(dp.proposer, self.austria)
+        # Draws in this round are DIAS, and all powers are still alive
+        self.assertEqual(dp.draw_size(), 7)
+        powers = dp.powers()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                self.assertIn(power, powers)
+        # Draws in this tournament are secret
+        self.assertIsNone(dp.votes_in_favour)
+        self.g1.refresh_from_db()
+        self.assertTrue(self.g1.is_finished)
+        # Clean up
+        dp.delete()
+        self.g1.is_finished = False
+        self.g1.save()
+        self.g1.refresh_from_db()
+
     def test_draw_vote(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('draw_vote', args=(self.t.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
+
+    # TODO check initial value for year and season in draw vote page with and without game images
+
+    # TODO check errors from DrawProposal.clean() get displayed
+    # - Second passed DrawProposal for one game
+    # - Passed DrawProposal with SC counts afterwards
+    # - Dead power in non-DIAS DP
+
+    # TODO what about a DrawProposal for a game that was won outright?
 
     def test_views(self):
         response = self.client.get(reverse('game_views', args=(self.t.pk, 'Game1')))
