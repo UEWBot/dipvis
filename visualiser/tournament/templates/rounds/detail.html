@@ -33,6 +33,7 @@
 
 <p>{% trans "Views:" %}</p>
 <ul>
+  <li><a href="{% url 'board_call' tournament.id round.number %}">{% trans "Board Call" %}</a></li>
   <li><a href="{% url 'game_index' tournament.id round.number %}">{% trans "Game Index" %}</a></li>
 </ul>
 

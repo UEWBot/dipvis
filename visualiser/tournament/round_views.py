@@ -363,8 +363,8 @@ def seed_games(request, tournament_id, round_num):
                     gp.save()
             # Notify the players
             send_board_call(r)
-            # Redirect to the index of games in the round
-            return HttpResponseRedirect(reverse('game_index',
+            # Redirect to the board call page
+            return HttpResponseRedirect(reverse('board_call',
                                                 args=(tournament_id, round_num)))
     else:
         # Check for a multiple of seven players,
@@ -505,8 +505,8 @@ def create_games(request, tournament_id, round_num):
                 i.save()
         # Notify the players
         send_board_call(r)
-        # Redirect to the index of games in the round
-        return HttpResponseRedirect(reverse('game_index',
+        # Redirect to the board call page
+        return HttpResponseRedirect(reverse('board_call',
                                             args=(tournament_id, round_num)))
 
     return render(request,

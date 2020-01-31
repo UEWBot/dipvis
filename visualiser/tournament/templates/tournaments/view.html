@@ -16,6 +16,7 @@
   <li><a href="{% url 'tournament_game_results_refresh' tournament.id %}">{% trans "Game Summary" %}</a></li>
   {% for round in tournament.round_set.all %}
     <li>{% trans "Round" %} {{ round.number }}</li>
+      <p><a href="{% url 'board_call' tournament.id round.number %}">{% trans "Board Call" %}</p>
       <ul>
         {% for game in round.game_set.all %}
           <li><a href="{% url 'game_overview' tournament.id game.name %}">{% blocktrans with game=game.name %}Game {{ game }} Overview{% endblocktrans %}</a>{% trans " (cycles between SC chart, SC ownership, and latest position)" %}</li>

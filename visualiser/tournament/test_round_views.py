@@ -702,7 +702,7 @@ class RoundViewTests(TestCase):
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('game_index', args=(self.t3.pk, 2)))
+        self.assertEqual(response.url, reverse('board_call', args=(self.t3.pk, 2)))
         # Check Game name and Set
         g.refresh_from_db()
         self.assertEqual(g.name, 'NewName')
@@ -918,4 +918,8 @@ class RoundViewTests(TestCase):
 
     def test_game_index(self):
         response = self.client.get(reverse('game_index', args=(self.t1.pk, 1)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_board_call(self):
+        response = self.client.get(reverse('board_call', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 200)
