@@ -452,6 +452,18 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Final Scores', response.content)
 
+    def test_scores_with_sitter(self):
+        # Scores page for a Tournament where somebody sat out a round
+        # Add a sitting-out player
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=self.t4)
+        rp = RoundPlayer.objects.create(player=self.p2, the_round=self.r41, game_count=0)
+        response = self.client.get(reverse('tournament_scores', args=(self.t4.pk,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Final Scores', response.content)
+        rp.delete()
+        tp.delete()
+
     def test_scores_refresh(self):
         response = self.client.get(reverse('tournament_scores_refresh', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
