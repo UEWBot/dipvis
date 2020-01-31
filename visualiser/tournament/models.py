@@ -112,12 +112,22 @@ class RoundScoringSystem(ABC):
 class RScoringBest(RoundScoringSystem):
     """
     Take the best of any game scores for that round.
+
+    non_player_score is the points that players get for sitting out a round.
+    if non_player_score_once is set, non_player_score can only be scored
+     once per player, regardless of the number of rounds they sit out.
     """
-    def __init__(self, non_player_score=0.0):
+    def __init__(self, non_player_score=0.0, non_player_score_once=False):
         self.non_player_score = non_player_score
+        self.non_player_score_once = non_player_score_once
         self.name = _(u'Best game counts')
         if non_player_score > 0.0:
-            self.name = _('Best game counts. Sitters get %(points)d') % {'points': non_player_score}
+            if non_player_score_once:
+                once_str = " once"
+            else:
+                once_str = ""
+            self.name = _('Best game counts. Sitters get %(points)d%(once)s') % {'points': non_player_score,
+                                                                                 'once': once_str}
 
     def scores(self, game_players, non_players):
         """
@@ -146,6 +156,12 @@ class RScoringBest(RoundScoringSystem):
                 retval[p] = 0.0
         # Give the appropriate points to anyone who agreed to sit out
         for p in non_players:
+            # If the "sitting out" bonus is only allowed once and they've sat out multiple rounds, they get zero
+            if self.non_player_score_once and RoundPlayer.objects.filter(player=p.player,
+                                                                         the_round__tournament=p.the_round.tournament,
+                                                                         game_count=0).count() > 1:
+                retval[p.player] = 0.0
+                continue
             retval[p.player] = self.non_player_score
         return retval
 
@@ -154,6 +170,7 @@ class RScoringBest(RoundScoringSystem):
 R_SCORING_SYSTEMS = [
     RScoringBest(),
     RScoringBest(4005.0),
+    RScoringBest(4005.0, True),
 ]
 
 
