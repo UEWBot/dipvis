@@ -439,7 +439,9 @@ class RoundViewTests(TestCase):
                           'form-7-player': str(self.p9.pk),
                           'form-7-round_2': 'ok',
                           'form-8-player': '',
-                          'form-9-player': ''})
+                          'form-8-round_2': '',
+                          'form-9-player': '',
+                          'form-9-round_2': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
@@ -473,7 +475,9 @@ class RoundViewTests(TestCase):
                           'form-6-player': str(self.p8.pk),
                           'form-6-round_1': 'ok',
                           'form-7-player': '',
-                          'form-8-player': ''})
+                          'form-7-round_1': '',
+                          'form-8-player': '',
+                          'form-8-round_1': ''})
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,
@@ -482,6 +486,45 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, url)
         # No clean up needed because we left the same 7 players playing
+
+    def test_roll_call_post_add_duplicate_player(self):
+        # POST of roll_call() where we add a TournamentPlayer who's already playing
+        self.assertTrue(self.t3.round_numbered(1).is_finished())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # TODO Why doesn't this work?
+        #data = urlencode({'form-TOTAL_FORMS': '9',
+        data = urlencode({'form-TOTAL_FORMS': '8',
+                          'form-INITIAL_FORMS': '7',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-0-round_1': 'ok',
+                          'form-1-player': str(self.p3.pk),
+                          'form-1-round_1': 'ok',
+                          'form-2-player': str(self.p4.pk),
+                          'form-2-round_1': 'ok',
+                          'form-3-player': str(self.p5.pk),
+                          'form-3-round_1': 'ok',
+                          'form-4-player': str(self.p6.pk),
+                          'form-4-round_1': 'ok',
+                          'form-5-player': str(self.p7.pk),
+                          'form-5-round_1': 'ok',
+                          'form-6-player': str(self.p8.pk),
+                          'form-6-round_1': 'ok',
+                          'form-7-player': str(self.p3.pk),
+                          'form-7-round_1': 'ok',
+                          'form-8-player': '',
+                          'form-8-round_1': ''})
+        url = reverse('round_roll_call', args=(self.t3.pk, 1))
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # There should be a validation error for the last player
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'appears more than once', response.content)
+        # Should re-load the same page
+        self.assertEqual(response.context['post_url'], url)
+        # No clean up needed because there was an error
 
     def test_get_seven_not_logged_in(self):
         response = self.client.get(reverse('get_seven', args=(self.t1.pk, 1)))

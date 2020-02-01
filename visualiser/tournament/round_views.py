@@ -119,8 +119,7 @@ def roll_call(request, tournament_id, round_num=None):
                               'tournaments/round_players.html',
                               {'title': _('Roll Call'),
                                'tournament': t,
-                               'post_url': reverse('roll_call',
-                                                   args=(tournament_id,)),
+                               'post_url': request.path_info,
                                'formset': formset})
             for r_name, value in form.cleaned_data.items():
                 if r_name == 'player':
@@ -146,8 +145,7 @@ def roll_call(request, tournament_id, round_num=None):
                                       'tournaments/round_players.html',
                                       {'title': _('Roll Call'),
                                        'tournament': t,
-                                       'post_url': reverse('roll_call',
-                                                           args=(tournament_id,)),
+                                       'post_url': request.path_info,
                                        'formset': formset})
                 else:
                     # delete any corresponding RoundPlayer
@@ -176,7 +174,7 @@ def roll_call(request, tournament_id, round_num=None):
                   'tournaments/round_players.html',
                   {'title': _('Roll Call'),
                    'tournament': t,
-                   'post_url': reverse('roll_call', args=(tournament_id,)),
+                   'post_url': request.path_info,
                    'formset': formset})
 
 
