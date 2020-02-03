@@ -1484,11 +1484,16 @@ class Game(models.Model):
         Returns a list of the CentreCounts for the surviving powers.
         If a year is provided, it returns a list of the powers that survived
         that whole year.
+        If a year is provided that is after the most recent year for which we have CentreCounts,
+        the most recent list will be returned.
         If a year is provided for which there are no CentreCounts, an empty
         list will be returned.
         """
+        final_year = self.final_year()
         if year is None:
-            year = self.final_year()
+            year = final_year
+        if year > final_year:
+            year = final_year
         final_scs = self.centrecount_set.filter(year=year)
         return [sc for sc in final_scs if sc.count > 0]
 

@@ -2046,7 +2046,8 @@ class TournamentModelTests(TestCase):
     def test_game_survivors_invalid_year(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        self.assertEqual(len(g.survivors(1905)), 0)
+        # As the Game has not yeat reached 1905, we should get the most recent state
+        self.assertEqual(len(g.survivors(1905)), len(g.survivors()))
 
     # Game.result_str()
     def test_game_result_str_soloed(self):
