@@ -1761,8 +1761,10 @@ class DrawProposal(models.Model):
                     raise ValidationError(_(u'%(power)s present more than once'),
                                           params={'power':  power})
                 powers.add(power)
+        # Figure out how many powers are still alive
+        survivors = len(self.game.survivors(self.year))
         # Only one successful draw proposal
-        if self.passed:
+        if self.passed or (self.votes_in_favour == survivors):
             try:
                 p = DrawProposal.objects.get(game=self.game,
                                              passed=True)
@@ -1772,7 +1774,8 @@ class DrawProposal(models.Model):
                 pass
         # No successful proposal prior to the latest SC count
         final_year = self.game.final_year()
-        if self.passed and (self.year <= final_year):
+        if (self.passed or
+            (self.votes_in_favour == survivors)) and (self.year <= final_year):
             raise ValidationError(_(u'Game already has a centre count for %(year)d'),
                                   params={'year': final_year})
         # No dead powers included
@@ -1804,7 +1807,7 @@ class DrawProposal(models.Model):
     def save(self, *args, **kwargs):
         if self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
             # Derive passed from votes_in_favour and survivor count
-            survivors = len(self.game.survivors())
+            survivors = len(self.game.survivors(self.year))
             if self.votes_in_favour:
                 # Votes must be unanimous
                 self.passed = (self.votes_in_favour == survivors)

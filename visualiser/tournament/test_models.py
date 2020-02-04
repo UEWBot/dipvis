@@ -2604,6 +2604,51 @@ class TournamentModelTests(TestCase):
                           power_6=self.turkey, power_7=self.austria)
         self.assertRaises(ValidationError, dp.clean)
 
+    def test_draw_proposal_clean_votes_in_favour_too_late(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        self.assertEqual(CentreCount.objects.filter(game=g, year=1901).count(), 0)
+        self.assertEqual(g.final_year(), 1900)
+        # We need to add some SupplyCentreCounts to the Game
+        scs = {self.austria: 5,
+               self.england: 4,
+               self.france: 5,
+               self.germany: 6,
+               self.italy: 4,
+               self.russia: 6,
+               self.turkey: 4}
+        for p, c in scs.items():
+            CentreCount.objects.create(power=p,
+                                       game=g,
+                                       year=1901,
+                                       count=c)
+        print(g.final_year())
+        dp = DrawProposal(game=g, year=1901, season='F', proposer=self.austria,
+                          votes_in_favour=7,
+                          power_1=self.england, power_2=self.france,
+                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
+                          power_6=self.turkey, power_7=self.austria)
+        self.assertRaises(ValidationError, dp.clean)
+        # Clean up
+        CentreCount.objects.filter(game=g, year=1901).delete()
+
+    def test_draw_proposal_clean_votes_in_favour_multiple_successful(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        dp1 = DrawProposal.objects.create(game=g, year=1901, season='F', proposer=self.austria,
+                                          votes_in_favour=7,
+                                          power_1=self.england, power_2=self.france,
+                                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
+                                          power_6=self.turkey, power_7=self.austria)
+        self.assertTrue(dp1.passed)
+        dp2 = DrawProposal(game=g, year=1902, season='F', proposer=self.austria,
+                           votes_in_favour=7,
+                           power_1=self.england, power_2=self.france,
+                           power_3=self.germany, power_4=self.italy, power_5=self.russia,
+                           power_6=self.turkey, power_7=self.austria)
+        self.assertRaises(ValidationError, dp2.clean)
+        dp1.delete()
+
     # DrawProposal.save()
 
     def test_draw_proposal_save_vote_passed(self):
