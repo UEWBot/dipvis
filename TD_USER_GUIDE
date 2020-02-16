@@ -125,6 +125,12 @@ Russia, then Turkey, with England and Austria joint last".
 Roll Call and Game Seeding
 --------------------------
 
+Note: the software has the concept of "the current round", which is determined
+by which rounds have RoundPlayers (i.e. roll call has been done) and Games that
+haven't yet finished. One effect of this is that you shouldn't enter roll call
+information until you're actually about to start the round (in practice, you
+don't know for sure who's going to show up until then anyway).
+
 Shortly before the Round starts, go to the round page, which should be
 https://example.com/tournaments/42/current_round/
 There you will find a "Roll Call" link to https://example.com/tournaments/42/rounds/1/roll_call/
