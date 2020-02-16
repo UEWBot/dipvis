@@ -165,6 +165,14 @@ class RScoringBest(RoundScoringSystem):
             retval[p.player] = self.non_player_score
         return retval
 
+    def __str__(self):
+        ret = 'Best game score in each round counts'
+        if self.non_player_score > 0.0:
+            ret += '. Sitting out scores %f' % self.non_player_score
+        if self.non_player_score_once:
+            ret += ' once only'
+        return ret
+
 
 # All the round scoring systems we support
 R_SCORING_SYSTEMS = [

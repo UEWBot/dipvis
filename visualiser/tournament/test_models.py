@@ -308,7 +308,7 @@ class TournamentModelTests(TestCase):
         # Add a RoundPlayer to r32
         RoundPlayer.objects.create(player=cls.p5, the_round=r32, score=47.3)
 
-    # RScoringBest without sitting-out bonus
+    # RScoringBest.scores() without sitting-out bonus
     def test_r_scoring_best(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
@@ -399,7 +399,7 @@ class TournamentModelTests(TestCase):
         # Clean up
         t.delete()
 
-    # RScoringBest with sitting bonus
+    # RScoringBest.scores() with sitting bonus
     def test_r_scoring_best_with_bonus(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
@@ -467,7 +467,7 @@ class TournamentModelTests(TestCase):
         # Clean up
         t.delete()
 
-    # RScoringBest with one-off sitting bonus
+    # RScoringBest.scores() with one-off sitting bonus
     def test_r_scoring_best_with_one_bonus(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
@@ -561,6 +561,32 @@ class TournamentModelTests(TestCase):
 
         # Clean up
         t.delete()
+
+    # RScoringBest.__str__()
+    def test_rscoringbest0_str(self):
+        # TODO This depends on the ordering
+        r = R_SCORING_SYSTEMS[0]
+        r_str = str(r)
+        self.assertIn('est game score', r_str)
+        self.assertNotIn('out', r_str)
+        self.assertNotIn('once', r_str)
+
+    def test_rscoringbest1_str(self):
+        # TODO This depends on the ordering
+        r = R_SCORING_SYSTEMS[1]
+        r_str = str(r)
+        self.assertIn('est game score', r_str)
+        self.assertIn('out', r_str)
+        self.assertNotIn('once', r_str)
+
+    def test_rscoringbest2_str(self):
+        # TODO This depends on the ordering
+        r = R_SCORING_SYSTEMS[2]
+        r_str = str(r)
+        self.assertIn('est game score', r_str)
+        self.assertIn('out', r_str)
+        self.assertIn('once', r_str)
+
 
     # TODO TScoringSum
 
