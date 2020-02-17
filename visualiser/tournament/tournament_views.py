@@ -297,14 +297,16 @@ def tournament_best_countries(request,
                 gp = gps[p.power].pop(0)
             except IndexError:
                 continue
-            row.append('<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f<br/>%d %s'
-                       % (gp.player.get_absolute_url(),
-                          gp.player,
-                          all_urls_and_scores[gp.game][0],  # URL
-                          all_urls_and_scores[gp.game][1],  # name
-                          all_urls_and_scores[gp.game][2][gp.power],  # score
-                          gp.final_sc_count(),  # dots
-                          _('centre(s)')))
+            cell = '<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f' % (gp.player.get_absolute_url(),
+                                                                           gp.player,
+                                                                           all_urls_and_scores[gp.game][0],  # URL
+                                                                           all_urls_and_scores[gp.game][1],  # name
+                                                                           all_urls_and_scores[gp.game][2][gp.power])  # score
+            if gp.tournamentplayer().unranked:
+                cell += '*'
+            cell += '<br/>%d %s' % (gp.final_sc_count(),  # dots
+                                    _('centre(s)'))
+            row.append(cell)
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
