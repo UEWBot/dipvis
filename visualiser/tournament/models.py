@@ -416,6 +416,28 @@ class Tournament(models.Model):
         """
         return self.power_assignment == self.PREFERENCES
 
+    def tournament_scoring_system_obj(self):
+        """
+        Return the TournamentScoringSystem object for the Tournament.
+        Can raise InvalidScoringSystem.
+        """
+        # Find the scoring system to combine round scores into a tournament score
+        system = find_tournament_scoring_system(self.tournament_scoring_system)
+        if not system:
+            raise InvalidScoringSystem(self.tournament_scoring_system)
+        return system
+
+    def round_scoring_system_obj(self):
+        """
+        Return the RoundScoringSystem object for the Tournament.
+        Can raise InvalidScoringSystem.
+        """
+        # Find the scoring system to combine game scores into a round score
+        system = find_round_scoring_system(self.round_scoring_system)
+        if not system:
+            raise InvalidScoringSystem(self.round_scoring_system)
+        return system
+
     def _scores_detail_calculated(self):
         """
         Calculate the scores.
@@ -424,10 +446,7 @@ class Tournament(models.Model):
         - Dict, keyed by round, of dicts, keyed by player,
           of float round scores
         """
-        # Find the scoring system to combine round scores into a tournament score
-        system = find_tournament_scoring_system(self.tournament_scoring_system)
-        if not system:
-            raise InvalidScoringSystem(self.tournament_scoring_system)
+        system = self.tournament_scoring_system_obj()
         t_scores, r_scores = system.scores_detail(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
         # Now add in anyone who has yet to attend a round
         for tp in self.tournamentplayer_set.all():
@@ -907,6 +926,17 @@ class Round(models.Model):
     class Meta:
         ordering = ['start']
 
+    def game_scoring_system_obj(self):
+        """
+        Return the GameScoringSystem for the Round.
+        Can raise InvalidScoringSystem.
+        """
+        # Calculate the scores for the game using the specified ScoringSystem
+        system = find_game_scoring_system(self.scoring_system)
+        if not system:
+            raise InvalidScoringSystem(self.scoring_system)
+        return system
+
     def scores(self, force_recalculation=False):
         """
         Returns the scores for everyone who played in the round.
@@ -919,10 +949,7 @@ class Round(models.Model):
                 retval[p.player] = p.score
             return retval
 
-        # Find the scoring system to combine game scores into a round score
-        system = find_round_scoring_system(self.tournament.round_scoring_system)
-        if not system:
-            raise InvalidScoringSystem(self.tournament.round_scoring_system)
+        system = self.tournament.round_scoring_system_obj()
         # Identify any players who were checked in but didn't play
         gps = GamePlayer.objects.filter(game__the_round=self).distinct()
         non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
@@ -1219,9 +1246,7 @@ class Game(models.Model):
             return retval
 
         # Calculate the scores for the game using the specified ScoringSystem
-        system = find_game_scoring_system(self.the_round.scoring_system)
-        if not system:
-            raise InvalidScoringSystem(self.the_round.scoring_system)
+        system = self.the_round.game_scoring_system_obj()
         return system.scores(self.centrecount_set.all())
 
     def positions(self):
