@@ -240,6 +240,10 @@ class TScoringSum(TournamentScoringSystem):
             t_scores[p] = sum(player_scores[:self.scored_rounds])
         return (t_scores, round_scores)
 
+    def __str__(self):
+        ret = self.name
+        return ret
+
 
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [

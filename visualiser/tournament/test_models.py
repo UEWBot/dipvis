@@ -588,7 +588,26 @@ class TournamentModelTests(TestCase):
         self.assertIn('once', r_str)
 
 
-    # TODO TScoringSum
+    # TScoringSum.__str__()
+    def test_tscoringsum0_str(self):
+        # TODO This depends on the ordering
+        t = T_SCORING_SYSTEMS[0]
+        t_str = str(t)
+        self.assertIn('best 2', t_str)
+
+    def test_tscoringsum1_str(self):
+        # TODO This depends on the ordering
+        t = T_SCORING_SYSTEMS[1]
+        t_str = str(t)
+        self.assertIn('best 3', t_str)
+
+    def test_tscoringsum2_str(self):
+        # TODO This depends on the ordering
+        t = T_SCORING_SYSTEMS[2]
+        t_str = str(t)
+        self.assertIn('best 4', t_str)
+
+    # TODO TScoringSum.scores_detail()
 
     # find_scoring_system()
     # Mostly tested implicitly, but we do want to check the error case
