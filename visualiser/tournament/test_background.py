@@ -20,6 +20,7 @@ from tournament.background import WDDBackground, InvalidWDDId
 
 INVALID_WDD_ID = 1
 BRANDON_FOGEL_WDD_ID = 13051
+MELINDA_HOLLEY_WDD_ID = 5185
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
@@ -74,6 +75,14 @@ class WDDBackgroundTests(TestCase):
     def test_wdd_background_boards_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.boards)
+
+    @tag('wdd')
+    def test_wdd_background_boards_nc(self):
+        # Melinda has three boards listed on
+        # http://www.world-diplomacy-database.com/php/results/player_fiche9.php?id_player=5185
+        # with a rank of "n.c.". See Bug #117.
+        b = WDDBackground(MELINDA_HOLLEY_WDD_ID)
+        b.boards()
 
     # WDDBackground.awards()
     @tag('wdd')

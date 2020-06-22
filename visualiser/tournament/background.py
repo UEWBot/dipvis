@@ -331,6 +331,7 @@ class WDDBackground():
                         # '6', '2ex'
                         # '4', '2ex', '(D3)'
                         # '4 (L)'
+                        # 'n.c.'
                         # The Rank column actually encodes up to three separate pieces of info
                         for key, s in zip([u'Position', u'Position sharing', u'Game end'],
                                           td.stripped_strings):
@@ -342,6 +343,9 @@ class WDDBackground():
                                 s2 = s.split()
                                 result[key] = s2[0]
                                 result[u'Game end'] = s2[1][1:-1]
+                            elif s == 'n.c.':
+                                # This seems to indicate that the result for the game is not recorded
+                                break
                             else:
                                 result[key] = int(s)
                     elif key == 'SCs':

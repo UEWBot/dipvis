@@ -33,6 +33,7 @@ MATT_SUNDSTROM_WDD_ID = 8355
 NATE_COCKERILL_WDD_ID = 5009
 SPIROS_BOBETSIS_WDD_ID = 12304
 CLAESAR_WEBDIP_WDD_ID = 13317
+MELINDA_HOLLEY_WDD_ID = 5185
 
 class PlayerTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -235,6 +236,15 @@ class PlayerTests(TestCase):
         # TODO Validate results
         # Windy City Weasels 2012 he played France
         p.background(power=self.france)
+
+    @tag('slow', 'wdd')
+    def test_player_background_non_std_3(self):
+        # Melinda has games listed with no ranking (n.c)
+        p, created = Player.objects.get_or_create(first_name='Melinda',
+                                                  last_name='Holley',
+                                                  wdd_player_id=MELINDA_HOLLEY_WDD_ID)
+        # TODO Validate results
+        p.background()
 
     def test_player_background_unknown(self):
         p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')

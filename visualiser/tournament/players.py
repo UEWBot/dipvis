@@ -244,6 +244,11 @@ def add_player_bg(player):
         except GreatPower.DoesNotExist:
             # Apparently not a Standard game
             continue
+        if 'Position' not in b:
+            print('Ignoring game %s in %s for %s with no position' % (b['Round / Board'],
+                                                                      b['Name of the tournament'],
+                                                                      str(player)))
+            continue
         try:
             i, _ = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
                                                           game_name=b['Round / Board'],
