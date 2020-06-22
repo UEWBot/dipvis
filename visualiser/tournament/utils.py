@@ -42,6 +42,21 @@ def clean_duplicate_player(del_player, keep_player):
         print("Player to delete has a WDD player id!")
         return
 
+    if keep_player.email != del_player.email:
+        if del_player.email:
+            print("Player to delete has an email address!")
+            return
+
+    if keep_player.picture != del_player.picture:
+        if del_player.picture:
+            print("Player to delete has a picture!")
+            return
+
+    if keep_player.user != del_player.user:
+        if del_player.user is not None:
+            print("Player to delete has an account!")
+            return
+
     # Move GamePlayers
     for gp in del_player.gameplayer_set.all():
         print("Moving %s" % gp)
