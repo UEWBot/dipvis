@@ -26,7 +26,7 @@ from django.core.mail import send_mail, EmailMessage
 def send_board_call(the_round):
     """Send an email to all players in the round with the board calls"""
     # TODO Translation is complex, because we don't want to use the language of the
-    # person who triggered seding the email but of the person it's going to
+    # person who triggered sending the email but of the person it's going to
     # and right now we send one email to all the players
     subject = 'Board call for %(tourney)s Round %(round)d' % {'tourney': the_round.tournament,
                                                               'round': the_round.number()}
