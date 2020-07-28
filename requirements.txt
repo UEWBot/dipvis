@@ -2,3 +2,4 @@ bs4>=0.0.1
 Django>=2.1.2
 django-extensions>=2.1.4
 django-slowtests>=0.5.1
+Pillow
