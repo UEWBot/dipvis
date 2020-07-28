@@ -949,6 +949,9 @@ class Game(models.Model):
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
+    notes = models.CharField(max_length=120,
+                             blank=True,
+                             help_text=_('Will be included in board call emails and game page'))
 
     class Meta:
         ordering = ['name']

@@ -328,6 +328,7 @@ def seed_games(request, tournament_id, round_num):
                 g = f.game
                 g.name = f.cleaned_data['name']
                 g.the_set = f.cleaned_data['the_set']
+                g.notes = f.cleaned_data['notes']
                 try:
                     g.full_clean()
                 except ValidationError as e:
@@ -345,7 +346,7 @@ def seed_games(request, tournament_id, round_num):
                     gp.save()
                 # Assign the powers to the players
                 for gp_id, field in f.cleaned_data.items():
-                    if gp_id in ['the_set', 'name']:
+                    if gp_id in ['the_set', 'name', 'notes']:
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
@@ -434,7 +435,8 @@ def create_games(request, tournament_id, round_num):
     data = []
     for g in games:
         current = {'name': g.name,
-                   'the_set': g.the_set}
+                   'the_set': g.the_set,
+                   'notes': g.notes}
         for gp in g.gameplayer_set.all():
             current[gp.power.name] = gp.roundplayer()
         data.append(current)
@@ -461,6 +463,7 @@ def create_games(request, tournament_id, round_num):
                 # This must be an extra, unused formset
                 continue
             g.the_set=f.cleaned_data['the_set']
+            g.notes=f.cleaned_data['notes']
             try:
                 g.full_clean()
             except ValidationError as e:
