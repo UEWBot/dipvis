@@ -113,7 +113,7 @@ class SCOwnershipAdmin(admin.ModelAdmin):
 
 class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
-    fields = ['the_round', 'name', 'is_top_board', 'started_at', 'is_finished']
+    fields = ['the_round', 'name', 'notes', 'is_top_board', 'started_at', 'is_finished']
     inlines = [GamePlayerInline]
     list_filter = ('the_round__tournament', 'name', 'is_finished')
 
