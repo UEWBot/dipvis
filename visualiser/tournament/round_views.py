@@ -18,11 +18,13 @@
 Round Views for the Diplomacy Tournament Visualiser.
 """
 
+import csv
+
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
 from django.forms.formsets import formset_factory
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import ugettext as _
@@ -65,6 +67,33 @@ def round_simple(request, tournament_id, round_num, template):
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
     return render(request, 'rounds/%s.html' % template, context)
+
+
+def board_call_csv(request, tournament_id, round_num):
+    """CSV of the board call for the round"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    # Fields to write
+    headers = ['Round', 'Board', 'Power', 'Player Name', 'Player Id']
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="%s%dround%sboard_call.csv"' % (t.name,
+                                                                                            t.start_date.year,
+                                                                                            round_num)
+
+    writer = csv.DictWriter(response, fieldnames=headers)
+    writer.writeheader()
+
+    for g in r.game_set.all():
+        for gp in g.gameplayer_set.all():
+            row_dict = {'Round': round_num,
+                        'Board': g.name,
+                        'Power': gp.power.name,
+                        'Player Name': str(gp.player),
+                        'Player Id': gp.player.pk}
+            writer.writerow(row_dict)
+
+    return response
 
 
 @permission_required('tournament.add_roundplayer')

@@ -30,6 +30,7 @@ round_patterns = [
     url(r'^create_games/$', round_views.create_games, name='create_games'),
     url(r'^game_scores/$', round_views.game_scores, name='game_scores'),
     url(r'^games/$', round_views.game_index, name='game_index'),
+    url(r'^board_call_csv/$', round_views.board_call_csv, name='board_call_csv'),
     url(r'^board_call/$', round_views.round_simple,
         {'template': 'board_call'}, name='board_call'),
 ]

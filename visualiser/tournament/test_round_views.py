@@ -337,6 +337,8 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_detail', args=(self.t1.pk, 2)))
         self.assertEqual(response.status_code, 404)
 
+    # TODO board_call_csv()
+
     def test_roll_call_not_logged_in(self):
         response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 302)
