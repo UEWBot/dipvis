@@ -400,11 +400,11 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     random.shuffle(results)
     return results
 
-def news(obj):
+def news(obj, for_year=None):
     if isinstance(obj, Tournament):
         return _tournament_news(obj)
     if isinstance(obj, Round):
         return _round_news(obj)
     if isinstance(obj, Game):
-        return _game_news(obj)
+        return _game_news(obj, for_year)
     raise NotImplementedError

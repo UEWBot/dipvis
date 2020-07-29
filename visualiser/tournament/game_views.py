@@ -425,14 +425,14 @@ def sc_counts(request, tournament_id, game_name):
                    'game': g})
 
 
-def game_news(request, tournament_id, game_name, as_ticker=False):
+def game_news(request, tournament_id, game_name, for_year=None, as_ticker=False):
     """Display news for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     context = {'tournament': t,
                'game': g,
                'subject': 'News',
-               'content': news(g)}
+               'content': news(g, for_year)}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',

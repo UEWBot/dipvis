@@ -24,6 +24,7 @@ from django.utils import timezone
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
+from tournament.models import SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
 
@@ -104,6 +105,14 @@ class RoundViewTests(TestCase):
                                      started_at=r.start,
                                      the_round=r,
                                      the_set=GameSet.objects.first())
+
+        # Add SO ownerships for Game1, but skip 1901
+        #for sco in cls.g1.supplycentreownership_set.filter(year=1900):
+        #    SupplyCentreOwnership.objects.create(game=sco.game, year=1902, sc=sco.sc, owner=sco.owner)
+        #cls.g1.create_or_update_sc_counts_from_ownerships(1902)
+        #print(len(cls.g1.years_played()))
+        #print(cls.g1.years_played()[0])
+        #print(cls.g1.years_played()[-1])
 
     def test_detail(self):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
@@ -269,7 +278,7 @@ class RoundViewTests(TestCase):
     def test_post_secret_dias_draw_vote_passed(self):
         self.assertEqual(self.g1.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        data = urlencode({'year': '1902',
+        data = urlencode({'year': '1903',
                           'season': SPRING,
                           'passed': True,
                           'proposer': str(self.austria)})
@@ -283,7 +292,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(self.g1.drawproposal_set.count(), 1)
         dp = self.g1.drawproposal_set.get()
         self.assertEqual(dp.game, self.g1)
-        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.year, 1903)
         self.assertEqual(dp.season, SPRING)
         self.assertTrue(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
