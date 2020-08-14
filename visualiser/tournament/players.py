@@ -402,11 +402,11 @@ class Player(models.Model):
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
     # Cache of the player's name in the WDD
     _wdd_name = models.CharField(max_length=60, blank=True)
-    user = models.ForeignKey(User,
-                             blank=True,
-                             null=True,
-                             on_delete=models.CASCADE,
-                             help_text=_('If the Player has an account on the site, record it here'))
+    user = models.OneToOneField(User,
+                                blank=True,
+                                null=True,
+                                on_delete=models.CASCADE,
+                                help_text=_('If the Player has an account on the site, record it here'))
     class Meta:
         ordering = ['last_name', 'first_name']
 
