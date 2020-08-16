@@ -52,7 +52,7 @@ class RoundInline(admin.StackedInline):
     )
 
 class TournamentAdmin(admin.ModelAdmin):
-    """Include Round and TournamentPlayer as part of Tournament"""
+    """Include Round as part of Tournament"""
     inlines = [RoundInline]
     fields = ('name',
               ('start_date', 'end_date'),
