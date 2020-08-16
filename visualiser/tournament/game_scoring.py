@@ -342,6 +342,50 @@ class GScoringJanus(GameScoringSystem):
         return retval
 
 
+class GScoringTribute(GameScoringSystem):
+    """
+    1 point per dot, survivors split 66 points
+    equally between them.
+    Each player pays the board leader(s) 1 point for each dot
+    the leader has over 6. This payment cannot exceed the survival points.
+    With a solo, soloer gets 100, everyone else gets 0.
+    """
+    def __init__(self):
+        self.name = _('Tribute')
+
+    def scores(self, centre_counts):
+        retval = {}
+        final_scs = _final_year_scs(centre_counts)
+        survivors = final_scs.filter(count__gt=0).count()
+        survival_points = 66 / survivors
+        leader_scs = final_scs[0].count
+        leaders = final_scs.filter(count=leader_scs).count()
+        if leader_scs > 6:
+            bonus_per_survivor = min(survival_points, leader_scs - 6)
+        else:
+            bonus_per_survivor = 0
+        soloed = leader_scs >= WINNING_SCS
+        for sc in final_scs:
+            if soloed:
+                if sc.count == leader_scs:
+                    retval[sc.power] = 100
+                else:
+                    retval[sc.power] = 0
+                continue
+            # 1 point per dot
+            retval[sc.power] = sc.count
+            # Plus the survival points
+            if sc.count:
+                retval[sc.power] += survival_points
+            # Leader(s) gets tribute
+            if sc.count == leader_scs:
+                retval[sc.power] += bonus_per_survivor * (survivors - leaders) / leaders
+            # from all the rest
+            elif sc.count:
+                retval[sc.power] -= bonus_per_survivor
+        return retval
+
+
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringSolos(),
@@ -352,4 +396,5 @@ G_SCORING_SYSTEMS = [
     GScoringCarnage(_('Carnage with dead equal'), True),
     GScoringCarnage(_('Carnage with elimination order'), False),
     GScoringJanus(),
+    GScoringTribute(),
 ]
