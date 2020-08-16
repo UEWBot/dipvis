@@ -389,7 +389,7 @@ class Tournament(models.Model):
                                         choices=POWER_ASSIGN_METHODS,
                                         default=MANUAL)
     editable = models.BooleanField(default=True,
-                                   help_text=_('Check to disallow any further changes to the tournament'))
+                                   help_text=_('Uncheck to disallow any further changes to the tournament'))
     best_country_criterion = models.CharField(max_length=1,
                                               verbose_name=_(u'How Best Country awards are determined'),
                                               choices=BEST_COUNTRY_CRITERION,
