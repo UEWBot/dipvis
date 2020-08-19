@@ -54,7 +54,7 @@ class RoundInline(admin.StackedInline):
 class TournamentAdmin(admin.ModelAdmin):
     """Include Round as part of Tournament"""
     inlines = [RoundInline]
-    fields = ('name',
+    fields = (('name', 'format'),
               ('start_date', 'end_date'),
               ('tournament_scoring_system', 'round_scoring_system'),
               ('seed_games', 'power_assignment'),

@@ -353,6 +353,14 @@ class Tournament(models.Model):
         (DOTS, _('Highest centre count')),
     )
 
+    # Formats
+    FTF = 'F'
+    VFTF = 'V'
+    FORMATS = (
+        (FTF, _('Face to Face')),
+        (VFTF, _('Virtual Face to Face')),
+    )
+
     # Flag value to use for players who are excluded from the rankings
     UNRANKED = 999999
 
@@ -394,6 +402,9 @@ class Tournament(models.Model):
                                               verbose_name=_(u'How Best Country awards are determined'),
                                               choices=BEST_COUNTRY_CRITERION,
                                               default=SCORE)
+    format = models.CharField(max_length=1,
+                              choices=FORMATS,
+                              default=FTF)
 
     class Meta:
         ordering = ['-start_date']
@@ -404,6 +415,13 @@ class Tournament(models.Model):
         Intended for use in template code.
         """
         return self.power_assignment == self.PREFERENCES
+
+    def is_virtual(self):
+        """
+        Returns True if the Tournament is online,
+        False if it is truly face-to-face.
+        """
+        return self.format == self.VFTF
 
     def tournament_scoring_system_obj(self):
         """
@@ -650,6 +668,7 @@ class TournamentPlayer(models.Model):
                                    verbose_name=_('Ineligible for awards'),
                                    help_text=_('Set this to ignore this player when determining rankings'))
     uuid_str = models.CharField(max_length=36, blank=True)
+    discord_username = models.CharField(max_length=40, blank=True)
 
     class Meta:
         ordering = ['player']

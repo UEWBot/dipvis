@@ -41,8 +41,12 @@ def send_board_call(the_round):
             game_text += g.notes + '\n'
         recipients = []
         for gp in g.gameplayer_set.order_by('power'):
-            game_text += '%(power)s: %(player)s\n' % {'power': gp.power or 'Power TBD',
-                                                      'player': gp.player}
+            game_text += '%(power)s: %(player)s' % {'power': gp.power or 'Power TBD',
+                                                    'player': gp.player}
+            if the_round.tournament.is_virtual():
+                game_text += ' %(discord)s\n' % {'discord': ' (%s)' % gp.tournamentplayer().discord_username or ''}
+            else:
+                game_text += '\n'
             if gp.player.email:
                 recipients.append(gp.player.email)
         games.append((game_text, recipients))
