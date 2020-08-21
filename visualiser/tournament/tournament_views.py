@@ -400,11 +400,8 @@ def round_scores(request, tournament_id):
                         if created:
                             i.delete()
                         return render(request,
-                                      'tournaments/round_players.html',
-                                      {'title': _('Scores'),
-                                       'tournament': t,
-                                       'post_url': reverse('enter_scores',
-                                                           args=(tournament_id,)),
+                                      'tournaments/enter_scores.html',
+                                      {'tournament': t,
                                        'formset': formset})
 
                     i.save()
@@ -416,11 +413,8 @@ def round_scores(request, tournament_id):
                     except ValidationError as e:
                         form.add_error(form.fields[r_name], e)
                         return render(request,
-                                      'tournaments/round_players.html',
-                                      {'title': _('Scores'),
-                                       'tournament': t,
-                                       'post_url': reverse('enter_scores',
-                                                           args=(tournament_id,)),
+                                      'tournaments/enter_scores.html',
+                                      {'tournament': t,
                                        'formset': formset})
                     tp.save()
         # Redirect to the read-only version
@@ -428,10 +422,8 @@ def round_scores(request, tournament_id):
                                             args=(tournament_id)))
 
     return render(request,
-                  'tournaments/round_players.html',
-                  {'title': _('Scores'),
-                   'tournament': t,
-                   'post_url': reverse('enter_scores', args=(tournament_id,)),
+                  'tournaments/enter_scores.html',
+                  {'tournament': t,
                    'formset': formset})
 
 

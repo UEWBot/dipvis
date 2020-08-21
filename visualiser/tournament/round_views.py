@@ -146,9 +146,8 @@ def roll_call(request, tournament_id, round_num=None):
                 if created:
                     i.delete()
                 return render(request,
-                              'tournaments/round_players.html',
-                              {'title': _('Roll Call'),
-                               'tournament': t,
+                              'tournaments/roll_call.html',
+                              {'tournament': t,
                                'post_url': request.path_info,
                                'formset': formset})
             i.discord_username = p.discord_username
@@ -174,9 +173,8 @@ def roll_call(request, tournament_id, round_num=None):
                         if created:
                             i.delete()
                         return render(request,
-                                      'tournaments/round_players.html',
-                                      {'title': _('Roll Call'),
-                                       'tournament': t,
+                                      'tournaments/roll_call.html',
+                                      {'tournament': t,
                                        'post_url': request.path_info,
                                        'formset': formset})
                 else:
@@ -203,9 +201,8 @@ def roll_call(request, tournament_id, round_num=None):
                                                   round_num)))
 
     return render(request,
-                  'tournaments/round_players.html',
-                  {'title': _('Roll Call'),
-                   'tournament': t,
+                  'tournaments/roll_call.html',
+                  {'tournament': t,
                    'post_url': request.path_info,
                    'formset': formset})
 
