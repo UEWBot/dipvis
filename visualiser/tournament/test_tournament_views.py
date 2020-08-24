@@ -660,7 +660,10 @@ class TournamentViewTests(TestCase):
 
     def test_player_prefs_post(self):
         url = reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str))
-        data = urlencode({'prefs': 'FART'})
+        data = urlencode({'form-TOTAL_FORMS': '1',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': '1',
+                          'prefs': 'FART'})
         response = self.client.post(url,
                                     data,
                                     content_type='application/x-www-form-urlencoded')

@@ -837,6 +837,9 @@ class Round(models.Model):
                                                   validators=[validate_year])
     earliest_end_time = models.DateTimeField(blank=True, null=True)
     latest_end_time = models.DateTimeField(blank=True, null=True)
+    enable_check_in = models.BooleanField(default=False,
+                                          verbose_name=_(u'Enable self-check-ins'))
+    email_sent = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['start']
@@ -1529,7 +1532,7 @@ class RoundPlayer(models.Model):
                                              help_text=_('number of games being played this round'))
 
     class Meta:
-        ordering = ['player']
+        ordering = ['player', 'the_round__start']
 
     def tournamentplayer(self):
         """

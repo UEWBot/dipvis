@@ -32,6 +32,7 @@ from django.utils.translation import ugettext as _
 from tournament.forms import BaseGamePlayersFormset
 from tournament.forms import BasePlayerRoundFormset
 from tournament.forms import BasePowerAssignFormset
+from tournament.forms import EnableCheckInForm
 from tournament.forms import GamePlayersForm
 from tournament.forms import GameScoreForm
 from tournament.forms import GetSevenPlayersForm
@@ -42,7 +43,7 @@ from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
 
 from tournament.diplomacy import GreatPower, GameSet
-from tournament.email import send_board_call
+from tournament.email import send_board_call, send_roll_call_email
 from tournament.game_seeder import GameSeeder
 from tournament.models import Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -109,7 +110,10 @@ def roll_call(request, tournament_id, round_num=None):
         round_set = t.round_set.filter(pk=r.pk)
     else:
         round_set = t.round_set.all()
-    data = []
+    enable_data = {}
+    for r in round_set.all():
+        enable_data['round_%d' % r.number()] = r.enable_check_in
+    player_data = []
     # Go through each player in the Tournament
     for tp in t.tournamentplayer_set.all():
         current = {'player': tp.player}
@@ -119,17 +123,38 @@ def roll_call(request, tournament_id, round_num=None):
             # Is this player listed as playing this round ?
             played = rps.filter(the_round=r).exists()
             current['round_%d' % r.number()] = played
-        data.append(current)
+        player_data.append(current)
     if round_num is not None:
         formset = PlayerRoundFormset(request.POST or None,
                                      tournament=t,
                                      round_num=int(round_num),
-                                     initial=data)
+                                     initial=player_data)
+        form = EnableCheckInForm(request.POST or None,
+                                 tournament=t,
+                                 round_num=int(round_num),
+                                 initial=enable_data)
     else:
         formset = PlayerRoundFormset(request.POST or None,
                                      tournament=t,
-                                     initial=data)
-    if formset.is_valid():
+                                     initial=player_data)
+        form = EnableCheckInForm(request.POST or None,
+                                 tournament=t,
+                                 initial=enable_data)
+    if formset.is_valid() and form.is_valid():
+        for r_name, value in form.cleaned_data.items():
+            # Extract the round number from the field name
+            i = int(r_name[6:])
+            # Find that Round
+            r = t.round_numbered(i)
+            if (value is True) and not r.enable_check_in:
+                # send emails if not already sent
+                if not r.email_sent:
+                    for tp in t.tournamentplayer_set.all():
+                        send_roll_call_email(tp, i)
+                    r.email_sent = True
+            r.enable_check_in = value
+            r.save()
+
         for form in formset:
             try:
                 p = form.cleaned_data['player']
@@ -149,7 +174,8 @@ def roll_call(request, tournament_id, round_num=None):
                               'tournaments/roll_call.html',
                               {'tournament': t,
                                'post_url': request.path_info,
-                               'formset': formset})
+                               'formset': formset,
+                               'form': form})
             i.discord_username = p.discord_username
             i.save()
             for r_name, value in form.cleaned_data.items():
@@ -176,7 +202,8 @@ def roll_call(request, tournament_id, round_num=None):
                                       'tournaments/roll_call.html',
                                       {'tournament': t,
                                        'post_url': request.path_info,
-                                       'formset': formset})
+                                       'formset': formset,
+                                       'form': form})
                 else:
                     # delete any corresponding RoundPlayer
                     # This could be a player who was previously checked-off in error
@@ -204,7 +231,8 @@ def roll_call(request, tournament_id, round_num=None):
                   'tournaments/roll_call.html',
                   {'tournament': t,
                    'post_url': request.path_info,
-                   'formset': formset})
+                   'formset': formset,
+                   'form': form})
 
 
 @permission_required('tournament.add_game')

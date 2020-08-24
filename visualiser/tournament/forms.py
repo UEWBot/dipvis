@@ -32,6 +32,48 @@ from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player
 
 
+class SelfCheckInForm(forms.Form):
+    """Form for one TournamentPlayer to selfcheck-in for a single Round"""
+    playing = forms.BooleanField(required=False)
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwargs from the list
+        self.tp = kwargs.pop('tp')
+        self.round = kwargs.pop('round')
+        super().__init__(*args, **kwargs)
+        # Set the label appropriately
+        label = _('Round %(number)d') % {'number': self.round.number()}
+        if self.round.is_finished():
+            label += _(' (Finished)')
+        self.fields['playing'].label = label
+        # Set read-only if it's too late or if self-check-in isn't enabled
+        readonly = (not self.round.enable_check_in) or self.round.game_set.exists()
+        if readonly:
+            self.fields['playing'].disabled = True
+
+
+class BaseCheckInFormset(BaseFormSet):
+    """Formset to provide self-check-in for every Round for a single TournamentPlayer"""
+    def __init__(self, *args, **kwargs):
+        # Remove our kwarg from the list
+        self.tp = kwargs.pop('tp')
+        # Get the list of Rounds
+        self.rounds = list(self.tp.tournament.round_set.all())
+        # Create initial if not provided
+        if 'initial' not in kwargs.keys():
+            initial = []
+            for r in self.rounds:
+                initial.append({'playing': r.roundplayer_set.filter(player=tp.player).exists()})
+            kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special arg down to the form itself
+        kwargs['tp'] = self.tp
+        kwargs['round'] = self.rounds[index]
+        return super()._construct_form(index, **kwargs)
+
+
 class PrefsForm(forms.Form):
     """Form for one TournamentPlayer's Preferences"""
     prefs = forms.CharField(max_length=7,
@@ -52,7 +94,7 @@ class PrefsForm(forms.Form):
 
 
 class BasePrefsFormset(BaseFormSet):
-    """Form to spcify Preferences for every TournamentPlayer"""
+    """Form to specify Preferences for every TournamentPlayer"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
@@ -60,7 +102,7 @@ class BasePrefsFormset(BaseFormSet):
         self.tps = list(self.tournament.tournamentplayer_set.all())
         # Create initial if not provided
         if 'initial' not in kwargs.keys():
-            # And construct inital data from it
+            # And construct initial data from it
             # __init__() uses len(initial) to decide how many forms to create
             initial = []
             for tp in self.tps:
@@ -520,6 +562,37 @@ class BaseSCCountFormset(BaseFormSet):
                                                'after': years[year],
                                                'year': year})
             neutrals = years[year]
+
+
+class EnableCheckInForm(forms.Form):
+    """Form to enable self-check-ins for roll call"""
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwargs from the list
+        self.tournament = kwargs.pop('tournament')
+        round_num = kwargs.pop('round_num', None)
+        super().__init__(*args, **kwargs)
+
+        if round_num:
+            first_round_num = last_round_num = this_round_num = round_num
+        else:
+            first_round_num = 1
+            last_round_num = self.tournament.round_set.count()
+            # current_round() could return None, if all rounds are over
+            cr = self.tournament.current_round()
+            if cr:
+                this_round_num = cr.number()
+            else:
+                # Use a round number higher than all that exist
+                this_round_num = last_round_num + 1
+
+        # Create the right number of enable fields, with the right ones read-only
+        for i in range(first_round_num, 1 + last_round_num):
+            name = 'round_%d' % i
+            readonly = (i < this_round_num)
+            self.fields[name] = forms.BooleanField(required=False, initial=False)
+            if readonly:
+                self.fields[name].disabled = True
 
 
 class PlayerForm(forms.Form):

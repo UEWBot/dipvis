@@ -109,3 +109,31 @@ def send_prefs_email(tournamentplayer, force=False):
               msg_body,
               settings.EMAIL_HOST_USER,
               [addr])
+
+
+ROLL_CALL_EMAIL = """
+Hi,
+You're receiving this because you are registered for the %(tourney)s Diplomacy tournament.
+The tournament allows you to check yourself in for a round, and players can now check in for round %(round)d.
+To check in, go to the following web page:
+%(url)s
+Note 1: this address is unique to you - don't share it with anyone!
+"""
+
+def send_roll_call_email(tournamentplayer, round_num):
+    """
+    Email the URL to self-check-in to the TournamentPlayer.
+    """
+    t = tournamentplayer.tournament
+    addr = tournamentplayer.player.email
+    # Can't do anything unless we have an email address for the player
+    if not addr:
+        return
+    # Create the email and send it
+    msg_body = ROLL_CALL_EMAIL % {'tourney': t,
+                                  'url': tournamentplayer.get_prefs_url(),
+                                  'round' : round_num}
+    send_mail('Self-check-in now available for round %d of %s' % (round_num, t),
+              msg_body,
+              settings.EMAIL_HOST_USER,
+              [addr])

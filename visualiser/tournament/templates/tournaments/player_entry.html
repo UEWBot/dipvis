@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Data Entry" %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Data Entry" %}</h1>
+{% if t.powers_assigned_from_prefs %}
+  <h2>{% trans "Current Preferences" %}</h2>
+
+  {% if prefs_list %}
+    <ol>
+    {% for p in prefs_list %}
+    <li>{% if forloop.first %}
+          {% trans "(Highest priority)" %}
+        {% endif %}{{ p.power }}</li>
+    {% endfor %}
+    </ol>
+    <p>{% trans "Remaining power(s) (if any) equal lowest priority." %}</p>
+  {% else %}
+    <p>{% trans "No power preference." %}</p>
+  {% endif %}
+
+  <h2>{% trans "Change Preferences" %}</h2>
+
+  <p>{% trans "Enter the initial of each power, in order, from highest to lowest preference." %}</p>
+  <p>{% trans "Missing powers will be ranked equal last." %}</p>
+{% endif %}
+
+<form method="post" action={% url 'player_prefs' tournament.id uuid %}>
+{% csrf_token %}
+
+{% if t.powers_assigned_from_prefs %}
+    <table class="form">
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <div class=fieldWrapper">
+          <tr>
+            {{ field.errors }}
+            {{ field }}
+            {% if field.help_text %}
+              <p class="help">{{ field.help_text|safe }}</p>
+            {% endif %}
+          </tr>
+        </div>
+      {% endfor %}
+    </table>
+    <input type="submit" value={% trans "Submit" %} />
+  </form>
+{% endif %}
+
+<h2>{% trans "Roll Call" %}</h2>
+
+{{ formset.management_form }}
+{{ formset.non_form_errors.as_ul }}
+<table class="form">
+<tbody>
+{% for form in formset.forms %}
+    <tr class="{% cycle 'odd_row' 'even_row' %}">
+    {{ form.non_field_errors }}
+    {% for field in form.visible_fields %}
+        <td>{% trans field.label %}</td>
+        <td>
+        {% if forloop.first %}
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+        {% endif %}
+        {{ field.errors.as_ul }}
+        {{ field }}
+        </td>
+    {% endfor %}
+    </tr>
+{% endfor %}
+</tbody>
+</table>
+<input type="submit" value={% trans "Submit" %} />
+</form>
+
+{% endblock %}

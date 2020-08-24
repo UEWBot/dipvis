@@ -31,12 +31,15 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from tournament.email import send_prefs_email
+
+from tournament.forms import BaseCheckInFormset
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
 from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
+from tournament.forms import SelfCheckInForm
 
 from tournament.diplomacy import GameSet
 from tournament.models import Tournament, Game, SeederBias
@@ -433,34 +436,83 @@ def player_prefs(request, tournament_id, uuid):
     """
     Display the current preferences for a single TournamentPlayer,
     and give them the ability to change them.
+    Also display checked-in state for each Round, and allow the player to
+    check in for a Round that hasn't yet got Games, if self-check-in is enabled.
     TournamentPlayer is (indirectly) identified by the uuid string.
     """
-    # Note that this effectively means that the URL only works for a published Tournament
-    t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    # Fail if the preferences would be ignored anyway
+    # Allow access regardless of published state
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    # But don't allow modification of archived tournaments
+    if not t.editable:
+        raise Http404
+    # Fail if the last round already has Games (too late)
     r = t.round_set.last()
-    if r and r.in_progress():
+    if r and r.game_set.exists():
         raise Http404
     # Find the TournamentPlayer in question
     try:
         tp = t.tournamentplayer_set.get(uuid_str=uuid)
     except TournamentPlayer.DoesNotExist:
         raise Http404
-    form = PrefsForm(request.POST or None,
-                     tp=tp)
-    if form.is_valid() and form.has_changed():
-        ps = form.cleaned_data['prefs']
+
+    SelfCheckInFormset = formset_factory(SelfCheckInForm,
+                                         extra=0,
+                                         formset=BaseCheckInFormset)
+    data = []
+    for r in tp.tournament.round_set.all():
+        rp_exists = r.roundplayer_set.filter(player=tp.player).exists()
+        data.append({'playing': rp_exists})
+    formset = SelfCheckInFormset(request.POST or None,
+                                 tp=tp,
+                                 initial=data)
+
+    prefs_form = PrefsForm(request.POST or None,
+                           tp=tp)
+
+    if prefs_form.is_valid() and prefs_form.has_changed():
+        ps = prefs_form.cleaned_data['prefs']
         # Set preferences for this TournamentPlayer
         tp.create_preferences_from_string(ps)
+
+    if formset.is_valid():
+        for form in formset:
+            if form.has_changed():
+                r = form.round
+                playing = form.cleaned_data['playing']
+                # Create or destroy the RoundPlayer as appropriate
+                if playing:
+                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
+                                                                   the_round=r)
+                    # TODO Should we set game_count to 1 here?
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        form.add_error(None, e)
+                        if created:
+                            i.delete()
+                    return render(request,
+                                  'tournaments/player_entry.html',
+                                  {'tournament': t,
+                                   'uuid': uuid,
+                                   'prefs_list': tp.preference_set.all(),
+                                   'formset': formset,
+                                   'form': prefs_form})
+                else:
+                    RoundPlayer.objects.filter(player=tp.player,
+                                               the_round=r).delete()
+
+
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('player_prefs',
                                             args=(tournament_id, uuid)))
+
     return render(request,
-                  'tournaments/player_prefs.html',
+                  'tournaments/player_entry.html',
                   {'tournament': t,
                    'uuid': uuid,
                    'prefs_list': tp.preference_set.all(),
-                   'form': form})
+                   'formset': formset,
+                   'form': prefs_form})
 
 
 @permission_required('tournament.add_preference')
