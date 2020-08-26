@@ -419,7 +419,7 @@ def round_scores(request, tournament_id):
                     tp.save()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_scores',
-                                            args=(tournament_id)))
+                                            args=(tournament_id,)))
 
     return render(request,
                   'tournaments/enter_scores.html',

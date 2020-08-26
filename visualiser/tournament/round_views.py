@@ -216,7 +216,7 @@ def get_seven(request, tournament_id, round_num):
     # If we have fewer than seven players, we're stuffed
     if count < 7:
         return HttpResponseRedirect(reverse('tournament_players',
-                                            args=(tournament_id)))
+                                            args=(tournament_id,)))
     sitters = count % 7
     # If we already have an exact multiple of seven players, go straight to creating games
     if sitters == 0:
@@ -595,7 +595,7 @@ def game_scores(request, tournament_id, round_num):
         t.store_scores()
         # Redirect to the round index
         return HttpResponseRedirect(reverse('round_index',
-                                            args=(tournament_id)))
+                                            args=(tournament_id,)))
 
     return render(request,
                   'rounds/game_score.html',
