@@ -589,26 +589,26 @@ class PowerAssignFormTest(TestCase):
     def test_success(self):
         data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
-                self.p1.pk: str(self.turkey.pk),
-                self.p2.pk: str(self.austria.pk),
-                self.p3.pk: str(self.england.pk),
-                self.p4.pk: str(self.france.pk),
-                self.p5.pk: str(self.germany.pk),
-                self.p6.pk: str(self.italy.pk),
-                self.p7.pk: str(self.russia.pk)}
+                self.gp1.pk: str(self.turkey.pk),
+                self.gp2.pk: str(self.austria.pk),
+                self.gp3.pk: str(self.england.pk),
+                self.gp4.pk: str(self.france.pk),
+                self.gp5.pk: str(self.germany.pk),
+                self.gp6.pk: str(self.italy.pk),
+                self.gp7.pk: str(self.russia.pk)}
         form = PowerAssignForm(data, game=self.g)
         self.assertTrue(form.is_valid())
 
     def test_field_error(self):
         data = {'name': 'R1G1',
                 'the_set': 'Non-existent set',
-                self.p1.pk: str(self.turkey.pk),
-                self.p2.pk: str(self.austria.pk),
-                self.p3.pk: str(self.england.pk),
-                self.p4.pk: str(self.france.pk),
-                self.p5.pk: str(self.germany.pk),
-                self.p6.pk: str(self.italy.pk),
-                self.p7.pk: str(self.russia.pk)}
+                self.gp1.pk: str(self.turkey.pk),
+                self.gp2.pk: str(self.austria.pk),
+                self.gp3.pk: str(self.england.pk),
+                self.gp4.pk: str(self.france.pk),
+                self.gp5.pk: str(self.germany.pk),
+                self.gp6.pk: str(self.italy.pk),
+                self.gp7.pk: str(self.russia.pk)}
         form = PowerAssignForm(data, game=self.g)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
@@ -618,29 +618,29 @@ class PowerAssignFormTest(TestCase):
     def test_power_error(self):
         data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
-                self.p1.pk: str(self.turkey.pk),
-                self.p2.pk: str(self.austria.pk),
-                self.p3.pk: 'None',
-                self.p4.pk: str(self.france.pk),
-                self.p5.pk: str(self.germany.pk),
-                self.p6.pk: str(self.italy.pk),
-                self.p7.pk: str(self.russia.pk)}
+                self.gp1.pk: str(self.turkey.pk),
+                self.gp2.pk: str(self.austria.pk),
+                self.gp3.pk: 'None',
+                self.gp4.pk: str(self.france.pk),
+                self.gp5.pk: str(self.germany.pk),
+                self.gp6.pk: str(self.italy.pk),
+                self.gp7.pk: str(self.russia.pk)}
         form = PowerAssignForm(data, game=self.g)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('That choice is not one of the available choices', form.errors[self.p3.pk][0])
+        self.assertIn('That choice is not one of the available choices', form.errors[self.gp3.pk][0])
 
     def test_reject_duplicate_powers(self):
         data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
-                self.p1.pk: str(self.turkey.pk),
-                self.p2.pk: str(self.france.pk),
-                self.p3.pk: str(self.england.pk),
-                self.p4.pk: str(self.france.pk),
-                self.p5.pk: str(self.germany.pk),
-                self.p6.pk: str(self.italy.pk),
-                self.p7.pk: str(self.russia.pk)}
+                self.gp1.pk: str(self.turkey.pk),
+                self.gp2.pk: str(self.france.pk),
+                self.gp3.pk: str(self.england.pk),
+                self.gp4.pk: str(self.france.pk),
+                self.gp5.pk: str(self.germany.pk),
+                self.gp6.pk: str(self.italy.pk),
+                self.gp7.pk: str(self.russia.pk)}
         form = PowerAssignForm(data, game=self.g)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
