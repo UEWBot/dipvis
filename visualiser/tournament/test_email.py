@@ -369,9 +369,15 @@ class EmailTests(TestCase):
     def test_send_prefs_email_prefs_not_done(self):
         # Call without force for a Player with email in Tournament with prefs
         # when not previously emailed
-        tp = self.t2.tournamentplayer_set.filter(uuid_str='').exclude(player__email='').first()
+        tp = self.t2.tournamentplayer_set.filter(uuid_str='').first()
+        # add an email address
+        tp.player.email='new.email@example.com'
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 1)
+        # Clean things up back as they were
+        tp.uuid_str = ''
+        tp.save()
+        tp.player.email = ''
 
     # send_prefs_email(force=True)
     def test_send_prefs_email_no_prefs_force(self):

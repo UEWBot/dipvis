@@ -739,6 +739,7 @@ class TournamentPlayer(models.Model):
         Populates the uuid_str attribute.
         """
         self.uuid_str = str(uuid.uuid4())
+        self.save()
 
     def __str__(self):
         return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
