@@ -71,8 +71,6 @@ class TournamentViewTests(TestCase):
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add preference')
         cls.u3.user_permissions.add(perm)
-        perm = Permission.objects.get(name='Can add seeder bias')
-        cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add tournament player')
         cls.u3.user_permissions.add(perm)
         cls.u3.save()

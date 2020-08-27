@@ -688,7 +688,7 @@ def tournament_players(request, tournament_id):
     return render(request, 'tournaments/tournament_players.html', context)
 
 
-@permission_required('tournament.add_seeder_bias')
+@permission_required('tournament.add_seederbias')
 def seeder_bias(request, tournament_id):
     """Display or add SeederBias objects for the Tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
