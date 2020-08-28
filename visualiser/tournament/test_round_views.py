@@ -968,3 +968,7 @@ class RoundViewTests(TestCase):
     def test_board_call(self):
         response = self.client.get(reverse('board_call', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 200)
+
+    def test_board_call_csv(self):
+        response = self.client.get(reverse('board_call_csv', args=(self.t4.pk, 1)))
+        self.assertEqual(response.status_code, 200)
