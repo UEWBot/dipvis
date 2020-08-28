@@ -490,13 +490,13 @@ def player_prefs(request, tournament_id, uuid):
                         form.add_error(None, e)
                         if created:
                             i.delete()
-                    return render(request,
-                                  'tournaments/player_entry.html',
-                                  {'tournament': t,
-                                   'uuid': uuid,
-                                   'prefs_list': tp.preference_set.all(),
-                                   'formset': formset,
-                                   'form': prefs_form})
+                        return render(request,
+                                      'tournaments/player_entry.html',
+                                      {'tournament': t,
+                                       'uuid': uuid,
+                                       'prefs_list': tp.preference_set.all(),
+                                       'formset': formset,
+                                       'form': prefs_form})
                 else:
                     RoundPlayer.objects.filter(player=tp.player,
                                                the_round=r).delete()

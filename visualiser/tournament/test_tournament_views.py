@@ -220,8 +220,9 @@ class TournamentViewTests(TestCase):
                                   started_at=cls.r41.start,
                                   the_set=GameSet.objects.first(),
                                   is_finished=True)
-        tp = TournamentPlayer.objects.create(player=cls.p1,
-                                             tournament=cls.t4)
+        cls.tp41 = TournamentPlayer.objects.create(player=cls.p1,
+                                                   tournament=cls.t4,
+                                                   uuid_str=str(uuid.uuid4()))
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p4,
@@ -651,12 +652,18 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('player_prefs', args=(self.t1.pk, uuid.uuid4())))
         self.assertEqual(response.status_code, 404)
 
+    def test_player_prefs_archived(self):
+        # Should get a 404 error if the Tournament has been achived
+        response = self.client.get(reverse('player_prefs', args=(self.t4.pk, self.tp41.uuid_str)))
+        self.assertEqual(response.status_code, 404)
+
     def test_player_prefs_too_late(self):
         # Should get a 404 error if the final round has started
         response = self.client.get(reverse('player_prefs', args=(self.t5.pk, self.tp51.uuid_str)))
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_post(self):
+        self.assertFalse(self.tp11.preference_set.exists())
         url = reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str))
         data = urlencode({'form-TOTAL_FORMS': '1',
                           'form-MAX_NUM_FORMS': '1000',
@@ -672,6 +679,30 @@ class TournamentViewTests(TestCase):
         self.assertEqual(self.tp11.prefs_string(), 'FART')
         # Clean up
         self.tp11.preference_set.all().delete()
+
+    def test_player_prefs_check_in(self):
+        self.assertFalse(self.tp11.roundplayers().exists())
+        # Enable self-check-in for round 1
+        r = self.t1.round_numbered(1)
+        r.enable_check_in = True
+        r.save()
+        url = reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str))
+        data = urlencode({'form-TOTAL_FORMS': '1',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': '1',
+                          'form-0-playing': 'on'})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, url)
+        # ... and the player should be checking in for the first round
+        self.assertEqual(self.tp11.roundplayers().count(), 1)
+        # Clean up
+        self.tp11.roundplayers().delete()
+        r.enable_check_in = False
+        r.save()
 
     def test_tournament_players(self):
         response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
