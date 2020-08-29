@@ -145,15 +145,15 @@ def roll_call(request, tournament_id, round_num=None):
             # Extract the round number from the field name
             i = int(r_name[6:])
             # Find that Round
-            r = t.round_numbered(i)
-            if (value is True) and not r.enable_check_in:
+            rd = t.round_numbered(i)
+            if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
-                if not r.email_sent:
+                if not rd.email_sent:
                     for tp in t.tournamentplayer_set.all():
                         send_roll_call_email(tp, i)
-                    r.email_sent = True
-            r.enable_check_in = value
-            r.save()
+                    rd.email_sent = True
+            rd.enable_check_in = value
+            rd.save()
 
         for form in formset:
             try:
