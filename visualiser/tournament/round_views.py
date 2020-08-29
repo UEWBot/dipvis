@@ -426,7 +426,7 @@ def seed_games(request, tournament_id, round_num):
         # Check for a multiple of seven players,
         # allowing for players sitting out or playing multiple games
         player_count = r.roundplayer_set.aggregate(Sum('game_count'))['game_count__sum']
-        if (player_count % 7) != 0:
+        if (player_count is None) or (player_count % 7) != 0:
             # We need players to sit out or play multiple games
             return HttpResponseRedirect(reverse('get_seven',
                                                 args=(tournament_id,
