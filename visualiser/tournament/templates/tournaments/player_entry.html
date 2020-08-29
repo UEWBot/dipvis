@@ -5,7 +5,7 @@
 {% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Data Entry" %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Data Entry" %}</h1>
+<h1>{% blocktrans with tournament=tournament %} {{tournament}} Player Data Entry {% endblocktrans %}</h1>
 {% if t.powers_assigned_from_prefs %}
   <h2>{% trans "Current Preferences" %}</h2>
 
@@ -79,3 +79,4 @@
 </form>
 
 {% endblock %}
+{% block footer %}{% endblock %}

@@ -45,6 +45,10 @@ class SelfCheckInForm(forms.Form):
         label = _('Round %(number)d') % {'number': self.round.number()}
         if self.round.is_finished():
             label += _(' (Finished)')
+        elif not self.round.enable_check_in:
+            label += _(' (Self-check-in not yet allowed)')
+        elif self.round.game_set.exists():
+            label += _(' (Self-check-in closed)')
         self.fields['playing'].label = label
         # Set read-only if it's too late or if self-check-in isn't enabled
         readonly = (not self.round.enable_check_in) or self.round.game_set.exists()
