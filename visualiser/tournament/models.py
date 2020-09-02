@@ -844,6 +844,7 @@ class Round(models.Model):
 
     class Meta:
         ordering = ['start']
+        unique_together = ('tournament', 'start')
 
     def game_scoring_system_obj(self):
         """

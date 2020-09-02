@@ -16,6 +16,7 @@
 
 from django.core.exceptions import ValidationError
 from django.db.models import Sum
+from django.db.utils import IntegrityError
 from django.test import TestCase, tag, override_settings
 from django.utils import timezone
 
@@ -488,7 +489,7 @@ class TournamentModelTests(TestCase):
         r2 = Round.objects.create(tournament=t,
                                   scoring_system=s,
                                   dias=False,
-                                  start=t.start_date)
+                                  start=t.start_date + HOURS_8)
         # Two finished Games
         g1 = Game.objects.create(name='g1',
                                  started_at=r1.start,
@@ -1202,6 +1203,34 @@ class TournamentModelTests(TestCase):
         # TODO Validate result
         str(p)
         tp.preference_set.all().delete()
+
+    # Round uniqueness
+    def test_two_rounds_same_start(self):
+        # New Tournament just for this test
+        s = G_SCORING_SYSTEMS[0].name
+        now = timezone.now()
+        t = Tournament.objects.create(name='Round Scoring Test',
+                                      start_date=now,
+                                      end_date=now,
+                                      round_scoring_system=R_SCORING_SYSTEMS[2].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=Tournament.SECRET)
+        # Check that we got the right scoring system
+        self.assertIn("once", t.round_scoring_system)
+        # Two Rounds
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=t.start_date)
+        self.assertRaises(IntegrityError,
+                          Round.objects.create,
+                          tournament=t,
+                          scoring_system=s,
+                          dias=False,
+                          start=t.start_date)
+        # Clean up
+        # For some reason, this gives an error
+        #t.delete()
 
     # Round.scores()
     def test_round_scores_invalid(self):

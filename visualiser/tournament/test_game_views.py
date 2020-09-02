@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
@@ -27,6 +28,8 @@ from tournament.models import Tournament, Round, Game
 from tournament.models import SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
+
+HOURS_8 = timedelta(hours=8)
 
 class RoundViewTests(TestCase):
     fixtures = ['game_sets.json']
@@ -73,7 +76,7 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=cls.t1.start_date)
+                                 start=cls.t1.start_date + HOURS_8)
         cls.g2 = Game.objects.create(name='Game2',
                                      started_at=r.start,
                                      the_round=r,
@@ -100,7 +103,7 @@ class RoundViewTests(TestCase):
         r = Round.objects.create(tournament=cls.t2,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=False,
-                                 start=cls.t2.start_date)
+                                 start=cls.t2.start_date + HOURS_8)
         cls.g4 = Game.objects.create(name='Game4',
                                      started_at=r.start,
                                      the_round=r,
