@@ -452,7 +452,7 @@ def self_check_in_control(request, tournament_id):
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
                 if not rd.email_sent:
-                    send_roll_call_emails(list(t.tournamentplayer_set.all()), i)
+                    send_roll_call_emails(i, list(t.tournamentplayer_set.all()))
                     rd.email_sent = True
             rd.enable_check_in = value
             rd.save()
