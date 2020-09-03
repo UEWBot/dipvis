@@ -31,7 +31,7 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from tournament.email import send_prefs_email
-from tournament.email import send_roll_call_email
+from tournament.email import send_roll_call_emails
 
 from tournament.forms import BaseCheckInFormset
 from tournament.forms import BasePlayerRoundScoreFormset
@@ -452,8 +452,7 @@ def self_check_in_control(request, tournament_id):
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
                 if not rd.email_sent:
-                    for tp in t.tournamentplayer_set.all():
-                        send_roll_call_email(tp, i)
+                    send_roll_call_emails(list(t.tournamentplayer_set.all()), i)
                     rd.email_sent = True
             rd.enable_check_in = value
             rd.save()

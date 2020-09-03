@@ -21,7 +21,8 @@ from django.test import TestCase, override_settings
 from django.utils import timezone
 
 from tournament.diplomacy import GreatPower, GameSet
-from tournament.email import send_board_call, send_prefs_email, send_roll_call_email
+from tournament.email import send_board_call, send_prefs_email
+from tournament.email import send_roll_call_emails
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer
@@ -394,13 +395,13 @@ class EmailTests(TestCase):
         send_prefs_email(tp, force=True)
         self.assertEqual(len(mail.outbox), 1)
 
-    # send_roll_call_email()
-    def test_send_roll_call_email_no_address(self):
+    # send_roll_call_emails()
+    def test_send_roll_call_emails_no_address(self):
         tp = self.t1.tournamentplayer_set.filter(player__email='').first()
-        send_roll_call_email(tp, 1)
+        send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 0)
 
-    def test_send_roll_call_email(self):
+    def test_send_roll_call_emails(self):
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
-        send_roll_call_email(tp, 1)
+        send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 1)

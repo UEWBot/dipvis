@@ -117,23 +117,32 @@ You're receiving this because you are registered for the %(tourney)s Diplomacy t
 The tournament allows you to check yourself in for a round, and players can now check in for round %(round)d.
 To check in, go to the following web page:
 %(url)s
-Note 1: this address is unique to you - don't share it with anyone!
+Note: this address is unique to you - don't share it with anyone!
 """
 
-def send_roll_call_email(tournamentplayer, round_num):
+def send_roll_call_emails(round_num, tournamentplayer_list):
     """
-    Email the URL to self-check-in to the TournamentPlayer.
+    Email the URL to self-check-in to the list of TournamentPlayers.
     """
-    t = tournamentplayer.tournament
-    addr = tournamentplayer.player.email
-    # Can't do anything unless we have an email address for the player
-    if not addr:
-        return
-    # Create the email and send it
-    msg_body = ROLL_CALL_EMAIL % {'tourney': t,
-                                  'url': tournamentplayer.get_prefs_url(),
-                                  'round' : round_num}
-    send_mail('Self-check-in now available for round %d of %s' % (round_num, t),
-              msg_body,
-              settings.EMAIL_HOST_USER,
-              [addr])
+    messages = []
+    for tp in tournamentplayer_list:
+        # TODO we could hoist some of this outside the loop if
+        #      we assume that the list of TPs are all for the same Tournament
+        t = tp.tournament
+        subject = 'Self-check-in now available for round %d of %s' % (round_num, t)
+        addr = tp.player.email
+        # Can't do anything unless we have an email address for the player
+        if not addr:
+            return
+        # Create the email and add it to the list
+        msg_body = ROLL_CALL_EMAIL % {'tourney': t,
+                                      'url': tp.get_prefs_url(),
+                                      'round' : round_num}
+        email = EmailMessage(subject=subject,
+                             body=msg_body,
+                             from_email=settings.EMAIL_HOST_USER,
+                             to=[addr])
+        messages.append(email)
+    # Send them all
+    if messages:
+        mail.get_connection().send_messages(messages)
