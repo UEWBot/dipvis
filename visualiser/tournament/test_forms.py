@@ -35,6 +35,7 @@ from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersForm
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
 from tournament.forms import SCCountForm, BaseSCCountFormset, GameEndedForm
+from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
 from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
 from tournament.forms import SeederBiasForm
@@ -291,14 +292,14 @@ class GamePlayersFormTest(TestCase):
         # The keys should be the RoundPlayer pks
         self.assertEqual(the_choices[1][0], self.rp1.pk)
         # and the values should be the Player names, in alphabetical order
-        self.assertEqual(the_choices[1][1], str(self.rp1.player))
-        self.assertEqual(the_choices[2][1], str(self.rp2.player))
-        self.assertEqual(the_choices[3][1], str(self.rp3.player))
-        self.assertEqual(the_choices[4][1], str(self.rp4.player))
-        self.assertEqual(the_choices[5][1], str(self.rp5.player))
-        self.assertEqual(the_choices[6][1], str(self.rp6.player))
-        self.assertEqual(the_choices[7][1], str(self.rp7.player))
-        self.assertEqual(the_choices[8][1], str(self.rp8.player))
+        self.assertEqual(the_choices[1][1], self.rp1.player.sortable_str())
+        self.assertEqual(the_choices[2][1], self.rp2.player.sortable_str())
+        self.assertEqual(the_choices[3][1], self.rp3.player.sortable_str())
+        self.assertEqual(the_choices[4][1], self.rp4.player.sortable_str())
+        self.assertEqual(the_choices[5][1], self.rp5.player.sortable_str())
+        self.assertEqual(the_choices[6][1], self.rp6.player.sortable_str())
+        self.assertEqual(the_choices[7][1], self.rp7.player.sortable_str())
+        self.assertEqual(the_choices[8][1], self.rp8.player.sortable_str())
 
     def test_success(self):
         data = {'name': 'R1G1',
@@ -913,16 +914,16 @@ class GetSevenPlayersFormTest(TestCase):
                 # The keys should be the RoundPlayer pks
                 self.assertEqual(the_choices[1][0], self.rp1_1.pk)
                 # and the values should be the Player names, in alphabetical order
-                self.assertEqual(the_choices[1][1], str(self.rp1_1.player))
-                self.assertEqual(the_choices[2][1], str(self.rp1_2.player))
-                self.assertEqual(the_choices[3][1], str(self.rp1_3.player))
-                self.assertEqual(the_choices[4][1], str(self.rp1_4.player))
-                self.assertEqual(the_choices[5][1], str(self.rp1_5.player))
-                self.assertEqual(the_choices[6][1], str(self.rp1_6.player))
-                self.assertEqual(the_choices[7][1], str(self.rp1_7.player))
-                self.assertEqual(the_choices[8][1], str(self.rp1_8.player))
-                self.assertEqual(the_choices[9][1], str(self.rp1_9.player))
-                self.assertEqual(the_choices[10][1], str(self.rp1_10.player))
+                self.assertEqual(the_choices[1][1], self.rp1_1.player.sortable_str())
+                self.assertEqual(the_choices[2][1], self.rp1_2.player.sortable_str())
+                self.assertEqual(the_choices[3][1], self.rp1_3.player.sortable_str())
+                self.assertEqual(the_choices[4][1], self.rp1_4.player.sortable_str())
+                self.assertEqual(the_choices[5][1], self.rp1_5.player.sortable_str())
+                self.assertEqual(the_choices[6][1], self.rp1_6.player.sortable_str())
+                self.assertEqual(the_choices[7][1], self.rp1_7.player.sortable_str())
+                self.assertEqual(the_choices[8][1], self.rp1_8.player.sortable_str())
+                self.assertEqual(the_choices[9][1], self.rp1_9.player.sortable_str())
+                self.assertEqual(the_choices[10][1], self.rp1_10.player.sortable_str())
 
     def test_sitters_fields(self):
         # We should have 3 fields for players sitting out
@@ -1462,6 +1463,26 @@ class BaseSCCountFormsetTest(TestCase):
         self.assertIn('Neutrals increase', formset.non_form_errors()[0])
 
 
+class PlayerFormTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+
+    def test_player_labels(self):
+        # Check the player names
+        form = PlayerForm()
+        the_choices = list(form.fields['player'].choices)
+        # We should have one per Player, plus the initial empty choice
+        self.assertEqual(len(the_choices), Player.objects.count() + 1)
+        # The keys should be the Player pks
+        self.assertEqual(the_choices[1][0], self.p1.pk)
+        # and the values should be the Player names, in alphabetical order
+        self.assertEqual(the_choices[1][1], self.p1.sortable_str())
+        self.assertEqual(the_choices[2][1], self.p2.sortable_str())
+
+
 class PlayerRoundFormTest(TestCase):
 
     @classmethod
@@ -1474,6 +1495,7 @@ class PlayerRoundFormTest(TestCase):
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=Tournament.SECRET)
 
+        cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
 
     def test_form_needs_first_round_num(self):
@@ -1515,6 +1537,20 @@ class PlayerRoundFormTest(TestCase):
         self.assertTrue(form.fields['round_1'].disabled)
         self.assertFalse(form.fields['round_2'].disabled)
         self.assertFalse(form.fields['round_3'].disabled)
+
+    def test_player_labels(self):
+        # Check the player names
+        form = PlayerRoundForm(first_round_num=1,
+                               last_round_num=3,
+                               this_round_num=2)
+        the_choices = list(form.fields['player'].choices)
+        # We should have one per Player, plus the initial empty choice
+        self.assertEqual(len(the_choices), Player.objects.count() + 1)
+        # The keys should be the Player pks
+        self.assertEqual(the_choices[1][0], self.p1.pk)
+        # and the values should be the Player names, in alphabetical order
+        self.assertEqual(the_choices[1][1], self.p1.sortable_str())
+        self.assertEqual(the_choices[2][1], self.p2.sortable_str())
 
 
 class BasePlayerRoundFormsetTest(TestCase):
@@ -1868,5 +1904,5 @@ class SeederBiasFormTest(TestCase):
             self.assertEqual(the_choices[1][0], self.tp2.pk)
             self.assertEqual(the_choices[2][0], self.tp1.pk)
             # and the values should be the Player names, in alphabetical order
-            self.assertEqual(the_choices[1][1], str(self.tp2.player))
-            self.assertEqual(the_choices[2][1], str(self.tp1.player))
+            self.assertEqual(the_choices[1][1], self.tp2.player.sortable_str())
+            self.assertEqual(the_choices[2][1], self.tp1.player.sortable_str())

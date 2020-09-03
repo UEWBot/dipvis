@@ -414,6 +414,9 @@ class Player(models.Model):
     def __str__(self):
         return u'%s %s' % (self.first_name, self.last_name)
 
+    def sortable_str(self):
+        return u'%s, %s' % (self.last_name, self.first_name)
+
     def save(self, *args, **kwargs):
         # Re-cache WDD Name in case WDD id has changed
         self._wdd_name = ''

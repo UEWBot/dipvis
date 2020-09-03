@@ -176,7 +176,7 @@ class GameScoreForm(forms.Form):
 class RoundPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a RoundPlayer"""
     def label_from_instance(self, obj):
-        return obj.player.__str__()
+        return obj.player.sortable_str()
 
 
 class GamePlayersForm(forms.Form):
@@ -599,16 +599,22 @@ class EnableCheckInForm(forms.Form):
                 self.fields[name].disabled = True
 
 
+class PlayerChoiceField(forms.ModelChoiceField):
+    """Field to pick a Player"""
+    def label_from_instance(self, obj):
+        return obj.sortable_str()
+
+
 class PlayerForm(forms.Form):
     """Form to pick a Player"""
-    player = forms.ModelChoiceField(queryset=Player.objects.all())
+    player = PlayerChoiceField(queryset=Player.objects.all())
 
 
 class PlayerRoundForm(forms.Form):
     """Form to specify which rounds a player played in"""
     # We want all Players to be available to be chosen,
     # as this provides an easy way to add TournamentPlayers
-    player = forms.ModelChoiceField(queryset=Player.objects.all())
+    player = PlayerChoiceField(queryset=Player.objects.all())
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
@@ -676,7 +682,7 @@ class BasePlayerRoundFormset(BaseFormSet):
 class TournamentPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a TournamentPlayer"""
     def label_from_instance(self, obj):
-        return obj.player.__str__()
+        return obj.player.sortable_str()
 
 
 class PlayerRoundScoreForm(forms.Form):
