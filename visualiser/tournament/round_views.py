@@ -149,8 +149,7 @@ def roll_call(request, tournament_id, round_num=None):
                               'tournaments/roll_call.html',
                               {'tournament': t,
                                'post_url': request.path_info,
-                               'formset': formset,
-                               'form': form})
+                               'formset': formset})
             i.discord_username = p.discord_username
             i.save()
             for r_name, value in form.cleaned_data.items():
@@ -177,8 +176,7 @@ def roll_call(request, tournament_id, round_num=None):
                                       'tournaments/roll_call.html',
                                       {'tournament': t,
                                        'post_url': request.path_info,
-                                       'formset': formset,
-                                       'form': form})
+                                       'formset': formset})
                 else:
                     # delete any corresponding RoundPlayer
                     # This could be a player who was previously checked-off in error
