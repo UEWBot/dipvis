@@ -122,6 +122,8 @@ tournament_patterns = [
     url(r'^best_countries_refresh/$', tournament_views.tournament_best_countries,
         {'refresh': True}, name='tournament_best_countries_refresh'),
     url(r'^enter_scores/$', tournament_views.round_scores, name='enter_scores'),
+    url(r'^self_check_in/$', tournament_views.self_check_in_control,
+        name='self_check_in_control'),
     url(r'^roll_call/$', round_views.roll_call, name='roll_call'),
     url(r'^current_round/$', tournament_views.tournament_round, name='tournament_round'),
     # TODO Why does this one calls into game_views ?

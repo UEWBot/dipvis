@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Self-Check-In Control{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Self-Check-In Control" %}</h1>
+
+<form method="post" action={{ post_url }}>
+  <h2>{% trans "Enable self-check-in" %}</h2>
+  <p>{% trans "To allow players to check themselves in for a round, check the box for the round below. This will send all registered players an email with the URL of a page where they can check themselves in for the round." %}</p>
+  <p>{% trans "You should only enable self-check-ins for a round shortly before the round is due to start, to avoid players checking themselves in but then not actually playing." %}</p>
+  {% csrf_token %}
+  <table>
+    {{ form }}
+  </table>
+  <input type="submit" value={% trans "Submit" %} />
+</form>
+{% endblock %}

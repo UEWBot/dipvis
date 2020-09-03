@@ -8,14 +8,6 @@
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Roll Call" %}</h1>
 
 <form method="post" action={{ post_url }}>
-    <h2>{% trans "Enable self-check-in" %}</h2>
-    <p>{% trans "To allow players to check themselves in for a round, check the box for the round below. This will send all registered players an email with the URL of a page where they can check themselves in for the round." %}</p>
-    <p>{% trans "You should only enable self-check-ins for a round shortly before the round is due to start, to avoid players checking themselves in but then not actually playing." %}</p>
-    <p>{% trans "The Submit button below applies to the whole page." %}</p>
-    <table>
-      {{ form.as_table }}
-    </table>
-
     <h2>{% trans "Players checked in" %}</h2>
     <p>{% trans "If a player doesn't appear in the dropdown, you'll first have to add them to the database, which you can do from" %} <a href="{% url 'admin:tournament_player_add' %}">{% trans "this page" %}</a>.</p>
     {% include "formset_table.html" %}

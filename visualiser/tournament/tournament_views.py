@@ -31,10 +31,12 @@ from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from tournament.email import send_prefs_email
+from tournament.email import send_roll_call_email
 
 from tournament.forms import BaseCheckInFormset
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
+from tournament.forms import EnableCheckInForm
 from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
@@ -428,6 +430,42 @@ def round_scores(request, tournament_id):
                   'tournaments/enter_scores.html',
                   {'tournament': t,
                    'formset': formset})
+
+
+@permission_required('tournament.change_round')
+def self_check_in_control(request, tournament_id):
+    """Provide a form to control self-check-in for each round"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    round_set = t.round_set.all()
+    enable_data = {}
+    for r in round_set.all():
+        enable_data['round_%d' % r.number()] = r.enable_check_in
+    form = EnableCheckInForm(request.POST or None,
+                             tournament=t,
+                             initial=enable_data)
+    if form.is_valid():
+        for r_name, value in form.cleaned_data.items():
+            # Extract the round number from the field name
+            i = int(r_name[6:])
+            # Find that Round
+            rd = t.round_numbered(i)
+            if (value is True) and not rd.enable_check_in:
+                # send emails if not already sent
+                if not rd.email_sent:
+                    for tp in t.tournamentplayer_set.all():
+                        send_roll_call_email(tp, i)
+                    rd.email_sent = True
+            rd.enable_check_in = value
+            rd.save()
+        # Redirect to the roll call page
+        return HttpResponseRedirect(reverse('roll_call',
+                                            args=(tournament_id, )))
+
+    return render(request,
+                  'tournaments/self_check_in_control.html',
+                  {'tournament': t,
+                   'post_url': request.path_info,
+                   'form': form})
 
 
 # Note: No permission_required decorator
