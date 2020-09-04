@@ -672,9 +672,8 @@ class TournamentViewTests(TestCase):
         response = self.client.post(url,
                                     data,
                                     content_type='application/x-www-form-urlencoded')
-        # It should redirect back to the same page
+        # It should redirect
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, url)
         # ... and the preferences should have been set
         self.assertEqual(self.tp11.prefs_string(), 'FART')
         # Clean up
@@ -694,10 +693,9 @@ class TournamentViewTests(TestCase):
         response = self.client.post(url,
                                     data,
                                     content_type='application/x-www-form-urlencoded')
-        # It should redirect back to the same page
+        # It should redirect
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, url)
-        # ... and the player should be checking in for the first round
+        # ... and the player should be checked in for the first round
         self.assertEqual(self.tp11.roundplayers().count(), 1)
         # Clean up
         self.tp11.roundplayers().delete()

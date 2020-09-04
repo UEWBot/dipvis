@@ -469,7 +469,7 @@ def self_check_in_control(request, tournament_id):
 
 # Note: No permission_required decorator
 # because this one should be available to any who have the URL
-def player_prefs(request, tournament_id, uuid):
+def player_prefs(request, tournament_id, uuid, confirm=False):
     """
     Display the current preferences for a single TournamentPlayer,
     and give them the ability to change them.
@@ -491,6 +491,12 @@ def player_prefs(request, tournament_id, uuid):
         tp = t.tournamentplayer_set.get(uuid_str=uuid)
     except TournamentPlayer.DoesNotExist:
         raise Http404
+
+    # Do we just want the confirmation page?
+    if confirm:
+        return render(request,
+                      'tournaments/player_conf.html',
+                      {'tp': tp})
 
     SelfCheckInFormset = formset_factory(SelfCheckInForm,
                                          extra=0,
@@ -540,7 +546,7 @@ def player_prefs(request, tournament_id, uuid):
 
 
         # Redirect back here to flush the POST data
-        return HttpResponseRedirect(reverse('player_prefs',
+        return HttpResponseRedirect(reverse('player_prefs_confirm',
                                             args=(tournament_id, uuid)))
 
     return render(request,
