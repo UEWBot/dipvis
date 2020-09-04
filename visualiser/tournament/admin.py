@@ -38,6 +38,10 @@ class GameSetAdmin(admin.ModelAdmin):
     """Include SetPower as part of GameSet"""
     inlines = [SetPowerInline]
 
+class RoundAdmin(admin.ModelAdmin):
+    list_filter = ('tournament',)
+    ordering = ['tournament__name', 'start']
+
 class RoundInline(admin.StackedInline):
     model = Round
     extra = 4
@@ -155,6 +159,7 @@ admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
 admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
 admin.site.register(PlayerAward, PlayerAwardAdmin)
 admin.site.register(PlayerRanking, PlayerRankingAdmin)
+admin.site.register(Round, RoundAdmin)
 admin.site.register(RoundPlayer, RoundPlayerAdmin)
 admin.site.register(GamePlayer, GamePlayerAdmin)
 admin.site.register(SeederBias, SeederBiasAdmin)
