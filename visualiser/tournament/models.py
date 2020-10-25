@@ -668,7 +668,9 @@ class TournamentPlayer(models.Model):
                                    verbose_name=_('Ineligible for awards'),
                                    help_text=_('Set this to ignore this player when determining rankings'))
     uuid_str = models.CharField(max_length=36, blank=True)
-    discord_username = models.CharField(max_length=40, blank=True)
+    backstabbr_username = models.CharField(max_length=40,
+                                           blank=True,
+                                           help_text=_('Username on the backstabbr website'))
 
     class Meta:
         ordering = ['player']

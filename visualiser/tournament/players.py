@@ -399,7 +399,9 @@ class Player(models.Model):
                                                 verbose_name=_(u'WDD player id'),
                                                 blank=True,
                                                 null=True)
-    discord_username = models.CharField(max_length=40, blank=True)
+    backstabbr_username = models.CharField(max_length=40,
+                                           blank=True,
+                                           help_text=_('Username on the backstabbr website'))
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
     # Cache of the player's name in the WDD
     _wdd_name = models.CharField(max_length=60, blank=True)
