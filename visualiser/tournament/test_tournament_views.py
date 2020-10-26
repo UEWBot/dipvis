@@ -679,29 +679,6 @@ class TournamentViewTests(TestCase):
         # Clean up
         self.tp11.preference_set.all().delete()
 
-    def test_player_prefs_check_in(self):
-        self.assertFalse(self.tp11.roundplayers().exists())
-        # Enable self-check-in for round 1
-        r = self.t1.round_numbered(1)
-        r.enable_check_in = True
-        r.save()
-        url = reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str))
-        data = urlencode({'form-TOTAL_FORMS': '1',
-                          'form-MAX_NUM_FORMS': '1000',
-                          'form-INITIAL_FORMS': '1',
-                          'form-0-playing': 'on'})
-        response = self.client.post(url,
-                                    data,
-                                    content_type='application/x-www-form-urlencoded')
-        # It should redirect
-        self.assertEqual(response.status_code, 302)
-        # ... and the player should be checked in for the first round
-        self.assertEqual(self.tp11.roundplayers().count(), 1)
-        # Clean up
-        self.tp11.roundplayers().delete()
-        r.enable_check_in = False
-        r.save()
-
     def test_tournament_players(self):
         response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)

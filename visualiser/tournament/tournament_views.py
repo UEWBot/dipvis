@@ -469,12 +469,10 @@ def self_check_in_control(request, tournament_id):
 
 # Note: No permission_required decorator
 # because this one should be available to any who have the URL
-def player_prefs(request, tournament_id, uuid, confirm=False):
+def player_prefs(request, tournament_id, uuid):
     """
     Display the current preferences for a single TournamentPlayer,
     and give them the ability to change them.
-    Also display checked-in state for each Round, and allow the player to
-    check in for a Round that hasn't yet got Games, if self-check-in is enabled.
     TournamentPlayer is (indirectly) identified by the uuid string.
     """
     # Allow access regardless of published state
@@ -492,23 +490,6 @@ def player_prefs(request, tournament_id, uuid, confirm=False):
     except TournamentPlayer.DoesNotExist:
         raise Http404
 
-    # Do we just want the confirmation page?
-    if confirm:
-        return render(request,
-                      'tournaments/player_conf.html',
-                      {'tp': tp})
-
-    SelfCheckInFormset = formset_factory(SelfCheckInForm,
-                                         extra=0,
-                                         formset=BaseCheckInFormset)
-    data = []
-    for r in tp.tournament.round_set.all():
-        rp_exists = r.roundplayer_set.filter(player=tp.player).exists()
-        data.append({'playing': rp_exists})
-    formset = SelfCheckInFormset(request.POST or None,
-                                 tp=tp,
-                                 initial=data)
-
     prefs_form = PrefsForm(request.POST or None,
                            tp=tp)
 
@@ -517,36 +498,8 @@ def player_prefs(request, tournament_id, uuid, confirm=False):
         # Set preferences for this TournamentPlayer
         tp.create_preferences_from_string(ps)
 
-    if formset.is_valid():
-        for form in formset:
-            if form.has_changed():
-                r = form.round
-                playing = form.cleaned_data['playing']
-                # Create or destroy the RoundPlayer as appropriate
-                if playing:
-                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
-                                                                   the_round=r)
-                    # TODO Should we set game_count to 1 here?
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        form.add_error(None, e)
-                        if created:
-                            i.delete()
-                        return render(request,
-                                      'tournaments/player_entry.html',
-                                      {'tournament': t,
-                                       'uuid': uuid,
-                                       'prefs_list': tp.preference_set.all(),
-                                       'formset': formset,
-                                       'form': prefs_form})
-                else:
-                    RoundPlayer.objects.filter(player=tp.player,
-                                               the_round=r).delete()
-
-
         # Redirect back here to flush the POST data
-        return HttpResponseRedirect(reverse('player_prefs_confirm',
+        return HttpResponseRedirect(reverse('player_prefs',
                                             args=(tournament_id, uuid)))
 
     return render(request,
@@ -554,7 +507,6 @@ def player_prefs(request, tournament_id, uuid, confirm=False):
                   {'tournament': t,
                    'uuid': uuid,
                    'prefs_list': tp.preference_set.all(),
-                   'formset': formset,
                    'form': prefs_form})
 
 

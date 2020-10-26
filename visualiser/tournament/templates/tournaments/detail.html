@@ -51,9 +51,6 @@
     {% if perms.tournament.add_seederbias %}
       <li><a href="{% url 'seeder_bias' tournament.id %}">{% trans "Add bias to the game seeder" %}</a> - {% trans "Use this if you have people playing in the tournament you want to keep apart (e.g. family members)." %}</li>
     {% endif %}
-    {% if perms.tournament.change_round %}
-      <li><a href="{% url 'self_check_in_control' tournament.id %}">{% trans "Self-Check-In Control" %}</a> - {% trans "Use this to allow players to check themselves in for each round." %}</li>
-    {% endif %}
     {% if perms.tournament.add_roundplayer %}
       <li><a href="{% url 'roll_call' tournament.id %}">{% trans "Roll Call" %}</a> - {% trans "Use this to specify which of the players at the tournament are actually playing in each round." %}</li>
     {% endif %}

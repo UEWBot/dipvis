@@ -147,8 +147,6 @@ tournament_patterns = [
     url(r'^seeder_bias/$', tournament_views.seeder_bias, name='seeder_bias'),
     url(r'^player_prefs/(?P<uuid>[^/]+)/$', tournament_views.player_prefs,
         name='player_prefs'),
-    url(r'^player_prefs_confirm/(?P<uuid>[^/]+)/$', tournament_views.player_prefs,
-        {'confirm': True}, name='player_prefs_confirm'),
     url(r'^players/$', tournament_views.tournament_players,
         name='tournament_players'),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
