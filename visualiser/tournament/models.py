@@ -1003,7 +1003,7 @@ class Game(models.Model):
             pos = ranks[gp.player][0]
             position_to_gps.setdefault(pos, []).append(gp)
         # Starting from the lowest rank, work through the whole list
-        for pos in sorted(position_to_gps.keys()):
+        for pos in sorted(position_to_gps.keys(), reverse=True):
             # At each rank, order players randomly
             random.shuffle(position_to_gps[pos])
             for gp in position_to_gps[pos]:

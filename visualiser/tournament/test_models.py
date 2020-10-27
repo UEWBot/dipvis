@@ -1583,30 +1583,47 @@ class TournamentModelTests(TestCase):
         # Now add preferences for some players
         p = Preference(player=tp1, power=self.austria, ranking=1)
         p.save()
-        p = Preference(player=tp2, power=self.germany, ranking=1)
-        p.save()
-        p = Preference(player=tp2, power=self.turkey, ranking=2)
+        p = Preference(player=tp1, power=self.italy, ranking=2)
         p.save()
         p = Preference(player=tp3, power=self.austria, ranking=1)
         p.save()
-        p = Preference(player=tp3, power=self.france, ranking=2)
+        p = Preference(player=tp3, power=self.italy, ranking=2)
+        p.save()
+        p = Preference(player=tp4, power=self.austria, ranking=1)
+        p.save()
+        p = Preference(player=tp4, power=self.england, ranking=2)
+        p.save()
+        p = Preference(player=tp4, power=self.france, ranking=3)
+        p.save()
+        p = Preference(player=tp4, power=self.germany, ranking=4)
+        p.save()
+        p = Preference(player=tp5, power=self.england, ranking=1)
+        p.save()
+        p = Preference(player=tp5, power=self.france, ranking=2)
+        p.save()
+        p = Preference(player=tp6, power=self.england, ranking=1)
+        p.save()
+        p = Preference(player=tp6, power=self.france, ranking=2)
+        p.save()
+        p = Preference(player=tp7, power=self.austria, ranking=1)
         p.save()
         g2.assign_powers_from_prefs()
         # We need to retrieve the GamePlayers from the database to see the updates
         # No powers taken - get first preference
-        gp = GamePlayer.objects.get(game=g2, player=self.p1)
+        gp = GamePlayer.objects.get(game=g2, player=self.p7)
         self.assertEqual(gp.power, self.austria)
-        # First preference still available, should get it
-        gp = GamePlayer.objects.get(game=g2, player=self.p2)
+        # Players 5 and 6 are tied, with the same prefs. 1 gets E, the other F
+        gp = GamePlayer.objects.get(game=g2, player=self.p6)
+        self.assertIn(gp.power, [self.england, self.france])
+        gp = GamePlayer.objects.get(game=g2, player=self.p5)
+        self.assertIn(gp.power, [self.england, self.france])
+        # First three preferences gone, but fourth available, should get that
+        gp = GamePlayer.objects.get(game=g2, player=self.p4)
         self.assertEqual(gp.power, self.germany)
         # First preference gone, but second available, should get that
         gp = GamePlayer.objects.get(game=g2, player=self.p3)
-        self.assertEqual(gp.power, self.france)
-        # All preferences gone, should get a random available power
-        for p in [self.p4, self.p5, self.p6, self.p7]:
-            with self.subTest(player=p):
-                gp = GamePlayer.objects.get(game=g2, player=p)
-                self.assertIn(gp.power, [self.england, self.italy, self.russia, self.turkey])
+        self.assertEqual(gp.power, self.italy)
+        # Others have no preferences, and all prefs gone
         # Note that this will also delete all GamePlayers for that Game
         g2.delete()
         g1.delete()
