@@ -603,3 +603,80 @@ class GameScoringTests(TestCase):
                 else:
                     self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
+
+    def test_g_scoring_world_classic_no_solo1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 0:
+                    self.assertEqual(s, 3)
+                elif sc.count == 8:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48/2)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+
+    def test_g_scoring_world_classic_no_solo2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1905)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 0:
+                    self.assertEqual(s, 3)
+                elif sc.count == 13:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+
+    def test_g_scoring_world_classic_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1906)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 0:
+                    if sc.power == self.austria:
+                        self.assertEqual(s, 3)
+                    else:
+                        self.assertEqual(s, 5)
+                elif sc.count == 17:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+
+    def test_g_scoring_world_classic_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1907)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 18:
+                    self.assertEqual(s, 420)
+                else:
+                    if sc.power == self.austria:
+                        self.assertEqual(s, 3)
+                    elif sc.power == self.france:
+                        self.assertEqual(s, 5)
+                    elif sc.power == self.italy:
+                        self.assertEqual(s, 5)
+                    else:
+                        self.assertEqual(s, 6)
+

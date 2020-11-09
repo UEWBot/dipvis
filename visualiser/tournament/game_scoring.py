@@ -386,6 +386,50 @@ class GScoringTribute(GameScoringSystem):
         return retval
 
 
+class GScoringWorldClassic(GameScoringSystem):
+    """
+    Solo gets 420. Others get 0.
+    Otherwise 10 points per SC, 30 for surviving to the end/draw, 48 pool for board topping.
+    1 point for year survived if eliminated by a non-solo.
+    """
+    def __init__(self):
+        self.name = _('World Classic')
+
+    def scores(self, centre_counts):
+        retval = {}
+        final_scs = _final_year_scs(centre_counts)
+        survivors = final_scs.filter(count__gt=0).count()
+        survival_points = 60 / survivors
+        leader_scs = final_scs[0].count
+        leaders = final_scs.filter(count=leader_scs).count()
+        soloed = leader_scs >= WINNING_SCS
+        if soloed:
+            solo_year = final_scs[0].year
+        for sc in final_scs:
+            # 1 point per year survived if eliminated, regardless of the game result
+            if sc.count == 0:
+                year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
+                retval[sc.power] = year - 1901
+                continue
+            # Scoring a soloed game is different
+            if soloed:
+                if sc.count == leader_scs:
+                    retval[sc.power] = 420
+                else:
+                    # Everyone else does still get survival points up to the solo year
+                    retval[sc.power] = solo_year - 1901
+                continue
+            # 10 points per SC
+            retval[sc.power] = 10 * sc.count
+            # 30 for surviving
+            if sc.count:
+                retval[sc.power] += 30
+            # 48 split between board toppers
+            if sc.count == leader_scs:
+                retval[sc.power] += 48 / leaders
+        return retval
+
+
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringSolos(),
@@ -397,4 +441,5 @@ G_SCORING_SYSTEMS = [
     GScoringCarnage(_('Carnage with elimination order'), False),
     GScoringJanus(),
     GScoringTribute(),
+    GScoringWorldClassic(),
 ]
