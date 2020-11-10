@@ -43,8 +43,9 @@ def send_board_call(the_round):
         for gp in g.gameplayer_set.order_by('power'):
             game_text += '%(power)s: %(player)s' % {'power': gp.power or 'Power TBD',
                                                     'player': gp.player}
-            if the_round.tournament.is_virtual():
-                game_text += ' %(backstabbr)s\n' % {'backstabbr': ' (%s)' % gp.tournamentplayer().backstabbr_username or ''}
+            bs_un = gp.tournamentplayer().backstabbr_username
+            if the_round.tournament.is_virtual() and bs_un:
+                game_text += ' (%(backstabbr)s)\n' % {'backstabbr': bs_un}
             else:
                 game_text += '\n'
             if gp.player.email:
