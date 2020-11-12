@@ -22,8 +22,9 @@
 This module provides utility functions for DipVis.
 """
 
-from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer, Preference, Round, RoundPlayer, SeederBias, SupplyCentreOwnership, Tournament, TournamentPlayer
-from tournament.models import SPRING
+from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
+from tournament.models import Preference, Round, RoundPlayer, SeederBias
+from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 
 
 def clean_duplicate_player(del_player, keep_player):
@@ -188,9 +189,9 @@ def clone_tournament(t):
     for sb in SeederBias.objects.filter(player1__tournament=t):
         p1 = TournamentPlayer.objects.get(tournament=new_t, player=sb.player1.player)
         p2 = TournamentPlayer.objects.get(tournament=new_t, player=sb.player2.player)
-        new_sb = SeederBias.objects.create(player1=p1,
-                                           player2=p2,
-                                           weight=sb.weight)
+        SeederBias.objects.create(player1=p1,
+                                  player2=p2,
+                                  weight=sb.weight)
 
     return new_t
 

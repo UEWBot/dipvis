@@ -41,7 +41,7 @@ from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.diplomacy import validate_ranking, validate_preference_string
 from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.players import Player, add_player_bg, position_str
+from tournament.players import Player, add_player_bg
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
 from tournament.players import validate_wdd_tournament_id
 

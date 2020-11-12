@@ -28,7 +28,7 @@ from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player
 
 from tournament.news import _tournament_news, _round_leader_str, _round_news, _game_news
-from tournament.news import MASK_ALL_NEWS, news
+from tournament.news import MASK_ALL_NEWS
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)

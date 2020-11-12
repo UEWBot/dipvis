@@ -33,7 +33,6 @@ from django.utils.translation import ugettext as _
 from tournament.email import send_prefs_email
 from tournament.email import send_roll_call_emails
 
-from tournament.forms import BaseCheckInFormset
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
 from tournament.forms import EnableCheckInForm
@@ -41,7 +40,6 @@ from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
-from tournament.forms import SelfCheckInForm
 
 from tournament.diplomacy import GameSet
 from tournament.models import Tournament, Game, SeederBias

@@ -67,7 +67,7 @@ class BaseCheckInFormset(BaseFormSet):
         if 'initial' not in kwargs.keys():
             initial = []
             for r in self.rounds:
-                initial.append({'playing': r.roundplayer_set.filter(player=tp.player).exists()})
+                initial.append({'playing': r.roundplayer_set.filter(player=self.tp.player).exists()})
             kwargs['initial'] = initial
         super().__init__(*args, **kwargs)
 

@@ -1218,10 +1218,10 @@ class TournamentModelTests(TestCase):
         # Check that we got the right scoring system
         self.assertIn("once", t.round_scoring_system)
         # Two Rounds
-        r1 = Round.objects.create(tournament=t,
-                                  scoring_system=s,
-                                  dias=False,
-                                  start=t.start_date)
+        Round.objects.create(tournament=t,
+                             scoring_system=s,
+                             dias=False,
+                             start=t.start_date)
         self.assertRaises(IntegrityError,
                           Round.objects.create,
                           tournament=t,

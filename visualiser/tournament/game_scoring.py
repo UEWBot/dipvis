@@ -398,8 +398,6 @@ class GScoringWorldClassic(GameScoringSystem):
     def scores(self, centre_counts):
         retval = {}
         final_scs = _final_year_scs(centre_counts)
-        survivors = final_scs.filter(count__gt=0).count()
-        survival_points = 60 / survivors
         leader_scs = final_scs[0].count
         leaders = final_scs.filter(count=leader_scs).count()
         soloed = leader_scs >= WINNING_SCS
