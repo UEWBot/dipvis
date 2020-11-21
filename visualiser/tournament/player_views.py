@@ -18,12 +18,19 @@
 Player Views for the Diplomacy Tournament Visualiser.
 """
 
+import csv
+from io import StringIO
+
+from django.contrib import messages
+from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.views import generic
 
-from tournament.players import Player, add_player_bg
+from tournament.players import Player, add_player_bg, validate_wdd_player_id
 
 # Player views
 
@@ -49,3 +56,105 @@ def player_detail(request, pk):
     return render(request,
                   'players/detail.html',
                   {'player': player})
+
+
+@permission_required('tournament.add_player')
+def upload_players(request):
+    """Upload a CSV file to add Players"""
+    if request.method == 'GET':
+        return render(request,
+                      'players/upload_players.html')
+
+    count = 0
+    try:
+        csv_file = request.FILES['csv_file']
+        if csv_file.multiple_chunks():
+            messages.error(request,
+                           'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
+            return HttpResponseRedirect(reverse('upload_players'))
+        # TODO How do I know what charset to use?
+        fp = StringIO(csv_file.read().decode('utf8'))
+        reader = csv.DictReader(fp)
+        for row in reader:
+            try:
+                first_name = row['First Name']
+            except KeyError:
+                messages.error(request, 'Failed to find column First Name')
+                return HttpResponseRedirect(reverse('upload_players'))
+
+            try:
+                last_name = row['Last Name']
+            except KeyError:
+                messages.error(request, 'Failed to find column Last Name')
+                return HttpResponseRedirect(reverse('upload_players'))
+
+            # All the other columns are optional
+            try:
+                email = row['Email Address']
+            except KeyError:
+                email = ''
+            else:
+                if len(email) > 0:
+                    try:
+                        validate_email(email)
+                    except ValidationError:
+                        messages.warning(request, 'Email address for %s %s is invalid - ignored' % (first_name, last_name))
+                        email = ''
+
+            try:
+                bs_un = row['Backstabbr Username']
+            except KeyError:
+                bs_un = None
+
+            # Accept either WDD Id or WDD URL
+            # If we have a valid WDD Id, ignore WDD URL
+            try:
+                wdd_id = row['WDD Id']
+            except KeyError:
+                wdd_id = None
+            else:
+                try:
+                    wdd_id = int(wdd_id)
+                except ValueError:
+                    if len(wdd_id):
+                        messages.warning(request, 'WDD Id for %s %s is invalid - ignored' % (first_name, last_name))
+                    wdd_id = None
+                else:
+                    try:
+                        validate_wdd_player_id(wdd_id)
+                    except ValidationError:
+                        messages.warning(request, 'WDD Id for %s %s is invalid - ignored' % (first_name, last_name))
+                        wdd_id = None
+
+            if wdd_id is None:
+                try:
+                    wdd_url = row['WDD URL']
+                except KeyError:
+                    wdd_url = None
+                else:
+                    if len(wdd_url) > 0:
+                        wdd_id = int(wdd_url.rpartition('id_player=')[-1])
+                        try:
+                            validate_wdd_player_id(wdd_id)
+                        except ValidationError:
+                            messages.warning(request, 'WDD URL for %s %s is invalid - ignored' % (first_name, last_name))
+                            wdd_id = None
+
+            # Add the Player
+            p, created = Player.objects.get_or_create(first_name=first_name,
+                                                      last_name=last_name,
+                                                      defaults={'email': email,
+                                                                'backstabbr_username': bs_un,
+                                                                'wdd_player_id': wdd_id})
+            if created:
+                messages.info(request, 'Player %s %s added' % (first_name, last_name))
+                count += 1
+            else:
+                messages.error(request, 'Player %s %s already exists - skipped' % (first_name, last_name))
+
+    except Exception as e:
+        messages.error(request, 'Unable to upload file: ' + repr(e))
+
+    messages.success(request, 'Added %d player(s)' % count)
+
+    return HttpResponseRedirect(reverse('upload_players'))

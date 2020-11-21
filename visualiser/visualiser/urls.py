@@ -21,6 +21,15 @@ from tournament import player_views
 
 admin.autodiscover()
 
+player_patterns = [
+    url(r'^$', player_views.PlayerIndexView.as_view(),
+        name='player_index'),
+    url(r'^(?P<pk>\d+)/$', player_views.player_detail,
+        name='player_detail'),
+    url(r'^upload_players/$', player_views.upload_players,
+        name='upload_players'),
+]
+
 urlpatterns = [
     # Examples:
     # url(r'^$', 'visualiser.views.home', name='home'),
@@ -29,8 +38,5 @@ urlpatterns = [
     url(r'^tournaments/', include('tournament.urls')),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^admin/', admin.site.urls),
-    url(r'^players/$', player_views.PlayerIndexView.as_view(),
-        name='player_index'),
-    url(r'^players/(?P<pk>\d+)/$', player_views.player_detail,
-        name='player_detail'),
+    url(r'^players/', include(player_patterns)),
 ]

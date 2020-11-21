@@ -32,4 +32,14 @@
     {% endif %}
   </span>
 </div>
+
+{% if user.is_active %}
+  {% if perms.tournament.add_player %}
+    <ul>
+      <li><a href="{% url 'admin:tournament_player_add' %}">{% trans "Add a single player" %}</a></li>
+      <li><a href="{% url 'upload_players' %}">{% trans "Upload CSV file of players" %}</a></li>
+    </ul>
+  {% endif %}
+{% endif %}
+
 {% endblock %}

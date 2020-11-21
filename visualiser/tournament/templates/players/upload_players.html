@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "DipTV - Upload Players CSV" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Upload Players CSV" %}</h1>
+
+<p>{% trans "Mandatory columns:" %}</p>
+<ul>
+  <li>First Name</li>
+  <li>Last Name</li>
+</ul>
+<p>{% trans "Optional columns:" %}</p>
+<ul>
+  <li>Email Address</li>
+  <li>Backstabbr Username</li>
+  <li>WDD URL</li>
+  <li>WDD Id</li>
+</ul>
+
+<form action="{% url 'upload_players' %}" method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+    <tr><th><label for="csv_file">{% trans "File:" %}</label></th>
+    <td><input type="file" name="csv_file" id="csv_file" required="True" size="50"></td></tr>
+    <div>
+         <button class="btn btn-primary">{% trans "Upload" %}</button>
+    </div>
+</form>
+{% endblock %}
