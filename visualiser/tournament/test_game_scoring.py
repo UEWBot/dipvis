@@ -697,7 +697,7 @@ class GameScoringTests(TestCase):
                 elif sc.count == 8:
                     self.assertAlmostEqual(s, 100 * 112 / 458)
                 else:
-                    self.assertAlmostEqual(s, 0.6)
+                    self.assertAlmostEqual(s, 0.3)
 
     def test_g_scoring_manorcon_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -720,7 +720,7 @@ class GameScoringTests(TestCase):
                 elif sc.count == 13:
                     self.assertAlmostEqual(s, 100 * 237 / 512)
                 else:
-                    self.assertAlmostEqual(s, 0.6)
+                    self.assertAlmostEqual(s, 0.3)
 
     def test_g_scoring_manorcon_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -740,11 +740,11 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 373 / 636)
                 else:
                     if sc.power == self.austria:
-                        self.assertAlmostEqual(s, 0.6)
+                        self.assertAlmostEqual(s, 0.3)
                     elif sc.power == self.france:
-                        self.assertAlmostEqual(s, 1.0)
+                        self.assertAlmostEqual(s, 0.5)
                     elif sc.power == self.italy:
-                        self.assertAlmostEqual(s, 1.0)
+                        self.assertAlmostEqual(s, 0.5)
 
     def test_g_scoring_manorcon_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -760,11 +760,11 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 75)
                 else:
                     if sc.power == self.austria:
-                        self.assertAlmostEqual(s, 0.6)
+                        self.assertAlmostEqual(s, 0.3)
                     elif sc.power == self.france:
-                        self.assertAlmostEqual(s, 1.0)
+                        self.assertAlmostEqual(s, 0.5)
                     elif sc.power == self.italy:
-                        self.assertAlmostEqual(s, 1.0)
+                        self.assertAlmostEqual(s, 0.5)
                     else:
-                        self.assertAlmostEqual(s, 1.2)
+                        self.assertAlmostEqual(s, 0.6)
 

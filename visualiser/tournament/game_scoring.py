@@ -430,9 +430,9 @@ class GScoringWorldClassic(GameScoringSystem):
 
 class GScoringManorCon(GameScoringSystem):
     """
-    Solo gets 75. Others get 0.1 per season they survived.
+    Solo gets 75. Others get 0.1 per year they survived.
     Otherwise calculate N = S^2 + 4*S + 16 for each power, where S is their centre-count (including N=16 for dead powers).
-    Then each surviving power scored 100 * N/(sum of all Ns), and each dead power still scores 0.1 per season they survived.
+    Then each surviving power scored 100 * N/(sum of all Ns), and each dead power still scores 0.1 per year they survived.
     """
     def __init__(self):
         self.name = _('ManorCon')
@@ -458,14 +458,14 @@ class GScoringManorCon(GameScoringSystem):
                         year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
                     else:
                         year = solo_year
-                    retval[sc.power] = 0.2 * (year - 1901)
+                    retval[sc.power] = 0.1 * (year - 1901)
             else:
                 # 0.1 point per season survived if eliminated, regardless of the game result
                 if sc.count == 0:
                     year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
                     n = 16
                     # retval gets the actual score
-                    retval[sc.power] = 0.2 * (year - 1901)
+                    retval[sc.power] = 0.1 * (year - 1901)
                 else:
                     # Calculate N for the power
                     n = sc.count * sc.count + 4 * sc.count + 16
