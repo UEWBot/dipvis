@@ -428,6 +428,58 @@ class GScoringWorldClassic(GameScoringSystem):
         return retval
 
 
+class GScoringManorCon(GameScoringSystem):
+    """
+    Solo gets 75. Others get 0.1 per season they survived.
+    Otherwise calculate N = S^2 + 4*S + 16 for each power, where S is their centre-count (including N=16 for dead powers).
+    Then each surviving power scored 100 * N/(sum of all Ns), and each dead power still scores 0.1 per season they survived.
+    """
+    def __init__(self):
+        self.name = _('ManorCon')
+
+    def scores(self, centre_counts):
+        retval = {}
+        final_scs = _final_year_scs(centre_counts)
+        leader_scs = final_scs[0].count
+        leaders = final_scs.filter(count=leader_scs).count()
+        soloed = leader_scs >= WINNING_SCS
+        if soloed:
+            solo_year = final_scs[0].year
+        sum_of_n = 0.0
+        for sc in final_scs:
+            # Scoring a soloed game is different
+            if soloed:
+                # In this case, "sum of N" is irrelevant, so retval is the actual score
+                if sc.count == leader_scs:
+                    retval[sc.power] = 75
+                # Everyone else does still get survival points up to the solo year or their elimination year
+                else:
+                    if sc.count == 0:
+                        year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
+                    else:
+                        year = solo_year
+                    retval[sc.power] = 0.2 * (year - 1901)
+            else:
+                # 0.1 point per season survived if eliminated, regardless of the game result
+                if sc.count == 0:
+                    year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
+                    n = 16
+                    # retval gets the actual score
+                    retval[sc.power] = 0.2 * (year - 1901)
+                else:
+                    # Calculate N for the power
+                    n = sc.count * sc.count + 4 * sc.count + 16
+                    # Retval gets N, which still needs to be divided
+                    retval[sc.power] = n
+                # And add N for this power to the total
+                sum_of_n += n
+        if not soloed:
+            for sc in final_scs:
+                if sc.count > 0:
+                    retval[sc.power] *= 100/sum_of_n
+        return retval
+
+
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringSolos(),
@@ -440,4 +492,5 @@ G_SCORING_SYSTEMS = [
     GScoringJanus(),
     GScoringTribute(),
     GScoringWorldClassic(),
+    GScoringManorCon(),
 ]

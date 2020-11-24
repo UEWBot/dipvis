@@ -680,3 +680,91 @@ class GameScoringTests(TestCase):
                     else:
                         self.assertEqual(s, 6)
 
+    def test_g_scoring_manorcon_no_solo1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1904)
+        system = find_game_scoring_system('ManorCon')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 4:
+                    self.assertAlmostEqual(s, 100 * 48 / 458)
+                elif sc.count == 5:
+                    self.assertAlmostEqual(s, 100 * 61 / 458)
+                elif sc.count == 8:
+                    self.assertAlmostEqual(s, 100 * 112 / 458)
+                else:
+                    self.assertAlmostEqual(s, 0.6)
+
+    def test_g_scoring_manorcon_no_solo2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1905)
+        system = find_game_scoring_system('ManorCon')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 3:
+                    self.assertAlmostEqual(s, 100 * 37 / 512)
+                elif sc.count == 4:
+                    self.assertAlmostEqual(s, 100 * 48 / 512)
+                elif sc.count == 5:
+                    self.assertAlmostEqual(s, 100 * 61 / 512)
+                elif sc.count == 6:
+                    self.assertAlmostEqual(s, 100 * 76 / 512)
+                elif sc.count == 13:
+                    self.assertAlmostEqual(s, 100 * 237 / 512)
+                else:
+                    self.assertAlmostEqual(s, 0.6)
+
+    def test_g_scoring_manorcon_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1906)
+        system = find_game_scoring_system('ManorCon')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 5:
+                    self.assertAlmostEqual(s, 100 * 61 / 636)
+                elif sc.count == 7:
+                    self.assertAlmostEqual(s, 100 * 93 / 636)
+                elif sc.count == 17:
+                    self.assertAlmostEqual(s, 100 * 373 / 636)
+                else:
+                    if sc.power == self.austria:
+                        self.assertAlmostEqual(s, 0.6)
+                    elif sc.power == self.france:
+                        self.assertAlmostEqual(s, 1.0)
+                    elif sc.power == self.italy:
+                        self.assertAlmostEqual(s, 1.0)
+
+    def test_g_scoring_manorcon_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year=1907)
+        system = find_game_scoring_system('ManorCon')
+        scores = system.scores(scs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.get(power=p)
+                if sc.count == 18:
+                    self.assertEqual(s, 75)
+                else:
+                    if sc.power == self.austria:
+                        self.assertAlmostEqual(s, 0.6)
+                    elif sc.power == self.france:
+                        self.assertAlmostEqual(s, 1.0)
+                    elif sc.power == self.italy:
+                        self.assertAlmostEqual(s, 1.0)
+                    else:
+                        self.assertAlmostEqual(s, 1.2)
+
