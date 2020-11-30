@@ -8,7 +8,7 @@
 
 <p>{% trans "Start time:" %} {{ round.start }}</p>
 
-<p>{% trans "Scoring system:" %} {{ round.scoring_system }}</p>
+<p>{% trans "Scoring system:" %} <a href="{{ round.game_scoring_system_obj.get_absolute_url }}">{{ round.scoring_system }}</a></p>
 
 <p>{% if round.dias %}{% trans "All surviving players are included if a game ends in a draw." %}
    {% else %}{% trans "Surviving players may vote themselves out of draws." %}

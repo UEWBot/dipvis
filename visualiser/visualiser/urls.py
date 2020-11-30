@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2014, 2016-2017, 2019-2020 Chris Brand
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,8 +16,9 @@
 
 from django.conf.urls import url, include
 from django.contrib import admin
+from django.urls import path
 
-from tournament import player_views
+from tournament import game_scoring_system_views, player_views
 
 admin.autodiscover()
 
@@ -30,6 +31,13 @@ player_patterns = [
         name='upload_players'),
 ]
 
+game_scoring_patterns = [
+    path('', game_scoring_system_views.game_scoring_index,
+         name='game_scoring_index'),
+    path('<slug:slug>/', game_scoring_system_views.game_scoring_detail,
+         name='game_scoring_detail'),
+]
+
 urlpatterns = [
     # Examples:
     # url(r'^$', 'visualiser.views.home', name='home'),
@@ -39,4 +47,5 @@ urlpatterns = [
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^admin/', admin.site.urls),
     url(r'^players/', include(player_patterns)),
+    url(r'^game_scoring/', include(game_scoring_patterns)),
 ]

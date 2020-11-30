@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h1>{% trans "DipTV - Game Scoring Systems" %}</h1>
+{% if system_list %}
+<p>{% trans "Game Scoring Systems:" %}</p>
+    <ul>
+    {% for s in system_list %}
+        <li><a href="{{ s.get_absolute_url }}">{{ s }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>{% trans "No game scoring systems are available." %}</p>
+{% endif %}
+{% endblock %}

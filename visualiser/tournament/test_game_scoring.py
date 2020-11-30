@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2014, 2016-2020 Chris Brand
 # 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -113,6 +113,13 @@ class GameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
         CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+
+    # description
+    def test_description(self):
+        for system in G_SCORING_SYSTEMS:
+            with self.subTest(system=system.name):
+                desc = system.description
+                # TODO verify desc
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):

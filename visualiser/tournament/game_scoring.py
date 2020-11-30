@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2014, 2016-2020 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,8 @@ import operator
 
 from abc import ABC, abstractmethod
 
+from django.urls import reverse
+from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
@@ -59,6 +61,25 @@ class GameScoringSystem(ABC):
         Returns a dict, indexed by power id, of scores.
         """
         raise NotImplementedError
+
+    @property
+    def slug(self):
+        """Slug for the system"""
+        # In theory, two systems could have matching slugs, but the usage means that should never happen
+        return slugify(self.name)
+
+    @property
+    def description(self):
+        """Returns a string describing the scoring system"""
+        # By default, use the docstring for the class
+        return _(self.__doc__)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('game_scoring_detail', args=(self.slug,))
 
 
 class GScoringSolos(GameScoringSystem):
@@ -180,6 +201,26 @@ class GScoringCDiplo(GameScoringSystem):
         self.position_pts = [first_pts, second_pts, third_pts]
         self.loss_pts = loss_pts
 
+    @property
+    def description(self):
+        return _("""
+                 If there is a solo:
+                 - Soloers score %(soloer_pts)d.
+                 - Losers to a solo score %(loss_pts)d.
+                 Otherwise:
+                 - Participants get %(played_pts)d.
+                 - Everyone gets one point per centre owned.
+                 - Power with the most centres gets %(first_pts)d.
+                 - Power with the second most centres gets %(second_pts)d.
+                 - Power with the third most centres gets %(third_pts)d.
+                 - if powers are tied for rank, they split the points for their ranks.
+                 """) % {'soloer_pts': self.soloer_pts,
+                        'played_pts': self.played_pts,
+                        'first_pts': self.position_pts[0],
+                        'second_pts': self.position_pts[1],
+                        'third_pts': self.position_pts[2],
+                        'loss_pts': self.loss_pts}
+
     def scores(self, centre_counts):
         retval = {}
         final_scs = _final_year_scs(centre_counts)
@@ -208,15 +249,37 @@ class _DummySC(object):
 class GScoringCarnage(GameScoringSystem):
     """
     Position grants a set number of points (7000, 6000, 5000, 4000, 3000,
-    20000, or 1000), with ties splitting those points.
-    Eliminated powers just split position points.
+    2000, or 1000), with ties splitting those points.
     Each power gets 1 point per centre owned at the end, unless there's
     a solo, in which case the soloer gets the 34 SC points.
+    Eliminated powers either get position points based on when they were
+    eliminated or all split position points.
     """
     def __init__(self, name, dead_equal=True):
         self.name = name
         self.dead_equal = dead_equal
         self.position_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
+
+    @property
+    def description(self):
+        base = _("""
+                 Position grants a set number of points (%(pos_1)d, %(pos_2)d, %(pos_3)d, %(pos_4)d, %(pos_5)d,
+                 %(pos_6)d, or %(pos_7)d), with ties splitting those points.
+                 Each power gets 1 point per centre owned at the end, unless there's
+                 a solo, in which case the soloer gets the 34 SC points.
+                 """) % {'pos_1': self.position_pts[0],
+                         'pos_2': self.position_pts[1],
+                         'pos_3': self.position_pts[2],
+                         'pos_4': self.position_pts[3],
+                         'pos_5': self.position_pts[4],
+                         'pos_6': self.position_pts[5],
+                         'pos_7': self.position_pts[6],
+                         }
+        if self.dead_equal:
+            return base + 'Eliminated powers all split position points.'
+        else:
+            return base + 'Eliminated powers get position points based on when they were eliminated.'
+
 
     def scores(self, centre_counts):
         retval = {}
