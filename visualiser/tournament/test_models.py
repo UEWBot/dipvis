@@ -761,6 +761,9 @@ class TournamentModelTests(TestCase):
 
     def test_tournament_positions_and_scores_with_unranked(self):
         t = Tournament.objects.get(name='t1')
+        for r in t.round_set.all():
+            # Solo or bust gives everyone the same score (0)
+            self.assertEqual(r.scoring_system, 'Solo or bust')
         # Discard the round scores
         p_and_s = t.positions_and_scores()[0]
         # The unranked player should have a special position
