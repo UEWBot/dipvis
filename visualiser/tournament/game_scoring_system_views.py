@@ -30,9 +30,8 @@ from tournament.game_scoring import GameScoringSystem, G_SCORING_SYSTEMS
 
 def game_scoring_index(request):
     """GameScoringSystem index"""
-    system_list = G_SCORING_SYSTEMS
     # Sort by name
-    system_list.sort(key=operator.attrgetter('name'))
+    system_list = sorted(G_SCORING_SYSTEMS, key=operator.attrgetter('name'))
     return render(request,
                   'game_scoring_systems/index.html',
                   {'system_list': system_list})
