@@ -65,3 +65,5 @@ class TournamentViewTests(TestCase):
         # It should redirect back to the same URL
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, player_url)
+
+    # TODO test upload_players(), including fields with trailing spaces

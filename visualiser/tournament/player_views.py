@@ -77,20 +77,20 @@ def upload_players(request):
         reader = csv.DictReader(fp)
         for row in reader:
             try:
-                first_name = row['First Name']
+                first_name = row['First Name'].strip()
             except KeyError:
                 messages.error(request, 'Failed to find column First Name')
                 return HttpResponseRedirect(reverse('upload_players'))
 
             try:
-                last_name = row['Last Name']
+                last_name = row['Last Name'].strip()
             except KeyError:
                 messages.error(request, 'Failed to find column Last Name')
                 return HttpResponseRedirect(reverse('upload_players'))
 
             # All the other columns are optional
             try:
-                email = row['Email Address']
+                email = row['Email Address'].strip()
             except KeyError:
                 email = ''
             else:
@@ -102,14 +102,14 @@ def upload_players(request):
                         email = ''
 
             try:
-                bs_un = row['Backstabbr Username']
+                bs_un = row['Backstabbr Username'].strip()
             except KeyError:
                 bs_un = None
 
             # Accept either WDD Id or WDD URL
             # If we have a valid WDD Id, ignore WDD URL
             try:
-                wdd_id = row['WDD Id']
+                wdd_id = row['WDD Id'].strip()
             except KeyError:
                 wdd_id = None
             else:
@@ -128,7 +128,7 @@ def upload_players(request):
 
             if wdd_id is None:
                 try:
-                    wdd_url = row['WDD URL']
+                    wdd_url = row['WDD URL'].strip()
                 except KeyError:
                     wdd_url = None
                 else:
