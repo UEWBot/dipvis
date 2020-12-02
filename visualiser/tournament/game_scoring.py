@@ -259,15 +259,18 @@ class GScoringCarnage(GameScoringSystem):
         self.name = name
         self.dead_equal = dead_equal
         self.position_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
+        self.solo_pts = sum(self.position_pts) + TOTAL_SCS
 
     @property
     def description(self):
         base = _("""
-                 Position grants a set number of points (%(pos_1)d, %(pos_2)d, %(pos_3)d, %(pos_4)d, %(pos_5)d,
-                 %(pos_6)d, or %(pos_7)d), with ties splitting those points.
-                 Each power gets 1 point per centre owned at the end, unless there's
-                 a solo, in which case the soloer gets the 34 SC points.
-                 """) % {'pos_1': self.position_pts[0],
+                 If any power soloed, they get %(solo_pts)d points and all others get zero.
+                 Otherwise, all powers score 1 point per centre owned at the end plus
+                 points for their final position.
+                 Position points are %(pos_1)d, %(pos_2)d, %(pos_3)d, %(pos_4)d, %(pos_5)d,
+                 %(pos_6)d, or %(pos_7)d, with ties splitting those points.
+                 """) % {'solo_pts': self.solo_pts,
+                         'pos_1': self.position_pts[0],
                          'pos_2': self.position_pts[1],
                          'pos_3': self.position_pts[2],
                          'pos_4': self.position_pts[3],
@@ -287,7 +290,7 @@ class GScoringCarnage(GameScoringSystem):
 
         # Solos are special
         if final_scs[0].count >= WINNING_SCS:
-            retval[final_scs[0].power] = sum(self.position_pts) + TOTAL_SCS
+            retval[final_scs[0].power] = self.solo_pts
             for sc in final_scs[1:]:
                 retval[sc.power] = 0
             return retval
