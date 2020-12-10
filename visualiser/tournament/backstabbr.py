@@ -20,22 +20,26 @@ Scrape the interesting parts of a Diplomacy game on Backstabbr.com.
 import urllib.request
 from bs4 import BeautifulSoup
 
-BACKSTABBR_GAME_URL = 'http://www.backstabbr.com/game/'
+BACKSTABBR_GAME_URL = 'https://www.backstabbr.com/game/'
 
-def previous_season(year, season):
-    """
-    Returns the year and season before the one provided.
-    year should be an int.
-    season should be one of "spring", "fall", or "winter".
-    """
-    PREV = {'spring': 'winter',
-            'fall': 'spring',
-            'winter' : 'fall'}
-    prev_season = PREV[season]
-    if season == 'Spring':
-        return year - 1, prev_season
-    else:
-        return year, prev_season
+# Names used for the Great Powers on Backstabbr
+POWERS = ['Austria',
+          'England',
+          'France',
+          'Germany',
+          'Italy',
+          'Russia',
+          'Turkey']
+
+# Names used for the seasons on Backstabbr
+SPRING = 'spring'
+FALL = 'fall'
+WINTER = 'winter'
+
+class InvalidGameId(Exception):
+    """The id provided for the game is unused on Backstabbr."""
+    pass
+
 
 class Game():
 
@@ -52,13 +56,8 @@ class Game():
         self.ongoing = True
         self.soloing_power = None
         self.powers = {}
-        self.powers['Austria'] = (0, 'Unknown')
-        self.powers['England'] = (0, 'Unknown')
-        self.powers['France'] = (0, 'Unknown')
-        self.powers['Germany'] = (0, 'Unknown')
-        self.powers['Italy'] = (0, 'Unknown')
-        self.powers['Russia'] = (0, 'Unknown')
-        self.powers['Turkey'] = (0, 'Unknown')
+        for p in POWERS:
+            self.powers[p] = (0, 'Unknown')
         self._parse_page()
         self._calculate_result()
 
@@ -86,11 +85,14 @@ class Game():
         """
         self.url = '%s%d' % (BACKSTABBR_GAME_URL, self.number)
         page = urllib.request.urlopen(self.url)
+        if page.geturl() != self.url:
+            # We were redirected - implies invalid game number
+            raise InvalidGameId(self.number)
         soup = BeautifulSoup(page.read())
         # Extract the game name
-        m = soup.find('meta', property="og:description", content=True)
+        m = soup.find('meta', property="og:title", content=True)
         if m:
-            self.name = m["content"]
+            self.name = m["content"].partition('(')[0].strip()
         else:
             title = soup.find('title')
             self.name = title.string.partition('Game:')[2].partition('|  Backstabbr')[0].strip()
@@ -100,7 +102,8 @@ class Game():
                 if div.a:
                     # This gives us the "current season" i.e. the next season to be played
                     season_year = div.a.string.split()
-                    self.last_year, self.last_season = previous_season(int(season_year[1]), season_year[0])
+                    self.season = season_year[0]
+                    self.year = int(season_year[1])
         # Centre counts
         for span in soup.find_all('span'):
             if span.div:
@@ -130,49 +133,3 @@ class Game():
                         except AttributeError:
                             self.gm = None
                         self.ongoing = False
-
-    def as_dict(self):
-        """
-        Return a dict containing all the details of the game.
-        """
-        retval = {}
-        retval['name'] = self.name
-        retval['id'] = self.number
-        retval['url'] = self.url
-        retval['ongoing'] = self.ongoing
-        retval['result'] = self.result
-        retval['soloer'] = self.soloer
-        retval['soloing_power'] = self.soloing_power
-        retval['last season'] = self.last_season
-        retval['last year'] = self.last_year
-        retval['gm'] = self.gm
-        for k, v in self.powers.items():
-            retval['%s centres' % k] =  v[0]
-            retval['%s player' % k] =  v[1]
-        return retval
-
-def print_game(number):
-    """
-    Print the details of the Backstabbr game with the specified number.
-    """
-    g = Game(number)
-    print(g.as_dict())
-    print('Name: %s.' % g.name)
-    print('Ongoing: %s.' % g.ongoing)
-    print('Result: %s.' % g.result)
-    print('Winner: %s.' % g.soloer)
-    print('Winning Power: %s.' % g.soloing_power)
-    print('Last turn completed: %s %d.' % (g.last_season, g.last_year))
-    print('GM: %s.' % g.gm)
-    for k, v in g.powers.items():
-        print('Power: %s.' % k)
-        print('  Centre Count: %s.' % v[0])
-        print('  Player: %s.' % v[1])
-
-if __name__ == "__main__":
-    # Test with three known games
-    print_game(5127188186136576)
-    print_game(5128998112198656)
-    print_game(5169348121985024)
-    print_game(4728919006117888)
-    print_game(5689559237263360)
