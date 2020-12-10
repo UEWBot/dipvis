@@ -150,7 +150,37 @@ def upload_players(request):
                 messages.info(request, 'Player %s %s added' % (first_name, last_name))
                 count += 1
             else:
-                messages.error(request, 'Player %s %s already exists - skipped' % (first_name, last_name))
+                # Add missing info and flag mismatches
+                new_info = []
+                if len(email) > 0:
+                    if len(p.email) > 0:
+                        if p.email != email:
+                            messages.warning(request, 'Player %s %s already exists with a different email address' % (first_name, last_name))
+                    else:
+                        # Add the email address
+                        p.email = email
+                        new_info.append('email address')
+                if bs_un is not None and len(bs_un) > 0:
+                    if len(p.backstabbr_username) > 0:
+                        if p.backstabbr_username != bs_un:
+                            messages.warning(request, 'Player %s %s already exists with a different Backstabbr username' % (first_name, last_name))
+                    else:
+                        # Add the username
+                        p.backstabbr_username = bs_un
+                        new_info.append('Backstabbr username')
+                if wdd_id is not None:
+                    if p.wdd_player_id:
+                        if p.wdd_player_id != wdd_id:
+                            messages.warning(request, 'Player %s %s already exists with a different WDD Id' % (first_name, last_name))
+                    else:
+                        # Add the WDD id
+                        p.wdd_player_id = wdd_id
+                        new_info.append('WDD id')
+                if len(new_info):
+                    p.save()
+                    messages.info(request, 'Player %s %s already exists - added %s' % (first_name, last_name, ', '.join(new_info)))
+                else:
+                    messages.info(request, 'Player %s %s already exists - skipped' % (first_name, last_name))
 
     except Exception as e:
         messages.error(request, 'Unable to upload file: ' + repr(e))
