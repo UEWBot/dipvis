@@ -83,6 +83,8 @@ game_patterns = [
     url(r'^overview3/$', game_views.game_image,
         {'timelapse': True, 'redirect_url_name': 'game_overview'},
         name='game_overview_3'),
+    url(r'^scrape_backstabbr/$', game_views.scrape_backstabbr,
+        name='scrape_backstabbr'),
 ]
 
 tournament_patterns = [

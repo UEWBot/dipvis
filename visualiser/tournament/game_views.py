@@ -26,6 +26,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
+from tournament import backstabbr
+
 from tournament.forms import BaseSCCountFormset
 from tournament.forms import BaseSCOwnerFormset
 from tournament.forms import DrawForm
@@ -616,3 +618,56 @@ def add_game_image(request, tournament_id, game_name=''):
                   'games/add_image.html',
                   {'tournament': t,
                    'form': form})
+
+@permission_required('tournament.add_centrecount')
+def scrape_backstabbr(request, tournament_id, game_name):
+    """Import CentreCounts from backstabbr"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    # Do we have a backstabbr game?
+    if backstabbr.BACKSTABBR_GAME_URL not in g.notes:
+        raise Http404
+    # Extract the backstabbr game id
+    # Here we assume that it's "everything after the final /"
+    game_number = int(g.notes.split('/')[-1])
+    # Parse the current game page on Backstabbr
+    bg = backstabbr.Game(game_number)
+    # Figure out what year we have centre counts for
+    if bg.season == backstabbr.SPRING:
+        year = bg.year - 1
+    elif bg.season == backstabbr.FALL:
+        year = bg.year - 1
+    elif bg.season == backstabbr.WINTER:
+        year = bg.year
+    else:
+        raise Http404
+    # Add the appropriate CentreCounts
+    for k, v in bg.powers.items():
+        # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+        power = GreatPower.objects.get(abbreviation=k[0])
+        # Can't use get_or_create() here,
+        # because count has no default and may have changed
+        try:
+            i = CentreCount.objects.get(power=power,
+                                        game=g,
+                                        year=year)
+            # Ensure the count has the value we want
+            i.count = v[0]
+        except CentreCount.DoesNotExist:
+            i = CentreCount(power=power,
+                            game=g,
+                            year=year,
+                            count=v[0])
+        try:
+            i.full_clean()
+        except ValidationError as e:
+            raise Http404
+        i.save()
+    # TODO There's more information in bg - like whether the game is over...
+    # Report what was done
+    return render(request,
+                  'games/scrape_backstabbr.html',
+                  {'tournament': t,
+                   'game': g,
+                   'year': year,
+                   'centrecounts': g.centrecount_set.filter(year=year).order_by('power')})
