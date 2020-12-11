@@ -23,6 +23,16 @@ from django.core import mail
 from django.core.mail import send_mail, EmailMessage
 
 
+def _filter_recipients(recipients, tournament):
+    """
+    Remove any recipients we don't want to send email to from the list.
+    If tournament.no_email is set, this will remove anyone not in tournament.managers.
+    """
+    if not tournament.no_email:
+        return
+    managers = [m.player.email for m in tournament.manaer_set.all()]
+    recipients = [set(recipients) & set(managers)]
+
 def send_board_call(the_round):
     """Send an email to all players in the round with the board calls"""
     # TODO Translation is complex, because we don't want to use the language of the
@@ -50,6 +60,7 @@ def send_board_call(the_round):
                 game_text += '\n'
             if gp.player.email:
                 recipients.append(gp.player.email)
+        _filter_recipients(recipients, the_round.tournament)
         games.append((game_text, recipients))
     # Put together the common body of the message
     all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
@@ -100,6 +111,12 @@ def send_prefs_email(tournamentplayer, force=False):
     # Can't do anything unless we have an email address for the player
     if not addr:
         return
+    addr_list = [addr]
+    # Check whether the tournament should send email at all
+    # Still send if the recipient is a manager
+    _filter_recipients(addr_list, t)
+    if not(addr_list):
+        return
     # Don't send again, unless told to
     if tournamentplayer.uuid_str and not force:
         return
@@ -109,7 +126,7 @@ def send_prefs_email(tournamentplayer, force=False):
     send_mail('Specify power preferences for %s' % t,
               msg_body,
               settings.EMAIL_HOST_USER,
-              [addr])
+              addr_list)
 
 
 ROLL_CALL_EMAIL = """
@@ -139,10 +156,14 @@ def send_roll_call_emails(round_num, tournamentplayer_list):
         msg_body = ROLL_CALL_EMAIL % {'tourney': t,
                                       'url': tp.get_prefs_url(),
                                       'round' : round_num}
+        addr_list = [addr]
+        _filter_recipients(addr_list, t)
+        if not addr_list:
+            continue
         email = EmailMessage(subject=subject,
                              body=msg_body,
                              from_email=settings.EMAIL_HOST_USER,
-                             to=[addr])
+                             to=addr_list)
         messages.append(email)
     # Send them all
     if messages:

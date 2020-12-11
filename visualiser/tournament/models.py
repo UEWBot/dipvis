@@ -405,6 +405,8 @@ class Tournament(models.Model):
     format = models.CharField(max_length=1,
                               choices=FORMATS,
                               default=FTF)
+    no_email = models.BooleanField(default=False,
+                                   help_text=_('Check to only generate email to tournament managers'))
 
     class Meta:
         ordering = ['-start_date']

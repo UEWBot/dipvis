@@ -64,6 +64,7 @@ class TournamentAdmin(admin.ModelAdmin):
               ('seed_games', 'power_assignment'),
               ('draw_secrecy', 'best_country_criterion'),
               ('managers', 'is_published', 'editable'),
+              'no_email',
               'wdd_tournament_id')
 
 class TournamentPlayerAdmin(admin.ModelAdmin):
