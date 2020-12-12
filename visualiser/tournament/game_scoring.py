@@ -456,53 +456,6 @@ class GScoringSumOfSquares(GameScoringSystem):
         return retval
 
 
-class GScoringJanus(GameScoringSystem):
-    """
-    1 point per dot, board leader gets 6 more (split evenly if
-    there are multiple board leaders), survivors split 60 points
-    equally between them.
-    If there's a lone board leader, every other player loses
-    a number of their survival points to the leader equal to the
-    dot gap between first and second place.
-    With a solo, soloer gets 100, everyone else gets 0.
-    """
-    def __init__(self):
-        self.name = _('Janus')
-
-    def scores(self, state):
-        retval = {}
-        num_survivors = len(state.survivors())
-        survival_points = 60 / num_survivors
-        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        dots.sort(key = itemgetter(1), reverse=True)
-        leader_scs = dots[0][1]
-        second_scs = dots[1][1]
-        margin = leader_scs - second_scs
-        bonus_per_survivor = min(survival_points, margin)
-        num_leaders = len([c for (p, c) in dots if c == leader_scs])
-        soloer = state.soloer()
-        soloed = soloer is not None
-        for p, c in dots:
-            if soloed:
-                if p == soloer:
-                    retval[p] = 100
-                else:
-                    retval[p] = 0
-                continue
-            retval[p] = c
-            if c == leader_scs:
-                retval[p] += 6 / num_leaders
-            if c:
-                retval[p] += survival_points
-            # Is there a lone leader?
-            if margin:
-                if p == dots[0][0]:
-                    retval[p] += bonus_per_survivor * (num_survivors - 1)
-                elif c:
-                    retval[p] -= bonus_per_survivor
-        return retval
-
-
 class GScoringTribute(GameScoringSystem):
     """
     1 point per dot, survivors split 66 points
@@ -653,7 +606,6 @@ G_SCORING_SYSTEMS = [
     GScoringCarnage(_('Carnage with dead equal'), centre_based=False, dead_equal=True),
     GScoringCarnage(_('Carnage with elimination order'), centre_based=False, dead_equal=False),
     GScoringCarnage(_('Center-count Carnage'), centre_based=True, dead_equal=False),
-    GScoringJanus(),
     GScoringTribute(),
     GScoringWorldClassic(),
     GScoringManorCon(),
