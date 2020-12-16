@@ -341,6 +341,11 @@ def _seed_games_and_powers(tournament, the_round):
                                         players_doubling_up=two_gamers)
 
 
+def _generate_game_name(round_num, i):
+    """Generate a default name for Game n in round round_num"""
+    return 'R%sG%s' % (round_num, chr(ord('A') + i - 1))
+
+
 @permission_required('tournament.add_game')
 def seed_games(request, tournament_id, round_num):
     """Seed players to the games for a round"""
@@ -413,7 +418,7 @@ def seed_games(request, tournament_id, round_num):
             games = _seed_games_and_powers(t, r)
             # Add the Games and GamePlayers to the database
             for i, g in enumerate(games, start=1):
-                new_game = Game.objects.create(name='R%sG%d' % (round_num, i),
+                new_game = Game.objects.create(name=_generate_game_name(round_num, i),
                                                the_round=r,
                                                the_set=default_set)
                 current = {'name': new_game.name,
@@ -428,7 +433,7 @@ def seed_games(request, tournament_id, round_num):
             games = _seed_games(t, r)
             # Add the Games and GamePlayers to the database
             for i, g in enumerate(games, start=1):
-                new_game = Game.objects.create(name='R%sG%d' % (round_num, i),
+                new_game = Game.objects.create(name=_generate_game_name(round_num, i),
                                                the_round=r,
                                                the_set=default_set)
                 current = {'name': new_game.name,
