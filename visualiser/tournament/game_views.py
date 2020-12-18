@@ -299,11 +299,12 @@ def sc_counts(request, tournament_id, game_name):
     g = get_game_or_404(t, game_name)
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them two
-    years_to_go = 2
+    # TODO Fix this properly - we need to allow for "filling in the gaps"
+    years_to_go = 4
     last_year_played = g.final_year()
     final_year = g.the_round.final_year
-    if final_year:
-        years_to_go = final_year - last_year_played
+    #if final_year:
+    #    years_to_go = final_year - last_year_played
     SCCountFormset = formset_factory(SCCountForm,
                                      extra=years_to_go,
                                      formset=BaseSCCountFormset)
