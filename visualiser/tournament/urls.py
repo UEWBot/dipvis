@@ -61,7 +61,7 @@ game_patterns = [
         {'timelapse': True}, name='game_image_seq'),
     url(r'^add_position/$', game_views.add_game_image, name='add_game_image'),
     url(r'^news/$', game_views.game_news, name='game_news'),
-    url(r'^news/(?P<for_year>\d{4,})$', game_views.game_news,
+    url(r'^news/(?P<for_year>\d{4,})/$', game_views.game_news,
         name='game_news_for_year'),
     url(r'^news_ticker/$', game_views.game_news,
         {'as_ticker': True}, name='game_news_ticker'),
