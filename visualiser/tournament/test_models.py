@@ -76,6 +76,12 @@ class TournamentModelTests(TestCase):
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=Tournament.COUNTS)
+        t4 = Tournament.objects.create(name='t4',
+                                       start_date=timezone.now(),
+                                       end_date=timezone.now(),
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       power_assignment=Tournament.PREFERENCES)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -1144,7 +1150,77 @@ class TournamentModelTests(TestCase):
         # TODO Validate result
         str(tp)
 
-    # TODO TournamentPlayer.save()
+    # TournamentPlayer.save()
+    def test_new_tp_set_uuid(self):
+        # New TournamentPlayer for Player with email in Tournament with prefs should get uuid_str set
+        self.assertEqual(len(self.p1.email), 0)
+        self.p1.email = 'example@example.com'
+        self.p1.save()
+        t = Tournament.objects.get(name='t4')
+        self.assertEqual(t.powers_assigned_from_prefs(), True)
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1)
+        tp.save()
+        self.assertNotEqual(len(tp.uuid_str), 0)
+        # Clean up
+        tp.delete()
+        self.p1.email = ''
+        self.p1.save()
+
+    def test_new_tp_no_set_uuid(self):
+        # New TournamentPlayer in Tournament without prefs should not get uuid_str,
+        # even for Player with email
+        self.assertEqual(len(self.p1.email), 0)
+        self.p1.email = 'example@example.com'
+        self.p1.save()
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.powers_assigned_from_prefs(), False)
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1)
+        tp.save()
+        self.assertEqual(len(tp.uuid_str), 0)
+        # Clean up
+        tp.delete()
+        self.p1.email = ''
+        self.p1.save()
+
+    def test_new_tp_copy_bs_username(self):
+        # New TournamentPlayer should get backstabbr_username copied over from Player
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual(len(self.p1.backstabbr_username), 0)
+        self.p1.backstabbr_username = 'My_username'
+        self.p1.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1)
+        tp.save()
+        self.assertEqual(tp.backstabbr_username, self.p1.backstabbr_username)
+        tp.delete()
+        self.p1.backstabbr_username = ''
+        self.p1.save()
+
+    def test_save_tp_leave_bs_username(self):
+        # Existing TournamentPlayer should not get backstabbr_username changed
+        t = Tournament.objects.get(name='t1')
+        tp = t.tournamentplayer_set.get(player=self.p3)
+        self.assertEqual(len(self.p3.backstabbr_username), 0)
+        self.assertEqual(len(tp.backstabbr_username), 0)
+        # Add a backstabbr_username to the Player
+        self.p3.backstabbr_username = 'My_username'
+        self.p3.save()
+        # Save the TournamentPlayer
+        tp.save()
+        # TournamentPlayer backstabbr_username should remain the same
+        self.assertEqual(len(tp.backstabbr_username), 0)
+        # Clean up
+        self.p3.backstabbr_username = ''
+        self.p3.save()
+
+    # TODO New TournamentPlayer should be unranked if they're a manager
+    # TODO New TournamentPlayer should not be unranked if they're not a manager
+    # TODO Background objects should be generated for new TournamentPlayer
+    # TODO Background objects should not be generated for existing TournamentPlayer
+    # TODO Existing TournamentPlayer should not have unranked cleared when saved
+    # TODO Existing TournamentPlayer should not have unranked set when saved
 
     # validate_weight()
     def test_validate_weight_0(self):
