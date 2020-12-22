@@ -25,7 +25,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import ugettext as _
 
-from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
+from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 
 
 def _the_game(centre_counts):
@@ -473,7 +473,7 @@ class GScoringWorldClassic(GameScoringSystem):
             # 1 point per year survived if eliminated, regardless of the game result
             if sc.count == 0:
                 year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
-                retval[sc.power] = year - 1901
+                retval[sc.power] = year - FIRST_YEAR
                 continue
             # Scoring a soloed game is different
             if soloed:
@@ -481,7 +481,7 @@ class GScoringWorldClassic(GameScoringSystem):
                     retval[sc.power] = 420
                 else:
                     # Everyone else does still get survival points up to the solo year
-                    retval[sc.power] = solo_year - 1901
+                    retval[sc.power] = solo_year - FIRST_YEAR
                 continue
             # 10 points per SC
             retval[sc.power] = 10 * sc.count
@@ -524,14 +524,14 @@ class GScoringManorCon(GameScoringSystem):
                         year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
                     else:
                         year = solo_year
-                    retval[sc.power] = 0.1 * (year - 1901)
+                    retval[sc.power] = 0.1 * (year - FIRST_YEAR)
             else:
                 # 0.1 point per season survived if eliminated, regardless of the game result
                 if sc.count == 0:
                     year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
                     n = 16
                     # retval gets the actual score
-                    retval[sc.power] = 0.1 * (year - 1901)
+                    retval[sc.power] = 0.1 * (year - FIRST_YEAR)
                 else:
                     # Calculate N for the power
                     n = sc.count * sc.count + 4 * sc.count + 16
