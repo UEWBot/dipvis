@@ -198,11 +198,13 @@ def tournament_game_results(request,
                     # New line if they played multiple games in this round
                     if gs:
                         gs += '<br>'
+                    cc_set = g.centrecount_set.all()
+                    power_cc_set = cc_set.filter(power=gp.power)
                     # Final CentreCount for this player in this game
-                    final_sc = g.centrecount_set.filter(power=gp.power).order_by('-year').first()
+                    final_sc = power_cc_set.order_by('-year').first()
                     if final_sc.count == 0:
                         # We need to look back to find the first CentreCount with no dots
-                        final_sc = g.centrecount_set.filter(power=gp.power).filter(count=0).order_by('year').first()
+                        final_sc = power_cc_set.filter(count=0).order_by('year').first()
                         gs += _('Eliminated as %(power)s in %(year)d') % {'year': final_sc.year,
                                                                           'power': gp.power.name}
                     else:
@@ -211,7 +213,7 @@ def tournament_game_results(request,
                         else:
                             centre_str = _('centres')
                         # Final year of the game as a whole
-                        final_year = g.centrecount_set.order_by('-year').first().year
+                        final_year = cc_set.order_by('-year').first().year
                         # Was the game soloed ?
                         soloer = g.soloer()
                         if gp == soloer:
