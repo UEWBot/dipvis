@@ -18,6 +18,7 @@
 Game Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.db.models import Count
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
@@ -41,7 +42,7 @@ from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
 
 from tournament.diplomacy import GreatPower, SupplyCentre
-from tournament.diplomacy import TOTAL_SCS, WINNING_SCS
+from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 from tournament.models import Game, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING
@@ -199,26 +200,35 @@ def game_sc_chart(request,
     return render(request, 'games/sc_count.html', context)
 
 
+def _blank_row_num(game, queryset, final_year):
+    """Return the number of blank forms to provide"""
+    # If the round ends with a certain year, provide the right number of blank rows
+    # Otherwise, just give them four
+    years_to_go = 4
+    last_year_played = game.final_year()
+    if final_year:
+        # How many years do we have entered already?
+        years = queryset.aggregate(Count('year', distinct=True))['year__count']
+        # So how many years are missing?
+        years_to_go = 2 + final_year - FIRST_YEAR - years
+    return years_to_go
+
+
 @permission_required('tournament.add_centrecount')
 def sc_owners(request, tournament_id, game_name):
     """Provide a form to enter SC ownership for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    # If the round ends with a certain year, provide the right number of blank rows
-    # Otherwise, just give them four
-    years_to_go = 4
-    last_year_played = g.final_year()
+    sco_set = g.supplycentreownership_set.all()
     final_year = g.the_round.final_year
-    if final_year:
-        years_to_go = final_year - last_year_played
     SCOwnerFormset = formset_factory(SCOwnerForm,
-                                     extra=years_to_go,
+                                     extra=_blank_row_num(g, sco_set, final_year),
                                      formset=BaseSCOwnerFormset)
     # Put in all the existing SupplyCentreOwnerships for this game
     data = []
     for year in g.years_played():
         scs = {'year': year}
-        owners = g.supplycentreownership_set.filter(year=year)
+        owners = sco_set.filter(year=year)
         for o in owners:
             scs[o.sc.name] = o.owner
         data.append(scs)
@@ -297,23 +307,17 @@ def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    # If the round ends with a certain year, provide the right number of blank rows
-    # Otherwise, just give them two
-    # TODO Fix this properly - we need to allow for "filling in the gaps"
-    years_to_go = 4
-    last_year_played = g.final_year()
+    cc_set = g.centrecount_set.all()
     final_year = g.the_round.final_year
-    #if final_year:
-    #    years_to_go = final_year - last_year_played
     SCCountFormset = formset_factory(SCCountForm,
-                                     extra=years_to_go,
+                                     extra=_blank_row_num(g, cc_set, final_year),
                                      formset=BaseSCCountFormset)
     # Put in all the existing CentreCounts for this game
     data = []
     death_data = {}
     for year in g.years_played():
         scs = {'year': year}
-        counts = g.centrecount_set.filter(year=year)
+        counts = cc_set.filter(year=year)
         for c in counts:
             scs[c.power.name] = c.count
             if (c.count == 0) and (c.power.name not in death_data):
