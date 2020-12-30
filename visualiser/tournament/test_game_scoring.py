@@ -125,7 +125,7 @@ class GameScoringTests(TestCase):
     def test_g_scoring_solos_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -135,12 +135,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_solos_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 100)
             else:
@@ -150,7 +150,7 @@ class GameScoringTests(TestCase):
     def test_g_scoring_draws_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -164,7 +164,7 @@ class GameScoringTests(TestCase):
         DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
                                     power_1=self.austria, power_2=self.england, power_3=self.france,
                                     power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -178,7 +178,7 @@ class GameScoringTests(TestCase):
         DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
                                     power_1=self.austria, power_2=self.england, power_3=self.russia,
                                     power_4=self.germany)
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -194,7 +194,7 @@ class GameScoringTests(TestCase):
         """No draw, no solo, but with powers eliminated"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1905)
+        scs = g.centrecount_set.filter(year__lte=1905)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
@@ -208,12 +208,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_draws_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Draw size')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 100)
             else:
@@ -224,12 +224,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_cdiplo_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, 1 + 4)
@@ -241,12 +241,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_cdiplo_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('CDiplo 100')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 100)
             else:
@@ -256,12 +256,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_cdiplo80_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, 4)
@@ -273,12 +273,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_cdiplo80_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 80)
             else:
@@ -289,12 +289,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_squares_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, 100.0 * 16 / 148)
@@ -306,12 +306,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_squares_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Sum of Squares')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 100)
             else:
@@ -322,12 +322,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_carnage1_simple(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Carnage with dead equal')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
@@ -339,12 +339,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_carnage1_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Carnage with dead equal')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
             else:
@@ -354,13 +354,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_carnage1_eliminations(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1906)
+        scs = g.centrecount_set.filter(year__lte=1906)
         system = find_game_scoring_system('Carnage with dead equal')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
             if sc.count == 17:
                 self.assertEqual(s, 7000 + sc.count)
@@ -376,12 +376,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_carnage2_simple(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Carnage with elimination order')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
             if sc.count == 4:
                 self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
@@ -392,12 +392,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_carnage2_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Carnage with elimination order')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             if sc.count == 18:
                 self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
             else:
@@ -407,12 +407,12 @@ class GameScoringTests(TestCase):
     def test_g_scoring_carnage2_eliminations(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1906)
+        scs = g.centrecount_set.filter(year__lte=1906)
         system = find_game_scoring_system('Carnage with elimination order')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
-            sc = scs.get(power=p)
+            sc = scs.filter(power=p).last()
             # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
             if sc.count == 17:
                 self.assertEqual(s, 7000 + sc.count)
@@ -432,13 +432,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_janus_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Janus')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
                 if sc.count == 4:
                     self.assertEqual(s, 60 / 7 + 4)
@@ -450,13 +450,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_janus_no_solo_2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1905)
+        scs = g.centrecount_set.filter(year__lte=1905)
         system = find_game_scoring_system('Janus')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 0)
                 elif sc.count == 3:
@@ -475,13 +475,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_janus_no_solo_3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1906)
+        scs = g.centrecount_set.filter(year__lte=1906)
         system = find_game_scoring_system('Janus')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 0)
                 elif sc.count == 5:
@@ -496,13 +496,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_janus_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Janus')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 18:
                     self.assertEqual(s, 100)
                 else:
@@ -513,13 +513,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_tribute_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1901)
+        scs = g.centrecount_set.filter(year__lte=1901)
         system = find_game_scoring_system('Tribute')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
                 if sc.count == 4:
                     self.assertEqual(s, 66 / 7 + 4)
@@ -531,13 +531,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_tribute_tied_top(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year__lte=1904)
         system = find_game_scoring_system('Tribute')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 0)
                 elif sc.count == 4:
@@ -552,13 +552,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_tribute_no_solo_2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1905)
+        scs = g.centrecount_set.filter(year__lte=1905)
         system = find_game_scoring_system('Tribute')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 0)
                 elif sc.count == 3:
@@ -577,13 +577,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_tribute_no_solo_3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1906)
+        scs = g.centrecount_set.filter(year__lte=1906)
         system = find_game_scoring_system('Tribute')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 0)
                 elif sc.count == 5:
@@ -598,13 +598,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_tribute_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('Tribute')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 18:
                     self.assertEqual(s, 100)
                 else:
@@ -614,13 +614,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_world_classic_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year__lte=1904)
         system = find_game_scoring_system('World Classic')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 3)
                 elif sc.count == 8:
@@ -631,13 +631,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_world_classic_no_solo2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1905)
+        scs = g.centrecount_set.filter(year__lte=1905)
         system = find_game_scoring_system('World Classic')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     self.assertEqual(s, 3)
                 elif sc.count == 13:
@@ -648,13 +648,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_world_classic_no_solo3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1906)
+        scs = g.centrecount_set.filter(year__lte=1906)
         system = find_game_scoring_system('World Classic')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 0:
                     if sc.power == self.austria:
                         self.assertEqual(s, 3)
@@ -668,13 +668,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_world_classic_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('World Classic')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 18:
                     self.assertEqual(s, 420)
                 else:
@@ -690,13 +690,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_manorcon_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1904)
+        scs = g.centrecount_set.filter(year__lte=1904)
         system = find_game_scoring_system('ManorCon')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 4:
                     self.assertAlmostEqual(s, 100 * 48 / 458)
                 elif sc.count == 5:
@@ -709,13 +709,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_manorcon_no_solo2(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1905)
+        scs = g.centrecount_set.filter(year__lte=1905)
         system = find_game_scoring_system('ManorCon')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 3:
                     self.assertAlmostEqual(s, 100 * 37 / 512)
                 elif sc.count == 4:
@@ -732,13 +732,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_manorcon_no_solo3(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1906)
+        scs = g.centrecount_set.filter(year__lte=1906)
         system = find_game_scoring_system('ManorCon')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 5:
                     self.assertAlmostEqual(s, 100 * 61 / 636)
                 elif sc.count == 7:
@@ -756,13 +756,13 @@ class GameScoringTests(TestCase):
     def test_g_scoring_manorcon_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year=1907)
+        scs = g.centrecount_set.filter(year__lte=1907)
         system = find_game_scoring_system('ManorCon')
         scores = system.scores(scs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.get(power=p)
+                sc = scs.filter(power=p).last()
                 if sc.count == 18:
                     self.assertEqual(s, 75)
                 else:
