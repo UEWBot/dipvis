@@ -5,6 +5,37 @@
 
 {% block content %}
 <h1>{{ system.name }}</h1>
-
+<h2>{% trans "Summary" %}</h2>
 {{ system.description|linebreaks }}
+<h2>{% trans "Examples" %}</h2>
+{% for e in examples %}
+  <table class="form">
+    <thead><tr><th/>
+      {% for p in e.0.all_powers %}
+        <th>{{ p.name }}</th>
+      {% endfor %}
+    </tr></thead>
+    <tbody>
+    <tr class="odd_row">
+      <td>{% trans "Centres" %}</td>
+      {% for dots in e.0.sc_counts.values %}
+        <td>{{ dots }}</td>
+      {% endfor %}
+    </tr>
+    <tr class="even_row">
+      <td>{% trans "Elimination year" %}</td>
+      {% for year in e.0.elimination_year_list %}
+        <td>{{ year|default_if_none:"" }}</td>
+      {% endfor %}
+    </tr>
+    <tr class="odd_row">
+      <td>{% trans "Score" %}</td>
+      {% for score in e.1.values %}
+        <td>{{ score|floatformat:2 }}</td>
+      {% endfor %}
+    </tr>
+    </tbody>
+  </table>
+  </p>
+{%endfor %}
 {% endblock %}

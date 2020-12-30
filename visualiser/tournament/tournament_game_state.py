@@ -84,7 +84,9 @@ class TournamentGameState(GameState):
         return None
 
     def num_powers_with(self, centres):
-        """returns the number of powers that own the specified number of supply centres."""
+        """
+        Returns the number of powers that own the specified number of supply centres.
+        """
         return self.final_year_scs.filter(count=centres).count()
 
     def highest_dot_count(self):
