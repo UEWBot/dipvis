@@ -195,3 +195,32 @@ def clone_tournament(t):
 
     return new_t
 
+
+def fix_round_players(the_round):
+    """
+    Utility to clean up RoundPlayers.
+    Checks for any RoundPlayers without Games in the Round.
+    If they don't have a game_count of zero, delete them.
+    Then checks for any Games in the Round where there is no
+    corresponding RoundPlayer, and creates one.
+    Finally, triggers a score recalculation for all Games in the round.
+    """
+    # First, check that the Round does have Games. If not, abort
+    game_set = the_round.game_set.all()
+    if not game_set.exists():
+        print("No games in round - exiting.\n")
+        return;
+    # Check for suprious RoundPlayers
+    for rp in the_round.roundplayer_set.filter(game_count=1):
+        if not game_set.filter(gameplayer__player=rp.player).exists():
+            print("%s didn't actually play in the round.\n" % rp)
+            rp.delete()
+    # Check for missing RoundPlayers
+    for g in game_set.all():
+        for gp in g.gameplayer_set.all():
+            if not RoundPlayer.filter(player=gp.player).exists():
+                print("Missing RoundPlayer %s\n" % gp.player)
+                RoundPlayer.objects.create(player=gp.player,
+                                           the_round=the_round)
+        # Trigger a score recalculation
+        g.save()
