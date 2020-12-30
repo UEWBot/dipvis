@@ -17,7 +17,7 @@
 """
 This module contains scoring systems for individual diplomacy games.
 """
-import operator
+from operator import itemgetter
 
 from abc import ABC, abstractmethod
 
@@ -28,22 +28,62 @@ from django.utils.translation import ugettext as _
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 
 
-def _the_game(centre_counts):
-    """Returns the game in question."""
-    return centre_counts.first().game
-
-
-def _final_year(centre_counts):
-    """Returns the most recent year we have centre counts for."""
-    return centre_counts.order_by('-year')[0].year
-
-
-def _final_year_scs(centre_counts):
+class GameState(ABC):
     """
-    Returns the CentreCounts for the most recent year only,
-    ordered largest-to-smallest.
+    The state of a Game to be scored.
+    Encapsulates all the information needed to calculate a score for each power.
     """
-    return centre_counts.filter(year=_final_year(centre_counts)).order_by('-count')
+
+    @abstractmethod
+    def all_powers(self):
+        """Returns an iterable of all the powers."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def soloer(self):
+        """Returns the power that soloed the game or was conceded to, or None."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def survivors(self):
+        """
+        Returns an iterable of the subset of powers that are still alive.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def powers_in_draw(self):
+        """
+        Returns an iterable of all the powers that are included in a draw.
+        For a concession, return an iterable containing just the power conceded to.
+        If there is no passed draw vote or concession, returns survivors().
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def solo_year(self):
+        """Returns the year in which a solo occurred, or None."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def num_powers_with(self, centres):
+        """returns the number of powers that own the specified number of supply centres."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def highest_dot_count(self):
+        """Returns the number of supply centres owned by the strongest power(s)."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def dot_count(self, power):
+        """Returns the number of supply centres owned by the specified power."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def year_eliminated(self, power):
+        """Returns the year in which the specified power was eliminated, or None."""
+        raise NotImplementedError
 
 
 class GameScoringSystem(ABC):
@@ -55,9 +95,9 @@ class GameScoringSystem(ABC):
     name = u''
 
     @abstractmethod
-    def scores(self, centre_counts):
+    def scores(self, state):
         """
-        Takes the set of CentreCount objects for one Game.
+        Takes a GameState object.
         Returns a dict, indexed by power id, of scores.
         """
         raise NotImplementedError
@@ -90,18 +130,17 @@ class GScoringSolos(GameScoringSystem):
     def __init__(self):
         self.name = _(u'Solo or bust')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         """
         If any power soloed, they get 100 points.
         Otherwise, they get 0.
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        # We only care about the most recent centrecounts
-        for sc in _final_year_scs(centre_counts):
-            retval[sc.power] = 0
-            if sc.count >= WINNING_SCS:
-                retval[sc.power] = 100.0
+        for p in state.all_powers():
+            retval[p] = 0
+            if state.soloer() == p:
+                retval[p] = 100.0
         return retval
 
 
@@ -113,7 +152,7 @@ class GScoringDrawSize(GameScoringSystem):
     def __init__(self):
         self.name = _(u'Draw size')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         """
         If any power soloed, they get 100 points.
         Otherwise, if a draw passed, all powers in the draw equally shared 100
@@ -122,30 +161,24 @@ class GScoringDrawSize(GameScoringSystem):
         Return a dict, indexed by power id, of scores.
         """
         retval = {}
-        the_game = _the_game(centre_counts)
-        draw = the_game.passed_draw()
-        final_scs = _final_year_scs(centre_counts)
-        survivors = final_scs.filter(count__gt=0).count()
-        soloed = final_scs[0].count >= WINNING_SCS
-        # We only care about the most recent centrecounts
-        for sc in final_scs:
-            retval[sc.power] = 0.0
-            if sc.count >= WINNING_SCS:
-                retval[sc.power] = 100.0
+        survivors = state.powers_in_draw()
+        soloed = state.soloer() is not None
+        for p in state.all_powers():
+            retval[p] = 0.0
+            if p == state.soloer():
+                retval[p] = 100.0
             elif soloed:
                 # Leave the score at zero
                 pass
-            elif draw:
-                if sc.power in draw.powers():
-                    retval[sc.power] = 100.0 / draw.draw_size()
-            elif sc.count > 0:
-                retval[sc.power] = 100.0 / survivors
+            elif p in survivors:
+                retval[p] = 100.0 / len(survivors)
+            # This leaves dead powers, or those excluded from a draw, with zero
         return retval
 
 
 def _adjust_rank_score(centre_counts, rank_points):
     """
-    Takes a list of CentreCounts for one year of one game,
+    Takes a list of (power, centre count) 2-tuples for one year of one game,
     ordered highest-to-lowest, and a list of ranking points for positions,
     ordered from first place to last.
     Returns a list of ranking points for positions, ordered to correspond to
@@ -160,8 +193,8 @@ def _adjust_rank_score(centre_counts, rank_points):
     i = 0
     count = 0
     points = 0
-    scs = centre_counts[0].count
-    while (i < len(centre_counts)) and (centre_counts[i].count == scs):
+    scs = centre_counts[0][1]
+    while (i < len(centre_counts)) and (centre_counts[i][1] == scs):
         count += 1
         if i < len(rank_points):
             points += rank_points[i]
@@ -221,29 +254,20 @@ class GScoringCDiplo(GameScoringSystem):
                         'third_pts': self.position_pts[2],
                         'loss_pts': self.loss_pts}
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
-        final_scs = _final_year_scs(centre_counts)
+        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
+        dots.sort(key = itemgetter(1), reverse=True)
         # Tweak the ranking points to allow for ties
-        rank_pts = _adjust_rank_score(list(final_scs), self.position_pts)
-        for i, sc in enumerate(final_scs):
-            if final_scs[0].count >= WINNING_SCS:
-                retval[sc.power] = self.loss_pts
-                if sc.count >= WINNING_SCS:
-                    retval[sc.power] = self.soloer_pts
+        rank_pts = _adjust_rank_score(dots, self.position_pts)
+        for i, (p, c) in enumerate(dots):
+            if dots[0][1] >= WINNING_SCS:
+                retval[p] = self.loss_pts
+                if c >= WINNING_SCS:
+                    retval[p] = self.soloer_pts
             else:
-                retval[sc.power] = self.played_pts + sc.count + rank_pts[i]
+                retval[p] = self.played_pts + c + rank_pts[i]
         return retval
-
-
-class _DummySC(object):
-    """
-    Used by Carnage scoring with elimination ordering.
-    Just has power and count attributes.
-    """
-    def __init__(self, power, count):
-        self.power = power
-        self.count = count
 
 
 class GScoringCarnage(GameScoringSystem):
@@ -284,52 +308,55 @@ class GScoringCarnage(GameScoringSystem):
             return base + 'Eliminated powers get position points based on when they were eliminated.'
 
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
-        final_scs = _final_year_scs(centre_counts)
 
         # Solos are special
-        if final_scs[0].count >= WINNING_SCS:
-            retval[final_scs[0].power] = self.solo_pts
-            for sc in final_scs[1:]:
-                retval[sc.power] = 0
+        soloer = state.soloer()
+        if soloer is not None:
+            for p in state.all_powers():
+                if p == soloer:
+                    retval[p] = self.solo_pts
+                else:
+                    retval[p] = 0
             return retval
+
+        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
+        dots.sort(key = itemgetter(1), reverse=True)
 
         # Giving all the dead powers equal scores is easy
         if self.dead_equal:
             # Tweak the ranking points to allow for ties
-            rank_pts = _adjust_rank_score(list(final_scs),
-                                          list(self.position_pts))
-            for i, sc in enumerate(final_scs):
-                retval[sc.power] = sc.count + rank_pts[i]
+            rank_pts = _adjust_rank_score(dots, list(self.position_pts))
+            for i, (p, c) in enumerate(dots):
+                retval[p] = c + rank_pts[i]
             return retval
 
         # Split out the eliminated powers
-        live_scs = list(final_scs.exclude(count=0))
+        live_scs = [(p, c) for (p, c) in dots if c > 0]
         pos_pts = list(self.position_pts)
         pos_pts_1 = pos_pts[:len(live_scs)]
         # Tweak the alive powers points to allow for ties
         rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
-        for i, sc in enumerate(live_scs):
-            retval[sc.power] = sc.count + rank_pts[i]
+        for i, (p, c) in enumerate(live_scs):
+            retval[p] = c + rank_pts[i]
 
         # If nobody was eliminated, we're done
         if len(pos_pts) == len(pos_pts_1):
             return retval
 
-        dead_scs = final_scs.filter(count=0)
+        dead_scs = [(p, c) for (p, c) in dots if c == 0]
         pos_pts_2 = pos_pts[len(pos_pts_1)-len(pos_pts):]
         # Find when the dead powers died
         dummys = []
-        for sc in dead_scs:
-            p = sc.power
-            year = sc.game.centrecount_set.filter(power=p).filter(count=0).order_by('year').first().year
+        for p, c in dead_scs:
+            year = state.year_eliminated(p)
             # For both year and SC count, higher is better
-            dummys.append(_DummySC(p, year))
-        dummys.sort(key=operator.attrgetter('count'), reverse=True)
+            dummys.append((p, year))
+        dummys.sort(key=itemgetter(1), reverse=True)
         rank_pts = _adjust_rank_score(dummys, pos_pts_2)
-        for i, sc in enumerate(dummys):
-            retval[sc.power] = rank_pts[i]
+        for i, (p, c) in enumerate(dummys):
+            retval[p] = rank_pts[i]
         return retval
 
 
@@ -342,24 +369,24 @@ class GScoringSumOfSquares(GameScoringSystem):
     def __init__(self):
         self.name = _(u'Sum of Squares')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
         retval_solo = {}
-        solo_found = False
-        final_scs = _final_year_scs(centre_counts)
+        soloer = state.soloer()
         sum_of_squares = 0
-        for sc in final_scs:
-            retval_solo[sc.power] = 0
-            retval[sc.power] = sc.count * sc.count * 100.0
-            sum_of_squares += sc.count * sc.count
-            if sc.count >= WINNING_SCS:
-                # Overwrite the previous totals we came up with
-                retval_solo[sc.power] = 100.0
-                solo_found = True
-        if solo_found:
+        all_powers = state.all_powers()
+        for p in all_powers:
+            retval_solo[p] = 0
+            dots = state.dot_count(p)
+            retval[p] = dots * dots * 100.0
+            sum_of_squares += dots * dots
+            if p == soloer:
+                retval_solo[p] = 100.0
+        if soloer is not None:
             return retval_solo
-        for sc in final_scs:
-            retval[sc.power] /= sum_of_squares
+        # Now that we have sum_of_squares, we can divide each score by it
+        for p in all_powers:
+            retval[p] /= sum_of_squares
         return retval
 
 
@@ -376,35 +403,37 @@ class GScoringJanus(GameScoringSystem):
     def __init__(self):
         self.name = _('Janus')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
-        final_scs = _final_year_scs(centre_counts)
-        survivors = final_scs.filter(count__gt=0).count()
-        survival_points = 60 / survivors
-        leader_scs = final_scs[0].count
-        leaders = final_scs.filter(count=leader_scs).count()
-        second_scs = final_scs[1].count
+        num_survivors = len(state.survivors())
+        survival_points = 60 / num_survivors
+        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
+        dots.sort(key = itemgetter(1), reverse=True)
+        leader_scs = dots[0][1]
+        second_scs = dots[1][1]
         margin = leader_scs - second_scs
         bonus_per_survivor = min(survival_points, margin)
-        soloed = leader_scs >= WINNING_SCS
-        for sc in final_scs:
+        num_leaders = len([c for (p, c) in dots if c == leader_scs])
+        soloer = state.soloer()
+        soloed = soloer is not None
+        for p, c in dots:
             if soloed:
-                if sc.count == leader_scs:
-                    retval[sc.power] = 100
+                if p == soloer:
+                    retval[p] = 100
                 else:
-                    retval[sc.power] = 0
+                    retval[p] = 0
                 continue
-            retval[sc.power] = sc.count
-            if sc.count == leader_scs:
-                retval[sc.power] += 6 / leaders
-            if sc.count:
-                retval[sc.power] += survival_points
+            retval[p] = c
+            if c == leader_scs:
+                retval[p] += 6 / num_leaders
+            if c:
+                retval[p] += survival_points
             # Is there a lone leader?
             if margin:
-                if sc.power == final_scs[0].power:
-                    retval[sc.power] += bonus_per_survivor * (survivors - 1)
-                elif sc.count:
-                    retval[sc.power] -= bonus_per_survivor
+                if p == dots[0][0]:
+                    retval[p] += bonus_per_survivor * (num_survivors - 1)
+                elif c:
+                    retval[p] -= bonus_per_survivor
         return retval
 
 
@@ -419,36 +448,37 @@ class GScoringTribute(GameScoringSystem):
     def __init__(self):
         self.name = _('Tribute')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
-        final_scs = _final_year_scs(centre_counts)
-        survivors = final_scs.filter(count__gt=0).count()
-        survival_points = 66 / survivors
-        leader_scs = final_scs[0].count
-        leaders = final_scs.filter(count=leader_scs).count()
+        num_survivors = len(state.survivors())
+        survival_points = 66 / num_survivors
+        leader_scs = state.highest_dot_count()
+        num_leaders = state.num_powers_with(leader_scs)
         if leader_scs > 6:
             bonus_per_survivor = min(survival_points, leader_scs - 6)
         else:
             bonus_per_survivor = 0
-        soloed = leader_scs >= WINNING_SCS
-        for sc in final_scs:
+        soloer = state.soloer()
+        soloed = soloer is not None
+        for p in state.all_powers():
             if soloed:
-                if sc.count == leader_scs:
-                    retval[sc.power] = 100
+                if p == soloer:
+                    retval[p] = 100
                 else:
-                    retval[sc.power] = 0
+                    retval[p] = 0
                 continue
             # 1 point per dot
-            retval[sc.power] = sc.count
+            dots = state.dot_count(p)
+            retval[p] = dots
             # Plus the survival points
-            if sc.count:
-                retval[sc.power] += survival_points
+            if dots:
+                retval[p] += survival_points
             # Leader(s) gets tribute
-            if sc.count == leader_scs:
-                retval[sc.power] += bonus_per_survivor * (survivors - leaders) / leaders
+            if dots == leader_scs:
+                retval[p] += bonus_per_survivor * (num_survivors - num_leaders) / num_leaders
             # from all the rest
-            elif sc.count:
-                retval[sc.power] -= bonus_per_survivor
+            elif dots:
+                retval[p] -= bonus_per_survivor
         return retval
 
 
@@ -461,36 +491,36 @@ class GScoringWorldClassic(GameScoringSystem):
     def __init__(self):
         self.name = _('World Classic')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
-        final_scs = _final_year_scs(centre_counts)
-        leader_scs = final_scs[0].count
-        leaders = final_scs.filter(count=leader_scs).count()
-        soloed = leader_scs >= WINNING_SCS
+        leader_scs = state.highest_dot_count()
+        num_leaders = state.num_powers_with(leader_scs)
+        soloer = state.soloer()
+        soloed = soloer is not None
         if soloed:
-            solo_year = final_scs[0].year
-        for sc in final_scs:
+            solo_year = state.solo_year()
+        for p in state.all_powers():
+            dots = state.dot_count(p)
             # 1 point per year survived if eliminated, regardless of the game result
-            if sc.count == 0:
-                year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
-                retval[sc.power] = year - FIRST_YEAR
+            if dots == 0:
+                retval[p] = state.year_eliminated(p) - FIRST_YEAR
                 continue
             # Scoring a soloed game is different
             if soloed:
-                if sc.count == leader_scs:
-                    retval[sc.power] = 420
+                if dots == leader_scs:
+                    retval[p] = 420
                 else:
                     # Everyone else does still get survival points up to the solo year
-                    retval[sc.power] = solo_year - FIRST_YEAR
+                    retval[p] = solo_year - FIRST_YEAR
                 continue
             # 10 points per SC
-            retval[sc.power] = 10 * sc.count
+            retval[p] = 10 * dots
             # 30 for surviving
-            if sc.count:
-                retval[sc.power] += 30
+            if dots:
+                retval[p] += 30
             # 48 split between board toppers
-            if sc.count == leader_scs:
-                retval[sc.power] += 48 / leaders
+            if dots == leader_scs:
+                retval[p] += 48 / num_leaders
         return retval
 
 
@@ -503,46 +533,48 @@ class GScoringManorCon(GameScoringSystem):
     def __init__(self):
         self.name = _('ManorCon')
 
-    def scores(self, centre_counts):
+    def scores(self, state):
         retval = {}
-        final_scs = _final_year_scs(centre_counts)
-        leader_scs = final_scs[0].count
-        leaders = final_scs.filter(count=leader_scs).count()
-        soloed = leader_scs >= WINNING_SCS
+        leader_scs = state.highest_dot_count()
+        #num_leaders = state.num_powers_with(leader_scs)
+        soloer = state.soloer()
+        soloed = soloer is not None
         if soloed:
-            solo_year = final_scs[0].year
+            solo_year = state.solo_year()
         sum_of_n = 0.0
-        for sc in final_scs:
+        all_powers = state.all_powers()
+        for p in all_powers:
+            dots = state.dot_count(p)
             # Scoring a soloed game is different
             if soloed:
                 # In this case, "sum of N" is irrelevant, so retval is the actual score
-                if sc.count == leader_scs:
-                    retval[sc.power] = 75
+                if dots == leader_scs:
+                    retval[p] = 75
                 # Everyone else does still get survival points up to the solo year or their elimination year
                 else:
-                    if sc.count == 0:
-                        year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
+                    if dots == 0:
+                        year = state.year_eliminated(p)
                     else:
                         year = solo_year
-                    retval[sc.power] = 0.1 * (year - FIRST_YEAR)
+                    retval[p] = 0.1 * (year - FIRST_YEAR)
             else:
                 # 0.1 point per season survived if eliminated, regardless of the game result
-                if sc.count == 0:
-                    year = sc.game.centrecount_set.filter(power=sc.power).filter(count=0).order_by('year').first().year
+                if dots == 0:
+                    year = state.year_eliminated(p)
                     n = 16
                     # retval gets the actual score
-                    retval[sc.power] = 0.1 * (year - FIRST_YEAR)
+                    retval[p] = 0.1 * (year - FIRST_YEAR)
                 else:
                     # Calculate N for the power
-                    n = sc.count * sc.count + 4 * sc.count + 16
+                    n = dots * dots + 4 * dots + 16
                     # Retval gets N, which still needs to be divided
-                    retval[sc.power] = n
+                    retval[p] = n
                 # And add N for this power to the total
                 sum_of_n += n
         if not soloed:
-            for sc in final_scs:
-                if sc.count > 0:
-                    retval[sc.power] *= 100/sum_of_n
+            for p in all_powers:
+                if state.dot_count(p) > 0:
+                    retval[p] *= 100 / sum_of_n
         return retval
 
 

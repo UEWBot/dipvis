@@ -44,6 +44,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.players import Player, add_player_bg
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
 from tournament.players import validate_wdd_tournament_id
+from tournament.tournament_game_state import TournamentGameState
 
 SPRING = 'S'
 FALL = 'F'
@@ -1077,7 +1078,8 @@ class Game(models.Model):
 
         # Calculate the scores for the game using the specified ScoringSystem
         system = self.the_round.game_scoring_system_obj()
-        return system.scores(self.centrecount_set.all())
+        tgs = TournamentGameState(self.centrecount_set.all())
+        return system.scores(tgs)
 
     def positions(self):
         """

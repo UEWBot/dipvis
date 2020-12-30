@@ -22,6 +22,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import find_game_scoring_system
+from tournament.tournament_game_state import TournamentGameState
 
 from datetime import timedelta
 
@@ -126,8 +127,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Solo or bust')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 0)
@@ -136,8 +138,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Solo or bust')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -151,8 +154,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
@@ -165,8 +169,9 @@ class GameScoringTests(TestCase):
                                     power_1=self.austria, power_2=self.england, power_3=self.france,
                                     power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
@@ -179,8 +184,9 @@ class GameScoringTests(TestCase):
                                     power_1=self.austria, power_2=self.england, power_3=self.russia,
                                     power_4=self.germany)
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p in GreatPower.objects.all():
             if (p == self.austria) or (p == self.england) or (p == self.russia) or (p == self.germany):
@@ -195,8 +201,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p in GreatPower.objects.all():
             if p == self.austria:
@@ -209,8 +216,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -225,8 +233,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('CDiplo 100')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -242,8 +251,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('CDiplo 100')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -257,8 +267,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('CDiplo 80')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -274,8 +285,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('CDiplo 80')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -290,8 +302,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Sum of Squares')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -307,8 +320,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Sum of Squares')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -323,8 +337,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -340,8 +355,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -355,8 +371,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
         for p,s in scores.items():
@@ -377,8 +394,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Carnage with elimination order')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -393,8 +411,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Carnage with elimination order')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -408,8 +427,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Carnage with elimination order')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             sc = scs.filter(power=p).last()
@@ -433,8 +453,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Janus')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -451,8 +472,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Janus')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -476,8 +498,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Janus')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -497,8 +520,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Janus')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -514,8 +538,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Tribute')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -532,8 +557,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Tribute')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -553,8 +579,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Tribute')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -578,8 +605,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Tribute')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -599,8 +627,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Tribute')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -615,8 +644,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('World Classic')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -632,8 +662,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('World Classic')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -649,8 +680,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('World Classic')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -669,8 +701,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('World Classic')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -691,8 +724,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('ManorCon')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -710,8 +744,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('ManorCon')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -733,8 +768,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('ManorCon')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
@@ -757,8 +793,9 @@ class GameScoringTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
         system = find_game_scoring_system('ManorCon')
-        scores = system.scores(scs)
+        scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
