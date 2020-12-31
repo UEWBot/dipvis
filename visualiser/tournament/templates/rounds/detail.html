@@ -27,7 +27,7 @@
 <p>{% blocktrans with count=round.game_set.count %}{{ count }} Games{% endblocktrans %}:</p>
 <ul>
   {% for g in round.game_set.all %}
-    <li><a href="{{ g.get_absolute_url }}">{{ g.name}}</a>{% if g.is_finished %}{% trans " (Complete)" %}{% endif %}</li>
+    <li><a href="{{ g.get_absolute_url }}">{{ g.name}}</a> {% blocktrans with year=g.final_year %}Played {{ year }}.{% endblocktrans %}{% if g.is_finished %}{% trans " (Complete)" %}{% endif %}</li>
   {% endfor %}
 </ul>
 
