@@ -18,7 +18,7 @@
         </tr></thead>
         <tbody><tr>
           {% for gp in g.gameplayer_set.all %}
-            <td>{{ gp.player }}</td>
+            <td>{{ gp.player }}{% if tournament.is_virtual %}<br/>({{ gp.player.backstabbr_username }}){% endif %}</td>
           {% endfor %}
         </tr></tbody>
       </table>
