@@ -18,11 +18,14 @@
 <dl>
   {% for gp in game.gameplayer_set.all %}
     <dt>{{ gp.power }}</dt>
-    <dd>{{ gp.player }}</dd>
+    <dd>{{ gp.player }}{% if tournament.is_virtual %} ( {{ gp.player.backstabbr_username }} ){% endif %}</dd>
   {% endfor %}
 </dl>
 
-<p>{% trans "Start time:" %} {{ game.started_at }}</p><p>{% blocktrans with set=game.the_set %}Played with the {{ set }} set.{% endblocktrans %}</p>
+<p>{% trans "Start time:" %} {{ game.started_at }}</p>
+{% if not tournament.is_virtual %}
+  <p>{% blocktrans with set=game.the_set %}Played with the {{ set }} set.{% endblocktrans %}</p>
+{% endif %}
 
 <p>{% trans "Views:" %}</p>
 <ul>
@@ -49,7 +52,7 @@
     <li><a href="{% url 'enter_sc_owners' tournament.id game.name %}">{% trans "Enter SC Ownership" %}</a> - {% trans "Use this to update the supply centre ownership for the game." %}</li>
   {% endif %}
   {% if perms.tournament.add_centrecount and game.notes and tournament.is_virtual %}
-    <li><a href="{% url 'scrape_backstabbr' tournament.id game.name %}">{% trans "Import SC Counts from Backstabbr" %}</a> - {% trans "Use this to update the supply centre chart a game on Backstabbr. Backstabbr URL must be in the game's notes." %}</li>
+    <li><a href="{% url 'scrape_backstabbr' tournament.id game.name %}">{% trans "Import SC Counts from Backstabbr" %}</a> - {% trans "Use this to update the supply centre chart a game on Backstabbr. Backstabbr URL must be in the game's notes (and hence listed above)." %}</li>
   {% endif %}
   {% if perms.tournament.add_gameimage %}
     <li><a href="{% url 'add_game_image' tournament.id game.name %}">{% trans "Upload Game Image" %}</a> - {% trans "Use this to add a picture of the game in progress." %}</li>
