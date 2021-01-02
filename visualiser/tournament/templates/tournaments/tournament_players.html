@@ -12,6 +12,9 @@
     <table class="form">
       <thead><tr>
         <th>{% trans "Player" %}</th>
+	{% if tournament.is_virtual %}
+          <th>{% trans "Backstabbr Username" %}</th>
+	{% endif %}
         <th>{% trans "Unranked?" %}</th>
         <th>{% trans "Email known?" %}</th>
         {% if tournament.powers_assigned_from_prefs %}
@@ -26,6 +29,9 @@
         {% for tp in tournament.tournamentplayer_set.all %}
           <tr class="{% cycle 'odd_row' 'even_row' %}">
             <td>{{ tp.player }}</td>
+	    {% if tournament.is_virtual %}
+	      <td>{{tp.backstabbr_username }}</td>
+	    {% endif %}
             <td style="text-align:center">{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
             <td>{% if tp.player.email != "" %}{% trans "Yes" %}{% endif %}</td>
             {% if tournament.powers_assigned_from_prefs %}
