@@ -16,9 +16,10 @@
 
 from django.conf.urls import url, include
 
-from tournament import tournament_views
-from tournament import round_views
 from tournament import game_views
+from tournament import round_views
+from tournament import tournament_views
+from tournament import tournament_player_views
 from tournament import wdd_views
 
 round_patterns = [
@@ -87,6 +88,11 @@ game_patterns = [
         name='scrape_backstabbr'),
 ]
 
+tp_patterns = [
+    url(r'^$', tournament_player_views.index,
+        name='tournament_players'),
+]
+
 tournament_patterns = [
     url(r'^$', tournament_views.tournament_simple,
         {'template': 'detail'}, name='tournament_detail'),
@@ -149,8 +155,7 @@ tournament_patterns = [
     url(r'^seeder_bias/$', tournament_views.seeder_bias, name='seeder_bias'),
     url(r'^player_prefs/(?P<uuid>[^/]+)/$', tournament_views.player_prefs,
         name='player_prefs'),
-    url(r'^players/$', tournament_views.tournament_players,
-        name='tournament_players'),
+    url(r'^players/$', include(tp_patterns)),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),
 ]

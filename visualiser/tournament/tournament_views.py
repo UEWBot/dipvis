@@ -30,13 +30,11 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
-from tournament.email import send_prefs_email
 from tournament.email import send_roll_call_emails
 
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
 from tournament.forms import EnableCheckInForm
-from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
@@ -626,59 +624,6 @@ def prefs_csv(request, tournament_id):
         writer.writerow(row_dict)
 
     return response
-
-
-def tournament_players(request, tournament_id):
-    """Display a list of registered players for a tournament"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
-    PlayerFormset = formset_factory(PlayerForm,
-                                    extra=4)
-    formset = PlayerFormset(request.POST or None)
-    if request.method == 'POST':
-        if t.is_finished() or not t.editable:
-            raise Http404
-        for k in request.POST.keys():
-            # Send preferences email to the specified TournamentPlayer
-            if k.startswith('prefs_'):
-                # Extract the TournamentPlayer pk from the button name
-                pk = int(k[6:])
-                tp = TournamentPlayer.objects.get(pk=pk)
-                send_prefs_email(tp, force=True)
-                break
-            # Delete the specified TournamentPlayer
-            if k.startswith('unregister_'):
-                # Extract the TournamentPlayer pk from the button name
-                pk = int(k[11:])
-                tp_qs = TournamentPlayer.objects.filter(pk=pk)
-                # Also delete any corresponding RoundPlayers
-                tp_qs.get().roundplayers().delete()
-                tp_qs.delete()
-                break
-        # Create a TournamentPlayer for each player to register
-        if formset.is_valid():
-            for form in formset:
-                try:
-                    player = form.cleaned_data['player']
-                except KeyError:
-                    # Empty form - nothing to do
-                    continue
-                tp, created = TournamentPlayer.objects.get_or_create(player=player,
-                                                                     tournament=t)
-                if created:
-                    # TODO t in X.all() doesn't look very efficient
-                    tp.unranked = (player.user is not None) and (t in player.user.tournament_set.all())
-                    tp.save()
-                else:
-                    # TODO Because we don't pass the modified formset to render(),
-                    # this error is never seen.
-                    # In practice, though, the player *is* (already) registered...
-                    form.add_error('player',
-                                   _("Player already registered"))
-        # Redirect back here to flush the POST data
-        return HttpResponseRedirect(reverse('tournament_players',
-                                            args=(tournament_id,)))
-    context = {'tournament': t, 'formset': formset}
-    return render(request, 'tournaments/tournament_players.html', context)
 
 
 @permission_required('tournament.add_seederbias')
