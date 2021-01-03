@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2019 Chris Brand
+# Copyright (C) 2019-2021 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ from tournament.players import Player
 
 @override_settings(HOSTNAME='example.com')
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
-class TournamentViewTests(TestCase):
+class TournamentPlayerViewTests(TestCase):
     fixtures = ['game_sets.json']
 
     @classmethod
@@ -338,11 +338,16 @@ class TournamentViewTests(TestCase):
                             the_set=GameSet.objects.first(),
                             is_finished=False)
 
-    def test_tournament_players(self):
+    def test_index_invalid(self):
+        self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
+        response = self.client.get(reverse('tournament_players', args=(self.INVALID_T_PK,)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_index(self):
         response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
 
-    def test_tournament_players_editable_prefs(self):
+    def test_index_editable_prefs(self):
         # A tournament that can be edited, that uses preferences for power assignment
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
@@ -351,7 +356,7 @@ class TournamentViewTests(TestCase):
         self.assertIn(b'Register Players', response.content)
         self.assertIn(b'prefs_', response.content)
 
-    def test_tournament_players_editable_no_prefs(self):
+    def test_index_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players', args=(self.t3.pk,)))
@@ -360,7 +365,7 @@ class TournamentViewTests(TestCase):
         self.assertIn(b'Register Players', response.content)
         self.assertNotIn(b'prefs_', response.content)
 
-    def test_tournament_players_archived(self):
+    def test_index_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players', args=(self.t4.pk,)))
@@ -368,7 +373,7 @@ class TournamentViewTests(TestCase):
         # Verify that we get the read-only version of the page
         self.assertNotIn(b'Register Players', response.content)
 
-    def test_tournament_players_unregister_from_editable(self):
+    def test_index_unregister_from_editable(self):
         # A tournament that can be edited
         # Add a TournamentPlayer and RoundPlayer just for this test
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
@@ -394,7 +399,7 @@ class TournamentViewTests(TestCase):
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         self.assertFalse(self.t2.round_numbered(1).roundplayer_set.filter(player=self.p2).exists())
 
-    def test_tournament_players_unregister_from_archived(self):
+    def test_index_unregister_from_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
         # Use an existing TournamentPlayer
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
@@ -412,7 +417,7 @@ class TournamentViewTests(TestCase):
         # ... and the TournamentPlayer should still exist
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
 
-    def test_tournament_players_register_player(self):
+    def test_index_register_player(self):
         # Use the form to register a Player
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -436,7 +441,7 @@ class TournamentViewTests(TestCase):
         # Clean up
         tp_qs.delete()
 
-    def test_tournament_players_register_registered_player(self):
+    def test_index_register_registered_player(self):
         # Use the form to register a Player who is already registered
         self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p1).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -452,7 +457,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, url)
 
-    def test_tournament_players_resend_prefs_email(self):
+    def test_index_resend_prefs_email(self):
         # Use the form to re-send the preferences email to a Player
         tp = self.t2.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -470,7 +475,7 @@ class TournamentViewTests(TestCase):
         # ... and the email should be sent
         self.assertEqual(len(mail.outbox), 1)
 
-    def test_tournament_players_flag_as_unranked(self):
+    def test_index_flag_as_unranked(self):
         # Adding a manager as a TournamentPlayer should flag them as unranked
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p11).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)

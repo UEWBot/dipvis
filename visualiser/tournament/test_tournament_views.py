@@ -366,6 +366,7 @@ class TournamentViewTests(TestCase):
         self.assertIn(b't4', response.content) # Published
 
     def test_detail_invalid_tournament(self):
+        self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
         response = self.client.get(reverse('tournament_detail', args=(self.INVALID_T_PK,)))
         self.assertEqual(response.status_code, 404)
 
