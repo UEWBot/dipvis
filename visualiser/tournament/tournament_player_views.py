@@ -69,11 +69,7 @@ def index(request, tournament_id):
                     continue
                 tp, created = TournamentPlayer.objects.get_or_create(player=player,
                                                                      tournament=t)
-                if created:
-                    # TODO t in X.all() doesn't look very efficient
-                    tp.unranked = (player.user is not None) and (t in player.user.tournament_set.all())
-                    tp.save()
-                else:
+                if not created:
                     # TODO Because we don't pass the modified formset to render(),
                     # this error is never seen.
                     # In practice, though, the player *is* (already) registered...

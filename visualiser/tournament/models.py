@@ -752,6 +752,13 @@ class TournamentPlayer(models.Model):
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
+        # Default some attributes
+        if is_new:
+            # Only override if they haven't been provided
+            if not self.backstabbr_username:
+                self.backstabbr_username = self.player.backstabbr_username
+            if not self.unranked:
+                self.unranked = (self.player.user is not None) and self.player.user.tournament_set.filter(pk=self.tournament.pk).exists()
         super().save(*args, **kwargs)
         # Update background info when a player is added to the Tournament (only)
         if is_new:

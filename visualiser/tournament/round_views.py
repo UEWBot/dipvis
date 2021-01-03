@@ -150,8 +150,6 @@ def roll_call(request, tournament_id, round_num=None):
                               {'tournament': t,
                                'post_url': request.path_info,
                                'formset': formset})
-            i.backstabbr_username = p.backstabbr_username
-            i.save()
             for r_name, value in form.cleaned_data.items():
                 if r_name == 'player':
                     # This column is just for the user
