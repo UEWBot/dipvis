@@ -155,7 +155,7 @@ tournament_patterns = [
     url(r'^seeder_bias/$', tournament_views.seeder_bias, name='seeder_bias'),
     url(r'^player_prefs/(?P<uuid>[^/]+)/$', tournament_views.player_prefs,
         name='player_prefs'),
-    url(r'^players/$', include(tp_patterns)),
+    url(r'^players/', include(tp_patterns)),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),
 ]
