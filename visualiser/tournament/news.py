@@ -205,6 +205,9 @@ def _sc_gains_and_losses(prev_scos, current_scos):
     Parameters are two QuerySets for last year and this year's
       SupplyCentreOwnerships.
     """
+    # Can't do anything without two consecutive years information
+    if not prev_scos.exists() or not current_scos.exists():
+        return {}, {}
     # Extract the info we need into two sets that can be operated on
     prev = set()
     for sco in prev_scos.all():

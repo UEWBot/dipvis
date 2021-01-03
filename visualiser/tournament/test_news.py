@@ -326,6 +326,16 @@ class TournamentNewsTests(TestCase):
                 _game_news(g, mask=mask)
                 mask *= 2
 
+    def test_game_news_without_ownerships(self):
+        # Test with no SupplyCentreOwnership objects
+        # We need a year with CentreCounts but no SupplyCentreOwnerships,
+        # where the previous year *does* have SupplyCentreOwnerships.
+        # 1900 always has the latter.
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        # TODO Validate results
+        _game_news(g, for_year=1901)
+
     def test_game_news_sc_gains_losses(self):
         # Austria lost three, flagging it as interesting
         # France gained three, making it interesting
