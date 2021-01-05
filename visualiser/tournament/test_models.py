@@ -2958,6 +2958,8 @@ class TournamentModelTests(TestCase):
         t.delete()
         self.assertEqual(Preference.objects.count(), 0)
 
+    # TODO GamePlayer.result_str()
+
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
