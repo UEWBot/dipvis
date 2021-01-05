@@ -80,3 +80,14 @@ def index(request, tournament_id):
                                             args=(tournament_id,)))
     context = {'tournament': t, 'formset': formset}
     return render(request, 'tournament_players/index.html', context)
+
+
+def detail(request, tournament_id, tp_id):
+    """Display details of a single registered player for a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    try:
+        tp = t.tournamentplayer_set.get(id=int(tp_id))
+    except TournamentPlayer.DoesNotExist:
+        raise Http404
+    context = {'tournament': t, 'player': tp}
+    return render(request, 'tournament_players/detail.html', context)

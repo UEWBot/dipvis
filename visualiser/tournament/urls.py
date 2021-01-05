@@ -91,6 +91,8 @@ game_patterns = [
 tp_patterns = [
     url(r'^$', tournament_player_views.index,
         name='tournament_players'),
+    url(r'^(?P<tp_id>\d+)/$', tournament_player_views.detail,
+        name='tournament_player_detail'),
 ]
 
 tournament_patterns = [

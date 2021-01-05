@@ -312,6 +312,8 @@ class TournamentPlayerViewTests(TestCase):
 
         # Hopefully this isn't the pk for any Tournament
         cls.INVALID_T_PK = 99999
+        # And this one for any TournamentPlayer
+        cls.INVALID_TP_PK = 99999
 
         # Published Tournament, so it's visible to all
         # Ongoing, one round that has started
@@ -498,3 +500,25 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(tp.unranked)
         # Clean up
         tp_qs.delete()
+
+    def test_details_invalid_tournament(self):
+        self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
+        response = self.client.get(reverse('tournament_player_detail', args=(self.INVALID_T_PK,
+                                                                             self.tp11.pk)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_details_invalid_player(self):
+        self.assertFalse(self.t1.tournamentplayer_set.filter(pk=self.INVALID_TP_PK).exists())
+        response = self.client.get(reverse('tournament_player_detail', args=(self.t1.pk,
+                                                                             self.INVALID_TP_PK)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_details_player_not_in_tourney(self):
+        response = self.client.get(reverse('tournament_player_detail', args=(self.t1.pk,
+                                                                             self.tp51.pk)))
+        self.assertEqual(response.status_code, 404)
+
+    def test_details_valid(self):
+        response = self.client.get(reverse('tournament_player_detail', args=(self.t1.pk,
+                                                                             self.tp11.pk)))
+        self.assertEqual(response.status_code, 200)

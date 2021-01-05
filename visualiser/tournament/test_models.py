@@ -1144,6 +1144,8 @@ class TournamentModelTests(TestCase):
 
     # TODO TournamentPlayer.send_prefs_email()
 
+    # TODO TournamentPlayer.get_absolute_url()
+
     # TournamentPlayer.__str__()
     def test_tournamentplayer_str(self):
         tp = TournamentPlayer.objects.first()

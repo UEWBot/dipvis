@@ -746,6 +746,11 @@ class TournamentPlayer(models.Model):
         self.uuid_str = str(uuid.uuid4())
         self.save()
 
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('tournament_player_detail', args=[str(self.tournament.id),
+                                                         str(self.id)])
+
     def __str__(self):
         return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
                                                  'player': self.player}
