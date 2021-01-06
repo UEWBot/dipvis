@@ -57,7 +57,7 @@
 {% else %}
   <ul>
     {% for tp in tournament.tournamentplayer_set.all %}
-      <li><a href="{{ tp.player.get_absolute_url }}">{{ tp.player }}</a> {% if tp.unranked %}{% trans "(Ineligible for awards)" %}{% endif %}</li>
+      <li><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a> {% if tp.unranked %}{% trans "(Ineligible for awards)" %}{% endif %}</li>
     {% empty %}
       <li>{% trans "No players yet registered" %}</li>
     {% endfor %}

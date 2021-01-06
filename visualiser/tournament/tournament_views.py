@@ -139,7 +139,7 @@ def tournament_scores(request,
                     str += '*'
                 rs.append(str % r_scores[r][p.player])
         scores.append(['%d' % t_positions_and_scores[p.player][0]]
-                      + ['<a href="%s">%s</a>' % (p.player.get_absolute_url(), p.player)]
+                      + ['<a href="%s">%s</a>' % (p.get_absolute_url(), p.player)]
                       + rs
                       + ['%.2f' % t_positions_and_scores[p.player][1]])
     # sort rows by position (they'll retain the alphabetic sorting if equal)
@@ -200,7 +200,7 @@ def tournament_game_results(request,
                         gs += '<br>'
                     gs += gp.result_str()
             rs.append(gs)
-        results.append(['<a href=%s>%s</a>' % (p.player.get_absolute_url(), p.player)] + rs)
+        results.append(['<a href=%s>%s</a>' % (p.get_absolute_url(), p.player)] + rs)
     # Add one final row showing whether each round is ongoing or not
     row = ['']
     for r in rds:
@@ -245,7 +245,7 @@ def tournament_best_countries(request,
                 gp = gps[p.power].pop(0)
             except IndexError:
                 continue
-            cell = '<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f' % (gp.player.get_absolute_url(),
+            cell = '<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f' % (gp.tournamentplayer().get_absolute_url(),
                                                                            gp.player,
                                                                            all_urls_and_scores[gp.game][0],  # URL
                                                                            all_urls_and_scores[gp.game][1],  # name

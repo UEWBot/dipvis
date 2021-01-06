@@ -156,11 +156,12 @@ def game_sc_chart(request,
     set_powers = g.the_set.setpower_set.order_by('power')
     # TODO Sort set_powers alphabetically by translated power.name
     # Massage ps so we have one entry per power
-    players = g.players(latest=False)
+    gameplayers = g.gameplayer_set.all()
     ps = []
     for sp in set_powers:
         power_players = ['<a href="%s">%s</a>'
-                         % (p.get_absolute_url(), p) for p in players[sp.power]]
+                         % (gp.tournamentplayer().get_absolute_url(),
+                            gp.player) for gp in gameplayers.filter(power=sp.power)]
         names = '<br>'.join(map(str, power_players))
         ps.append(names)
     scs = g.centrecount_set.order_by('power', 'year')
