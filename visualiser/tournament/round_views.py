@@ -163,7 +163,8 @@ def roll_call(request, tournament_id, round_num=None):
                     # Ensure that we have a corresponding RoundPlayer
                     i, created = RoundPlayer.objects.get_or_create(player=p,
                                                                    the_round=r)
-                    # TODO Should we set game_count to 1 here?
+                    # Reset game_count in case we've been here before
+                    i.game_count = 1
                     try:
                         i.full_clean()
                     except ValidationError as e:
@@ -175,6 +176,7 @@ def roll_call(request, tournament_id, round_num=None):
                                       {'tournament': t,
                                        'post_url': request.path_info,
                                        'formset': formset})
+                    i.save()
                 else:
                     # delete any corresponding RoundPlayer
                     # This could be a player who was previously checked-off in error
