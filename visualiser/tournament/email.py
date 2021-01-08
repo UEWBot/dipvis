@@ -30,7 +30,7 @@ def _filter_recipients(recipients, tournament):
     """
     if not tournament.no_email:
         return
-    managers = [m.player.email for m in tournament.manaer_set.all()]
+    managers = [m.player.email for m in tournament.managers.all()]
     recipients = [set(recipients) & set(managers)]
 
 def send_board_call(the_round):
