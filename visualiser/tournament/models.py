@@ -1732,10 +1732,22 @@ class GamePlayer(models.Model):
                                                                                              'dots': final_sc.count}
                 else:
                     # Game is either ongoing or reached a timed end
-                    gs = _('%(dots)d %(dot_str)s as %(power)s in %(year)d') % {'year': final_sc.year,
-                                                                               'power': self.power.name,
-                                                                               'dot_str': centre_str,
-                                                                               'dots': final_sc.count}
+                    # Is this power topping the board?
+                    final_sc_set = cc_set.filter(year=final_sc.year).order_by('-count')
+                    topper_dots = final_sc_set.first().count
+                    if final_sc.count == topper_dots:
+                        topper_count = final_sc_set.filter(count=topper_dots).count()
+                        if topper_count == 1:
+                            topper_str = _(' (board top)')
+                        else:
+                            topper_str = _(' (%(n)d-way tied board top)') % {'n': topper_count}
+                    else:
+                        topper_str = ''
+                    gs = _('%(dots)d %(dot_str)s%(topper)s as %(power)s in %(year)d') % {'year': final_sc.year,
+                                                                                         'power': self.power.name,
+                                                                                         'topper': topper_str,
+                                                                                         'dot_str': centre_str,
+                                                                                         'dots': final_sc.count}
         # game name and link
         gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name,
                                                          'url': g.get_absolute_url()}
