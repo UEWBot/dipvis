@@ -35,6 +35,8 @@ MASK_SC_CHANGES = 1 << 5
 MASK_SC_CHANGE_COUNTS = 1 << 6
 MASK_SC_OWNER_COUNTS = 1 << 7
 MASK_ALL_NEWS = (1 << 8) - 1
+# All the ones that require SC ownership information
+MASK_OWNERSHIP = MASK_SC_CHANGES | MASK_SC_CHANGE_COUNTS | MASK_SC_OWNER_COUNTS
 
 
 def _tournament_news(t):
@@ -287,6 +289,9 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         prev_scs = centres_set.filter(year=last_year-1)
         prev_scos = g.supplycentreownership_set.filter(year=last_year-1)
         sc_gains, sc_losses = _sc_gains_and_losses(prev_scos, current_scos)
+        if not prev_scos.exists() or not current_scos.exists():
+            # Filter out stuff that needs supply centre ownership information
+            mask &= ~MASK_OWNERSHIP
     else:
         # We only look for differences, so just force no differences
         prev_scs = current_scs
