@@ -1641,8 +1641,8 @@ class GamePlayer(models.Model):
 
     def final_sc_count(self):
         """
-        Number of SupplyCentres held at the end of the Game,
-        or currently if the Game is still ongoing.
+        Number of SupplyCentres held when this Player stopped playing the power,
+        at the end of the Game, or currently if the Game is still ongoing.
         """
         game = self.game
         final_year = game.final_year()
@@ -1685,6 +1685,7 @@ class GamePlayer(models.Model):
         If the Game is ongoing, this will be the result if the game ended now.
         Returned string includes an HTML <a> link to the game details page.
         """
+        # TODO This doesn't allow for replacement players
         g = self.game
         cc_set = g.centrecount_set.all()
         power_cc_set = cc_set.filter(power=self.power)
