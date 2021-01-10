@@ -9,21 +9,25 @@
 <form method="post" action={% url 'get_seven' tournament.id round.number %}>
   {% csrf_token %}
   {{ form.non_field_errors }}
-  {% if sitters == 1 %}
-    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> 1 player to sit out the round,{% endblocktrans %}</p>
+  {% if sitters == 0 and doubles == 7 %}
+    <p>{% blocktrans with count=count %}With {{ count }} players, you don't need anyone to sit out or play two boards.{% endblocktrans %}</p>
   {% else %}
-    <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> {{ sitters }} players to sit out the round,{% endblocktrans %}</p>
+    {% if sitters == 1 %}
+      <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> 1 player to sit out the round,{% endblocktrans %}</p>
+    {% else %}
+      <p>{% blocktrans with count=count sitters=sitters %}With {{ count }} players, you need <b>either</b> {{ sitters }} players to sit out the round,{% endblocktrans %}</p>
+    {% endif %}
+    {% if doubles == 1 %}
+      <p>{% blocktrans with doubles=doubles %}<b>or</b> 1 player to play in two games.{% endblocktrans %}</p>
+    {% else %}
+      <p>{% blocktrans with doubles=doubles %}<b>or</b> {{ doubles }} players to each play in two games.{% endblocktrans %}</p>
+    {% endif %}
+    {% for field in form %}
+      <p>{{ field.errors }}
+      {{ field.label_tag }}
+      {{ field }}</p>
+    {% endfor %}
   {% endif %}
-  {% if doubles == 1 %}
-    <p>{% blocktrans with doubles=doubles %}<b>or</b> 1 player to play in two games.{% endblocktrans %}</p>
-  {% else %}
-    <p>{% blocktrans with doubles=doubles %}<b>or</b> {{ doubles }} players to each play in two games.{% endblocktrans %}</p>
-  {% endif %}
-  {% for field in form %}
-    <p>{{ field.errors }}
-    {{ field.label_tag }}
-    {{ field }}</p>
-  {% endfor %}
   <input type="submit" value="{% trans "Seed Games" %}" />
 </form>
 {% endblock %}

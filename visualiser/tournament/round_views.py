@@ -187,8 +187,8 @@ def roll_call(request, tournament_id, round_num=None):
         # we only want to seed boards if it's the current round
         if (round_num is None) or (r.number() == int(round_num)):
             if t.seed_games:
-                # Seed the games. Note that this will redirect to 'get_seven" if necessary
-                return HttpResponseRedirect(reverse('seed_games',
+                # Ensure that we have the right number of players
+                return HttpResponseRedirect(reverse('get_seven',
                                                     args=(tournament_id,
                                                           r.number())))
             # Next job is almost certainly to create the actual games
@@ -218,12 +218,6 @@ def get_seven(request, tournament_id, round_num):
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
     sitters = count % 7
-    # If we already have an exact multiple of seven players, go straight to creating games
-    if sitters == 0:
-        return HttpResponseRedirect(reverse('seed_games',
-                                            args=(tournament_id,
-                                                  round_num)))
-
     doubles = 7 - sitters
     context = {'tournament': t,
                'round': r,

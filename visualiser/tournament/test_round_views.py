@@ -447,9 +447,9 @@ class RoundViewTests(TestCase):
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
-        # It should redirect to the seed games page
+        # It should redirect to the get seven page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('seed_games', args=(self.t3.pk, 2)))
+        self.assertEqual(response.url, reverse('get_seven', args=(self.t3.pk, 2)))
         # No clean up needed because we left the same 8 players playing
 
     def test_roll_call_post_old_round(self):
@@ -549,8 +549,8 @@ class RoundViewTests(TestCase):
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('get_seven', args=(self.t2.pk, 3)))
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('seed_games', args=(self.t2.pk, 3)))
+        # We should still get the "get seven" page
+        self.assertEqual(response.status_code, 200)
 
     def test_get_seven_sitters(self):
         # get_seven where we specify people sitting out
