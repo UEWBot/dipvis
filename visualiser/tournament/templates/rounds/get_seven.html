@@ -30,4 +30,5 @@
   {% endif %}
   <input type="submit" value="{% trans "Seed Games" %}" />
 </form>
+<p><a href="{% url 'round_roll_call' tournament.id round.number %}">{% trans "Back to roll call" %}</a></p>
 {% endblock %}
