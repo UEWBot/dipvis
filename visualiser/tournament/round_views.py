@@ -237,11 +237,13 @@ def get_seven(request, tournament_id, round_num):
             if rp:
                 rp.game_count = 0
                 rp.save()
-        for i in range(doubles):
-            rp = form.cleaned_data['double_%d' % i]
-            if rp:
-                rp.game_count = 2
-                rp.save()
+        if doubles != 7:
+            # We don't actually give the option of having 7 players play 2 boards
+            for i in range(doubles):
+                rp = form.cleaned_data['double_%d' % i]
+                if rp:
+                    rp.game_count = 2
+                    rp.save()
         return HttpResponseRedirect(reverse('seed_games',
                                             args=(tournament_id,
                                                   round_num)))
