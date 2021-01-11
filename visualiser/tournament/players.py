@@ -605,6 +605,9 @@ class Player(models.Model):
         """
         results = []
         results_set = self.playergameresult_set.all()
+        # We can't report anything useful if we have no info on games played
+        if not results_set.exists():
+            return results
         if power is not None:
             results_set = results_set.filter(power=power)
             c_str = _(u' as %(power)s') % {'power': power}
