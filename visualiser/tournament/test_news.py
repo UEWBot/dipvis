@@ -324,7 +324,7 @@ class TournamentNewsTests(TestCase):
             with self.subTest(mask=mask):
                 # TODO Validate results
                 _game_news(g, mask=mask)
-                mask *= 2
+            mask *= 2
 
     def test_game_news_without_ownerships(self):
         # Test with no SupplyCentreOwnership objects

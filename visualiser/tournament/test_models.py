@@ -967,7 +967,7 @@ class TournamentModelTests(TestCase):
             with self.subTest(mask=mask):
                 # TODO Validate results
                 t.background(mask=mask)
-                mask *= 2
+            mask *= 2
 
     # Tournament.current_round()
     def test_tourney_current_round_none(self):
@@ -1536,7 +1536,7 @@ class TournamentModelTests(TestCase):
             with self.subTest(mask=mask):
                 # TODO Validate results
                 r.background(mask=mask)
-                mask *= 2
+            mask *= 2
 
     # Round.clean()
     def test_round_clean_missing_earliest_end(self):
@@ -1962,7 +1962,7 @@ class TournamentModelTests(TestCase):
             with self.subTest(mask=mask):
                 # TODO Validate results
                 g.background(mask=mask)
-                mask *= 2
+            mask *= 2
 
     # Game.passed_draw()
     def test_game_passed_draw_none(self):

@@ -198,7 +198,7 @@ class PlayerTests(TestCase):
             with self.subTest(mask=mask):
                 # TODO Validate results
                 p.background(mask=mask)
-                mask *= 2
+            mask *= 2
 
     @tag('slow', 'wdd')
     def test_player_background_with_power(self):
