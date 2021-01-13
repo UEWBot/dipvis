@@ -21,6 +21,7 @@ Django news file for the Diplomacy Tournament Visualiser.
 import random
 
 from django.utils.translation import ugettext as _
+from django.utils.translation import ngettext
 
 from tournament.models import Tournament, Round, Game, CentreCount
 from tournament.players import position_str
@@ -105,14 +106,10 @@ def _tournament_news(t):
         if played_rounds == 0:
             results.append(_(u'Tournament has yet to start.'))
         else:
-            if played_rounds == 1:
-                have_str = u'has'
-            else:
-                have_str = u'have'
-            results.append(_(u'%(r_num)d of %(rounds)d rounds %(have)s been played.')
-                           % {'r_num': played_rounds,
-                              'rounds': t.round_set.count(),
-                              'have': have_str})
+            results.append(ngettext('One of %(rounds)d has been played.',
+                                    '%(r_num)d of %(rounds)d have been played.',
+                                    played_rounds) % {'r_num': played_rounds,
+                                                      'rounds': t.round_set.count()})
             # Include who is leading the tournament
             include_leader = True
     if include_leader:
@@ -185,14 +182,11 @@ def _round_news(r):
         results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': r.number()})
     else:
         # Otherwise, add a count of completed games
-        if done_games == 0:
-            done_str = _(u'None')
-        else:
-            done_str = u'%d' % done_games
-        results.append(_(u'%(done)s of the %(total_num)d games in round %(r_num)d have ended.')
-                       % {'done': done_str,
-                          'r_num': r.number(),
-                          'total_num': r.game_set.count()})
+        results.append(ngettext('One of the %(total_num)d games in round %(r_num)d have ended.',
+                                '%(num_done)d of the %(total_num)d games in round %(r_num)d have ended.',
+                                done_games) % {'num_done': done_games,
+                                               'r_num': r.number(),
+                                               'total_num': r.game_set.count()})
         # TODO Add time played in the round so far (difficult to internationalise ?)
     # Shuffle the resulting list
     random.shuffle(results)
