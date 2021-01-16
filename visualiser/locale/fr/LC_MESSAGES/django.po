@@ -1295,7 +1295,7 @@ msgstr "Vues d'ensemble"
 #: tournament/templates/games/detail.html:32
 #: tournament/templates/games/view.html:11
 msgid "Supply Centre Chart"
-msgstr ""
+msgstr "Tableau de décompte des centres"
 
 #: tournament/templates/games/detail.html:34
 #: tournament/templates/games/view.html:13
@@ -1742,11 +1742,11 @@ msgstr "%(count)s Parties"
 #: tournament/templates/rounds/detail.html:30
 #, python-format
 msgid "Played %(year)s."
-msgstr "A joué %(year)s"
+msgstr "A joué %(year)s."
 
 #: tournament/templates/rounds/detail.html:30
 msgid " (Complete)"
-msgstr "(Terminé)"
+msgstr " (Terminé)"
 
 #: tournament/templates/rounds/detail.html:36
 #: tournament/templates/tournaments/view.html:19
@@ -2013,11 +2013,11 @@ msgstr "DipTV - %(tournament)s"
 
 #: tournament/templates/tournaments/detail.html:11
 msgid " players registered."
-msgstr "joueurs enregistrés"
+msgstr " joueurs enregistrés"
 
 #: tournament/templates/tournaments/detail.html:12
 msgid "Format: "
-msgstr "Format"
+msgstr "Format: "
 
 #: tournament/templates/tournaments/detail.html:12
 msgid "Virtual Face-to-face"
@@ -2029,11 +2029,11 @@ msgstr "Face-à-Face"
 
 #: tournament/templates/tournaments/detail.html:13
 msgid "Tournament scoring: "
-msgstr "Score pour le tournoi"
+msgstr "Score pour le tournoi: "
 
 #: tournament/templates/tournaments/detail.html:14
 msgid "Round scoring: "
-msgstr "Score pour la ronde"
+msgstr "Score pour la ronde: "
 
 #: tournament/templates/tournaments/detail.html:16
 #, python-format
@@ -2043,15 +2043,15 @@ msgstr "%(count)s Rondes"
 #: tournament/templates/tournaments/detail.html:20
 #, python-format
 msgid "%(count)s Games."
-msgstr "%(count)s Parties"
+msgstr "%(count)s Parties."
 
 #: tournament/templates/tournaments/detail.html:20
 msgid " Completed."
-msgstr "Terminé"
+msgstr " Terminé."
 
 #: tournament/templates/tournaments/detail.html:24
 msgid "Counts of votes in favour of and against draws are revealed."
-msgstr "Le compte des votes en faveur et contre la fin de partie sont révélés"
+msgstr "Le compte des votes en faveur et contre la fin de partie sont révélés."
 
 #: tournament/templates/tournaments/detail.html:27
 msgid "Multi-frame view"
@@ -2078,11 +2078,11 @@ msgstr "Ronde actuelle"
 
 #: tournament/templates/tournaments/detail.html:38
 msgid " game(s)"
-msgstr "partie(s)"
+msgstr " partie(s)"
 
 #: tournament/templates/tournaments/detail.html:38
 msgid "No games"
-msgstr "Pas de partie."
+msgstr "Pas de partie"
 
 #: tournament/templates/tournaments/detail.html:40
 msgid "Round Index"
@@ -2090,7 +2090,7 @@ msgstr "Liste des rondes"
 
 #: tournament/templates/tournaments/detail.html:43
 msgid "CSV files for World Diplomacy Database upload:"
-msgstr "Fichiers CSV pour chargement dans la World Diplomacy Database"
+msgstr "Fichiers CSV pour chargement dans la World Diplomacy Database:"
 
 #: tournament/templates/tournaments/detail.html:45
 msgid "Classification"
@@ -2109,7 +2109,7 @@ msgid ""
 "Use this if you have people playing in the tournament you want to keep apart "
 "(e.g. family members)."
 msgstr "Utilisez ceci si vous voulez que des joueurs ne soient pas à la même table"
-"(exemple des membres de la même famille)"
+"(exemple des membres de la même famille)."
 
 #: tournament/templates/tournaments/detail.html:56
 msgid ""
@@ -2134,7 +2134,7 @@ msgstr "Téléchargez préférences CSV"
 msgid ""
 "Use this to download a sample CSV file listing player country preferences."
 msgstr ""
-"Utilisez ceci pour télécharger un fichier CSV qui liste les préférences de pays des joueurs.."
+"Utilisez ceci pour télécharger un fichier CSV qui liste les préférences de pays des joueurs."
 
 #: tournament/templates/tournaments/detail.html:66
 msgid "Enter Scores"
@@ -2167,12 +2167,12 @@ msgstr "Préférences de pays pour les joueurs"
 #: tournament/templates/tournaments/player_entry.html:26
 msgid ""
 "Enter the initial of each power, in order, from highest to lowest preference."
-msgstr "Entrez l'initiale de chaque pays dans l'ordre de vos préférences (de la plus haute à la plus basse)"
+msgstr "Entrez l'initiale de chaque pays dans l'ordre de vos préférences (de la plus haute à la plus basse)."
 
 #: tournament/templates/tournaments/enter_prefs.html:11
 #: tournament/templates/tournaments/player_entry.html:27
 msgid "Missing powers will be ranked equal last."
-msgstr "Les pays manquants seront classés derniers"
+msgstr "Les pays manquants seront classés derniers."
 
 #: tournament/templates/tournaments/enter_scores.html:5
 #: tournament/templates/tournaments/scores.html:4
@@ -2190,7 +2190,7 @@ msgstr "DipTV - Choix de Cadre"
 
 #: tournament/templates/tournaments/frameset_picker.html:7
 msgid "Pick a screen layout:"
-msgstr "Choisissez une configuration d'écran"
+msgstr "Choisissez une configuration d'écran:"
 
 #: tournament/templates/tournaments/frameset_picker.html:35
 msgid ""
@@ -2215,15 +2215,15 @@ msgstr "Résultats des parties en cours"
 
 #: tournament/templates/tournaments/index.html:7
 msgid "Tournaments:"
-msgstr "Tournois"
+msgstr "Tournois:"
 
 #: tournament/templates/tournaments/index.html:18
 msgid "No tournaments are available."
-msgstr "Aucun tournoi n'est disponible"
+msgstr "Aucun tournoi n'est disponible."
 
 #: tournament/templates/tournaments/index.html:22
 msgid "Unpublished Tournaments:"
-msgstr "Tournois non publiés"
+msgstr "Tournois non publiés:"
 
 #: tournament/templates/tournaments/index.html:32
 msgid ""
@@ -2238,7 +2238,7 @@ msgstr "page d'administration"
 
 #: tournament/templates/tournaments/index.html:34
 msgid "No unpublished tournaments are available."
-msgstr "Aucun tournoi non publié n'est disponible"
+msgstr "Aucun tournoi non publié n'est disponible."
 
 #: tournament/templates/tournaments/index.html:36
 msgid "Add a tournament"
@@ -2261,7 +2261,7 @@ msgstr " %(tournament)s Confirmation de la Saisie des Données des Joueurs "
 
 #: tournament/templates/tournaments/player_conf.html:10
 msgid "Self-Check-In Done."
-msgstr "Enregistrement Automatique Terminé"
+msgstr "Enregistrement Automatique Terminé."
 
 #: tournament/templates/tournaments/player_conf.html:11
 #, python-format
@@ -2278,7 +2278,7 @@ msgstr "Saisie des Données des Joueurs "
 #: tournament/templates/tournaments/player_entry.html:8
 #, python-format
 msgid " %(tournament)s Player Data Entry "
-msgstr "%(tournament)s Saisie des Données des Joueurs"
+msgstr "%(tournament)s Saisie des Données des Joueurs "
 
 #: tournament/templates/tournaments/player_entry.html:9
 msgid "Current Preferences"
@@ -2290,11 +2290,11 @@ msgstr "(Priorité la plus haute)"
 
 #: tournament/templates/tournaments/player_entry.html:19
 msgid "Remaining power(s) (if any) equal lowest priority."
-msgstr "Pays restants (s'il y en a) avec priorité la plus basse"
+msgstr "Pays restants (s'il y en a) avec priorité la plus basse."
 
 #: tournament/templates/tournaments/player_entry.html:21
 msgid "No power preference."
-msgstr "Pas de préférence pour les pays"
+msgstr "Pas de préférence pour les pays."
 
 #: tournament/templates/tournaments/player_entry.html:24
 msgid "Change Preferences"
@@ -2388,7 +2388,7 @@ msgid ""
 "actually playing."
 msgstr ""
 "Vous ne devez autorisez l'enregistrement automatique juste avant le début de la ronde,"
-" pour éviter que les joueurs s'enregistrent mais ne jouent pas"
+" pour éviter que les joueurs s'enregistrent mais ne jouent pas."
 
 #: tournament/templates/tournaments/upload_prefs.html:4
 #, python-format
@@ -2401,7 +2401,7 @@ msgstr "Chargement des Préférences CSV"
 
 #: tournament/templates/tournaments/view.html:9
 msgid " (cycles between standings, game summary, and best country standings)"
-msgstr "(cylces entre le classement, le résumé des ârties et le classmeent des meilleurs pays"
+msgstr " (cylces entre le classement, le résumé des ârties et le classmeent des meilleurs pays"
 
 #: tournament/templates/tournaments/view.html:18
 msgid "Round"
@@ -2414,7 +2414,7 @@ msgstr "Aperçu de la Partie %(game)s"
 
 #: tournament/templates/tournaments/view.html:22
 msgid " (cycles between SC chart, SC ownership, and latest position)"
-msgstr "(cycles entre le tableau de décompte des centres, la possession des centres et la dernière position"
+msgstr " (cycles entre le tableau de décompte des centres, la possession des centres et la dernière position)"
 
 #: tournament/templates/tournaments/view.html:23
 #, python-format
@@ -2428,7 +2428,7 @@ msgstr "Partie %(game)s Possesion des Centres"
 
 #: tournament/templates/tournaments/view.html:24
 msgid " (Not all tournaments record this info)"
-msgstr "(Tous les tournois n'ont pas cette information)"
+msgstr " (Tous les tournois n'ont pas cette information)"
 
 #: tournament/templates/tournaments/view.html:26
 #, python-format
@@ -2442,7 +2442,7 @@ msgstr "Pas de parties à la ronde %(n)s"
 
 #: tournament/templates/tournaments/view.html:34
 msgid "No rounds in tournament."
-msgstr "Pas de ronde dans le tournoi"
+msgstr "Pas de ronde dans le tournoi."
 
 #: tournament/tournament_player_views.py:77
 msgid "Player already registered"
@@ -2480,7 +2480,7 @@ msgstr "Changer"
 
 #: visualiser/templates/admin/index.html:49
 msgid "You don't have permission to edit anything."
-msgstr "Vous n'avez pas la permission d'éditer"
+msgstr "Vous n'avez pas la permission d'éditer."
 
 #: visualiser/templates/admin/index.html:57
 msgid "Recent Actions"
