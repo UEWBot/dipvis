@@ -146,7 +146,7 @@ def tournament_scores(request,
     scores.sort(key=lambda row: float(row[0]))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
-        row[0] = row[0].replace('%d' % Tournament.UNRANKED, 'Unranked')
+        row[0] = row[0].replace('%d' % Tournament.UNRANKED, _('Unranked'))
     # Add one final row showing whether each round is ongoing or not
     row = ['', '']
     for r in rds:
