@@ -1,0 +1,2499 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-01-13 16:05-0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: templates/registration/login.html:17
+msgid "Please correct the error below."
+msgstr "Svp, corrigez l'erreur ci-dessous."
+
+#: templates/registration/login.html:17
+msgid "Please correct the errors below."
+msgstr "Svp, corrigez les erreurs ci-dessous."
+
+#: templates/registration/login.html:37
+msgid "Password:"
+msgstr "Mot de passe:"
+
+#: templates/registration/login.html:44
+msgid "Forgotten your password or username?"
+msgstr "Nom d'utilisateur ou mot de passe oubliés?"
+
+#: templates/registration/login.html:48
+msgid "Log in"
+msgstr "Identification"
+
+#: tournament/diplomacy.py:45 tournament/diplomacy.py:54
+#, python-format
+msgid "%(value)d is not a valid game year"
+msgstr "%(value)d n'est pas une année de jeu valide"
+
+#: tournament/diplomacy.py:63 tournament/diplomacy.py:66
+#, python-format
+msgid "%(value)d is not a valid ranking"
+msgstr "%(value)d n'est pas un classement valide"
+
+#: tournament/diplomacy.py:80
+#, python-format
+msgid "%(prefs)s contains duplicate characters"
+msgstr "%(prefs)s contient des caractères en double "
+
+#: tournament/diplomacy.py:88
+#, python-format
+msgid "%(prefs)s contains invalid character(s)"
+msgstr "%(prefs)s contient des caractère(s) invalides"
+
+#: tournament/diplomacy.py:140 tournament/models.py:992
+msgid "set"
+msgstr "ensemble"
+
+#: tournament/diplomacy.py:149
+#, python-format
+msgid "%(power)s in %(the_set)s"
+msgstr "%(power)s dans %(the_set)s"
+
+#: tournament/forms.py:45
+#, python-format
+msgid "Round %(number)d"
+msgstr "Ronde %(number)d"
+
+#: tournament/forms.py:47
+msgid " (Finished)"
+msgstr " (Terminé)"
+
+#: tournament/forms.py:49
+msgid " (Self-check-in not yet allowed)"
+msgstr " (L'enregistrement automatique n'est pas autorisé)"
+
+#: tournament/forms.py:51
+msgid " (Self-check-in closed)"
+msgstr " (L'enregistrement automatique est terminé)"
+
+#: tournament/forms.py:154 tournament/forms.py:184 tournament/forms.py:256
+msgid "Game Name"
+msgstr "Nom de la partie"
+
+#: tournament/forms.py:185 tournament/forms.py:257
+msgid "Game Set"
+msgstr "Ensemble de parties"
+
+#: tournament/forms.py:187 tournament/forms.py:259
+msgid "Notes"
+msgstr "Notes"
+
+#: tournament/forms.py:219 tournament/forms.py:379 tournament/forms.py:651
+#, python-format
+msgid "Player %(player)s appears more than once"
+msgstr "Le joueur %(player)s apparaît plus d'une fois "
+
+#: tournament/forms.py:251 tournament/forms.py:321 tournament/models.py:1270
+msgid "Game names must be unique within the tournament"
+msgstr "Le nom des parties doit être unique pour un tournoi donné"
+
+#: tournament/forms.py:291
+#, python-format
+msgid "Power %(power)s appears more than once"
+msgstr "Le pays %(power)s apparaît plus d'une fois"
+
+#: tournament/forms.py:328
+msgid "Player sitting out"
+msgstr "Joueur qui ne participe pas à la ronde"
+
+#: tournament/forms.py:329
+msgid "Player to play two games"
+msgstr "Joueur qui joue deux parties"
+
+#: tournament/forms.py:396
+#, python-format
+msgid ""
+"Too few players sitting out games. Got %(actual)d, expected %(expected)d"
+msgstr "Trop peu de joueurs qui ne participent pas à la ronde. Nombre actuel %(actual)d, attendu %(expected)d"
+
+#: tournament/forms.py:400
+#, python-format
+msgid ""
+"Too few players playing two games. Got %(actual)d, expected %(expected)d"
+msgstr "Trop peu de joueurs jouent deux parties. Nombre actuel %(actual)d, attendu %(expected)d"
+
+#: tournament/forms.py:404
+msgid "Either have players sit out the round or have players play two games"
+msgstr "Il faut que des joueurs ne participent pas à la ronde ou que des joueurs jouent deux parties"
+
+#: tournament/forms.py:442 tournament/forms.py:556
+#, python-format
+msgid "Year %(year)s appears more than once"
+msgstr "L'année %(year)s apparaît plus d'une fois"
+
+#: tournament/forms.py:463
+msgid "Supply Centres should never change from owned to neutral"
+msgstr "Les centres ne doivent jamais redevenir neutres"
+
+#: tournament/forms.py:468
+msgid "Game ended"
+msgstr "La partie est terminée"
+
+#: tournament/forms.py:477
+msgid "Eliminated (optional):"
+msgstr "Éliminé (optionnel):"
+
+#: tournament/forms.py:529
+#, python-format
+msgid "Total SC count for %(year)d is %(dots)d, more than %(max)d"
+msgstr "Le total des centres pour %(year)d est %(dots)d, plus que %(max)d"
+
+#: tournament/forms.py:564
+#, python-format
+msgid "Neutrals increases from %(before)d to %(after)d in %(year)d"
+msgstr "Les aresenaux neutres ont augmenté de %(before)d à %(after)d l'année %(year)d"
+
+#: tournament/game_scoring.py:131
+msgid "Solo or bust"
+msgstr "Solo ou rien"
+
+#: tournament/game_scoring.py:153
+msgid "Draw size"
+msgstr "Taille de l'égalité"
+
+#: tournament/game_scoring.py:239
+#, python-format
+msgid ""
+"\n"
+"                 If there is a solo:\n"
+"                 - Soloers score %(soloer_pts)d.\n"
+"                 - Losers to a solo score %(loss_pts)d.\n"
+"                 Otherwise:\n"
+"                 - Participants get %(played_pts)d.\n"
+"                 - Everyone gets one point per centre owned.\n"
+"                 - Power with the most centres gets %(first_pts)d.\n"
+"                 - Power with the second most centres gets %(second_pts)d.\n"
+"                 - Power with the third most centres gets %(third_pts)d.\n"
+"                 - if powers are tied for rank, they split the points for "
+"their ranks.\n"
+"                 "
+msgstr ""
+"\n"
+"                 Si il y a un solo:\n"
+"                 - Le joueur qui a un solo obtient un score de %(soloer_pts)d.\n"
+"                 - Les joueurs qui subissent un solo obtiennent un score de %(loss_pts)d.\n"
+"                 Sinon:\n"
+"                 - Les participants obtiennent un score de %(played_pts)d.\n"
+"                 - Chacun obtient un point par centre.\n"
+"                 - Le pays avec le plus de centres obtient %(first_pts)d.\n"
+"                 - Le pays avec le deuxième plus grand nombre de centres obtient %(second_pts)d.\n"
+"                 - Le pays avec le troisième plus grand nombre de centres obtient %(third_pts)d.\n"
+"                 - si des pays sont à égalité, les points de position sont partagés.\n"
+"                 "
+
+#: tournament/game_scoring.py:290
+#, python-format
+msgid ""
+"\n"
+"                 If any power soloed, they get %(solo_pts)d points and all "
+"others get zero.\n"
+"                 Otherwise, all powers score 1 point per centre owned at the "
+"end plus\n"
+"                 points for their final position.\n"
+"                 Position points are %(pos_1)d, %(pos_2)d, %(pos_3)d, "
+"%(pos_4)d, %(pos_5)d,\n"
+"                 %(pos_6)d, or %(pos_7)d, with ties splitting those points.\n"
+"                 "
+msgstr ""
+"\n"
+"  si un pays a un solo, il obtient %(solo_pts)d points et "
+"les autres joueurs obtiennent zero.\n"
+"                 Sinon, chaque pays obtient 1 point par centre contrôlé"
+"à la fin de la partie plus\n"
+"                 points pour leur position finale.\n"
+"                 Les points liés à la position sont %(pos_1)d, %(pos_2)d, %(pos_3)d, "
+"%(pos_4)d, %(pos_5)d,\n"
+"                 %(pos_6)d, or %(pos_7)d, les points étant partagés en cas d'égalité.\n"
+"                 "
+
+#: tournament/game_scoring.py:370
+msgid "Sum of Squares"
+msgstr "Somme des carrés des centres"
+
+#: tournament/game_scoring.py:404
+msgid "Janus"
+msgstr "Janus"
+
+#: tournament/game_scoring.py:449
+msgid "Tribute"
+msgstr "Tribute"
+
+#: tournament/game_scoring.py:492
+msgid "World Classic"
+msgstr "World Classic"
+
+#: tournament/game_scoring.py:534
+msgid "ManorCon"
+msgstr "ManorCon"
+
+#: tournament/game_scoring.py:585
+msgid "CDiplo 100"
+msgstr "CDiplo 100"
+
+#: tournament/game_scoring.py:586
+msgid "CDiplo 80"
+msgstr "CDiplo 80"
+
+#: tournament/game_scoring.py:588
+msgid "Carnage with dead equal"
+msgstr "Carnage avec égalité pour les éliminés"
+
+#: tournament/game_scoring.py:589
+msgid "Carnage with elimination order"
+msgstr "Carnage avec ordre d'élimination"
+
+#: tournament/game_scoring_system_views.py:57
+#, python-format
+msgid "Total supply centre count is %(total)d\n"
+msgstr "Le écompte total des centres est de %(total)d\n"
+
+#: tournament/game_scoring_system_views.py:60
+msgid "%(power)p cannot be eliminated in %(year)d"
+msgstr "%(power)p ne peut pas être éliminé en %(year)d"
+
+#: tournament/game_scoring_system_views.py:63
+msgid "%(power)p cannot be eliminated in %(year)d if the game ended in %(end)d"
+msgstr "%(power)p ne peut pas être éliminé en %(year)d si la partie s'est terminée en %(end)d"
+
+#: tournament/game_scoring_system_views.py:67
+msgid ""
+"%(power)p annot be eliminated in %(year)d and now have %(dots)d centre(s)"
+msgstr "%(power)p ne peut pas être éliminé en %(year)d et maintenant posséder %(dots)d centre(s)"
+
+#: tournament/game_views.py:175
+#: tournament/templates/game_scoring_systems/detail.html:32
+msgid "Score"
+msgstr "Score"
+
+#: tournament/game_views.py:400
+#, python-format
+msgid "%(power)s cannot have %(count)d SCs and be eliminated in %(year)d"
+msgstr "%(power)s ne peut pas avoir %(count)d centres et être éliminé en %(year)d"
+
+#: tournament/models.py:52
+msgid "spring"
+msgstr "printemps"
+
+#: tournament/models.py:53
+msgid "fall"
+msgstr "automne"
+
+#: tournament/models.py:113
+msgid "Best game counts"
+msgstr "La meilleure partie compte"
+
+#: tournament/models.py:119
+#, python-format
+msgid "Best game counts. Sitters get %(points)d%(once)s"
+msgstr "La meilleure partie compte. Les joueurs qui n'ont pas joué de manière involontaire obtiennent %(points)d%(once)s"
+
+#: tournament/models.py:240
+msgid "Sum best 2 rounds"
+msgstr "Somme des 2 meilleures rondes"
+
+#: tournament/models.py:241
+msgid "Sum best 3 rounds"
+msgstr "Somme des 3 meilleures rondes"
+
+#: tournament/models.py:242
+msgid "Sum best 4 rounds"
+msgstr "Somme des 4 meilleures rondes"
+
+#: tournament/models.py:295
+#, python-format
+msgid "%(value)d is not a valid SC count"
+msgstr "%(value)d n'est pas un nombre de centres valide"
+
+#: tournament/models.py:304
+msgid "Game names cannot contain spaces"
+msgstr "Le nom des parties ne peut contenir d'espace"
+
+#: tournament/models.py:312
+#, python-format
+msgid "%(value)d is not a valid vote count"
+msgstr "%(value)d n'est pas un nombre de votes valide"
+
+#: tournament/models.py:335
+msgid "Pass/Fail"
+msgstr "Passe/Echoue"
+
+#: tournament/models.py:336
+msgid "Numbers for and against"
+msgstr "Nombre pour et contre"
+
+#: tournament/models.py:344
+msgid "Minimising playing the same power"
+msgstr "Minimiser les joueurs qui rejouent le même pays"
+
+#: tournament/models.py:345
+msgid "Manually by TD or at the board"
+msgstr "Manuellement par le DT ou à la table"
+
+#: tournament/models.py:346
+msgid "Using player preferences and ranking"
+msgstr "Utilisation des préférences des joueurs et du classement"
+
+#: tournament/models.py:353
+msgid "Highest score"
+msgstr "Score le plus élevé"
+
+#: tournament/models.py:354
+msgid "Highest centre count"
+msgstr "Plus grand nombre de centres"
+
+#: tournament/models.py:361
+msgid "Face to Face"
+msgstr "Face à Face"
+
+#: tournament/models.py:362
+msgid "Virtual Face to Face"
+msgstr "Face à Face virtuel"
+
+#: tournament/models.py:375
+msgid "How to combine round scores into a tournament score"
+msgstr "Comment combiner les scores pour le classement du tournoi"
+
+#: tournament/models.py:380
+msgid "How to combine game scores into a round score"
+msgstr "Comment combiner les scores des parties en score pour la ronde"
+
+#: tournament/models.py:382
+msgid "What players are told about failed draw votes"
+msgstr "Quels joueurs apprennent l'échec d'un vote de fin de partie"
+
+#: tournament/models.py:386
+msgid "Whether the tournament is visible to all site visitors"
+msgstr "Est-ce que le tournoi est visible à tous les visiteurs du site"
+
+#: tournament/models.py:388
+msgid ""
+"Which users can modify the tournament,<br/> and see it while it is "
+"unpublished.<br/>"
+msgstr "Quels utilisateurs peuvent modifier le tournoi,<br/> et le voir qunad il est "
+"non publié.<br/>"
+
+#: tournament/models.py:390
+msgid "This tournament's id in the WDD"
+msgstr "Le numéro de ce tournoi dans la WDD"
+
+#: tournament/models.py:393
+msgid ""
+"Add this after the tournament is complete and results have been uploaded to "
+"the WDD"
+msgstr "Ajouter cela quand le tournoi est terminé et que les résultats ont été chargés"
+"dans la wDD"
+
+#: tournament/models.py:395
+msgid "Check to let the software seed players to games"
+msgstr "Cocher pour que le logiciel assigne les joueurs aux parties"
+
+#: tournament/models.py:397
+msgid "How powers are assigned"
+msgstr "Comment les pays sont assignés"
+
+#: tournament/models.py:401
+msgid "Uncheck to disallow any further changes to the tournament"
+msgstr "Déslectionner pour ne plus autoriser de changement pour ce tournoi"
+
+#: tournament/models.py:403
+msgid "How Best Country awards are determined"
+msgstr "Comment les prix pour les meilleurs pays sont déterminés"
+
+#: tournament/models.py:410
+msgid "Check to only generate email to tournament managers"
+msgstr "Cocher pour générer des messages uniquement pour les gestionnaires de tournoi"
+
+#: tournament/models.py:671
+msgid "Ineligible for awards"
+msgstr "Pas éligibles pour les prix"
+
+#: tournament/models.py:672
+msgid "Set this to ignore this player when determining rankings"
+msgstr "A fixer pour ignorer ce joueur dans le classment"
+
+#: tournament/models.py:676 tournament/players.py:404
+msgid "Username on the backstabbr website"
+msgstr "Nom d'utilisateur sur le site backstabbr"
+
+#: tournament/models.py:755
+#, python-format
+msgid "%(player)s at %(tourney)s"
+msgstr "%(player)s à %(tourney)s"
+
+#: tournament/models.py:779
+#, python-format
+msgid "%(value)d is not a valid weighting"
+msgstr "%(value)d n'est pas un poids valide"
+
+#: tournament/models.py:793
+msgid "Number of games to pretend they've already played together"
+msgstr "Nombre de parties pour indiquer qu'ils ont déjà joué ensemble"
+
+#: tournament/models.py:807
+msgid "The players must differ"
+msgstr "Les joueurs doivent être différents"
+
+#: tournament/models.py:809
+msgid "The players must be playing the same tournament"
+msgstr "Les joueurs doivent jouer dans le même tournoi"
+
+#: tournament/models.py:812
+#, python-format
+msgid "%(p1)s and %(p2)s at %(tourney)s"
+msgstr "%(p1)s et %(p2)s à %(tourney)s"
+
+#: tournament/models.py:834
+#, python-format
+msgid "%(player)s ranks %(power)s at %(rank)d"
+msgstr "%(player)s classe %(power)s en %(rank)d"
+
+#: tournament/models.py:848
+msgid "Game scoring system"
+msgstr "Système de classement"
+
+#: tournament/models.py:850
+msgid "How to calculate a score for one game"
+msgstr "Comment calculer le score pour une partie"
+
+#: tournament/models.py:851
+msgid "Draws Include All Survivors"
+msgstr "Les votes de fin de partie doivent inclure tous les survivants"
+
+#: tournament/models.py:859
+msgid "Enable self-check-ins"
+msgstr "Autoriser l'enregistement automatique"
+
+#: tournament/models.py:946
+#, python-format
+msgid "Round %(round)d could end as early as %(time)s."
+msgstr "La ronde %(round)d peut se terminer dès %(time)s"
+
+#: tournament/models.py:950
+#, python-format
+msgid "Round %(round)d could end as late as %(time)s."
+msgstr "La ronde %(round)d peut se terminer au plus tard en %(time)s."
+
+#: tournament/models.py:954
+#, python-format
+msgid "Round %(round)d will end after playing year %(year)d."
+msgstr "La ronde %(round)d se termine après avoir l'année %(year)d."
+
+#: tournament/models.py:967
+msgid "Earliest end time specified without latest end time"
+msgstr "Durée minimale de partie spécifiée sans durée maximiale "
+
+#: tournament/models.py:969
+msgid "Latest end time specified without earliest end time"
+msgstr "Durée maximale de partie spécifiée sans durée minimale"
+
+#: tournament/models.py:977
+#, python-format
+msgid "%(tournament)s round %(round)d"
+msgstr "%(tournament)s ronde %(round)d"
+
+#: tournament/models.py:987
+msgid "Must be unique within the tournament. No spaces"
+msgstr "Doit être unique pour ce tournoi. Pas d'espace."
+
+#: tournament/models.py:991 tournament/models.py:1549
+msgid "round"
+msgstr "ronde"
+
+#: tournament/models.py:995
+msgid "Will be included in board call emails and game page"
+msgstr "Sera inclu dans les messages d'assignement des parties et dans la page des parties"
+
+#: tournament/models.py:1062
+#, python-format
+msgid "Missing count of %(dots)d centre(s) for %(power)s"
+msgstr "Le nombre de centre(s) %(dots)d pour %(power)s est manquant "
+
+#: tournament/models.py:1067
+#, python-format
+msgid ""
+"%(power)s owns %(sco_dots)d centre(s) in %(year)d, but their centrecount is "
+"%(dots)d"
+msgstr "%(power)s possède %(sco_dots)d centre(s) en %(year)d, mais le compte de leurs centres est de "
+"%(dots)d"
+
+#: tournament/models.py:1232
+#, python-format
+msgid "Game%(game)s conceded to "
+msgstr "Partie %(game)s concédée à"
+
+#: tournament/models.py:1234
+#, python-format
+msgid "Vote passed to end game%(game)s as a %(n)d-way draw between "
+msgstr "Vote de fin de partie pour la partie %(game)s comme égalité à %(n)d entre"
+
+#: tournament/models.py:1240 tournament/models.py:1254 tournament/news.py:371
+#, python-format
+msgid "%(player)s (%(power)s)"
+msgstr "%(player)s (%(power)s)"
+
+#: tournament/models.py:1247
+#, python-format
+msgid "Game%(game)s won by %(player)s (%(power)s)"
+msgstr "Partie%(game)s gagnée par %(player)s (%(power)s)"
+
+#: tournament/models.py:1256
+#, python-format
+msgid "Game%(game)s ended. Board top is %(top)d centres, for %(player)s"
+msgstr "Partie%(game)s terminée. Les joueurs %(player)s ont gagné avec %(top)d centres"
+
+#: tournament/models.py:1329
+#, python-format
+msgid "%(game)s at %(tourney)s"
+msgstr "%(game)s à %(tourney)s"
+
+#: tournament/models.py:1348
+#, python-format
+msgid "%(dot)s in %(game)s was owned by %(power)s at the end of %(year)d"
+msgstr "%(dot)s dans %(game)s appartenait à %(power)s à la fin de %(year)d"
+
+#: tournament/models.py:1449
+msgid "This DrawProposal only has pass/fail, not vote counts"
+msgstr "Cette proposition de fin de partie est passe/échoue, pas de décompte des votes"
+
+#: tournament/models.py:1472
+msgid "Draw powers should go as early as possible"
+msgstr "Les pays doivent être choisis aussitôt que possible "
+
+#: tournament/models.py:1479
+#, python-format
+msgid "%(power)s present more than once"
+msgstr "%(power)s présent plus d'une fois"
+
+#: tournament/models.py:1490
+msgid "Game already has a successful draw proposal"
+msgstr "La partie est déjà terminée avec un vote de fin partie "
+
+#: tournament/models.py:1497
+#, python-format
+msgid "Game already has a centre count for %(year)d"
+msgstr "La partie a déja un décompte des centres pour %(year)d"
+
+#: tournament/models.py:1509
+#, python-format
+msgid "Dead power %(power)s included in proposal"
+msgstr "Le pays éliminé %(power)s est inclu dans la proposition"
+
+#: tournament/models.py:1513
+#, python-format
+msgid "Missing alive power %(power)s in DIAS game"
+msgstr "Pays encore actif %(power)s non inlcus dans un vote qui doit inclure tous les surivivants "
+
+#: tournament/models.py:1518
+msgid "Passed needs a value"
+msgstr "Vote passé doit inclure une valeur"
+
+#: tournament/models.py:1521
+msgid "Votes_in_favour needs a value"
+msgstr "Votes_en_faveur doit inclure une valeur"
+
+#: tournament/models.py:1552
+msgid "number of games being played this round"
+msgstr "nombre de aprties jouées cette ronde"
+
+#: tournament/models.py:1576 tournament/models.py:1773
+msgid "Player is not yet in the tournament"
+msgstr "Ce joueur n'est pas isncrit à ce tournoi"
+
+#: tournament/models.py:1579
+#, python-format
+msgid "%(player)s in %(round)s"
+msgstr "%(player)s dans %(round)s"
+
+#: tournament/models.py:1697
+#, python-format
+msgid "Eliminated as %(power)s in %(year)d"
+msgstr "Éliminé avec %(power)s en %(year)d"
+
+#: tournament/models.py:1701
+msgid "centre"
+msgstr "centre"
+
+#: tournament/models.py:1703
+msgid "centres"
+msgstr "centres"
+
+#: tournament/models.py:1709
+#, python-format
+msgid "Solo as %(power)s with %(dots)d %(dot_str)s in %(year)d"
+msgstr "Solo avec %(power)s avec %(dots)d %(dot_str)s en %(year)d"
+
+#: tournament/models.py:1714 tournament/models.py:1729
+#, python-format
+msgid "Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d"
+msgstr "Défaite avec %(power)s avec %(dots)d %(dot_str)s en %(year)d"
+
+#: tournament/models.py:1723
+#, python-format
+msgid "%(n)d-way draw as %(power)s with %(dots)d %(dot_str)s in %(year)d"
+msgstr "Égalité à %(n)d avec %(power)s avec %(dots)d %(dot_str)s en %(year)d"
+
+#: tournament/models.py:1741
+msgid " (board top)"
+msgstr " (Victoire)"
+
+#: tournament/models.py:1743
+#, python-format
+msgid " (%(n)d-way tied board top)"
+msgstr " (Victoire partagée à %(n)d"
+
+#: tournament/models.py:1746
+#, python-format
+msgid "%(dots)d %(dot_str)s%(topper)s as %(power)s in %(year)d"
+msgstr " %(dots)d %(dot_str)s%(topper)s avec %(power)s en %(year)d"
+
+#: tournament/models.py:1752
+#, python-format
+msgid " in <a href=\"%(url)s\">%(game)s</a>"
+msgstr " dans <a href=\"%(url)s\">%(game)s</a>"
+
+#: tournament/models.py:1756
+msgid " [Top Board]"
+msgstr " [Table Finale]"
+
+#: tournament/models.py:1758
+msgid " [Ongoing]"
+msgstr "[En cours]"
+
+#: tournament/models.py:1776
+msgid "Final season played must also be specified"
+msgstr "La saison finale jouée doit aussi être spécifiée"
+
+#: tournament/models.py:1778
+msgid "Final year must be specified with final season"
+msgstr "L'année finale doit être spécifiée avec la saison finale"
+
+#: tournament/models.py:1792
+#, python-format
+msgid ""
+"%(player1)s and %(player2)s both start playing %(power)s %(season)s %(year)d"
+msgstr ""
+"%(player1)s et %(player2)s ont tous les deux commencé à jouer %(power)s %(season)s %(year)d"
+
+#: tournament/models.py:1803
+#, python-format
+msgid ""
+"%(player)s is listed as playing %(power)s in game %(game)s from %(season)s "
+"%(year)d"
+msgstr ""
+"%(player)s est listé comme joueur de  %(power)s dans la partie %(game)s à partir de %(season)s "
+"%(year)d"
+
+#: tournament/models.py:1821
+#, python-format
+msgid ""
+"%(player)s is listed as still playing %(power)s in game %(game)s from "
+"%(season)s %(year)d"
+msgstr ""
+"%(player)s joue encore %(power)s dans la partie %(game)s à partir de "
+"%(season)s %(year)d"
+
+
+#: tournament/models.py:1841
+#, python-format
+msgid "%(player)s as %(power)s in %(game)s"
+msgstr "%(player)s avec %(power)s dans %(game)s"
+
+#: tournament/models.py:1844
+#, python-format
+msgid "%(player)s in %(game)s Power TBD"
+msgstr "%(player)s dans %(game)s Pays à décider."
+
+#: tournament/models.py:1860
+msgid "movement"
+msgstr "mouvement"
+
+#: tournament/models.py:1861
+msgid "retreats"
+msgstr "retraite"
+
+#: tournament/models.py:1862
+msgid "adjustments"
+msgstr "ajsutements"
+
+#: tournament/models.py:1895
+msgid "No adjustment phase in spring"
+msgstr "Pas de phase d'ajustement au printemps"
+
+#: tournament/models.py:1904
+#, python-format
+msgid "%(game)s %(turn)s image"
+msgstr "image de %(turn)s dans %(game)s"
+
+#: tournament/models.py:1934
+#, python-format
+msgid "Games in this round end with %(year)d"
+msgstr "Les parties de cette ronde se finissent en %(year)d"
+
+#: tournament/models.py:1946
+msgid "SC count for a power cannot increase from zero"
+msgstr "Le nombre de centres d'un pays ne peut pas augmenter après être à zéro"
+
+#: tournament/models.py:1948
+msgid "SC count for a power cannot more than double in a year"
+msgstr "Le nombre de centres d'un pays ne pas plus que doubler au cours d'une année"
+
+#: tournament/news.py:52 tournament/news.py:166
+msgid "were"
+msgstr "étaient"
+
+#: tournament/news.py:54 tournament/news.py:168
+msgid "are"
+msgstr "sont"
+
+#: tournament/news.py:55
+#, python-format
+msgid "%(count)d players %(are)s registered to play in the tournament."
+msgstr "%(count)d joueurs %(are)s sont enregistrés pour jouer dans ce tournoi."
+
+#: tournament/news.py:63
+#, python-format
+msgid "Round %(r_num)d of %(rounds)d is currently being played."
+msgstr "La ronde %(r_num)d de %(rounds)d est en cours."
+
+#: tournament/news.py:67
+#, python-format
+msgid "Round %(r_num)d of %(rounds)d will begin at %(date)s."
+msgstr "La ronde %(r_num)d de %(rounds)d commencera à %(date)s"
+
+#: tournament/news.py:77
+#, python-format
+msgid "%(player)s came %(pos)s, with a score of %(score).2f."
+msgstr "%(player)s a fini %(pos)s, avec un score de %(score).2f."
+
+#: tournament/news.py:85
+#, python-format
+msgid ""
+"%(player)s won Best %(country)s with %(dots)d centre(s) and a score of "
+"%(score).2f in game %(game)s of round %(round)d."
+msgstr ""
+"%(player)s a remporté Meilleure  %(country)s avec %(dots)d centre(s) et un score de "
+"%(score).2f dans la partie %(game)s de la ronde %(round)d."
+
+#: tournament/news.py:95
+#, python-format
+msgid ""
+"Best %(country)s was jointly won by %(winner_str)s with %(dots)d centre(s) "
+"and a score of %(score).2f."
+msgstr "Meilleure %(country)s a été remportée conjointement par %(winner_str)s avec %(dots)d centre(s) "
+"et un score de %(score).2f."
+
+#: tournament/news.py:107
+msgid "Tournament has yet to start."
+msgstr "Le tournoi n'a pas encore commencé"
+
+#: tournament/news.py:109
+#, python-format
+msgid "One of %(rounds)d has been played."
+msgid_plural "%(r_num)d of %(rounds)d have been played."
+msgstr[0] "Une des %(rounds)d a été jouée."
+msgstr[1] "%(r_num)d des %(rounds)d ont été jouées"
+
+#: tournament/news.py:121
+#, python-format
+msgid ""
+"If the tournament ended now, the winning score would be %(score).2f for "
+"%(players)s."
+msgstr "si le tournoi finissait maintenant, le score les plus élevé serait de %(score).2f pour "
+"%(players)s."
+
+#: tournament/news.py:144 tournament/tournament_views.py:154
+#: tournament/tournament_views.py:158 tournament/tournament_views.py:208
+msgid "Final"
+msgstr "Final"
+
+#: tournament/news.py:146
+msgid "Current"
+msgstr "Courant"
+
+#: tournament/news.py:148
+#, python-format
+msgid "%(done)s top score for round %(r_num)d is %(score).2f for %(players)s."
+msgstr "Le score le plus élevé %(done)s pour la ronde %(r_num)d est de %(score).2f pour %(players)s."
+
+#: tournament/news.py:169
+#, python-format
+msgid "%(count)d players %(are)s registered to play in the round."
+msgstr "%(count)d joueurs %(are)s sont enregistrés pour jouer cette ronde."
+
+#: tournament/news.py:180
+#, python-format
+msgid "Round %(r_num)d has ended."
+msgstr "La ronde %(r_num)d est terminée."
+
+#: tournament/news.py:182
+#, python-format
+msgid "Round %(r_num)d has not yet started."
+msgstr "La ronde %(r_num)d n'a pas commencé"
+
+#: tournament/news.py:185
+#, python-format
+msgid "One of the %(total_num)d games in round %(r_num)d have ended."
+msgid_plural ""
+"%(num_done)d of the %(total_num)d games in round %(r_num)d have ended."
+msgstr[0] "Une des %(total_num)d parties de la ronde %(r_num)d est terminée."
+msgstr[1] "%(num_done)d des %(total_num)d parties de la ronde %(r_num)d sont terminées"
+
+#: tournament/news.py:237
+#, python-format
+msgid " in game %(name)s"
+msgstr "dans la partie %(name)s"
+
+#: tournament/news.py:267
+#, python-format
+msgid "%(dot)s has been owned by %(owners)d different Great Powers (%(list)s)."
+msgstr "%(dot)s a été possédé par %(owners)d différents pays (%(list)s)."
+
+#: tournament/news.py:277
+#, python-format
+msgid "Highest SC count%(game)s is %(dots)d, for %(player)s."
+msgstr "Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
+
+#: tournament/news.py:303
+#, python-format
+msgid "%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s."
+msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
+
+#: tournament/news.py:312
+#, python-format
+msgid ""
+"%(player)s (%(power)s) est passé de %(old)d à %(new)d centre(s)%(game)s."
+msgstr ""
+
+#: tournament/news.py:329
+#, python-format
+msgid "%(sc)s (from %(power)s)"
+msgstr "%(sc)s (de %(power)s)"
+
+#: tournament/news.py:332
+#, python-format
+msgid "%(sc)s (neutral)"
+msgstr "%(sc)s (neutre)"
+
+#: tournament/news.py:334 tournament/news.py:339
+msgid "no centres"
+msgstr "pas de centre"
+
+#: tournament/news.py:336
+#, python-format
+msgid "%(sc)s (to %(power)s)"
+msgstr "%(sc)s (à %(power)s)"
+
+#: tournament/news.py:340
+#, python-format
+msgid "%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s."
+msgstr "%(player)s (%(power)s) a gagné %(gains)s et perdu %(losses)s%(game)s."
+
+#: tournament/news.py:351
+#, python-format
+msgid "%(count)d non-neutral centre(s) changed hands%(game)s."
+msgstr "%(count)d centres non-neutres ont changé de propriétaire%(game)s."
+
+#: tournament/news.py:358
+#, python-format
+msgid "%(count)d draw vote(s) have been taken."
+msgstr "%(count)d votes de fin de aprtie ont eu lieu."
+
+#: tournament/news.py:375
+#, python-format
+msgid ", %(for)d for, %(against)d against"
+msgstr ", %(for)d pour, %(against)d contre"
+
+#: tournament/news.py:380
+#, python-format
+msgid "Vote to concede to %(powers)s failed%(game)s%(count)s."
+msgstr "Vote de concession envers %(powers)s a échoué %(game)s%(count)s."
+
+#: tournament/news.py:384
+#, python-format
+msgid "Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s."
+msgstr "vote de fin de partie pour ne égalité à %(n)d entre %(powers)s a échoué %(game)s%(count)s."
+
+#: tournament/news.py:396
+#, python-format
+msgid "%(player)s (%(power)s) was eliminated in %(year)d%(game)s."
+msgstr "%(player)s (%(power)s) a été éliminé en %(year)d%(game)s."
+
+#: tournament/players.py:93
+#, python-format
+msgid "%(value)d is not a valid WDD player Id"
+msgstr "%(value)d n'est pas une Id valide sur WDD"
+
+#: tournament/players.py:108
+#, python-format
+msgid "%(value)d is not a valid WDD tournament Id"
+msgstr "%(value)d n'est pas un numéro de tournoi valide sur WDD"
+
+#: tournament/players.py:399
+msgid "WDD player id"
+msgstr "Id de joueur sur WDD"
+
+#: tournament/players.py:412
+msgid "If the Player has an account on the site, record it here"
+msgstr "Si le Joueur a un compte sur le site, enregistrez-le ici"
+
+#: tournament/players.py:451 tournament/players.py:470
+#, python-format
+msgid "WDD Id %(wdd_id)d is invalid"
+msgstr "L'Id WDD %(wdd_id)d n'est pas valide"
+
+#: tournament/players.py:506
+#, python-format
+msgid "%(name)s has never won Best %(power)s."
+msgstr "%(name)s n'a jamais remproté Meilleure %(power)s."
+
+#: tournament/players.py:510
+msgid "once"
+msgstr "une fois"
+
+#: tournament/players.py:512
+#, python-format
+msgid "%(count)d times"
+msgstr "%(count)d fois"
+
+#: tournament/players.py:513
+#, python-format
+msgid "%(name)s has won Best %(power)s %(count_str)s."
+msgstr "%(name)s a remporté Meilleure %(power)s %(count_str)s."
+
+#: tournament/players.py:518
+#, python-format
+msgid "%(name)s first won %(award)s in %(year)d at %(tourney)s"
+msgstr "%(name)s a remporté pour la première fois %(award)s en %(year)d à %(tourney)s"
+
+#: tournament/players.py:523 tournament/players.py:532
+#, python-format
+msgid " with %(dots)d Supply Centres"
+msgstr "avec %(dots)d centres"
+
+#: tournament/players.py:527
+#, python-format
+msgid "%(name)s most recently won %(award)s in %(year)d at %(tourney)s"
+msgstr "%(name)s a récemment gagné %(award)s en %(year)d à %(tourney)s"
+
+#: tournament/players.py:537
+#, python-format
+msgid "%(name)s won %(award)s at %(tourney)s."
+msgstr "%(name)s a remporté %(award)s à %(tourney)s."
+
+#: tournament/players.py:550
+#, python-format
+msgid "This is the first tournament for %(name)s."
+msgstr "C'est le premier tournoi pour %(name)s."
+
+#: tournament/players.py:554
+#, python-format
+msgid "%(name)s has competed in %(number)d tournament(s)."
+msgstr "%(name)s a participé à %(number)d tournoi(s)."
+
+#: tournament/players.py:566
+#, python-format
+msgid "%(name)s first competed in a tournament (%(tournament)s) in %(year)d."
+msgstr "Le premier tournoi de %(name)s est (%(tournament)s) en %(year)d."
+
+#: tournament/players.py:572
+#, python-format
+msgid ""
+"%(name)s most recently competed in a tournament (%(tournament)s) in %(year)d."
+msgstr ""
+"Le tournoi le plus récent de %(name)s a été (%(tournament)s) en %(year)d."
+
+#: tournament/players.py:580
+#, python-format
+msgid ""
+"%(name)s has won %(wins)d of %(plays)d tournaments (%(percentage).2f%%)."
+msgstr ""
+"%(name)s a remporté %(wins)d des %(plays)d tournois joués (%(percentage).2f%%)."
+
+#: tournament/players.py:586
+#, python-format
+msgid "%(name)s won their first tournament (%(tourney)s) in %(year)d."
+msgstr "%(name)s a remporté son premier tournoi (%(tourney)s) en %(year)d."
+
+#: tournament/players.py:591
+#, python-format
+msgid "%(name)s most recently won a tournament (%(tourney)s) in %(year)d."
+msgstr "La victoire la plus récente de %(name)s est (%(tourney)s) en %(year)d."
+
+#: tournament/players.py:598
+#, python-format
+msgid "The best tournament result for %(name)s is %(position)s."
+msgstr ""
+
+#: tournament/players.py:613
+#, python-format
+msgid " as %(power)s"
+msgstr "avec %(power)s"
+
+#: tournament/players.py:619
+#, python-format
+msgid "%(name)s has never played%(power)s in a tournament before."
+msgstr "%(name)s n'a jamais joué %(power)s en tournoi auparavant."
+
+#: tournament/players.py:623
+msgid "games"
+msgstr "parties"
+
+#: tournament/players.py:625
+msgid "game"
+msgstr "partie"
+
+#: tournament/players.py:627
+#, python-format
+msgid "%(name)s has played %(games)d tournament %(games_word)s%(power)s."
+msgstr "%(name)s a joué %(games)d tournament %(games_word)s%(power)s."
+
+#: tournament/players.py:636
+#, python-format
+msgid ""
+"%(name)s has finished with as many as %(dots)d centres%(power)s in "
+"tournament games."
+msgstr "%(name)s has finished with as many as %(dots)d centres%(power)s in "
+"tournament games."
+
+#: tournament/players.py:643
+#, python-format
+msgid ""
+"%(name)s has soloed %(solos)d of %(games)d tournament %(games_word)s played"
+"%(power)s (%(percentage).2f%%)."
+msgstr ""
+"%(name)s a obtenu un solo %(solos)d sur %(games)d de parties de torunois %(games_word)s jouées"
+"%(power)s (%(percentage).2f%%)."
+
+#: tournament/players.py:651
+#, python-format
+msgid "%(name)s has yet to solo%(power)s at a tournament."
+msgstr "%(name)s n'a jamais eu de solo avec %(power)s dans un tournoi."
+
+#: tournament/players.py:659
+#, python-format
+msgid ""
+"%(name)s was eliminated in %(deaths)d of %(games)d tournament %(games_word)s "
+"played%(power)s (%(percentage).2f%%)."
+msgstr ""
+"%(name)s a été éliminé dans %(deaths)d des %(games)d parties de tournois %(games_word)s "
+" %(power)s joué (%(percentage).2f%%)."
+
+#: tournament/players.py:667
+#, python-format
+msgid "%(name)s has yet to be eliminated%(power)s in a tournament."
+msgstr "%(name)s n'a jamais été éliminé avec %(power)s dans un tournoi."
+
+#: tournament/players.py:674
+#, python-format
+msgid ""
+"%(name)s topped the board in %(tops)d of %(games)d tournament %(games_word)s "
+"played%(power)s (%(percentage).2f%%)."
+msgstr "%(name)s a remporté %(tops)d parties sur %(games)d parties de torunois %(games_word)s jouées"
+"a joué %(power)s (%(percentage).2f%%)."
+
+#: tournament/players.py:682
+#, python-format
+msgid "%(name)s has yet to top the board%(power)s at a tournament."
+msgstr "%(name)s n'a pas encore gagné avec %(power)s à un tournoi."
+
+#: tournament/players.py:713 tournament/players.py:757
+#: tournament/players.py:788
+msgid "WDD tournament id"
+msgstr "ID WDD du tournoi"
+
+#: tournament/players.py:719
+#, python-format
+msgid "%(player)s came %(position)s at %(tournament)s"
+msgstr "%(player)s a fini %(position)s à %(tournament)s"
+
+#: tournament/players.py:723
+#, python-format
+msgid " in %(year)d"
+msgstr "en %(year)d "
+
+#: tournament/players.py:733
+msgid "Win"
+msgstr "Victoire"
+
+#: tournament/players.py:734
+msgid "2-way draw"
+msgstr "Égalité à 2"
+
+#: tournament/players.py:735
+msgid "3-way draw"
+msgstr "Égalité à 3"
+
+#: tournament/players.py:736
+msgid "4-way draw"
+msgstr "Égalité à 4"
+
+#: tournament/players.py:737
+msgid "5-way draw"
+msgstr "Égalité à 5"
+
+#: tournament/players.py:738
+msgid "6-way draw"
+msgstr "Égalité à 6"
+
+#: tournament/players.py:739
+msgid "7-way draw"
+msgstr "Égalité à 7"
+
+#: tournament/players.py:740
+msgid "Loss"
+msgstr "Défaite"
+
+#: tournament/players.py:765
+#, python-format
+msgid "%(player)s played %(power)s in %(game)s at %(tourney)s"
+msgstr "%(player)s a joué %(power)s dans la partie %(game)s à %(tourney)s"
+
+#: tournament/players.py:796
+#, python-format
+msgid "%(player)s won %(award)s at %(tourney)s"
+msgstr "%(player)s a gagné %(award)s à %(tourney)s"
+
+#: tournament/players.py:817
+#, python-format
+msgid "%(player)s is ranked %(ranking)s in their country in the %(system)s"
+msgstr "%(player)s a un classement national de %(ranking)s dans le %(system)s"
+
+#: tournament/players.py:823
+#, python-format
+msgid "%(player)s is ranked %(ranking)s internationally in the %(system)s"
+msgstr "%(player)s ea un classement international de %(ranking)s dans %(system)s"
+
+#: tournament/templates/base.html:10
+#: tournament/templates/tournaments/index.html:5
+msgid "DipTV - Diplomacy Tournament Visualiser"
+msgstr "DipTV - Visualisation de Torunoi de Diplomatie"
+
+#: tournament/templates/base.html:25
+msgid "login"
+msgstr "se connecter"
+
+#: tournament/templates/base.html:25
+msgid " Retrieved at "
+msgstr "Récupéré à"
+
+#: tournament/templates/base.html:25
+#, python-format
+msgid "Retrieved by %(user)s at "
+msgstr "Récupéré par %(user)s à"
+
+#: tournament/templates/formset_table.html:31
+#: tournament/templates/games/add_image.html:12
+#: tournament/templates/games/sc_counts_form.html:54
+#: tournament/templates/games/vote.html:15
+#: tournament/templates/rounds/seeded_games.html:38
+#: tournament/templates/tournaments/enter_prefs.html:18
+#: tournament/templates/tournaments/player_entry.html:45
+#: tournament/templates/tournaments/seeder_bias.html:45
+#: tournament/templates/tournaments/self_check_in_control.html:18
+msgid "Submit"
+msgstr "Soumettre"
+
+#: tournament/templates/game_scoring_systems/detail.html:8
+msgid "Summary"
+msgstr "Résumé"
+
+#: tournament/templates/game_scoring_systems/detail.html:10
+msgid "Examples"
+msgstr "Exemples"
+
+#: tournament/templates/game_scoring_systems/detail.html:20
+msgid "Centres"
+msgstr "Centres"
+
+#: tournament/templates/game_scoring_systems/detail.html:26
+msgid "Elimination year"
+msgstr "Année d'élimination"
+
+#: tournament/templates/game_scoring_systems/index.html:5
+msgid "DipTV - Game Scoring Systems"
+msgstr "DipTV - Systèmes de Classement"
+
+#: tournament/templates/game_scoring_systems/index.html:7
+msgid "Game Scoring Systems:"
+msgstr "Systèmes de Classement"
+
+#: tournament/templates/game_scoring_systems/index.html:14
+msgid "No game scoring systems are available."
+msgstr "Aucun système de classement nE'st disponible"
+
+#: tournament/templates/games/add_image.html:4
+msgid "DipTV - Upload Game Position Image"
+msgstr "DipTV - Chargement de l'image de la Position de la Partie"
+
+#: tournament/templates/games/add_image.html:7
+msgid "Upload Game Position Image"
+msgstr "Charger l'Image de la Position de la Partie"
+
+#: tournament/templates/games/add_image.html:8
+msgid ""
+"Image should be of the position at the <b>start</b> of the specified phase"
+msgstr "L'image doit corresondre à la position au <b>start</b> de la phase spécifiée "
+
+#: tournament/templates/games/detail.html:4
+#: tournament/templates/games/view.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Game %(game)s Views"
+msgstr "DipTV - %(tournament)s Vue d'ensemble pour la Partie %(game)s"
+
+#: tournament/templates/games/detail.html:7
+#, python-format
+msgid "Game %(game)s Views"
+msgstr "Vue d'ensemble pour la Partie %(game)s"
+
+#: tournament/templates/games/detail.html:9
+msgid "Top Board for the tournament"
+msgstr "Table Finale pour le tournoi"
+
+#: tournament/templates/games/detail.html:13
+msgid "Game is ongoing."
+msgstr "La partie est en cours"
+
+#: tournament/templates/games/detail.html:14
+#, python-format
+msgid "Last year played is %(year)s."
+msgstr "La dernière année jouée est %(year)s"
+
+#: tournament/templates/games/detail.html:25
+#: tournament/templates/rounds/detail.html:9
+msgid "Start time:"
+msgstr "Heure de début"
+
+#: tournament/templates/games/detail.html:27
+#, python-format
+msgid "Played with the %(set)s set."
+msgstr "Joué avec l'ensemble %(set)s"
+
+#: tournament/templates/games/detail.html:30
+#: tournament/templates/rounds/detail.html:34
+#: tournament/templates/tournaments/detail.html:25
+msgid "Views:"
+msgstr "Vues d'ensemble"
+
+#: tournament/templates/games/detail.html:32
+#: tournament/templates/games/view.html:11
+msgid "Supply Centre Chart"
+msgstr ""
+
+#: tournament/templates/games/detail.html:34
+#: tournament/templates/games/view.html:13
+msgid "Supply Centre Ownership"
+msgstr "Tableau de Possession des Centres"
+
+#: tournament/templates/games/detail.html:37
+#: tournament/templates/games/view.html:16
+msgid "Latest Position"
+msgstr "Dernière Position"
+
+#: tournament/templates/games/detail.html:39
+#: tournament/templates/games/view.html:18
+#: tournament/templates/tournaments/detail.html:35
+msgid "News"
+msgstr "Nouvelles"
+
+#: tournament/templates/games/detail.html:41
+#: tournament/templates/games/view.html:20
+msgid "Position Timelapse"
+msgstr "Timelapse de la position"
+
+#: tournament/templates/games/detail.html:43
+#: tournament/templates/games/view.html:22
+#: tournament/templates/players/detail.html:21
+#: tournament/templates/tournaments/detail.html:36
+msgid "Background"
+msgstr "Contexte"
+
+#: tournament/templates/games/detail.html:46
+#: tournament/templates/rounds/detail.html:46
+#: tournament/templates/tournaments/detail.html:50
+msgid "Data Entry:"
+msgstr "Entrée des données"
+
+#: tournament/templates/games/detail.html:49
+msgid "Enter SC Counts"
+msgstr "Entrer le décompte des centres"
+
+#: tournament/templates/games/detail.html:49
+msgid "Use this to update the supply centre chart for the game."
+msgstr "Utiliser ceci pour modifier le décompte des centres pour la partie"
+
+#: tournament/templates/games/detail.html:52
+msgid "Enter SC Ownership"
+msgstr "Entrer la possession des centres"
+
+#: tournament/templates/games/detail.html:52
+msgid "Use this to update the supply centre ownership for the game."
+msgstr "Utilisez ceci pour mettre à jour la possession des centres pour la partie"
+
+#: tournament/templates/games/detail.html:55
+msgid "Import SC Counts from Backstabbr"
+msgstr "Importer le décompte des centres à partir de Backstabbr"
+
+#: tournament/templates/games/detail.html:55
+msgid ""
+"Use this to update the supply centre chart a game on Backstabbr. Backstabbr "
+"URL must be in the game's notes (and hence listed above)."
+msgstr ""
+"Utilisez ceci pour mettre à jour la tble de décompte des centres sur Backstabbr. L'URL de Backstabbr "
+"doit être dans les notes de la partie (et donc notée ci-dessus)."
+
+#: tournament/templates/games/detail.html:58
+#: tournament/templates/tournaments/detail.html:69
+msgid "Upload Game Image"
+msgstr "Charger Image de la Partie"
+
+#: tournament/templates/games/detail.html:58
+msgid "Use this to add a picture of the game in progress."
+msgstr "Utilisez ceci pour ajouter une image de la partie en cours"
+
+#: tournament/templates/games/detail.html:61
+msgid "Enter Draw Vote"
+msgstr "Entrez Vote de Fin de Partie"
+
+#: tournament/templates/games/detail.html:61
+msgid "Use this to record draw votes, whether they succeed or fail."
+msgstr "Utilisez ceci pour enregister les votes de fin de partie, qu'ils passent ou échouent."
+
+#: tournament/templates/games/detail.html:64
+msgid "Modify Game"
+msgstr "Modifiez la Partie"
+
+#: tournament/templates/games/detail.html:64
+#: tournament/templates/rounds/detail.html:69
+msgid ""
+"Use this to change the players assigned to games (e.g. to replace a player) "
+"or the great power assignments."
+msgstr ""
+"Utilisez ceci pour changer les joueurs assignés aux parties (par exemple, rempalcer un joueur) "
+"ou l'assignation des pays."
+
+#: tournament/templates/games/image.html:4
+#, python-format
+msgid "DipTV - Game %(game)s %(turn)s"
+msgstr "DipTV - Partie %(game)s %(turn)s"
+
+#: tournament/templates/games/image.html:7
+#, python-format
+msgid "Game %(game)s"
+msgstr "Partie %(game)s"
+
+#: tournament/templates/games/index.html:4
+#, python-format
+msgid "DipTV - %(round)s"
+msgstr "DipTV - %(round)s"
+
+#: tournament/templates/games/index.html:7
+#, python-format
+msgid "Round %(n)s"
+msgstr "Ronde %(n)s"
+
+#: tournament/templates/games/index.html:13
+msgid "(Complete)"
+msgstr "(Terminé)"
+
+#: tournament/templates/games/index.html:19
+msgid "No games exist in the round."
+msgstr "Aucune partie n'existe pour cette ronde"
+
+#: tournament/templates/games/info.html:4
+#: tournament/templates/games/info_ticker.html:4
+#, python-format
+msgid "DipTV - Game %(game)s %(subject)s"
+msgstr "DipTV - Partie %(game)s %(subject)s"
+
+#: tournament/templates/games/info.html:7
+#, python-format
+msgid "Game %(game)s</a> %(subject)s"
+msgstr "Partie %(game)s</a> %(subject)s"
+
+#: tournament/templates/games/sc_count.html:4
+#, python-format
+msgid "DipTV - Game %(game)s SC Chart"
+msgstr "DipTV - Partie %(game)s Décompte des centres"
+
+#: tournament/templates/games/sc_count.html:7
+#, python-format
+msgid "Partie %(game)s</a> Décompte des centres"
+msgstr ""
+
+#: tournament/templates/games/sc_count.html:8
+#: tournament/templates/games/sc_owners.html:8
+msgid "Game ongoing"
+msgstr "Partie en cours"
+
+#: tournament/templates/games/sc_count.html:15
+msgid "Neutrals"
+msgstr "Neutres"
+
+#: tournament/templates/games/sc_counts_form.html:4
+#, python-format
+msgid "DipTV - Game %(game)s Supply Centres"
+msgstr "DipTV - Parties %(game)s Centres"
+
+#: tournament/templates/games/sc_counts_form.html:7
+#, python-format
+msgid "Game %(game)s Supply Centres"
+msgstr "Partie %(game)s Centres"
+
+#: tournament/templates/games/sc_owners.html:4
+#, python-format
+msgid "DipTV - Game %(game)s SC Ownership"
+msgstr "DipTV - Partie %(game)s Possesion des centres"
+
+#: tournament/templates/games/sc_owners.html:7
+#, python-format
+msgid "Game %(game)s</a> SC Ownership"
+msgstr "Game %(game)s</a> Possesion des centres"
+
+#: tournament/templates/games/sc_owners_form.html:4
+#, python-format
+msgid "DipTV - Game %(game)s Supply Centre Ownerships"
+msgstr "DipTV - Partie %(game)s Possesion des centres"
+
+#: tournament/templates/games/sc_owners_form.html:7
+#, python-format
+msgid "Game %(game)s Supply Centre Ownerships"
+msgstr "Partie %(game)s Possession des centres"
+
+#: tournament/templates/games/sc_owners_form.html:11
+msgid ""
+"Note that Supply Centre counts will be updated to reflect what is entered "
+"here"
+msgstr "Notez que le décompte des centre sera mis à jour pour refléter ce qui est entré ici"
+
+#: tournament/templates/games/scrape_backstabbr.html:4
+#, python-format
+msgid "DipTV - Game %(game)s Backstabbr import"
+msgstr "DipTV - Partie %(game)s Importer à partir de Backstabbr"
+
+#: tournament/templates/games/scrape_backstabbr.html:7
+#, python-format
+msgid "Game %(game)s</a> Backstabbr import"
+msgstr "Partie %(game)s Importer à partir de Backstabbr"
+
+#: tournament/templates/games/scrape_backstabbr.html:8
+#, python-format
+msgid "Imported centre counts for %(year)s:"
+msgstr "Décompte des centres importé pour %(year)s:"
+
+#: tournament/templates/games/view.html:10
+#: tournament/templates/tournaments/view.html:9
+msgid "Overview"
+msgstr "Vue générale"
+
+#: tournament/templates/games/view.html:10
+msgid ""
+" (cycles between supply centre chart, supply centre ownership, and latest "
+"position)"
+msgstr "(cycles entre le tableau de décompte des centres, la possession des centres et la dernière position)"
+
+#: tournament/templates/games/vote.html:4
+#, python-format
+msgid "DipTV - Game %(game)s Draw Vote"
+msgstr "DipTV - Vote de fin de partie pour la Partie %(game)s"
+
+#: tournament/templates/games/vote.html:7
+#, python-format
+msgid "Game %(game)s Draw Vote"
+msgstr "Vote de fin de partie pour la Partie %(game)s"
+
+#: tournament/templates/players/detail.html:5
+#, python-format
+msgid "DipTV - %(player)s"
+msgstr "DipTV - %(player)s"
+
+#: tournament/templates/players/detail.html:12
+msgid "WDD Name and Id:"
+msgstr "Nom et ID dans la WDD"
+
+#: tournament/templates/players/detail.html:12
+msgid "None"
+msgstr "Aucun"
+
+#: tournament/templates/players/detail.html:13
+msgid "Tournaments"
+msgstr "Tournois"
+
+#: tournament/templates/players/detail.html:16
+msgid "Unranked"
+msgstr "Non classé"
+
+#: tournament/templates/players/detail.html:18
+msgid "No tournaments in the database"
+msgstr "Pas de tournoi dans la base"
+
+#: tournament/templates/players/detail.html:22
+msgid "From the"
+msgstr "A partir de "
+
+#: tournament/templates/players/detail.html:31
+msgid "Update background"
+msgstr "Mise à jour de l'origine"
+
+#: tournament/templates/players/index.html:4
+msgid "DipTV - Player Index"
+msgstr "DipTV - Liste des Joueurs"
+
+#: tournament/templates/players/index.html:7
+msgid "Player Index"
+msgstr "Liste des Joueurs"
+
+#: tournament/templates/players/index.html:11
+#, python-format
+msgid "%(name)s in WDD"
+msgstr "%(name)s dans WDD"
+
+#: tournament/templates/players/index.html:11
+msgid "Not in WDD"
+msgstr "Pas dans WDD"
+
+#: tournament/templates/players/index.html:15
+msgid "No players exist in the database."
+msgstr "Aucun joueur dans la base de données"
+
+#: tournament/templates/players/index.html:21
+msgid "first"
+msgstr "premier"
+
+#: tournament/templates/players/index.html:22
+msgid "previous"
+msgstr "précédent"
+
+#: tournament/templates/players/index.html:26
+#, python-format
+msgid "Page %(current)s of %(total)s"
+msgstr "Page %(current)s de %(total)s"
+
+#: tournament/templates/players/index.html:30
+msgid "next"
+msgstr "suivant"
+
+#: tournament/templates/players/index.html:31
+msgid "last"
+msgstr "dernier"
+
+#: tournament/templates/players/index.html:39
+msgid "Add a single player"
+msgstr "Ajouter un joueur"
+
+#: tournament/templates/players/index.html:40
+msgid "Upload CSV file of players"
+msgstr "Charger le fichier CSV des joueurs"
+
+#: tournament/templates/players/upload_players.html:4
+msgid "DipTV - Upload Players CSV"
+msgstr "DipTV - Chargmeent fichier CSV joueurs"
+
+#: tournament/templates/players/upload_players.html:7
+msgid "Upload Players CSV"
+msgstr "Charger fichier Joueurs CSV"
+
+#: tournament/templates/players/upload_players.html:9
+msgid "Mandatory columns:"
+msgstr "Colonnes obligatoires"
+
+#: tournament/templates/players/upload_players.html:14
+msgid "Optional columns:"
+msgstr "Colonnes optionnelles"
+
+#: tournament/templates/players/upload_players.html:24
+#: tournament/templates/tournaments/upload_prefs.html:11
+msgid "File:"
+msgstr "Fichier."
+
+#: tournament/templates/players/upload_players.html:27
+#: tournament/templates/tournaments/upload_prefs.html:14
+msgid "Upload"
+msgstr "Charger"
+
+#: tournament/templates/rounds/board_call.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Round %(round)s Board Call"
+msgstr "DipTV - %(tournament)s Appel des joueurs Round %(round)s"
+
+#: tournament/templates/rounds/board_call.html:7
+#, python-format
+msgid "Round %(round)s Board Call"
+msgstr "Appel des joueurs pour la Ronde %(round)s"
+
+#: tournament/templates/rounds/create_games.html:4
+#: tournament/templates/rounds/seeded_games.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Round %(round)s Games "
+msgstr "DipTV - %(tournament)s Round %(round)s Parties"
+
+#: tournament/templates/rounds/create_games.html:7
+#: tournament/templates/rounds/game_score.html:7
+#: tournament/templates/rounds/get_seven.html:7
+#: tournament/templates/rounds/index.html:11
+#: tournament/templates/rounds/seeded_games.html:7
+#: tournament/templates/tournaments/detail.html:19
+#: tournament/templates/tournaments/game_results.html:17
+#: tournament/templates/tournaments/scores.html:18
+#, python-format
+msgid "Round %(round)s"
+msgstr "Ronde %(round)s"
+
+#: tournament/templates/rounds/create_games.html:7
+#: tournament/templates/rounds/game_score.html:7
+#: tournament/templates/rounds/seeded_games.html:7
+msgid "Games"
+msgstr "Parties"
+
+#: tournament/templates/rounds/create_games.html:9
+#: tournament/templates/rounds/seeded_games.html:9
+msgid "Game Names cannot contain spaces and must be unique within the round."
+msgstr ""
+
+#: tournament/templates/rounds/create_games.html:10
+#: tournament/templates/rounds/seeded_games.html:10
+msgid ""
+"Game Set should be chosen to ensure the great power colours are as expected. "
+"If the set being used does not appear in the drop-down, you can add it "
+"(provided you have a picture of the initial position) at"
+msgstr ""
+
+#: tournament/templates/rounds/create_games.html:10
+#: tournament/templates/rounds/seeded_games.html:10
+#: tournament/templates/tournament_players/index.html:54
+#: tournament/templates/tournaments/roll_call.html:12
+msgid "this page"
+msgstr "cette page"
+
+#: tournament/templates/rounds/create_games.html:11
+#, python-format
+msgid ""
+"If a player does not appear in the drop-down, you need to flag them as "
+"playing in round %(round_num)s on the"
+msgstr ""
+
+#: tournament/templates/rounds/create_games.html:11
+msgid "roll call page"
+msgstr "page d'appel"
+
+#: tournament/templates/rounds/detail.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Round %(round)s Views"
+msgstr "DipTV - %(tournament)s Vue d'ensemble de la Ronde %(round)s"
+
+#: tournament/templates/rounds/detail.html:7
+#, python-format
+msgid "Round %(round)s Views"
+msgstr "Vue d'ensemble de la Ronde %(round)s"
+
+#: tournament/templates/rounds/detail.html:11
+msgid "Scoring system:"
+msgstr "Système de classement"
+
+#: tournament/templates/rounds/detail.html:13
+msgid "All surviving players are included if a game ends in a draw."
+msgstr "Tous les joueurs survivants sont inclus dans une égalité de fin de partie"
+
+#: tournament/templates/rounds/detail.html:14
+msgid "Surviving players may vote themselves out of draws."
+msgstr "Les joueurs survivants peuvent s'exclure d'une égalité de fin de partie"
+
+#: tournament/templates/rounds/detail.html:18
+#, python-format
+msgid "Games in this round end with %(year)s."
+msgstr "Les parties de cette ronde se finissent en %(year)s."
+
+#: tournament/templates/rounds/detail.html:20
+#, python-format
+msgid "Games in this round will end between %(start)s and %(end)s."
+msgstr "Les parties de cette ronde se finissent entre %(start)s et %(end)s"
+
+#: tournament/templates/rounds/detail.html:22
+msgid "Games in this round have no set endpoint."
+msgstr "Les parties de cette ronde n'ont pas de fin prédéterminée."
+
+#: tournament/templates/rounds/detail.html:25
+msgid " players present."
+msgstr " joueurs présents."
+
+#: tournament/templates/rounds/detail.html:27
+#: tournament/templates/rounds/index.html:13
+#, python-format
+msgid "%(count)s Games"
+msgstr "%(count)s Parties"
+
+#: tournament/templates/rounds/detail.html:30
+#, python-format
+msgid "Played %(year)s."
+msgstr "A joué %(year)s"
+
+#: tournament/templates/rounds/detail.html:30
+msgid " (Complete)"
+msgstr "(Terminé)"
+
+#: tournament/templates/rounds/detail.html:36
+#: tournament/templates/tournaments/view.html:19
+msgid "Board Call"
+msgstr "Appel des tables"
+
+#: tournament/templates/rounds/detail.html:37
+msgid "Game Index"
+msgstr "Liste des Parties"
+
+#: tournament/templates/rounds/detail.html:40
+msgid "CSV file download:"
+msgstr "Chargement de fichier CSV"
+
+#: tournament/templates/rounds/detail.html:42
+msgid "Board call"
+msgstr "Appel des tables"
+
+#: tournament/templates/rounds/detail.html:50
+#: tournament/templates/tournaments/detail.html:62
+msgid "Enter player preferences"
+msgstr "Entrez les préférences des joueurs"
+
+#: tournament/templates/rounds/detail.html:50
+#: tournament/templates/tournaments/detail.html:62
+msgid "Use this to enter player country preferences using a form."
+msgstr "Utilisez ceci pour entrer les préférences des joueurs pour les pays en utilisant un formulaire"
+
+#: tournament/templates/rounds/detail.html:54
+#: tournament/templates/tournaments/detail.html:56
+#: tournament/templates/tournaments/roll_call.html:8
+msgid "Roll Call"
+msgstr "Recensement des joueurs"
+
+#: tournament/templates/rounds/detail.html:54
+msgid ""
+"Use this to specify which of the players at the tournament are actually "
+"playing in this round."
+msgstr ""
+
+#: tournament/templates/rounds/detail.html:58
+#: tournament/templates/rounds/get_seven.html:23
+msgid "Seed Games"
+msgstr ""
+
+#: tournament/templates/rounds/detail.html:58
+msgid "Use this to get the software to assign players to games."
+msgstr "Utiisez ceci pour que le logiciel assigne les joueurs aux parties"
+
+#: tournament/templates/rounds/detail.html:60
+#, python-format
+msgid ""
+"<b>Warning!</b> Clicking this link will permanently delete the existing "
+"%(count)s games!"
+msgstr "<b>Attention!</b> Clicquer ce lien effacera définitivenment "
+"les %(count)s parties existantes!"
+
+#: tournament/templates/rounds/detail.html:63
+msgid "Create Games"
+msgstr "Créer les Parties"
+
+#: tournament/templates/rounds/detail.html:63
+msgid ""
+"Use this to create the games for this round, to assign players to games, and "
+"to assign great powers to players."
+msgstr "Utilisez ceci pour créer les parties pour cette ronde, pour assigner les joueurs aux parties, et "
+"pour assigner les pays aux joueurs."
+
+#: tournament/templates/rounds/detail.html:67
+msgid "Score Games"
+msgstr "Score des Parties"
+
+#: tournament/templates/rounds/detail.html:67
+msgid "Use this if you need to override the scores calculated by the system."
+msgstr "Utilisez ceci pour remplacer les scores calculés par le système"
+
+#: tournament/templates/rounds/detail.html:69
+msgid "Modify Games"
+msgstr "Modifier les Parties"
+
+#: tournament/templates/rounds/game_score.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Round %(round)s Game Scores"
+msgstr "DipTV - %(tournament)s Ronde %(round)s Scores des Parties"
+
+#: tournament/templates/rounds/get_seven.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Round %(round)s Game Seeding "
+msgstr "DipTV - %(tournament)s Round %(round)s Création des Parties "
+
+#: tournament/templates/rounds/get_seven.html:7
+msgid "Game Seeding"
+msgstr "Création des Parties"
+
+#: tournament/templates/rounds/get_seven.html:13
+#, python-format
+msgid ""
+"With %(n_players)s players, you don't need anyone to sit out or play two "
+"boards."
+msgstr ""
+
+#: tournament/templates/rounds/get_seven.html:15
+#, python-format
+msgid ""
+"With %(n_players)s players, you need <b>either</b> 1 player to sit out the "
+"round,"
+msgid_plural ""
+"With %(n_players)s players, you need <b>either</b> %(sitters)s players to "
+"sit out the round,"
+msgstr[0] "Avec %(n_players)s joueurs, il faut que <b>soit</b> %(sitters)s joueur accepte de ne pas jouer "
+"cette ronde,"
+msgstr[1] "Avec %(n_players)s joueurs, il faut que <b>soit</b> %(sitters)s joueurs acceptent de ne pas jouer "
+"cette ronde,"
+
+#: tournament/templates/rounds/get_seven.html:16
+#, python-format
+msgid "<b>or</b> 1 player to play in two games."
+msgid_plural "<b>or</b> %(doubles)s players to each play in two games."
+msgstr[0] "<b>ou</b> 1 joueur jouera dans deux parties."
+msgstr[1] "<b>ou</b> %(doubles)s joueurs joueront dans deux parties."
+
+#: tournament/templates/rounds/get_seven.html:25
+msgid "Back to roll call"
+msgstr "Retour au recensement"
+
+#: tournament/templates/rounds/index.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Round Index"
+msgstr "DipTV - %(tournament)s Lsite des Rondes"
+
+#: tournament/templates/rounds/index.html:12
+msgid "Start"
+msgstr "Commencer."
+
+#: tournament/templates/rounds/index.html:15
+msgid "Completed"
+msgstr "Terminé."
+
+#: tournament/templates/rounds/index.html:21
+msgid "No rounds exist in the tournament."
+msgstr "Aucune ronde n'existe pour ce tournoi."
+
+#: tournament/templates/tournament_players/detail.html:4
+#, python-format
+msgid "DipTV - %(tp)s"
+msgstr "DipTV - %(tp)s"
+
+#: tournament/templates/tournament_players/detail.html:9
+msgid "Ineligible for awards."
+msgstr "Inadmissible pour les prix."
+
+#: tournament/templates/tournament_players/detail.html:13
+#, python-format
+msgid "Round %(r)s"
+msgstr "Ronde %(r)s"
+
+#: tournament/templates/tournament_players/detail.html:18
+#: tournament/templates/tournament_players/detail.html:22
+msgid "Did not play."
+msgstr "N'a pas joué."
+
+#: tournament/templates/tournament_players/detail.html:22
+msgid "Has not yet played."
+msgstr "N'a pas encore joué"
+
+#: tournament/templates/tournament_players/detail.html:26
+msgid "Player Background"
+msgstr "Origine du Joueur"
+
+#: tournament/templates/tournament_players/index.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Registered Players"
+msgstr "DipTV - %(tournament)s Joueurs enregistrés"
+
+#: tournament/templates/tournament_players/index.html:7
+msgid "Registered Players"
+msgstr "Joueurs enregistrés"
+
+#: tournament/templates/tournament_players/index.html:14
+#: tournament/templates/tournaments/game_results.html:15
+#: tournament/templates/tournaments/scores.html:16
+#: tournament/templates/tournaments/seeder_bias.html:15
+#: tournament/templates/tournaments/seeder_bias.html:16
+msgid "Player"
+msgstr "Joueur"
+
+#: tournament/templates/tournament_players/index.html:16
+msgid "Backstabbr Username"
+msgstr "Nom d'utilisateur Backstabbr"
+
+#: tournament/templates/tournament_players/index.html:18
+msgid "Unranked?"
+msgstr "Non classé?"
+
+#: tournament/templates/tournament_players/index.html:19
+msgid "Email known?"
+msgstr "Courriel inconnu?"
+
+#: tournament/templates/tournament_players/index.html:21
+msgid "Prefs email sent?"
+msgstr "Courriel de préférences envoyé?"
+
+#: tournament/templates/tournament_players/index.html:35
+#: tournament/templates/tournament_players/index.html:36
+#: tournament/templates/tournament_players/index.html:38
+msgid "Yes"
+msgstr "Oui"
+
+#: tournament/templates/tournament_players/index.html:40
+msgid "Send prefs email"
+msgstr "Envoyer un courriel de préférences"
+
+#: tournament/templates/tournament_players/index.html:45
+msgid "Unregister player"
+msgstr "Désenregistrez un joueur"
+
+#: tournament/templates/tournament_players/index.html:52
+msgid ""
+"WARNING: You will really mess things up if you unregister a player who has "
+"played in the tournament"
+msgstr "AVERTISSEMENT: Vous allez causer des problèmes si vous désenregistrer un joueur"
+" qui a participé au tournoi"
+
+#: tournament/templates/tournament_players/index.html:53
+msgid "Register Players"
+msgstr "Joueurs Enregistrés"
+
+#: tournament/templates/tournament_players/index.html:54
+#: tournament/templates/tournaments/roll_call.html:12
+msgid ""
+"If a player doesn't appear in the dropdown, you'll first have to add them to "
+"the database, which you can do from"
+msgstr "Si le joueur n'apparait pas dans le menu déroulant, il faut d'abord l'ajouter"
+"dans la base, ce que vous pouvez faire"
+
+#: tournament/templates/tournament_players/index.html:60
+msgid "(Ineligible for awards)"
+msgstr "(Pas admissible pour les prix)"
+
+#: tournament/templates/tournament_players/index.html:62
+msgid "No players yet registered"
+msgstr "Aucun joueur enregistré"
+
+#: tournament/templates/tournaments/best_countries.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Best Countries"
+msgstr "DipTV - %(tournament)s Meilleurs Pays"
+
+#: tournament/templates/tournaments/best_countries.html:7
+#: tournament/templates/tournaments/detail.html:33
+#: tournament/templates/tournaments/view.html:15
+msgid "Best Countries"
+msgstr "Meilleurs pays"
+
+#: tournament/templates/tournaments/best_countries.html:24
+msgid "unranked"
+msgstr "non classé"
+
+#: tournament/templates/tournaments/detail.html:4
+#: tournament/templates/tournaments/view.html:4
+#, python-format
+msgid "DipTV - %(tournament)s"
+msgstr "DipTV - %(tournament)s"
+
+#: tournament/templates/tournaments/detail.html:11
+msgid " players registered."
+msgstr "joueurs enregistrés"
+
+#: tournament/templates/tournaments/detail.html:12
+msgid "Format: "
+msgstr "Format"
+
+#: tournament/templates/tournaments/detail.html:12
+msgid "Virtual Face-to-face"
+msgstr "Face-à-Face virtuel"
+
+#: tournament/templates/tournaments/detail.html:12
+msgid "Face-to-face"
+msgstr "Face-à-Face"
+
+#: tournament/templates/tournaments/detail.html:13
+msgid "Tournament scoring: "
+msgstr "Score pour le tournoi"
+
+#: tournament/templates/tournaments/detail.html:14
+msgid "Round scoring: "
+msgstr "Score pour la ronde"
+
+#: tournament/templates/tournaments/detail.html:16
+#, python-format
+msgid "%(count)s Rounds"
+msgstr "%(count)s Rondes"
+
+#: tournament/templates/tournaments/detail.html:20
+#, python-format
+msgid "%(count)s Games."
+msgstr "%(count)s Parties"
+
+#: tournament/templates/tournaments/detail.html:20
+msgid " Completed."
+msgstr "Terminé"
+
+#: tournament/templates/tournaments/detail.html:24
+msgid "Counts of votes in favour of and against draws are revealed."
+msgstr "Le compte des votes en faveur et contre la fin de partie sont révélés"
+
+#: tournament/templates/tournaments/detail.html:27
+msgid "Multi-frame view"
+msgstr "Vue multi-images"
+
+#: tournament/templates/tournaments/detail.html:29
+#: tournament/templates/tournaments/view.html:11
+msgid "Final Standings"
+msgstr "Classement Final"
+
+#: tournament/templates/tournaments/detail.html:31
+#: tournament/templates/tournaments/view.html:13
+msgid "Current Standings"
+msgstr "Classement Actuel"
+
+#: tournament/templates/tournaments/detail.html:34
+#: tournament/templates/tournaments/view.html:16
+msgid "Game Summary"
+msgstr "Résumé de la partie"
+
+#: tournament/templates/tournaments/detail.html:38
+msgid "Current Round"
+msgstr "Ronde actuelle"
+
+#: tournament/templates/tournaments/detail.html:38
+msgid " game(s)"
+msgstr "partie(s)"
+
+#: tournament/templates/tournaments/detail.html:38
+msgid "No games"
+msgstr "Pas de partie."
+
+#: tournament/templates/tournaments/detail.html:40
+msgid "Round Index"
+msgstr "Liste des rondes"
+
+#: tournament/templates/tournaments/detail.html:43
+msgid "CSV files for World Diplomacy Database upload:"
+msgstr "Fichiers CSV pour chargement dans la World Diplomacy Database"
+
+#: tournament/templates/tournaments/detail.html:45
+msgid "Classification"
+msgstr "Classement"
+
+#: tournament/templates/tournaments/detail.html:46
+msgid "Boards"
+msgstr "Tables"
+
+#: tournament/templates/tournaments/detail.html:53
+msgid "Add bias to the game seeder"
+msgstr "Ajouter un biais d'assignation"
+
+#: tournament/templates/tournaments/detail.html:53
+msgid ""
+"Use this if you have people playing in the tournament you want to keep apart "
+"(e.g. family members)."
+msgstr "Utilisez ceci si vous voulez que des joueurs ne soient pas à la même table"
+"(exemple des membres de la même famille)"
+
+#: tournament/templates/tournaments/detail.html:56
+msgid ""
+"Use this to specify which of the players at the tournament are actually "
+"playing in each round."
+msgstr ""
+"Utilisez ceci pour spécifier quels joueurs du tournoi jouent effectivement dans chacune des rondes."
+
+#: tournament/templates/tournaments/detail.html:60
+msgid "Upload preferences CSV"
+msgstr "Chargez les préférences CSV"
+
+#: tournament/templates/tournaments/detail.html:60
+msgid "Use this to upload a CSV file listing player country preferences."
+msgstr "Utilisez ceci pour charger un fichier CSV qui liste les préférences de pays des joueurs."
+
+#: tournament/templates/tournaments/detail.html:61
+msgid "Download preferences CSV"
+msgstr "Téléchargez préférences CSV"
+
+#: tournament/templates/tournaments/detail.html:61
+msgid ""
+"Use this to download a sample CSV file listing player country preferences."
+msgstr ""
+"Utilisez ceci pour télécharger un fichier CSV qui liste les préférences de pays des joueurs.."
+
+#: tournament/templates/tournaments/detail.html:66
+msgid "Enter Scores"
+msgstr "Entrez les scores"
+
+#: tournament/templates/tournaments/detail.html:66
+msgid ""
+"Use this if you need to modify the scores that the system calculates when "
+"games end."
+msgstr ""
+"Utilisez ceci si vous avez besoin de  modifier les scores calculés par le logiciel "
+"à la fin de la partie."
+
+#: tournament/templates/tournaments/detail.html:69
+msgid "Use this to add a picture of a game in progress."
+msgstr "Utilisez ceci pour ajouter une image d'une partie en cours."
+
+#: tournament/templates/tournaments/enter_prefs.html:5
+#: tournament/templates/tournaments/player_conf.html:5
+#: tournament/templates/tournaments/player_entry.html:5
+msgid "DipTV"
+msgstr "DipTV"
+
+#: tournament/templates/tournaments/enter_prefs.html:5
+#: tournament/templates/tournaments/enter_prefs.html:8
+msgid "Player Country Preferences"
+msgstr "Préférences de pays pour les joueurs"
+
+#: tournament/templates/tournaments/enter_prefs.html:10
+#: tournament/templates/tournaments/player_entry.html:26
+msgid ""
+"Enter the initial of each power, in order, from highest to lowest preference."
+msgstr "Entrez l'initiale de chaque pays dans l'ordre de vos préférences (de la plus haute à la plus basse)"
+
+#: tournament/templates/tournaments/enter_prefs.html:11
+#: tournament/templates/tournaments/player_entry.html:27
+msgid "Missing powers will be ranked equal last."
+msgstr "Les pays manquants seront classés derniers"
+
+#: tournament/templates/tournaments/enter_scores.html:5
+#: tournament/templates/tournaments/scores.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Scores"
+msgstr "DipTV - %(tournament)s Scores"
+
+#: tournament/templates/tournaments/enter_scores.html:8
+msgid "Scores"
+msgstr "Scores"
+
+#: tournament/templates/tournaments/frameset_picker.html:4
+msgid "DipTV - Frame Picker"
+msgstr "DipTV - Choix de Cadre"
+
+#: tournament/templates/tournaments/frameset_picker.html:7
+msgid "Pick a screen layout:"
+msgstr "Choisissez une configuration d'écran"
+
+#: tournament/templates/tournaments/frameset_picker.html:35
+msgid ""
+"All views also have a news ticker across the bottom. You can choose any URL "
+"in each frame. Most will auto-refresh."
+msgstr ""
+"Toutes les vues ont un compteur de nouvelles en bas. Vous pouvez choisir un URL"
+"dans chaque cadre. La plupart sont rafraichis automatiquement."
+
+#: tournament/templates/tournaments/game_results.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Game Results"
+msgstr "DipTV - %(tournament)s Résultat des Parties"
+
+#: tournament/templates/tournaments/game_results.html:8
+msgid "Final Game Results"
+msgstr "Résultats finaux des parties"
+
+#: tournament/templates/tournaments/game_results.html:10
+msgid "Current Game Results"
+msgstr "Résultats des parties en cours"
+
+#: tournament/templates/tournaments/index.html:7
+msgid "Tournaments:"
+msgstr "Tournois"
+
+#: tournament/templates/tournaments/index.html:18
+msgid "No tournaments are available."
+msgstr "Aucun tournoi n'est disponible"
+
+#: tournament/templates/tournaments/index.html:22
+msgid "Unpublished Tournaments:"
+msgstr "Tournois non publiés"
+
+#: tournament/templates/tournaments/index.html:32
+msgid ""
+"Unpublished tournaments are not visible to most site users. To make one "
+"visible, check the 'is_published' checkbox for it in the "
+msgstr "Les tournois non publiés ne sont pas visibles par la pluârt des utilisateurs du site. Pour rendre un tournoi visible"
+"cochez la case 'est_publié' dans la"
+
+#: tournament/templates/tournaments/index.html:32
+msgid "admin page"
+msgstr "page d'administration"
+
+#: tournament/templates/tournaments/index.html:34
+msgid "No unpublished tournaments are available."
+msgstr "Aucun tournoi non publié n'est disponible"
+
+#: tournament/templates/tournaments/index.html:36
+msgid "Add a tournament"
+msgstr "Ajouter un tournoi"
+
+#: tournament/templates/tournaments/info.html:4
+#: tournament/templates/tournaments/info_ticker.html:4
+#, python-format
+msgid "DipTV - %(tournament)s %(subject)s"
+msgstr "DipTV - %(tournament)s %(subject)s"
+
+#: tournament/templates/tournaments/player_conf.html:5
+msgid "Player Data Entry Confirmation"
+msgstr "Confirmation de la Saisie des Données des Joueurs"
+
+#: tournament/templates/tournaments/player_conf.html:8
+#, python-format
+msgid " %(tournament)s Player Data Entry Confirmation "
+msgstr " %(tournament)s Confirmation de la Saisie des Données des Joueurs "
+
+#: tournament/templates/tournaments/player_conf.html:10
+msgid "Self-Check-In Done."
+msgstr "Enregistrement Automatique Terminé"
+
+#: tournament/templates/tournaments/player_conf.html:11
+#, python-format
+msgid ""
+" If something comes up, you can go back to <a href=\"%(url)s\">that same "
+"page</a> to change whether you are playing or not. "
+msgstr "En cas de problème, vous pouvez retourner à <a href=\"%(url)s\">that same "
+"page</a> pour cahnger votre statut de participation. "
+
+#: tournament/templates/tournaments/player_entry.html:5
+msgid "Player Data Entry"
+msgstr "Saisie des Données des Joueurs "
+
+#: tournament/templates/tournaments/player_entry.html:8
+#, python-format
+msgid " %(tournament)s Player Data Entry "
+msgstr "%(tournament)s Saisie des Données des Joueurs"
+
+#: tournament/templates/tournaments/player_entry.html:9
+msgid "Current Preferences"
+msgstr "Préférences actuelles"
+
+#: tournament/templates/tournaments/player_entry.html:15
+msgid "(Highest priority)"
+msgstr "(Priorité la plus haute)"
+
+#: tournament/templates/tournaments/player_entry.html:19
+msgid "Remaining power(s) (if any) equal lowest priority."
+msgstr "Pays restants (s'il y en a) avec priorité la plus basse"
+
+#: tournament/templates/tournaments/player_entry.html:21
+msgid "No power preference."
+msgstr "Pas de préférence pour les pays"
+
+#: tournament/templates/tournaments/player_entry.html:24
+msgid "Change Preferences"
+msgstr "Changement de Préférences"
+
+#: tournament/templates/tournaments/roll_call.html:5
+#, python-format
+msgid "DipTV - %(tournament)s Roll Call"
+msgstr "DipTV - %(tournament)s Recensement des joueurs"
+
+#: tournament/templates/tournaments/roll_call.html:11
+msgid "Players checked in"
+msgstr "Joueurs enregistrés"
+
+#: tournament/templates/tournaments/scores.html:8
+msgid "Final Scores"
+msgstr "Scores finaux"
+
+#: tournament/templates/tournaments/scores.html:10
+msgid "Current Scores"
+msgstr "Scores actuels"
+
+#: tournament/templates/tournaments/scores.html:15
+msgid "Position"
+msgstr "Position"
+
+#: tournament/templates/tournaments/scores.html:20
+msgid "Tournament"
+msgstr "Tournoi"
+
+#: tournament/templates/tournaments/scores.html:32
+msgid "did not play"
+msgstr "n'a pas joué"
+
+#: tournament/templates/tournaments/seeder_bias.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Seeder Bias"
+msgstr "DipTV - %(tournament)s Biais d'assignation"
+
+#: tournament/templates/tournaments/seeder_bias.html:7
+msgid "Seeder Bias"
+msgstr "Biais d'assignation"
+
+#: tournament/templates/tournaments/seeder_bias.html:9
+msgid "Existing Bias"
+msgstr "Bias existant"
+
+#: tournament/templates/tournaments/seeder_bias.html:17
+msgid "Weight"
+msgstr "Poids"
+
+#: tournament/templates/tournaments/seeder_bias.html:29
+msgid "Remove"
+msgstr "Enlever"
+
+#: tournament/templates/tournaments/seeder_bias.html:37
+msgid "Game seeder is currently unbiased"
+msgstr "L'assignation de parties est actuellement non-biaisé"
+
+#: tournament/templates/tournaments/seeder_bias.html:41
+msgid "Add Bias"
+msgstr "Ajouter un Biais"
+
+#: tournament/templates/tournaments/self_check_in_control.html:5
+#, python-format
+msgid "DipTV - %(tournament)s Self-Check-In Control"
+msgstr "DipTV - %(tournament)s Contrôle d'enregsitrement automatique"
+
+#: tournament/templates/tournaments/self_check_in_control.html:8
+msgid "Self-Check-In Control"
+msgstr "Contrôle d'enregistrement automatique"
+
+#: tournament/templates/tournaments/self_check_in_control.html:11
+msgid "Enable self-check-in"
+msgstr "Autoriser l'enregistrement automatique"
+
+#: tournament/templates/tournaments/self_check_in_control.html:12
+msgid ""
+"To allow players to check themselves in for a round, check the box for the "
+"round below. This will send all registered players an email with the URL of "
+"a page where they can check themselves in for the round."
+msgstr ""
+"Pour autoriser les joueurs à s'enregistrer pour une ronde, cocher la case ci-dessous."
+"Cela enverra à tous les joueurs enregistrés un courriel avec l'URL de"
+"la page sur laquelle ils peuvent s'enregistrer pour la ronde."
+
+#: tournament/templates/tournaments/self_check_in_control.html:13
+msgid ""
+"You should only enable self-check-ins for a round shortly before the round "
+"is due to start, to avoid players checking themselves in but then not "
+"actually playing."
+msgstr ""
+"Vous ne devez autorisez l'enregistrement automatique juste avant le début de la ronde,"
+" pour éviter que les joueurs s'enregistrent mais ne jouent pas"
+
+#: tournament/templates/tournaments/upload_prefs.html:4
+#, python-format
+msgid "DipTV - %(tournament)s Upload Preferences CSV"
+msgstr "DipTV - %(tournament)s Chargement des Préférences CSV"
+
+#: tournament/templates/tournaments/upload_prefs.html:7
+msgid "Upload Preferences CSV"
+msgstr "Chargement des Préférences CSV"
+
+#: tournament/templates/tournaments/view.html:9
+msgid " (cycles between standings, game summary, and best country standings)"
+msgstr "(cylces entre le classement, le résumé des ârties et le classmeent des meilleurs pays"
+
+#: tournament/templates/tournaments/view.html:18
+msgid "Round"
+msgstr "Ronde"
+
+#: tournament/templates/tournaments/view.html:22
+#, python-format
+msgid "Game %(game)s Overview"
+msgstr "Aperçu de la Partie %(game)s"
+
+#: tournament/templates/tournaments/view.html:22
+msgid " (cycles between SC chart, SC ownership, and latest position)"
+msgstr "(cycles entre le tableau de décompte des centres, la possession des centres et la dernière position"
+
+#: tournament/templates/tournaments/view.html:23
+#, python-format
+msgid "Game %(game)s Supply Centre Chart"
+msgstr "Partie %(game)s Tableau de décompte des centres"
+
+#: tournament/templates/tournaments/view.html:24
+#, python-format
+msgid "Game %(game)s Supply Centre Ownership"
+msgstr "Partie %(game)s Possesion des Centres"
+
+#: tournament/templates/tournaments/view.html:24
+msgid " (Not all tournaments record this info)"
+msgstr "(Tous les tournois n'ont pas cette information)"
+
+#: tournament/templates/tournaments/view.html:26
+#, python-format
+msgid "Game %(game)s Current Position"
+msgstr "Position Actuelle de la Partie %(game)s"
+
+#: tournament/templates/tournaments/view.html:29
+#, python-format
+msgid "No games in round %(n)s."
+msgstr "Pas de parties à la ronde %(n)s"
+
+#: tournament/templates/tournaments/view.html:34
+msgid "No rounds in tournament."
+msgstr "Pas de ronde dans le tournoi"
+
+#: tournament/tournament_player_views.py:77
+msgid "Player already registered"
+msgstr "Joueur déjà enregistré"
+
+#: tournament/tournament_views.py:256
+msgid "centre(s)"
+msgstr "centre(s)"
+
+#: visualiser/templates/admin/base_site.html:4
+msgid "Diplomacy Tournament Visualiser admin"
+msgstr "Administrateur du Visualiseur de Tournoi de Diplomatie"
+
+#: visualiser/templates/admin/base_site.html:7
+msgid "Diplomacy Tournament administration"
+msgstr "Administration d'un tournoi de Diplomatie"
+
+#: visualiser/templates/admin/index.html:20
+#, python-format
+msgid "Models in the %(name)s application"
+msgstr "Modèles dans l'pplication %(name)s"
+
+#: visualiser/templates/admin/index.html:21
+#, python-format
+msgid "%(name)s"
+msgstr "%(name)s"
+
+#: visualiser/templates/admin/index.html:33
+msgid "Add"
+msgstr "Ajouter"
+
+#: visualiser/templates/admin/index.html:39
+msgid "Change"
+msgstr "Changer"
+
+#: visualiser/templates/admin/index.html:49
+msgid "You don't have permission to edit anything."
+msgstr "Vous n'avez pas la permission d'éditer"
+
+#: visualiser/templates/admin/index.html:57
+msgid "Recent Actions"
+msgstr "Actions récentes"
+
+#: visualiser/templates/admin/index.html:58
+msgid "My Actions"
+msgstr "Mes actions"
+
+#: visualiser/templates/admin/index.html:62
+msgid "None available"
+msgstr "Non disponible"
+
+#: visualiser/templates/admin/index.html:76
+msgid "Unknown content"
+msgstr "Contenu inconnu"
