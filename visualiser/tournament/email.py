@@ -23,15 +23,15 @@ from django.core import mail
 from django.core.mail import send_mail, EmailMessage
 
 
-def _filter_recipients(recipients, tournament):
+def _filtered_recipients(recipients, tournament):
     """
     Remove any recipients we don't want to send email to from the list.
     If tournament.no_email is set, this will remove anyone not in tournament.managers.
     """
-    if not tournament.no_email:
-        return
-    managers = [m.player.email for m in tournament.managers.all()]
-    recipients = [set(recipients) & set(managers)]
+    if tournament.no_email:
+        managers = [m.player.email for m in tournament.managers.all()]
+        recipients = list(set(recipients) & set(managers))
+    return recipients
 
 def send_board_call(the_round):
     """Send an email to all players in the round with the board calls"""
@@ -60,7 +60,7 @@ def send_board_call(the_round):
                 game_text += '\n'
             if gp.player.email:
                 recipients.append(gp.player.email)
-        _filter_recipients(recipients, the_round.tournament)
+        recipients = _filtered_recipients(recipients, the_round.tournament)
         games.append((game_text, recipients))
     # Put together the common body of the message
     all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
@@ -114,7 +114,7 @@ def send_prefs_email(tournamentplayer, force=False):
     addr_list = [addr]
     # Check whether the tournament should send email at all
     # Still send if the recipient is a manager
-    _filter_recipients(addr_list, t)
+    addr_list = _filtered_recipients(addr_list, t)
     if not(addr_list):
         return
     # Don't send again, unless told to
@@ -157,7 +157,7 @@ def send_roll_call_emails(round_num, tournamentplayer_list):
                                       'url': tp.get_prefs_url(),
                                       'round' : round_num}
         addr_list = [addr]
-        _filter_recipients(addr_list, t)
+        addr_list = _filtered_recipients(addr_list, t)
         if not addr_list:
             continue
         email = EmailMessage(subject=subject,
