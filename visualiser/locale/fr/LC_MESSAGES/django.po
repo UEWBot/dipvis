@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-01-13 16:05-0800\n"
+"POT-Creation-Date: 2021-01-18 11:58-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,334 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: map_translations.py:4
+msgid "Austria-Hungary"
+msgstr "Autriche-Hongrie"
+
+#: map_translations.py:5
+msgid "England"
+msgstr "Grande-Bretagne"
+
+#: map_translations.py:6
+msgid "France"
+msgstr "France"
+
+#: map_translations.py:7
+msgid "Germany"
+msgstr "Allemagne"
+
+#: map_translations.py:8
+msgid "Italy"
+msgstr "Italie"
+
+#: map_translations.py:9
+msgid "Russia"
+msgstr "Russie"
+
+#: map_translations.py:10
+msgid "Turkey"
+msgstr "Turquie"
+
+#: map_translations.py:11
+msgid "A"
+msgstr "AH"
+
+#: map_translations.py:12
+msgid "E"
+msgstr "GB"
+
+#: map_translations.py:13
+msgid "F"
+msgstr "FR"
+
+#: map_translations.py:14
+msgid "G"
+msgstr "AL"
+
+#: map_translations.py:15
+msgid "I"
+msgstr "IT"
+
+#: map_translations.py:16
+msgid "R"
+msgstr "RU"
+
+#: map_translations.py:17
+msgid "T"
+msgstr "TU"
+
+#: map_translations.py:18
+msgid "Ankara"
+msgstr "Ankara"
+
+#: map_translations.py:19
+msgid "Belgium"
+msgstr "Royaume de Belgique"
+
+#: map_translations.py:20
+msgid "Berlin"
+msgstr "Berlin"
+
+#: map_translations.py:21
+msgid "Brest"
+msgstr "Brest"
+
+#: map_translations.py:22
+msgid "Budapest"
+msgstr "Budapest"
+
+#: map_translations.py:23
+msgid "Bulgaria"
+msgstr "Royaume de Bulgarie"
+
+#: map_translations.py:24
+msgid "Constantinople"
+msgstr "Constantinople"
+
+#: map_translations.py:25
+msgid "Denmark"
+msgstr "Royaume de Danemark"
+
+#: map_translations.py:26
+msgid "Edinburgh"
+msgstr "Edimbourg"
+
+#: map_translations.py:27
+msgid "Greece"
+msgstr "Royaume de Grèce"
+
+#: map_translations.py:28
+msgid "Holland"
+msgstr "Pays-Bas"
+
+#: map_translations.py:29
+msgid "Kiel"
+msgstr "Kiel"
+
+#: map_translations.py:30
+msgid "Liverpool"
+msgstr "Liverpool"
+
+#: map_translations.py:31
+msgid "London"
+msgstr "Londres"
+
+#: map_translations.py:32
+msgid "Marseilles"
+msgstr "Toulon"
+
+#: map_translations.py:33
+msgid "Moscow"
+msgstr "Moscou"
+
+#: map_translations.py:34
+msgid "Munich"
+msgstr "Munich"
+
+#: map_translations.py:35
+msgid "Naples"
+msgstr "Naples"
+
+#: map_translations.py:36
+msgid "Norway"
+msgstr "Royaume de Norvège"
+
+#: map_translations.py:37
+msgid "Paris"
+msgstr "Paris"
+
+#: map_translations.py:38
+msgid "Portugal"
+msgstr "Royaume du Portugal"
+
+#: map_translations.py:39
+msgid "Rome"
+msgstr "Rome"
+
+#: map_translations.py:40
+msgid "Rumania"
+msgstr "Royaume de Roumanie"
+
+#: map_translations.py:41
+msgid "Serbia"
+msgstr "Royaume de Serbie"
+
+#: map_translations.py:42
+msgid "Sevastapol"
+msgstr "Odessa"
+
+#: map_translations.py:43
+msgid "Smyrna"
+msgstr "Smyrne"
+
+#: map_translations.py:44
+msgid "Spain"
+msgstr "Royaume d'Espagne"
+
+#: map_translations.py:45
+msgid "St Petersburg"
+msgstr "St Pétersbourg"
+
+#: map_translations.py:46
+msgid "Sweden"
+msgstr "Royaume de Suéde"
+
+#: map_translations.py:47
+msgid "Trieste"
+msgstr "Trieste"
+
+#: map_translations.py:48
+msgid "Tunis"
+msgstr "Tunise"
+
+#: map_translations.py:49
+msgid "Venice"
+msgstr "Venise"
+
+#: map_translations.py:50
+msgid "Vienna"
+msgstr "Vienne"
+
+#: map_translations.py:51
+msgid "Warsaw"
+msgstr "Varsovie"
+
+#: map_translations.py:52
+msgid "Ank"
+msgstr "Ank"
+
+#: map_translations.py:53
+msgid "Bel"
+msgstr "Bel"
+
+#: map_translations.py:54
+msgid "Ber"
+msgstr "Ber"
+
+#: map_translations.py:55
+msgid "Bre"
+msgstr "Bre"
+
+#: map_translations.py:56
+msgid "Bud"
+msgstr "Bud"
+
+#: map_translations.py:57
+msgid "Bul"
+msgstr "Bul"
+
+#: map_translations.py:58
+msgid "Con"
+msgstr "Con"
+
+#: map_translations.py:59
+msgid "Den"
+msgstr "Dan"
+
+#: map_translations.py:60
+msgid "Edi"
+msgstr "Edi"
+
+#: map_translations.py:61
+msgid "Gre"
+msgstr "Gre"
+
+#: map_translations.py:62
+msgid "Hol"
+msgstr "Pay"
+
+#: map_translations.py:63
+msgid "Kie"
+msgstr "Kie"
+
+#: map_translations.py:64
+msgid "Lvp"
+msgstr "Liv"
+
+#: map_translations.py:65
+msgid "Lon"
+msgstr "Lon"
+
+#: map_translations.py:66
+msgid "Mar"
+msgstr "Tou"
+
+#: map_translations.py:67
+msgid "Mos"
+msgstr "Mos"
+
+#: map_translations.py:68
+msgid "Mun"
+msgstr "Mun"
+
+#: map_translations.py:69
+msgid "Nap"
+msgstr "Nap"
+
+#: map_translations.py:70
+msgid "Nwy"
+msgstr "Nge"
+
+#: map_translations.py:71
+msgid "Par"
+msgstr "Par"
+
+#: map_translations.py:72
+msgid "Por"
+msgstr "Por"
+
+#: map_translations.py:73
+msgid "Rom"
+msgstr "Rom"
+
+#: map_translations.py:74
+msgid "Rum"
+msgstr "Rou"
+
+#: map_translations.py:75
+msgid "Ser"
+msgstr "Ser"
+
+#: map_translations.py:76
+msgid "Sev"
+msgstr "Ode"
+
+#: map_translations.py:77
+msgid "Smy"
+msgstr "Smy"
+
+#: map_translations.py:78
+msgid "Spa"
+msgstr "Esp"
+
+#: map_translations.py:79
+msgid "StP"
+msgstr "StP"
+
+#: map_translations.py:80
+msgid "Swe"
+msgstr "Sue"
+
+#: map_translations.py:81
+msgid "Tri"
+msgstr "Tri"
+
+#: map_translations.py:82
+msgid "Tun"
+msgstr "Tun"
+
+#: map_translations.py:83
+msgid "Ven"
+msgstr "Ven"
+
+#: map_translations.py:84
+msgid "Vie"
+msgstr "Vie"
+
+#: map_translations.py:85
+msgid "War"
+msgstr "Var"
 
 #: templates/registration/login.html:17
 msgid "Please correct the error below."
@@ -122,17 +450,23 @@ msgstr "Joueur qui joue deux parties"
 #, python-format
 msgid ""
 "Too few players sitting out games. Got %(actual)d, expected %(expected)d"
-msgstr "Trop peu de joueurs qui ne participent pas à la ronde. Nombre actuel %(actual)d, attendu %(expected)d"
+msgstr ""
+"Trop peu de joueurs qui ne participent pas à la ronde. Nombre actuel "
+"%(actual)d, attendu %(expected)d"
 
 #: tournament/forms.py:400
 #, python-format
 msgid ""
 "Too few players playing two games. Got %(actual)d, expected %(expected)d"
-msgstr "Trop peu de joueurs jouent deux parties. Nombre actuel %(actual)d, attendu %(expected)d"
+msgstr ""
+"Trop peu de joueurs jouent deux parties. Nombre actuel %(actual)d, attendu "
+"%(expected)d"
 
 #: tournament/forms.py:404
 msgid "Either have players sit out the round or have players play two games"
-msgstr "Il faut que des joueurs ne participent pas à la ronde ou que des joueurs jouent deux parties"
+msgstr ""
+"Il faut que des joueurs ne participent pas à la ronde ou que des joueurs "
+"jouent deux parties"
 
 #: tournament/forms.py:442 tournament/forms.py:556
 #, python-format
@@ -159,7 +493,8 @@ msgstr "Le total des centres pour %(year)d est %(dots)d, plus que %(max)d"
 #: tournament/forms.py:564
 #, python-format
 msgid "Neutrals increases from %(before)d to %(after)d in %(year)d"
-msgstr "Les aresenaux neutres ont augmenté de %(before)d à %(after)d l'année %(year)d"
+msgstr ""
+"Les aresenaux neutres ont augmenté de %(before)d à %(after)d l'année %(year)d"
 
 #: tournament/game_scoring.py:131
 msgid "Solo or bust"
@@ -188,15 +523,20 @@ msgid ""
 msgstr ""
 "\n"
 "                 Si il y a un solo:\n"
-"                 - Le joueur qui a un solo obtient un score de %(soloer_pts)d.\n"
-"                 - Les joueurs qui subissent un solo obtiennent un score de %(loss_pts)d.\n"
+"                 - Le joueur qui a un solo obtient un score de "
+"%(soloer_pts)d.\n"
+"                 - Les joueurs qui subissent un solo obtiennent un score de "
+"%(loss_pts)d.\n"
 "                 Sinon:\n"
 "                 - Les participants obtiennent un score de %(played_pts)d.\n"
 "                 - Chacun obtient un point par centre.\n"
 "                 - Le pays avec le plus de centres obtient %(first_pts)d.\n"
-"                 - Le pays avec le deuxième plus grand nombre de centres obtient %(second_pts)d.\n"
-"                 - Le pays avec le troisième plus grand nombre de centres obtient %(third_pts)d.\n"
-"                 - si des pays sont à égalité, les points de position sont partagés.\n"
+"                 - Le pays avec le deuxième plus grand nombre de centres "
+"obtient %(second_pts)d.\n"
+"                 - Le pays avec le troisième plus grand nombre de centres "
+"obtient %(third_pts)d.\n"
+"                 - si des pays sont à égalité, les points de position sont "
+"partagés.\n"
 "                 "
 
 #: tournament/game_scoring.py:290
@@ -214,14 +554,15 @@ msgid ""
 "                 "
 msgstr ""
 "\n"
-"  si un pays a un solo, il obtient %(solo_pts)d points et "
-"les autres joueurs obtiennent zero.\n"
-"                 Sinon, chaque pays obtient 1 point par centre contrôlé"
-"à la fin de la partie plus\n"
+"  si un pays a un solo, il obtient %(solo_pts)d points et les autres joueurs "
+"obtiennent zero.\n"
+"                 Sinon, chaque pays obtient 1 point par centre contrôléà la "
+"fin de la partie plus\n"
 "                 points pour leur position finale.\n"
-"                 Les points liés à la position sont %(pos_1)d, %(pos_2)d, %(pos_3)d, "
-"%(pos_4)d, %(pos_5)d,\n"
-"                 %(pos_6)d, or %(pos_7)d, les points étant partagés en cas d'égalité.\n"
+"                 Les points liés à la position sont %(pos_1)d, %(pos_2)d, "
+"%(pos_3)d, %(pos_4)d, %(pos_5)d,\n"
+"                 %(pos_6)d, or %(pos_7)d, les points étant partagés en cas "
+"d'égalité.\n"
 "                 "
 
 #: tournament/game_scoring.py:370
@@ -271,12 +612,19 @@ msgstr "%(power)p ne peut pas être éliminé en %(year)d"
 
 #: tournament/game_scoring_system_views.py:63
 msgid "%(power)p cannot be eliminated in %(year)d if the game ended in %(end)d"
-msgstr "%(power)p ne peut pas être éliminé en %(year)d si la partie s'est terminée en %(end)d"
+msgstr ""
+"%(power)p ne peut pas être éliminé en %(year)d si la partie s'est terminée "
+"en %(end)d"
 
 #: tournament/game_scoring_system_views.py:67
+#, fuzzy
+#| msgid ""
+#| "%(power)p annot be eliminated in %(year)d and now have %(dots)d centre(s)"
 msgid ""
-"%(power)p annot be eliminated in %(year)d and now have %(dots)d centre(s)"
-msgstr "%(power)p ne peut pas être éliminé en %(year)d et maintenant posséder %(dots)d centre(s)"
+"%(power)p cannot be eliminated in %(year)d and now have %(dots)d centre(s)"
+msgstr ""
+"%(power)p ne peut pas être éliminé en %(year)d et maintenant posséder "
+"%(dots)d centre(s)"
 
 #: tournament/game_views.py:175
 #: tournament/templates/game_scoring_systems/detail.html:32
@@ -286,7 +634,8 @@ msgstr "Score"
 #: tournament/game_views.py:400
 #, python-format
 msgid "%(power)s cannot have %(count)d SCs and be eliminated in %(year)d"
-msgstr "%(power)s ne peut pas avoir %(count)d centres et être éliminé en %(year)d"
+msgstr ""
+"%(power)s ne peut pas avoir %(count)d centres et être éliminé en %(year)d"
 
 #: tournament/models.py:52
 msgid "spring"
@@ -303,7 +652,9 @@ msgstr "La meilleure partie compte"
 #: tournament/models.py:119
 #, python-format
 msgid "Best game counts. Sitters get %(points)d%(once)s"
-msgstr "La meilleure partie compte. Les joueurs qui n'ont pas joué de manière involontaire obtiennent %(points)d%(once)s"
+msgstr ""
+"La meilleure partie compte. Les joueurs qui n'ont pas joué de manière "
+"involontaire obtiennent %(points)d%(once)s"
 
 #: tournament/models.py:240
 msgid "Sum best 2 rounds"
@@ -387,7 +738,8 @@ msgstr "Est-ce que le tournoi est visible à tous les visiteurs du site"
 msgid ""
 "Which users can modify the tournament,<br/> and see it while it is "
 "unpublished.<br/>"
-msgstr "Quels utilisateurs peuvent modifier le tournoi,<br/> et le voir qunad il est "
+msgstr ""
+"Quels utilisateurs peuvent modifier le tournoi,<br/> et le voir qunad il est "
 "non publié.<br/>"
 
 #: tournament/models.py:390
@@ -398,8 +750,9 @@ msgstr "Le numéro de ce tournoi dans la WDD"
 msgid ""
 "Add this after the tournament is complete and results have been uploaded to "
 "the WDD"
-msgstr "Ajouter cela quand le tournoi est terminé et que les résultats ont été chargés"
-"dans la wDD"
+msgstr ""
+"Ajouter cela quand le tournoi est terminé et que les résultats ont été "
+"chargésdans la wDD"
 
 #: tournament/models.py:395
 msgid "Check to let the software seed players to games"
@@ -419,7 +772,8 @@ msgstr "Comment les prix pour les meilleurs pays sont déterminés"
 
 #: tournament/models.py:410
 msgid "Check to only generate email to tournament managers"
-msgstr "Cocher pour générer des messages uniquement pour les gestionnaires de tournoi"
+msgstr ""
+"Cocher pour générer des messages uniquement pour les gestionnaires de tournoi"
 
 #: tournament/models.py:671
 msgid "Ineligible for awards"
@@ -519,7 +873,9 @@ msgstr "ronde"
 
 #: tournament/models.py:995
 msgid "Will be included in board call emails and game page"
-msgstr "Sera inclu dans les messages d'assignement des parties et dans la page des parties"
+msgstr ""
+"Sera inclu dans les messages d'assignement des parties et dans la page des "
+"parties"
 
 #: tournament/models.py:1062
 #, python-format
@@ -531,8 +887,9 @@ msgstr "Le nombre de centre(s) %(dots)d pour %(power)s est manquant "
 msgid ""
 "%(power)s owns %(sco_dots)d centre(s) in %(year)d, but their centrecount is "
 "%(dots)d"
-msgstr "%(power)s possède %(sco_dots)d centre(s) en %(year)d, mais le compte de leurs centres est de "
-"%(dots)d"
+msgstr ""
+"%(power)s possède %(sco_dots)d centre(s) en %(year)d, mais le compte de "
+"leurs centres est de %(dots)d"
 
 #: tournament/models.py:1232
 #, python-format
@@ -542,7 +899,8 @@ msgstr "Partie %(game)s concédée à"
 #: tournament/models.py:1234
 #, python-format
 msgid "Vote passed to end game%(game)s as a %(n)d-way draw between "
-msgstr "Vote de fin de partie pour la partie %(game)s comme égalité à %(n)d entre"
+msgstr ""
+"Vote de fin de partie pour la partie %(game)s comme égalité à %(n)d entre"
 
 #: tournament/models.py:1240 tournament/models.py:1254 tournament/news.py:371
 #, python-format
@@ -557,7 +915,9 @@ msgstr "Partie%(game)s gagnée par %(player)s (%(power)s)"
 #: tournament/models.py:1256
 #, python-format
 msgid "Game%(game)s ended. Board top is %(top)d centres, for %(player)s"
-msgstr "Partie%(game)s terminée. Les joueurs %(player)s ont gagné avec %(top)d centres"
+msgstr ""
+"Partie%(game)s terminée. Les joueurs %(player)s ont gagné avec %(top)d "
+"centres"
 
 #: tournament/models.py:1329
 #, python-format
@@ -571,7 +931,9 @@ msgstr "%(dot)s dans %(game)s appartenait à %(power)s à la fin de %(year)d"
 
 #: tournament/models.py:1449
 msgid "This DrawProposal only has pass/fail, not vote counts"
-msgstr "Cette proposition de fin de partie est passe/échoue, pas de décompte des votes"
+msgstr ""
+"Cette proposition de fin de partie est passe/échoue, pas de décompte des "
+"votes"
 
 #: tournament/models.py:1472
 msgid "Draw powers should go as early as possible"
@@ -599,7 +961,9 @@ msgstr "Le pays éliminé %(power)s est inclu dans la proposition"
 #: tournament/models.py:1513
 #, python-format
 msgid "Missing alive power %(power)s in DIAS game"
-msgstr "Pays encore actif %(power)s non inlcus dans un vote qui doit inclure tous les surivivants "
+msgstr ""
+"Pays encore actif %(power)s non inlcus dans un vote qui doit inclure tous "
+"les surivivants "
 
 #: tournament/models.py:1518
 msgid "Passed needs a value"
@@ -690,7 +1054,8 @@ msgstr "L'année finale doit être spécifiée avec la saison finale"
 msgid ""
 "%(player1)s and %(player2)s both start playing %(power)s %(season)s %(year)d"
 msgstr ""
-"%(player1)s et %(player2)s ont tous les deux commencé à jouer %(power)s %(season)s %(year)d"
+"%(player1)s et %(player2)s ont tous les deux commencé à jouer %(power)s "
+"%(season)s %(year)d"
 
 #: tournament/models.py:1803
 #, python-format
@@ -698,8 +1063,8 @@ msgid ""
 "%(player)s is listed as playing %(power)s in game %(game)s from %(season)s "
 "%(year)d"
 msgstr ""
-"%(player)s est listé comme joueur de  %(power)s dans la partie %(game)s à partir de %(season)s "
-"%(year)d"
+"%(player)s est listé comme joueur de  %(power)s dans la partie %(game)s à "
+"partir de %(season)s %(year)d"
 
 #: tournament/models.py:1821
 #, python-format
@@ -709,7 +1074,6 @@ msgid ""
 msgstr ""
 "%(player)s joue encore %(power)s dans la partie %(game)s à partir de "
 "%(season)s %(year)d"
-
 
 #: tournament/models.py:1841
 #, python-format
@@ -753,7 +1117,8 @@ msgstr "Le nombre de centres d'un pays ne peut pas augmenter après être à zé
 
 #: tournament/models.py:1948
 msgid "SC count for a power cannot more than double in a year"
-msgstr "Le nombre de centres d'un pays ne pas plus que doubler au cours d'une année"
+msgstr ""
+"Le nombre de centres d'un pays ne pas plus que doubler au cours d'une année"
 
 #: tournament/news.py:52 tournament/news.py:166
 msgid "were"
@@ -774,8 +1139,9 @@ msgid "Round %(r_num)d of %(rounds)d is currently being played."
 msgstr "La ronde %(r_num)d de %(rounds)d est en cours."
 
 #: tournament/news.py:67
-#, python-format
-msgid "Round %(r_num)d of %(rounds)d will begin at %(date)s."
+#, fuzzy, python-format
+#| msgid "Round %(r_num)d of %(rounds)d will begin at %(date)s."
+msgid "Round %(r_num)d of %(rounds)d will start at %(date)s."
 msgstr "La ronde %(r_num)d de %(rounds)d commencera à %(date)s"
 
 #: tournament/news.py:77
@@ -789,16 +1155,17 @@ msgid ""
 "%(player)s won Best %(country)s with %(dots)d centre(s) and a score of "
 "%(score).2f in game %(game)s of round %(round)d."
 msgstr ""
-"%(player)s a remporté Meilleure  %(country)s avec %(dots)d centre(s) et un score de "
-"%(score).2f dans la partie %(game)s de la ronde %(round)d."
+"%(player)s a remporté Meilleure  %(country)s avec %(dots)d centre(s) et un "
+"score de %(score).2f dans la partie %(game)s de la ronde %(round)d."
 
 #: tournament/news.py:95
 #, python-format
 msgid ""
 "Best %(country)s was jointly won by %(winner_str)s with %(dots)d centre(s) "
 "and a score of %(score).2f."
-msgstr "Meilleure %(country)s a été remportée conjointement par %(winner_str)s avec %(dots)d centre(s) "
-"et un score de %(score).2f."
+msgstr ""
+"Meilleure %(country)s a été remportée conjointement par %(winner_str)s avec "
+"%(dots)d centre(s) et un score de %(score).2f."
 
 #: tournament/news.py:107
 msgid "Tournament has yet to start."
@@ -816,8 +1183,9 @@ msgstr[1] "%(r_num)d des %(rounds)d ont été jouées"
 msgid ""
 "If the tournament ended now, the winning score would be %(score).2f for "
 "%(players)s."
-msgstr "si le tournoi finissait maintenant, le score les plus élevé serait de %(score).2f pour "
-"%(players)s."
+msgstr ""
+"si le tournoi finissait maintenant, le score les plus élevé serait de "
+"%(score).2f pour %(players)s."
 
 #: tournament/news.py:144 tournament/tournament_views.py:154
 #: tournament/tournament_views.py:158 tournament/tournament_views.py:208
@@ -831,7 +1199,9 @@ msgstr "Courant"
 #: tournament/news.py:148
 #, python-format
 msgid "%(done)s top score for round %(r_num)d is %(score).2f for %(players)s."
-msgstr "Le score le plus élevé %(done)s pour la ronde %(r_num)d est de %(score).2f pour %(players)s."
+msgstr ""
+"Le score le plus élevé %(done)s pour la ronde %(r_num)d est de %(score).2f "
+"pour %(players)s."
 
 #: tournament/news.py:169
 #, python-format
@@ -854,7 +1224,8 @@ msgid "One of the %(total_num)d games in round %(r_num)d have ended."
 msgid_plural ""
 "%(num_done)d of the %(total_num)d games in round %(r_num)d have ended."
 msgstr[0] "Une des %(total_num)d parties de la ronde %(r_num)d est terminée."
-msgstr[1] "%(num_done)d des %(total_num)d parties de la ronde %(r_num)d sont terminées"
+msgstr[1] ""
+"%(num_done)d des %(total_num)d parties de la ronde %(r_num)d sont terminées"
 
 #: tournament/news.py:237
 #, python-format
@@ -869,7 +1240,8 @@ msgstr "%(dot)s a été possédé par %(owners)d différents pays (%(list)s)."
 #: tournament/news.py:277
 #, python-format
 msgid "Highest SC count%(game)s is %(dots)d, for %(player)s."
-msgstr "Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
+msgstr ""
+"Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
 
 #: tournament/news.py:303
 #, python-format
@@ -877,10 +1249,11 @@ msgid "%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s."
 msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
 
 #: tournament/news.py:312
-#, python-format
+#, fuzzy, python-format
+#| msgid "%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s."
 msgid ""
-"%(player)s (%(power)s) est passé de %(old)d à %(new)d centre(s)%(game)s."
-msgstr ""
+"%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s."
+msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
 
 #: tournament/news.py:329
 #, python-format
@@ -929,7 +1302,9 @@ msgstr "Vote de concession envers %(powers)s a échoué %(game)s%(count)s."
 #: tournament/news.py:384
 #, python-format
 msgid "Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s."
-msgstr "vote de fin de partie pour ne égalité à %(n)d entre %(powers)s a échoué %(game)s%(count)s."
+msgstr ""
+"vote de fin de partie pour ne égalité à %(n)d entre %(powers)s a échoué "
+"%(game)s%(count)s."
 
 #: tournament/news.py:396
 #, python-format
@@ -981,7 +1356,8 @@ msgstr "%(name)s a remporté Meilleure %(power)s %(count_str)s."
 #: tournament/players.py:518
 #, python-format
 msgid "%(name)s first won %(award)s in %(year)d at %(tourney)s"
-msgstr "%(name)s a remporté pour la première fois %(award)s en %(year)d à %(tourney)s"
+msgstr ""
+"%(name)s a remporté pour la première fois %(award)s en %(year)d à %(tourney)s"
 
 #: tournament/players.py:523 tournament/players.py:532
 #, python-format
@@ -1025,7 +1401,8 @@ msgstr ""
 msgid ""
 "%(name)s has won %(wins)d of %(plays)d tournaments (%(percentage).2f%%)."
 msgstr ""
-"%(name)s a remporté %(wins)d des %(plays)d tournois joués (%(percentage).2f%%)."
+"%(name)s a remporté %(wins)d des %(plays)d tournois joués (%(percentage).2f"
+"%%)."
 
 #: tournament/players.py:586
 #, python-format
@@ -1070,7 +1447,8 @@ msgstr "%(name)s a joué %(games)d tournament %(games_word)s%(power)s."
 msgid ""
 "%(name)s has finished with as many as %(dots)d centres%(power)s in "
 "tournament games."
-msgstr "%(name)s has finished with as many as %(dots)d centres%(power)s in "
+msgstr ""
+"%(name)s has finished with as many as %(dots)d centres%(power)s in "
 "tournament games."
 
 #: tournament/players.py:643
@@ -1079,8 +1457,8 @@ msgid ""
 "%(name)s has soloed %(solos)d of %(games)d tournament %(games_word)s played"
 "%(power)s (%(percentage).2f%%)."
 msgstr ""
-"%(name)s a obtenu un solo %(solos)d sur %(games)d de parties de torunois %(games_word)s jouées"
-"%(power)s (%(percentage).2f%%)."
+"%(name)s a obtenu un solo %(solos)d sur %(games)d de parties de torunois "
+"%(games_word)s jouées%(power)s (%(percentage).2f%%)."
 
 #: tournament/players.py:651
 #, python-format
@@ -1093,8 +1471,8 @@ msgid ""
 "%(name)s was eliminated in %(deaths)d of %(games)d tournament %(games_word)s "
 "played%(power)s (%(percentage).2f%%)."
 msgstr ""
-"%(name)s a été éliminé dans %(deaths)d des %(games)d parties de tournois %(games_word)s "
-" %(power)s joué (%(percentage).2f%%)."
+"%(name)s a été éliminé dans %(deaths)d des %(games)d parties de tournois "
+"%(games_word)s  %(power)s joué (%(percentage).2f%%)."
 
 #: tournament/players.py:667
 #, python-format
@@ -1106,8 +1484,9 @@ msgstr "%(name)s n'a jamais été éliminé avec %(power)s dans un tournoi."
 msgid ""
 "%(name)s topped the board in %(tops)d of %(games)d tournament %(games_word)s "
 "played%(power)s (%(percentage).2f%%)."
-msgstr "%(name)s a remporté %(tops)d parties sur %(games)d parties de torunois %(games_word)s jouées"
-"a joué %(power)s (%(percentage).2f%%)."
+msgstr ""
+"%(name)s a remporté %(tops)d parties sur %(games)d parties de torunois "
+"%(games_word)s jouéesa joué %(power)s (%(percentage).2f%%)."
 
 #: tournament/players.py:682
 #, python-format
@@ -1179,7 +1558,8 @@ msgstr "%(player)s a un classement national de %(ranking)s dans le %(system)s"
 #: tournament/players.py:823
 #, python-format
 msgid "%(player)s is ranked %(ranking)s internationally in the %(system)s"
-msgstr "%(player)s ea un classement international de %(ranking)s dans %(system)s"
+msgstr ""
+"%(player)s ea un classement international de %(ranking)s dans %(system)s"
 
 #: tournament/templates/base.html:10
 #: tournament/templates/tournaments/index.html:5
@@ -1250,7 +1630,8 @@ msgstr "Charger l'Image de la Position de la Partie"
 #: tournament/templates/games/add_image.html:8
 msgid ""
 "Image should be of the position at the <b>start</b> of the specified phase"
-msgstr "L'image doit corresondre à la position au <b>start</b> de la phase spécifiée "
+msgstr ""
+"L'image doit corresondre à la position au <b>start</b> de la phase spécifiée "
 
 #: tournament/templates/games/detail.html:4
 #: tournament/templates/games/view.html:4
@@ -1345,7 +1726,8 @@ msgstr "Entrer la possession des centres"
 
 #: tournament/templates/games/detail.html:52
 msgid "Use this to update the supply centre ownership for the game."
-msgstr "Utilisez ceci pour mettre à jour la possession des centres pour la partie"
+msgstr ""
+"Utilisez ceci pour mettre à jour la possession des centres pour la partie"
 
 #: tournament/templates/games/detail.html:55
 msgid "Import SC Counts from Backstabbr"
@@ -1356,8 +1738,9 @@ msgid ""
 "Use this to update the supply centre chart a game on Backstabbr. Backstabbr "
 "URL must be in the game's notes (and hence listed above)."
 msgstr ""
-"Utilisez ceci pour mettre à jour la tble de décompte des centres sur Backstabbr. L'URL de Backstabbr "
-"doit être dans les notes de la partie (et donc notée ci-dessus)."
+"Utilisez ceci pour mettre à jour la tble de décompte des centres sur "
+"Backstabbr. L'URL de Backstabbr doit être dans les notes de la partie (et "
+"donc notée ci-dessus)."
 
 #: tournament/templates/games/detail.html:58
 #: tournament/templates/tournaments/detail.html:69
@@ -1374,7 +1757,9 @@ msgstr "Entrez Vote de Fin de Partie"
 
 #: tournament/templates/games/detail.html:61
 msgid "Use this to record draw votes, whether they succeed or fail."
-msgstr "Utilisez ceci pour enregister les votes de fin de partie, qu'ils passent ou échouent."
+msgstr ""
+"Utilisez ceci pour enregister les votes de fin de partie, qu'ils passent ou "
+"échouent."
 
 #: tournament/templates/games/detail.html:64
 msgid "Modify Game"
@@ -1386,8 +1771,8 @@ msgid ""
 "Use this to change the players assigned to games (e.g. to replace a player) "
 "or the great power assignments."
 msgstr ""
-"Utilisez ceci pour changer les joueurs assignés aux parties (par exemple, rempalcer un joueur) "
-"ou l'assignation des pays."
+"Utilisez ceci pour changer les joueurs assignés aux parties (par exemple, "
+"rempalcer un joueur) ou l'assignation des pays."
 
 #: tournament/templates/games/image.html:4
 #, python-format
@@ -1434,9 +1819,10 @@ msgid "DipTV - Game %(game)s SC Chart"
 msgstr "DipTV - Partie %(game)s Décompte des centres"
 
 #: tournament/templates/games/sc_count.html:7
-#, python-format
-msgid "Partie %(game)s</a> Décompte des centres"
-msgstr ""
+#, fuzzy, python-format
+#| msgid "Game %(game)s</a> SC Ownership"
+msgid "Game %(game)s</a> SC Chart"
+msgstr "Game %(game)s</a> Possesion des centres"
 
 #: tournament/templates/games/sc_count.html:8
 #: tournament/templates/games/sc_owners.html:8
@@ -1481,7 +1867,9 @@ msgstr "Partie %(game)s Possession des centres"
 msgid ""
 "Note that Supply Centre counts will be updated to reflect what is entered "
 "here"
-msgstr "Notez que le décompte des centre sera mis à jour pour refléter ce qui est entré ici"
+msgstr ""
+"Notez que le décompte des centre sera mis à jour pour refléter ce qui est "
+"entré ici"
 
 #: tournament/templates/games/scrape_backstabbr.html:4
 #, python-format
@@ -1507,7 +1895,9 @@ msgstr "Vue générale"
 msgid ""
 " (cycles between supply centre chart, supply centre ownership, and latest "
 "position)"
-msgstr "(cycles entre le tableau de décompte des centres, la possession des centres et la dernière position)"
+msgstr ""
+"(cycles entre le tableau de décompte des centres, la possession des centres "
+"et la dernière position)"
 
 #: tournament/templates/games/vote.html:4
 #, python-format
@@ -1537,6 +1927,7 @@ msgid "Tournaments"
 msgstr "Tournois"
 
 #: tournament/templates/players/detail.html:16
+#: tournament/tournament_views.py:149
 msgid "Unranked"
 msgstr "Non classé"
 
@@ -1709,11 +2100,13 @@ msgstr "Système de classement"
 
 #: tournament/templates/rounds/detail.html:13
 msgid "All surviving players are included if a game ends in a draw."
-msgstr "Tous les joueurs survivants sont inclus dans une égalité de fin de partie"
+msgstr ""
+"Tous les joueurs survivants sont inclus dans une égalité de fin de partie"
 
 #: tournament/templates/rounds/detail.html:14
 msgid "Surviving players may vote themselves out of draws."
-msgstr "Les joueurs survivants peuvent s'exclure d'une égalité de fin de partie"
+msgstr ""
+"Les joueurs survivants peuvent s'exclure d'une égalité de fin de partie"
 
 #: tournament/templates/rounds/detail.html:18
 #, python-format
@@ -1773,7 +2166,9 @@ msgstr "Entrez les préférences des joueurs"
 #: tournament/templates/rounds/detail.html:50
 #: tournament/templates/tournaments/detail.html:62
 msgid "Use this to enter player country preferences using a form."
-msgstr "Utilisez ceci pour entrer les préférences des joueurs pour les pays en utilisant un formulaire"
+msgstr ""
+"Utilisez ceci pour entrer les préférences des joueurs pour les pays en "
+"utilisant un formulaire"
 
 #: tournament/templates/rounds/detail.html:54
 #: tournament/templates/tournaments/detail.html:56
@@ -1801,8 +2196,9 @@ msgstr "Utiisez ceci pour que le logiciel assigne les joueurs aux parties"
 msgid ""
 "<b>Warning!</b> Clicking this link will permanently delete the existing "
 "%(count)s games!"
-msgstr "<b>Attention!</b> Clicquer ce lien effacera définitivenment "
-"les %(count)s parties existantes!"
+msgstr ""
+"<b>Attention!</b> Clicquer ce lien effacera définitivenment les %(count)s "
+"parties existantes!"
 
 #: tournament/templates/rounds/detail.html:63
 msgid "Create Games"
@@ -1812,8 +2208,9 @@ msgstr "Créer les Parties"
 msgid ""
 "Use this to create the games for this round, to assign players to games, and "
 "to assign great powers to players."
-msgstr "Utilisez ceci pour créer les parties pour cette ronde, pour assigner les joueurs aux parties, et "
-"pour assigner les pays aux joueurs."
+msgstr ""
+"Utilisez ceci pour créer les parties pour cette ronde, pour assigner les "
+"joueurs aux parties, et pour assigner les pays aux joueurs."
 
 #: tournament/templates/rounds/detail.html:67
 msgid "Score Games"
@@ -1856,10 +2253,12 @@ msgid ""
 msgid_plural ""
 "With %(n_players)s players, you need <b>either</b> %(sitters)s players to "
 "sit out the round,"
-msgstr[0] "Avec %(n_players)s joueurs, il faut que <b>soit</b> %(sitters)s joueur accepte de ne pas jouer "
-"cette ronde,"
-msgstr[1] "Avec %(n_players)s joueurs, il faut que <b>soit</b> %(sitters)s joueurs acceptent de ne pas jouer "
-"cette ronde,"
+msgstr[0] ""
+"Avec %(n_players)s joueurs, il faut que <b>soit</b> %(sitters)s joueur "
+"accepte de ne pas jouer cette ronde,"
+msgstr[1] ""
+"Avec %(n_players)s joueurs, il faut que <b>soit</b> %(sitters)s joueurs "
+"acceptent de ne pas jouer cette ronde,"
 
 #: tournament/templates/rounds/get_seven.html:16
 #, python-format
@@ -1967,8 +2366,9 @@ msgstr "Désenregistrez un joueur"
 msgid ""
 "WARNING: You will really mess things up if you unregister a player who has "
 "played in the tournament"
-msgstr "AVERTISSEMENT: Vous allez causer des problèmes si vous désenregistrer un joueur"
-" qui a participé au tournoi"
+msgstr ""
+"AVERTISSEMENT: Vous allez causer des problèmes si vous désenregistrer un "
+"joueur qui a participé au tournoi"
 
 #: tournament/templates/tournament_players/index.html:53
 msgid "Register Players"
@@ -1979,8 +2379,9 @@ msgstr "Joueurs Enregistrés"
 msgid ""
 "If a player doesn't appear in the dropdown, you'll first have to add them to "
 "the database, which you can do from"
-msgstr "Si le joueur n'apparait pas dans le menu déroulant, il faut d'abord l'ajouter"
-"dans la base, ce que vous pouvez faire"
+msgstr ""
+"Si le joueur n'apparait pas dans le menu déroulant, il faut d'abord "
+"l'ajouterdans la base, ce que vous pouvez faire"
 
 #: tournament/templates/tournament_players/index.html:60
 msgid "(Ineligible for awards)"
@@ -2108,15 +2509,17 @@ msgstr "Ajouter un biais d'assignation"
 msgid ""
 "Use this if you have people playing in the tournament you want to keep apart "
 "(e.g. family members)."
-msgstr "Utilisez ceci si vous voulez que des joueurs ne soient pas à la même table"
-"(exemple des membres de la même famille)."
+msgstr ""
+"Utilisez ceci si vous voulez que des joueurs ne soient pas à la même "
+"table(exemple des membres de la même famille)."
 
 #: tournament/templates/tournaments/detail.html:56
 msgid ""
 "Use this to specify which of the players at the tournament are actually "
 "playing in each round."
 msgstr ""
-"Utilisez ceci pour spécifier quels joueurs du tournoi jouent effectivement dans chacune des rondes."
+"Utilisez ceci pour spécifier quels joueurs du tournoi jouent effectivement "
+"dans chacune des rondes."
 
 #: tournament/templates/tournaments/detail.html:60
 msgid "Upload preferences CSV"
@@ -2124,7 +2527,9 @@ msgstr "Chargez les préférences CSV"
 
 #: tournament/templates/tournaments/detail.html:60
 msgid "Use this to upload a CSV file listing player country preferences."
-msgstr "Utilisez ceci pour charger un fichier CSV qui liste les préférences de pays des joueurs."
+msgstr ""
+"Utilisez ceci pour charger un fichier CSV qui liste les préférences de pays "
+"des joueurs."
 
 #: tournament/templates/tournaments/detail.html:61
 msgid "Download preferences CSV"
@@ -2134,7 +2539,8 @@ msgstr "Téléchargez préférences CSV"
 msgid ""
 "Use this to download a sample CSV file listing player country preferences."
 msgstr ""
-"Utilisez ceci pour télécharger un fichier CSV qui liste les préférences de pays des joueurs."
+"Utilisez ceci pour télécharger un fichier CSV qui liste les préférences de "
+"pays des joueurs."
 
 #: tournament/templates/tournaments/detail.html:66
 msgid "Enter Scores"
@@ -2145,8 +2551,8 @@ msgid ""
 "Use this if you need to modify the scores that the system calculates when "
 "games end."
 msgstr ""
-"Utilisez ceci si vous avez besoin de  modifier les scores calculés par le logiciel "
-"à la fin de la partie."
+"Utilisez ceci si vous avez besoin de  modifier les scores calculés par le "
+"logiciel à la fin de la partie."
 
 #: tournament/templates/tournaments/detail.html:69
 msgid "Use this to add a picture of a game in progress."
@@ -2167,7 +2573,9 @@ msgstr "Préférences de pays pour les joueurs"
 #: tournament/templates/tournaments/player_entry.html:26
 msgid ""
 "Enter the initial of each power, in order, from highest to lowest preference."
-msgstr "Entrez l'initiale de chaque pays dans l'ordre de vos préférences (de la plus haute à la plus basse)."
+msgstr ""
+"Entrez l'initiale de chaque pays dans l'ordre de vos préférences (de la plus "
+"haute à la plus basse)."
 
 #: tournament/templates/tournaments/enter_prefs.html:11
 #: tournament/templates/tournaments/player_entry.html:27
@@ -2197,8 +2605,8 @@ msgid ""
 "All views also have a news ticker across the bottom. You can choose any URL "
 "in each frame. Most will auto-refresh."
 msgstr ""
-"Toutes les vues ont un compteur de nouvelles en bas. Vous pouvez choisir un URL"
-"dans chaque cadre. La plupart sont rafraichis automatiquement."
+"Toutes les vues ont un compteur de nouvelles en bas. Vous pouvez choisir un "
+"URLdans chaque cadre. La plupart sont rafraichis automatiquement."
 
 #: tournament/templates/tournaments/game_results.html:4
 #, python-format
@@ -2229,8 +2637,9 @@ msgstr "Tournois non publiés:"
 msgid ""
 "Unpublished tournaments are not visible to most site users. To make one "
 "visible, check the 'is_published' checkbox for it in the "
-msgstr "Les tournois non publiés ne sont pas visibles par la pluârt des utilisateurs du site. Pour rendre un tournoi visible"
-"cochez la case 'est_publié' dans la"
+msgstr ""
+"Les tournois non publiés ne sont pas visibles par la pluârt des utilisateurs "
+"du site. Pour rendre un tournoi visiblecochez la case 'est_publié' dans la"
 
 #: tournament/templates/tournaments/index.html:32
 msgid "admin page"
@@ -2268,7 +2677,8 @@ msgstr "Enregistrement Automatique Terminé."
 msgid ""
 " If something comes up, you can go back to <a href=\"%(url)s\">that same "
 "page</a> to change whether you are playing or not. "
-msgstr "En cas de problème, vous pouvez retourner à <a href=\"%(url)s\">that same "
+msgstr ""
+"En cas de problème, vous pouvez retourner à <a href=\"%(url)s\">that same "
 "page</a> pour cahnger votre statut de participation. "
 
 #: tournament/templates/tournaments/player_entry.html:5
@@ -2377,9 +2787,9 @@ msgid ""
 "round below. This will send all registered players an email with the URL of "
 "a page where they can check themselves in for the round."
 msgstr ""
-"Pour autoriser les joueurs à s'enregistrer pour une ronde, cocher la case ci-dessous."
-"Cela enverra à tous les joueurs enregistrés un courriel avec l'URL de"
-"la page sur laquelle ils peuvent s'enregistrer pour la ronde."
+"Pour autoriser les joueurs à s'enregistrer pour une ronde, cocher la case ci-"
+"dessous.Cela enverra à tous les joueurs enregistrés un courriel avec l'URL "
+"dela page sur laquelle ils peuvent s'enregistrer pour la ronde."
 
 #: tournament/templates/tournaments/self_check_in_control.html:13
 msgid ""
@@ -2387,8 +2797,8 @@ msgid ""
 "is due to start, to avoid players checking themselves in but then not "
 "actually playing."
 msgstr ""
-"Vous ne devez autorisez l'enregistrement automatique juste avant le début de la ronde,"
-" pour éviter que les joueurs s'enregistrent mais ne jouent pas."
+"Vous ne devez autorisez l'enregistrement automatique juste avant le début de "
+"la ronde, pour éviter que les joueurs s'enregistrent mais ne jouent pas."
 
 #: tournament/templates/tournaments/upload_prefs.html:4
 #, python-format
@@ -2401,7 +2811,9 @@ msgstr "Chargement des Préférences CSV"
 
 #: tournament/templates/tournaments/view.html:9
 msgid " (cycles between standings, game summary, and best country standings)"
-msgstr " (cylces entre le classement, le résumé des ârties et le classmeent des meilleurs pays"
+msgstr ""
+" (cylces entre le classement, le résumé des ârties et le classmeent des "
+"meilleurs pays"
 
 #: tournament/templates/tournaments/view.html:18
 msgid "Round"
@@ -2414,7 +2826,9 @@ msgstr "Aperçu de la Partie %(game)s"
 
 #: tournament/templates/tournaments/view.html:22
 msgid " (cycles between SC chart, SC ownership, and latest position)"
-msgstr " (cycles entre le tableau de décompte des centres, la possession des centres et la dernière position)"
+msgstr ""
+" (cycles entre le tableau de décompte des centres, la possession des centres "
+"et la dernière position)"
 
 #: tournament/templates/tournaments/view.html:23
 #, python-format
