@@ -556,7 +556,7 @@ msgstr ""
 "\n"
 "  si un pays a un solo, il obtient %(solo_pts)d points et les autres joueurs "
 "obtiennent zero.\n"
-"                 Sinon, chaque pays obtient 1 point par centre contrôléà la "
+"                 Sinon, chaque pays obtient 1 point par centre contrôlé à la "
 "fin de la partie plus\n"
 "                 points pour leur position finale.\n"
 "                 Les points liés à la position sont %(pos_1)d, %(pos_2)d, "
@@ -617,9 +617,6 @@ msgstr ""
 "en %(end)d"
 
 #: tournament/game_scoring_system_views.py:67
-#, fuzzy
-#| msgid ""
-#| "%(power)p annot be eliminated in %(year)d and now have %(dots)d centre(s)"
 msgid ""
 "%(power)p cannot be eliminated in %(year)d and now have %(dots)d centre(s)"
 msgstr ""
@@ -752,7 +749,7 @@ msgid ""
 "the WDD"
 msgstr ""
 "Ajouter cela quand le tournoi est terminé et que les résultats ont été "
-"chargésdans la wDD"
+"chargés dans la wDD"
 
 #: tournament/models.py:395
 msgid "Check to let the software seed players to games"
@@ -1139,8 +1136,6 @@ msgid "Round %(r_num)d of %(rounds)d is currently being played."
 msgstr "La ronde %(r_num)d de %(rounds)d est en cours."
 
 #: tournament/news.py:67
-#, fuzzy, python-format
-#| msgid "Round %(r_num)d of %(rounds)d will begin at %(date)s."
 msgid "Round %(r_num)d of %(rounds)d will start at %(date)s."
 msgstr "La ronde %(r_num)d de %(rounds)d commencera à %(date)s"
 
@@ -1249,8 +1244,6 @@ msgid "%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s."
 msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
 
 #: tournament/news.py:312
-#, fuzzy, python-format
-#| msgid "%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s."
 msgid ""
 "%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s."
 msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
@@ -1819,10 +1812,8 @@ msgid "DipTV - Game %(game)s SC Chart"
 msgstr "DipTV - Partie %(game)s Décompte des centres"
 
 #: tournament/templates/games/sc_count.html:7
-#, fuzzy, python-format
-#| msgid "Game %(game)s</a> SC Ownership"
 msgid "Game %(game)s</a> SC Chart"
-msgstr "Game %(game)s</a> Possesion des centres"
+msgstr "Game %(game)s</a> Décompte des centres"
 
 #: tournament/templates/games/sc_count.html:8
 #: tournament/templates/games/sc_owners.html:8
@@ -2788,8 +2779,8 @@ msgid ""
 "a page where they can check themselves in for the round."
 msgstr ""
 "Pour autoriser les joueurs à s'enregistrer pour une ronde, cocher la case ci-"
-"dessous.Cela enverra à tous les joueurs enregistrés un courriel avec l'URL "
-"dela page sur laquelle ils peuvent s'enregistrer pour la ronde."
+"dessous. Cela enverra à tous les joueurs enregistrés un courriel avec l'URL "
+"de la page sur laquelle ils peuvent s'enregistrer pour la ronde."
 
 #: tournament/templates/tournaments/self_check_in_control.html:13
 msgid ""
