@@ -703,6 +703,7 @@ class TournamentPlayer(models.Model):
         Raises InvalidPreferenceList if anything is wrong with the string.
         """
         # Convert the preference string to all uppercase
+        # TODO This assumes English power abbreviations
         the_string = the_string.upper()
         try:
             validate_preference_string(the_string)
@@ -722,6 +723,7 @@ class TournamentPlayer(models.Model):
         Returns the preferences for this TournamentPlayer as a string.
         More-or-less the inverse of create_preferences_from_string().
         """
+        # TODO This returns the preference string in English
         ret = []
         for p in self.preference_set.all():
             ret.append(p.power.abbreviation)
@@ -1695,7 +1697,7 @@ class GamePlayer(models.Model):
             # We need to look back to find the first CentreCount with no dots
             final_sc = power_cc_set.filter(count=0).order_by('year').first()
             gs = _('Eliminated as %(power)s in %(year)d') % {'year': final_sc.year,
-                                                             'power': self.power.name}
+                                                             'power': _(self.power.name)}
         else:
             if final_sc.count == 1:
                 centre_str = _('centre')
@@ -1707,12 +1709,12 @@ class GamePlayer(models.Model):
             soloer = g.soloer()
             if self == soloer:
                 gs = _('Solo as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_year,
-                                                                                     'power': self.power.name,
+                                                                                     'power': _(self.power.name),
                                                                                      'dot_str': centre_str,
                                                                                      'dots': final_sc.count}
             elif soloer is not None:
                 gs = _('Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_sc.year,
-                                                                                     'power': self.power.name,
+                                                                                     'power': _(self.power.name),
                                                                                      'dot_str': centre_str,
                                                                                      'dots': final_sc.count}
             else:
@@ -1721,13 +1723,13 @@ class GamePlayer(models.Model):
                 if res:
                     if self.power in res.powers():
                         gs = _('%(n)d-way draw as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'n': res.draw_size(),
-                                                                                                       'power': self.power.name,
+                                                                                                       'power': _(self.power.name),
                                                                                                        'dots': final_sc.count,
                                                                                                        'dot_str': centre_str,
                                                                                                        'year': final_year}
                     else:
                         gs = _('Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d') % {'year': final_sc.year,
-                                                                                             'power': self.power.name,
+                                                                                             'power': _(self.power.name),
                                                                                              'dot_str': centre_str,
                                                                                              'dots': final_sc.count}
                 else:
@@ -1744,7 +1746,7 @@ class GamePlayer(models.Model):
                     else:
                         topper_str = ''
                     gs = _('%(dots)d %(dot_str)s%(topper)s as %(power)s in %(year)d') % {'year': final_sc.year,
-                                                                                         'power': self.power.name,
+                                                                                         'power': _(self.power.name),
                                                                                          'topper': topper_str,
                                                                                          'dot_str': centre_str,
                                                                                          'dots': final_sc.count}

@@ -74,7 +74,7 @@ def board_call_csv(request, tournament_id, round_num):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     # Fields to write
-    headers = ['Round', 'Board', 'Power', 'Player Name', 'Player Id', 'Backstabbr Username']
+    headers = [_('Round'), _('Board'), _('Power'), _('Player Name'), _('Player Id'), _('Backstabbr Username')]
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="%s%dround%sboard_call.csv"' % (t.name,
@@ -86,12 +86,12 @@ def board_call_csv(request, tournament_id, round_num):
 
     for g in r.game_set.all():
         for gp in g.gameplayer_set.all():
-            row_dict = {'Round': round_num,
-                        'Board': g.name,
-                        'Power': gp.power.name,
-                        'Player Name': str(gp.player),
-                        'Player Id': gp.player.pk,
-                        'Backstabbr Username': gp.tournamentplayer().backstabbr_username}
+            row_dict = {_('Round'): round_num,
+                        _('Board'): g.name,
+                        _('Power'): _(gp.power.name),
+                        _('Player Name'): str(gp.player),
+                        _('Player Id'): gp.player.pk,
+                        _('Backstabbr Username'): gp.tournamentplayer().backstabbr_username}
             writer.writerow(row_dict)
 
     return response

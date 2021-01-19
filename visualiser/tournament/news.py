@@ -84,7 +84,7 @@ def _tournament_news(t):
             if len(gps) == 1:
                 results.append(_(u'%(player)s won Best %(country)s with %(dots)d centre(s) and a score of %(score).2f in game %(game)s of round %(round)d.')
                                % {'player': str(gp.player),
-                                  'country': power.name,
+                                  'country': _(power.name),
                                   'dots': gp.final_sc_count(),
                                   'score': gp.score,
                                   'game': gp.game.name,
@@ -93,7 +93,7 @@ def _tournament_news(t):
                 # Tie for best power
                 winner_str = ', '.join([str(p.player) for p in gps])
                 results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centre(s) and a score of %(score).2f.')
-                               % {'country': power.name,
+                               % {'country': _(power.name),
                                   'winner_str': winner_str,
                                   'dots': gp.final_sc_count(),
                                   'score': gp.score})
@@ -267,7 +267,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                 results.append(_('%(dot)s has been owned by %(owners)d different Great Powers (%(list)s).')
                                % {'dot': sc,
                                   'owners': len(set_),
-                                  'list': ','.join([p.abbreviation for p in set_])})
+                                  'list': ','.join([_(p.abbreviation) for p in set_])})
     if (mask & MASK_BOARD_TOP) != 0:
         # Who's topping the board ?
         max_scs = current_scs.order_by('-count')[0].count
@@ -326,15 +326,15 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                         if gains_str:
                             gains_str += ', '
                         if p:
-                            gains_str += _('%(sc)s (from %(power)s)' % {'sc': s.abbreviation,
-                                                                        'power': p.abbreviation})
+                            gains_str += _('%(sc)s (from %(power)s)') % {'sc': _(s.abbreviation),
+                                                                         'power': _(p.abbreviation)}
                         else:
-                            gains_str += _('%(sc)s (neutral)' % {'sc': s.abbreviation})
+                            gains_str += _('%(sc)s (neutral)') % {'sc': _(s.abbreviation)}
                 else:
                     gains_str = _('no centres')
                 if losses:
-                    losses_str = ', '.join(_('%(sc)s (to %(power)s)' % {'sc': s.abbreviation,
-                                                                        'power': p.abbreviation}) for s, p in losses)
+                    losses_str = ', '.join(_('%(sc)s (to %(power)s)') % {'sc': _(s.abbreviation),
+                                                                         'power': _(p.abbreviation)} for s, p in losses)
                 else:
                     losses_str = _('no centres')
                 results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.')
