@@ -53,10 +53,11 @@ Creating Your Tournament
 ------------------------
 
 Start out at https://example.com/admin/tournament/tournament/add.
-Give the tournament a name (the year will automatically be appended), dates, and
-pick a TournamentScoringSystem and RoundScoringSystem. Decide whether you want the
-system to seed the games or not, how Great Powers will be assigned, and what you're
-going to tell players about failed DrawProposals.
+Give the tournament a name (the year will automatically be appended), format (FTF
+or vFTF), dates, and pick a TournamentScoringSystem and RoundScoringSystem.
+Decide whether you want the system to seed the games or not, how Great Powers
+will be assigned, what you're going to tell players about failed DrawProposals,
+and whether best countries are determined by score or centre count.
 
 Next come some items to control how the site will treat the Tournament. Make
 yourself a Manager (you can add others too if you like), and decide whether to
@@ -64,15 +65,16 @@ publish the Tournament on the site. Unpublished Tournaments will only be visible
 to users with accounts on the site, so it's a good idea to keep it unpublished
 while you're getting everything set up. You might not want to publish it at all,
 or only to publish it after the Tournament is over. Keep the Tournament Editable
-until it's over and all the data has been entered.
+until it's over and all the data has been entered. Finally, check the "no email"
+checkbox if you're going to be doing any experimenting (e.g. tying out game
+seeding) or if you don't want the system to send email to the players at all.
 
 Next you can add Rounds. For each one, you need to specify the start and end times and dates,
 and the scoring system used for games in that Round (most Tournaments will use the
 same scoring system for every round, but the system supports deviations from that).
 You also need to decide whether Draws in the Round include all survivors (DIAS).
-
-That's all you need to do here. You can also add TournamentPlayers from this page,
-but adding too many at a time can cause problems. I recommend adding them later.
+If you want, you can specify that a Round ends after a particular game year or
+between specified times.
 
 Scroll all the way to the bottom to find the "Save" button.
 
@@ -103,6 +105,11 @@ to be done by hand and it quite tricky! Note that email address, if provided, wi
 be used to send board calls to, and also to send a link to enter country preferences
 if that's how Great Powers are assigned in your Tournament. The "WDD id" is used to
 provide background information about the Player. The "picture" is for future use.
+Any "Backstabbr username" will be displayed in board calls for vFTF Tournaments.
+The "User" field is to match-up Players who are also TDs who use the system (by
+default, Players who play in a Tournament that they help manage will be "Unranked"
+- they won't be eligible for Best Country awards and their score will be noted
+sparetely to everyone else.
 
 This is also a good time to add any SeederBias that you might need. Your Tournament
 page has a link to https://example.com/admin/tournament/seederbias/add/ where you
@@ -113,9 +120,10 @@ Great Power Preferences
 
 If you're using preference lists to assign Great Powers, hopefully most players will
 provide you with an email address. In that case, when you register them, the system
-will send them an email with a unique URL where they can enter their preferences for
-the Tournament. You can see which have been sent out from the tournament player page,
-and you can also re-send them from here if needed.
+will send them an email (unless you checked that "no email" flag for the Tournament)
+with a unique URL where they can enter their preferences for the Tournament. You can
+see which have been sent out from the tournament player page, and you can also re-send
+them from here if needed.
 
 For players who don't provide an email, you can enter their preferences by hand at
 https://example.com/tournaments/42/prefs. Preferences are entered as a string of
@@ -136,12 +144,14 @@ https://example.com/tournaments/42/current_round/
 There you will find a "Roll Call" link to https://example.com/tournaments/42/rounds/1/roll_call/
 Here you simply check the box by each player who is present to play the round.
 Once you have everyone entered, press "Submit".
-If you don't have an exact multiple of seven players, the system will prompt you to
+This will take you to the "get seven" page. If you have an exact multiple of seven
+players, you can just seed the games from here. Otherwise, the system will prompt you to
 either have players sit out the round or to have players play multiple games. Just
-select them from the dropdown lists and hit "Submit".
+select them from the dropdown lists and hit "Seed Games".
 The system will go ahead and seed the boards. Note that you can refresh this page
 to re-do the seeding if needed. You can also make changes manually. Once you're happy,
-press "Submit" and the Games will be created, including sending out emails to the players.
+press "Submit" and the Games will be created, including sending out emails to the players
+(unless your Tournament has the "no email" option selected).
 
 Game Tracking
 -------------
@@ -156,7 +166,7 @@ calculate CentreCounts).
 Enter CentreCounts after each game year.
 For DrawProposals, you can enter all of them or just the ones that pass.
 
-The bare minimum is the final year CentreCounts and any passed DrawProposals. These are
+The bare minimum is the final year CentreCounts and any successful DrawProposals. These are
 needed to calculate scores.
 
 If you were to enter all the above data, people would be able to see timelapse-style
@@ -164,8 +174,8 @@ displays of the board state, charts of SC ownership and centre counts, and textu
 highlights like "Austria dropped from 5 to 2, losing Trieste to Italy, Greece to Turkey,
 and Budapest to Russia", as well as up-to-date "if all games ended now" scores.
 
-Note that if you want people to be able to follow the Tournament, you'll need to set
-it to "Published".
+Note that if you want people to be able to follow the Tournament, or even just see the
+standings, you'll need to set it to "Published".
 
 Results
 -------
@@ -177,8 +187,12 @@ as well as a leaderboard.
 If necessary, you can override the calculated scores. I haven't had to use this for a very
 long time, though, so there may well be bugs there.
 
+Once the Tournament is over and all the data has been entered, please uncheck the "Editable"
+checkbox for the Tournament. This will help prevent inadvertant changes.
+
 Upload to WDD
 -------------
 
 Once your Tournament is complete, the system can generate the two CSV files needed to
-upload the results to the WDD.
+upload the results to the WDD. Once your Tournament is actually on the WDD, please take
+a moment to set its "WDD Id" to help with cross-referencing.
