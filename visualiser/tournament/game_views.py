@@ -126,7 +126,7 @@ def game_sc_owners(request,
                 row.append({'color': 'white', 'text': no_data_str})
             else:
                 row.append({'color': power_to_colour[sco.owner],
-                            'text': sco.owner.abbreviation})
+                            'text': _(sco.owner.abbreviation)})
         rows.append(row)
         try:
             # Check for any problems, and add them to the list
