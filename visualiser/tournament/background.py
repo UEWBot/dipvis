@@ -91,7 +91,7 @@ class WikipediaBackground():
                 row = tag.tr
                 columns = []
                 for th in row.find_all('th'):
-                    columns.append(str(th.string))
+                    columns.append(str(th.string.strip()))
                 while True:
                     row = row.find_next_sibling()
                     if not row:

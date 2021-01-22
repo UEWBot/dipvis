@@ -16,11 +16,38 @@
 
 from django.test import TestCase, tag
 
-from tournament.background import WDDBackground, InvalidWDDId
+from tournament.background import WDDBackground, WikipediaBackground, InvalidWDDId
 
 INVALID_WDD_ID = 1
 BRANDON_FOGEL_WDD_ID = 13051
 MELINDA_HOLLEY_WDD_ID = 5185
+
+class WikipediaBackgroundTests(TestCase):
+    def test_wikipedia_background_titles(self):
+        name = 'Cyrille Sevin'
+        bg = WikipediaBackground(name)
+        print(bg.titles())
+        titles = bg.titles()
+        for t in titles:
+            if t['Year'] == 1997:
+                if t['Tournament'] == 'EuroDipCon':
+                    self.assertEqual(t['European Champion'], name)
+                else:
+                    self.assertEqual(t['World Champion'], name)
+            elif t['Year'] == 2001:
+                self.assertEqual(t['World Champion'], name)
+            elif t['Year'] == 2004:
+                self.assertEqual(t['Third'], name)
+            elif t['Year'] == 2006:
+                self.assertEqual(t['Second'], name)
+            elif t['Year'] == 2008:
+                self.assertEqual(t['Second'], name)
+            elif t['Year'] == 2013:
+                self.assertEqual(t['World Champion'], name)
+            elif t['Year'] == 2015:
+                self.assertEqual(t['European Champion'], name)
+            else:
+                self.assertLessThan(t['Year'], 2020)
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
