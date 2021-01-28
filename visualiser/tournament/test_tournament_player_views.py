@@ -73,6 +73,8 @@ class TournamentPlayerViewTests(TestCase):
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add tournament player')
         cls.u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can delete tournament player')
+        cls.u3.user_permissions.add(perm)
         cls.u3.save()
 
         # Some Players
@@ -415,7 +417,9 @@ class TournamentPlayerViewTests(TestCase):
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # We shouldn't be allowed to change an uneditable Tournament
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 200)
+        # Verify that we get the read-only version of the page
+        self.assertNotIn(b'Register Players', response.content)
         # ... and the TournamentPlayer should still exist
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
 

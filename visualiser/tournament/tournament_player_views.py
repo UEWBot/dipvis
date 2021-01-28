@@ -36,6 +36,10 @@ from tournament.tournament_views import get_visible_tournament_or_404
 def index(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # Non-managers just get a simple list of players
+    if not (t.editable and request.user.has_perm('tournament.delete_tournamentplayer')):
+        context = {'tournament': t}
+        return render(request, 'tournament_players/index.html', context)
     PlayerFormset = formset_factory(PlayerForm,
                                     extra=4)
     formset = PlayerFormset(request.POST or None)
@@ -79,7 +83,7 @@ def index(request, tournament_id):
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
     context = {'tournament': t, 'formset': formset}
-    return render(request, 'tournament_players/index.html', context)
+    return render(request, 'tournament_players/index_form.html', context)
 
 
 def detail(request, tournament_id, tp_id):

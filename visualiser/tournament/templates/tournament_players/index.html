@@ -6,62 +6,12 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Registered Players" %}</h1>
 
-{% if user.is_active and tournament.editable and perms.tournament.add_tournamentplayer %}
-  <form action="{% url 'tournament_players' tournament.id %}" method="post">
-    {% csrf_token %}
-    <table class="form">
-      <thead><tr>
-        <th>{% trans "Player" %}</th>
-	{% if tournament.is_virtual %}
-          <th>{% trans "Backstabbr Username" %}</th>
-	{% endif %}
-        <th>{% trans "Unranked?" %}</th>
-        <th>{% trans "Email known?" %}</th>
-        {% if tournament.powers_assigned_from_prefs %}
-          <th>{% trans "Prefs email sent?" %}</th>
-          <th></th>
-        {% endif %}
-        {% if not t.is_finished %}
-          <th></th>
-        {% endif %}
-      </tr></thead>
-      <tbody>
-        {% for tp in tournament.tournamentplayer_set.all %}
-          <tr class="{% cycle 'odd_row' 'even_row' %}">
-            <td>{{ tp.player }}</td>
-	    {% if tournament.is_virtual %}
-	      <td>{{tp.backstabbr_username }}</td>
-	    {% endif %}
-            <td style="text-align:center">{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
-            <td>{% if tp.player.email != "" %}{% trans "Yes" %}{% endif %}</td>
-            {% if tournament.powers_assigned_from_prefs %}
-                <td style="text-align:center">{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
-                <td>{% if tp.player.email != "" %}
-                  <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email" %}" />
-                  {% endif %}</td>
-            {% endif %}
-            {% if not t.is_finished %}
-              <td>
-                <input type="submit" name="unregister_{{ tp.pk }}" value="{% trans "Unregister player" %}" />
-              </td>
-            {% endif %}
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p>{% trans "WARNING: You will really mess things up if you unregister a player who has played in the tournament" %}</p>
-  <h2>{% trans "Register Players" %}</h2>
-  <p>{% trans "If a player doesn't appear in the dropdown, you'll first have to add them to the database, which you can do from" %} <a href="{% url 'admin:tournament_player_add' %}">{% trans "this page" %}</a>.</p>
-      {% include "formset_table.html" %}
-  </form>
-{% else %}
-  <ul>
-    {% for tp in tournament.tournamentplayer_set.all %}
-      <li><a href="{% if tournament.current_round.gameset.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a> {% if tp.unranked %}{% trans "(Ineligible for awards)" %}{% endif %}</li>
-    {% empty %}
-      <li>{% trans "No players yet registered" %}</li>
-    {% endfor %}
-  </ul>
-{% endif %}
+<ul>
+  {% for tp in tournament.tournamentplayer_set.all %}
+    <li><a href="{% if tournament.current_round.gameset.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a> {% if tp.unranked %}{% trans "(Ineligible for awards)" %}{% endif %}</li>
+  {% empty %}
+    <li>{% trans "No players yet registered" %}</li>
+  {% endfor %}
+</ul>
 
 {% endblock %}
