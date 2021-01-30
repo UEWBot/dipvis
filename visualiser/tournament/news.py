@@ -355,8 +355,8 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # How many draw votes have there been ?
         dp_queryset = g.drawproposal_set.filter(year__lte=last_year)
         votes = dp_queryset.count()
-        results.append(_('%(count)d draw vote(s) have been taken.')
-                       % {'count': votes})
+        results.append(_('%(count)d draw vote(s) have been taken%(game)s.')
+                       % {'count': votes, 'game': gn_str})
         # What draw votes failed recently ?
         # Note that it's fairly arbitrary where we draw the line here
         draws_set = dp_queryset.order_by('-year').filter(year__gte=last_year)
