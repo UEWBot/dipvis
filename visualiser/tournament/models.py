@@ -1035,11 +1035,26 @@ class Game(models.Model):
             for gp in position_to_gps[pos]:
                 gp.set_power_from_prefs()
 
+    def check_whether_finished(self, year=None):
+        """
+        Checks whether the Game has been soloed or the final_year has been reached.
+        If so, sets is_finished to True.
+        Should be called whenever CentreCounts for a year have been added.
+        If year is not provided, uses the most recent year for the Game.
+        """
+        if year is None:
+            year = self.final_year()
+        if (self.soloer() is not None) or (year == self.final_year):
+            self.is_finished = True
+            self.save()
+
     def create_or_update_sc_counts_from_ownerships(self, year):
         """
         Ensures that there is one CentreCount for each power for the
         specified year, and that the values match those determined by
         looking at the SupplyCentreOwnerships for that year.
+        Sets self.is_finished if self.final_year has been reached or
+        if the Game has been soloed.
         Can raise SCOwnershipsNotFound.
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
@@ -1051,6 +1066,7 @@ class Game(models.Model):
                                                      year=year,
                                                      defaults={'count': all_scos.filter(owner=p).count()})[0]
             i.save()
+        self.check_whether_finished(year)
 
     def compare_sc_counts_and_ownerships(self, year):
         """

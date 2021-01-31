@@ -288,10 +288,6 @@ def sc_owners(request, tournament_id, game_name):
             except SCOwnershipsNotFound:
                 # We have a blank row
                 continue
-            if (year == final_year) or (g.soloer() is not None):
-                # We now have final CentreCounts
-                g.is_finished = True
-                g.save()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_owners',
                                             args=(tournament_id, game_name)))
@@ -338,14 +334,11 @@ def sc_counts(request, tournament_id, game_name):
             except KeyError:
                 # Must be one of the extra forms, still blank
                 continue
-            solo = False
             for name, value in form.cleaned_data.items():
                 try:
                     power = GreatPower.objects.get(name=name)
                 except GreatPower.DoesNotExist:
                     continue
-                if value >= WINNING_SCS:
-                    solo = True
                 # Can't use get_or_create() here,
                 # because count has no default and may have changed
                 try:
@@ -372,10 +365,6 @@ def sc_counts(request, tournament_id, game_name):
                                    'game': g})
 
                 i.save()
-            if (year == final_year) or solo:
-                # We now have final CentreCounts
-                g.is_finished = True
-                g.save()
 
         # Add eliminations for any eliminated powers, if needed
         for name, value in death_form.cleaned_data.items():
@@ -418,8 +407,11 @@ def sc_counts(request, tournament_id, game_name):
         # Set the "game over" flag as appropriate
         # Game is over if it reached the final year,
         # somebody won, or the checkbox was checked
-        g.is_finished = g.is_finished or end_form.cleaned_data['is_finished']
-        g.save()
+        if end_form.cleaned_data['is_finished']:
+            g.is_finished = True
+            g.save()
+        else:
+            g.check_whether_finished()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',
                                             args=(tournament_id, game_name)))
@@ -670,6 +662,7 @@ def scrape_backstabbr(request, tournament_id, game_name):
         except ValidationError as e:
             raise Http404
         i.save()
+    g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
