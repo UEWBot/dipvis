@@ -1192,12 +1192,12 @@ class Game(models.Model):
         """
         Returns either a GamePlayer if somebody soloed the game, or None
         """
-        # Just order by SC count, and check the first (highest)
-        scs = self.centrecount_set.order_by('-count')
-        if scs[0].count >= WINNING_SCS:
-            # TODO This looks like it fails if the soloer was a replacement player
-            return self.gameplayer_set.get(power=scs[0].power)
-        return None
+        try:
+            sc = self.centrecount_set.get(count__gte=WINNING_SCS)
+        except CentreCount.DoesNotExist:
+            return None
+        # TODO This looks like it fails if the soloer was a replacement player
+        return self.gameplayer_set.get(power=sc.power)
 
     def survivors(self, year=None):
         """
