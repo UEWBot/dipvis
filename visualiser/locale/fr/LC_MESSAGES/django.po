@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-01-19 12:06-0800\n"
+"POT-Creation-Date: 2021-01-31 11:47-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -972,7 +972,7 @@ msgstr "Votes_en_faveur doit inclure une valeur"
 
 #: tournament/models.py:1554
 msgid "number of games being played this round"
-msgstr "nombre de aprties jouées cette ronde"
+msgstr "nombre de parties jouées cette ronde"
 
 #: tournament/models.py:1578 tournament/models.py:1775
 msgid "Player is not yet in the tournament"
@@ -1280,9 +1280,8 @@ msgid "%(count)d non-neutral centre(s) changed hands%(game)s."
 msgstr "%(count)d centres non-neutres ont changé de propriétaire%(game)s."
 
 #: tournament/news.py:358
-#, python-format
-msgid "%(count)d draw vote(s) have been taken."
-msgstr "%(count)d votes de fin de aprtie ont eu lieu."
+msgid "%(count)d draw vote(s) have been taken%(game)s."
+msgstr "%(count)d votes de fin de partie ont eu lieu%(game)s."
 
 #: tournament/news.py:375
 #, python-format
@@ -1580,7 +1579,7 @@ msgid "Player Id"
 msgstr "Liste des Joueurs"
 
 #: tournament/round_views.py:77 tournament/round_views.py:94
-#: tournament/templates/tournament_players/index.html:16
+#: tournament/templates/tournament_players/index_form.html:15
 msgid "Backstabbr Username"
 msgstr "Nom d'utilisateur Backstabbr"
 
@@ -2090,7 +2089,7 @@ msgstr ""
 
 #: tournament/templates/rounds/create_games.html:10
 #: tournament/templates/rounds/seeded_games.html:10
-#: tournament/templates/tournament_players/index.html:54
+#: tournament/templates/tournament_players/index_form.html:53
 #: tournament/templates/tournaments/roll_call.html:12
 msgid "this page"
 msgstr "cette page"
@@ -2338,15 +2337,25 @@ msgid "Player Background"
 msgstr "Origine du Joueur"
 
 #: tournament/templates/tournament_players/index.html:4
+#: tournament/templates/tournament_players/index_form.html:4
 #, python-format
 msgid "DipTV - %(tournament)s Registered Players"
 msgstr "DipTV - %(tournament)s Joueurs enregistrés"
 
 #: tournament/templates/tournament_players/index.html:7
+#: tournament/templates/tournament_players/index_form.html:7
 msgid "Registered Players"
 msgstr "Joueurs enregistrés"
 
-#: tournament/templates/tournament_players/index.html:14
+#: tournament/templates/tournament_players/index.html:11
+msgid "(Ineligible for awards)"
+msgstr "(Pas admissible pour les prix)"
+
+#: tournament/templates/tournament_players/index.html:13
+msgid "No players yet registered"
+msgstr "Aucun joueur enregistré"
+
+#: tournament/templates/tournament_players/index_form.html:13
 #: tournament/templates/tournaments/game_results.html:15
 #: tournament/templates/tournaments/scores.html:16
 #: tournament/templates/tournaments/seeder_bias.html:15
@@ -2354,33 +2363,33 @@ msgstr "Joueurs enregistrés"
 msgid "Player"
 msgstr "Joueur"
 
-#: tournament/templates/tournament_players/index.html:18
+#: tournament/templates/tournament_players/index_form.html:17
 msgid "Unranked?"
 msgstr "Non classé?"
 
-#: tournament/templates/tournament_players/index.html:19
+#: tournament/templates/tournament_players/index_form.html:18
 msgid "Email known?"
 msgstr "Courriel inconnu?"
 
-#: tournament/templates/tournament_players/index.html:21
+#: tournament/templates/tournament_players/index_form.html:20
 msgid "Prefs email sent?"
 msgstr "Courriel de préférences envoyé?"
 
-#: tournament/templates/tournament_players/index.html:35
-#: tournament/templates/tournament_players/index.html:36
-#: tournament/templates/tournament_players/index.html:38
+#: tournament/templates/tournament_players/index_form.html:34
+#: tournament/templates/tournament_players/index_form.html:35
+#: tournament/templates/tournament_players/index_form.html:37
 msgid "Yes"
 msgstr "Oui"
 
-#: tournament/templates/tournament_players/index.html:40
+#: tournament/templates/tournament_players/index_form.html:39
 msgid "Send prefs email"
 msgstr "Envoyer un courriel de préférences"
 
-#: tournament/templates/tournament_players/index.html:45
+#: tournament/templates/tournament_players/index_form.html:44
 msgid "Unregister player"
 msgstr "Désenregistrez un joueur"
 
-#: tournament/templates/tournament_players/index.html:52
+#: tournament/templates/tournament_players/index_form.html:51
 msgid ""
 "WARNING: You will really mess things up if you unregister a player who has "
 "played in the tournament"
@@ -2388,11 +2397,11 @@ msgstr ""
 "AVERTISSEMENT: Vous allez causer des problèmes si vous désenregistrer un "
 "joueur qui a participé au tournoi"
 
-#: tournament/templates/tournament_players/index.html:53
+#: tournament/templates/tournament_players/index_form.html:52
 msgid "Register Players"
 msgstr "Joueurs Enregistrés"
 
-#: tournament/templates/tournament_players/index.html:54
+#: tournament/templates/tournament_players/index_form.html:53
 #: tournament/templates/tournaments/roll_call.html:12
 msgid ""
 "If a player doesn't appear in the dropdown, you'll first have to add them to "
@@ -2400,14 +2409,6 @@ msgid ""
 msgstr ""
 "Si le joueur n'apparait pas dans le menu déroulant, il faut d'abord "
 "l'ajouterdans la base, ce que vous pouvez faire"
-
-#: tournament/templates/tournament_players/index.html:60
-msgid "(Ineligible for awards)"
-msgstr "(Pas admissible pour les prix)"
-
-#: tournament/templates/tournament_players/index.html:62
-msgid "No players yet registered"
-msgstr "Aucun joueur enregistré"
 
 #: tournament/templates/tournaments/best_countries.html:4
 #, python-format
@@ -2876,7 +2877,7 @@ msgstr "Pas de parties à la ronde %(n)s"
 msgid "No rounds in tournament."
 msgstr "Pas de ronde dans le tournoi."
 
-#: tournament/tournament_player_views.py:77
+#: tournament/tournament_player_views.py:81
 msgid "Player already registered"
 msgstr "Joueur déjà enregistré"
 
