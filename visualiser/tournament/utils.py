@@ -27,10 +27,11 @@ from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 
 
-def clean_duplicate_player(del_player, keep_player):
+def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
     Moves any TournamentPlayers, RoundPlayers, and GamePlayers
     from del_player to keep_player.
+    If dry_run is True, just report what changes would be made.
     """
     # First check that what we're doing makes sense
     if del_player.first_name != keep_player.first_name:
@@ -61,20 +62,23 @@ def clean_duplicate_player(del_player, keep_player):
     # Move GamePlayers
     for gp in del_player.gameplayer_set.all():
         print("Moving %s" % gp)
-        gp.player = keep_player
-        gp.save()
+        if not dry_run:
+            gp.player = keep_player
+            gp.save()
 
     # Move RoundPlayers
     for rp in del_player.roundplayer_set.all():
         print("Moving %s" % rp)
-        rp.player = keep_player
-        rp.save()
+        if not dry_run:
+            rp.player = keep_player
+            rp.save()
 
     # Move TournamentPlayers
     for tp in del_player.tournamentplayer_set.all():
         print("Moving %s" % tp)
-        tp.player = keep_player
-        tp.save()
+        if not dry_run:
+            tp.player = keep_player
+            tp.save()
 
     print("Player with private key %d ready to delete from the admin" % del_player.pk)
 
@@ -196,7 +200,7 @@ def clone_tournament(t):
     return new_t
 
 
-def fix_round_players(the_round):
+def fix_round_players(the_round, dry_run=False):
     """
     Utility to clean up RoundPlayers.
     Checks for any RoundPlayers without Games in the Round.
@@ -204,6 +208,7 @@ def fix_round_players(the_round):
     Then checks for any Games in the Round where there is no
     corresponding RoundPlayer, and creates one.
     Finally, triggers a score recalculation for all Games in the round.
+    If dry_run is True, just report what would be done.
     """
     # First, check that the Round does have Games. If not, abort
     game_set = the_round.game_set.all()
@@ -213,14 +218,18 @@ def fix_round_players(the_round):
     # Check for suprious RoundPlayers
     for rp in the_round.roundplayer_set.filter(game_count=1):
         if not game_set.filter(gameplayer__player=rp.player).exists():
-            print("%s didn't actually play in the round.\n" % rp)
-            rp.delete()
+            print("%s didn't actually play in the round - deleting.\n" % rp)
+            if not dry_run:
+                rp.delete()
     # Check for missing RoundPlayers
     for g in game_set.all():
         for gp in g.gameplayer_set.all():
             if not RoundPlayer.filter(player=gp.player).exists():
-                print("Missing RoundPlayer %s\n" % gp.player)
-                RoundPlayer.objects.create(player=gp.player,
-                                           the_round=the_round)
+                print("Missing RoundPlayer %s - adding\n" % gp.player)
+                if not dry_run:
+                    RoundPlayer.objects.create(player=gp.player,
+                                               the_round=the_round)
         # Trigger a score recalculation
-        g.save()
+        print("Saving game %s to trigger score recalculation\n" % g);
+        if not dry_run:
+            g.save()
