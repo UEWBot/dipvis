@@ -407,7 +407,10 @@ def seed_games(request, tournament_id, round_num):
         # Delete any existing Games and GamePlayers for this round
         r.game_set.all().delete()
         # TODO It's a bit hokey to have a fixed default GameSet here
-        default_set = GameSet.objects.get(pk=1)
+        if t.is_virtual():
+            default_set = GameSet.objects.get(name='Backstabbr')
+        else:
+            default_set = GameSet.objects.get(pk=1)
         data = []
         # Generate a seeding, and assign powers if required
         if t.power_assignment == Tournament.AUTO:
