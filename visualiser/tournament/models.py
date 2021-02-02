@@ -40,7 +40,7 @@ from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy import validate_year_including_start, validate_year
 from tournament.diplomacy import validate_ranking, validate_preference_string
 from tournament.email import send_prefs_email
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
 from tournament.players import Player, add_player_bg
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
 from tournament.players import validate_wdd_tournament_id
@@ -86,6 +86,7 @@ class RoundScoringSystem(ABC):
     A scoring system for a Round.
     Provides a method to calculate a score for each player of one round.
     """
+    MAX_NAME_LENGTH=40
     name = u''
 
     @abstractmethod
@@ -177,6 +178,7 @@ class TournamentScoringSystem(ABC):
     A scoring system for a Tournament.
     Provides a method to calculate a score for each player of tournament.
     """
+    MAX_NAME_LENGTH=40
     name = u''
 
     @abstractmethod
@@ -365,17 +367,19 @@ class Tournament(models.Model):
     # Flag value to use for players who are excluded from the rankings
     UNRANKED = 999999
 
-    name = models.CharField(max_length=60)
+    MAX_NAME_LENGTH = 60
+
+    name = models.CharField(max_length=MAX_NAME_LENGTH)
     start_date = models.DateField()
     end_date = models.DateField()
     # How do we combine round scores to get an overall player tournament score ?
     # This is the name of a TournamentScoringSystem object
-    tournament_scoring_system = models.CharField(max_length=40,
+    tournament_scoring_system = models.CharField(max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
                                                  help_text=_(u'How to combine round scores into a tournament score'))
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a RoundScoringSystem object
-    round_scoring_system = models.CharField(max_length=40,
+    round_scoring_system = models.CharField(max_length=RoundScoringSystem.MAX_NAME_LENGTH,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS),
                                             help_text=_(u'How to combine game scores into a round score'))
     draw_secrecy = models.CharField(max_length=1,
@@ -664,6 +668,8 @@ class TournamentPlayer(models.Model):
     """
     One player in a tournament
     """
+    MAX_BACKSTABBR_USERNAME_LENGTH=40
+
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
@@ -671,7 +677,7 @@ class TournamentPlayer(models.Model):
                                    verbose_name=_('Ineligible for awards'),
                                    help_text=_('Set this to ignore this player when determining rankings'))
     uuid_str = models.CharField(max_length=36, blank=True)
-    backstabbr_username = models.CharField(max_length=40,
+    backstabbr_username = models.CharField(max_length=MAX_BACKSTABBR_USERNAME_LENGTH,
                                            blank=True,
                                            help_text=_('Username on the backstabbr website'))
 
@@ -846,7 +852,7 @@ class Round(models.Model):
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a GameScoringSystem object
     # There has at least been talk of tournaments using multiple scoring systems, one per round
-    scoring_system = models.CharField(max_length=40,
+    scoring_system = models.CharField(max_length=GameScoringSystem.MAX_NAME_LENGTH,
                                       verbose_name=_(u'Game scoring system'),
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
                                       help_text=_(u'How to calculate a score for one game'))
@@ -984,7 +990,10 @@ class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
     """
-    name = models.CharField(max_length=20,
+    MAX_NAME_LENGTH=20
+    MAX_NOTES_LENGTH=120
+
+    name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_game_name],
                             help_text=_(u'Must be unique within the tournament. No spaces'))
     started_at = models.DateTimeField(default=timezone.now)
@@ -992,7 +1001,7 @@ class Game(models.Model):
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
-    notes = models.CharField(max_length=120,
+    notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
                              help_text=_('Will be included in board call emails and game page'))
 

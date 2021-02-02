@@ -92,6 +92,7 @@ class GameScoringSystem(ABC):
     A scoring system for a Game.
     Provides a method to calculate a score for each player of one game.
     """
+    MAX_NAME_LENGTH = 40
     name = u''
 
     @abstractmethod
