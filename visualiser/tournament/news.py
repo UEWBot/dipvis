@@ -121,6 +121,9 @@ def _tournament_news(t):
             results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.')
                            % {'score': max_score,
                               'players': player_str})
+            # How many players are close to the leader?
+            contenders = len([s for s in the_scores.values() if s >= max_score * 0.9]) - 1
+            results.append(_("%(count)d players have at least 90%% of the leader's current tournament score") % {'count': contenders})
         # Include the top score from each previous round (if any)
         for r in t.round_set.all():
             if r.is_finished():
@@ -163,18 +166,30 @@ def _round_news(r):
         results.append(ls)
     # Always include the number of players
     if r.is_finished():
-        tense_str = _('were')
+        plural_tense_str = _('were')
+        singular_tense_str = _('was')
     else:
-        tense_str = _('are')
+        plural_tense_str = _('are')
+        singular_tense_str = _('is')
     results.append(_('%(count)d players %(are)s registered to play in the round.')
                    % {'count': r.roundplayer_set.count(),
-                      'are': tense_str})
+                      'are': plural_tense_str})
     # Get the news for every game in the round
     done_games = 0
+    toppers = []
     for g in r.game_set.all():
+        toppers += g.board_toppers()
         if g.is_finished:
             done_games += 1
         results += _game_news(g, include_game_name=True)
+    max_centres = max(cc.count for cc in toppers)
+    toppers = [cc for cc in toppers if cc.count == max_centres]
+    toppers_str = ', '.join([_('%(power)s in %(game)s') % {'power': _(cc.power.abbreviation),
+                                                           'game': cc.game.name} for cc in toppers])
+    results.append(_('Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s.') % {'r_num': r.number(),
+                                                                                                    'is': singular_tense_str,
+                                                                                                    'dots': max_centres,
+                                                                                                    'players': toppers_str})
     # Note if the round has finished
     if r.is_finished():
         results.append(_(u'Round %(r_num)d has ended.') % {'r_num': r.number()})
