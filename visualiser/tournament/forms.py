@@ -133,6 +133,7 @@ class DrawForm(forms.Form):
         # Remove our special kwargs from the list
         is_dias = kwargs.pop('dias')
         secrecy = kwargs.pop('secrecy')
+        player_count = kwargs.pop('player_count')
         super().__init__(*args, **kwargs)
 
         if not is_dias:
@@ -144,7 +145,7 @@ class DrawForm(forms.Form):
                                                        required=False)
         elif secrecy == Tournament.COUNTS:
             self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
-                                                                max_value=7)
+                                                                max_value=player_count)
         else:
             assert 0, 'Unexpected draw secrecy value %c' % secrecy
 

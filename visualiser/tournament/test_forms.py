@@ -141,18 +141,22 @@ class DrawFormTest(TestCase):
 
     def test_init_missing_dias(self):
         with self.assertRaises(KeyError):
-            DrawForm(secrecy=Tournament.SECRET)
+            DrawForm(secrecy=Tournament.SECRET, player_count=7)
+
+    def test_init_missing_player_count(self):
+        with self.assertRaises(KeyError):
+            DrawForm(secrecy=Tournament.SECRET, dias=False)
 
     def test_init_missing_secrecy(self):
         with self.assertRaises(KeyError):
-            DrawForm(dias=True)
+            DrawForm(dias=True, player_count=6)
 
     def test_init_invalid_secrecy(self):
         with self.assertRaises(AssertionError):
-            DrawForm(dias=True, secrecy='Q')
+            DrawForm(dias=True, secrecy='Q', player_count=7)
 
     def test_dias_secret(self):
-        form = DrawForm(dias=True, secrecy=Tournament.SECRET)
+        form = DrawForm(dias=True, secrecy=Tournament.SECRET, player_count=7)
         # Form should have year, season, proposer, and passed
         self.check_common_fields(form)
         self.assertIn('passed', form.fields)
@@ -161,7 +165,7 @@ class DrawFormTest(TestCase):
                 self.assertNotIn(field, form.fields)
 
     def test_non_dias_secret(self):
-        form = DrawForm(dias=False, secrecy=Tournament.SECRET)
+        form = DrawForm(dias=False, secrecy=Tournament.SECRET, player_count=7)
         # Form should have year, season, proposer, powers, and passed
         self.check_common_fields(form)
         for field in ('powers', 'passed'):
@@ -170,7 +174,7 @@ class DrawFormTest(TestCase):
         self.assertNotIn('votes_in_favour', form.fields)
 
     def test_dias_counts(self):
-        form = DrawForm(dias=True, secrecy=Tournament.COUNTS)
+        form = DrawForm(dias=True, secrecy=Tournament.COUNTS, player_count=7)
         # Form should have year, season, proposer, and votes_in_favour
         self.check_common_fields(form)
         self.assertIn('votes_in_favour', form.fields)
@@ -179,7 +183,7 @@ class DrawFormTest(TestCase):
                 self.assertNotIn(field, form.fields)
 
     def test_non_dias_counts(self):
-        form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
+        form = DrawForm(dias=False, secrecy=Tournament.COUNTS, player_count=7)
         # Form should have year, season, proposer, powers, and votes_in_favour
         self.check_common_fields(form)
         for field in ('powers', 'votes_in_favour'):
@@ -188,7 +192,7 @@ class DrawFormTest(TestCase):
         self.assertNotIn('passed', form.fields)
 
     def test_proposer_optional(self):
-        form = DrawForm(dias=False, secrecy=Tournament.COUNTS)
+        form = DrawForm(dias=False, secrecy=Tournament.COUNTS, player_count=7)
         self.assertFalse(form.fields['proposer'].required)
 
 

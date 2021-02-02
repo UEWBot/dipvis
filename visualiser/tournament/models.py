@@ -1483,6 +1483,9 @@ class DrawProposal(models.Model):
                 powers.add(power)
         # Figure out how many powers are still alive
         survivors = len(self.game.survivors(self.year))
+        if self.votes_in_favour and (self.votes_in_favour > survivors):
+            raise ValidationError(_(u'%(voters)d voters exceeds %(survivors)d surviving powers') % {'voters': self.votes_in_favour,
+                                                                                                    'survivors': survivors})
         # Only one successful draw proposal
         if self.passed or (self.votes_in_favour == survivors):
             try:
