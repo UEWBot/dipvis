@@ -182,14 +182,15 @@ def _round_news(r):
         if g.is_finished:
             done_games += 1
         results += _game_news(g, include_game_name=True)
-    max_centres = max(cc.count for cc in toppers)
-    toppers = [cc for cc in toppers if cc.count == max_centres]
-    toppers_str = ', '.join([_('%(power)s in %(game)s') % {'power': _(cc.power.abbreviation),
-                                                           'game': cc.game.name} for cc in toppers])
-    results.append(_('Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s.') % {'r_num': r.number(),
-                                                                                                    'is': singular_tense_str,
-                                                                                                    'dots': max_centres,
-                                                                                                    'players': toppers_str})
+    if toppers:
+        max_centres = max(cc.count for cc in toppers)
+        toppers = [cc for cc in toppers if cc.count == max_centres]
+        toppers_str = ', '.join([_('%(power)s in %(game)s') % {'power': _(cc.power.abbreviation),
+                                                               'game': cc.game.name} for cc in toppers])
+        results.append(_('Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s.') % {'r_num': r.number(),
+                                                                                                        'is': singular_tense_str,
+                                                                                                        'dots': max_centres,
+                                                                                                        'players': toppers_str})
     # Note if the round has finished
     if r.is_finished():
         results.append(_(u'Round %(r_num)d has ended.') % {'r_num': r.number()})
