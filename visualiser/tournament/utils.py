@@ -224,7 +224,7 @@ def fix_round_players(the_round, dry_run=False):
     # Check for missing RoundPlayers
     for g in game_set.all():
         for gp in g.gameplayer_set.all():
-            if not RoundPlayer.filter(player=gp.player).exists():
+            if not RoundPlayer.objects.filter(player=gp.player).exists():
                 print("Missing RoundPlayer %s - adding\n" % gp.player)
                 if not dry_run:
                     RoundPlayer.objects.create(player=gp.player,
