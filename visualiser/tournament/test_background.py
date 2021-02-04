@@ -26,7 +26,6 @@ class WikipediaBackgroundTests(TestCase):
     def test_wikipedia_background_titles(self):
         name = 'Cyrille Sevin'
         bg = WikipediaBackground(name)
-        print(bg.titles())
         titles = bg.titles()
         for t in titles:
             if t['Year'] == 1997:
