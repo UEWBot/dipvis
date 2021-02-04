@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-01-31 11:47-0800\n"
+"POT-Creation-Date: 2021-02-04 06:02+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -386,7 +386,7 @@ msgstr "%(prefs)s contient des caractères en double "
 msgid "%(prefs)s contains invalid character(s)"
 msgstr "%(prefs)s contient des caractère(s) invalides"
 
-#: tournament/diplomacy.py:140 tournament/models.py:994
+#: tournament/diplomacy.py:140 tournament/models.py:1003
 msgid "set"
 msgstr "ensemble"
 
@@ -412,41 +412,41 @@ msgstr " (L'enregistrement automatique n'est pas autorisé)"
 msgid " (Self-check-in closed)"
 msgstr " (L'enregistrement automatique est terminé)"
 
-#: tournament/forms.py:154 tournament/forms.py:184 tournament/forms.py:256
+#: tournament/forms.py:155 tournament/forms.py:185 tournament/forms.py:257
 msgid "Game Name"
 msgstr "Nom de la partie"
 
-#: tournament/forms.py:185 tournament/forms.py:257
+#: tournament/forms.py:186 tournament/forms.py:258
 msgid "Game Set"
 msgstr "Ensemble de parties"
 
-#: tournament/forms.py:187 tournament/forms.py:259
+#: tournament/forms.py:188 tournament/forms.py:260
 msgid "Notes"
 msgstr "Notes"
 
-#: tournament/forms.py:219 tournament/forms.py:379 tournament/forms.py:651
+#: tournament/forms.py:220 tournament/forms.py:380 tournament/forms.py:652
 #, python-format
 msgid "Player %(player)s appears more than once"
 msgstr "Le joueur %(player)s apparaît plus d'une fois "
 
-#: tournament/forms.py:251 tournament/forms.py:321 tournament/models.py:1272
+#: tournament/forms.py:252 tournament/forms.py:322 tournament/models.py:1281
 msgid "Game names must be unique within the tournament"
 msgstr "Le nom des parties doit être unique pour un tournoi donné"
 
-#: tournament/forms.py:291
+#: tournament/forms.py:292
 #, python-format
 msgid "Power %(power)s appears more than once"
 msgstr "Le pays %(power)s apparaît plus d'une fois"
 
-#: tournament/forms.py:328
+#: tournament/forms.py:329
 msgid "Player sitting out"
 msgstr "Joueur qui ne participe pas à la ronde"
 
-#: tournament/forms.py:329
+#: tournament/forms.py:330
 msgid "Player to play two games"
 msgstr "Joueur qui joue deux parties"
 
-#: tournament/forms.py:396
+#: tournament/forms.py:397
 #, python-format
 msgid ""
 "Too few players sitting out games. Got %(actual)d, expected %(expected)d"
@@ -454,7 +454,7 @@ msgstr ""
 "Trop peu de joueurs qui ne participent pas à la ronde. Nombre actuel "
 "%(actual)d, attendu %(expected)d"
 
-#: tournament/forms.py:400
+#: tournament/forms.py:401
 #, python-format
 msgid ""
 "Too few players playing two games. Got %(actual)d, expected %(expected)d"
@@ -462,49 +462,49 @@ msgstr ""
 "Trop peu de joueurs jouent deux parties. Nombre actuel %(actual)d, attendu "
 "%(expected)d"
 
-#: tournament/forms.py:404
+#: tournament/forms.py:405
 msgid "Either have players sit out the round or have players play two games"
 msgstr ""
 "Il faut que des joueurs ne participent pas à la ronde ou que des joueurs "
 "jouent deux parties"
 
-#: tournament/forms.py:442 tournament/forms.py:556
+#: tournament/forms.py:443 tournament/forms.py:557
 #, python-format
 msgid "Year %(year)s appears more than once"
 msgstr "L'année %(year)s apparaît plus d'une fois"
 
-#: tournament/forms.py:463
+#: tournament/forms.py:464
 msgid "Supply Centres should never change from owned to neutral"
 msgstr "Les centres ne doivent jamais redevenir neutres"
 
-#: tournament/forms.py:468
+#: tournament/forms.py:469
 msgid "Game ended"
 msgstr "La partie est terminée"
 
-#: tournament/forms.py:477
+#: tournament/forms.py:478
 msgid "Eliminated (optional):"
 msgstr "Éliminé (optionnel):"
 
-#: tournament/forms.py:529
+#: tournament/forms.py:530
 #, python-format
 msgid "Total SC count for %(year)d is %(dots)d, more than %(max)d"
 msgstr "Le total des centres pour %(year)d est %(dots)d, plus que %(max)d"
 
-#: tournament/forms.py:564
+#: tournament/forms.py:565
 #, python-format
 msgid "Neutrals increases from %(before)d to %(after)d in %(year)d"
 msgstr ""
 "Les aresenaux neutres ont augmenté de %(before)d à %(after)d l'année %(year)d"
 
-#: tournament/game_scoring.py:131
+#: tournament/game_scoring.py:132
 msgid "Solo or bust"
 msgstr "Solo ou rien"
 
-#: tournament/game_scoring.py:153
+#: tournament/game_scoring.py:154
 msgid "Draw size"
 msgstr "Taille de l'égalité"
 
-#: tournament/game_scoring.py:239
+#: tournament/game_scoring.py:240
 #, python-format
 msgid ""
 "\n"
@@ -539,7 +539,7 @@ msgstr ""
 "partagés.\n"
 "                 "
 
-#: tournament/game_scoring.py:290
+#: tournament/game_scoring.py:291
 #, python-format
 msgid ""
 "\n"
@@ -565,39 +565,39 @@ msgstr ""
 "d'égalité.\n"
 "                 "
 
-#: tournament/game_scoring.py:370
+#: tournament/game_scoring.py:371
 msgid "Sum of Squares"
 msgstr "Somme des carrés des centres"
 
-#: tournament/game_scoring.py:404
+#: tournament/game_scoring.py:405
 msgid "Janus"
 msgstr "Janus"
 
-#: tournament/game_scoring.py:449
+#: tournament/game_scoring.py:450
 msgid "Tribute"
 msgstr "Tribute"
 
-#: tournament/game_scoring.py:492
+#: tournament/game_scoring.py:493
 msgid "World Classic"
 msgstr "World Classic"
 
-#: tournament/game_scoring.py:534
+#: tournament/game_scoring.py:535
 msgid "ManorCon"
 msgstr "ManorCon"
 
-#: tournament/game_scoring.py:585
+#: tournament/game_scoring.py:586
 msgid "CDiplo 100"
 msgstr "CDiplo 100"
 
-#: tournament/game_scoring.py:586
+#: tournament/game_scoring.py:587
 msgid "CDiplo 80"
 msgstr "CDiplo 80"
 
-#: tournament/game_scoring.py:588
+#: tournament/game_scoring.py:589
 msgid "Carnage with dead equal"
 msgstr "Carnage avec égalité pour les éliminés"
 
-#: tournament/game_scoring.py:589
+#: tournament/game_scoring.py:590
 msgid "Carnage with elimination order"
 msgstr "Carnage avec ordre d'élimination"
 
@@ -642,96 +642,96 @@ msgstr "printemps"
 msgid "fall"
 msgstr "automne"
 
-#: tournament/models.py:113
+#: tournament/models.py:114
 msgid "Best game counts"
 msgstr "La meilleure partie compte"
 
-#: tournament/models.py:119
+#: tournament/models.py:120
 #, python-format
 msgid "Best game counts. Sitters get %(points)d%(once)s"
 msgstr ""
 "La meilleure partie compte. Les joueurs qui n'ont pas joué de manière "
 "involontaire obtiennent %(points)d%(once)s"
 
-#: tournament/models.py:240
+#: tournament/models.py:242
 msgid "Sum best 2 rounds"
 msgstr "Somme des 2 meilleures rondes"
 
-#: tournament/models.py:241
+#: tournament/models.py:243
 msgid "Sum best 3 rounds"
 msgstr "Somme des 3 meilleures rondes"
 
-#: tournament/models.py:242
+#: tournament/models.py:244
 msgid "Sum best 4 rounds"
 msgstr "Somme des 4 meilleures rondes"
 
-#: tournament/models.py:295
+#: tournament/models.py:297
 #, python-format
 msgid "%(value)d is not a valid SC count"
 msgstr "%(value)d n'est pas un nombre de centres valide"
 
-#: tournament/models.py:304
+#: tournament/models.py:306
 msgid "Game names cannot contain spaces"
 msgstr "Le nom des parties ne peut contenir d'espace"
 
-#: tournament/models.py:312
+#: tournament/models.py:314
 #, python-format
 msgid "%(value)d is not a valid vote count"
 msgstr "%(value)d n'est pas un nombre de votes valide"
 
-#: tournament/models.py:335
+#: tournament/models.py:337
 msgid "Pass/Fail"
 msgstr "Passe/Echoue"
 
-#: tournament/models.py:336
+#: tournament/models.py:338
 msgid "Numbers for and against"
 msgstr "Nombre pour et contre"
 
-#: tournament/models.py:344
+#: tournament/models.py:346
 msgid "Minimising playing the same power"
 msgstr "Minimiser les joueurs qui rejouent le même pays"
 
-#: tournament/models.py:345
+#: tournament/models.py:347
 msgid "Manually by TD or at the board"
 msgstr "Manuellement par le DT ou à la table"
 
-#: tournament/models.py:346
+#: tournament/models.py:348
 msgid "Using player preferences and ranking"
 msgstr "Utilisation des préférences des joueurs et du classement"
 
-#: tournament/models.py:353
+#: tournament/models.py:355
 msgid "Highest score"
 msgstr "Score le plus élevé"
 
-#: tournament/models.py:354
+#: tournament/models.py:356
 msgid "Highest centre count"
 msgstr "Plus grand nombre de centres"
 
-#: tournament/models.py:361
+#: tournament/models.py:363
 msgid "Face to Face"
 msgstr "Face à Face"
 
-#: tournament/models.py:362
+#: tournament/models.py:364
 msgid "Virtual Face to Face"
 msgstr "Face à Face virtuel"
 
-#: tournament/models.py:375
+#: tournament/models.py:379
 msgid "How to combine round scores into a tournament score"
 msgstr "Comment combiner les scores pour le classement du tournoi"
 
-#: tournament/models.py:380
+#: tournament/models.py:384
 msgid "How to combine game scores into a round score"
 msgstr "Comment combiner les scores des parties en score pour la ronde"
 
-#: tournament/models.py:382
+#: tournament/models.py:386
 msgid "What players are told about failed draw votes"
 msgstr "Quels joueurs apprennent l'échec d'un vote de fin de partie"
 
-#: tournament/models.py:386
+#: tournament/models.py:390
 msgid "Whether the tournament is visible to all site visitors"
 msgstr "Est-ce que le tournoi est visible à tous les visiteurs du site"
 
-#: tournament/models.py:388
+#: tournament/models.py:392
 msgid ""
 "Which users can modify the tournament,<br/> and see it while it is "
 "unpublished.<br/>"
@@ -739,11 +739,11 @@ msgstr ""
 "Quels utilisateurs peuvent modifier le tournoi,<br/> et le voir qunad il est "
 "non publié.<br/>"
 
-#: tournament/models.py:390
+#: tournament/models.py:394
 msgid "This tournament's id in the WDD"
 msgstr "Le numéro de ce tournoi dans la WDD"
 
-#: tournament/models.py:393
+#: tournament/models.py:397
 msgid ""
 "Add this after the tournament is complete and results have been uploaded to "
 "the WDD"
@@ -751,135 +751,135 @@ msgstr ""
 "Ajouter cela quand le tournoi est terminé et que les résultats ont été "
 "chargés dans la wDD"
 
-#: tournament/models.py:395
+#: tournament/models.py:399
 msgid "Check to let the software seed players to games"
 msgstr "Cocher pour que le logiciel assigne les joueurs aux parties"
 
-#: tournament/models.py:397
+#: tournament/models.py:401
 msgid "How powers are assigned"
 msgstr "Comment les pays sont assignés"
 
-#: tournament/models.py:401
+#: tournament/models.py:405
 msgid "Uncheck to disallow any further changes to the tournament"
 msgstr "Déslectionner pour ne plus autoriser de changement pour ce tournoi"
 
-#: tournament/models.py:403
+#: tournament/models.py:407
 msgid "How Best Country awards are determined"
 msgstr "Comment les prix pour les meilleurs pays sont déterminés"
 
-#: tournament/models.py:410
+#: tournament/models.py:414
 msgid "Check to only generate email to tournament managers"
 msgstr ""
 "Cocher pour générer des messages uniquement pour les gestionnaires de tournoi"
 
-#: tournament/models.py:671
+#: tournament/models.py:677
 msgid "Ineligible for awards"
 msgstr "Pas éligibles pour les prix"
 
-#: tournament/models.py:672
+#: tournament/models.py:678
 msgid "Set this to ignore this player when determining rankings"
 msgstr "A fixer pour ignorer ce joueur dans le classment"
 
-#: tournament/models.py:676 tournament/players.py:404
+#: tournament/models.py:682 tournament/players.py:404
 msgid "Username on the backstabbr website"
 msgstr "Nom d'utilisateur sur le site backstabbr"
 
-#: tournament/models.py:757
+#: tournament/models.py:763
 #, python-format
 msgid "%(player)s at %(tourney)s"
 msgstr "%(player)s à %(tourney)s"
 
-#: tournament/models.py:781
+#: tournament/models.py:787
 #, python-format
 msgid "%(value)d is not a valid weighting"
 msgstr "%(value)d n'est pas un poids valide"
 
-#: tournament/models.py:795
+#: tournament/models.py:801
 msgid "Number of games to pretend they've already played together"
 msgstr "Nombre de parties pour indiquer qu'ils ont déjà joué ensemble"
 
-#: tournament/models.py:809
+#: tournament/models.py:815
 msgid "The players must differ"
 msgstr "Les joueurs doivent être différents"
 
-#: tournament/models.py:811
+#: tournament/models.py:817
 msgid "The players must be playing the same tournament"
 msgstr "Les joueurs doivent jouer dans le même tournoi"
 
-#: tournament/models.py:814
+#: tournament/models.py:820
 #, python-format
 msgid "%(p1)s and %(p2)s at %(tourney)s"
 msgstr "%(p1)s et %(p2)s à %(tourney)s"
 
-#: tournament/models.py:836
+#: tournament/models.py:842
 #, python-format
 msgid "%(player)s ranks %(power)s at %(rank)d"
 msgstr "%(player)s classe %(power)s en %(rank)d"
 
-#: tournament/models.py:850
+#: tournament/models.py:856
 msgid "Game scoring system"
 msgstr "Système de classement"
 
-#: tournament/models.py:852
+#: tournament/models.py:858
 msgid "How to calculate a score for one game"
 msgstr "Comment calculer le score pour une partie"
 
-#: tournament/models.py:853
+#: tournament/models.py:859
 msgid "Draws Include All Survivors"
 msgstr "Les votes de fin de partie doivent inclure tous les survivants"
 
-#: tournament/models.py:861
+#: tournament/models.py:867
 msgid "Enable self-check-ins"
 msgstr "Autoriser l'enregistement automatique"
 
-#: tournament/models.py:948
+#: tournament/models.py:954
 #, python-format
 msgid "Round %(round)d could end as early as %(time)s."
 msgstr "La ronde %(round)d peut se terminer dès %(time)s"
 
-#: tournament/models.py:952
+#: tournament/models.py:958
 #, python-format
 msgid "Round %(round)d could end as late as %(time)s."
 msgstr "La ronde %(round)d peut se terminer au plus tard en %(time)s."
 
-#: tournament/models.py:956
+#: tournament/models.py:962
 #, python-format
 msgid "Round %(round)d will end after playing year %(year)d."
 msgstr "La ronde %(round)d se termine après avoir l'année %(year)d."
 
-#: tournament/models.py:969
+#: tournament/models.py:975
 msgid "Earliest end time specified without latest end time"
 msgstr "Durée minimale de partie spécifiée sans durée maximiale "
 
-#: tournament/models.py:971
+#: tournament/models.py:977
 msgid "Latest end time specified without earliest end time"
 msgstr "Durée maximale de partie spécifiée sans durée minimale"
 
-#: tournament/models.py:979
+#: tournament/models.py:985
 #, python-format
 msgid "%(tournament)s round %(round)d"
 msgstr "%(tournament)s ronde %(round)d"
 
-#: tournament/models.py:989
+#: tournament/models.py:998
 msgid "Must be unique within the tournament. No spaces"
 msgstr "Doit être unique pour ce tournoi. Pas d'espace."
 
-#: tournament/models.py:993 tournament/models.py:1551
+#: tournament/models.py:1002 tournament/models.py:1563
 msgid "round"
 msgstr "ronde"
 
-#: tournament/models.py:997
+#: tournament/models.py:1006
 msgid "Will be included in board call emails and game page"
 msgstr ""
 "Sera inclu dans les messages d'assignement des parties et dans la page des "
 "parties"
 
-#: tournament/models.py:1064
+#: tournament/models.py:1073
 #, python-format
 msgid "Missing count of %(dots)d centre(s) for %(power)s"
 msgstr "Le nombre de centre(s) %(dots)d pour %(power)s est manquant "
 
-#: tournament/models.py:1069
+#: tournament/models.py:1078
 #, python-format
 msgid ""
 "%(power)s owns %(sco_dots)d centre(s) in %(year)d, but their centrecount is "
@@ -888,165 +888,170 @@ msgstr ""
 "%(power)s possède %(sco_dots)d centre(s) en %(year)d, mais le compte de "
 "leurs centres est de %(dots)d"
 
-#: tournament/models.py:1234
+#: tournament/models.py:1243
 #, python-format
 msgid "Game%(game)s conceded to "
 msgstr "Partie %(game)s concédée à"
 
-#: tournament/models.py:1236
+#: tournament/models.py:1245
 #, python-format
 msgid "Vote passed to end game%(game)s as a %(n)d-way draw between "
 msgstr ""
 "Vote de fin de partie pour la partie %(game)s comme égalité à %(n)d entre"
 
-#: tournament/models.py:1242 tournament/models.py:1256 tournament/news.py:371
+#: tournament/models.py:1251 tournament/models.py:1265 tournament/news.py:387
 #, python-format
 msgid "%(player)s (%(power)s)"
 msgstr "%(player)s (%(power)s)"
 
-#: tournament/models.py:1249
+#: tournament/models.py:1258
 #, python-format
 msgid "Game%(game)s won by %(player)s (%(power)s)"
 msgstr "Partie%(game)s gagnée par %(player)s (%(power)s)"
 
-#: tournament/models.py:1258
+#: tournament/models.py:1267
 #, python-format
 msgid "Game%(game)s ended. Board top is %(top)d centres, for %(player)s"
 msgstr ""
 "Partie%(game)s terminée. Les joueurs %(player)s ont gagné avec %(top)d "
 "centres"
 
-#: tournament/models.py:1331
+#: tournament/models.py:1340
 #, python-format
 msgid "%(game)s at %(tourney)s"
 msgstr "%(game)s à %(tourney)s"
 
-#: tournament/models.py:1350
+#: tournament/models.py:1359
 #, python-format
 msgid "%(dot)s in %(game)s was owned by %(power)s at the end of %(year)d"
 msgstr "%(dot)s dans %(game)s appartenait à %(power)s à la fin de %(year)d"
 
-#: tournament/models.py:1451
+#: tournament/models.py:1460
 msgid "This DrawProposal only has pass/fail, not vote counts"
 msgstr ""
 "Cette proposition de fin de partie est passe/échoue, pas de décompte des "
 "votes"
 
-#: tournament/models.py:1474
+#: tournament/models.py:1483
 msgid "Draw powers should go as early as possible"
 msgstr "Les pays doivent être choisis aussitôt que possible "
 
-#: tournament/models.py:1481
+#: tournament/models.py:1490
 #, python-format
 msgid "%(power)s present more than once"
 msgstr "%(power)s présent plus d'une fois"
 
-#: tournament/models.py:1492
+#: tournament/models.py:1496
+#, python-format
+msgid "%(voters)d voters exceeds %(survivors)d surviving powers"
+msgstr ""
+
+#: tournament/models.py:1504
 msgid "Game already has a successful draw proposal"
 msgstr "La partie est déjà terminée avec un vote de fin partie "
 
-#: tournament/models.py:1499
+#: tournament/models.py:1511
 #, python-format
 msgid "Game already has a centre count for %(year)d"
 msgstr "La partie a déja un décompte des centres pour %(year)d"
 
-#: tournament/models.py:1511
+#: tournament/models.py:1523
 #, python-format
 msgid "Dead power %(power)s included in proposal"
 msgstr "Le pays éliminé %(power)s est inclu dans la proposition"
 
-#: tournament/models.py:1515
+#: tournament/models.py:1527
 #, python-format
 msgid "Missing alive power %(power)s in DIAS game"
 msgstr ""
 "Pays encore actif %(power)s non inlcus dans un vote qui doit inclure tous "
 "les surivivants "
 
-#: tournament/models.py:1520
+#: tournament/models.py:1532
 msgid "Passed needs a value"
 msgstr "Vote passé doit inclure une valeur"
 
-#: tournament/models.py:1523
+#: tournament/models.py:1535
 msgid "Votes_in_favour needs a value"
 msgstr "Votes_en_faveur doit inclure une valeur"
 
-#: tournament/models.py:1554
+#: tournament/models.py:1566
 msgid "number of games being played this round"
 msgstr "nombre de parties jouées cette ronde"
 
-#: tournament/models.py:1578 tournament/models.py:1775
+#: tournament/models.py:1590 tournament/models.py:1787
 msgid "Player is not yet in the tournament"
 msgstr "Ce joueur n'est pas isncrit à ce tournoi"
 
-#: tournament/models.py:1581
+#: tournament/models.py:1593
 #, python-format
 msgid "%(player)s in %(round)s"
 msgstr "%(player)s dans %(round)s"
 
-#: tournament/models.py:1699
+#: tournament/models.py:1711
 #, python-format
 msgid "Eliminated as %(power)s in %(year)d"
 msgstr "Éliminé avec %(power)s en %(year)d"
 
-#: tournament/models.py:1703
+#: tournament/models.py:1715
 msgid "centre"
 msgstr "centre"
 
-#: tournament/models.py:1705
+#: tournament/models.py:1717
 msgid "centres"
 msgstr "centres"
 
-#: tournament/models.py:1711
+#: tournament/models.py:1723
 #, python-format
 msgid "Solo as %(power)s with %(dots)d %(dot_str)s in %(year)d"
 msgstr "Solo avec %(power)s avec %(dots)d %(dot_str)s en %(year)d"
 
-#: tournament/models.py:1716 tournament/models.py:1731
+#: tournament/models.py:1728 tournament/models.py:1743
 #, python-format
 msgid "Loss as %(power)s with %(dots)d %(dot_str)s in %(year)d"
 msgstr "Défaite avec %(power)s avec %(dots)d %(dot_str)s en %(year)d"
 
-#: tournament/models.py:1725
+#: tournament/models.py:1737
 #, python-format
 msgid "%(n)d-way draw as %(power)s with %(dots)d %(dot_str)s in %(year)d"
 msgstr "Égalité à %(n)d avec %(power)s avec %(dots)d %(dot_str)s en %(year)d"
 
-#: tournament/models.py:1743
+#: tournament/models.py:1755
 msgid " (board top)"
 msgstr " (Victoire)"
 
-#: tournament/models.py:1745
+#: tournament/models.py:1757
 #, python-format
 msgid " (%(n)d-way tied board top)"
 msgstr " (Victoire partagée à %(n)d"
 
-#: tournament/models.py:1748
+#: tournament/models.py:1760
 #, python-format
 msgid "%(dots)d %(dot_str)s%(topper)s as %(power)s in %(year)d"
 msgstr " %(dots)d %(dot_str)s%(topper)s avec %(power)s en %(year)d"
 
-#: tournament/models.py:1754
+#: tournament/models.py:1766
 #, python-format
 msgid " in <a href=\"%(url)s\">%(game)s</a>"
 msgstr " dans <a href=\"%(url)s\">%(game)s</a>"
 
-#: tournament/models.py:1758
+#: tournament/models.py:1770
 msgid " [Top Board]"
 msgstr " [Table Finale]"
 
-#: tournament/models.py:1760
+#: tournament/models.py:1772
 msgid " [Ongoing]"
 msgstr "[En cours]"
 
-#: tournament/models.py:1778
+#: tournament/models.py:1790
 msgid "Final season played must also be specified"
 msgstr "La saison finale jouée doit aussi être spécifiée"
 
-#: tournament/models.py:1780
+#: tournament/models.py:1792
 msgid "Final year must be specified with final season"
 msgstr "L'année finale doit être spécifiée avec la saison finale"
 
-#: tournament/models.py:1794
+#: tournament/models.py:1806
 #, python-format
 msgid ""
 "%(player1)s and %(player2)s both start playing %(power)s %(season)s %(year)d"
@@ -1054,7 +1059,7 @@ msgstr ""
 "%(player1)s et %(player2)s ont tous les deux commencé à jouer %(power)s "
 "%(season)s %(year)d"
 
-#: tournament/models.py:1805
+#: tournament/models.py:1817
 #, python-format
 msgid ""
 "%(player)s is listed as playing %(power)s in game %(game)s from %(season)s "
@@ -1063,7 +1068,7 @@ msgstr ""
 "%(player)s est listé comme joueur de  %(power)s dans la partie %(game)s à "
 "partir de %(season)s %(year)d"
 
-#: tournament/models.py:1823
+#: tournament/models.py:1835
 #, python-format
 msgid ""
 "%(player)s is listed as still playing %(power)s in game %(game)s from "
@@ -1072,56 +1077,56 @@ msgstr ""
 "%(player)s joue encore %(power)s dans la partie %(game)s à partir de "
 "%(season)s %(year)d"
 
-#: tournament/models.py:1843
+#: tournament/models.py:1855
 #, python-format
 msgid "%(player)s as %(power)s in %(game)s"
 msgstr "%(player)s avec %(power)s dans %(game)s"
 
-#: tournament/models.py:1846
+#: tournament/models.py:1858
 #, python-format
 msgid "%(player)s in %(game)s Power TBD"
 msgstr "%(player)s dans %(game)s Pays à décider."
 
-#: tournament/models.py:1862
+#: tournament/models.py:1874
 msgid "movement"
 msgstr "mouvement"
 
-#: tournament/models.py:1863
+#: tournament/models.py:1875
 msgid "retreats"
 msgstr "retraite"
 
-#: tournament/models.py:1864
+#: tournament/models.py:1876
 msgid "adjustments"
 msgstr "ajsutements"
 
-#: tournament/models.py:1897
+#: tournament/models.py:1909
 msgid "No adjustment phase in spring"
 msgstr "Pas de phase d'ajustement au printemps"
 
-#: tournament/models.py:1906
+#: tournament/models.py:1918
 #, python-format
 msgid "%(game)s %(turn)s image"
 msgstr "image de %(turn)s dans %(game)s"
 
-#: tournament/models.py:1936
+#: tournament/models.py:1948
 #, python-format
 msgid "Games in this round end with %(year)d"
 msgstr "Les parties de cette ronde se finissent en %(year)d"
 
-#: tournament/models.py:1948
+#: tournament/models.py:1960
 msgid "SC count for a power cannot increase from zero"
 msgstr "Le nombre de centres d'un pays ne peut pas augmenter après être à zéro"
 
-#: tournament/models.py:1950
+#: tournament/models.py:1962
 msgid "SC count for a power cannot more than double in a year"
 msgstr ""
 "Le nombre de centres d'un pays ne pas plus que doubler au cours d'une année"
 
-#: tournament/news.py:52 tournament/news.py:166
+#: tournament/news.py:52 tournament/news.py:169
 msgid "were"
 msgstr "étaient"
 
-#: tournament/news.py:54 tournament/news.py:168
+#: tournament/news.py:54 tournament/news.py:172
 msgid "are"
 msgstr "sont"
 
@@ -1183,38 +1188,67 @@ msgstr ""
 "si le tournoi finissait maintenant, le score les plus élevé serait de "
 "%(score).2f pour %(players)s."
 
-#: tournament/news.py:144 tournament/tournament_views.py:154
+#: tournament/news.py:126
+#, fuzzy, python-format
+#| msgid "%(count)d players %(are)s registered to play in the tournament."
+msgid ""
+"%(count)d players have at least 90%% of the leader's current tournament score"
+msgstr "%(count)d joueurs %(are)s enregistrés pour jouer dans ce tournoi."
+
+#: tournament/news.py:147 tournament/tournament_views.py:154
 #: tournament/tournament_views.py:158 tournament/tournament_views.py:208
 msgid "Final"
 msgstr "Final"
 
-#: tournament/news.py:146
+#: tournament/news.py:149
 msgid "Current"
 msgstr "Courant"
 
-#: tournament/news.py:148
+#: tournament/news.py:151
 #, python-format
 msgid "%(done)s top score for round %(r_num)d is %(score).2f for %(players)s."
 msgstr ""
 "Le score le plus élevé %(done)s pour la ronde %(r_num)d est de %(score).2f "
 "pour %(players)s."
 
-#: tournament/news.py:169
+#: tournament/news.py:170
+msgid "was"
+msgstr ""
+
+#: tournament/news.py:173
+msgid "is"
+msgstr ""
+
+#: tournament/news.py:174
 #, python-format
 msgid "%(count)d players %(are)s registered to play in the round."
 msgstr "%(count)d joueurs %(are)s enregistrés pour jouer cette ronde."
 
-#: tournament/news.py:180
+#: tournament/news.py:188
+#, fuzzy, python-format
+#| msgid "%(power)s in %(the_set)s"
+msgid "%(power)s in %(game)s"
+msgstr "%(power)s dans %(the_set)s"
+
+#: tournament/news.py:190
+#, fuzzy, python-format
+#| msgid "Highest SC count%(game)s is %(dots)d, for %(player)s."
+msgid ""
+"Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s."
+msgstr ""
+"Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
+
+#: tournament/news.py:196
 #, python-format
 msgid "Round %(r_num)d has ended."
 msgstr "La ronde %(r_num)d est terminée."
 
-#: tournament/news.py:182
+#: tournament/news.py:198
 #, python-format
 msgid "Round %(r_num)d has not yet started."
 msgstr "La ronde %(r_num)d n'a pas commencé"
 
-#: tournament/news.py:185
+#: tournament/news.py:201
 #, python-format
 msgid "One of the %(total_num)d games in round %(r_num)d have ended."
 msgid_plural ""
@@ -1223,84 +1257,85 @@ msgstr[0] "Une des %(total_num)d parties de la ronde %(r_num)d est terminée."
 msgstr[1] ""
 "%(num_done)d des %(total_num)d parties de la ronde %(r_num)d sont terminées"
 
-#: tournament/news.py:237
+#: tournament/news.py:253
 #, python-format
 msgid " in game %(name)s"
 msgstr "dans la partie %(name)s"
 
-#: tournament/news.py:267
+#: tournament/news.py:283
 #, python-format
 msgid "%(dot)s has been owned by %(owners)d different Great Powers (%(list)s)."
 msgstr "%(dot)s a été possédé par %(owners)d différents pays (%(list)s)."
 
-#: tournament/news.py:277
+#: tournament/news.py:293
 #, python-format
 msgid "Highest SC count%(game)s is %(dots)d, for %(player)s."
 msgstr ""
 "Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
 
-#: tournament/news.py:303
+#: tournament/news.py:319
 #, python-format
 msgid "%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s."
 msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
 
-#: tournament/news.py:312
+#: tournament/news.py:328
 #, python-format
 msgid ""
 "%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s."
 msgstr "%(player)s (%(power)s) est passé de %(old)d à %(new)d centres%(game)s."
 
-#: tournament/news.py:329
+#: tournament/news.py:345
 #, python-format
 msgid "%(sc)s (from %(power)s)"
 msgstr "%(sc)s (de %(power)s)"
 
-#: tournament/news.py:332
+#: tournament/news.py:348
 #, python-format
 msgid "%(sc)s (neutral)"
 msgstr "%(sc)s (neutre)"
 
-#: tournament/news.py:334 tournament/news.py:339
+#: tournament/news.py:350 tournament/news.py:355
 msgid "no centres"
 msgstr "pas de centre"
 
-#: tournament/news.py:336
+#: tournament/news.py:352
 #, python-format
 msgid "%(sc)s (to %(power)s)"
 msgstr "%(sc)s (à %(power)s)"
 
-#: tournament/news.py:340
+#: tournament/news.py:356
 #, python-format
 msgid "%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s."
 msgstr "%(player)s (%(power)s) a gagné %(gains)s et perdu %(losses)s%(game)s."
 
-#: tournament/news.py:351
+#: tournament/news.py:367
 #, python-format
 msgid "%(count)d non-neutral centre(s) changed hands%(game)s."
 msgstr "%(count)d centres non-neutres ont changé de propriétaire%(game)s."
 
-#: tournament/news.py:358
+#: tournament/news.py:374
+#, python-format
 msgid "%(count)d draw vote(s) have been taken%(game)s."
 msgstr "%(count)d votes de fin de partie ont eu lieu%(game)s."
 
-#: tournament/news.py:375
+#: tournament/news.py:391
 #, python-format
 msgid ", %(for)d for, %(against)d against"
 msgstr ", %(for)d pour, %(against)d contre"
 
-#: tournament/news.py:380
+#: tournament/news.py:396
 #, python-format
 msgid "Vote to concede to %(powers)s failed%(game)s%(count)s."
 msgstr "Vote de concession envers %(powers)s a échoué %(game)s%(count)s."
 
-#: tournament/news.py:384
+#: tournament/news.py:400
 #, python-format
 msgid "Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s."
 msgstr ""
 "vote de fin de partie pour ne égalité à %(n)d entre %(powers)s a échoué "
 "%(game)s%(count)s."
 
-#: tournament/news.py:396
+#: tournament/news.py:412
 #, python-format
 msgid "%(player)s (%(power)s) was eliminated in %(year)d%(game)s."
 msgstr "%(player)s (%(power)s) a été éliminé en %(year)d%(game)s."
