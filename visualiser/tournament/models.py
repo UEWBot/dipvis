@@ -293,7 +293,7 @@ def validate_sc_count(value):
     """
     Checks for a valid SC count
     """
-    if value < 0 or value > TOTAL_SCS:
+    if (value < 0) or (value > TOTAL_SCS):
         raise ValidationError(_(u'%(value)d is not a valid SC count'),
                               params={'value': value})
 
@@ -310,7 +310,7 @@ def validate_vote_count(value):
     """
     Checks for a valid vote count
     """
-    if value < 0 or value > 7:
+    if (value < 0) or (value > 7):
         raise ValidationError(_('%(value)d is not a valid vote count'),
                               params={'value': value})
 
