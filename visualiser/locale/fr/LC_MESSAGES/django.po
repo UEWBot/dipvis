@@ -891,13 +891,13 @@ msgstr ""
 #: tournament/models.py:1243
 #, python-format
 msgid "Game%(game)s conceded to "
-msgstr "Partie %(game)s concédée à"
+msgstr "Partie%(game)s concédée à"
 
 #: tournament/models.py:1245
 #, python-format
 msgid "Vote passed to end game%(game)s as a %(n)d-way draw between "
 msgstr ""
-"Vote de fin de partie pour la partie %(game)s comme égalité à %(n)d entre"
+"Vote de fin de partie pour la partie%(game)s comme égalité à %(n)d entre"
 
 #: tournament/models.py:1251 tournament/models.py:1265 tournament/news.py:387
 #, python-format
@@ -1189,11 +1189,10 @@ msgstr ""
 "%(score).2f pour %(players)s."
 
 #: tournament/news.py:126
-#, fuzzy, python-format
-#| msgid "%(count)d players %(are)s registered to play in the tournament."
+#, python-format
 msgid ""
 "%(count)d players have at least 90%% of the leader's current tournament score"
-msgstr "%(count)d joueurs %(are)s enregistrés pour jouer dans ce tournoi."
+msgstr "%(count)d des joueurs ont au moins 90%% du score du leader actuel du tournoi"
 
 #: tournament/news.py:147 tournament/tournament_views.py:154
 #: tournament/tournament_views.py:158 tournament/tournament_views.py:208
@@ -1225,18 +1224,16 @@ msgid "%(count)d players %(are)s registered to play in the round."
 msgstr "%(count)d joueurs %(are)s enregistrés pour jouer cette ronde."
 
 #: tournament/news.py:188
-#, fuzzy, python-format
-#| msgid "%(power)s in %(the_set)s"
+#, python-format
 msgid "%(power)s in %(game)s"
-msgstr "%(power)s dans %(the_set)s"
+msgstr "%(power)s dans %(game)s"
 
 #: tournament/news.py:190
-#, fuzzy, python-format
-#| msgid "Highest SC count%(game)s is %(dots)d, for %(player)s."
+#, python-format
 msgid ""
 "Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s."
 msgstr ""
-"Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
+"Le plus grand nombre de centres pour un joueur à la ronde %(r_num)d %(is)s %(dots)d pour %(players)s."
 
 #: tournament/news.py:196
 #, python-format
@@ -1271,7 +1268,7 @@ msgstr "%(dot)s a été possédé par %(owners)d différents pays (%(list)s)."
 #, python-format
 msgid "Highest SC count%(game)s is %(dots)d, for %(player)s."
 msgstr ""
-"Plus grand nombre de centres dans %(game)s est de %(dots)d, pour %(player)s."
+"Plus grand nombre de centres%(game)s est de %(dots)d, pour %(player)s."
 
 #: tournament/news.py:319
 #, python-format
@@ -1326,13 +1323,13 @@ msgstr ", %(for)d pour, %(against)d contre"
 #: tournament/news.py:396
 #, python-format
 msgid "Vote to concede to %(powers)s failed%(game)s%(count)s."
-msgstr "Vote de concession envers %(powers)s a échoué %(game)s%(count)s."
+msgstr "Vote de concession envers %(powers)s a échoué%(game)s%(count)s."
 
 #: tournament/news.py:400
 #, python-format
 msgid "Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s."
 msgstr ""
-"vote de fin de partie pour ne égalité à %(n)d entre %(powers)s a échoué "
+"vote de fin de partie pour ne égalité à %(n)d entre %(powers)s a échoué"
 "%(game)s%(count)s."
 
 #: tournament/news.py:412
@@ -1608,10 +1605,8 @@ msgid "Player Name"
 msgstr "Joueur"
 
 #: tournament/round_views.py:77 tournament/round_views.py:93
-#, fuzzy
-#| msgid "Player Index"
 msgid "Player Id"
-msgstr "Liste des Joueurs"
+msgstr "Id du Joueur"
 
 #: tournament/round_views.py:77 tournament/round_views.py:94
 #: tournament/templates/tournament_players/index_form.html:15
