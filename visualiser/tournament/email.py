@@ -95,6 +95,25 @@ You can change your preference list at any time.
 The list at the time of board call for each round is the one that will be used for that round.
 """
 
+BIDS_EMAIL = """
+Hi,
+You're receiving this because you are registered for the %(tourney)s Diplomacy tournament.
+The tournament is using a blind auction to assign Great Powers.
+To enter or update your bids, go to the following web page:
+%(url)s
+Note 1: this address is unique to you - if you share it with anyone, they will be able to change your bids!
+Note 2: you will get a "Page Not Found" error before the tournament starts.
+
+You must bid between %(min)d and %(max)d for each Great Power.
+All your bids must total %(total)d.
+You can change your bids at any time.
+Your bids as they stand at the time of board call for the round are what will be used for that round.
+"""
+
+PREFS_SUBJECT = 'Specify power preferences for %s'
+
+BIDS_SUBJECT = 'Specify power blind auction bids for %s'
+
 
 def send_prefs_email(tournamentplayer, force=False):
     """
@@ -103,9 +122,17 @@ def send_prefs_email(tournamentplayer, force=False):
     Unless force is True, will only send the email if one hasn't already been sent.
     Note that if force is True, any previous URL will no longer be valid.
     """
+    from tournament.models import PowerBid
+
     t = tournamentplayer.tournament
     # Bail if preferences aren't needed for the Tournament
-    if not t.powers_assigned_from_prefs():
+    if t.power_assignment == t.PREFERENCES:
+        body = PREFS_EMAIL
+        subject = PREFS_SUBJECT
+    elif t.power_assignment == t.AUCTION:
+        body = BIDS_EMAIL
+        subject = BIDS_SUBJECT
+    else:
         return
     addr = tournamentplayer.player.email
     # Can't do anything unless we have an email address for the player
@@ -121,9 +148,12 @@ def send_prefs_email(tournamentplayer, force=False):
     if tournamentplayer.uuid_str and not force:
         return
     # Create the email and send it
-    msg_body = PREFS_EMAIL % {'tourney': t,
-                              'url': tournamentplayer.get_prefs_url()}
-    send_mail('Specify power preferences for %s' % t,
+    msg_body = body % {'tourney': t,
+                       'url': tournamentplayer.get_prefs_url(),
+                       'min': PowerBid.MIN_BID,
+                       'max': PowerBid.MAX_BID,
+                       'total': PowerBid.BID_TOTAL}
+    send_mail(subject % t,
               msg_body,
               settings.EMAIL_HOST_USER,
               addr_list)

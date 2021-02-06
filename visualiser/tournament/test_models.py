@@ -1134,13 +1134,27 @@ class TournamentModelTests(TestCase):
     def test_tp_get_prefs_url(self):
         # A TournamentPlayer with a uuid_str
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
+        t = tp.tournament
+        old_pa = t.power_assignment
+        t.power_assignment = Tournament.PREFERENCES
+        t.save()
         tp._generate_uuid()
         self.assertIn('https://', tp.get_prefs_url())
+        # Clean up
+        t.power_assignment = old_pa
+        t.save()
 
     def test_tp_get_prefs_url_no_uuid(self):
         # A TournamentPlayer without a uuid_str
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
+        t = tp.tournament
+        old_pa = t.power_assignment
+        t.power_assignment = Tournament.PREFERENCES
+        t.save()
         self.assertIn('https://', tp.get_prefs_url())
+        # Clean up
+        t.power_assignment = old_pa
+        t.save()
 
     # TODO TournamentPlayer.send_prefs_email()
 

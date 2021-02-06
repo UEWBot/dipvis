@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Power Auction Bids" %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Power Auction Bids" %}</h1>
+
+<h2>{% trans "Current Bids" %}</h2>
+
+<dl>
+{% for bid in player.powerbid_set.all %}
+  <dt>{{ bid.power }}</dt>
+  <dd>{{ bid.bid }}</dd>
+{% empty %}
+  <li>{% trans "No current bids" %}</li>
+{% endfor %}
+</dl>
+
+<h2>{% trans "Change Bids" %}</h2>
+<form method="post" action={% url 'auction_bids' tournament.id uuid %}>
+  {% csrf_token %}
+  <table class="form">
+    {{ form.as_table }}
+  </table>
+  <input type="submit" value="{% trans "Submit" %}" />
+</form>
+{% endblock %}

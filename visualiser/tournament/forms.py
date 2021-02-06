@@ -28,7 +28,7 @@ from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy import validate_preference_string
 from tournament.models import Game, GameImage, SeederBias
 from tournament.models import SEASONS
-from tournament.models import Tournament, TournamentPlayer
+from tournament.models import PowerBid, Tournament, TournamentPlayer
 from tournament.players import Player
 
 
@@ -76,6 +76,37 @@ class BaseCheckInFormset(BaseFormSet):
         kwargs['tp'] = self.tp
         kwargs['round'] = self.rounds[index]
         return super()._construct_form(index, **kwargs)
+
+
+class AuctionBidForm(forms.Form):
+    """Form for a bid for a single GreatPower"""
+    def __init__(self, *args, **kwargs):
+        # Remove our kwarg from the list
+        self.tp = kwargs.pop('tp')
+        super().__init__(*args, **kwargs)
+        # Create the right country fields
+        for power in GreatPower.objects.all():
+            c = power.name
+            self.fields[c] = forms.IntegerField(min_value=PowerBid.MIN_BID,
+                                                max_value=PowerBid.MAX_BID)
+            self.fields[c].label = _(c)
+            self.fields[c].help_text = _('Your bid to play %(power)s') % {'power': _(c)}
+            attrs = self.fields[c].widget.attrs
+            #attrs['size'] = 10
+            #attrs['maxlength'] = 10
+
+    def clean(self):
+        if any(self.errors):
+            # One or more forms is invalid anyway
+            return
+        # Check the total amount bid
+        total = 0
+        for power in GreatPower.objects.all():
+            total += self.cleaned_data[_(power.name)]
+        if total != BID_TOTAL:
+            raise forms.ValidationError(_('Bids total %(sum)d - should be %(expected)d') % {'sum': total,
+                                                                                            'expected': BID_TOTAL})
+        return self.cleaned_data
 
 
 class PrefsForm(forms.Form):

@@ -469,5 +469,12 @@ class EmailTests(TestCase):
     def test_send_roll_call_emails(self):
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         self.assertIsNotNone(tp)
+        t = tp.tournament
+        old_pa = t.power_assignment
+        t.power_assignment = Tournament.PREFERENCES
+        t.save()
         send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 1)
+        # Clean up
+        t.power_assignment = old_pa
+        t.save()

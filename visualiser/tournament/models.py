@@ -81,6 +81,11 @@ class PowerAlreadyAssigned(Exception):
     pass
 
 
+class InvalidPowerAssignmentMethod(Exception):
+    """The Tournament does not need player input to assign powers."""
+    pass
+
+
 class RoundScoringSystem(ABC):
     """
     A scoring system for a Round.
@@ -315,6 +320,15 @@ def validate_vote_count(value):
                               params={'value': value})
 
 
+def validate_bid(value):
+    """
+    Checks for a valid blind auction bid
+    """
+    if (value < PowerBid.MIN_BID) or (value > PowerBid.MAX_BID):
+        raise ValidationError(_('%(value)d is not a valid bid'),
+                              params={'value': value})
+
+
 def game_image_location(instance, filename):
     """
     Function that determines where to store the file.
@@ -342,10 +356,12 @@ class Tournament(models.Model):
     AUTO = 'A'
     MANUAL = 'M'
     PREFERENCES = 'P'
+    AUCTION = 'B'
     POWER_ASSIGN_METHODS = (
         (AUTO, _('Minimising playing the same power')),
         (MANUAL, _('Manually by TD or at the board')),
         (PREFERENCES, _('Using player preferences and ranking')),
+        (AUCTION, _('Blind auction')),
     )
 
     # Best Country Criterion
@@ -422,6 +438,13 @@ class Tournament(models.Model):
         Intended for use in template code.
         """
         return self.power_assignment == self.PREFERENCES
+
+    def powers_assigned_from_bids(self):
+        """
+        Returns True is power_assignment is AUCTION.
+        Intended for use in template code.
+        """
+        return self.power_assignment == self.AUCTION
 
     def is_virtual(self):
         """
@@ -737,13 +760,19 @@ class TournamentPlayer(models.Model):
 
     def get_prefs_url(self):
         """
-        Returns the absolute URL to update the preferences for this
+        Returns the absolute URL to update the preferences or enter bids for this
         TournamentPlayer.
         """
         if not self.uuid_str:
             self._generate_uuid()
-        path = reverse('player_prefs',
-                       args=[str(self.tournament.id), self.uuid_str])
+        if self.tournament.power_assignment == Tournament.PREFERENCES:
+            path = reverse('player_prefs',
+                           args=[str(self.tournament.id), self.uuid_str])
+        elif self.tournament.power_assignment == Tournament.AUCTION:
+            path = reverse('auction_bids',
+                           args=[str(self.tournament.id), self.uuid_str])
+        else:
+            raise InvalidPowerAssignmentMethod(self.tournament.power_assignment)
         return 'https://%(host)s%(path)s' % {'host': settings.HOSTNAME,
                                              'path': path}
 
@@ -842,6 +871,31 @@ class Preference(models.Model):
         return _('%(player)s ranks %(power)s at %(rank)d') % {'player': self.player,
                                                               'power': self.power.name,
                                                               'rank': self.ranking}
+
+
+class PowerBid(models.Model):
+    """
+    How much a player is willing to 'pay' to play a particular power.
+    Used for auction power assignment.
+    """
+    MIN_BID = 1
+    MAX_BID = 40
+    BID_TOTAL = 70
+
+    player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE)
+    power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
+    bid = models.PositiveSmallIntegerField(validators=[validate_bid])
+
+    class Meta:
+        # Each player can only have one bid per power
+        unique_together = ('player', 'power')
+        # Highest bid first
+        ordering = ['player', 'power']
+
+    def __str__(self):
+        return _('%(player)s bid %(bid)d for %(power)s') % {'player': self.player,
+                                                            'power': self.power.name,
+                                                            'bid': self.bid}
 
 
 class Round(models.Model):

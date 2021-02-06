@@ -18,16 +18,19 @@
 Tournament Player Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
+from tournament.diplomacy import GreatPower
 from tournament.email import send_prefs_email
+from tournament.forms import AuctionBidForm
 from tournament.forms import PlayerForm
 from tournament.forms import PrefsForm
-from tournament.models import Tournament, TournamentPlayer
+from tournament.models import PowerBid, Tournament, TournamentPlayer
 from tournament.tournament_views import get_visible_tournament_or_404
 
 
@@ -139,3 +142,70 @@ def player_prefs(request, tournament_id, uuid):
                    'uuid': uuid,
                    'prefs_list': tp.preference_set.all(),
                    'form': prefs_form})
+
+
+# Note: No permission_required decorator
+# because this one should be available to any who have the URL
+def auction_bids(request, tournament_id, uuid):
+    """
+    Display the current bids for a single TournamentPlayer,
+    and give them the ability to change them.
+    TournamentPlayer is (indirectly) identified by the uuid string.
+    """
+    # Allow access regardless of published state
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    # But don't allow modification of archived tournaments
+    if not t.editable:
+        raise Http404
+    # Fail if the last round already has Games (too late)
+    r = t.round_set.last()
+    if r and r.game_set.exists():
+        raise Http404
+    # Find the TournamentPlayer in question
+    try:
+        tp = t.tournamentplayer_set.get(uuid_str=uuid)
+    except TournamentPlayer.DoesNotExist:
+        raise Http404
+
+    # Find any existing bids
+    data = {}
+    for power in GreatPower.objects.all():
+        try:
+            bid = tp.powerbid_set.get(power=power)
+        except PowerBid.DoesNotExist:
+            pass
+        else:
+            data[_(power.name)] = bid.bid
+    bids_form = AuctionBidForm(request.POST or None,
+                               tp=tp,
+                               initial=data)
+
+    if bids_form.is_valid() and bids_form.has_changed():
+        for power in GreatPower.objects.all():
+            bid = bids_form.cleaned_data[_(power.name)]
+            
+            i, created = PowerBid.objects.update_or_create(player=tp,
+                                                           power=power,
+                                                           defaults={'bid': bid})
+            #try:
+            #    i.full_clean()
+            #except ValidationError as e:
+            #    bids_form.add_error(bids_form.fields[_(power.name)], e)
+            #    if created:
+            #        i.delete()
+            #    return render(request,
+            #                  'tournaments/auction_bids.html',
+            #                  {'tournament': t,
+            #                   'uuid': uuid,
+            #                   'form': bids_form})
+
+        # Redirect back here to flush the POST data
+        return HttpResponseRedirect(reverse('auction_bids',
+                                            args=(tournament_id, uuid)))
+
+    return render(request,
+                  'tournaments/auction_bids.html',
+                  {'tournament': t,
+                   'player': tp,
+                   'uuid': uuid,
+                   'form': bids_form})
