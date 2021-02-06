@@ -95,8 +95,8 @@ def detail(request, tournament_id, tp_id):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     try:
         tp = t.tournamentplayer_set.get(id=int(tp_id))
-    except TournamentPlayer.DoesNotExist:
-        raise Http404
+    except TournamentPlayer.DoesNotExist as e:
+        raise Http404 from e
     context = {'tournament': t, 'player': tp}
     return render(request, 'tournament_players/detail.html', context)
 
@@ -121,8 +121,8 @@ def player_prefs(request, tournament_id, uuid):
     # Find the TournamentPlayer in question
     try:
         tp = t.tournamentplayer_set.get(uuid_str=uuid)
-    except TournamentPlayer.DoesNotExist:
-        raise Http404
+    except TournamentPlayer.DoesNotExist as e:
+        raise Http404 from e
 
     prefs_form = PrefsForm(request.POST or None,
                            tp=tp)
@@ -164,8 +164,8 @@ def auction_bids(request, tournament_id, uuid):
     # Find the TournamentPlayer in question
     try:
         tp = t.tournamentplayer_set.get(uuid_str=uuid)
-    except TournamentPlayer.DoesNotExist:
-        raise Http404
+    except TournamentPlayer.DoesNotExist as e:
+        raise Http404 from e
 
     # Find any existing bids
     data = {}
