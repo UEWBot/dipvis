@@ -642,42 +642,6 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('prefs_csv', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 200)
 
-    def test_player_prefs(self):
-        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str)))
-        self.assertEqual(response.status_code, 200)
-
-    def test_player_prefs_invalid_uuid(self):
-        # Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer
-        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, uuid.uuid4())))
-        self.assertEqual(response.status_code, 404)
-
-    def test_player_prefs_archived(self):
-        # Should get a 404 error if the Tournament has been achived
-        response = self.client.get(reverse('player_prefs', args=(self.t4.pk, self.tp41.uuid_str)))
-        self.assertEqual(response.status_code, 404)
-
-    def test_player_prefs_too_late(self):
-        # Should get a 404 error if the final round has started
-        response = self.client.get(reverse('player_prefs', args=(self.t5.pk, self.tp51.uuid_str)))
-        self.assertEqual(response.status_code, 404)
-
-    def test_player_prefs_post(self):
-        self.assertFalse(self.tp11.preference_set.exists())
-        url = reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str))
-        data = urlencode({'form-TOTAL_FORMS': '1',
-                          'form-MAX_NUM_FORMS': '1000',
-                          'form-INITIAL_FORMS': '1',
-                          'prefs': 'FART'})
-        response = self.client.post(url,
-                                    data,
-                                    content_type='application/x-www-form-urlencoded')
-        # It should redirect
-        self.assertEqual(response.status_code, 302)
-        # ... and the preferences should have been set
-        self.assertEqual(self.tp11.prefs_string(), 'FART')
-        # Clean up
-        self.tp11.preference_set.all().delete()
-
     def test_seeder_bias_not_logged_in(self):
         response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
         self.assertEqual(response.status_code, 302)

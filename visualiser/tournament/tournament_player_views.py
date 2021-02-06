@@ -20,13 +20,14 @@ Tournament Player Views for the Diplomacy Tournament Visualiser.
 
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import ugettext as _
 
 from tournament.email import send_prefs_email
 from tournament.forms import PlayerForm
-from tournament.models import TournamentPlayer
+from tournament.forms import PrefsForm
+from tournament.models import Tournament, TournamentPlayer
 from tournament.tournament_views import get_visible_tournament_or_404
 
 
@@ -95,3 +96,46 @@ def detail(request, tournament_id, tp_id):
         raise Http404
     context = {'tournament': t, 'player': tp}
     return render(request, 'tournament_players/detail.html', context)
+
+
+# Note: No permission_required decorator
+# because this one should be available to any who have the URL
+def player_prefs(request, tournament_id, uuid):
+    """
+    Display the current preferences for a single TournamentPlayer,
+    and give them the ability to change them.
+    TournamentPlayer is (indirectly) identified by the uuid string.
+    """
+    # Allow access regardless of published state
+    t = get_object_or_404(Tournament, pk=tournament_id)
+    # But don't allow modification of archived tournaments
+    if not t.editable:
+        raise Http404
+    # Fail if the last round already has Games (too late)
+    r = t.round_set.last()
+    if r and r.game_set.exists():
+        raise Http404
+    # Find the TournamentPlayer in question
+    try:
+        tp = t.tournamentplayer_set.get(uuid_str=uuid)
+    except TournamentPlayer.DoesNotExist:
+        raise Http404
+
+    prefs_form = PrefsForm(request.POST or None,
+                           tp=tp)
+
+    if prefs_form.is_valid() and prefs_form.has_changed():
+        ps = prefs_form.cleaned_data['prefs']
+        # Set preferences for this TournamentPlayer
+        tp.create_preferences_from_string(ps)
+
+        # Redirect back here to flush the POST data
+        return HttpResponseRedirect(reverse('player_prefs',
+                                            args=(tournament_id, uuid)))
+
+    return render(request,
+                  'tournaments/player_entry.html',
+                  {'tournament': t,
+                   'uuid': uuid,
+                   'prefs_list': tp.preference_set.all(),
+                   'form': prefs_form})
