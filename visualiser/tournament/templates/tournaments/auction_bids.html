@@ -4,6 +4,41 @@
 
 {% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Power Auction Bids" %}{% endblock %}
 
+{% block style %}
+<style>
+  div.changeParent {
+    padding: 1px;
+  }
+
+  div.changeChild {
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  div.changeChildTotal {
+    /* margin: 20px 0px 20px 0px; */
+    text-align: center;
+    width: 320px;
+  }
+
+  div.changeChildButtons {
+    display: inline-block;
+    vertical-align: middle;
+    margin-top: 20px;
+  }
+
+  .totalText {
+    font-size: x-large;
+    font-weight: bold;
+  }
+
+  .validationInfo {
+    margin-top: 10px;
+    color: red;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Player Power Auction Bids" %}</h1>
 
@@ -19,11 +54,133 @@
 </dl>
 
 <h2>{% trans "Change Bids" %}</h2>
-<form method="post" action={% url 'auction_bids' tournament.id uuid %}>
-  {% csrf_token %}
-  <table class="form">
-    {{ form.as_table }}
-  </table>
-  <input type="submit" value="{% trans "Submit" %}" />
-</form>
+  <div class='changeParent'>
+    <div class='changeChild'>
+      <form method="post" action={% url 'auction_bids' tournament.id uuid %}>
+        {% csrf_token %}
+        <table class="form">
+          {{ form.as_table }}
+        </table>
+        <input type="submit" value="{% trans "Submit" %}" />
+      </form>
+    </div>
+    <div class='changeChild changeChildTotal'>
+      <div class='totalText'>
+        Total:
+        <br>
+        <span class="helptext" id="id_Total"></span>
+      </div>
+      <div id='id_ValidationInfo' class='validationInfo'>come here</div>
+      <div class='changeChildButtons'>
+        <button onclick="MakeRandom()">Make Random</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block script %}
+<script>
+
+  var mMaxTotal = 70;
+  var mMustUseAllPoints = false;
+  var mMaxBid = 40;
+  var mMinBid = 0;
+  var mNoIdenticalBids = true;
+
+  var mPowerNames = ["Austria-Hungary", "England", "France", "Germany", "Italy", "Russia", "Turkey"];
+  var mPowerIds = mPowerNames.map(x => "id_" + x);
+
+  function ValidateAndUpdateDisplay() {
+    var tot = 0;
+
+    var s = '';
+
+    var powersByBidSize = [];
+    for (let i = 0; i < mMaxBid + 1; i++) powersByBidSize[i] = [];
+
+    mPowerIds.forEach(x => {
+      var elm = document.getElementById(x);
+      if (elm != null) {
+        var val = elm.value;
+        if (isNaN(val)) {
+          s += elm.name + ' is not a number.<br>';
+        } else {
+          val = Number(val);
+          powersByBidSize[val].push(elm.name);
+          tot += val;
+          if (val < mMinBid) s += elm.name + ' is below the minimum (' + mMinBid + ').<br>';
+          if (val > mMaxBid) s += elm.name + ' is above the maximum (' + mMaxBid + ').<br>';
+        }
+      }
+    });
+
+    if (mNoIdenticalBids) {
+      powersByBidSize.forEach(powers => {
+        if (powers.length > 1) {
+          var sPowers = '';
+          for (let i = 0; i < powers.length; i++) {
+            const pp = powers[i];
+            if (i > 0 && !(powers.length == 2 && i == 1)) sPowers += ",";
+            if (i == powers.length - 1) sPowers += " and";
+            sPowers += " " + pp;
+          }
+          s += sPowers + ' have identical bids.<br>';
+        }
+
+      });
+    }
+
+    if (mMustUseAllPoints && tot != mMaxTotal) s += 'The total must equal ' + mMaxTotal + '.<br>';
+    if (tot > mMaxTotal) s += 'The total is above the maximum (' + mMaxTotal + ').<br>';
+
+    document.getElementById("id_Total").innerHTML = tot;
+    document.getElementById('id_ValidationInfo').innerHTML = s;
+  };
+
+  function MakeRandom() {
+    var options = [];
+    for (let i = mMinBid; i < mMaxBid + 1; i++) options.push(i);
+
+    var selections = [];
+    for (let i = 0; i < 7; i++) {
+      var sel = options[Math.floor(Math.random() * options.length)];
+      selections.push(sel);
+
+      var tot = 0;
+      selections.forEach(x => tot += x);
+
+      var minrest = 0;
+      for (let j = 0; j < 6 - selections.length; j++) minrest += options[j];
+
+      options = options.filter(x => (x < mMaxTotal - tot - minrest) && x != sel);
+    }
+
+    selections.forEach((x, i) => {
+      var elm = document.getElementById(mPowerIds[i]);
+      if (elm != null) elm.value = x;
+    });
+
+    ValidateAndUpdateDisplay();
+  }
+
+  function SinkEvents() {
+    mPowerIds.forEach(x => {
+      var elm = document.getElementById(x);
+      if (elm != null) {
+        elm.addEventListener('input', (event) => {
+          ValidateAndUpdateDisplay();
+          return false;
+        });
+        // elm.onchange = 'function (event) {ValidateAndUpdateDisplay();}';
+        // elm.onclick = 'function (event) {ValidateAndUpdateDisplay();}';
+      }
+    });
+
+  }
+
+  ValidateAndUpdateDisplay();
+  SinkEvents();
+
+</script>
+
 {% endblock %}
