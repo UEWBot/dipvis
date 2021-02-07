@@ -103,9 +103,9 @@ class AuctionBidForm(forms.Form):
         total = 0
         for power in GreatPower.objects.all():
             total += self.cleaned_data[_(power.name)]
-        if total != BID_TOTAL:
-            raise forms.ValidationError(_('Bids total %(sum)d - should be %(expected)d') % {'sum': total,
-                                                                                            'expected': BID_TOTAL})
+        if total > BID_TOTAL:
+            raise forms.ValidationError(_('Bids total %(sum)d - greater than %(expected)d') % {'sum': total,
+                                                                                               'expected': BID_TOTAL})
         return self.cleaned_data
 
 

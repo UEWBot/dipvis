@@ -878,9 +878,9 @@ class PowerBid(models.Model):
     How much a player is willing to 'pay' to play a particular power.
     Used for auction power assignment.
     """
-    MIN_BID = 1
-    MAX_BID = 40
-    BID_TOTAL = 70
+    MIN_BID = 0
+    MAX_BID = 60
+    BID_TOTAL = 100
 
     player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
@@ -889,6 +889,8 @@ class PowerBid(models.Model):
     class Meta:
         # Each player can only have one bid per power
         unique_together = ('player', 'power')
+        # All bids by a player must be different
+        unique_together = ('player', 'bid')
         # Highest bid first
         ordering = ['player', 'power']
 
