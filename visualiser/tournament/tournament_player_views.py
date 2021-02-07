@@ -208,4 +208,7 @@ def auction_bids(request, tournament_id, uuid):
                   {'tournament': t,
                    'player': tp,
                    'uuid': uuid,
+                   'min_bid': PowerBid.MIN_BID,
+                   'max_bid': PowerBid.MAX_BID,
+                   'bid_total': PowerBid.BID_TOTAL,
                    'form': bids_form})
