@@ -137,9 +137,9 @@ class WDDBackground():
         url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         try:
             page = urllib.request.urlopen(url)
-        except urllib.request.URLError:
+        except urllib.request.URLError as e:
             # Most likely, WDD is not available
-            raise WDDNotAccessible
+            raise WDDNotAccessible from e
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
             raise InvalidWDDId(self.wdd_id)

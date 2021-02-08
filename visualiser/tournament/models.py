@@ -737,7 +737,7 @@ class TournamentPlayer(models.Model):
         try:
             validate_preference_string(the_string)
         except ValidationError as e:
-            raise InvalidPreferenceList(str(e))
+            raise InvalidPreferenceList from e
         # Remove any existing preferences for this player
         self.preference_set.all().delete()
         to_power = {}
@@ -1528,8 +1528,8 @@ class DrawProposal(models.Model):
         survivors = scs.filter(count__gt=0).count()
         try:
             return survivors - self.votes_in_favour
-        except TypeError:
-            raise TypeError(_('This DrawProposal only has pass/fail, not vote counts'))
+        except TypeError as e:
+            raise TypeError(_('This DrawProposal only has pass/fail, not vote counts')) from e
 
     def clean(self):
         """

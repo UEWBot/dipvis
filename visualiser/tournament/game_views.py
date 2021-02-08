@@ -63,8 +63,8 @@ def get_game_or_404(tournament, game_name):
     try:
         return Game.objects.get(name=game_name,
                                 the_round__tournament=tournament)
-    except Game.DoesNotExist:
-        raise Http404
+    except Game.DoesNotExist as e:
+        raise Http404 from e
 
 
 def game_simple(request, tournament_id, game_name, template):
@@ -660,7 +660,7 @@ def scrape_backstabbr(request, tournament_id, game_name):
         try:
             i.full_clean()
         except ValidationError as e:
-            raise Http404
+            raise Http404 from e
         i.save()
     g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...

@@ -57,8 +57,8 @@ def get_round_or_404(tournament, round_num):
     """
     try:
         return tournament.round_numbered(round_num)
-    except Round.DoesNotExist:
-        raise Http404
+    except Round.DoesNotExist as e:
+        raise Http404 from e
 
 
 def round_simple(request, tournament_id, round_num, template):

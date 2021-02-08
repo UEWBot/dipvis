@@ -504,8 +504,8 @@ class GameSeeder:
                 for s in self._all_possible_seedings(players):
                     fitness = self._set_fitness(s)
                     seedings.append((s, fitness))
-            except _AssignmentFailed:
-                raise ImpossibleToSeed
+            except _AssignmentFailed as e:
+                raise ImpossibleToSeed from e
         # Sort them by fitness
         seedings.sort(key=itemgetter(1))
         if self.seed_method == SeedMethod.RANDOM:
