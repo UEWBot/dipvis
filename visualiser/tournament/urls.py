@@ -34,6 +34,8 @@ round_patterns = [
     url(r'^board_call_csv/$', round_views.board_call_csv, name='board_call_csv'),
     url(r'^board_call/$', round_views.round_simple,
         {'template': 'board_call'}, name='board_call'),
+    url(r'^blind_auction_csv/$', round_views.blind_auction_csv,
+        name='blind_auction_csv'),
 ]
 
 game_patterns = [

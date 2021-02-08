@@ -97,6 +97,33 @@ def board_call_csv(request, tournament_id, round_num):
     return response
 
 
+def blind_auction_csv(request, tournament_id, round_num):
+    """CSV of the blind auction bids for the round"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    # Fields to write
+    headers = [_('Round'), _('Player Name'), _('Player Id'), _('Great Power'), _('Bid')]
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="%s%dround%sboard_call.csv"' % (t.name,
+                                                                                            t.start_date.year,
+                                                                                            round_num)
+
+    writer = csv.DictWriter(response, fieldnames=headers)
+    writer.writeheader()
+
+    for tp in t.tournamentplayer_set.all():
+        for bid in tp.powerbid_set.all():
+            row_dict = {_('Round'): round_num,
+                        _('Player Name'): str(tp.player),
+                        _('Player Id'): tp.player.pk,
+                        _('Great Power'): bid.power.name,
+                        _('Bid'): bid.bid}
+            writer.writerow(row_dict)
+
+    return response
+
+
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id, round_num=None):
     """Provide a form to specify which players are playing each round"""
