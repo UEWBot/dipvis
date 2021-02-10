@@ -18,6 +18,7 @@
 Tournament Player Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
@@ -157,9 +158,15 @@ def auction_bids(request, tournament_id, uuid):
     # But don't allow modification of archived tournaments
     if not t.editable:
         raise Http404
+    # Find the first round without Games
+    all_rounds_qs = t.round_set.all()
+    for_round = None
+    for r in all_rounds_qs:
+        if not r.game_set.exists():
+            for_round = r
+            break;
     # Fail if the last round already has Games (too late)
-    r = t.round_set.last()
-    if r and r.game_set.exists():
+    if for_round is None:
         raise Http404
     # Find the TournamentPlayer in question
     try:
@@ -169,15 +176,39 @@ def auction_bids(request, tournament_id, uuid):
 
     # Find any existing bids
     data = {}
+    tp_bids_qs = tp.powerbid_set.all()
     for power in GreatPower.objects.all():
         try:
-            bid = tp.powerbid_set.get(power=power)
+            bid = tp_bids_qs.get(power=power, the_round=for_round)
         except PowerBid.DoesNotExist:
             pass
         else:
             data[_(power.name)] = bid.bid
+
+    # Which style of auction is it?
+    if t.power_assignment == t.AUCTION_PER_ROUND:
+        funds = PowerBid.BID_TOTAL_PER_ROUND
+    elif t.power_assignment == t.AUCTION_TOTAL:
+        # How much do they get in total?
+        total_rounds = len(all_rounds_qs)
+        funds = PowerBid.BID_TOTAL_PER_ROUND * total_rounds
+        print('Initial total funds is %d' % funds)
+        # How much did they spend in previous rounds ?
+        for r in all_rounds_qs:
+            # Stop when we get to the round we're bidding for
+            if r is for_round:
+                break;
+            spent = tp_bids_qs.filter(the_round=r).aggregate(Sum('bid'))['bid__sum']
+            if spent is not None:
+                funds -= spent
+            print('Minus spend in %s leaves %d' % (str(r), funds))
+        # And how much do they need to save for future rounds?
+        # TODO "21" should be derived from the number of GreatPowers
+        funds -= (21 * (total_rounds - for_round.number()))
+        print('Minus 21 per future round leaves %d' % funds)
+
     bids_form = AuctionBidForm(request.POST or None,
-                               tp=tp,
+                               funds=funds,
                                initial=data)
 
     if bids_form.is_valid() and bids_form.has_changed():
@@ -186,18 +217,8 @@ def auction_bids(request, tournament_id, uuid):
             
             i, created = PowerBid.objects.update_or_create(player=tp,
                                                            power=power,
+                                                           the_round=for_round,
                                                            defaults={'bid': bid})
-            #try:
-            #    i.full_clean()
-            #except ValidationError as e:
-            #    bids_form.add_error(bids_form.fields[_(power.name)], e)
-            #    if created:
-            #        i.delete()
-            #    return render(request,
-            #                  'tournaments/auction_bids.html',
-            #                  {'tournament': t,
-            #                   'uuid': uuid,
-            #                   'form': bids_form})
 
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('auction_bids',
@@ -208,7 +229,8 @@ def auction_bids(request, tournament_id, uuid):
                   {'tournament': t,
                    'player': tp,
                    'uuid': uuid,
+                   'round_num': for_round.number(),
                    'min_bid': PowerBid.MIN_BID,
                    'max_bid': PowerBid.MAX_BID,
-                   'bid_total': PowerBid.BID_TOTAL,
+                   'bid_total': funds,
                    'form': bids_form})

@@ -113,7 +113,7 @@ def blind_auction_csv(request, tournament_id, round_num):
     writer.writeheader()
 
     for tp in t.tournamentplayer_set.all():
-        for bid in tp.powerbid_set.all():
+        for bid in tp.powerbid_set.filter(the_round=r):
             row_dict = {_('Round'): round_num,
                         _('Player Name'): str(tp.player),
                         _('Player Id'): tp.player.pk,

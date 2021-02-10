@@ -82,7 +82,7 @@ class AuctionBidForm(forms.Form):
     """Form for a bid for a single GreatPower"""
     def __init__(self, *args, **kwargs):
         # Remove our kwarg from the list
-        self.tp = kwargs.pop('tp')
+        self.funds = kwargs.pop('funds')
         super().__init__(*args, **kwargs)
         # Create the right country fields
         for power in GreatPower.objects.all():
@@ -92,8 +92,6 @@ class AuctionBidForm(forms.Form):
             self.fields[c].label = _(c)
             self.fields[c].help_text = _('Your bid to play %(power)s') % {'power': _(c)}
             attrs = self.fields[c].widget.attrs
-            #attrs['size'] = 10
-            #attrs['maxlength'] = 10
 
     def clean(self):
         if any(self.errors):
@@ -103,9 +101,9 @@ class AuctionBidForm(forms.Form):
         total = 0
         for power in GreatPower.objects.all():
             total += self.cleaned_data[_(power.name)]
-        if total > BID_TOTAL:
+        if total > self.funds:
             raise forms.ValidationError(_('Bids total %(sum)d - greater than %(expected)d') % {'sum': total,
-                                                                                               'expected': BID_TOTAL})
+                                                                                               'expected': self.funds})
         return self.cleaned_data
 
 
