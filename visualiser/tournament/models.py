@@ -863,9 +863,9 @@ class Preference(models.Model):
 
     class Meta:
         # Each player can only have one ranking per power
-        unique_together = ('player', 'power')
-        # Every ranking by a player must be unique
-        unique_together = ('player', 'ranking')
+        unique_together = (('player', 'power'),
+                           # Every ranking by a player must be unique
+                           ('player', 'ranking'))
         # Highest-rank first
         ordering = ['ranking']
 
@@ -1033,9 +1033,9 @@ class PowerBid(models.Model):
 
     class Meta:
         # Each player can only have one bid per power per round
-        unique_together = ('player', 'power', 'the_round')
-        # All bids by a player for a given round must be different
-        unique_together = ('player', 'bid', 'the_round')
+        unique_together = (('player', 'power', 'the_round'),
+                           # All bids by a player for a given round must be different
+                           ('player', 'bid', 'the_round'))
         ordering = ['player', 'power']
 
     def __str__(self):
