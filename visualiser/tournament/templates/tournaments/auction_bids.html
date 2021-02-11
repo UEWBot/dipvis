@@ -75,6 +75,10 @@
       <div id='id_ValidationInfo' class='validationInfo'>come here</div>
       <div class='changeChildButtons'>
         <button onclick="MakeRandom()">Make Random</button>
+        <br><br>with <input type="number" id='id_TotalPointsForMakeRandom' style="width: 50px;text-align: center;">
+        points
+        <br><br><input type="checkbox" id='id_KeepEven' checked>
+        <label for="id_KeepEven">Keep as even as possible</label>
       </div>
     </div>
   </div>
@@ -97,24 +101,42 @@
 
     _PowerNames;
     get PowerNames() { return this._PowerNames }
+    set PowerNames(value) { this._PowerNames = value }
 
     _BoardCount;
     get BoardCount() { return this._BoardCount }
+    set BoardCount(value) { this._BoardCount = value }
 
     _MinimumIndividualBid;
     get MinimumIndividualBid() { return this._MinimumIndividualBid }
+    set MinimumIndividualBid(value) { this._MinimumIndividualBid = value }
 
     _MaximumIndividualBid;
     get MaximumIndividualBid() { return this._MaximumIndividualBid }
+    set MaximumIndividualBid(value) { this._MaximumIndividualBid = value }
 
     _MaximumTotal;
     get MaximumTotal() { return this._MaximumTotal }
+    set MaximumTotal(value) { this._MaximumTotal = value }
 
     _IdenticalBidsProhibited;
     get IdenticalBidsProhibited() { return this._IdenticalBidsProhibited }
+    set IdenticalBidsProhibited(value) { this._IdenticalBidsProhibited = value }
 
     _MustUseAllPoints;
     get MustUseAllPoints() { return this._MustUseAllPoints }
+    set MustUseAllPoints(value) { this._MustUseAllPoints = value }
+
+    Duplicate() {
+      var ret = new PowerBidConfiguration(this.PowerNames
+        , this.BoardCount
+        , this.MinimumIndividualBid
+        , this.MaximumIndividualBid
+        , this.MaximumTotal
+        , this.IdenticalBidsProhibited
+        , this.MustUseAllPoints);
+      return ret;
+    }
 
     MakeNewBidSet() {
       return new BidSet(this);
@@ -176,8 +198,12 @@
         var selectedPower = toselect[iPower];
         toselect.splice(iPower, 1);
 
-        var selectedBid = options[Math.floor(Math.random() * options.length)];
-        if (toselect.length == 1) selectedBid = options[options.length - 1];
+        var selectedBid;
+        if (toselect.length == 0) {
+          selectedBid = options[options.length - 1];
+        } else {
+          selectedBid = options[Math.floor(Math.random() * options.length)];
+        }
 
         this._Bids[selectedPower] = selectedBid;
 
@@ -186,11 +212,43 @@
         var minrest = 0;
         for (let j = 0; j < toselect.length - 1; j++) minrest += options[j];
 
-        options = options.filter(x => (x < this._config.MaximumTotal - tot - minrest) && !(this._config.IdenticalBidsProhibited && x == selectedBid));
+        options = options.filter(x => (x < this._config.MaximumTotal - tot - minrest + 1) && !(this._config.IdenticalBidsProhibited && x == selectedBid));
       }
-
     }
 
+    MakeEven() {
+      this.ClearBids();
+
+      var iMin = this._config.MinimumIndividualBid;
+      var n = this._config.PowerNames.length;
+      while (iMin * n + n * (n - 1) / 2 < this._config.MaximumTotal) {
+        iMin++;
+      }
+
+      var options = [];
+      for (let i = 0; i < this._config.PowerNames.length; i++) options.push(i + iMin);
+
+      var tot = 0;
+      var i = 0;
+      do {
+        options[i]--; i++;
+        tot = 0;
+        options.forEach(x => tot += x);
+      }
+      while (tot > this._config.MaximumTotal);
+
+      var toselect = this._config.PowerNames.slice(); //make a copy
+
+      i = 0;
+      while (toselect.length > 0) {
+        var iPower = Math.floor(Math.random() * toselect.length);
+        var selectedPower = toselect[iPower];
+        toselect.splice(iPower, 1);
+
+        this._Bids[selectedPower] = options[i];
+        i++;
+      }
+    }
     _LastValidationMessages = "";
     get LastValidationMessages() { return this._LastValidationMessages };
 
@@ -285,6 +343,9 @@
     return ret;
   }
 
+  function GetTotalPointsForMakeRandomInput() { return document.getElementById('id_TotalPointsForMakeRandom') }
+  function GetKeepEvenForMakeRandomInput() { return document.getElementById('id_KeepEven') }
+
   function ValidateAndUpdateDisplay() {
 
     var bidset = mConfiguration.MakeNewBidSet();
@@ -302,8 +363,16 @@
 
   function MakeRandom() {
 
-    var bidset = mConfiguration.MakeNewBidSet();
-    bidset.MakeRandom();
+    var config = mConfiguration.Duplicate();
+    config.MaximumTotal = GetTotalPointsForMakeRandomInput().value;
+    config.MaximumIndividualBid = config.MaximumTotal - config.PowerNames.length * (config.PowerNames.length - 1) / 2;
+
+    var bidset = config.MakeNewBidSet();
+    if (GetKeepEvenForMakeRandomInput().checked) {
+      bidset.MakeEven();
+    } else {
+      bidset.MakeRandom();
+    }
 
     var inps = GetInputs();
     Object.keys(inps).forEach(powername => {
@@ -321,6 +390,10 @@
         return false;
       });
     });
+
+    var inp = GetTotalPointsForMakeRandomInput();
+    // inp.value = mConfiguration.MaximumTotal;
+    inp.value = 100;
   }
 
   ValidateAndUpdateDisplay();
