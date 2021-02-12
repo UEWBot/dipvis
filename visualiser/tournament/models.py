@@ -1033,9 +1033,7 @@ class PowerBid(models.Model):
 
     class Meta:
         # Each player can only have one bid per power per round
-        unique_together = (('player', 'power', 'the_round'),
-                           # All bids by a player for a given round must be different
-                           ('player', 'bid', 'the_round'))
+        unique_together = ('player', 'power', 'the_round')
         ordering = ['player', 'power']
 
     def __str__(self):

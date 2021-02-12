@@ -79,8 +79,9 @@ class BaseCheckInFormset(BaseFormSet):
 
 
 class AuctionBidForm(forms.Form):
-    """Form for a bid for a single GreatPower"""
+    """Form for bids for all GreatPowers"""
     def __init__(self, *args, **kwargs):
+        self.duplicate_bids_allowed = False
         # Remove our kwarg from the list
         self.funds = kwargs.pop('funds')
         super().__init__(*args, **kwargs)
@@ -94,9 +95,20 @@ class AuctionBidForm(forms.Form):
             attrs = self.fields[c].widget.attrs
 
     def clean(self):
-        if any(self.errors):
-            # One or more forms is invalid anyway
-            return
+        # Check for duplicate bids
+        if not self.duplicate_bids_allowed:
+            bid_dict = {}
+            for power in GreatPower.objects.all():
+                bid = self.cleaned_data[_(power.name)]
+                bid_dict.setdefault(bid, []).append(_(power.name))
+            errs = []
+            for k, v in bid_dict.items():
+                if len(v) > 1:
+                    errs.append(_('Duplicate bid %(bid)d for %(powers)s.') % {'bid': k,
+                                                                              'powers': ', '.join(v)})
+            if errs:
+                raise forms.ValidationError(' '.join(errs))
+
         # Check the total amount bid
         total = 0
         for power in GreatPower.objects.all():
