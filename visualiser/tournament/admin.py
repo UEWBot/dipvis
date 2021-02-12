@@ -19,7 +19,7 @@ from django.contrib import admin
 from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
 from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
-from tournament.models import RoundPlayer
+from tournament.models import PowerBid, RoundPlayer
 from tournament.models import SeederBias
 from tournament.players import Player, PlayerTournamentRanking, PlayerGameResult
 from tournament.players import PlayerAward, PlayerRanking
@@ -129,6 +129,9 @@ class PlayerAdmin(admin.ModelAdmin):
     exclude = ('_wdd_name',)
     list_filter = ('first_name', 'last_name')
 
+class PowerBidAdmin(admin.ModelAdmin):
+    list_filter = ('player__tournament', )
+
 class SeederBiasAdmin(admin.ModelAdmin):
     list_filter = ('player1__tournament', )
 
@@ -160,6 +163,7 @@ admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
 admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
 admin.site.register(PlayerAward, PlayerAwardAdmin)
 admin.site.register(PlayerRanking, PlayerRankingAdmin)
+admin.site.register(PowerBid, PowerBidAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(RoundPlayer, RoundPlayerAdmin)
 admin.site.register(GamePlayer, GamePlayerAdmin)
