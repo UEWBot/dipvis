@@ -130,7 +130,7 @@ class PlayerAdmin(admin.ModelAdmin):
     list_filter = ('first_name', 'last_name')
 
 class PowerBidAdmin(admin.ModelAdmin):
-    list_filter = ('player__tournament', )
+    list_filter = ('player__tournament', 'player__player')
 
 class SeederBiasAdmin(admin.ModelAdmin):
     list_filter = ('player1__tournament', )
