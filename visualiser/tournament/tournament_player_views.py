@@ -214,13 +214,14 @@ def auction_bids(request, tournament_id, uuid):
                                initial=data)
 
     if bids_form.is_valid() and bids_form.has_changed():
-        for power in GreatPower.objects.all():
-            bid = bids_form.cleaned_data[_(power.name)]
-            
-            i, created = PowerBid.objects.update_or_create(player=tp,
-                                                           power=power,
-                                                           the_round=for_round,
-                                                           defaults={'bid': bid})
+        with transaction.atomic():
+            for power in GreatPower.objects.all():
+                bid = bids_form.cleaned_data[_(power.name)]
+
+                i, created = PowerBid.objects.update_or_create(player=tp,
+                                                               power=power,
+                                                               the_round=for_round,
+                                                               defaults={'bid': bid})
 
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('auction_bids',

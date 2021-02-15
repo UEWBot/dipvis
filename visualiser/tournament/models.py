@@ -28,7 +28,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Sum, Max
 from django.urls import reverse
 from django.utils import timezone
@@ -746,8 +746,9 @@ class TournamentPlayer(models.Model):
         for p in GreatPower.objects.all():
             to_power[p.abbreviation] = p
         # Go through the string, creating Preferences
-        for i, c in enumerate(the_string, 1):
-            Preference.objects.create(player=self, power=to_power[c], ranking=i)
+        with transaction.atomic():
+            for i, c in enumerate(the_string, 1):
+                Preference.objects.create(player=self, power=to_power[c], ranking=i)
 
     def prefs_string(self):
         """
@@ -1117,12 +1118,13 @@ class Game(models.Model):
         all_scos = self.supplycentreownership_set.filter(year=year)
         if not all_scos.exists():
             raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
-        for p in GreatPower.objects.all():
-            i = CentreCount.objects.update_or_create(power=p,
-                                                     game=self,
-                                                     year=year,
-                                                     defaults={'count': all_scos.filter(owner=p).count()})[0]
-            i.save()
+        with transaction.atomic():
+            for p in GreatPower.objects.all():
+                i = CentreCount.objects.update_or_create(power=p,
+                                                         game=self,
+                                                         year=year,
+                                                         defaults={'count': all_scos.filter(owner=p).count()})[0]
+                i.save()
         self.check_whether_finished(year)
 
     def compare_sc_counts_and_ownerships(self, year):
@@ -1347,16 +1349,17 @@ class Game(models.Model):
 
         # Auto-create 1900 SC counts (unless they already exist)
         # Auto-create SC Ownership (unless they already exist)
-        for power in GreatPower.objects.all():
-            i, _ = CentreCount.objects.get_or_create(power=power,
-                                                     game=self,
-                                                     year=FIRST_YEAR - 1,
-                                                     count=power.starting_centres)
-            for sc in SupplyCentre.objects.filter(initial_owner=power):
-                i, _ = SupplyCentreOwnership.objects.get_or_create(owner=power,
-                                                                   game=self,
-                                                                   year=FIRST_YEAR - 1,
-                                                                   sc=sc)
+        with transaction.atomic():
+            for power in GreatPower.objects.all():
+                i, _ = CentreCount.objects.get_or_create(power=power,
+                                                         game=self,
+                                                         year=FIRST_YEAR - 1,
+                                                         count=power.starting_centres)
+                for sc in SupplyCentre.objects.filter(initial_owner=power):
+                    i, _ = SupplyCentreOwnership.objects.get_or_create(owner=power,
+                                                                       game=self,
+                                                                       year=FIRST_YEAR - 1,
+                                                                       sc=sc)
 
         # Auto-create S1901M image (if it doesn't exist)
         GameImage.objects.update_or_create(game=self,

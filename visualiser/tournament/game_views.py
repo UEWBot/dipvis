@@ -18,6 +18,7 @@
 Game Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.db import transaction
 from django.db.models import Count
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
@@ -243,27 +244,28 @@ def sc_owners(request, tournament_id, game_name):
                 continue
             if year is None:
                 continue
-            for name, value in form.cleaned_data.items():
+            with transaction.atomic():
+                for name, value in form.cleaned_data.items():
+                    try:
+                        dot = SupplyCentre.objects.get(name=name)
+                    except SupplyCentre.DoesNotExist:
+                        continue
+                    if value is None:
+                        # Dot is (now) neutral
+                        SupplyCentreOwnership.objects.filter(sc=dot,
+                                                             game=g,
+                                                             year=year).delete()
+                    else:
+                        SupplyCentreOwnership.objects.update_or_create(sc=dot,
+                                                                       game=g,
+                                                                       year=year,
+                                                                       defaults={'owner': value})
+                # Ensure that CentreCounts for this year match
                 try:
-                    dot = SupplyCentre.objects.get(name=name)
-                except SupplyCentre.DoesNotExist:
+                    g.create_or_update_sc_counts_from_ownerships(year)
+                except SCOwnershipsNotFound:
+                    # We have a row with just the year but no actual ownerships
                     continue
-                if value is None:
-                    # Dot is (now) neutral
-                    SupplyCentreOwnership.objects.filter(sc=dot,
-                                                         game=g,
-                                                         year=year).delete()
-                else:
-                    SupplyCentreOwnership.objects.update_or_create(sc=dot,
-                                                                   game=g,
-                                                                   year=year,
-                                                                   defaults={'owner': value})
-            # Ensure that CentreCounts for this year match
-            try:
-                g.create_or_update_sc_counts_from_ownerships(year)
-            except SCOwnershipsNotFound:
-                # We have a row with just the year but no actual ownerships
-                continue
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_owners',
                                             args=(tournament_id, game_name)))
@@ -310,37 +312,37 @@ def sc_counts(request, tournament_id, game_name):
             except KeyError:
                 # Must be one of the extra forms, still blank
                 continue
-            for name, value in form.cleaned_data.items():
-                try:
-                    power = GreatPower.objects.get(name=name)
-                except GreatPower.DoesNotExist:
-                    continue
-                # Can't use update_or_create() because we need to call full_clean()
-                try:
-                    i = CentreCount.objects.get(power=power,
-                                                game=g,
-                                                year=year)
-                    # Ensure the count has the value we want
-                    i.count = value
-                except CentreCount.DoesNotExist:
-                    i = CentreCount(power=power,
-                                    game=g,
-                                    year=year,
-                                    count=value)
-                try:
-                    i.full_clean()
-                except ValidationError as e:
-                    #form.add_error(name, e)
-                    form.add_error(None, e)
-                    return render(request,
-                                  'games/sc_counts_form.html',
-                                  {'formset': formset,
-                                   'end_form': end_form,
-                                   'death_form': death_form,
-                                   'tournament': t,
-                                   'game': g})
-
-                i.save()
+            with transaction.atomic():
+                for name, value in form.cleaned_data.items():
+                    try:
+                        power = GreatPower.objects.get(name=name)
+                    except GreatPower.DoesNotExist:
+                        continue
+                    # Can't use update_or_create() because we need to call full_clean()
+                    try:
+                        i = CentreCount.objects.get(power=power,
+                                                    game=g,
+                                                    year=year)
+                        # Ensure the count has the value we want
+                        i.count = value
+                    except CentreCount.DoesNotExist:
+                        i = CentreCount(power=power,
+                                        game=g,
+                                        year=year,
+                                        count=value)
+                    try:
+                        i.full_clean()
+                    except ValidationError as e:
+                        #form.add_error(name, e)
+                        form.add_error(None, e)
+                        return render(request,
+                                      'games/sc_counts_form.html',
+                                      {'formset': formset,
+                                       'end_form': end_form,
+                                       'death_form': death_form,
+                                       'tournament': t,
+                                       'game': g})
+                    i.save()
 
         # Add eliminations for any eliminated powers, if needed
         for name, value in death_form.cleaned_data.items():
@@ -631,13 +633,14 @@ def scrape_backstabbr(request, tournament_id, game_name):
     if have_ownerships:
         g.create_or_update_sc_counts_from_ownerships(year)
     else:
-        for k, v in bg.powers.items():
-            # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
-            power = GreatPower.objects.get(abbreviation=k[0])
-            CentreCount.objects.update_or_create(power=power,
-                                                 game=g,
-                                                 year=year,
-                                                 defaults={'count': v[0]})
+        with transaction.atomic():
+            for k, v in bg.powers.items():
+                # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+                power = GreatPower.objects.get(abbreviation=k[0])
+                CentreCount.objects.update_or_create(power=power,
+                                                     game=g,
+                                                     year=year,
+                                                     defaults={'count': v[0]})
     g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
