@@ -56,6 +56,7 @@
 </dl>
 
 <h2>{% blocktrans with num=round_num %} Change Bids for round {{ num }} {% endblocktrans %}</h2>
+  <p><b>{% trans "Total points available to bid: " %}{{ bid_total }}</b></p>
   <div class='changeParent'>
     <div class='changeChild'>
       <form method="post" action={% url 'auction_bids' tournament.id uuid %}>
