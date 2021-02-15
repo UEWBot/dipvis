@@ -164,11 +164,10 @@ def roll_call(request, tournament_id, round_num):
                 # Ignore non-bool fields and ones that aren't True
                 if value is True:
                     # Ensure that we have a corresponding RoundPlayer
-                    i, created = RoundPlayer.objects.get_or_create(player=p,
-                                                                   the_round=r)
-                    # Reset game_count in case we've been here before
-                    i.game_count = 1
-                    i.save()
+                    RoundPlayer.objects.update_or_create(player=p,
+                                                         the_round=r,
+                                                         # Reset game_count in case we've been here before
+                                                         defaults={'game_count': 1})
                 elif r.game_set.filter(gameplayer__player=p).exists():
                     # Refuse to delete this one
                     form.add_error(None, _('Player did play this round'))
@@ -511,16 +510,9 @@ def create_games(request, tournament_id, round_num):
                     p = GreatPower.objects.get(name=power)
                 except GreatPower.DoesNotExist:
                     continue
-                # Is there already a player for this power in this game ?
-                try:
-                    i = GamePlayer.objects.get(game=g,
-                                               power=p)
-                except GamePlayer.DoesNotExist:
-                    i = GamePlayer(player=field.player, game=g, power=p)
-                else:
-                    # Change the player (if necessary)
-                    i.player = field.player
-                i.save()
+                GamePlayer.objects.update_or_create(game=g,
+                                                    power=p,
+                                                    defaults={'player': field.player})
         # Notify the players
         send_board_call(r)
         # Redirect to the board call page

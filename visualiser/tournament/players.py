@@ -353,12 +353,11 @@ def add_player_bg(player):
     rankings = bg.rankings()
     for r in rankings:
         try:
-            i, _ = PlayerRanking.objects.get_or_create(player=player,
-                                                       system=r['Name'])
-            i.score = float(r['Score'])
-            i.international_rank = r['International rank']
-            i.national_rank = r['National rank']
-            i.save()
+            PlayerRanking.objects.update_or_create(player=player,
+                                                   system=r['Name'],
+                                                   defaults={'score': float(r['Score']),
+                                                             'international_rank': r['International rank'],
+                                                             'national_rank': r['National rank']})
         except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single ranking rather than all the background

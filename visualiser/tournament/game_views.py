@@ -248,29 +248,16 @@ def sc_owners(request, tournament_id, game_name):
                     dot = SupplyCentre.objects.get(name=name)
                 except SupplyCentre.DoesNotExist:
                     continue
-                # Can't use get_or_create() here,
-                # because owner has no default and may have changed
-                try:
-                    i = SupplyCentreOwnership.objects.get(sc=dot,
-                                                          game=g,
-                                                          year=year)
-                    if value is None:
-                        # There is an owner in the db,
-                        # but now we want this dot to be neutral
-                        i.delete()
-                        continue
-                    else:
-                        # Ensure the owner has the value we want
-                        i.owner = value
-                except SupplyCentreOwnership.DoesNotExist:
-                    if value is None:
-                        # Still neutral
-                        continue
-                    i = SupplyCentreOwnership(sc=dot,
-                                              game=g,
-                                              year=year,
-                                              owner=value)
-                i.save()
+                if value is None:
+                    # Dot is (now) neutral
+                    SupplyCentreOwnership.objects.filter(sc=dot,
+                                                         game=g,
+                                                         year=year).delete()
+                else:
+                    SupplyCentreOwnership.objects.update_or_create(sc=dot,
+                                                                   game=g,
+                                                                   year=year,
+                                                                   defaults={'owner': value})
             # Ensure that CentreCounts for this year match
             try:
                 g.create_or_update_sc_counts_from_ownerships(year)
@@ -328,8 +315,7 @@ def sc_counts(request, tournament_id, game_name):
                     power = GreatPower.objects.get(name=name)
                 except GreatPower.DoesNotExist:
                     continue
-                # Can't use get_or_create() here,
-                # because count has no default and may have changed
+                # Can't use update_or_create() because we need to call full_clean()
                 try:
                     i = CentreCount.objects.get(power=power,
                                                 game=g,
@@ -648,24 +634,10 @@ def scrape_backstabbr(request, tournament_id, game_name):
         for k, v in bg.powers.items():
             # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
             power = GreatPower.objects.get(abbreviation=k[0])
-            # Can't use get_or_create() here,
-            # because count has no default and may have changed
-            try:
-                i = CentreCount.objects.get(power=power,
-                                            game=g,
-                                            year=year)
-                # Ensure the count has the value we want
-                i.count = v[0]
-            except CentreCount.DoesNotExist:
-                i = CentreCount(power=power,
-                                game=g,
-                                year=year,
-                                count=v[0])
-            try:
-                i.full_clean()
-            except ValidationError as e:
-                raise Http404 from e
-            i.save()
+            CentreCount.objects.update_or_create(power=power,
+                                                 game=g,
+                                                 year=year,
+                                                 defaults={'count': v[0]})
     g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done

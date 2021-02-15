@@ -1359,12 +1359,11 @@ class Game(models.Model):
                                                                    sc=sc)
 
         # Auto-create S1901M image (if it doesn't exist)
-        i, _ = GameImage.objects.get_or_create(game=self,
-                                               year=FIRST_YEAR,
-                                               season=SPRING,
-                                               phase=GameImage.MOVEMENT)
-        i.image = self.the_set.initial_image
-        i.save()
+        GameImage.objects.update_or_create(game=self,
+                                           year=FIRST_YEAR,
+                                           season=SPRING,
+                                           phase=GameImage.MOVEMENT,
+                                           defaults={'image': self.the_set.initial_image})
 
         # If the game is (now) finished, store the player scores
         if self.is_finished:
