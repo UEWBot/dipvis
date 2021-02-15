@@ -128,6 +128,7 @@ def blind_auction_csv(request, tournament_id, round_num):
 def roll_call(request, tournament_id, round_num=None):
     """Provide a form to specify which players are playing each round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    current_round_num = t.current_round().number()
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
@@ -209,28 +210,32 @@ def roll_call(request, tournament_id, round_num=None):
                     # This could be a player who was previously checked-off in error
                     RoundPlayer.objects.filter(player=p,
                                                the_round=r).delete()
-        r = t.current_round()
         # If we're doing a roll call for a single round,
         # we only want to seed boards if it's the current round
-        if (round_num is None) or (r.number() == int(round_num)):
+        if (round_num is None) or (current_round_num == int(round_num)):
             if t.seed_games:
                 # Ensure that we have the right number of players
                 return HttpResponseRedirect(reverse('get_seven',
                                                     args=(tournament_id,
-                                                          r.number())))
+                                                          current_round_num)))
             # Next job is almost certainly to create the actual games
             return HttpResponseRedirect(reverse('create_games',
                                                 args=(tournament_id,
-                                                      r.number())))
+                                                      current_round_num)))
         # Back to the same page, but as a GET
         return HttpResponseRedirect(reverse('round_roll_call',
                                             args=(tournament_id,
                                                   round_num)))
 
+    # Warn the user if they're changing players for an earlier round
+    warning = ''
+    if (round_num is not None) and (current_round_num != int(round_num)):
+        warning = _("This page is for round %(this_round)s, but the current round is %(cur_round)d. Submit will change attendance but won't seed games.") % {'this_round': round_num, 'cur_round': current_round_num}
     return render(request,
                   'tournaments/roll_call.html',
                   {'tournament': t,
                    'post_url': request.path_info,
+                   'warning': warning,
                    'formset': formset})
 
 
