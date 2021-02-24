@@ -150,10 +150,6 @@ def clone_tournament(t):
                 GamePlayer.objects.create(player=gp.player,
                                           game=new_g,
                                           power=gp.power,
-                                          first_year=gp.first_year,
-                                          first_season=gp.first_season,
-                                          last_year=gp.last_year,
-                                          last_season=gp.last_season,
                                           score=gp.score)
             for dp in g.drawproposal_set.all():
                 DrawProposal.objects.create(game=new_g,

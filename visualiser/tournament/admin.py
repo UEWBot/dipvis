@@ -79,20 +79,8 @@ class GamePlayerInline(admin.TabularInline):
         (None, {
             'fields': ('player', 'power', 'score')
         }),
-        ('Replacement player options', {
-            'classes': ('collapse',),
-            'fields': ('first_season', 'first_year')
-        }),
-        ('Replaced player options', {
-            'classes': ('collapse',),
-            'fields': ('last_season', 'last_year')
-        }),
     )
     def get_extra(self, request, obj=None, **kwargs):
-        if obj is not None:
-            # Replacement players are pretty rare
-            # Let them click the button if needed
-            return 0
         # We're going to want 7 players
         return 7
 

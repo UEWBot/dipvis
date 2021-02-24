@@ -1168,7 +1168,6 @@ class Game(models.Model):
             retval = {}
             players = self.gameplayer_set.all()
             for p in players:
-                # TODO Need to combine scores if multiple players played a power
                 retval[p.power] = p.score
             return retval
 
@@ -1207,30 +1206,14 @@ class Game(models.Model):
         scs = self.centrecount_set.all()
         return sorted(list({sc.year for sc in scs}))
 
-    def players(self, latest=True):
-        """
-        Returns a dict, keyed by power, of lists of players of that power
-        If latest is True, only include the latest player of each power
-        """
-        powers = GreatPower.objects.all()
-        gps = self.gameplayer_set.all().order_by('-first_year')
-        retval = {}
-        for power in powers:
-            ps = gps.filter(power=power)
-            if latest:
-                ps = ps[0:1]
-            retval[power] = [gp.player for gp in ps]
-        return retval
-
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of strings that give background for the game
         """
-        players_by_power = self.players(latest=True)
+        gps = self.gameplayer_set.all()
         results = []
-        for c, players in players_by_power.items():
-            for p in players:
-                results += p.background(c, mask=mask)
+        for gp in gps:
+            results += gp.player.background(gp.power, mask=mask)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
@@ -1278,7 +1261,6 @@ class Game(models.Model):
             sc = self.centrecount_set.get(count__gte=WINNING_SCS)
         except CentreCount.DoesNotExist:
             return None
-        # TODO This looks like it fails if the soloer was a replacement player
         return self.gameplayer_set.get(power=sc.power)
 
     def survivors(self, year=None):
@@ -1319,7 +1301,6 @@ class Game(models.Model):
                                                                                                'n': sz}
             winners = []
             for power in powers:
-                # TODO This looks broken if there were replacements
                 game_player = self.gameplayer_set.get(power=power)
                 winners.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                                'power': _(power.abbreviation)})
@@ -1333,9 +1314,9 @@ class Game(models.Model):
                                                                        'power': _(soloer.power.abbreviation)}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
-            player_dict = self.players(latest=True)
+            gps = self.gameplayer_set.all()
             toppers = self.board_toppers()
-            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': player_dict[scs.power][0],
+            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps.get(power=scs.power),
                                                                    'power': _(scs.power.abbreviation)} for scs in list(toppers)])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
                                                                                              'top': toppers[0].count,
@@ -1389,7 +1370,6 @@ class Game(models.Model):
         if self.is_finished:
             scores = self.scores(True)
             players = self.gameplayer_set.all()
-            # TODO Need to split the score somehow if there were multiple players of a power
             for p in players:
                 p.score = scores[p.power]
                 p.save()
@@ -1678,17 +1658,10 @@ class GamePlayer(models.Model):
                               blank=True,
                               related_name='+',
                               on_delete=models.CASCADE)
-    first_year = models.PositiveSmallIntegerField(default=FIRST_YEAR,
-                                                  validators=[validate_year])
-    first_season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
-    last_year = models.PositiveSmallIntegerField(blank=True,
-                                                 null=True,
-                                                 validators=[validate_year])
-    last_season = models.CharField(max_length=1, choices=SEASONS, blank=True)
     score = models.FloatField(default=0.0)
 
     class Meta:
-        ordering = ['game', 'power', 'first_year']
+        ordering = ['game', 'power']
 
     def roundplayer(self):
         """
@@ -1716,28 +1689,14 @@ class GamePlayer(models.Model):
         sc = self.game.centrecount_set.filter(power=self.power).filter(count=0).order_by('year').first()
         if not sc:
             return None
-        e_year = sc.year
-        # The power was eliminated. Was this player playing it at the time?
-        if not self.last_year:
-            return e_year
-        if e_year > self.last_year:
-            return None
-        if e_year == self.last_year and self.last_season == SPRING:
-            return None
-        return e_year
+        return sc.year
 
     def final_sc_count(self):
         """
-        Number of SupplyCentres held when this Player stopped playing the power,
-        at the end of the Game, or currently if the Game is still ongoing.
+        Number of SupplyCentres held at the end of the Game, or currently if the Game is still ongoing.
         """
         game = self.game
         final_year = game.final_year()
-        if self.last_year:
-            if self.last_season == SPRING:
-                final_year = self.last_year - 1
-            else:
-                final_year = self.last_year
         return game.centrecount_set.filter(year__lte=final_year,
                                            power=self.power).last().count
 
@@ -1772,7 +1731,6 @@ class GamePlayer(models.Model):
         If the Game is ongoing, this will be the result if the game ended now.
         Returned string includes an HTML <a> link to the game details page.
         """
-        # TODO This doesn't allow for replacement players
         g = self.game
         cc_set = g.centrecount_set.all()
         power_cc_set = cc_set.filter(power=self.power)
@@ -1849,79 +1807,11 @@ class GamePlayer(models.Model):
         """
         Validate the object.
         There must already be a corresponding TournamentPlayer.
-        If either of the last_year and last_season attributes are set,
-        both must be set.
-        Only one Player can be playing this power at any given point in the
-        Game.
         """
         # Player should already be in the tournament
         t = self.game.the_round.tournament
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError(_(u'Player is not yet in the tournament'))
-        # Need either both or neither of last_year and last_season
-        if self.last_season == '' and self.last_year:
-            raise ValidationError(_(u'Final season played must also be specified'))
-        if self.last_season != '' and not self.last_year:
-            raise ValidationError(_(u'Final year must be specified with final season'))
-        # Check for overlap with another player
-        others = []
-        if self.power:
-            others = GamePlayer.objects.filter(game=self.game, power=self.power).exclude(player=self.player)
-        # Ensure one player at a time
-        for other in others:
-            # It's possible that the in-memory object has a different player than the one in the database
-            if self == other:
-                continue
-            if self.first_year < other.first_year:
-                we_were_first = True
-            elif self.first_year == other.first_year:
-                if self.first_season == other.first_season:
-                    raise ValidationError(_(u'%(player1)s and %(player2)s both start playing %(power)s %(season)s %(year)d'),
-                                          params={'player1': other.player,
-                                                  'player2': self.player,
-                                                  'power': self.power,
-                                                  'season': self.first_season,
-                                                  'year': self.first_year})
-                we_were_first = bool(self.first_season == SPRING)
-            else:
-                we_were_first = False
-            if we_were_first:
-                # Our term must finish before theirs started
-                err_str = _(u'%(player)s is listed as playing %(power)s in game %(game)s from %(season)s %(year)d')
-                if not self.last_year or self.last_year > other.first_year:
-                    raise ValidationError(err_str,
-                                          params={'player': other.player,
-                                                  'power': other.power,
-                                                  'game': other.game.name,
-                                                  'season': other.first_season,
-                                                  'year': other.first_year})
-                if self.last_year == other.first_year:
-                    if self.last_season != SPRING or other.first_season != FALL:
-                        raise ValidationError(err_str,
-                                              params={'player': other.player,
-                                                      'power': other.power,
-                                                      'game': other.game.name,
-                                                      'season': other.first_season,
-                                                      'year': other.first_year})
-            else:
-                # Their term must finish before ours started
-                err_str = _(u'%(player)s is listed as still playing %(power)s in game %(game)s from %(season)s %(year)d')
-                if not other.last_year or other.last_year > self.first_year:
-                    raise ValidationError(err_str,
-                                          params={'player': other.player,
-                                                  'power': other.power,
-                                                  'game': other.game,
-                                                  'season': other.first_season,
-                                                  'year': other.first_year})
-                if other.last_year == self.first_year:
-                    if other.last_season != SPRING or self.first_season != FALL:
-                        raise ValidationError(err_str,
-                                              params={'player': other.player,
-                                                      'power': other.power,
-                                                      'game': other.game,
-                                                      'season': other.first_season,
-                                                      'year': other.first_year})
-        # TODO Ensure no gaps - may have to be done elsewhere
 
     def __str__(self):
         if self.power:

@@ -192,14 +192,7 @@ class TournamentNewsTests(TestCase):
         # Add GamePlayers to g11
         GamePlayer.objects.create(player=cls.p1,
                                   game=g11,
-                                  power=cls.austria,
-                                  last_year=1903,
-                                  last_season='F')
-        GamePlayer.objects.create(player=cls.p2,
-                                  game=g11,
-                                  power=cls.austria,
-                                  first_year=1903,
-                                  first_season='X')
+                                  power=cls.austria)
         GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
         GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
@@ -217,14 +210,7 @@ class TournamentNewsTests(TestCase):
         # Add GamePlayers to g13
         GamePlayer.objects.create(player=cls.p1,
                                   game=g13,
-                                  power=cls.austria,
-                                  last_year=1903,
-                                  last_season='F')
-        GamePlayer.objects.create(player=cls.p2,
-                                  game=g13,
-                                  power=cls.austria,
-                                  first_year=1903,
-                                  first_season='X')
+                                  power=cls.austria)
         GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
         GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)

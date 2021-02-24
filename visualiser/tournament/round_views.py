@@ -311,7 +311,6 @@ def _create_game_seeder(tournament, round_number):
             game = set()
             for gp in g.gameplayer_set.all():
                 game.add((gp.tournamentplayer(), gp.power))
-            # TODO This doesn't deal with replacement players
             assert len(game) == 7
             seeder.add_played_game(game)
     # Add in any biases now that all players have been added
@@ -517,7 +516,6 @@ def create_games(request, tournament_id, round_num):
                     i = GamePlayer.objects.get(game=g,
                                                power=p)
                 except GamePlayer.DoesNotExist:
-                    # Create one (default first_season and first_year)
                     i = GamePlayer(player=field.player, game=g, power=p)
                 else:
                     # Change the player (if necessary)

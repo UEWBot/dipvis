@@ -234,14 +234,7 @@ class TournamentModelTests(TestCase):
         # Add GamePlayers to g11
         GamePlayer.objects.create(player=cls.p1,
                                   game=g11,
-                                  power=cls.austria,
-                                  last_year=1903,
-                                  last_season='F')
-        GamePlayer.objects.create(player=cls.p2,
-                                  game=g11,
-                                  power=cls.austria,
-                                  first_year=1903,
-                                  first_season='X')
+                                  power=cls.austria)
         GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
         GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
@@ -259,14 +252,7 @@ class TournamentModelTests(TestCase):
         # Add GamePlayers to g13
         GamePlayer.objects.create(player=cls.p1,
                                   game=g13,
-                                  power=cls.austria,
-                                  last_year=1903,
-                                  last_season='F')
-        GamePlayer.objects.create(player=cls.p2,
-                                  game=g13,
-                                  power=cls.austria,
-                                  first_year=1903,
-                                  first_season='X')
+                                  power=cls.austria)
         GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
         GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
@@ -1939,35 +1925,6 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         self.assertEqual(g.years_played()[0], 1900)
 
-    # Game.players()
-    def test_game_players_default(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        self.assertEqual(len(g.players()), 7)
-        for power, gps in g.players().items():
-            with self.subTest(power=power):
-                self.assertEqual(len(gps), 1)
-
-    def test_game_players_all(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        self.assertEqual(len(g.players(False)), 7)
-        players = g.players(False)
-        for power in players.keys():
-            with self.subTest(power=power):
-                if power.abbreviation == u'A':
-                    self.assertEqual(len(players[power]), 2)
-                else:
-                    self.assertEqual(len(players[power]), 1)
-
-    def test_game_players_none(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(3).game_set.get(name='g15')
-        self.assertEqual(len(g.players()), 7)
-        for power, gps in g.players().items():
-            with self.subTest(power=power):
-                self.assertEqual(len(gps), 0)
-
     # Game.background()
     def test_game_background(self):
         g = Game.objects.first()
@@ -2845,14 +2802,6 @@ class TournamentModelTests(TestCase):
     # This is indirectly tested via GamePlayer.set_power_from_prefs(), below
 
     # GamePlayer.elimination_year()
-    def test_gameplayer_elimination_year_replacement(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        gp = g.gameplayer_set.filter(power=self.austria).first()
-        self.assertEqual(gp.elimination_year(), None)
-        gp = g.gameplayer_set.filter(power=self.austria).last()
-        self.assertEqual(gp.elimination_year(), 1904)
-
     def test_gameplayer_elimination_year_not_eliminated(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -2877,14 +2826,6 @@ class TournamentModelTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         gp = g.gameplayer_set.get(power=self.england)
         self.assertEqual(gp.final_sc_count(), 4)
-
-    def test_gameplayer_final_sc_count_replacement(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        gp = g.gameplayer_set.filter(power=self.austria).first()
-        self.assertEqual(gp.final_sc_count(), 5)
-        gp = g.gameplayer_set.filter(power=self.austria).last()
-        self.assertEqual(gp.final_sc_count(), 0)
 
     # GamePlayer.set_power_from_prefs()
     def test_gameplayer_set_power_from_prefs(self):
@@ -2990,146 +2931,6 @@ class TournamentModelTests(TestCase):
                         game=g,
                         power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
-
-    def test_gameplayer_clean_player_missing_last_year(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
-        tp = TournamentPlayer(player=self.p9, tournament=t)
-        gp = GamePlayer(player=self.p9,
-                        game=g,
-                        power=self.austria,
-                        last_year=1909)
-        tp.save()
-        self.assertRaises(ValidationError, gp.clean)
-        tp.delete()
-
-    def test_gameplayer_clean_player_missing_last_season(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(2).game_set.get(name='g13')
-        tp = TournamentPlayer(player=self.p9, tournament=t)
-        gp = GamePlayer(player=self.p9,
-                        game=g,
-                        power=self.austria,
-                        last_season='S')
-        tp.save()
-        self.assertRaises(ValidationError, gp.clean)
-        tp.delete()
-
-    def test_gameplayer_clean_overlap_1(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(3).game_set.get(name='g15')
-        tp1 = TournamentPlayer(player=self.p9, tournament=t)
-        tp2 = TournamentPlayer(player=self.p10, tournament=t)
-        gp1 = GamePlayer(player=self.p9,
-                         game=g,
-                         power=self.austria)
-        gp2 = GamePlayer(player=self.p10,
-                         game=g,
-                         power=self.austria,
-                         first_year=1902,
-                         first_season='S')
-        tp1.save()
-        tp2.save()
-        gp1.clean()
-        gp1.save()
-        self.assertRaises(ValidationError, gp2.clean)
-        gp1.delete()
-        tp2.delete()
-        tp1.delete()
-
-    def test_gameplayer_clean_overlap_2(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(3).game_set.get(name='g15')
-        tp1 = TournamentPlayer(player=self.p9, tournament=t)
-        tp2 = TournamentPlayer(player=self.p10, tournament=t)
-        gp1 = GamePlayer(player=self.p9,
-                         game=g,
-                         power=self.austria,
-                         last_year=1902,
-                         last_season='S')
-        gp2 = GamePlayer(player=self.p10,
-                         game=g,
-                         power=self.austria,
-                         first_year=1902,
-                         first_season='S')
-        tp1.save()
-        tp2.save()
-        gp1.clean()
-        gp1.save()
-        self.assertRaises(ValidationError, gp2.clean)
-        gp1.delete()
-        tp2.delete()
-        tp1.delete()
-
-    def test_gameplayer_clean_overlap_3(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(3).game_set.get(name='g15')
-        tp1 = TournamentPlayer(player=self.p9, tournament=t)
-        tp2 = TournamentPlayer(player=self.p10, tournament=t)
-        gp1 = GamePlayer(player=self.p9,
-                         game=g,
-                         power=self.austria,
-                         first_year=1902,
-                         first_season='S')
-        gp2 = GamePlayer(player=self.p10,
-                         game=g,
-                         power=self.austria,
-                         last_year=1902,
-                         last_season='S')
-        tp1.save()
-        tp2.save()
-        gp1.clean()
-        gp1.save()
-        self.assertRaises(ValidationError, gp2.clean)
-        gp1.delete()
-        tp2.delete()
-        tp1.delete()
-
-    def test_gameplayer_clean_overlap_4(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(3).game_set.get(name='g15')
-        tp1 = TournamentPlayer(player=self.p9, tournament=t)
-        tp2 = TournamentPlayer(player=self.p10, tournament=t)
-        gp1 = GamePlayer(player=self.p9,
-                         game=g,
-                         power=self.austria,
-                         first_year=1902,
-                         first_season='S')
-        gp2 = GamePlayer(player=self.p10,
-                         game=g,
-                         power=self.austria)
-        tp1.save()
-        tp2.save()
-        gp1.clean()
-        gp1.save()
-        self.assertRaises(ValidationError, gp2.clean)
-        gp1.delete()
-        tp2.delete()
-        tp1.delete()
-
-    def test_gameplayer_clean_overlap_5(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(3).game_set.get(name='g15')
-        tp1 = TournamentPlayer(player=self.p9, tournament=t)
-        tp2 = TournamentPlayer(player=self.p10, tournament=t)
-        gp1 = GamePlayer(player=self.p9,
-                         game=g,
-                         power=self.austria,
-                         first_year=1902,
-                         first_season='S')
-        gp2 = GamePlayer(player=self.p10,
-                         game=g,
-                         power=self.austria,
-                         first_year=1902,
-                         first_season='S')
-        tp1.save()
-        tp2.save()
-        gp1.clean()
-        gp1.save()
-        self.assertRaises(ValidationError, gp2.clean)
-        gp1.delete()
-        tp2.delete()
-        tp1.delete()
 
     # GamePlayer.__str__()
     def test_gameplayer_str_with_power(self):

@@ -266,8 +266,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     # If the game just started, there is no news, so return the background instead
     if last_year == 1900:
         return g.background()
-    # TODO This isn't right when for_year is not None and there are replacement players
-    player_dict = g.players(latest=True)
+    gps = g.gameplayer_set.all()
     current_scs = centres_set.filter(year=last_year)
     current_scos = g.supplycentreownership_set.filter(year=last_year)
     results = []
@@ -288,7 +287,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # Who's topping the board ?
         max_scs = current_scs.order_by('-count')[0].count
         first = current_scs.order_by('-count').filter(count=max_scs)
-        first_str = ', '.join(['%s (%s)' % (player_dict[scs.power][0],
+        first_str = ', '.join(['%s (%s)' % (gps.get(power=scs.power).player,
                                             _(scs.power.abbreviation)) for scs in list(first)])
         results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.')
                        % {'game': gn_str,
@@ -317,7 +316,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         if (mask & MASK_GAINERS) != 0:
             if scs.count - prev.count > 1:
                 results.append(_(u'%(player)s (%(power)s) grew from %(old)d to %(new)d centres%(game)s.')
-                               % {'player': player_dict[power][0],
+                               % {'player': gps.get(power=power).player,
                                   'power': _(power.abbreviation),
                                   'old': prev.count,
                                   'new': scs.count,
@@ -326,7 +325,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         if (mask & MASK_LOSERS) != 0:
             if prev.count - scs.count > 1:
                 results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s.')
-                               % {'player': player_dict[power][0],
+                               % {'player': gps.get(power=power).player,
                                   'power': _(power.abbreviation),
                                   'old': prev.count,
                                   'new': scs.count,
@@ -354,7 +353,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                 else:
                     losses_str = _('no centres')
                 results.append(_('%(player)s (%(power)s) took %(gains)s and lost %(losses)s%(game)s.')
-                               % {'player': player_dict[power][0],
+                               % {'player': gps.get(power=power).player,
                                   'power': _(power.abbreviation),
                                   'gains': gains_str,
                                   'losses': losses_str,
@@ -382,7 +381,6 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
             sz = len(powers)
             incl = []
             for power in powers:
-                # TODO This looks broken if there were replacements
                 game_player = g.gameplayer_set.get(power=power)
                 incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                             'power': _(power.abbreviation)})
@@ -410,7 +408,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
             power = scs.power
             zeroes = zeroes.exclude(power=power)
             results.append(_(u'%(player)s (%(power)s) was eliminated in %(year)d%(game)s.')
-                           % {'player': player_dict[power][0],
+                           % {'player': gps.get(power=power).player,
                               'power': _(power.abbreviation),
                               'year': scs.year,
                               'game': gn_str})
