@@ -57,14 +57,14 @@ class SimpleGameState(GameState):
             raise InvalidState(_('Total supply centre count is %(total)d\n') % {'total': total})
         for p, y in elimination_years.items():
             if y < FIRST_YEAR:
-                raise InvalidState(_('%(power)p cannot be eliminated in %(year)d') % {'power': str(p),
+                raise InvalidState(_('%(power)s cannot be eliminated in %(year)d') % {'power': str(p),
                                                                                       'year': y})
             if y > final_year:
-                raise InvalidState(_('%(power)p cannot be eliminated in %(year)d if the game ended in %(end)d') % {'power': str(p),
+                raise InvalidState(_('%(power)s cannot be eliminated in %(year)d if the game ended in %(end)d') % {'power': str(p),
                                                                                                                    'year': y,
                                                                                                                    'end': final_year})
             if sc_counts[p]:
-                raise InvalidState(_('%(power)p cannot be eliminated in %(year)d and now have %(dots)d centre(s)') % {'power': str(p),
+                raise InvalidState(_('%(power)s cannot be eliminated in %(year)d and now have %(dots)d centre(s)') % {'power': str(p),
                                                                                                                       'year': y,
                                                                                                                       'dots': sc_counts[p]})
 
