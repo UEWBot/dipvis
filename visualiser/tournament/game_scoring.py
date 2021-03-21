@@ -190,6 +190,8 @@ def _adjust_rank_score(centre_counts, rank_points):
     if not rank_points:
         # The rest of them get zero points
         return [] + [0.0] * len(centre_counts)
+    # Work with a copy of rank_points
+    rank_pts = rank_points.copy()
     # First count up how many powers tied at the top
     i = 0
     count = 0
@@ -197,18 +199,18 @@ def _adjust_rank_score(centre_counts, rank_points):
     scs = centre_counts[0][1]
     while (i < len(centre_counts)) and (centre_counts[i][1] == scs):
         count += 1
-        if i < len(rank_points):
-            points += rank_points[i]
+        if i < len(rank_pts):
+            points += rank_pts[i]
         i += 1
     # Now share the points between those tied players
     for j in range(0, i):
-        if j < len(rank_points):
-            rank_points[j] = points / count
+        if j < len(rank_pts):
+            rank_pts[j] = points / count
         else:
-            rank_points.append(points / count)
+            rank_pts.append(points / count)
     # And recursively continue
-    return rank_points[0:i] + _adjust_rank_score(centre_counts[i:],
-                                                 rank_points[i:])
+    return rank_pts[0:i] + _adjust_rank_score(centre_counts[i:],
+                                              rank_pts[i:])
 
 
 class GScoringCDiplo(GameScoringSystem):
@@ -328,26 +330,25 @@ class GScoringCarnage(GameScoringSystem):
         # Giving all the dead powers equal scores is easy
         if self.dead_equal:
             # Tweak the ranking points to allow for ties
-            rank_pts = _adjust_rank_score(dots, list(self.position_pts))
+            rank_pts = _adjust_rank_score(dots, self.position_pts)
             for i, (p, c) in enumerate(dots):
                 retval[p] = c + rank_pts[i]
             return retval
 
         # Split out the eliminated powers
         live_scs = [(p, c) for (p, c) in dots if c > 0]
-        pos_pts = list(self.position_pts)
-        pos_pts_1 = pos_pts[:len(live_scs)]
+        pos_pts_1 = self.position_pts[:len(live_scs)]
         # Tweak the alive powers points to allow for ties
         rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
         for i, (p, c) in enumerate(live_scs):
             retval[p] = c + rank_pts[i]
 
         # If nobody was eliminated, we're done
-        if len(pos_pts) == len(pos_pts_1):
+        if len(self.position_pts) == len(pos_pts_1):
             return retval
 
         dead_scs = [(p, c) for (p, c) in dots if c == 0]
-        pos_pts_2 = pos_pts[len(pos_pts_1)-len(pos_pts):]
+        pos_pts_2 = self.position_pts[len(pos_pts_1) - len(self.position_pts):]
         # Find when the dead powers died
         dummys = []
         for p, c in dead_scs:

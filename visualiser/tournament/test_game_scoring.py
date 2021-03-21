@@ -19,6 +19,7 @@ from django.utils import timezone
 
 from tournament.diplomacy import GameSet, GreatPower, TOTAL_SCS
 from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import find_game_scoring_system
@@ -114,6 +115,58 @@ class GameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
         CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
+    def test_no_corruption(self):
+        # Ensure that calls to calculate scores are independent
+        # Essentially a test for issue #188
+        system = find_game_scoring_system('CDiplo 80')
+        scores = system.scores(self.three_way_tie)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = self.three_way_tie.dot_count(p)
+            # 3 powers equal on 10 SCs, and 4 equal on 1 SC
+            if sc == 1:
+                self.assertEqual(s, 1)
+            else:
+                self.assertEqual(s, (25 + 14 + 7) / 3 + 10)
+        self.assertEqual(sum(scores.values()), 80)
+        scores = system.scores(self.three_survivors)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = self.three_survivors.dot_count(p)
+            if sc == 17:
+                self.assertEqual(s, 17 + 25)
+            elif sc == 16:
+                self.assertEqual(s, 16 + 14)
+            elif sc == 1:
+                self.assertEqual(s, 1 + 7)
+            else:
+                self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 80)
 
     # description
     def test_description(self):
