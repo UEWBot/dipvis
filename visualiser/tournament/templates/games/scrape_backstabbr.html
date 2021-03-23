@@ -11,4 +11,10 @@
     <li>{{ cc.power.name }}: {{ cc.count }}</li>
   {% endfor %}
 </ul>
+<p>{% blocktrans with year=year %}Imported supply centre ownerships for {{ year }}:{% endblocktrans %}</p>
+<ul>
+  {% for sco in ownerships %}
+    <li>{{ sco.owner.name }}: {{ sco.sc.name }}</li>
+  {% endfor %}
+</ul>
 {% endblock %}

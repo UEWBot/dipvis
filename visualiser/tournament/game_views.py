@@ -640,28 +640,42 @@ def scrape_backstabbr(request, tournament_id, game_name):
         year = bg.year
     else:
         raise Http404
-    # Add the appropriate CentreCounts
-    for k, v in bg.powers.items():
-        # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
-        power = GreatPower.objects.get(abbreviation=k[0])
-        # Can't use get_or_create() here,
-        # because count has no default and may have changed
-        try:
-            i = CentreCount.objects.get(power=power,
-                                        game=g,
-                                        year=year)
-            # Ensure the count has the value we want
-            i.count = v[0]
-        except CentreCount.DoesNotExist:
-            i = CentreCount(power=power,
-                            game=g,
-                            year=year,
-                            count=v[0])
-        try:
-            i.full_clean()
-        except ValidationError as e:
-            raise Http404 from e
-        i.save()
+    # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
+    have_ownerships = False
+    for k, v in bg.sc_ownership.items():
+        # Map k to SupplyCentre (assuming backstabbr.DOTS match SupplyCentre abbreviations)
+        sc = SupplyCentre.objects.get(abbreviation__iexact=k)
+        # Map v to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+        power = GreatPower.objects.get(abbreviation=v[0])
+        i, _ = SupplyCentreOwnership.objects.update_or_create(game=g,
+                                                              year=year,
+                                                              sc=sc,
+                                                              defaults={'owner': power})
+        have_ownerships = True
+    if have_ownerships:
+        g.create_or_update_sc_counts_from_ownerships(year)
+    else:
+        for k, v in bg.powers.items():
+            # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+            power = GreatPower.objects.get(abbreviation=k[0])
+            # Can't use get_or_create() here,
+            # because count has no default and may have changed
+            try:
+                i = CentreCount.objects.get(power=power,
+                                            game=g,
+                                            year=year)
+                # Ensure the count has the value we want
+                i.count = v[0]
+            except CentreCount.DoesNotExist:
+                i = CentreCount(power=power,
+                                game=g,
+                                year=year,
+                                count=v[0])
+            try:
+                i.full_clean()
+            except ValidationError as e:
+                raise Http404 from e
+            i.save()
     g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
@@ -670,4 +684,5 @@ def scrape_backstabbr(request, tournament_id, game_name):
                   {'tournament': t,
                    'game': g,
                    'year': year,
+                   'ownerships': g.supplycentreownership_set.filter(year=year).order_by('owner'),
                    'centrecounts': g.centrecount_set.filter(year=year).order_by('power')})

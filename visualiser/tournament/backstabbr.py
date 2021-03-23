@@ -17,7 +17,9 @@
 Scrape the interesting parts of a Diplomacy game on Backstabbr.com.
 """
 
+import re
 import urllib.request
+from ast import literal_eval
 from bs4 import BeautifulSoup
 
 BACKSTABBR_GAME_URL = 'https://www.backstabbr.com/game/'
@@ -31,10 +33,54 @@ POWERS = ['Austria',
           'Russia',
           'Turkey']
 
+# Names used for the Supply Centres on Backstabbr
+DOTS = ['Ank',
+        'Bel',
+        'Ber',
+        'Bre',
+        'Bud',
+        'Bul',
+        'Con',
+        'Den',
+        'Edi',
+        'Gre',
+        'Hol',
+        'Kie',
+        'Lvp',
+        'Lon',
+        'Mar',
+        'Mos',
+        'Mun',
+        'Nap',
+        'Nwy',
+        'Par',
+        'Por',
+        'Rom',
+        'Rum',
+        'Ser',
+        'Sev',
+        'Smy',
+        'Spa',
+        'StP',
+        'Swe',
+        'Tri',
+        'Tun',
+        'Ven',
+        'Vie',
+        'War']
+
 # Names used for the seasons on Backstabbr
 SPRING = 'spring'
 FALL = 'fall'
 WINTER = 'winter'
+
+# Unit types on Bacstabbr
+UINTS = ['A', 'F']
+
+# Javascript regexes
+DOTS = re.compile('var territories = (.*);')
+ORDERS = re.compile('var orders = (.*);')
+UNITS = re.compile('var unitsByPlayer = (.*);')
 
 class InvalidGameId(Exception):
     """The id provided for the game is unused on Backstabbr."""
@@ -56,6 +102,9 @@ class Game():
         self.ongoing = True
         self.soloing_power = None
         self.powers = {}
+        self.sc_ownership = {}
+        self.position = {}
+        self.orders = {}
         for p in POWERS:
             self.powers[p] = (0, 'Unknown')
         self._parse_page()
@@ -133,3 +182,15 @@ class Game():
                         except AttributeError:
                             self.gm = None
                         self.ongoing = False
+        # SC ownership, unit locations, and orders
+        for scr in soup.find_all('script'):
+            if scr.string is not None:
+                match = DOTS.search(scr.string)
+                if match:
+                    self.sc_ownership = literal_eval(match.group(1))
+                match = UNITS.search(scr.string)
+                if match:
+                    self.position = literal_eval(match.group(1))
+                match = ORDERS.search(scr.string)
+                if match:
+                    self.orders = literal_eval(match.group(1))
