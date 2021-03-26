@@ -501,6 +501,68 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 1000 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
 
+    # GScoringCentreCarnage
+    def test_g_scoring_centrecarnage_example_1(self):
+        example_1 = SimpleGameState(sc_counts={self.austria: 11,
+                                               self.england: 10,
+                                               self.france: 8,
+                                               self.germany: 2,
+                                               self.italy: 2,
+                                               self.russia: 1,
+                                               self.turkey: 0},
+                                    final_year=1908,
+                                    elimination_years={self.turkey: 1904},
+                                    draw=None)
+        system = find_game_scoring_system('Center-count Carnage')
+        scores = system.scores(example_1)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            if p == self.austria:
+                self.assertEqual(s, 5612)
+            elif p == self.england:
+                self.assertEqual(s, 5010)
+            elif p == self.france:
+                self.assertEqual(s, 4208)
+            elif p == self.germany:
+                self.assertEqual(s, 2405)
+            elif p == self.italy:
+                self.assertEqual(s, 2405)
+            elif p == self.russia:
+                self.assertEqual(s, 1602)
+            elif p == self.turkey:
+                self.assertEqual(s, 1000)
+
+    def test_g_scoring_centrecarnage_example_2(self):
+        example_2 = SimpleGameState(sc_counts={self.austria: 13,
+                                               self.england: 7,
+                                               self.france: 5,
+                                               self.germany: 5,
+                                               self.italy: 4,
+                                               self.russia: 0,
+                                               self.turkey: 0},
+                                    final_year=1908,
+                                    elimination_years={self.russia: 1905,
+                                                       self.turkey: 1904},
+                                    draw=None)
+        system = find_game_scoring_system('Center-count Carnage')
+        scores = system.scores(example_2)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            if p == self.austria:
+                self.assertEqual(s, 6012)
+            elif p == self.england:
+                self.assertEqual(s, 4410)
+            elif p == self.france:
+                self.assertEqual(s, 3407)
+            elif p == self.germany:
+                self.assertEqual(s, 3407)
+            elif p == self.italy:
+                self.assertEqual(s, 2604)
+            elif p == self.russia:
+                self.assertEqual(s, 1402)
+            elif p == self.turkey:
+                self.assertEqual(s, 1000)
+
     # GScoringJanus
     def test_g_scoring_janus_no_solo(self):
         t = Tournament.objects.get(name='t1')
