@@ -18,8 +18,10 @@ from django.test import TestCase
 from django.urls import reverse
 
 from tournament.game_scoring import GameScoringSystem, G_SCORING_SYSTEMS
+from tournament.game_scoring_system_views import SimpleGameState, InvalidState
 
 class GameScoringViewTests(TestCase):
+    fixtures = ['game_sets.json']
 
     def test_index(self):
         response = self.client.get(reverse('game_scoring_index'))
@@ -44,3 +46,25 @@ class GameScoringViewTests(TestCase):
         # Don't have to be logged in to see a scoring system
         response = self.client.get(reverse('game_scoring_detail', args=(G_SCORING_SYSTEMS[0].slug,)))
         self.assertEqual(response.status_code, 200)
+
+    def test_detail_all(self):
+        for sys in G_SCORING_SYSTEMS:
+            with self.subTest(sys):
+                response = self.client.get(reverse('game_scoring_detail', args=(sys.slug,)))
+                self.assertEqual(response.status_code, 200)
+
+    def test_invalid_simplegamestate_1(self):
+        too_many_dots = {'A': 10, 'E': 0, 'F': 2, 'G': 10, 'I': 1, 'R': 10, 'T': 2}
+        self.assertRaises(InvalidState, SimpleGameState, too_many_dots, 1908, {'E': 1902})
+
+    def test_invalid_simplegamestate_2(self):
+        sc_counts = {'A': 10, 'E': 0, 'F': 2, 'G': 10, 'I': 1, 'R': 10, 'T': 1}
+        self.assertRaises(InvalidState, SimpleGameState, sc_counts, 1908, {'E': 1900})
+
+    def test_invalid_simplegamestate_3(self):
+        sc_counts = {'A': 10, 'E': 0, 'F': 2, 'G': 10, 'I': 1, 'R': 10, 'T': 1}
+        self.assertRaises(InvalidState, SimpleGameState, sc_counts, 1908, {'E': 1909})
+
+    def test_invalid_simplegamestate_4(self):
+        sc_counts = {'A': 10, 'E': 1, 'F': 1, 'G': 10, 'I': 1, 'R': 10, 'T': 1}
+        self.assertRaises(InvalidState, SimpleGameState, sc_counts, 1908, {'E': 1902})
