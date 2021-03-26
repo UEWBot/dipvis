@@ -572,8 +572,7 @@ class GScoringWorldClassic(GameScoringSystem):
             # 10 points per SC
             retval[p] = 10 * dots
             # 30 for surviving
-            if dots:
-                retval[p] += 30
+            retval[p] += 30
             # 48 split between board toppers
             if dots == leader_scs:
                 retval[p] += 48 / num_leaders
