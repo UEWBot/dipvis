@@ -1334,7 +1334,10 @@ class TournamentModelTests(TestCase):
                                                       end_date=timezone.now(),
                                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                                       round_scoring_system='Invalid System')
-        r = Round.objects.create(tournament=t, scoring_system=G_SCORING_SYSTEMS[0].name, dias=True, start=t.start_date)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=t.start_date)
         self.assertRaises(InvalidScoringSystem, r.scores)
 
     def test_round_scores_finished(self):
@@ -1901,7 +1904,10 @@ class TournamentModelTests(TestCase):
                                                       end_date=timezone.now(),
                                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
-        r = Round.objects.create(tournament=t, scoring_system='Invalid System', dias=True, start=t.start_date)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Invalid System',
+                                 dias=True,
+                                 start=t.start_date)
         g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
         self.assertRaises(InvalidScoringSystem, g.scores)
 
