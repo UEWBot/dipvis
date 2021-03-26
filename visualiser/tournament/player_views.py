@@ -141,11 +141,11 @@ def upload_players(request):
                             wdd_id = None
 
             # Add the Player
-            p, created = Player.objects.get_or_create(first_name=first_name,
-                                                      last_name=last_name,
-                                                      defaults={'email': email,
-                                                                'backstabbr_username': bs_un,
-                                                                'wdd_player_id': wdd_id})
+            p, created = Player.objects.update_or_create(first_name=first_name,
+                                                         last_name=last_name,
+                                                         defaults={'email': email,
+                                                                   'backstabbr_username': bs_un,
+                                                                   'wdd_player_id': wdd_id})
             if created:
                 messages.info(request, 'Player %s %s added' % (first_name, last_name))
                 count += 1
