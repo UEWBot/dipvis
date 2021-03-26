@@ -95,7 +95,7 @@ class EmailTests(TestCase):
         p1 = Player.objects.create(first_name='Abbey',
                                    last_name='Brown',
                                    email='a.brown@example.com')
-        TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
+        TournamentPlayer.objects.create(player=p1, tournament=cls.t1, backstabbr_username='AbbeyBrown')
         RoundPlayer.objects.create(player=p1, the_round=r1)
         RoundPlayer.objects.create(player=p1, the_round=r2)
         GamePlayer.objects.create(player=p1, game=g1, power=austria)
@@ -104,7 +104,7 @@ class EmailTests(TestCase):
         p2 = Player.objects.create(first_name='Charles',
                                    last_name='Dog',
                                    email='c.dog@example.com')
-        TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
+        TournamentPlayer.objects.create(player=p2, tournament=cls.t1, backstabbr_username='CharlesDog')
         RoundPlayer.objects.create(player=p2, the_round=r1)
         RoundPlayer.objects.create(player=p2, the_round=r2)
         GamePlayer.objects.create(player=p2, game=g1, power=england)
@@ -376,7 +376,8 @@ class EmailTests(TestCase):
             self.assertNotIn('  ', m.body)
             # or any empty parentheses
             self.assertNotIn('()', m.body)
-        # TODO Check that the backstabbr username is in the email body
+            # Check that the backstabbr username is in the email body
+            self.assertIn('(AbbeyBrown)', m.body)
         # Cleanup
         t.format = Tournament.FTF
         t.save()
