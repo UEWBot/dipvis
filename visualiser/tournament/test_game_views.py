@@ -25,6 +25,7 @@ from django.utils import timezone
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
+from tournament.models import CentreCount
 #from tournament.models import SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
@@ -141,6 +142,265 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('enter_scs', args=(self.t1.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
+
+    def test_post_enter_scs(self):
+        self.assertFalse(self.g1.is_finished)
+        counts = {1907: {self.austria: 5,
+                         self.england: 5,
+                         self.france: 5,
+                         self.germany: 5,
+                         self.italy: 5,
+                         self.russia: 4,
+                         self.turkey: 5},
+                  1909: {self.austria: 6,
+                         self.england: 6,
+                         self.france: 4,
+                         self.germany: 5,
+                         self.italy: 4,
+                         self.russia: 9,
+                         self.turkey: 0},
+                  1910: {self.austria: 7,
+                         self.england: 7,
+                         self.france: 4,
+                         self.germany: 4,
+                         self.italy: 4,
+                         self.russia: 8,
+                         self.turkey: 0},
+                  1912: {self.austria: 9,
+                         self.england: 9,
+                         self.france: 3,
+                         self.germany: 3,
+                         self.italy: 3,
+                         self.russia: 7,
+                         self.turkey: 0}}
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'scs-TOTAL_FORMS': '4',
+                'scs-INITIAL_FORMS': '0',
+                'scs-MAX_NUM_FORMS': '1000',
+                'scs-MIN_NUM_FORMS': '0',
+                'death-%s' % str(self.austria): '',
+                'death-%s' % str(self.england): '',
+                'death-%s' % str(self.france): '',
+                'death-%s' % str(self.germany): '',
+                'death-%s' % str(self.italy): '',
+                'death-%s' % str(self.russia): '',
+                'death-%s' % str(self.turkey): '1908',
+                'end-is_finished': 'ok'}
+        for n, (y, dots) in enumerate(counts.items()):
+            data['scs-%d-year' % n] = str(y)
+            for p, c in dots.items():
+                data['scs-%d-%s' % (n, str(p))] = str(c)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the SC Chart page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, 'Game1')))
+        # And the CentreCounts should be added
+        for year, dots in counts.items():
+            with self.subTest(year=year):
+                ccs = CentreCount.objects.filter(game=self.g1, year=year)
+                self.assertEqual(ccs.count(), 7)
+                for p, c in dots.items():
+                    with self.subTest(year=year, power=p):
+                        self.assertEqual(ccs.get(power=p).count, c)
+        # Turkey should be eliminated in 1908
+        cc = CentreCount.objects.get(game=self.g1, year=1909, power=self.turkey)
+        self.assertEqual(cc.count, 0)
+        # Game should now be finished
+        self.g1.refresh_from_db()
+        self.assertTrue(self.g1.is_finished)
+        # Clean up
+        for year in counts.keys():
+            ccs = CentreCount.objects.filter(game=self.g1, year=year)
+            ccs.delete()
+        cc.delete()
+        self.g1.is_finished = False
+        self.g1.save()
+
+    def test_post_enter_scs_modify(self):
+        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1907).count(), 0)
+        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1908).count(), 0)
+        # Add some pre-existing CentreCounts for Game1, including an elimination
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.austria, count=5)
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.england, count=5)
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.france, count=5)
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.germany, count=5)
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.italy, count=5)
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.russia, count=5)
+        CentreCount.objects.create(game=self.g1, year=1907, power=self.turkey, count=4)
+
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.austria, count=6)
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.england, count=0)
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.france, count=6)
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.germany, count=6)
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.italy, count=6)
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.russia, count=4)
+        CentreCount.objects.create(game=self.g1, year=1908, power=self.turkey, count=6)
+        counts = {1901: {self.austria: 5,
+                         self.england: 4,
+                         self.france: 5,
+                         self.germany: 5,
+                         self.italy: 4,
+                         self.russia: 5,
+                         self.turkey: 4},
+                  1907: {self.austria: 5,
+                         self.england: 5,
+                         self.france: 5,
+                         self.germany: 5,
+                         self.italy: 5,
+                         self.russia: 5,
+                         self.turkey: 4},
+                  1908: {self.austria: 5,
+                         self.england: 0,
+                         self.france: 6,
+                         self.germany: 6,
+                         self.italy: 7,
+                         self.russia: 4,
+                         self.turkey: 6}}
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'scs-TOTAL_FORMS': '6',
+                'scs-INITIAL_FORMS': '2',
+                'scs-MAX_NUM_FORMS': '1000',
+                'scs-MIN_NUM_FORMS': '0',
+                'death-%s' % str(self.austria): '',
+                'death-%s' % str(self.england): '1908',
+                'death-%s' % str(self.france): '',
+                'death-%s' % str(self.germany): '',
+                'death-%s' % str(self.italy): '',
+                'death-%s' % str(self.russia): '',
+                'death-%s' % str(self.turkey): ''}
+        for n, (y, dots) in enumerate(counts.items()):
+            data['scs-%d-year' % n] = str(y)
+            for p, c in dots.items():
+                data['scs-%d-%s' % (n, str(p))] = str(c)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the SC Chart page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, 'Game1')))
+        # And the CentreCounts should be updated
+        for year, dots in counts.items():
+            with self.subTest(year=year):
+                ccs = CentreCount.objects.filter(game=self.g1, year=year)
+                self.assertEqual(ccs.count(), 7)
+                for p, c in dots.items():
+                    with self.subTest(year=year, power=p):
+                        self.assertEqual(ccs.get(power=p).count, c)
+        # Clean up
+        for year in counts.keys():
+            ccs = CentreCount.objects.filter(game=self.g1, year=year)
+            ccs.delete()
+
+    def test_post_enter_scs_too_many(self):
+        counts = {1907: {self.austria: 5,
+                         self.england: 5,
+                         self.france: 5,
+                         self.germany: 5,
+                         self.italy: 5,
+                         self.russia: 4,
+                         self.turkey: 5},
+                  1909: {self.austria: 6,
+                         self.england: 6,
+                         self.france: 4,
+                         self.germany: 5,
+                         self.italy: 4,
+                         self.russia: 5,
+                         self.turkey: 4},
+                  1910: {self.austria: 7,
+                         self.england: 7,
+                         self.france: 4,
+                         self.germany: 5,
+                         self.italy: 4,
+                         self.russia: 4,
+                         self.turkey: 4},
+                  1911: {self.austria: 8,
+                         self.england: 8,
+                         self.france: 3,
+                         self.germany: 4,
+                         self.italy: 3,
+                         self.russia: 4,
+                         self.turkey: 4},
+                  1912: {self.austria: 9,
+                         self.england: 9,
+                         self.france: 3,
+                         self.germany: 3,
+                         self.italy: 3,
+                         self.russia: 3,
+                         self.turkey: 4}}
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'scs-TOTAL_FORMS': '4',
+                'scs-INITIAL_FORMS': '0',
+                'scs-MAX_NUM_FORMS': '1000',
+                'scs-MIN_NUM_FORMS': '0',
+                'death-%s' % str(self.austria): '',
+                'death-%s' % str(self.england): '',
+                'death-%s' % str(self.france): '',
+                'death-%s' % str(self.germany): '',
+                'death-%s' % str(self.italy): '',
+                'death-%s' % str(self.russia): '',
+                'death-%s' % str(self.turkey): ''}
+        for n, (y, dots) in enumerate(counts.items()):
+            data['scs-%d-year' % n] = str(y)
+            for p, c in dots.items():
+                data['scs-%d-%s' % (n, str(p))] = str(c)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # Should get an error for the year with too many total SCs
+        self.assertEqual(response.status_code, 200)
+        # One form-wide error in the 1910 form, because the SC total is 35
+        self.assertEqual(response.context['formset'].total_error_count(), 1)
+
+    def test_post_enter_scs_zombie(self):
+        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1907).count(), 0)
+        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1908).count(), 0)
+        counts = {1907: {self.austria: 5,
+                         self.england: 5,
+                         self.france: 5,
+                         self.germany: 5,
+                         self.italy: 5,
+                         self.russia: 4,
+                         self.turkey: 5},
+                  1908: {self.austria: 6,
+                         self.england: 6,
+                         self.france: 4,
+                         self.germany: 5,
+                         self.italy: 4,
+                         self.russia: 5,
+                         self.turkey: 4}}
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'scs-TOTAL_FORMS': '4',
+                'scs-INITIAL_FORMS': '0',
+                'scs-MAX_NUM_FORMS': '1000',
+                'scs-MIN_NUM_FORMS': '0',
+                'death-%s' % str(self.austria): '',
+                'death-%s' % str(self.england): '',
+                'death-%s' % str(self.france): '',
+                'death-%s' % str(self.germany): '',
+                'death-%s' % str(self.italy): '1908',
+                'death-%s' % str(self.russia): '',
+                'death-%s' % str(self.turkey): ''}
+        for n, (y, dots) in enumerate(counts.items()):
+            data['scs-%d-year' % n] = str(y)
+            for p, c in dots.items():
+                data['scs-%d-%s' % (n, str(p))] = str(c)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # Should get an error for the year with too many total SCs
+        self.assertEqual(response.status_code, 200)
+        # Italy died in 1908, but also had 4 SCs
+        self.assertIn(str(self.italy), response.context['death_form'].errors.keys())
+        # Clean up
+        # (the form will add CentreCounts despite the error)
+        CentreCount.objects.filter(game=self.g1, year=1907).delete()
+        CentreCount.objects.filter(game=self.g1, year=1908).delete()
 
     def test_sc_owners(self):
         response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))

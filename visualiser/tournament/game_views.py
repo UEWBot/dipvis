@@ -392,8 +392,8 @@ def sc_counts(request, tournament_id, game_name):
                                              'year': value})
                 i.full_clean()
             except ValidationError as e:
-                death_form.add_error(form.fields[name], e)
-                i.delete()
+                death_form.add_error(name, e)
+                # We have already updated the CentreCounts, but let's do nothing else
                 return render(request,
                               'games/sc_counts_form.html',
                               {'formset': formset,
