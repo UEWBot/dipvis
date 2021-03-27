@@ -381,10 +381,10 @@ def sc_counts(request, tournament_id, game_name):
                                             year=value)
             except CentreCount.DoesNotExist:
                 # Create a zero-SC count
-                i = CentreCount.objects.create(power=power,
-                                               game=g,
-                                               year=value,
-                                               count=0)
+                i = CentreCount(power=power,
+                                game=g,
+                                year=value,
+                                count=0)
             try:
                 if i.count != 0:
                     raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
