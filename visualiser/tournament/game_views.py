@@ -355,12 +355,13 @@ def sc_counts(request, tournament_id, game_name):
                 try:
                     i.full_clean()
                 except ValidationError as e:
-                    form.add_error(form.fields[name], e)
-                    i.delete()
+                    #form.add_error(name, e)
+                    form.add_error(None, e)
                     return render(request,
                                   'games/sc_counts_form.html',
                                   {'formset': formset,
                                    'end_form': end_form,
+                                   'death_form': death_form,
                                    'tournament': t,
                                    'game': g})
 

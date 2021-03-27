@@ -402,6 +402,51 @@ class RoundViewTests(TestCase):
         CentreCount.objects.filter(game=self.g1, year=1907).delete()
         CentreCount.objects.filter(game=self.g1, year=1908).delete()
 
+    def test_post_enter_scs_zombie_2(self):
+        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1907).count(), 0)
+        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1908).count(), 0)
+        counts = {1907: {self.austria: 5,
+                         self.england: 5,
+                         self.france: 5,
+                         self.germany: 5,
+                         self.italy: 5,
+                         self.russia: 0,
+                         self.turkey: 9},
+                  1908: {self.austria: 6,
+                         self.england: 6,
+                         self.france: 4,
+                         self.germany: 5,
+                         self.italy: 4,
+                         self.russia: 1,
+                         self.turkey: 8}}
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'scs-TOTAL_FORMS': '4',
+                'scs-INITIAL_FORMS': '0',
+                'scs-MAX_NUM_FORMS': '1000',
+                'scs-MIN_NUM_FORMS': '0',
+                'death-%s' % str(self.austria): '',
+                'death-%s' % str(self.england): '',
+                'death-%s' % str(self.france): '',
+                'death-%s' % str(self.germany): '',
+                'death-%s' % str(self.italy): '',
+                'death-%s' % str(self.russia): '',
+                'death-%s' % str(self.turkey): ''}
+        for n, (y, dots) in enumerate(counts.items()):
+            data['scs-%d-year' % n] = str(y)
+            for p, c in dots.items():
+                data['scs-%d-%s' % (n, str(p))] = str(c)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # Should get an error for Russia recovering from an elimination
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['formset'].total_error_count(), 1)
+        # Clean up
+        # (the form will add some CentreCounts despite the error)
+        CentreCount.objects.filter(game=self.g1, year=1907).delete()
+        CentreCount.objects.filter(game=self.g1, year=1908).delete()
+
     def test_sc_owners(self):
         response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
