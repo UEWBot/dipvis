@@ -164,19 +164,8 @@ def roll_call(request, tournament_id, round_num=None):
                 # This must be one of the extra forms, still empty
                 continue
             # Ensure that this Player is in the Tournament
-            i, created = TournamentPlayer.objects.get_or_create(player=p,
-                                                                tournament=t)
-            try:
-                i.full_clean()
-            except ValidationError as e:
-                form.add_error(form.fields['player'], e)
-                if created:
-                    i.delete()
-                return render(request,
-                              'tournaments/roll_call.html',
-                              {'tournament': t,
-                               'post_url': request.path_info,
-                               'formset': formset})
+            TournamentPlayer.objects.get_or_create(player=p,
+                                                   tournament=t)
             for r_name, value in form.cleaned_data.items():
                 if r_name == 'player':
                     # This column is just for the user

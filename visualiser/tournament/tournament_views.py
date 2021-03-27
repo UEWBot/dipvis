@@ -337,32 +337,12 @@ def round_scores(request, tournament_id):
                     # Find that Round
                     r = t.round_numbered(i)
                     # Update the score
-                    i, created = RoundPlayer.objects.get_or_create(player=tp.player,
-                                                                   the_round=r)
-                    i.score = value
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        form.add_error(form.fields[r_name], e)
-                        if created:
-                            i.delete()
-                        return render(request,
-                                      'tournaments/enter_scores.html',
-                                      {'tournament': t,
-                                       'formset': formset})
-
-                    i.save()
+                    RoundPlayer.objects.update_or_create(player=tp.player,
+                                                         the_round=r,
+                                                         defaults={'score': value})
                 elif r_name == 'overall_score':
                     # Store the player's tournament score
                     tp.score = value
-                    try:
-                        tp.full_clean()
-                    except ValidationError as e:
-                        form.add_error(form.fields[r_name], e)
-                        return render(request,
-                                      'tournaments/enter_scores.html',
-                                      {'tournament': t,
-                                       'formset': formset})
                     tp.save()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_scores',
