@@ -394,15 +394,6 @@ def seed_games(request, tournament_id, round_num):
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
-                    try:
-                        gp.full_clean()
-                    except ValidationError as e:
-                        f.add_error(None, e)
-                        return render(request,
-                                      'rounds/seeded_games.html',
-                                      {'tournament': t,
-                                       'round': r,
-                                       'formset': formset})
                     gp.save()
             # Notify the players
             send_board_call(r)
@@ -543,17 +534,6 @@ def create_games(request, tournament_id, round_num):
                 else:
                     # Change the player (if necessary)
                     i.player = field.player
-                try:
-                    i.full_clean()
-                except ValidationError as e:
-                    f.add_error(None, e)
-                    # TODO Not 100% certain that this is the right thing to do here
-                    i.delete()
-                    return render(request,
-                                  'rounds/create_games.html',
-                                  {'tournament': t,
-                                   'round': r,
-                                   'formset': formset})
                 i.save()
         # Notify the players
         send_board_call(r)
