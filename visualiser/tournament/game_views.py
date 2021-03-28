@@ -270,17 +270,6 @@ def sc_owners(request, tournament_id, game_name):
                                               game=g,
                                               year=year,
                                               owner=value)
-                try:
-                    i.full_clean()
-                except ValidationError as e:
-                    form.add_error(None, e)
-                    i.delete()
-                    return render(request,
-                                  'games/sc_owners_form.html',
-                                  {'formset': formset,
-                                   'tournament': t,
-                                   'game': g})
-
                 i.save()
             # Ensure that CentreCounts for this year match
             try:
