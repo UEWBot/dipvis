@@ -925,9 +925,11 @@ class RoundViewTests(TestCase):
                 'form-INITIAL_FORMS': '0',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-game_id': '',
                 'form-0-name': 'NewName',
                 'form-0-notes': 'No Notes',
                 'form-0-the_set': str(self.gibsons.pk),
+                'form-1-game_id': '',
                 'form-1-name': '',
                 'form-1-notes': '',
                 'form-1-the_set': ''}
@@ -987,10 +989,11 @@ class RoundViewTests(TestCase):
                 'form-INITIAL_FORMS': '0',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
-                #'form-0-name': 'NewName',
-                'form-0-name': 'Existing',
+                'form-0-game_id': str(g.id),
+                'form-0-name': 'NewName',
                 'form-0-notes': 'New Notes',
                 'form-0-the_set': str(self.ah.pk),
+                'form-1-game_id': '',
                 'form-1-name': '',
                 'form-1-notes': '',
                 'form-1-the_set': ''}
@@ -1009,8 +1012,7 @@ class RoundViewTests(TestCase):
         # The one Game should still exist
         self.assertEqual(self.r11.game_set.count(), 1)
         g = self.r11.game_set.get()
-        #self.assertEqual(g.name, 'NewName')
-        self.assertEqual(g.name, 'Existing')
+        self.assertEqual(g.name, 'NewName')
         self.assertEqual(g.the_set, self.ah)
         self.assertEqual(g.notes, 'New Notes')
         self.assertEqual(g.gameplayer_set.count(), 7)

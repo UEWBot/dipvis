@@ -481,7 +481,8 @@ def create_games(request, tournament_id, round_num):
     games = r.game_set.all()
     data = []
     for g in games:
-        current = {'name': g.name,
+        current = {'game_id': g.id,
+                   'name': g.name,
                    'the_set': g.the_set,
                    'notes': g.notes}
         for gp in g.gameplayer_set.all():
@@ -501,13 +502,18 @@ def create_games(request, tournament_id, round_num):
                                  initial=data)
     if formset.is_valid():
         for f in formset:
-            # Update/create the game
             try:
-                # TODO What if they changed the Game's name?
-                g, created = Game.objects.update_or_create(name=f.cleaned_data['name'],
-                                                           the_round=r,
-                                                           defaults={'the_set': f.cleaned_data['the_set'],
-                                                                     'notes': f.cleaned_data['notes']})
+                if f.cleaned_data['game_id'] is not None:
+                    # Game should exist
+                    g = Game.objects.get(pk=f.cleaned_data['game_id'])
+                    g.name = f.cleaned_data['name']
+                    g.the_set = f.cleaned_data['the_set']
+                    g.notes = f.cleaned_data['notes']
+                else:
+                    g = Game(name=f.cleaned_data['name'],
+                             the_round=r,
+                             the_set=f.cleaned_data['the_set'],
+                             notes=f.cleaned_data['notes'])
             except KeyError:
                 # This must be an extra, unused formset
                 continue
@@ -515,8 +521,6 @@ def create_games(request, tournament_id, round_num):
                 g.full_clean()
             except ValidationError as e:
                 f.add_error(None, e)
-                if created:
-                    g.delete()
                 return render(request,
                               'rounds/create_games.html',
                               {'tournament': t,

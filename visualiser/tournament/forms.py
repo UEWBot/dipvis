@@ -223,6 +223,8 @@ class RoundPlayerChoiceField(forms.ModelChoiceField):
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
+    game_id = forms.IntegerField(required=False,
+                                 widget=forms.HiddenInput())
     name = forms.CharField(label=_(u'Game Name'), max_length=Game.MAX_NAME_LENGTH)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
