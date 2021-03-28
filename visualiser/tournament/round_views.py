@@ -604,21 +604,8 @@ def game_scores(request, tournament_id, round_num):
                 except GreatPower.DoesNotExist:
                     continue
                 # Find the matching GamePlayer
-                # TODO This will fail if there was a replacement
-                i = GamePlayer.objects.get(game=g,
-                                           power=p)
-                # Set the score
-                i.score = field
-                try:
-                    i.full_clean()
-                except ValidationError as e:
-                    f.add_error(None, e)
-                    return render(request,
-                                  'rounds/game_score.html',
-                                  {'tournament': t,
-                                   'round': round_num,
-                                   'formset': formset})
-                i.save()
+                GamePlayer.objects.filter(game=g,
+                                          power=p).update(score=field)
         # Update the Round and Tournament scores to reflect the changes
         r.store_scores()
         t.store_scores()
