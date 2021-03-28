@@ -181,17 +181,6 @@ def roll_call(request, tournament_id, round_num=None):
                                                                    the_round=r)
                     # Reset game_count in case we've been here before
                     i.game_count = 1
-                    try:
-                        i.full_clean()
-                    except ValidationError as e:
-                        form.add_error(None, e)
-                        if created:
-                            i.delete()
-                        return render(request,
-                                      'tournaments/roll_call.html',
-                                      {'tournament': t,
-                                       'post_url': request.path_info,
-                                       'formset': formset})
                     i.save()
                 else:
                     # delete any corresponding RoundPlayer
