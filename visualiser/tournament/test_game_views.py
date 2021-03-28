@@ -22,11 +22,10 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from tournament.diplomacy import GameSet, GreatPower
+from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
-from tournament.models import CentreCount
-#from tournament.models import SupplyCentreOwnership
+from tournament.models import CentreCount, SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
 
@@ -117,6 +116,42 @@ class RoundViewTests(TestCase):
         #print(len(cls.g1.years_played()))
         #print(cls.g1.years_played()[0])
         #print(cls.g1.years_played()[-1])
+
+        # Default SC ownerships, used to test post of sc ownerships
+        cls.default_owners = {'Ankara': cls.turkey,
+                              'Belgium': cls.france,
+                              'Berlin': cls.germany,
+                              'Brest': cls.france,
+                              'Budapest': cls.austria,
+                              'Bulgaria': cls.turkey,
+                              'Constantinople': cls.turkey,
+                              'Denmark': cls.germany,
+                              'Edinburgh': cls.england,
+                              'Greece': cls.austria,
+                              'Holland': cls.germany,
+                              'Kiel': cls.germany,
+                              'Liverpool': cls.england,
+                              'London': cls.england,
+                              'Marseilles': cls.france,
+                              'Moscow': cls.russia,
+                              'Munich': cls.germany,
+                              'Naples': cls.italy,
+                              'Norway': cls.england,
+                              'Paris': cls.france,
+                              'Portugal': cls.france,
+                              'Rome': cls.italy,
+                              'Rumania': cls.russia,
+                              'Serbia': cls.austria,
+                              'Sevastapol': cls.russia,
+                              'Smyrna': cls.turkey,
+                              'Spain': cls.france,
+                              'St.Petersburg': cls.russia,
+                              'Sweden': cls.russia,
+                              'Trieste': cls.austria,
+                              'Tunis': cls.italy,
+                              'Venice': cls.italy,
+                              'Vienna': cls.austria,
+                              'Warsaw': cls.russia}
 
     def test_detail(self):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
@@ -463,6 +498,120 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
+
+    def test_post_enter_sc_owners(self):
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'form-TOTAL_FORMS': '5',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0'}
+        for n, year in enumerate([1907]):
+            data['form-%d-year' % n] = str(year)
+            for sc, p in self.default_owners.items():
+                data['form-%d-%s' % (n, sc)] = str(p.id)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the SC Owners page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        # TODO And the appropriate SupplyCentreOwnerships should have been created
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 34)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 7)
+        # Clean up
+        self.g1.supplycentreownership_set.filter(year=1907).delete()
+        self.g1.centrecount_set.filter(year=1907).delete()
+
+    def test_post_enter_sc_owners_modify(self):
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 0)
+        # Add 1907 SupplyCentreOwnerships
+        # Serbia and Rumania neutral, remainder as listed above
+        for sc, p in self.default_owners.items():
+            if (sc != 'Serbia') and (sc != 'Rumania'):
+                SupplyCentreOwnership.objects.create(game=self.g1,
+                                                     sc=SupplyCentre.objects.get(name=sc),
+                                                     owner=p,
+                                                     year=1907)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'form-TOTAL_FORMS': '5',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0'}
+        for n, year in enumerate([1907]):
+            data['form-%d-year' % n] = str(year)
+            for sc, p in self.default_owners.items():
+                data['form-%d-%s' % (n, sc)] = str(p.id)
+        # Include a blank row
+        n += 1
+        data['form-%d-year' % n] = ''
+        for sc, p in self.default_owners.items():
+            data['form-%d-%s' % (n, sc)] = ''
+        # Now change the ownership of Trieste
+        data['form-0-Trieste'] = str(self.italy.id)
+        # And make Greece and Rumania neutral
+        data['form-0-Greece'] = ''
+        data['form-0-Rumania'] = ''
+        # Serbia will be changed from neutral to Austrian
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the SC Owners page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        # And the appropriate SupplyCentreOwnerships should have been updated/deleted
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 32)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 7)
+        sc=SupplyCentre.objects.get(name='Serbia')
+        self.assertEqual(self.g1.supplycentreownership_set.get(year=1907, sc=sc).owner, self.austria)
+        sc=SupplyCentre.objects.get(name='Trieste')
+        self.assertEqual(self.g1.supplycentreownership_set.get(year=1907, sc=sc).owner, self.italy)
+        sc=SupplyCentre.objects.get(name='Greece')
+        self.assertFalse(self.g1.supplycentreownership_set.filter(year=1907, sc=sc).exists())
+        sc=SupplyCentre.objects.get(name='Rumania')
+        self.assertFalse(self.g1.supplycentreownership_set.filter(year=1907, sc=sc).exists())
+        # Clean up
+        self.g1.supplycentreownership_set.filter(year=1907).delete()
+        self.g1.centrecount_set.filter(year=1907).delete()
+
+    def test_post_enter_sc_owners_all_neutral(self):
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 0)
+        # Create some CentreCounts for 1907
+        CentreCount.objects.create(game=self.g1,
+                                   power=self.austria,
+                                   year=1907,
+                                   count=6)
+        CentreCount.objects.create(game=self.g1,
+                                   power=self.italy,
+                                   year=1907,
+                                   count=16)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'form-TOTAL_FORMS': '5',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0'}
+        for n, year in enumerate([1907]):
+            data['form-%d-year' % n] = str(year)
+            for sc, p in self.default_owners.items():
+                data['form-%d-%s' % (n, sc)] = ''
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the SC Owners page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        # There should still be no SupplyCentreOwnerships
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
+        # and the two CentreCounts we added at the start
+        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 2)
+        # Clean up
+        self.g1.centrecount_set.filter(year=1907).delete()
 
     def test_current_game_image(self):
         response = self.client.get(reverse('current_game_image', args=(self.t1.pk, 'Game1')))

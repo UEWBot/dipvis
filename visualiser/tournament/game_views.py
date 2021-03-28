@@ -286,7 +286,7 @@ def sc_owners(request, tournament_id, game_name):
             try:
                 g.create_or_update_sc_counts_from_ownerships(year)
             except SCOwnershipsNotFound:
-                # We have a blank row
+                # We have a row with just the year but no actual ownerships
                 continue
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_owners',
