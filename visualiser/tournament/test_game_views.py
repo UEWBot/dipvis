@@ -838,3 +838,36 @@ class RoundViewTests(TestCase):
     def test_overview3(self):
         response = self.client.get(reverse('game_overview_3', args=(self.t1.pk, 'Game1')))
         self.assertEqual(response.status_code, 200)
+
+    def test_scrape_backstabbr_not_logged_in(self):
+        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.status_code, 302)
+
+    def test_scrape_backstabbr_no_url(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        self.assertEqual(len(self.g1.notes), 0)
+        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.status_code, 404)
+
+    def test_scrape_backstabbr_success(self):
+        self.assertEqual(len(self.g1.notes), 0)
+        self.assertEqual(self.g1.centrecount_set.count(), 7)
+        # Give g1 a backstabbr URL
+        self.g1.notes = 'https://www.backstabbr.com/game/4917371326693376'
+        self.g1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
+        # TODO Check the information displayed on the page
+        self.assertIn(b'1912', response.content)
+        # We should have added CentreCounts and SupplyCentreOwnerships for 1912
+        ccs = self.g1.centrecount_set.filter(year=1912)
+        self.assertEqual(len(ccs), 7)
+        scos = self.g1.supplycentreownership_set.filter(year=1912)
+        self.assertEqual(len(scos), 34)
+        # Clean up
+        self.g1.notes = ''
+        ccs.delete()
+        scos.delete()
+        self.g1.save()
+        self.g1.refresh_from_db()
