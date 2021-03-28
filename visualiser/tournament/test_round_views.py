@@ -44,6 +44,9 @@ class RoundViewTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
+        cls.gibsons = GameSet.objects.get(name='Gibsons')
+        cls.ah = GameSet.objects.get(name='Avalon Hill')
+
         # A superuser
         cls.USERNAME1 = 'superuser'
         cls.PWORD1 = 'l33tPw0rd'
@@ -185,13 +188,13 @@ class RoundViewTests(TestCase):
         RoundPlayer.objects.create(player=cls.p7, the_round=cls.r22)
         RoundPlayer.objects.create(player=cls.p8, the_round=cls.r22)
         # Third Round has exactly seven RoundPlayers
-        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r23)
-        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r23)
-        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r23)
-        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r23)
-        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r23)
-        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r23)
-        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r23)
+        cls.rp21 = RoundPlayer.objects.create(player=cls.p1, the_round=cls.r23)
+        cls.rp23 = RoundPlayer.objects.create(player=cls.p3, the_round=cls.r23)
+        cls.rp24 = RoundPlayer.objects.create(player=cls.p4, the_round=cls.r23)
+        cls.rp25 = RoundPlayer.objects.create(player=cls.p5, the_round=cls.r23)
+        cls.rp26 = RoundPlayer.objects.create(player=cls.p6, the_round=cls.r23)
+        cls.rp27 = RoundPlayer.objects.create(player=cls.p7, the_round=cls.r23)
+        cls.rp28 = RoundPlayer.objects.create(player=cls.p8, the_round=cls.r23)
 
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t3 = Tournament.objects.create(name='t3',
@@ -726,7 +729,6 @@ class RoundViewTests(TestCase):
         gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
-        gibsons = GameSet.objects.get(name='Gibsons')
         powers = {gp1: self.austria,
                   gp2: self.turkey,
                   gp3: self.england,
@@ -739,7 +741,7 @@ class RoundViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-name': 'NewName',
-                'form-0-the_set': str(gibsons.pk)}
+                'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
             data['form-0-%d' % gp.pk] = str(p.pk)
         data = urlencode(data)
@@ -751,7 +753,7 @@ class RoundViewTests(TestCase):
         # Check Game name and Set
         g.refresh_from_db()
         self.assertEqual(g.name, 'NewName')
-        self.assertEqual(g.the_set, gibsons)
+        self.assertEqual(g.the_set, self.gibsons)
         # And power assignments for the 7 GamePlayers
         for gp, p in powers.items():
             gp.refresh_from_db()
@@ -777,7 +779,6 @@ class RoundViewTests(TestCase):
         gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
-        gibsons = GameSet.objects.get(name='Gibsons')
         powers = {gp1: self.austria,
                   gp2: self.turkey,
                   gp3: self.england,
@@ -790,7 +791,7 @@ class RoundViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-name': 'S P A C E',
-                'form-0-the_set': str(gibsons.pk)}
+                'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
             data['form-0-%d' % gp.pk] = str(p.pk)
         data = urlencode(data)
@@ -821,7 +822,6 @@ class RoundViewTests(TestCase):
         gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
-        gibsons = GameSet.objects.get(name='Gibsons')
         powers = {gp1: self.austria,
                   gp2: self.turkey,
                   gp3: self.england,
@@ -834,7 +834,7 @@ class RoundViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-name': 'NewName',
-                'form-0-the_set': str(gibsons.pk)}
+                'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
             data['form-0-%d' % gp.pk] = str(p.pk)
         data['form-0-%d' % gp5.pk] = '99'
@@ -866,7 +866,6 @@ class RoundViewTests(TestCase):
         gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
-        gibsons = GameSet.objects.get(name='Gibsons')
         powers = {gp1: self.austria,
                   gp2: self.turkey,
                   gp3: self.england,
@@ -879,7 +878,7 @@ class RoundViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-name': 'NewName',
-                'form-0-the_set': str(gibsons.pk)}
+                'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
             data['form-0-%d' % gp.pk] = str(p.pk)
         data = urlencode(data)
@@ -911,6 +910,157 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('create_games', args=(self.t3.pk, 1)))
         self.assertEqual(response.status_code, 200)
+
+    def test_create_games_post(self):
+        # Simple case - no pre-existing Games. Create one.
+        self.assertEqual(self.r11.game_set.count(), 0)
+        powers = {self.austria : self.rp11,
+                  self.turkey : self.rp12,
+                  self.england : self.rp13,
+                  self.russia : self.rp15,
+                  self.italy : self.rp16,
+                  self.france : self.rp17,
+                  self.germany : self.rp19}
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'NewName',
+                'form-0-notes': 'No Notes',
+                'form-0-the_set': str(self.gibsons.pk),
+                'form-1-name': '',
+                'form-1-notes': '',
+                'form-1-the_set': ''}
+        for p, rp in powers.items():
+            data['form-0-%s' % p.name] = str(rp.pk)
+            # Include a blank form in the formset
+            data['form-1-%s' % p.name] = ''
+        data = urlencode(data)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should re-direct to the board call page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t1.pk, 1)))
+        # The one Game should now exist
+        self.assertEqual(self.r11.game_set.count(), 1)
+        g = self.r11.game_set.get()
+        self.assertEqual(g.name, 'NewName')
+        self.assertEqual(g.the_set, self.gibsons)
+        self.assertEqual(g.notes, 'No Notes')
+        self.assertEqual(g.gameplayer_set.count(), 7)
+        for p, rp in powers.items():
+            self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
+        # Clean up
+        self.r11.game_set.all().delete()
+
+    def test_create_games_post_modify(self):
+        # Modify an existing Game
+        self.assertEqual(self.r11.game_set.count(), 0)
+        powers = {self.austria : self.rp11,
+                  self.turkey : self.rp12,
+                  self.england : self.rp13,
+                  self.russia : self.rp15,
+                  self.italy : self.rp16,
+                  self.france : self.rp17,
+                  self.germany : self.rp19}
+        g = Game.objects.create(the_round=self.r11,
+                                name='Existing',
+                                the_set=self.gibsons,
+                                notes='Old notes')
+        for p, rp in powers.items():
+            # Swap England and Russia
+            if p == self.england:
+                GamePlayer.objects.create(game=g,
+                                          power=self.russia,
+                                          player=rp.player)
+            elif p == self.russia:
+                GamePlayer.objects.create(game=g,
+                                          power=self.england,
+                                          player=rp.player)
+            else:
+                GamePlayer.objects.create(game=g,
+                                          power=p,
+                                          player=rp.player)
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                #'form-0-name': 'NewName',
+                'form-0-name': 'Existing',
+                'form-0-notes': 'New Notes',
+                'form-0-the_set': str(self.ah.pk),
+                'form-1-name': '',
+                'form-1-notes': '',
+                'form-1-the_set': ''}
+        for p, rp in powers.items():
+            data['form-0-%s' % p.name] = str(rp.pk)
+            # Include a blank form in the formset
+            data['form-1-%s' % p.name] = ''
+        data = urlencode(data)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should re-direct to the board call page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t1.pk, 1)))
+        # The one Game should still exist
+        self.assertEqual(self.r11.game_set.count(), 1)
+        g = self.r11.game_set.get()
+        #self.assertEqual(g.name, 'NewName')
+        self.assertEqual(g.name, 'Existing')
+        self.assertEqual(g.the_set, self.ah)
+        self.assertEqual(g.notes, 'New Notes')
+        self.assertEqual(g.gameplayer_set.count(), 7)
+        for p, rp in powers.items():
+            self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
+        # Clean up
+        self.r11.game_set.all().delete()
+
+    def test_create_games_post_duplicate_name(self):
+        # Duplicate a Game name in another Round of the same Tournament
+        self.assertEqual(self.r21.game_set.count(), 0)
+        self.assertEqual(self.r23.game_set.count(), 0)
+        powers = {self.austria : self.rp21,
+                  self.turkey : self.rp23,
+                  self.england : self.rp24,
+                  self.russia : self.rp25,
+                  self.italy : self.rp26,
+                  self.france : self.rp27,
+                  self.germany : self.rp28}
+        # Create a Game in round 1
+        Game.objects.create(the_round=self.r21,
+                            name="Duplicate",
+                            the_set=self.gibsons)
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-game_id': '',
+                'form-0-name': 'Duplicate',
+                'form-0-notes': 'No Notes',
+                'form-0-the_set': str(self.ah.pk),
+                'form-1-game_id': '',
+                'form-1-name': '',
+                'form-1-notes': '',
+                'form-1-the_set': ''}
+        for p, rp in powers.items():
+            data['form-0-%s' % p.name] = str(rp.pk)
+            # Include a blank form in the formset
+            data['form-1-%s' % p.name] = ''
+        data = urlencode(data)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t2.pk, 3)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # We should get an error due to the duplicate name
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'must be unique', response.content)
+        # Clean up
+        self.r21.game_set.all().delete()
+        self.r23.game_set.all().delete()
 
     def test_game_scores_not_logged_in(self):
         response = self.client.get(reverse('game_scores', args=(self.t1.pk, 1)))
