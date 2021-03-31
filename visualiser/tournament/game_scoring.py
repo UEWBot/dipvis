@@ -329,20 +329,20 @@ class GScoringWhipping(GameScoringSystem):
 
 class GScoringCarnage(GameScoringSystem):
     """
-    Position grants a set number of points (7000, 6000, 5000, 4000, 3000,
-    2000, or 1000), with ties splitting those points.
-    Each power gets 1 point per centre owned at the end, unless there's
-    a solo, in which case the soloer gets the 34 SC points.
+    Position grants a set number of points, with ties splitting those points.
+    Each power gets some set points per centre owned at the end, unless there's
+    a solo, in which case the soloer gets all the SC points.
     Eliminated powers either get position points based on when they were
     eliminated or all split position points.
+    In the centre-based version, losers to a solo also get some points.
     """
     def __init__(self, name, centre_based, dead_equal):
         self.name = name
         self.dead_equal = dead_equal
         if centre_based:
-            self.points_per_dot = 200
-            self.position_pts = [3412, 3010, 2608, 2206, 1804, 1402, 1000]
-            self.solo_pts = 16242
+            self.points_per_dot = 500
+            self.position_pts = [7007, 6006, 5005, 4004, 3003, 2002, 1001]
+            self.solo_pts = 39028
             self.loss_pts = 1000
         else:
             self.points_per_dot = 1

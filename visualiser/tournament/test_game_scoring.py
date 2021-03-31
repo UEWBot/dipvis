@@ -502,7 +502,8 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
 
     # GScoringCentreCarnage
-    def test_g_scoring_centrecarnage_example_1(self):
+    def test_g_scoring_centrecarnage_1(self):
+        # There used to be an "example 1" and "example 2" in the doc, but no more :-(
         example_1 = SimpleGameState(sc_counts={self.austria: 11,
                                                self.england: 10,
                                                self.france: 8,
@@ -518,21 +519,22 @@ class GameScoringTests(TestCase):
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             if p == self.austria:
-                self.assertEqual(s, 5612)
+                self.assertEqual(s, 11 * 500 + 7007)
             elif p == self.england:
-                self.assertEqual(s, 5010)
+                self.assertEqual(s, 10 * 500 + 6006)
             elif p == self.france:
-                self.assertEqual(s, 4208)
+                self.assertEqual(s, 8 * 500 + 5005)
             elif p == self.germany:
-                self.assertEqual(s, 2405)
+                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
             elif p == self.italy:
-                self.assertEqual(s, 2405)
+                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
             elif p == self.russia:
-                self.assertEqual(s, 1602)
+                self.assertEqual(s, 1 * 500 + 2002)
             elif p == self.turkey:
-                self.assertEqual(s, 1000)
+                self.assertEqual(s, 1001)
 
-    def test_g_scoring_centrecarnage_example_2(self):
+    def test_g_scoring_centrecarnage_2(self):
+        # There used to be an "example 1" and "example 2" in the doc, but no more :-(
         example_2 = SimpleGameState(sc_counts={self.austria: 13,
                                                self.england: 7,
                                                self.france: 5,
@@ -549,19 +551,19 @@ class GameScoringTests(TestCase):
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             if p == self.austria:
-                self.assertEqual(s, 6012)
+                self.assertEqual(s, 13 * 500 + 7007)
             elif p == self.england:
-                self.assertEqual(s, 4410)
+                self.assertEqual(s, 7 * 500 + 6006)
             elif p == self.france:
-                self.assertEqual(s, 3407)
+                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
             elif p == self.germany:
-                self.assertEqual(s, 3407)
+                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
             elif p == self.italy:
-                self.assertEqual(s, 2604)
+                self.assertEqual(s, 4 * 500 + 3003)
             elif p == self.russia:
-                self.assertEqual(s, 1402)
+                self.assertEqual(s, 2002)
             elif p == self.turkey:
-                self.assertEqual(s, 1000)
+                self.assertEqual(s, 1001)
 
     # GScoringTribute
     def test_g_scoring_tribute_no_solo(self):
