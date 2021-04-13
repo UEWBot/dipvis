@@ -1520,51 +1520,31 @@ class PlayerRoundFormTest(TestCase):
         cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
 
-    def test_form_needs_first_round_num(self):
-        # Omit first_round_num constructor parameter
+    def test_form_needs_round_num(self):
+        # Omit round_num constructor parameter
         with self.assertRaises(KeyError):
-            PlayerRoundForm(last_round_num=3, this_round_num=1)
-
-    def test_form_needs_last_round_num(self):
-        # Omit last_round_num constructor parameter
-        with self.assertRaises(KeyError):
-            PlayerRoundForm(first_round_num=1, this_round_num=1)
-
-    def test_form_needs_this_round_num(self):
-        # Omit this_round_num constructor parameter
-        with self.assertRaises(KeyError):
-            PlayerRoundForm(first_round_num=1, last_round_num=2)
+            PlayerRoundForm()
 
     def test_success(self):
         # Do everything right
         data = {'player': str(self.p1.pk),
-                'round_2': 'on'}
+                'present': 'on'}
         initial = {'player': self.p1,
-                   'round_1': False}
+                   'present': False}
         form = PlayerRoundForm(data,
                                initial=initial,
-                               first_round_num=1,
-                               last_round_num=2,
-                               this_round_num=1)
+                               round_num=1)
         self.assertTrue(form.is_valid())
 
     def test_round_fields(self):
         # Check that the correct round fields are created
-        form = PlayerRoundForm(first_round_num=1,
-                               last_round_num=3,
-                               this_round_num=2)
-        # We should have three round fields, numbered 1, 2, and 3
-        self.assertEqual(len(form.fields), 4)
-        # Just the first should be disabled
-        self.assertTrue(form.fields['round_1'].disabled)
-        self.assertFalse(form.fields['round_2'].disabled)
-        self.assertFalse(form.fields['round_3'].disabled)
+        form = PlayerRoundForm(round_num=2)
+        # We should have two fields - player and present
+        self.assertEqual(len(form.fields), 2)
 
     def test_player_labels(self):
         # Check the player names
-        form = PlayerRoundForm(first_round_num=1,
-                               last_round_num=3,
-                               this_round_num=2)
+        form = PlayerRoundForm(round_num=2)
         the_choices = list(form.fields['player'].choices)
         # We should have one per Player, plus the initial empty choice
         self.assertEqual(len(the_choices), Player.objects.count() + 1)
@@ -1636,22 +1616,17 @@ class BasePlayerRoundFormsetTest(TestCase):
 
     def test_formset_needs_tournament(self):
         with self.assertRaises(KeyError):
-            self.PlayerRoundFormset()
+            self.PlayerRoundFormset(round_num=2)
+
+    def test_formset_needs_round_num(self):
+        # Omit round_num constructor parameter
+        with self.assertRaises(KeyError):
+            self.PlayerRoundFormset(tournament=self.t2)
 
     def test_success(self):
-        # Everything is ok
         data = self.data.copy()
         data['form-0-player'] = str(self.p1.pk)
-        data['form-0-round_1'] = 'ok'
-        data['form-1-player'] = str(self.p2.pk)
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t1)
-        self.assertTrue(formset.is_valid())
-
-    def test_success_single_round(self):
-        # Single round roll call
-        data = self.data.copy()
-        data['form-0-player'] = str(self.p1.pk)
-        data['form-0-round_1'] = 'ok'
+        data['form-0-present'] = 'ok'
         data['form-1-player'] = str(self.p2.pk)
         ROUND_NUM = 2
         formset = self.PlayerRoundFormset(self.data,
@@ -1664,33 +1639,25 @@ class BasePlayerRoundFormsetTest(TestCase):
                     if field == 'player':
                         continue
                     # The only checkbox should be for round_num
-                    self.assertEqual(field, 'round_%d' % ROUND_NUM)
+                    self.assertEqual(field, 'present')
 
     def test_no_players(self):
         # Should be fine for a Tournament with no TournamentPlayers
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t2)
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t2, round_num=1)
         self.assertTrue(formset.is_valid())
 
     def test_tournament_over(self):
         # Should be fine for a Tournament that is finished
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t3)
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t3, round_num=1)
         self.assertTrue(formset.is_valid())
-        # All checkboxes should be disabled
-        for form in formset:
-            with self.subTest(form=form):
-                for field in form.fields:
-                    if field == 'player':
-                        continue
-                    with self.subTest(field=field):
-                        self.assertTrue(form.fields[field].disabled)
 
     def test_duplicate_players(self):
         # Don't allow the same player to be listed more than once
         data = self.data.copy()
         data['form-0-player'] = str(self.p1.pk)
-        data['form-0-round_1'] = 'ok'
+        data['form-0-present'] = 'ok'
         data['form-1-player'] = str(self.p1.pk)
-        formset = self.PlayerRoundFormset(data, tournament=self.t2)
+        formset = self.PlayerRoundFormset(data, tournament=self.t2, round_num=1)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
@@ -1702,7 +1669,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-player'] = str(self.p1.pk)
         data['form-1-player'] = 'Aardvark'
-        formset = self.PlayerRoundFormset(data, tournament=self.t2)
+        formset = self.PlayerRoundFormset(data, tournament=self.t2, round_num=1)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)

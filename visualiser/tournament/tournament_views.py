@@ -379,8 +379,8 @@ def self_check_in_control(request, tournament_id):
             rd.enable_check_in = value
             rd.save()
         # Redirect to the roll call page
-        return HttpResponseRedirect(reverse('roll_call',
-                                            args=(tournament_id, )))
+        return HttpResponseRedirect(reverse('round_roll_call',
+                                            args=(tournament_id, t.current_round().number())))
 
     return render(request,
                   'tournaments/self_check_in_control.html',

@@ -346,11 +346,6 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 302)
 
-    def test_roll_call_all_rounds(self):
-        self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('roll_call', args=(self.t1.pk,)))
-        self.assertEqual(response.status_code, 200)
-
     def test_roll_call_one_round(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
@@ -368,9 +363,9 @@ class RoundViewTests(TestCase):
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
                           'form-1-player': str(self.p2.pk),
-                          'form-1-round_1': 'ok',
+                          'form-1-present': 'ok',
                           'form-2-player': str(self.p3.pk),
-                          'form-2-round_1': 'ok',
+                          'form-2-present': 'ok',
                           'form-3-player': str(self.p4.pk),
                           'form-4-player': str(self.p5.pk),
                           'form-5-player': str(self.p6.pk),
@@ -382,7 +377,7 @@ class RoundViewTests(TestCase):
                           'form-11-player': str(self.p12.pk),
                           'form-12-player': str(self.p13.pk),
                           'form-13-player': str(self.p14.pk),
-                          'form-13-round_1': 'ok',
+                          'form-13-present': 'ok',
                           'form-14-player': ''})
         response = self.client.post(url,
                                     data,
@@ -414,9 +409,6 @@ class RoundViewTests(TestCase):
     def test_roll_call_post_current_round_no_seeding(self):
         self.common_roll_call_post(reverse('round_roll_call', args=(self.t1.pk, 1)))
 
-    def test_roll_call_post_no_round_no_seeding(self):
-        self.common_roll_call_post(reverse('roll_call', args=(self.t1.pk,)))
-
     def test_roll_call_post_current_round_with_seeding(self):
         # roll_call POST for current round of a tournament with seeding
         self.assertTrue(self.t3.current_round().number(), 2)
@@ -428,25 +420,25 @@ class RoundViewTests(TestCase):
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
-                          'form-0-round_2': 'ok',
+                          'form-0-present': 'ok',
                           'form-1-player': str(self.p3.pk),
-                          'form-1-round_2': 'ok',
+                          'form-1-present': 'ok',
                           'form-2-player': str(self.p4.pk),
-                          'form-2-round_2': 'ok',
+                          'form-2-present': 'ok',
                           'form-3-player': str(self.p5.pk),
-                          'form-3-round_2': 'ok',
+                          'form-3-present': 'ok',
                           'form-4-player': str(self.p6.pk),
-                          'form-4-round_2': 'ok',
+                          'form-4-present': 'ok',
                           'form-5-player': str(self.p7.pk),
-                          'form-5-round_2': 'ok',
+                          'form-5-present': 'ok',
                           'form-6-player': str(self.p8.pk),
-                          'form-6-round_2': 'ok',
+                          'form-6-present': 'ok',
                           'form-7-player': str(self.p9.pk),
-                          'form-7-round_2': 'ok',
+                          'form-7-present': 'ok',
                           'form-8-player': '',
-                          'form-8-round_2': '',
+                          'form-8-present': '',
                           'form-9-player': '',
-                          'form-9-round_2': ''})
+                          'form-9-present': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
@@ -466,23 +458,23 @@ class RoundViewTests(TestCase):
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
-                          'form-0-round_1': 'ok',
+                          'form-0-present': 'ok',
                           'form-1-player': str(self.p3.pk),
-                          'form-1-round_1': 'ok',
+                          'form-1-present': 'ok',
                           'form-2-player': str(self.p4.pk),
-                          'form-2-round_1': 'ok',
+                          'form-2-present': 'ok',
                           'form-3-player': str(self.p5.pk),
-                          'form-3-round_1': 'ok',
+                          'form-3-present': 'ok',
                           'form-4-player': str(self.p6.pk),
-                          'form-4-round_1': 'ok',
+                          'form-4-present': 'ok',
                           'form-5-player': str(self.p7.pk),
-                          'form-5-round_1': 'ok',
+                          'form-5-present': 'ok',
                           'form-6-player': str(self.p8.pk),
-                          'form-6-round_1': 'ok',
+                          'form-6-present': 'ok',
                           'form-7-player': '',
-                          'form-7-round_1': '',
+                          'form-7-present': '',
                           'form-8-player': '',
-                          'form-8-round_1': ''})
+                          'form-8-present': ''})
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,
@@ -503,23 +495,23 @@ class RoundViewTests(TestCase):
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
-                          'form-0-round_1': 'ok',
+                          'form-0-present': 'ok',
                           'form-1-player': str(self.p3.pk),
-                          'form-1-round_1': 'ok',
+                          'form-1-present': 'ok',
                           'form-2-player': str(self.p4.pk),
-                          'form-2-round_1': 'ok',
+                          'form-2-present': 'ok',
                           'form-3-player': str(self.p5.pk),
-                          'form-3-round_1': 'ok',
+                          'form-3-present': 'ok',
                           'form-4-player': str(self.p6.pk),
-                          'form-4-round_1': 'ok',
+                          'form-4-present': 'ok',
                           'form-5-player': str(self.p7.pk),
-                          'form-5-round_1': 'ok',
+                          'form-5-present': 'ok',
                           'form-6-player': str(self.p8.pk),
-                          'form-6-round_1': 'ok',
+                          'form-6-present': 'ok',
                           'form-7-player': str(self.p3.pk),
-                          'form-7-round_1': 'ok',
+                          'form-7-present': 'ok',
                           'form-8-player': '',
-                          'form-8-round_1': ''})
+                          'form-8-present': ''})
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,

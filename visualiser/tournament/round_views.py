@@ -125,37 +125,27 @@ def blind_auction_csv(request, tournament_id, round_num):
 
 
 @permission_required('tournament.add_roundplayer')
-def roll_call(request, tournament_id, round_num=None):
+def roll_call(request, tournament_id, round_num):
     """Provide a form to specify which players are playing each round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
-    if round_num is not None:
-        r = get_round_or_404(t, round_num)
-        round_set = t.round_set.filter(pk=r.pk)
-    else:
-        round_set = t.round_set.all()
+    r = get_round_or_404(t, round_num)
+    round_set = t.round_set.filter(pk=r.pk)
     player_data = []
     # Go through each player in the Tournament
     for tp in t.tournamentplayer_set.all():
         current = {'player': tp.player}
         rps = tp.roundplayers()
-        # And each round of the Tournament
-        for r in round_set:
-            # Is this player listed as playing this round ?
-            played = rps.filter(the_round=r).exists()
-            current['round_%d' % r.number()] = played
+        # Is this player listed as playing this round ?
+        played = rps.filter(the_round=r).exists()
+        current['present'] = played
         player_data.append(current)
-    if round_num is not None:
-        formset = PlayerRoundFormset(request.POST or None,
-                                     tournament=t,
-                                     round_num=int(round_num),
-                                     initial=player_data)
-    else:
-        formset = PlayerRoundFormset(request.POST or None,
-                                     tournament=t,
-                                     initial=player_data)
+    formset = PlayerRoundFormset(request.POST or None,
+                                 tournament=t,
+                                 round_num=int(round_num),
+                                 initial=player_data)
     if formset.is_valid():
         for form in formset:
             try:
@@ -170,10 +160,6 @@ def roll_call(request, tournament_id, round_num=None):
                 if r_name == 'player':
                     # This column is just for the user
                     continue
-                # Extract the round number from the field name
-                i = int(r_name[6:])
-                # Find that Round
-                r = t.round_numbered(i)
                 # Ignore non-bool fields and ones that aren't True
                 if value is True:
                     # Ensure that we have a corresponding RoundPlayer
@@ -188,9 +174,8 @@ def roll_call(request, tournament_id, round_num=None):
                     RoundPlayer.objects.filter(player=p,
                                                the_round=r).delete()
         r = t.current_round()
-        # If we're doing a roll call for a single round,
         # we only want to seed boards if it's the current round
-        if (round_num is None) or (r.number() == int(round_num)):
+        if r.number() == int(round_num):
             if t.seed_games:
                 # Ensure that we have the right number of players
                 return HttpResponseRedirect(reverse('get_seven',
@@ -207,15 +192,14 @@ def roll_call(request, tournament_id, round_num=None):
 
     # Warn the user if they're changing players for an earlier round
     warning = ''
-    if round_num is not None:
-        r = t.round_numbered(int(round_num))
-        if r.game_set.exists():
-            # We already have Games for this Round
-            warning = _("This page is for round %(round)s, which already has games. Submit will change attendance but won't seed games.") % {'round': round_num}
+    if r.game_set.exists():
+        # We already have Games for this Round
+        warning = _("This page is for round %(round)s, which already has games. Submit will change attendance but won't seed games.") % {'round': round_num}
 
     return render(request,
-                  'tournaments/roll_call.html',
+                  'rounds/roll_call.html',
                   {'tournament': t,
+                   'round': r,
                    'post_url': request.path_info,
                    'warning': warning,
                    'formset': formset})

@@ -2,10 +2,10 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Roll Call{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Roll Call {% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Roll Call" %}</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Roll Call" %}</h1>
 
 <p><b>{{ warning }}</b></p>
 
