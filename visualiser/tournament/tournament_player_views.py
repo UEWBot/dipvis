@@ -65,7 +65,9 @@ def index(request, tournament_id):
                 pk = int(k[11:])
                 tp_qs = TournamentPlayer.objects.filter(pk=pk)
                 # Also delete any corresponding RoundPlayers
-                tp_qs.get().roundplayers().delete()
+                # Can't use QuerySet.delete() after distinct()
+                for rp in tp_qs.get().roundplayers():
+                    rp.delete()
                 tp_qs.delete()
                 break
         # Create a TournamentPlayer for each player to register
