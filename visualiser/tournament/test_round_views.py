@@ -351,10 +351,10 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 200)
 
-    def common_roll_call_post(self, url):
-        # roll_call() POST for t1. Because t1 only has a single Round,
-        # the test for that round and for the whole tournament are the same
+    def test_roll_call_post_current_round_no_seeding(self):
+        # roll_call() POST for t1, which only has a single Round
         self.assertEqual(self.t1.current_round().number(), 1)
+        self.assertFalse(self.t1.seed_games)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # These are the existing 13 RoundPlayers, plus one new one and one blank
         data = urlencode({'form-TOTAL_FORMS': '15',
@@ -379,7 +379,7 @@ class RoundViewTests(TestCase):
                           'form-13-player': str(self.p14.pk),
                           'form-13-present': 'ok',
                           'form-14-player': ''})
-        response = self.client.post(url,
+        response = self.client.post(reverse('round_roll_call', args=(self.t1.pk, 1)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the create games page
@@ -405,9 +405,6 @@ class RoundViewTests(TestCase):
         self.rp111 = RoundPlayer.objects.create(player=self.p11, the_round=self.r11)
         self.rp112 = RoundPlayer.objects.create(player=self.p12, the_round=self.r11, game_count=0)
         self.rp113 = RoundPlayer.objects.create(player=self.p13, the_round=self.r11, game_count=2)
-
-    def test_roll_call_post_current_round_no_seeding(self):
-        self.common_roll_call_post(reverse('round_roll_call', args=(self.t1.pk, 1)))
 
     def test_roll_call_post_current_round_with_seeding(self):
         # roll_call POST for current round of a tournament with seeding
@@ -483,6 +480,45 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, url)
         # No clean up needed because we left the same 7 players playing
+
+    def test_roll_call_post_old_round_refuse_delete(self):
+        # POST of roll_call() for a Round that is finished
+        # trying to delete a player who played a game
+        r = self.t3.round_numbered(1)
+        self.assertTrue(r.is_finished())
+        self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # TODO Why doesn't this work?
+        #data = urlencode({'form-TOTAL_FORMS': '9',
+        data = urlencode({'form-TOTAL_FORMS': '7',
+                          'form-INITIAL_FORMS': '7',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-0-present': 'ok',
+                          'form-1-player': str(self.p3.pk),
+                          'form-1-present': '',
+                          'form-2-player': str(self.p4.pk),
+                          'form-2-present': 'ok',
+                          'form-3-player': str(self.p5.pk),
+                          'form-3-present': 'ok',
+                          'form-4-player': str(self.p6.pk),
+                          'form-4-present': 'ok',
+                          'form-5-player': str(self.p7.pk),
+                          'form-5-present': 'ok',
+                          'form-6-player': str(self.p8.pk),
+                          'form-6-present': 'ok',
+                          'form-7-player': str(self.p9.pk),
+                          'form-7-present': 'ok',
+                          'form-8-player': '',
+                          'form-8-present': ''})
+        response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'Player did play this round', response.content)
+        # Clean up
+        GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
 
     def test_roll_call_post_add_duplicate_player(self):
         # POST of roll_call() where we add a TournamentPlayer who's already playing

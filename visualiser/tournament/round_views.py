@@ -147,6 +147,7 @@ def roll_call(request, tournament_id, round_num):
                                  round_num=int(round_num),
                                  initial=player_data)
     if formset.is_valid():
+        errors_added = False
         for form in formset:
             try:
                 p = form.cleaned_data['player']
@@ -168,27 +169,32 @@ def roll_call(request, tournament_id, round_num):
                     # Reset game_count in case we've been here before
                     i.game_count = 1
                     i.save()
+                elif r.game_set.filter(gameplayer__player=p).exists():
+                    # Refuse to delete this one
+                    form.add_error(None, _('Player did play this round'))
+                    errors_added = True
                 else:
                     # delete any corresponding RoundPlayer
                     # This could be a player who was previously checked-off in error
                     RoundPlayer.objects.filter(player=p,
                                                the_round=r).delete()
-        r = t.current_round()
-        # we only want to seed boards if it's the current round
-        if r.number() == int(round_num):
-            if t.seed_games:
-                # Ensure that we have the right number of players
-                return HttpResponseRedirect(reverse('get_seven',
-                                                    args=(tournament_id,
-                                                          r.number())))
-            # Next job is almost certainly to create the actual games
-            return HttpResponseRedirect(reverse('create_games',
+        if not errors_added:
+            r = t.current_round()
+            # we only want to seed boards if it's the current round
+            if r.number() == int(round_num):
+                if t.seed_games:
+                    # Ensure that we have the right number of players
+                    return HttpResponseRedirect(reverse('get_seven',
                                                 args=(tournament_id,
-                                                      r.number())))
-        # Back to the same page, but as a GET
-        return HttpResponseRedirect(reverse('round_roll_call',
+                                                      round_num)))
+                # Next job is almost certainly to create the actual games
+                return HttpResponseRedirect(reverse('create_games',
                                             args=(tournament_id,
                                                   round_num)))
+            # Back to the same page, but as a GET
+            return HttpResponseRedirect(reverse('round_roll_call',
+                                                args=(tournament_id,
+                                                      round_num)))
 
     # Warn the user if they're changing players for an earlier round
     warning = ''
