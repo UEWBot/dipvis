@@ -413,7 +413,7 @@ class Tournament(models.Model):
                                                     blank=True,
                                                     null=True,
                                                     help_text=_('Add this after the tournament is complete and results have been uploaded to the WDD'))
-    seed_games = models.BooleanField(default=False,
+    seed_games = models.BooleanField(default=True,
                                      help_text=_('Check to let the software seed players to games'))
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=_('How powers are assigned'),
