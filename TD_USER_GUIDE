@@ -109,7 +109,7 @@ Any "Backstabbr username" will be displayed in board calls for vFTF Tournaments.
 The "User" field is to match-up Players who are also TDs who use the system (by
 default, Players who play in a Tournament that they help manage will be "Unranked"
 - they won't be eligible for Best Country awards and their score will be noted
-sparetely to everyone else.
+separately to everyone else.
 
 This is also a good time to add any SeederBias that you might need. Your Tournament
 page has a link to https://example.com/admin/tournament/seederbias/add/ where you
@@ -149,7 +149,9 @@ players, you can just seed the games from here. Otherwise, the system will promp
 either have players sit out the round or to have players play multiple games. Just
 select them from the dropdown lists and hit "Seed Games".
 The system will go ahead and seed the boards. Note that you can refresh this page
-to re-do the seeding if needed. You can also make changes manually. Once you're happy,
+to re-do the seeding if needed. You can also make changes manually. For a vFTF tournament
+with games on Backstabbr, you can enter links to the games on backstabbr on this page (under
+"notes") to make it easier to import centre-count information. Once you're happy,
 press "Submit" and the Games will be created, including sending out emails to the players
 (unless your Tournament has the "no email" option selected).
 
@@ -163,11 +165,14 @@ Your options are:
 Upload images for games as they progress. Ideally every season, but gaps are ok.
 Enter SupplyCentre ownership data after each game year (in this case the system will
 calculate CentreCounts).
-Enter CentreCounts after each game year.
+Enter CentreCounts after each game year. (For a vFTF game, if the Game's "notes" has a
+backstabbr URL for the game, you can grab the current CentreCounts from Backstabbr by
+just clicking the "Import SC Counts from Backstabbr" link on the Game page).
 For DrawProposals, you can enter all of them or just the ones that pass.
 
 The bare minimum is the final year CentreCounts and any successful DrawProposals. These are
-needed to calculate scores.
+needed to calculate scores. For some scoring systems, you'll also need to enter elimination
+years if you don't enter SC Counts for those years.
 
 If you were to enter all the above data, people would be able to see timelapse-style
 displays of the board state, charts of SC ownership and centre counts, and textual
@@ -184,15 +189,14 @@ The system will calculate scores as games progress (it continually updates all t
 on an "if all games ended now" basis), and will provide charts for best countries,
 as well as a leaderboard.
 
-If necessary, you can override the calculated scores. I haven't had to use this for a very
-long time, though, so there may well be bugs there.
+If necessary, you can override the calculated scores.
 
 Once the Tournament is over and all the data has been entered, please uncheck the "Editable"
-checkbox for the Tournament. This will help prevent inadvertant changes.
+checkbox for the Tournament (and Save it). This will help prevent inadvertant changes.
 
 Upload to WDD
 -------------
 
 Once your Tournament is complete, the system can generate the two CSV files needed to
 upload the results to the WDD. Once your Tournament is actually on the WDD, please take
-a moment to set its "WDD Id" to help with cross-referencing.
+a moment to set its "WDD Id" (and Save it) to help with cross-referencing.
