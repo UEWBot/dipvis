@@ -1120,11 +1120,10 @@ class Game(models.Model):
             raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
         with transaction.atomic():
             for p in GreatPower.objects.all():
-                i = CentreCount.objects.update_or_create(power=p,
-                                                         game=self,
-                                                         year=year,
-                                                         defaults={'count': all_scos.filter(owner=p).count()})[0]
-                i.save()
+                CentreCount.objects.update_or_create(power=p,
+                                                     game=self,
+                                                     year=year,
+                                                     defaults={'count': all_scos.filter(owner=p).count()})
         self.check_whether_finished(year)
 
     def compare_sc_counts_and_ownerships(self, year):
@@ -1351,15 +1350,15 @@ class Game(models.Model):
         # Auto-create SC Ownership (unless they already exist)
         with transaction.atomic():
             for power in GreatPower.objects.all():
-                i, _ = CentreCount.objects.get_or_create(power=power,
-                                                         game=self,
-                                                         year=FIRST_YEAR - 1,
-                                                         count=power.starting_centres)
+                CentreCount.objects.get_or_create(power=power,
+                                                  game=self,
+                                                  year=FIRST_YEAR - 1,
+                                                  count=power.starting_centres)
                 for sc in SupplyCentre.objects.filter(initial_owner=power):
-                    i, _ = SupplyCentreOwnership.objects.get_or_create(owner=power,
-                                                                       game=self,
-                                                                       year=FIRST_YEAR - 1,
-                                                                       sc=sc)
+                    SupplyCentreOwnership.objects.get_or_create(owner=power,
+                                                                game=self,
+                                                                year=FIRST_YEAR - 1,
+                                                                sc=sc)
 
         # Auto-create S1901M image (if it doesn't exist)
         GameImage.objects.update_or_create(game=self,

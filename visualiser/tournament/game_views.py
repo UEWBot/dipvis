@@ -625,10 +625,10 @@ def scrape_backstabbr(request, tournament_id, game_name):
         sc = SupplyCentre.objects.get(abbreviation__iexact=k)
         # Map v to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
         power = GreatPower.objects.get(abbreviation=v[0])
-        i, _ = SupplyCentreOwnership.objects.update_or_create(game=g,
-                                                              year=year,
-                                                              sc=sc,
-                                                              defaults={'owner': power})
+        SupplyCentreOwnership.objects.update_or_create(game=g,
+                                                       year=year,
+                                                       sc=sc,
+                                                       defaults={'owner': power})
         have_ownerships = True
     if have_ownerships:
         g.create_or_update_sc_counts_from_ownerships(year)
