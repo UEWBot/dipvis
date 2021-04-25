@@ -1242,6 +1242,23 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('draw_vote', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_graph(self):
+        # Test the page that holds the graph image
+        response = self.client.get(reverse('game_sc_graph', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_sc_graph_refresh(self):
+        # Test the page that holds the graph image
+        response = self.client.get(reverse('game_sc_graph_refresh', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+
+    def test_graph(self):
+        # This is the actual graph image
+        response = self.client.get(reverse('graph', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # Does the response look like a PNG image?
+        self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
+
     # TODO check initial value for year and season in draw vote page with and without game images
 
     # TODO check errors from DrawProposal.clean() get displayed

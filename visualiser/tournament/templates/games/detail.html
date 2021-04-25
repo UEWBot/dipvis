@@ -52,6 +52,7 @@
   {% if game.supplycentreownership_set.count > 22 %}
     <li><a href="{% url 'game_sc_owners' tournament.id game.name %}">{% trans "Supply Centre Ownership" %}</a></li>
   {% endif %}
+  <li><a href="{% url 'game_sc_graph' tournament.id game.name %}">{% trans "Supply Centre Graph" %}</a></li>
   {% if game.gameimage_set.count > 1 %}
     <li><a href="{% url 'current_game_image' tournament.id game.name %}">{% trans "Latest Position" %}</a></li>
   {% endif %}

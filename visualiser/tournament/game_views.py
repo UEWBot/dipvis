@@ -18,12 +18,15 @@
 Game Views for the Diplomacy Tournament Visualiser.
 """
 
+import io
+import matplotlib.pyplot as plt
+
 from django.db import transaction
 from django.db.models import Count
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
-from django.http import Http404, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -218,6 +221,71 @@ def game_sc_chart(request,
                                           args=(tournament_id, game_name))
     #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
+
+
+def _map_to_fg(colour):
+    """
+    Map the (background) colours of SetPower to colours suitable for foregound (on a white background)
+    """
+    MAP = {'grey': 'black',
+           'white': 'grey'}
+    try:
+        return MAP[colour]
+    except KeyError:
+        return colour
+
+
+def _graph_end_year(game):
+    """Determine a suitable end for the X-axis of the graph for the game"""
+    if game.is_finished:
+        return game.final_year()
+    if game.the_round.final_year:
+        return game.the_round.final_year
+    if game.final_year() > 1907:
+        return game.final_year()
+    return 1907
+
+
+def graph(request,
+          tournament_id,
+          game_name):
+    """Just an SC centre graph for the specified game, as a PNG image"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    with io.BytesIO() as f:
+        # plot the SC counts
+        plt.figure()
+        years = g.years_played()
+        for power in GreatPower.objects.all():
+            colour = _map_to_fg(g.the_set.setpower_set.get(power=power).colour)
+            dots = [cc.count for cc in g.centrecount_set.filter(power=power)]
+            # X-axis is year, y-axis is SC count. Colour by power
+            plt.plot(years, dots, label=_(power.name), color=colour, linewidth=2)
+        plt.axis([1900, _graph_end_year(g), 0, 18])
+        plt.xlabel(_('Year'))
+        plt.ylabel(_('Centres'))
+        plt.legend(loc='upper left')
+        plt.savefig(f, format='png')
+        graphic = f.getvalue()
+    response = HttpResponse(graphic, content_type="image/png")
+    return response
+
+
+def game_sc_graph(request,
+                  tournament_id,
+                  game_name,
+                  refresh=False,
+                  redirect_url_name='game_sc_graph_refresh'):
+    """Display the SupplyCentre graph for a game"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    context = {'game': g}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = REFRESH_TIME
+        context['redirect_url'] = reverse(redirect_url_name,
+                                          args=(tournament_id, game_name))
+    return render(request, 'games/sc_graph.html', context)
 
 
 def _blank_row_num(queryset, final_year):
