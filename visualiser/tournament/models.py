@@ -1698,6 +1698,8 @@ class GamePlayer(models.Model):
                               related_name='+',
                               on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
+    after_action_report = models.TextField(blank=True,
+                                           help_text=_("This player's account of the game"))
 
     class Meta:
         ordering = ['game', 'power']
@@ -1861,6 +1863,12 @@ class GamePlayer(models.Model):
                                                                'power': self.power}
         return _('%(player)s in %(game)s Power TBD') % {'game': self.game,
                                                         'player': self.player}
+
+    def get_aar_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('aar', args=[str(self.game.the_round.tournament.id),
+                                        self.game.name,
+                                        self.player.id])
 
 
 class GameImage(models.Model):

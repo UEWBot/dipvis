@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament game=game.name player=player %}DipTV - {{ tournament }} Game {{ game }} {{ player }} AAR{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with game=game.name player=player %}Game {{ game }} {{ player }} AAR{% endblocktrans %}</h1>
+
+<p>{{ gp.after_action_report }}</p>
+{% endblock %}

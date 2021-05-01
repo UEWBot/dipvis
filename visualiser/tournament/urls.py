@@ -88,6 +88,8 @@ game_patterns = [
         name='game_overview_3'),
     url(r'^scrape_backstabbr/$', game_views.scrape_backstabbr,
         name='scrape_backstabbr'),
+    url(r'^aar/(?P<player_id>\d+)/$', game_views.aar,
+        name='aar'),
 ]
 
 tp_patterns = [

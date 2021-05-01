@@ -28,10 +28,12 @@ from tournament.models import Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
+from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.players import Player
 
 HOURS_8 = timedelta(hours=8)
 
-class RoundViewTests(TestCase):
+class GameViewTests(TestCase):
     fixtures = ['game_sets.json']
 
     @classmethod
@@ -64,13 +66,13 @@ class RoundViewTests(TestCase):
                                            draw_secrecy=Tournament.SECRET,
                                            is_published=True)
         # One DIAS round, with 1 game
-        r = Round.objects.create(tournament=cls.t1,
-                                 scoring_system=G_SCORING_SYSTEMS[0].name,
-                                 dias=True,
-                                 start=cls.t1.start_date)
+        cls.r1 = Round.objects.create(tournament=cls.t1,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=cls.t1.start_date)
         cls.g1 = Game.objects.create(name='Game1',
-                                     started_at=r.start,
-                                     the_round=r,
+                                     started_at=cls.r1.start,
+                                     the_round=cls.r1,
                                      the_set=GameSet.objects.first())
         # And one non-DIAS round, with 1 game
         r = Round.objects.create(tournament=cls.t1,
@@ -160,6 +162,60 @@ class RoundViewTests(TestCase):
     def test_detail_non_existant_game(self):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game42')))
         self.assertEqual(response.status_code, 404)
+
+    def test_detail_no_aar_link(self):
+        # Add a GamePlayer without an AAR
+        p = Player.objects.create(first_name='Thor', last_name='Odinson')
+        TournamentPlayer.objects.create(tournament=self.t1, player=p)
+        RoundPlayer.objects.create(the_round=self.r1, player=p)
+        GamePlayer.objects.create(game=self.g1, player=p)
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(b'After Action Report', response.content)
+        # Clean up
+        p.delete()
+
+    def test_detail_aar_link(self):
+        # Add a GamePlayer with an AAR
+        p = Player.objects.create(first_name='Thor', last_name='Odinson')
+        TournamentPlayer.objects.create(tournament=self.t1, player=p)
+        RoundPlayer.objects.create(the_round=self.r1, player=p)
+        GamePlayer.objects.create(game=self.g1, player=p, after_action_report='I died')
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'After Action Report', response.content)
+        # Clean up
+        p.delete()
+
+    def test_aar(self):
+        # Add a GamePlayer with an AAR
+        p = Player.objects.create(first_name='Thor', last_name='Odinson')
+        TournamentPlayer.objects.create(tournament=self.t1, player=p)
+        RoundPlayer.objects.create(the_round=self.r1, player=p)
+        GamePlayer.objects.create(game=self.g1, player=p, after_action_report='I died')
+        response = self.client.get(reverse('aar', args=(self.t1.pk, 'Game1', p.pk)))
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        p.delete()
+
+    def test_non_existant_aar(self):
+        # Add a GamePlayer without an AAR
+        p = Player.objects.create(first_name='Thor', last_name='Odinson')
+        TournamentPlayer.objects.create(tournament=self.t1, player=p)
+        RoundPlayer.objects.create(the_round=self.r1, player=p)
+        GamePlayer.objects.create(game=self.g1, player=p)
+        response = self.client.get(reverse('aar', args=(self.t1.pk, 'Game1', p.pk)))
+        self.assertEqual(response.status_code, 404)
+        # Clean up
+        p.delete()
+
+    def test_aar_non_player(self):
+        # Try to retrieve an AAR from somebody who didn't play the Game
+        p = Player.objects.create(first_name='Thor', last_name='Odinson')
+        response = self.client.get(reverse('aar', args=(self.t1.pk, 'Game1', p.pk)))
+        self.assertEqual(response.status_code, 404)
+        # Clean up
+        p.delete()
 
     def test_sc_chart(self):
         response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, 'Game1')))

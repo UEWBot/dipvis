@@ -44,7 +44,7 @@ from tournament.tournament_views import get_visible_tournament_or_404
 
 from tournament.diplomacy import GreatPower, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
-from tournament.models import Game, DrawProposal
+from tournament.models import Game, GamePlayer, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING
 from tournament.models import SCOwnershipsNotFound
@@ -74,6 +74,22 @@ def game_simple(request, tournament_id, game_name, template):
     g = get_game_or_404(t, game_name)
     context = {'tournament': t, 'game': g}
     return render(request, 'games/%s.html' % template, context)
+
+
+def aar(request, tournament_id, game_name, player_id):
+    """One Player's After Action Report for the Game"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    # Check that this Player did play the Game
+    try:
+        gp = g.gameplayer_set.get(player=player_id)
+    except GamePlayer.DoesNotExist as e:
+        raise Http404 from e
+    # and that an AAR from them was uploaded
+    if not gp.after_action_report:
+        raise Http404
+    context = {'tournament': t, 'game': g, 'gp': gp, 'player': gp.player}
+    return render(request, 'games/aar.html', context)
 
 
 def game_sc_owners(request,
