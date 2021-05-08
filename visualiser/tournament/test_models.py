@@ -859,7 +859,7 @@ class TournamentModelTests(TestCase):
     # Tournament.store_scores()
     def test_tourney_store_scores(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
@@ -1446,7 +1446,7 @@ class TournamentModelTests(TestCase):
     # Round.store_scores()
     def test_round_store_scores(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
@@ -1667,7 +1667,7 @@ class TournamentModelTests(TestCase):
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
@@ -2265,7 +2265,7 @@ class TournamentModelTests(TestCase):
     @tag('slow')
     def test_game_save_end_of_game(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
@@ -2356,7 +2356,7 @@ class TournamentModelTests(TestCase):
     @tag('slow')
     def test_game_save_end_of_round(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
@@ -2449,7 +2449,7 @@ class TournamentModelTests(TestCase):
     @tag('slow')
     def test_game_save_end_of_tournament(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
@@ -2920,7 +2920,7 @@ class TournamentModelTests(TestCase):
     # GamePlayer.set_power_from_prefs()
     def test_gameplayer_set_power_from_prefs(self):
         now = timezone.now()
-        t = Tournament(name='t4',
+        t = Tournament(name='t5',
                        start_date=now,
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,

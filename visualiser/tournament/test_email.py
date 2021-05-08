@@ -205,7 +205,7 @@ class EmailTests(TestCase):
         TournamentPlayer.objects.create(player=p14, tournament=cls.t1)
         RoundPlayer.objects.create(player=p14, the_round=r1)
         GamePlayer.objects.create(player=p14, game=g2, power=england)
-        GamePlayer.objects.create(player=p14, game=g3, power=austria)
+        GamePlayer.objects.create(player=p14, game=g3, power=turkey)
 
         # This one has an email address, is in the Tournament, but not this Round
         cls.p15 = Player.objects.create(first_name='Charlotte',
@@ -229,31 +229,31 @@ class EmailTests(TestCase):
                                     last_name='Jalopy')
         TournamentPlayer.objects.create(player=p18, tournament=cls.t1)
         RoundPlayer.objects.create(player=p18, the_round=r1)
-        GamePlayer.objects.create(player=p18, game=g3, power=austria)
+        GamePlayer.objects.create(player=p18, game=g3, power=england)
 
         p19 = Player.objects.create(first_name='Keith',
                                     last_name='Llama')
         TournamentPlayer.objects.create(player=p19, tournament=cls.t1)
         RoundPlayer.objects.create(player=p19, the_round=r1)
-        GamePlayer.objects.create(player=p19, game=g3, power=austria)
+        GamePlayer.objects.create(player=p19, game=g3, power=france)
 
         p20 = Player.objects.create(first_name='Markus',
                                     last_name='Nucleotide')
         TournamentPlayer.objects.create(player=p20, tournament=cls.t1)
         RoundPlayer.objects.create(player=p20, the_round=r1)
-        GamePlayer.objects.create(player=p20, game=g3, power=austria)
+        GamePlayer.objects.create(player=p20, game=g3, power=germany)
 
         p21 = Player.objects.create(first_name='Olivia',
                                     last_name='Petticoat')
         TournamentPlayer.objects.create(player=p21, tournament=cls.t1)
         RoundPlayer.objects.create(player=p21, the_round=r1)
-        GamePlayer.objects.create(player=p21, game=g3, power=austria)
+        GamePlayer.objects.create(player=p21, game=g3, power=italy)
 
         p22 = Player.objects.create(first_name='Quentin',
                                     last_name='Radish')
         TournamentPlayer.objects.create(player=p22, tournament=cls.t1)
         RoundPlayer.objects.create(player=p22, the_round=r1)
-        GamePlayer.objects.create(player=p22, game=g3, power=austria)
+        GamePlayer.objects.create(player=p22, game=g3, power=russia)
 
         # Tournament with preferences
         cls.t2 = Tournament.objects.create(name='t2',

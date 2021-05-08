@@ -469,6 +469,7 @@ class Tournament(models.Model):
 
     class Meta:
         ordering = ['-start_date']
+        unique_together = ('name', 'start_date')
 
     def powers_assigned_from_prefs(self):
         """
@@ -1657,6 +1658,7 @@ class RoundPlayer(models.Model):
 
     class Meta:
         ordering = ['player', 'the_round__start']
+        unique_together = ('player', 'the_round')
 
     def tournamentplayer(self):
         """
@@ -1699,6 +1701,8 @@ class GamePlayer(models.Model):
 
     class Meta:
         ordering = ['game', 'power']
+        unique_together = ('player', 'game')
+        unique_together = ('power', 'game')
 
     def roundplayer(self):
         """

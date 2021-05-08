@@ -319,7 +319,7 @@ class TournamentPlayerViewTests(TestCase):
 
         # Published Tournament, so it's visible to all
         # Ongoing, one round that has started
-        cls.t5 = Tournament.objects.create(name='t1',
+        cls.t5 = Tournament.objects.create(name='t5',
                                            start_date=now,
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
