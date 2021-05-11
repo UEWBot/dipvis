@@ -170,11 +170,47 @@ class RScoringBest(RoundScoringSystem):
         return ret
 
 
+class RScoringAll(RoundScoringSystem):
+    """
+    Total all the Player's game scores for that round.
+    """
+    def __init__(self):
+        self.name = _(u'Add all game scores')
+
+    def scores(self, game_players, non_players):
+        """
+        If any player played multiple games, sum all game scores.
+        Otherwise, just take their game score.
+        game_players is a QuerySet of GamePlayers.
+        non_players is a QuerySet of RoundPlayers who were present but agreed
+            not to play.
+        Returns a dict, indexed by player key, of scores.
+        """
+        retval = {}
+        # First retrieve all the scores of all the games that are involved
+        # This will give us the "if the game ended now" score for in-progress games
+        game_scores = {}
+        for g in Game.objects.filter(gameplayer__in=game_players).distinct():
+            game_scores[g] = g.scores()
+        # for each player who played any of the specified games
+        for p in Player.objects.filter(gameplayer__in=game_players).distinct():
+            # Find just their games
+            # filter out games where they haven't been assigned a power
+            player_games = game_players.filter(player=p).filter(power__isnull=False)
+            # Add all game scores
+            if player_games.exists():
+                retval[p] = sum(game_scores[g.game][g.power] for g in player_games)
+            else:
+                retval[p] = 0.0
+        return retval
+
+
 # All the round scoring systems we support
 R_SCORING_SYSTEMS = [
     RScoringBest(),
     RScoringBest(4005.0),
     RScoringBest(4005.0, True),
+    RScoringAll(),
 ]
 
 

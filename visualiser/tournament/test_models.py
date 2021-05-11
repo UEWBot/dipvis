@@ -555,6 +555,96 @@ class TournamentModelTests(TestCase):
         # Clean up
         t.delete()
 
+    def test_r_scoring_all(self):
+        # New Tournament just for this test
+        s = G_SCORING_SYSTEMS[0].name
+        now = timezone.now()
+        t = Tournament.objects.create(name='Round Scoring Test',
+                                      start_date=now,
+                                      end_date=now,
+                                      round_scoring_system=R_SCORING_SYSTEMS[3].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=Tournament.SECRET)
+        # Check that we got the right scoring system
+        self.assertNotIn("Sitters", t.round_scoring_system)
+        # One Round
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s,
+                                 dias=False,
+                                 start=t.start_date)
+        # Two finished Games
+        g1 = Game.objects.create(name='g1',
+                                 started_at=r.start,
+                                 the_round=r,
+                                 is_finished=True,
+                                 the_set=self.set1)
+        g2 = Game.objects.create(name='g2',
+                                 started_at=r.start,
+                                 the_round=r,
+                                 is_finished=True,
+                                 the_set=self.set1)
+        # 12 players, so we have two playing two games
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        TournamentPlayer.objects.create(player=self.p3, tournament=t)
+        TournamentPlayer.objects.create(player=self.p4, tournament=t)
+        TournamentPlayer.objects.create(player=self.p5, tournament=t)
+        TournamentPlayer.objects.create(player=self.p6, tournament=t)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t)
+        TournamentPlayer.objects.create(player=self.p8, tournament=t)
+        TournamentPlayer.objects.create(player=self.p9, tournament=t)
+        TournamentPlayer.objects.create(player=self.p10, tournament=t)
+        TournamentPlayer.objects.create(player=self.p11, tournament=t)
+        TournamentPlayer.objects.create(player=self.p12, tournament=t)
+        RoundPlayer.objects.create(player=self.p1, the_round=r)
+        RoundPlayer.objects.create(player=self.p2, the_round=r)
+        RoundPlayer.objects.create(player=self.p3, the_round=r)
+        RoundPlayer.objects.create(player=self.p4, the_round=r)
+        RoundPlayer.objects.create(player=self.p5, the_round=r)
+        RoundPlayer.objects.create(player=self.p6, the_round=r)
+        RoundPlayer.objects.create(player=self.p7, the_round=r)
+        RoundPlayer.objects.create(player=self.p8, the_round=r)
+        RoundPlayer.objects.create(player=self.p9, the_round=r)
+        RoundPlayer.objects.create(player=self.p10, the_round=r)
+        RoundPlayer.objects.create(player=self.p11, the_round=r)
+        RoundPlayer.objects.create(player=self.p12, the_round=r)
+        GamePlayer.objects.create(player=self.p1, game=g1, power=self.austria, score=0)
+        GamePlayer.objects.create(player=self.p2, game=g1, power=self.england, score=1)
+        GamePlayer.objects.create(player=self.p3, game=g1, power=self.france, score=2)
+        GamePlayer.objects.create(player=self.p4, game=g1, power=self.germany, score=3)
+        GamePlayer.objects.create(player=self.p5, game=g1, power=self.italy, score=4)
+        GamePlayer.objects.create(player=self.p6, game=g1, power=self.russia, score=5)
+        GamePlayer.objects.create(player=self.p7, game=g1, power=self.turkey, score=6)
+        GamePlayer.objects.create(player=self.p12, game=g2, power=self.austria, score=0)
+        GamePlayer.objects.create(player=self.p11, game=g2, power=self.england, score=1)
+        GamePlayer.objects.create(player=self.p10, game=g2, power=self.france, score=2)
+        GamePlayer.objects.create(player=self.p9, game=g2, power=self.germany, score=3)
+        GamePlayer.objects.create(player=self.p8, game=g2, power=self.italy, score=4)
+        GamePlayer.objects.create(player=self.p7, game=g2, power=self.russia, score=5)
+        GamePlayer.objects.create(player=self.p6, game=g2, power=self.turkey, score=6)
+
+        # Now we can test the RoundScoringSystem
+        expected_results = {self.p1: 0,
+                            self.p2: 1,
+                            self.p3: 2,
+                            self.p4: 3,
+                            self.p5: 4,
+                            self.p6: 11, # Sum of 5 and 6
+                            self.p7: 11, # Sum of 5 and 6
+                            self.p8: 4,
+                            self.p9: 3,
+                            self.p10: 2,
+                            self.p11: 1,
+                            self.p12: 0,
+                           }
+        scores = r.scores(force_recalculation=True)
+        for p, s in expected_results.items():
+            with self.subTest(player=p):
+                self.assertEqual(scores[p], s)
+
+        # Clean up
+        t.delete()
+
     # RScoringBest.__str__()
     def test_rscoringbest0_str(self):
         # TODO This depends on the ordering
