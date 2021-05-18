@@ -74,8 +74,8 @@ SPRING = 'spring'
 FALL = 'fall'
 WINTER = 'winter'
 
-# Unit types on Bacstabbr
-UINTS = ['A', 'F']
+# Unit types on Backstabbr
+UNITS = ['A', 'F']
 
 # Javascript regexes
 DOTS = re.compile('var territories = (.*);')

@@ -107,7 +107,7 @@ def view_classification_csv(request, tournament_id):
                     'HOMONYME': '1',  # User Guide says "Set to 1"
                     'RANK': rank,
                     # No. of players with the same rank
-                    'EXAEQUO': len([s for x, s in t_positions_and_scores.values() if s == p_score]),
+                    'EXAEQUO': len([s for _, s in t_positions_and_scores.values() if s == p_score]),
                     'SCORE': p_score,
                    }
         # Add in round score for each round played

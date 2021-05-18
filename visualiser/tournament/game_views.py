@@ -223,7 +223,6 @@ def _blank_row_num(game, queryset, final_year):
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them four
     years_to_go = 4
-    last_year_played = game.final_year()
     if final_year:
         # How many years do we have entered already?
         years = queryset.aggregate(Count('year', distinct=True))['year__count']
