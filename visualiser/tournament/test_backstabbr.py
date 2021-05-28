@@ -40,7 +40,8 @@ class BackstabbrTests(TestCase):
         for k, v in results.items():
             with self.subTest(power=k):
                 self.assertEqual(g.powers[k][0], v[0])
-                self.assertEqual(g.powers[k][1], v[1])
+                # The "Display name" can be chnaged, but the number should still match
+                self.assertEqual(g.powers[k][1].split('#')[-1], v[1].split('#')[-1])
 
     @tag('backstabbr')
     def test_backstabbr_game_solo(self):
