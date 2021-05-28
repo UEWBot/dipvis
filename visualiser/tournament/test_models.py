@@ -29,7 +29,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SPRING
+from tournament.models import SPRING, FALL
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -2350,9 +2350,18 @@ class ModelTests(TestCase):
     def test_game_passed_draw_none(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
-        dp = DrawProposal.objects.create(game=g, year=1905, season='S', passed=False, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=SPRING,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertIsNone(g.passed_draw())
         dp.delete()
 
@@ -2360,30 +2369,66 @@ class ModelTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g2 = t.round_numbered(2).game_set.get(name='g13')
         g1 = t.round_numbered(2).game_set.get(name='g14')
-        dp = DrawProposal.objects.create(game=g1, year=1905, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g1,
+                                         year=1905,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertIsNone(g2.passed_draw())
         dp.delete()
 
     def test_game_passed_draw_one(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
-        dp = DrawProposal.objects.create(game=g, year=1905, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertEqual(g.passed_draw(), dp)
         dp.delete()
 
     def test_game_passed_draw_two(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
-        dp1 = DrawProposal.objects.create(game=g, year=1905, season='S', passed=False, proposer=self.austria,
-                                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
-        dp2 = DrawProposal.objects.create(game=g, year=1905, season='F', passed=True, proposer=self.austria,
-                                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp1 = DrawProposal.objects.create(game=g,
+                                          year=1905,
+                                          season=SPRING,
+                                          passed=False,
+                                          proposer=self.austria)
+        dp1.drawing_powers.add(self.austria)
+        dp1.drawing_powers.add(self.england)
+        dp1.drawing_powers.add(self.france)
+        dp1.drawing_powers.add(self.germany)
+        dp1.drawing_powers.add(self.italy)
+        dp1.drawing_powers.add(self.russia)
+        dp1.drawing_powers.add(self.turkey)
+        dp2 = DrawProposal.objects.create(game=g,
+                                          year=1905,
+                                          season=FALL,
+                                          passed=True,
+                                          proposer=self.austria)
+        dp2.drawing_powers.add(self.austria)
+        dp2.drawing_powers.add(self.england)
+        dp2.drawing_powers.add(self.france)
+        dp2.drawing_powers.add(self.germany)
+        dp2.drawing_powers.add(self.italy)
+        dp2.drawing_powers.add(self.russia)
+        dp2.drawing_powers.add(self.turkey)
         self.assertEqual(g.passed_draw(), dp2)
         dp1.delete()
         dp2.delete()
@@ -2512,26 +2557,48 @@ class ModelTests(TestCase):
     def test_game_result_str_passed_draw(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertIn('Vote passed ', g.result_str())
         dp.delete()
 
     def test_game_result_str_conceded(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.england,
-                                         power_1=self.england)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=self.england)
+        dp.drawing_powers.add(self.england)
         self.assertIn('conceded ', g.result_str())
         dp.delete()
 
     def test_game_result_str_failed_draw(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
-        dp = DrawProposal.objects.create(game=g, year=1901, season='S', passed=False, proposer=self.austria,
-                                         power_1=self.austria, power_2=self.england, power_3=self.france,
-                                         power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=SPRING,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         # Game is still ongoing
         self.assertIsNone(g.result_str())
         dp.delete()
@@ -2871,124 +2938,260 @@ class ModelTests(TestCase):
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
         self.assertEqual(dp.draw_size(), 1)
+        dp.delete()
 
     def test_draw_proposal_draw_size_all(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertEqual(dp.draw_size(), 7)
+        dp.delete()
 
     # DrawProposal.powers()
     def test_draw_proposal_powers_one(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
         self.assertEqual(len(dp.powers()), 1)
+        dp.delete()
 
     def test_draw_proposal_powers_all(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertEqual(len(dp.powers()), 7)
+        dp.delete()
 
     # DrawProposal.power_is_part()
     def test_draw_proposal_power_is_part_one(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
         with self.subTest(power=self.austria):
             self.assertEqual(dp.power_is_part(self.austria), True)
-        for power in [self.england, self.france, self.germany, self.italy, self.russia, self.turkey]:
+        for power in [self.england,
+                      self.france,
+                      self.germany,
+                      self.italy,
+                      self.russia,
+                      self.turkey]:
             with self.subTest(power=power):
                 self.assertEqual(dp.power_is_part(power), False)
+        dp.delete()
 
     def test_draw_proposal_power_is_part_all(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
-        for power in [self.austria, self.england, self.france, self.germany, self.italy, self.russia, self.turkey]:
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        for power in [self.austria,
+                      self.england,
+                      self.france,
+                      self.germany,
+                      self.italy,
+                      self.russia,
+                      self.turkey]:
             with self.subTest(power=power):
                 self.assertEqual(dp.power_is_part(self.austria), True)
+        dp.delete()
 
     # DrawProposal.votes_against()
     def test_draw_proposal_votes_against_none(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        dp = DrawProposal(game=g, year=1910, season='F', votes_in_favour=7, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         votes_in_favour=7,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertEqual(dp.votes_against(), 0)
+        dp.delete()
 
     def test_draw_proposal_votes_against_some(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        dp = DrawProposal(game=g, year=1910, season='F', votes_in_favour=2, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         votes_in_favour=2,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertEqual(dp.votes_against(), 5)
+        dp.delete()
 
     def test_draw_proposal_votes_against_exception(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertRaises(TypeError, dp.votes_against)
+        dp.delete()
 
     # DrawProposal.clean()
     def test_draw_proposal_clean_with_duplicates(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.austria)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_clean_with_gap(self):
         g = Game.objects.first()
-        dp = DrawProposal(game=g, year=1910, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_3=self.england)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_with_dead_powers(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1905, season='S', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=SPRING,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_missing_power_dias(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1901, season='F', passed=False, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_too_late(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1903, season='F', passed=True, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1903,
+                                         season=FALL,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_multiple_successful(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         done = g.is_finished
-        dp1 = DrawProposal.objects.create(game=g, year=1901, season='F', passed=True, proposer=self.austria,
-                                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                                          power_4=self.germany, power_5=self.italy, power_6=self.russia,
-                                          power_7=self.turkey)
-        dp2 = DrawProposal(game=g, year=1902, season='F', passed=True, proposer=self.austria,
-                           power_1=self.austria, power_2=self.england, power_3=self.france,
-                           power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp1 = DrawProposal.objects.create(game=g,
+                                          year=1901,
+                                          season=FALL,
+                                          passed=True,
+                                          proposer=self.austria)
+        dp1.drawing_powers.add(self.austria)
+        dp1.drawing_powers.add(self.england)
+        dp1.drawing_powers.add(self.france)
+        dp1.drawing_powers.add(self.germany)
+        dp1.drawing_powers.add(self.italy)
+        dp1.drawing_powers.add(self.russia)
+        dp1.drawing_powers.add(self.turkey)
+        dp2 = DrawProposal(game=g,
+                           year=1902,
+                           season=FALL,
+                           passed=True,
+                           proposer=self.austria)
         self.assertRaises(ValidationError, dp2.clean)
         # Clean up
         dp1.delete()
@@ -2998,60 +3201,107 @@ class ModelTests(TestCase):
     def test_draw_proposal_clean_passed_not_set(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1905, season='F', proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_clean_passed_false(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1905, season='F', passed=False, proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.russia,
-                          power_5=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         # This one should be fine
         dp.clean()
+        dp.delete()
 
     def test_draw_proposal_clean_passed_true(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1905, season='F', passed=True, proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.russia,
-                          power_5=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         # This one should be fine
         dp.clean()
+        dp.delete()
 
     def test_draw_proposal_clean_votes_in_favour_seven(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        dp = DrawProposal(game=g, year=1905, season='F', votes_in_favour=7, proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey, power_7=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         votes_in_favour=7,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
         # This one should be fine
         dp.clean()
+        dp.delete()
 
     def test_draw_proposal_clean_votes_in_favour_zero(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        dp = DrawProposal(game=g, year=1905, season='F', votes_in_favour=0, proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey, power_7=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         votes_in_favour=0,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
         # This one should be fine
         dp.clean()
+        dp.delete()
 
     def test_draw_proposal_clean_votes_in_favour_not_set(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        dp = DrawProposal(game=g, year=1905, season='F', proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey, power_7=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
         self.assertRaises(ValidationError, dp.clean)
+        dp.delete()
 
     def test_draw_proposal_clean_votes_in_favour_too_late(self):
         t = Tournament.objects.get(name='t3')
@@ -3072,29 +3322,44 @@ class ModelTests(TestCase):
                                        year=1901,
                                        count=c)
         print(g.final_year())
-        dp = DrawProposal(game=g, year=1901, season='F', proposer=self.austria,
-                          votes_in_favour=7,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey, power_7=self.austria)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=FALL,
+                                         proposer=self.austria,
+                                         votes_in_favour=7)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
         self.assertRaises(ValidationError, dp.clean)
         # Clean up
         CentreCount.objects.filter(game=g, year=1901).delete()
+        dp.delete()
 
     def test_draw_proposal_clean_votes_in_favour_multiple_successful(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
-        dp1 = DrawProposal.objects.create(game=g, year=1901, season='F', proposer=self.austria,
-                                          votes_in_favour=7,
-                                          power_1=self.england, power_2=self.france,
-                                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                                          power_6=self.turkey, power_7=self.austria)
+        dp1 = DrawProposal.objects.create(game=g,
+                                          year=1901,
+                                          season=FALL,
+                                          proposer=self.austria,
+                                          votes_in_favour=7)
+        dp1.drawing_powers.add(self.england)
+        dp1.drawing_powers.add(self.france)
+        dp1.drawing_powers.add(self.germany)
+        dp1.drawing_powers.add(self.italy)
+        dp1.drawing_powers.add(self.russia)
+        dp1.drawing_powers.add(self.turkey)
+        dp1.drawing_powers.add(self.austria)
         self.assertTrue(dp1.passed)
-        dp2 = DrawProposal(game=g, year=1902, season='F', proposer=self.austria,
-                           votes_in_favour=7,
-                           power_1=self.england, power_2=self.france,
-                           power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                           power_6=self.turkey, power_7=self.austria)
+        dp2 = DrawProposal(game=g,
+                           year=1902,
+                           season=FALL,
+                           proposer=self.austria,
+                           votes_in_favour=7)
         self.assertRaises(ValidationError, dp2.clean)
         dp1.delete()
 
@@ -3106,11 +3371,18 @@ class ModelTests(TestCase):
         # Modify the game to not yet be finished
         g.is_finished = False
         g.save()
-        dp = DrawProposal(game=g, year=1905, season='F', votes_in_favour=7, proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey, power_7=self.austria)
-        dp.save()
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         votes_in_favour=7,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
         self.assertTrue(dp.passed)
         self.assertTrue(g.is_finished)
         # Cleanup
@@ -3122,11 +3394,18 @@ class ModelTests(TestCase):
         # Modify the game to not yet be finished
         g.is_finished = False
         g.save()
-        dp = DrawProposal(game=g, year=1905, season='F', votes_in_favour=6, proposer=self.austria,
-                          power_1=self.england, power_2=self.france,
-                          power_3=self.germany, power_4=self.italy, power_5=self.russia,
-                          power_6=self.turkey, power_7=self.austria)
-        dp.save()
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         votes_in_favour=6,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
         self.assertFalse(dp.passed)
         self.assertFalse(g.is_finished)
         # Cleanup
@@ -3138,12 +3417,21 @@ class ModelTests(TestCase):
     def test_drawproposal_str(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        dp = DrawProposal(game=g, year=1901, season='F', passed=True, proposer=self.austria,
-                          power_1=self.austria, power_2=self.england, power_3=self.france,
-                          power_4=self.germany, power_5=self.italy, power_6=self.russia,
-                          power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=FALL,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         # TODO Validate result
         str(dp)
+        dp.delete()
 
     # RoundPlayer.tournamentplayer()
     def test_round_player_tournamentplayer(self):

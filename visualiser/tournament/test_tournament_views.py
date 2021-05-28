@@ -29,6 +29,7 @@ from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import G_SCORING_SYSTEMS
+from tournament.models import SPRING
 from tournament.players import Player
 
 @override_settings(HOSTNAME='example.com')
@@ -277,16 +278,16 @@ class TournamentViewTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g41, year=1902, count=5)
         CentreCount.objects.create(power=cls.russia, game=g41, year=1902, count=8)
         CentreCount.objects.create(power=cls.turkey, game=g41, year=1902, count=5)
-        DrawProposal.objects.create(game=g41,
-                                    year=1903,
-                                    season='S',
-                                    passed=True,
-                                    proposer=cls.france,
-                                    power_1=cls.england,
-                                    power_2=cls.france,
-                                    power_3=cls.italy,
-                                    power_4=cls.russia,
-                                    power_5=cls.turkey)
+        dp = DrawProposal.objects.create(game=g41,
+                                         year=1903,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=cls.france)
+        dp.drawing_powers.add(cls.england)
+        dp.drawing_powers.add(cls.france)
+        dp.drawing_powers.add(cls.italy)
+        dp.drawing_powers.add(cls.russia)
+        dp.drawing_powers.add(cls.turkey)
         # Add CentreCounts for g42 - solo for Russia. Austria eliminated
         CentreCount.objects.create(power=cls.austria, game=g42, year=1901, count=4)
         CentreCount.objects.create(power=cls.england, game=g42, year=1901, count=4)

@@ -1592,77 +1592,35 @@ class DrawProposal(models.Model):
                                  null=True,
                                  related_name='+',
                                  on_delete=models.CASCADE)
-    power_1 = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    power_2 = models.ForeignKey(GreatPower,
-                                blank=True,
-                                null=True,
-                                related_name='+',
-                                on_delete=models.CASCADE)
-    power_3 = models.ForeignKey(GreatPower,
-                                blank=True,
-                                null=True,
-                                related_name='+',
-                                on_delete=models.CASCADE)
-    power_4 = models.ForeignKey(GreatPower,
-                                blank=True,
-                                null=True,
-                                related_name='+',
-                                on_delete=models.CASCADE)
-    power_5 = models.ForeignKey(GreatPower,
-                                blank=True,
-                                null=True,
-                                related_name='+',
-                                on_delete=models.CASCADE)
-    power_6 = models.ForeignKey(GreatPower,
-                                blank=True,
-                                null=True,
-                                related_name='+',
-                                on_delete=models.CASCADE)
-    power_7 = models.ForeignKey(GreatPower,
-                                blank=True,
-                                null=True,
-                                related_name='+',
-                                on_delete=models.CASCADE)
+    drawing_powers = models.ManyToManyField(GreatPower, related_name='+')
     votes_in_favour = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
                                                        validators=[validate_vote_count])
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['game'],
+                                    condition=models.Q(passed=True),
+                                    name='only one passed'),
+        ]
 
     def draw_size(self):
         """
         Returns the number of powers included in the DrawProposal.
         """
-        return len(self.powers())
+        return self.drawing_powers.count()
 
     def powers(self):
         """
         Returns a list of powers included in the draw proposal.
         """
-        retval = []
-        for name, value in self.__dict__.items():
-            if name.startswith('power_'):
-                if value:
-                    retval.append(GreatPower.objects.get(pk=value))
-        return retval
+        return list(self.drawing_powers.all())
 
     def power_is_part(self, power):
         """
         Returns a Boolean indicating whether the specified power is included.
         """
-        if self.power_1 == power:
-            return True
-        if self.power_2 == power:
-            return True
-        if self.power_3 == power:
-            return True
-        if self.power_4 == power:
-            return True
-        if self.power_5 == power:
-            return True
-        if self.power_6 == power:
-            return True
-        if self.power_7 == power:
-            return True
-        return False
+        return self.drawing_powers.filter(pk=power.pk).exists()
 
     def votes_against(self):
         """
@@ -1679,9 +1637,6 @@ class DrawProposal(models.Model):
     def clean(self):
         """
         Validate the object.
-        The Power_N attributes must be used in numerical order.
-        Each GreatPower must only appear a maximum of once in the Power_N
-        attributes.
         Only one DrawProposal for a given Game can be successful.
         A successful DrawProposal for a Game cannot happen after any
         CentreCount.
@@ -1691,22 +1646,6 @@ class DrawProposal(models.Model):
         If the Tournament has its draw_secrecy attribute set to COUNTS,
         the votes_in_favour attribute must be set.
         """
-        # No skipping powers
-        found_null = False
-        for n in range(1, 8):
-            if not self.__dict__['power_%d_id' % n]:
-                found_null = True
-            elif found_null:
-                raise ValidationError(_(u'Draw powers should go as early as possible'))
-        # Each power must be unique
-        powers = set()
-        for name, value in self.__dict__.items():
-            if value and name.startswith('power_'):
-                power = GreatPower.objects.get(pk=value)
-                if power in powers:
-                    raise ValidationError(_(u'%(power)s present more than once'),
-                                          params={'power':  power})
-                powers.add(power)
         # Figure out how many powers are still alive
         survivors = len(self.game.survivors(self.year))
         if self.votes_in_favour and (self.votes_in_favour > survivors):
@@ -1728,21 +1667,23 @@ class DrawProposal(models.Model):
             raise ValidationError(_(u'Game already has a centre count for %(year)d'),
                                   params={'year': final_year})
         # No dead powers included
-        # If DIAS, all alive powers must be included
-        dias = self.game.is_dias()
-        # Get the most recent CentreCounts before the DrawProposal
-        scs = self.game.centrecount_set.filter(year__lt=self.year)
-        # We will always have at least the 1900 CentreCounts, and DrawProposal.year must be >= 1901
-        scs = scs.filter(year=scs.last().year)
-        for sc in scs:
-            if sc.power in powers:
-                if sc.count == 0:
-                    raise ValidationError(_(u'Dead power %(power)s included in proposal'),
-                                          params={'power': sc.power})
-            else:
-                if dias and sc.count > 0:
-                    raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
-                                          params={'power': sc.power})
+        # We can only use drawing_powers after the pk has been set
+        if self.pk is not None:
+            # If DIAS, all alive powers must be included
+            dias = self.game.is_dias()
+            # Get the most recent CentreCounts before the DrawProposal
+            scs = self.game.centrecount_set.filter(year__lt=self.year)
+            # We will always have at least the 1900 CentreCounts, and DrawProposal.year must be >= 1901
+            scs = scs.filter(year=scs.last().year)
+            for sc in scs:
+                if self.drawing_powers.filter(pk=sc.power.pk).exists():
+                    if sc.count == 0:
+                        raise ValidationError(_(u'Dead power %(power)s included in proposal'),
+                                              params={'power': sc.power})
+                else:
+                    if dias and sc.count > 0:
+                        raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
+                                              params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
         if self.game.the_round.tournament.draw_secrecy == Tournament.SECRET:
             if self.passed is None:
@@ -1760,6 +1701,10 @@ class DrawProposal(models.Model):
             if self.votes_in_favour:
                 # Votes must be unanimous
                 self.passed = (self.votes_in_favour == survivors)
+        # Ensure that we never save a second successful DrawProposal for a single Game
+        # (ideally, we'd do this with database constraints, but we're not there yet)
+        if self.passed and DrawProposal.objects.filter(game=self.game, passed=True).exclude(pk=self.pk).exists():
+            raise ValidationError(_('Successful DrawProposal already exists for the Game'))
         super().save(*args, **kwargs)
         # Does this complete the game ?
         if self.passed:

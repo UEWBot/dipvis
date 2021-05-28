@@ -241,19 +241,14 @@ def clone_tournament(t):
                                           power=gp.power,
                                           score=gp.score)
             for dp in g.drawproposal_set.all():
-                DrawProposal.objects.create(game=new_g,
-                                            year=dp.year,
-                                            season=dp.season,
-                                            passed=dp.passed,
-                                            proposer=dp.proposer,
-                                            power_1=dp.power_1,
-                                            power_2=dp.power_2,
-                                            power_3=dp.power_3,
-                                            power_4=dp.power_4,
-                                            power_5=dp.power_5,
-                                            power_6=dp.power_6,
-                                            power_7=dp.power_7,
-                                            votes_in_favour=dp.votes_in_favour)
+                new_dp = DrawProposal.objects.create(game=new_g,
+                                                     year=dp.year,
+                                                     season=dp.season,
+                                                     passed=dp.passed,
+                                                     proposer=dp.proposer,
+                                                     votes_in_favour=dp.votes_in_favour)
+                for p in dp.drawing_powers.all():
+                    new_dp.drawing_powers.add(p)
             for gi in g.gameimage_set.all():
                 # Skip the auto-created image
                 GameImage.objects.get_or_create(game=new_g,

@@ -24,6 +24,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import SPRING
 from tournament.models import find_game_scoring_system
 from tournament.tournament_game_state import TournamentGameState
 
@@ -229,9 +230,18 @@ class GameScoringTests(TestCase):
     def test_g_scoring_draws_7way_draw(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                    power_1=self.austria, power_2=self.england, power_3=self.france,
-                                    power_4=self.germany, power_5=self.italy, power_6=self.russia, power_7=self.turkey)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
         scs = g.centrecount_set.filter(year__lte=1901)
         tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
@@ -244,9 +254,15 @@ class GameScoringTests(TestCase):
     def test_g_scoring_draws_4way_draw(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        DrawProposal.objects.create(game=g, year=1901, season='S', passed=True, proposer=self.austria,
-                                    power_1=self.austria, power_2=self.england, power_3=self.russia,
-                                    power_4=self.germany)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.germany)
         scs = g.centrecount_set.filter(year__lte=1901)
         tgs = TournamentGameState(scs)
         system = find_game_scoring_system('Draw size')
@@ -259,6 +275,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(scores[p], 0.0)
         # 2 neutrals don't matter
         self.assertEqual(sum(scores.values()), 100)
+        # Clean up
+        dp.delete()
 
     def test_g_scoring_draws_eliminations(self):
         """No draw, no solo, but with powers eliminated"""

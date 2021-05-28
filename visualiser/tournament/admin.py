@@ -34,14 +34,6 @@ class CentreCountAdmin(admin.ModelAdmin):
 
 class DrawProposalAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
-    fieldsets = (
-        (None, {
-            'fields': ('game', 'season', 'year', 'proposer', 'passed', 'votes_in_favour')
-        }),
-        ('Powers', {
-            'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')
-        })
-    )
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer

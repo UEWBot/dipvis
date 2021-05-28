@@ -299,21 +299,21 @@ class WddViewTests(TestCase):
                                    year=1909,
                                    count=0)
         # Another with an elimination and a draw
-        DrawProposal.objects.create(game=g2,
-                                    year=1908,
-                                    season=FALL,
-                                    passed=False,
-                                    proposer=germany,
-                                    power_1=germany,
-                                    power_2=france,
-                                    power_3=england)
-        DrawProposal.objects.create(game=g2,
-                                    year=1910,
-                                    season=FALL,
-                                    passed=True,
-                                    proposer=france,
-                                    power_1=england,
-                                    power_2=france)
+        dp = DrawProposal.objects.create(game=g2,
+                                         year=1908,
+                                         season=FALL,
+                                         passed=False,
+                                         proposer=germany)
+        dp.drawing_powers.add(germany)
+        dp.drawing_powers.add(france)
+        dp.drawing_powers.add(england)
+        dp = DrawProposal.objects.create(game=g2,
+                                         year=1910,
+                                         season=FALL,
+                                         passed=True,
+                                         proposer=france)
+        dp.drawing_powers.add(england)
+        dp.drawing_powers.add(france)
         CentreCount.objects.create(power=austria,
                                    game=g2,
                                    year=1908,

@@ -483,11 +483,6 @@ def draw_vote(request, tournament_id, game_name):
             scs = g.survivors(years_played[-1])
             countries = [sc.power for sc in scs]
 
-        # Create a dict from countries, to pass as kwargs
-        kwargs = {}
-        for i, c in enumerate(countries, start=1):
-            kwargs['power_%d' % i] = c
-
         passed = form.cleaned_data.get('passed')
         votes_in_favour = form.cleaned_data.get('votes_in_favour')
 
@@ -497,8 +492,7 @@ def draw_vote(request, tournament_id, game_name):
                           season=form.cleaned_data['season'],
                           passed=passed,
                           votes_in_favour=votes_in_favour,
-                          proposer=form.cleaned_data['proposer'],
-                          **kwargs)
+                          proposer=form.cleaned_data['proposer'])
         try:
             dp.full_clean()
         except ValidationError as e:
@@ -509,6 +503,8 @@ def draw_vote(request, tournament_id, game_name):
                            'game': g,
                            'form': form})
         dp.save()
+        for c in countries:
+            dp.drawing_powers.add(c)
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
                                             args=(tournament_id, game_name)))
