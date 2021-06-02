@@ -321,81 +321,77 @@ def sc_counts(request, tournament_id, game_name):
                                prefix='death',
                                initial=death_data)
     if formset.is_valid() and end_form.is_valid() and death_form.is_valid():
-        for form in formset:
-            try:
-                year = form.cleaned_data['year']
-            except KeyError:
-                # Must be one of the extra forms, still blank
-                continue
+        try:
             with transaction.atomic():
-                for name, value in form.cleaned_data.items():
+                for form in formset:
+                    try:
+                        year = form.cleaned_data['year']
+                    except KeyError:
+                        # Must be one of the extra forms, still blank
+                        continue
+                    with transaction.atomic():
+                        for name, value in form.cleaned_data.items():
+                            try:
+                                power = GreatPower.objects.get(name=name)
+                            except GreatPower.DoesNotExist:
+                                continue
+                            # Can't use update_or_create() because we need to call full_clean()
+                            try:
+                                i = CentreCount.objects.get(power=power,
+                                                            game=g,
+                                                            year=year)
+                                # Ensure the count has the value we want
+                                i.count = value
+                            except CentreCount.DoesNotExist:
+                                i = CentreCount(power=power,
+                                                game=g,
+                                                year=year,
+                                                count=value)
+                            try:
+                                i.full_clean()
+                            except ValidationError as e:
+                                #form.add_error(name, e)
+                                form.add_error(None, e)
+                                raise e
+                            i.save()
+
+                # Add eliminations for any eliminated powers, if needed
+                for name, value in death_form.cleaned_data.items():
+                    if value is None:
+                        continue
                     try:
                         power = GreatPower.objects.get(name=name)
                     except GreatPower.DoesNotExist:
                         continue
-                    # Can't use update_or_create() because we need to call full_clean()
                     try:
                         i = CentreCount.objects.get(power=power,
                                                     game=g,
-                                                    year=year)
-                        # Ensure the count has the value we want
-                        i.count = value
+                                                    year=value)
                     except CentreCount.DoesNotExist:
+                        # Create a zero-SC count
                         i = CentreCount(power=power,
                                         game=g,
-                                        year=year,
-                                        count=value)
+                                        year=value,
+                                        count=0)
                     try:
+                        if i.count != 0:
+                            raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
+                                                  % {'power': power,
+                                                     'count': i.count,
+                                                     'year': value})
                         i.full_clean()
                     except ValidationError as e:
-                        #form.add_error(name, e)
-                        form.add_error(None, e)
-                        return render(request,
-                                      'games/sc_counts_form.html',
-                                      {'formset': formset,
-                                       'end_form': end_form,
-                                       'death_form': death_form,
-                                       'tournament': t,
-                                       'game': g})
+                        death_form.add_error(name, e)
+                        raise e
                     i.save()
-
-        # Add eliminations for any eliminated powers, if needed
-        for name, value in death_form.cleaned_data.items():
-            if value is None:
-                continue
-            try:
-                power = GreatPower.objects.get(name=name)
-            except GreatPower.DoesNotExist:
-                continue
-            try:
-                i = CentreCount.objects.get(power=power,
-                                            game=g,
-                                            year=value)
-            except CentreCount.DoesNotExist:
-                # Create a zero-SC count
-                i = CentreCount(power=power,
-                                game=g,
-                                year=value,
-                                count=0)
-            try:
-                if i.count != 0:
-                    raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
-                                          % {'power': power,
-                                             'count': i.count,
-                                             'year': value})
-                i.full_clean()
-            except ValidationError as e:
-                death_form.add_error(name, e)
-                # We have already updated the CentreCounts, but let's do nothing else
-                return render(request,
-                              'games/sc_counts_form.html',
-                              {'formset': formset,
-                               'end_form': end_form,
-                               'death_form': death_form,
-                               'tournament': t,
-                               'game': g})
-
-            i.save()
+        except ValidationError as e:
+            return render(request,
+                          'games/sc_counts_form.html',
+                          {'formset': formset,
+                           'end_form': end_form,
+                           'death_form': death_form,
+                           'tournament': t,
+                           'game': g})
 
         # Set the "game over" flag as appropriate
         # Game is over if it reached the final year,

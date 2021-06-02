@@ -448,8 +448,8 @@ class GameViewTests(TestCase):
         self.assertEqual(response.context['formset'].total_error_count(), 1)
 
     def test_post_enter_scs_zombie(self):
-        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1907).count(), 0)
-        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1908).count(), 0)
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1908).exists())
         counts = {1907: {self.austria: 5,
                          self.england: 5,
                          self.france: 5,
@@ -488,14 +488,13 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Italy died in 1908, but also had 4 SCs
         self.assertIn(str(self.italy), response.context['death_form'].errors.keys())
-        # Clean up
-        # (the form will add CentreCounts despite the error)
-        CentreCount.objects.filter(game=self.g1, year=1907).delete()
-        CentreCount.objects.filter(game=self.g1, year=1908).delete()
+        # No new CentreCounts should have been created
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1908).exists())
 
     def test_post_enter_scs_zombie_2(self):
-        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1907).count(), 0)
-        self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1908).count(), 0)
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1908).exists())
         counts = {1907: {self.austria: 5,
                          self.england: 5,
                          self.france: 5,
@@ -533,10 +532,9 @@ class GameViewTests(TestCase):
         # Should get an error for Russia recovering from an elimination
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['formset'].total_error_count(), 1)
-        # Clean up
-        # (the form will add some CentreCounts despite the error)
-        CentreCount.objects.filter(game=self.g1, year=1907).delete()
-        CentreCount.objects.filter(game=self.g1, year=1908).delete()
+        # No new CentreCounts should have been created
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
+        self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1908).exists())
 
     def test_sc_owners(self):
         response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
