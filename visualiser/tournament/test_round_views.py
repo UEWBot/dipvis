@@ -679,6 +679,72 @@ class RoundViewTests(TestCase):
             rp.game_count = initial_values[rp]
             rp.save()
 
+    def test_get_seven_standbys(self):
+        # Check that we can fill a game with standby players
+        self.assertEqual(RoundPlayer.objects.filter(the_round=self.r11, standby=True).count(), 0)
+        # Set it up so we have 5 players and 8 standbys
+        self.rp11.standby = True
+        self.rp11.save()
+        self.rp12.standby = True
+        self.rp12.save()
+        self.rp14.standby = True
+        self.rp14.save()
+        self.rp15.standby = True
+        self.rp15.save()
+        self.rp18.standby = True
+        self.rp18.save()
+        self.rp110.standby = True
+        self.rp110.save()
+        self.rp111.standby = True
+        self.rp111.save()
+        self.rp112.standby = True
+        self.rp112.save()
+        # Remember the game_counts
+        initial_values = {}
+        for rp in self.r11.roundplayer_set.all():
+            initial_values[rp] = rp.game_count
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'standby_0': str(self.rp12.pk),
+                          'standby_1': str(self.rp18.pk),
+                          })
+        response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
+        # Check that the game_counts have been updated accordingly
+        self.rp11.refresh_from_db()
+        self.assertEqual(self.rp11.game_count, 0)
+        self.rp12.refresh_from_db()
+        self.assertEqual(self.rp12.game_count, 1)
+        self.rp13.refresh_from_db()
+        self.assertEqual(self.rp13.game_count, 1)
+        self.rp14.refresh_from_db()
+        self.assertEqual(self.rp14.game_count, 0)
+        self.rp15.refresh_from_db()
+        self.assertEqual(self.rp15.game_count, 0)
+        self.rp16.refresh_from_db()
+        self.assertEqual(self.rp16.game_count, 1)
+        self.rp17.refresh_from_db()
+        self.assertEqual(self.rp17.game_count, 1)
+        self.rp18.refresh_from_db()
+        self.assertEqual(self.rp18.game_count, 1)
+        self.rp19.refresh_from_db()
+        self.assertEqual(self.rp19.game_count, 1)
+        self.rp110.refresh_from_db()
+        self.assertEqual(self.rp110.game_count, 0)
+        self.rp111.refresh_from_db()
+        self.assertEqual(self.rp111.game_count, 0)
+        self.rp112.refresh_from_db()
+        self.assertEqual(self.rp112.game_count, 0)
+        self.rp113.refresh_from_db()
+        self.assertEqual(self.rp113.game_count, 1)
+        # Clean up
+        for rp in self.r11.roundplayer_set.all():
+            rp.game_count = initial_values[rp]
+            rp.standby = False
+            rp.save()
+
     def test_seed_games_not_logged_in(self):
         response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)))
         self.assertEqual(response.status_code, 302)

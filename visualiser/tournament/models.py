@@ -1659,6 +1659,8 @@ class RoundPlayer(models.Model):
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
+    standby = models.BooleanField(default=False,
+                                  help_text=_('check if the player would prefer not to play this round'))
     score = models.FloatField(default=0.0)
     game_count = models.PositiveIntegerField(default=1,
                                              help_text=_('number of games being played this round'))

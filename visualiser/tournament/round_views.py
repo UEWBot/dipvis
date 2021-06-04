@@ -126,7 +126,7 @@ def blind_auction_csv(request, tournament_id, round_num):
 
 @permission_required('tournament.add_roundplayer')
 def roll_call(request, tournament_id, round_num):
-    """Provide a form to specify which players are playing each round"""
+    """Provide a form to specify which players are playing this round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PlayerRoundFormset = formset_factory(PlayerRoundForm,
                                          extra=2,
@@ -139,8 +139,14 @@ def roll_call(request, tournament_id, round_num):
         current = {'player': tp.player}
         rps = tp.roundplayers()
         # Is this player listed as playing this round ?
-        played = rps.filter(the_round=r).exists()
-        current['present'] = played
+        try:
+            rp = rps.get(the_round=r)
+        except RoundPlayer.DoesNotExist:
+            current['present'] = False
+            current['standby'] = False
+        else:
+            current['present'] = True
+            current['standby'] = rp.standby
         player_data.append(current)
     formset = PlayerRoundFormset(request.POST or None,
                                  tournament=t,
@@ -157,26 +163,23 @@ def roll_call(request, tournament_id, round_num):
             # Ensure that this Player is in the Tournament
             TournamentPlayer.objects.get_or_create(player=p,
                                                    tournament=t)
-            for r_name, value in form.cleaned_data.items():
-                if r_name == 'player':
-                    # This column is just for the user
-                    continue
-                # Ignore non-bool fields and ones that aren't True
-                if value is True:
-                    # Ensure that we have a corresponding RoundPlayer
-                    RoundPlayer.objects.update_or_create(player=p,
-                                                         the_round=r,
-                                                         # Reset game_count in case we've been here before
-                                                         defaults={'game_count': 1})
-                elif r.game_set.filter(gameplayer__player=p).exists():
-                    # Refuse to delete this one
-                    form.add_error(None, _('Player did play this round'))
-                    errors_added = True
-                else:
-                    # delete any corresponding RoundPlayer
-                    # This could be a player who was previously checked-off in error
-                    RoundPlayer.objects.filter(player=p,
-                                               the_round=r).delete()
+            if form.cleaned_data['present'] is True:
+                # Ensure that we have a corresponding RoundPlayer
+                is_standby = form.cleaned_data['standby']
+                RoundPlayer.objects.update_or_create(player=p,
+                                                     the_round=r,
+                                                     # Reset game_count in case we've been here before
+                                                     defaults={'game_count': 0 if is_standby else 1,
+                                                               'standby': is_standby})
+            elif r.game_set.filter(gameplayer__player=p).exists():
+                # Refuse to delete this one
+                form.add_error(None, _('Player did play this round'))
+                errors_added = True
+            else:
+                # delete any corresponding RoundPlayer
+                # This could be a player who was previously checked-off in error
+                RoundPlayer.objects.filter(player=p,
+                                           the_round=r).delete()
         if not errors_added:
             r = t.current_round()
             # we only want to seed boards if it's the current round
@@ -215,16 +218,34 @@ def get_seven(request, tournament_id, round_num):
     """Provide a form to get a multiple of seven players for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    count = r.roundplayer_set.count()
-    # If we have fewer than seven players, we're stuffed
-    if count < 7:
+    rps = r.roundplayer_set.all()
+    present = r.roundplayer_set.count()
+    # If we have fewer than seven players in total, we're stuffed
+    if present < 7:
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
-    sitters = count % 7
-    doubles = 7 - sitters
+    standbys = r.roundplayer_set.filter(standby=True).count()
+    playing = present - standbys
+    # We can always ask a partial board to sit the round out
+    sitters = playing % 7
+    if sitters > 0:
+        # Do we have enough standbys to make the partial board up to full?
+        if standbys >= 7 - sitters:
+            all_standbys_needed = False
+            standbys = 7 - sitters
+            doubles = 0
+            sitters = 0
+        else:
+            all_standbys_needed = True
+            doubles = 7 - (sitters + standbys)
+    else:
+        standbys = 0
+        doubles = 0
     context = {'tournament': t,
                'round': r,
-               'count': count,
+               'present': present,
+               'playing': playing,
+               'standbys': standbys,
                'sitters': sitters,
                'doubles': doubles}
     form = GetSevenPlayersForm(request.POST or None,
@@ -232,21 +253,28 @@ def get_seven(request, tournament_id, round_num):
     if form.is_valid():
         # Update RoundPlayers to indicate number of games they're playing
         # First clear any old game_counts
-        for rp in r.roundplayer_set.exclude(game_count=1):
-            rp.game_count = 1
+        for rp in r.roundplayer_set.all():
+            if rp.standby and not all_standbys_needed:
+                rp.game_count = 0
+            else:
+                rp.game_count = 1
             rp.save()
+        if not all_standbys_needed:
+            for i in range(standbys):
+                rp = form.cleaned_data['standby_%d' % i]
+                if rp:
+                    rp.game_count = 1
+                    rp.save()
         for i in range(sitters):
             rp = form.cleaned_data['sitter_%d' % i]
             if rp:
                 rp.game_count = 0
                 rp.save()
-        if doubles != 7:
-            # We don't actually give the option of having 7 players play 2 boards
-            for i in range(doubles):
-                rp = form.cleaned_data['double_%d' % i]
-                if rp:
-                    rp.game_count = 2
-                    rp.save()
+        for i in range(doubles):
+            rp = form.cleaned_data['double_%d' % i]
+            if rp:
+                rp.game_count = 2
+                rp.save()
         return HttpResponseRedirect(reverse('seed_games',
                                             args=(tournament_id,
                                                   round_num)))

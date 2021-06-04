@@ -861,8 +861,9 @@ class GetSevenPlayersFormTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # We need a Tournament, with 2 Rounds, one with an exact multiple of 7,
-        # and one without
+        # We need a Tournament, with 3 Rounds, one with an exact multiple of 7,
+        # one that needs all standby players plus some to play two boards,
+        # and one that needs a subset of the standby players to play
         t = Tournament.objects.create(name='t1',
                                       start_date=timezone.now(),
                                       end_date=timezone.now(),
@@ -877,6 +878,10 @@ class GetSevenPlayersFormTest(TestCase):
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
                                       start=t.start_date + timedelta(hours=8))
+        cls.r3 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date + timedelta(hours=16))
 
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
@@ -900,17 +905,19 @@ class GetSevenPlayersFormTest(TestCase):
         TournamentPlayer.objects.create(player=p5, tournament=t)
         TournamentPlayer.objects.create(player=p6, tournament=t)
         TournamentPlayer.objects.create(player=p7, tournament=t)
+
         cls.rp1_1 = RoundPlayer.objects.create(player=p1, the_round=cls.r1)
         cls.rp1_2 = RoundPlayer.objects.create(player=p2, the_round=cls.r1)
         cls.rp1_3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1)
         cls.rp1_4 = RoundPlayer.objects.create(player=p4, the_round=cls.r1)
-        cls.rp1_5 = RoundPlayer.objects.create(player=p5, the_round=cls.r1)
+        cls.rp1_5 = RoundPlayer.objects.create(player=p5, the_round=cls.r1, standby=True)
         cls.rp1_7 = RoundPlayer.objects.create(player=p7, the_round=cls.r1)
         cls.rp1_8 = RoundPlayer.objects.create(player=p8, the_round=cls.r1)
         cls.rp1_9 = RoundPlayer.objects.create(player=p9, the_round=cls.r1)
         cls.rp1_10 = RoundPlayer.objects.create(player=p10, the_round=cls.r1)
         # Again, check sorting
         cls.rp1_6 = RoundPlayer.objects.create(player=p6, the_round=cls.r1)
+
         RoundPlayer.objects.create(player=p2, the_round=cls.r2)
         RoundPlayer.objects.create(player=p3, the_round=cls.r2)
         RoundPlayer.objects.create(player=p4, the_round=cls.r2)
@@ -919,14 +926,52 @@ class GetSevenPlayersFormTest(TestCase):
         RoundPlayer.objects.create(player=p7, the_round=cls.r2)
         RoundPlayer.objects.create(player=p8, the_round=cls.r2)
 
+        cls.rp3_1 = RoundPlayer.objects.create(player=p1, the_round=cls.r3, standby=True)
+        cls.rp3_2 = RoundPlayer.objects.create(player=p2, the_round=cls.r3)
+        cls.rp3_3 = RoundPlayer.objects.create(player=p3, the_round=cls.r3, standby=True)
+        cls.rp3_4 = RoundPlayer.objects.create(player=p4, the_round=cls.r3)
+        cls.rp3_5 = RoundPlayer.objects.create(player=p5, the_round=cls.r3, standby=True)
+        cls.rp3_7 = RoundPlayer.objects.create(player=p7, the_round=cls.r3)
+        cls.rp3_8 = RoundPlayer.objects.create(player=p8, the_round=cls.r3, standby=True)
+        cls.rp3_9 = RoundPlayer.objects.create(player=p9, the_round=cls.r3)
+        cls.rp3_10 = RoundPlayer.objects.create(player=p10, the_round=cls.r3)
+        # Again, check sorting
+        cls.rp3_6 = RoundPlayer.objects.create(player=p6, the_round=cls.r3, standby=True)
+
     def test_form_needs_round(self):
         # Omit the_round constructor parameter
         with self.assertRaises(KeyError):
             GetSevenPlayersForm()
 
-    def check_fields(self, prefix, count):
+    def test_sitters_fields(self):
+        # We should have 2 fields for players sitting out
+        prefix='sitter'
         form = GetSevenPlayersForm(the_round=self.r1)
-        for i in range(0, count):
+        for i in range(0, 2):
+            with self.subTest(i=i):
+                name = '%s_%d' % (prefix, i)
+                self.assertIn(name, form.fields)
+                the_choices = list(form.fields[name].choices)
+                # We should have one choice per non-standby RoundPlayer, plus the initial empty choice
+                self.assertEqual(len(the_choices), self.r1.roundplayer_set.filter(standby=False).count() + 1)
+                # The keys should be the RoundPlayer pks
+                self.assertEqual(the_choices[1][0], self.rp1_1.pk)
+                # and the values should be the Player names, in alphabetical order
+                self.assertEqual(the_choices[1][1], self.rp1_1.player.sortable_str())
+                self.assertEqual(the_choices[2][1], self.rp1_2.player.sortable_str())
+                self.assertEqual(the_choices[3][1], self.rp1_3.player.sortable_str())
+                self.assertEqual(the_choices[4][1], self.rp1_4.player.sortable_str())
+                self.assertEqual(the_choices[5][1], self.rp1_6.player.sortable_str())
+                self.assertEqual(the_choices[6][1], self.rp1_7.player.sortable_str())
+                self.assertEqual(the_choices[7][1], self.rp1_8.player.sortable_str())
+                self.assertEqual(the_choices[8][1], self.rp1_9.player.sortable_str())
+                self.assertEqual(the_choices[9][1], self.rp1_10.player.sortable_str())
+
+    def test_doubles_fields(self):
+        # We should have 4 fields for players playing two games
+        prefix='double'
+        form = GetSevenPlayersForm(the_round=self.r1)
+        for i in range(0, 4):
             with self.subTest(i=i):
                 name = '%s_%d' % (prefix, i)
                 self.assertIn(name, form.fields)
@@ -947,19 +992,16 @@ class GetSevenPlayersFormTest(TestCase):
                 self.assertEqual(the_choices[9][1], self.rp1_9.player.sortable_str())
                 self.assertEqual(the_choices[10][1], self.rp1_10.player.sortable_str())
 
-    def test_sitters_fields(self):
-        # We should have 3 fields for players sitting out
-        self.check_fields('sitter', 3)
-
-    def test_doubles_fields(self):
-        # We should have 4 fields for players playing two games
-        self.check_fields('double', 4)
+    def test_no_standbys_fields(self):
+        # We should have no standby fields if all standby players are needed
+        form = GetSevenPlayersForm(the_round=self.r1)
+        name = 'standby_0'
+        self.assertNotIn(name, form.fields)
 
     def test_success_sitters(self):
         # Valid form with people sitting out
         data = {'sitter_0': str(self.rp1_10.pk),
                 'sitter_1': str(self.rp1_7.pk),
-                'sitter_2': str(self.rp1_3.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertTrue(form.is_valid())
@@ -1008,9 +1050,8 @@ class GetSevenPlayersFormTest(TestCase):
 
     def test_sitting_twice(self):
         # One person listed twice as sitting out
-        data = {'sitter_0': str(self.rp1_10.pk),
+        data = {'sitter_0': str(self.rp1_3.pk),
                 'sitter_1': str(self.rp1_3.pk),
-                'sitter_2': str(self.rp1_3.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
@@ -1037,7 +1078,6 @@ class GetSevenPlayersFormTest(TestCase):
         # Both people sitting out and people playing two boards
         data = {'sitter_0': str(self.rp1_1.pk),
                 'sitter_1': str(self.rp1_2.pk),
-                'sitter_2': str(self.rp1_3.pk),
                 'double_0': str(self.rp1_4.pk),
                 'double_1': str(self.rp1_5.pk),
                 'double_2': str(self.rp1_6.pk),
@@ -1052,7 +1092,6 @@ class GetSevenPlayersFormTest(TestCase):
 
     def test_too_few_sitters(self):
         data = {'sitter_0': str(self.rp1_10.pk),
-                'sitter_1': str(self.rp1_7.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1)
         self.assertFalse(form.is_valid())
@@ -1078,6 +1117,36 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(the_round=self.r2)
         # Nothing needed
         self.assertEqual(len(form.fields), 0)
+
+    def test_standby_fields(self):
+        # We should have 2 fields for standby players needed to play in Round 3
+        prefix='standby'
+        form = GetSevenPlayersForm(the_round=self.r3)
+        for i in range(0, 2):
+            with self.subTest(i=i):
+                name = '%s_%d' % (prefix, i)
+                self.assertIn(name, form.fields)
+                the_choices = list(form.fields[name].choices)
+                # We should have one choice per standby RoundPlayer, plus the initial empty choice
+                self.assertEqual(len(the_choices), self.r3.roundplayer_set.filter(standby=True).count() + 1)
+                # The keys should be the RoundPlayer pks
+                self.assertEqual(the_choices[1][0], self.rp3_1.pk)
+                # and the values should be the Player names, in alphabetical order
+                self.assertEqual(the_choices[1][1], self.rp3_1.player.sortable_str())
+                self.assertEqual(the_choices[2][1], self.rp3_3.player.sortable_str())
+                self.assertEqual(the_choices[3][1], self.rp3_5.player.sortable_str())
+                self.assertEqual(the_choices[4][1], self.rp3_6.player.sortable_str())
+                self.assertEqual(the_choices[5][1], self.rp3_8.player.sortable_str())
+
+    def test_too_few_standbys(self):
+        data = {'standby_0': str(self.rp3_1.pk),
+               }
+        form = GetSevenPlayersForm(data, the_round=self.r3)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Too few standby players selected to play', form.errors['__all__'][0])
 
 
 class SCOwnerFormTest(TestCase):
@@ -1528,9 +1597,22 @@ class PlayerRoundFormTest(TestCase):
     def test_success(self):
         # Do everything right
         data = {'player': str(self.p1.pk),
-                'present': 'on'}
+                'present': 'on',
+                'standby': 'on'}
         initial = {'player': self.p1,
-                   'present': False}
+                   'present': False,
+                   'standby': False}
+        form = PlayerRoundForm(data,
+                               initial=initial,
+                               round_num=1)
+        self.assertTrue(form.is_valid())
+
+    def test_success2(self):
+        # Do everything right
+        data = {'player': str(self.p1.pk)}
+        initial = {'player': self.p1,
+                   'present': False,
+                   'standby': False}
         form = PlayerRoundForm(data,
                                initial=initial,
                                round_num=1)
@@ -1539,8 +1621,8 @@ class PlayerRoundFormTest(TestCase):
     def test_round_fields(self):
         # Check that the correct round fields are created
         form = PlayerRoundForm(round_num=2)
-        # We should have two fields - player and present
-        self.assertEqual(len(form.fields), 2)
+        # We should have three fields - player, present, and standby
+        self.assertEqual(len(form.fields), 3)
 
     def test_player_labels(self):
         # Check the player names
@@ -1627,6 +1709,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-player'] = str(self.p1.pk)
         data['form-0-present'] = 'ok'
+        data['form-0-standby'] = 'ok'
         data['form-1-player'] = str(self.p2.pk)
         ROUND_NUM = 2
         formset = self.PlayerRoundFormset(self.data,
@@ -1638,8 +1721,8 @@ class BasePlayerRoundFormsetTest(TestCase):
                 for field in form.fields:
                     if field == 'player':
                         continue
-                    # The only checkbox should be for round_num
-                    self.assertEqual(field, 'present')
+                    # There should be checkboxes for present and standby
+                    self.assertIn(field, ['present', 'standby'])
 
     def test_no_players(self):
         # Should be fine for a Tournament with no TournamentPlayers
