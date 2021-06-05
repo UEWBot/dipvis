@@ -10,6 +10,7 @@
   {% csrf_token %}
   <table class="form">
     <thead><tr>
+      <th></th>
       <th>{% trans "Player" %}</th>
       {% if tournament.is_virtual %}
         <th>{% trans "Backstabbr Username" %}</th>
@@ -30,6 +31,7 @@
     <tbody>
       {% for tp in tournament.tournamentplayer_set.all %}
         <tr class="{% cycle 'odd_row' 'even_row' %}">
+          <td>{{ forloop.counter }}</td>
           <td>{{ tp.player }}</td>
           {% if tournament.is_virtual %}
             <td>{{tp.backstabbr_username }}</td>
