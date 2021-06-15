@@ -672,6 +672,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
 
+    # GScoringWorldClassic
     def test_g_scoring_world_classic_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -752,6 +753,7 @@ class GameScoringTests(TestCase):
                     else:
                         self.assertEqual(s, 6)
 
+    # GScoringManorCon
     def test_g_scoring_manorcon_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -844,6 +846,7 @@ class GameScoringTests(TestCase):
                     else:
                         self.assertAlmostEqual(s, 0.6)
 
+    # GScoringWhipping
     def test_g_scoring_whipping_example_a(self):
         example_a = SimpleGameState(sc_counts={self.austria: 0,
                                                self.england: 12,

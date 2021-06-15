@@ -526,7 +526,7 @@ class GScoringWorldClassic(GameScoringSystem):
                 continue
             # Scoring a soloed game is different
             if soloed:
-                if dots == leader_scs:
+                if p == soloer:
                     retval[p] = 420
                 else:
                     # Everyone else does still get survival points up to the solo year
@@ -554,7 +554,6 @@ class GScoringManorCon(GameScoringSystem):
     def scores(self, state):
         retval = {}
         leader_scs = state.highest_dot_count()
-        #num_leaders = state.num_powers_with(leader_scs)
         soloer = state.soloer()
         soloed = soloer is not None
         if soloed:
@@ -566,7 +565,7 @@ class GScoringManorCon(GameScoringSystem):
             # Scoring a soloed game is different
             if soloed:
                 # In this case, "sum of N" is irrelevant, so retval is the actual score
-                if dots == leader_scs:
+                if p == soloer:
                     retval[p] = 75
                 # Everyone else does still get survival points up to the solo year or their elimination year
                 else:
