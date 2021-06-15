@@ -133,6 +133,10 @@ class SimpleGameState(GameState):
                 retval.append(self.elimination_years[p])
         return retval
 
+    def last_full_year(self):
+        """Returns the last year for which we have SC ownerships."""
+        return self.final_year
+
 
 # Some fixed interesting game ends
 GAME_1 = {'sc_counts': [0, 17, 0, 0, 16, 1, 0],

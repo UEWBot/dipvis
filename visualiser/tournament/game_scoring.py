@@ -85,6 +85,16 @@ class GameState(ABC):
         """Returns the year in which the specified power was eliminated, or None."""
         raise NotImplementedError
 
+    @abstractmethod
+    def last_full_year(self):
+        """
+        Returns the year that the SC counts are for.
+        As SC ownerships change after Fall retreats, this will be the previous year
+        if currently playing spring or fall, and the current year if currently doing
+        adjustments.
+        """
+        raise NotImplementedError
+
 
 class GameScoringSystem(ABC):
     # TODO This doesn't deal with multiple players playing one power
@@ -542,6 +552,117 @@ class GScoringWorldClassic(GameScoringSystem):
         return retval
 
 
+class GScoringDetour09(GameScoringSystem):
+    """
+    Soloer gets 110. Loser to a solo get 0.
+    Otherwise, players get 1 per centre held, plyers get 2 points if they hold any centres,
+    If there's a single board topper, they get points equal to the difference between their
+    centre count and that of the player(s) immediately behind them.
+    Leader gets 4 points, 2nd gets 3, 3rd gets 2 and 4th gets 1. If players are tied for
+    position, they all get the lower position points.
+    Finally, scores for a game without a solo are normalised to be out of 100 (rounded to 0.01).
+    In addition to the points above, all players get 0.25 points per year of survival, to a maximum
+    of 2 points.
+    """
+    def __init__(self):
+        self.name = _('Detour09')
+
+    def scores(self, state):
+        retval = {}
+        soloer = state.soloer()
+        soloed = soloer is not None
+        all_powers = state.all_powers()
+        leader_scs = state.highest_dot_count()
+        # Scoring a soloed game is different
+        if soloed:
+            for p in all_powers:
+                if p == soloer:
+                    retval[p] = 110
+                else:
+                    retval[p] = 0
+        else:
+            # Do a first pass to allocate the easy points
+            for p in all_powers:
+                dots = state.dot_count(p)
+                retval[p] = dots
+                if dots > 0:
+                    retval[p] += 2
+            # Figure out which power is in which position
+            top_powers = sorted(retval, key=retval.get, reverse=True)
+            second = top_powers[1]
+            # Now do a second pass to allocate position-based points
+            for p in all_powers:
+                if state.dot_count(p) == leader_scs:
+                    # Add gap to second-place power
+                    retval[p] += leader_scs - state.dot_count(second)
+            # 1st place gets another 4, 2nd 3, 3rd 2 and 4th 1,
+            # with ties getting the lower position points
+            i = 0
+            bonus = 4
+            while (bonus > 0) and (i < 4):
+                p = top_powers[i]
+                dots = state.dot_count(p)
+                if state.num_powers_with(dots) == 1:
+                    retval[p] += bonus
+                elif state.num_powers_with(dots) == 2:
+                    bonus -= 1
+                    if bonus > 0:
+                        retval[p] += bonus
+                        i += 1
+                        p = top_powers[i]
+                        retval[p] += bonus
+                elif state.num_powers_with(dots)  == 3:
+                    bonus -= 2
+                    if bonus > 0:
+                        retval[p] += bonus
+                        i += 1
+                        p = top_powers[i]
+                        retval[p] += bonus
+                        i += 1
+                        p = top_powers[i]
+                        retval[p] += bonus
+                elif state.num_powers_with(dots)  == 4:
+                    bonus -= 3
+                    if bonus > 0:
+                        retval[p] += bonus
+                        i += 1
+                        p = top_powers[i]
+                        retval[p] += bonus
+                        i += 1
+                        p = top_powers[i]
+                        retval[p] += bonus
+                        i += 1
+                        p = top_powers[i]
+                        retval[p] += bonus
+                else:
+                    # No bonus at all
+                    break
+                i += 1
+                bonus -= 1
+            # Normalise to 100
+            total = sum(retval.values())
+            for p in all_powers:
+                retval[p] = retval[p] * 100.00 / total
+        # Add survival points
+        current_year = state.last_full_year() + 1
+        if soloed:
+            solo_year = state.solo_year()
+        for p in all_powers:
+            if state.dot_count(p) == 0:
+                year = state.year_eliminated(p)
+            elif soloed:
+                year = solo_year
+                if p == soloer:
+                    year += 1
+            else:
+                year = current_year
+            years = year - FIRST_YEAR
+            if years > 8:
+                years = 8
+            retval[p] += 0.25 * years
+        return retval
+
+
 class GScoringManorCon(GameScoringSystem):
     """
     Solo gets 75. Others get 0.1 per year they survived.
@@ -607,6 +728,7 @@ G_SCORING_SYSTEMS = [
     GScoringCarnage(_('Center-count Carnage'), centre_based=True, dead_equal=False),
     GScoringTribute(),
     GScoringWorldClassic(),
+    GScoringDetour09(),
     GScoringManorCon(),
     GScoringWhipping(_('Whipping'), 468),
 ]

@@ -101,3 +101,7 @@ class TournamentGameState(GameState):
         """Returns the year in which the specified power was eliminated, or None."""
         # TODO Need to add an exception handler to return None
         return self.scs.filter(power=power).filter(count=0).order_by('year').first().year
+
+    def last_full_year(self):
+        """Returns the last year for which SCs have been entered."""
+        return self.final_year
