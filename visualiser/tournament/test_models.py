@@ -675,6 +675,13 @@ class TournamentModelTests(TestCase):
         self.assertIn('out', r_str)
         self.assertIn('once', r_str)
 
+    # RScoringSum.__str__()
+    def test_rscoringsum_str(self):
+        # TODO This depends on the ordering
+        r = R_SCORING_SYSTEMS[3]
+        r_str = str(r)
+        self.assertIn('ll game scores', r_str)
+
 
     # TScoringSum.__str__()
     def test_tscoringsum0_str(self):

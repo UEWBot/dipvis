@@ -104,6 +104,10 @@ class RoundScoringSystem(ABC):
         """
         raise NotImplementedError
 
+    def __str__(self):
+        ret = self.name
+        return ret
+
 
 class RScoringBest(RoundScoringSystem):
     """
@@ -237,6 +241,10 @@ class TournamentScoringSystem(ABC):
         """
         raise NotImplementedError
 
+    def __str__(self):
+        ret = self.name
+        return ret
+
 
 class TScoringSum(TournamentScoringSystem):
     """
@@ -275,10 +283,6 @@ class TScoringSum(TournamentScoringSystem):
             # Add up the first N
             t_scores[p] = sum(player_scores[:self.scored_rounds])
         return (t_scores, round_scores)
-
-    def __str__(self):
-        ret = self.name
-        return ret
 
 
 # All the tournament scoring systems we support
