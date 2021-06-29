@@ -22,6 +22,7 @@ import urllib.request
 from ast import literal_eval
 from bs4 import BeautifulSoup
 
+BACKSTABBR_URL = 'https://www.backstabbr.com/'
 BACKSTABBR_GAME_URL = 'https://www.backstabbr.com/game/'
 
 # Names used for the Great Powers on Backstabbr
@@ -120,7 +121,8 @@ class Game():
         self.position = {}
         self.orders = {}
         for p in POWERS:
-            self.powers[p] = (0, 'Unknown')
+            # (centres, player, player profile URL) tuple
+            self.powers[p] = (0, 'Unknown', '')
         self._parse_page()
         self._calculate_result()
 
@@ -130,7 +132,7 @@ class Game():
         """
         alive = 0
         self.soloer = None
-        for count, player in self.powers.values():
+        for count, player, _ in self.powers.values():
             if count > 0:
                 alive += 1
             if count > 17:
@@ -173,7 +175,7 @@ class Game():
                 power, count = span.text.strip().split()
                 t = self.powers[power]
                 dots = int(count)
-                self.powers[power] = (dots, t[1])
+                self.powers[power] = (dots, t[1], t[2])
                 if dots > 17:
                     self.soloing_power = power
         # Players
@@ -185,7 +187,9 @@ class Game():
                         power = td.div.text.strip()
                     elif td.a:
                         t = self.powers[power]
-                        self.powers[power] = (t[0], td.a.string.strip())
+                        self.powers[power] = (t[0],
+                                              td.a.string.strip(),
+                                              BACKSTABBR_URL + td.a.get('href'))
         # GM
         for h4 in soup.find_all('h4'):
             if 'Gamemaster' in h4.string:

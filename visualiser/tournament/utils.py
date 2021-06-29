@@ -22,10 +22,41 @@
 This module provides utility functions for DipVis.
 """
 
+from tournament import backstabbr
 from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
 from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 
+
+def map_to_backstabbr_power(gp):
+    """Map a GreatPower to a Backstabbr.POWER."""
+    for power in backstabbr.POWERS:
+        if gp.abbreviation == power[0]:
+            return power
+    raise ValueError(gp)
+
+def populate_bs_profile_urls(dry_run=False):
+    """
+    Finds as many Backstabbr profile URLs as possible
+    and adds them to the appropriate Players.
+    """
+    for g in Game.objects.filter(notes__contains='backstabbr.com'):
+        print("Checking game %s" % g.notes)
+        try:
+            game_num = backstabbr.number_from_game_url(g.notes)
+        except backstabbr.InvalidGameUrl as e:
+            print("Failed to extract game number from URL - skipping")
+            continue
+        # read the game page
+        bg = backstabbr.Game(game_num)
+        for gp in g.gameplayer_set.all():
+            _, player, url = bg.powers[map_to_backstabbr_power(gp.power)]
+            if not gp.player.backstabbr_profile_url:
+                # Add the profile URL
+                print("Adding URL %s to %s" % (url, str(gp.player)))
+                if not dry_run:
+                    gp.player.backstabbr_profile_url = url
+                    gp.player.save()
 
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
@@ -211,7 +242,7 @@ def fix_round_players(the_round, dry_run=False):
     if not game_set.exists():
         print("No games in round - exiting.\n")
         return;
-    # Check for suprious RoundPlayers
+    # Check for spurious RoundPlayers
     for rp in the_round.roundplayer_set.filter(game_count=1):
         if not game_set.filter(gameplayer__player=rp.player).exists():
             print("%s didn't actually play in the round - deleting.\n" % rp)
