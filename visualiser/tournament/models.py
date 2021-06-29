@@ -202,6 +202,9 @@ class RScoringAll(RoundScoringSystem):
                 retval[p] = sum(game_scores[g.game][g.power] for g in player_games)
             else:
                 retval[p] = 0.0
+        # Give zero to anyone who didn't play
+        for p in non_players:
+            retval[p.player] = 0.0
         return retval
 
 

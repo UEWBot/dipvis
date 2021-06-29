@@ -227,6 +227,7 @@ class TournamentModelTests(TestCase):
         # The remainder are not used in this method but are available for use in tests
         cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
         cls.p12 = Player.objects.create(first_name='Wilfred', last_name='Xylophone')
+        cls.p13 = Player.objects.create(first_name='Yannis', last_name='Zygote')
 
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
@@ -555,6 +556,7 @@ class TournamentModelTests(TestCase):
         # Clean up
         t.delete()
 
+    # RScoringAll.scores()
     def test_r_scoring_all(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
@@ -583,7 +585,7 @@ class TournamentModelTests(TestCase):
                                  the_round=r,
                                  is_finished=True,
                                  the_set=self.set1)
-        # 12 players, so we have two playing two games
+        # 13 players, two playing two games and 1 sitting out
         TournamentPlayer.objects.create(player=self.p1, tournament=t)
         TournamentPlayer.objects.create(player=self.p2, tournament=t)
         TournamentPlayer.objects.create(player=self.p3, tournament=t)
@@ -596,6 +598,7 @@ class TournamentModelTests(TestCase):
         TournamentPlayer.objects.create(player=self.p10, tournament=t)
         TournamentPlayer.objects.create(player=self.p11, tournament=t)
         TournamentPlayer.objects.create(player=self.p12, tournament=t)
+        TournamentPlayer.objects.create(player=self.p13, tournament=t)
         RoundPlayer.objects.create(player=self.p1, the_round=r)
         RoundPlayer.objects.create(player=self.p2, the_round=r)
         RoundPlayer.objects.create(player=self.p3, the_round=r)
@@ -608,6 +611,7 @@ class TournamentModelTests(TestCase):
         RoundPlayer.objects.create(player=self.p10, the_round=r)
         RoundPlayer.objects.create(player=self.p11, the_round=r)
         RoundPlayer.objects.create(player=self.p12, the_round=r)
+        RoundPlayer.objects.create(player=self.p13, the_round=r)
         GamePlayer.objects.create(player=self.p1, game=g1, power=self.austria, score=0)
         GamePlayer.objects.create(player=self.p2, game=g1, power=self.england, score=1)
         GamePlayer.objects.create(player=self.p3, game=g1, power=self.france, score=2)
@@ -636,6 +640,7 @@ class TournamentModelTests(TestCase):
                             self.p10: 2,
                             self.p11: 1,
                             self.p12: 0,
+                            self.p13: 0,
                            }
         scores = r.scores(force_recalculation=True)
         for p, s in expected_results.items():
