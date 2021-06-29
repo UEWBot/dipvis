@@ -1689,7 +1689,10 @@ class PlayerRoundScoreFormTest(TestCase):
                                           draw_secrecy=Tournament.SECRET)
 
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+        cls.p2 = Player.objects.create(first_name='Beauregard'.ljust(Player._meta.get_field('first_name').max_length, '.'),
+                                       last_name='Bellaciousness'.ljust(Player._meta.get_field('first_name').max_length, '.'))
         cls.tp1 = TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t)
+        cls.tp2 = TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t)
 
     def test_form_needs_tournament(self):
         # Omit tournament constructor parameter
@@ -1703,10 +1706,21 @@ class PlayerRoundScoreFormTest(TestCase):
 
     def test_success(self):
         # Everything is ok
-        initial = {'tp': self.t.tournamentplayer_set.first(),
-                   'player': str(self.p1.pk),
+        initial = {'tp': self.tp1,
+                   'player': self.tp1.player,
                   }
-        form = PlayerRoundScoreForm({'tp': str(self.t.tournamentplayer_set.first().pk)},
+        form = PlayerRoundScoreForm({'tp': str(self.tp1.pk)},
+                                    initial=initial,
+                                    tournament=self.t,
+                                    last_round_num=2)
+        self.assertTrue(form.is_valid())
+
+    def test_long_name(self):
+        initial = {'tp': self.tp2,
+                   'player': self.tp2.player,
+                  }
+        form = PlayerRoundScoreForm({'tp': str(self.tp2.pk),
+                                     'round_2': '57.3'},
                                     initial=initial,
                                     tournament=self.t,
                                     last_round_num=2)
@@ -1715,7 +1729,7 @@ class PlayerRoundScoreFormTest(TestCase):
     def test_fields_disabled(self):
         # Many fields should be disabled
         initial = {'tp': self.tp1,
-                   'player': str(self.p1.pk),
+                   'player': self.tp1.player,
                   }
         form = PlayerRoundScoreForm(initial=initial,
                                     tournament=self.t,

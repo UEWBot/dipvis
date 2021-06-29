@@ -79,8 +79,9 @@ class TournamentViewTests(TestCase):
                                        email='a.ampersand@example.com')
         cls.p2 = Player.objects.create(first_name='Bobby',
                                        last_name='Bandersnatch')
-        p3 = Player.objects.create(first_name='Cassandra',
-                                   last_name='Cucumber')
+        # One with a really long name
+        p3 = Player.objects.create(first_name='Cassandra'.ljust(Player._meta.get_field('first_name').max_length,'.'),
+                                   last_name='Cucumber'.ljust(Player._meta.get_field('last_name').max_length,'.'))
         p4 = Player.objects.create(first_name='Derek',
                                    last_name='Dromedary')
         p5 = Player.objects.create(first_name='Ethel',

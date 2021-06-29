@@ -708,7 +708,9 @@ class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
     tp = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
                                      widget=forms.HiddenInput())
-    player = forms.CharField(max_length=20, disabled=True)
+    player = forms.CharField(max_length=Player._meta.get_field('first_name').max_length + Player._meta.get_field('last_name').max_length + 1,
+                             disabled=True)
+    player.widget.attrs.update(size='20')
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
