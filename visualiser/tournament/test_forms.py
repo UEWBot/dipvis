@@ -1890,7 +1890,7 @@ class SeederBiasFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_self_bias(self):
-        # Everything is ok
+        # Can't keep a player away from themselves
         form = SeederBiasForm({'player1': str(self.tp1.pk),
                                'player2': str(self.tp1.pk),
                                'weight': '3'},

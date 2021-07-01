@@ -8,13 +8,13 @@
 
 <h2>{% trans "Existing Bias" %}</h2>
 {% if biases.exists %}
+  <p>{% trans "These pairs of players will not be seeded on the same board (if possible)" %}</p>
   <form action="{% url 'seeder_bias' tournament.id %}" method="post">
     {% csrf_token %}
     <table class="form">
       <thead><tr>
         <th>{% trans "Player" %}</th>
         <th>{% trans "Player" %}</th>
-        <th>{% trans "Weight" %}</th>
         {% if tournament.editable %}
           <th></th>
         {% endif %}
@@ -23,7 +23,6 @@
         <tr class="{% cycle 'odd_row' 'even_row' %}">
           <td>{{ sb.player1.player }}</td>
           <td>{{ sb.player2.player }}</td>
-          <td>{{ sb.weight }}</td>
         {% if tournament.editable %}
           <td>
             <input type="submit" name="delete_{{ sb.pk }}" value="{% trans "Remove"%}" />
@@ -39,6 +38,7 @@
 
 {% if tournament.editable %}
   <h2>{% trans "Add Bias" %}</h2>
+  <p>{% trans "Enter a pair of players to keep apart if possible" %}</p>
   <form action="{% url 'seeder_bias' tournament.id %}" method="post">
     {% csrf_token %}
     {{ form }}
