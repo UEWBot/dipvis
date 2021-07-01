@@ -860,13 +860,13 @@ class GameScoringTests(TestCase):
                 sc = scs.filter(power=p).last()
                 if sc.count == 4:
                     # 4+2+0+0=6
-                    self.assertAlmostEqual(s, 1.0 + 100 * 6 / (6+6+8+8+13+13))
+                    self.assertAlmostEqual(s, 100 * 6 / (6+6+8+8+13+13))
                 elif sc.count == 5:
                     # 5+2+0+1=8
-                    self.assertAlmostEqual(s, 1.0 + 100 * 8 / (6+6+8+8+13+13))
+                    self.assertAlmostEqual(s, 100 * 8 / (6+6+8+8+13+13))
                 elif sc.count == 8:
                     # 8+2+0+3=13
-                    self.assertAlmostEqual(s, 1.0 + 100 * 13 / (6+6+8+8+13+13))
+                    self.assertAlmostEqual(s, 100 * 13 / (6+6+8+8+13+13))
                 else:
                     self.assertAlmostEqual(s, 0.75)
 
@@ -883,19 +883,19 @@ class GameScoringTests(TestCase):
                 sc = scs.filter(power=p).last()
                 if sc.count == 3:
                     # 3+2+0+0=5
-                    self.assertAlmostEqual(s, 1.25 + 100 * 5 / (5+5+7+9+11+26))
+                    self.assertAlmostEqual(s, 100 * 5 / (5+5+7+9+11+26))
                 elif sc.count == 4:
                     # 4+2+0+1=7
-                    self.assertAlmostEqual(s, 1.25 + 100 * 7 / (5+5+7+9+11+26))
+                    self.assertAlmostEqual(s, 100 * 7 / (5+5+7+9+11+26))
                 elif sc.count == 5:
                     # 5+2+0+2=9
-                    self.assertAlmostEqual(s, 1.25 + 100 * 9 / (5+5+7+9+11+26))
+                    self.assertAlmostEqual(s, 100 * 9 / (5+5+7+9+11+26))
                 elif sc.count == 6:
                     # 6+2+0+3=11
-                    self.assertAlmostEqual(s, 1.25 + 100 * 11 / (5+5+7+9+11+26))
+                    self.assertAlmostEqual(s, 100 * 11 / (5+5+7+9+11+26))
                 elif sc.count == 13:
                     # 13+2+7+4=26
-                    self.assertAlmostEqual(s, 1.25 + 100 * 26 / (5+5+7+9+11+26))
+                    self.assertAlmostEqual(s, 100 * 26 / (5+5+7+9+11+26))
                 else:
                     self.assertAlmostEqual(s, 0.75)
 
@@ -912,13 +912,13 @@ class GameScoringTests(TestCase):
                 sc = scs.filter(power=p).last()
                 if sc.count == 5:
                     # 5+2+0+1=8
-                    self.assertAlmostEqual(s, 1.5 + 100 * 8 / (8+8+12+33))
+                    self.assertAlmostEqual(s, 100 * 8 / (8+8+12+33))
                 elif sc.count == 7:
                     # 7+2+0+3=12
-                    self.assertAlmostEqual(s, 1.5 + 100 * 12 / (8+8+12+33))
+                    self.assertAlmostEqual(s, 100 * 12 / (8+8+12+33))
                 elif sc.count == 17:
                     # 17+2+10+4=33
-                    self.assertAlmostEqual(s, 1.5 + 100 * 33 / (8+8+12+33))
+                    self.assertAlmostEqual(s, 100 * 33 / (8+8+12+33))
                 else:
                     if sc.power == self.austria:
                         self.assertAlmostEqual(s, 0.75)
@@ -939,7 +939,7 @@ class GameScoringTests(TestCase):
             with self.subTest(power=p):
                 sc = scs.filter(power=p).last()
                 if sc.count == 18:
-                    self.assertEqual(s, 110 + 1.75)
+                    self.assertEqual(s, 110)
                 else:
                     if sc.power == self.austria:
                         self.assertAlmostEqual(s, 0.75)

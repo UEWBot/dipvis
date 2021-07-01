@@ -554,15 +554,16 @@ class GScoringWorldClassic(GameScoringSystem):
 
 class GScoringDetour09(GameScoringSystem):
     """
-    Soloer gets 110. Loser to a solo get 0.
-    Otherwise, players get 1 per centre held, plyers get 2 points if they hold any centres,
-    If there's a single board topper, they get points equal to the difference between their
+    Soloer gets 110.
+    Otherwise, players get 1 per centre held, plus 2 points if they hold any centres,
+    If there's a single board topper, that player get points equal to the difference between their
     centre count and that of the player(s) immediately behind them.
     Leader gets 4 points, 2nd gets 3, 3rd gets 2 and 4th gets 1. If players are tied for
     position, they all get the lower position points.
-    Finally, scores for a game without a solo are normalised to be out of 100 (rounded to 0.01).
-    In addition to the points above, all players get 0.25 points per year of survival, to a maximum
-    of 2 points.
+    Finally, scores for a game without a solo are normalised to be out of 100.
+    Eliminated players and those who lose to a solo get 0.25 points per year of survival,
+    to a maximum of 2 points. A year of survival is when the player has at least 1 centre during
+    winter and no other player has 18 or more.
     """
     def __init__(self):
         self.name = _('Detour09')
@@ -643,19 +644,17 @@ class GScoringDetour09(GameScoringSystem):
             total = sum(retval.values())
             for p in all_powers:
                 retval[p] = retval[p] * 100.00 / total
-        # Add survival points
-        current_year = state.last_full_year() + 1
+        # Survival points for eliminated players and losers to a solo
         if soloed:
             solo_year = state.solo_year()
         for p in all_powers:
             if state.dot_count(p) == 0:
                 year = state.year_eliminated(p)
-            elif soloed:
+            elif soloed and (p != soloer):
                 year = solo_year
-                if p == soloer:
-                    year += 1
             else:
-                year = current_year
+                # No survival points
+                continue
             years = year - FIRST_YEAR
             if years > 8:
                 years = 8
