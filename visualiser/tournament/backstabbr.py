@@ -87,6 +87,20 @@ class InvalidGameId(Exception):
     pass
 
 
+class InvalidGameUrl(Exception):
+    """Expected a Backstabbr game URL."""
+    pass
+
+
+def number_from_game_url(url):
+    """Extracts the backstabbr game id as an int from a backstabbr URL"""
+    if BACKSTABBR_GAME_URL not in url:
+        raise InvalidGameUrl(url)
+    if url[-1] == '/':
+        url = url[:-1]
+    return int(url.split('/')[-1])
+
+
 class Game():
 
     """

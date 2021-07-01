@@ -612,12 +612,10 @@ def scrape_backstabbr(request, tournament_id, game_name):
     """Import CentreCounts from backstabbr"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    # Do we have a backstabbr game?
-    if backstabbr.BACKSTABBR_GAME_URL not in g.notes:
-        raise Http404
-    # Extract the backstabbr game id
-    # Here we assume that it's "everything after the final /"
-    game_number = int(g.notes.split('/')[-1])
+    try:
+        game_number = backstabbr.number_from_game_url(g.notes)
+    except backstabbr.InvalidGameUrl as e:
+        raise Http404 from e
     # Parse the current game page on Backstabbr
     bg = backstabbr.Game(game_number)
     # Figure out what year we have centre counts for
