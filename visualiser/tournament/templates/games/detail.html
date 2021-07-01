@@ -18,7 +18,7 @@
 <dl>
   {% for gp in game.gameplayer_set.all %}
     <dt>{{ gp.power }}</dt>
-    <dd><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %} ( <a href="{{ gp.player.backstabbr_profile_url }}">{{ gp.player.backstabbr_username }}</a> ){% endif %}</dd>
+    <dd><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %} ( {% if gp.player.backstabbr_profile_url %}<a href="{{ gp.player.backstabbr_profile_url }}">{{ gp.player.backstabbr_username }}</a>{% else %}{{ gp.player.backstabbr_username }}{% endif %} ){% endif %}</dd>
     {% if gp.after_action_report %}
       <dd><a href="{{ gp.get_aar_url }}">{% trans "After Action Report" %}</a></dd>
     {% endif %}
