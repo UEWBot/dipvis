@@ -40,6 +40,10 @@ def populate_bs_profile_urls(dry_run=False):
     Finds as many Backstabbr profile URLs as possible
     and adds them to the appropriate Players.
     """
+    games = 0
+    players_left = 0
+    players_changed = 0
+    mismatches = 0
     for g in Game.objects.filter(notes__contains='backstabbr.com'):
         print("Checking game %s" % g.notes)
         try:
@@ -49,14 +53,31 @@ def populate_bs_profile_urls(dry_run=False):
             continue
         # read the game page
         bg = backstabbr.Game(game_num)
+        games += 1
         for gp in g.gameplayer_set.all():
             _, player, url = bg.powers[map_to_backstabbr_power(gp.power)]
-            if not gp.player.backstabbr_profile_url:
+            if gp.player.backstabbr_profile_url:
+                if url == gp.player.backstabbr_profile_url:
+                    players_left += 1
+                else:
+                    print("%s: In-game URL %s doesn't match stored URL %s" % (str(gp.player),
+                                                                              url,
+                                                                              gp.player.backstabbr_profile_url))
+                    mismatches += 1
+            else:
                 # Add the profile URL
                 print("Adding URL %s to %s" % (url, str(gp.player)))
                 if not dry_run:
                     gp.player.backstabbr_profile_url = url
                     gp.player.save()
+                players_changed += 1
+    print("Checked %d games" % games)
+    print("Matched %d profile URLs" % players_left)
+    if dry_run:
+        print("Updated %d profile URLs" % players_changed)
+    else:
+        print("Would have updated %d profile URLs" % players_changed)
+    print("%d mismatches detected" % mismatches)
 
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
