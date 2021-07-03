@@ -133,6 +133,16 @@ class GameScoringSystem(ABC):
         return reverse('game_scoring_detail', args=(self.slug,))
 
 
+def _normalise_scores(scores, total=100.0):
+    """
+    Adjusts all the scores to sum to total while keeping the same ratios.
+    scores should be a dict, indexed by power, of raw scores.
+    """
+    old_total = sum(scores.values())
+    for p in scores.keys():
+        scores[p] = scores[p] * total / old_total
+
+
 def _adjust_rank_score(centre_counts, rank_points):
     """
     Takes a list of (power, centre count) 2-tuples for one year of one game,
@@ -449,20 +459,16 @@ class GScoringSumOfSquares(GameScoringSystem):
         retval = {}
         retval_solo = {}
         soloer = state.soloer()
-        sum_of_squares = 0
         all_powers = state.all_powers()
         for p in all_powers:
             retval_solo[p] = 0.0
             dots = state.dot_count(p)
-            retval[p] = dots * dots * 100.0
-            sum_of_squares += dots * dots
+            retval[p] = dots * dots
             if p == soloer:
                 retval_solo[p] = 100.0
         if soloer is not None:
             return retval_solo
-        # Now that we have sum_of_squares, we can divide each score by it
-        for p in all_powers:
-            retval[p] /= sum_of_squares
+        _normalise_scores(retval)
         return retval
 
 
@@ -640,10 +646,7 @@ class GScoringDetour09(GameScoringSystem):
                     break
                 i += 1
                 bonus -= 1
-            # Normalise to 100
-            total = sum(retval.values())
-            for p in all_powers:
-                retval[p] = retval[p] * 100.00 / total
+            _normalise_scores(retval)
         # Survival points for eliminated players and losers to a solo
         if soloed:
             solo_year = state.solo_year()
