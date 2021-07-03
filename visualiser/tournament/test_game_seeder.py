@@ -20,6 +20,8 @@ Assign powers to players in a Diplomacy game.
 
 import unittest
 
+from string import ascii_uppercase
+
 from tournament.game_seeder import GameSeeder
 from tournament.game_seeder import InvalidPlayer
 from tournament.game_seeder import InvalidPlayerCount
@@ -541,30 +543,13 @@ class GameSeederSetupTest(unittest.TestCase):
                                     ('G', '7')]))
         self.assertRaises(ImpossibleToSeed, seeder.seed_games, set(['E']), set(['B']))
 
-def create_seeder(starts=1, iterations=1000):
+def create_seeder(starts=1, iterations=1000, num_players=20):
     # As there's no way to remove players, we'll re-create the seeder in each test
     seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
-    # 20 players to start with
-    seeder.add_player('A')
-    seeder.add_player('B')
-    seeder.add_player('C')
-    seeder.add_player('D')
-    seeder.add_player('E')
-    seeder.add_player('F')
-    seeder.add_player('G')
-    seeder.add_player('H')
-    seeder.add_player('I')
-    seeder.add_player('J')
-    seeder.add_player('K')
-    seeder.add_player('L')
-    seeder.add_player('M')
-    seeder.add_player('N')
-    seeder.add_player('O')
-    seeder.add_player('P')
-    seeder.add_player('Q')
-    seeder.add_player('R')
-    seeder.add_player('S')
-    seeder.add_player('T')
+    # Add players
+    # Note that the upper limit for num_players is 26
+    for p in range(num_players):
+        seeder.add_player(ascii_uppercase[p])
     return seeder
 
 # TODO test seed_games_and_powers()
@@ -616,14 +601,12 @@ class GameSeederSeedingTest(unittest.TestCase):
 
     # seed_games()
     def test_seed_games_initial(self):
-        s = create_seeder()
-        s.add_player('U')
+        s = create_seeder(num_players=21)
         r = s.seed_games()
         self.check_game_set(r, 21)
 
     def test_seed_games_second_round(self):
-        s = create_seeder()
-        s.add_player('U')
+        s = create_seeder(num_players=21)
         # Add some previously-played games
         s.add_played_game(set([('A', '1'),
                                ('B', '2'),
@@ -683,28 +666,22 @@ class GameSeederSeedingTest(unittest.TestCase):
 
     def test_seed_games_wrong_number_of_players(self):
         # Total player count not a multiple of 7
-        s = create_seeder()
-        s.add_player('U')
-        s.add_player('V')
+        s = create_seeder(num_players=22)
         self.assertRaises(InvalidPlayerCount, s.seed_games)
 
     def test_seed_games_wrong_number_of_players_2(self):
         # Multiple of 7 players, minus one not playing
-        s = create_seeder()
-        s.add_player('U')
+        s = create_seeder(num_players=21)
         self.assertRaises(InvalidPlayerCount, s.seed_games, set(['U']))
 
     def test_seed_games_wrong_number_of_players_3(self):
         # Multiple of 7 players, plus one playing two games
-        s = create_seeder()
-        s.add_player('U')
+        s = create_seeder(num_players=21)
         self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['U']))
 
     def test_seed_games_with_omission(self):
         # Multiple of 7 players plus one, minus one not playing
-        s = create_seeder()
-        s.add_player('U')
-        s.add_player('V')
+        s = create_seeder(num_players=22)
         omits = set(['U'])
         r = s.seed_games(omits)
         self.check_game_set(r, 21, omits)
