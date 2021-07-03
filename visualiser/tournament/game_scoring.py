@@ -133,6 +133,42 @@ class GameScoringSystem(ABC):
         return reverse('game_scoring_detail', args=(self.slug,))
 
 
+def _adjust_rank_score(centre_counts, rank_points):
+    """
+    Takes a list of (power, centre count) 2-tuples for one year of one game,
+    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered from first place to last.
+    Returns a list of ranking points for positions, ordered to correspond to
+    the centre counts, having made adjustments for any tied positions.
+    Where two or more powers have the same number of SCs, the ranking points
+    for their positions are shared eveny between them.
+    """
+    if not rank_points:
+        # The rest of them get zero points
+        return [] + [0.0] * len(centre_counts)
+    # Work with a copy of rank_points
+    rank_pts = rank_points.copy()
+    # First count up how many powers tied at the top
+    i = 0
+    count = 0
+    points = 0
+    scs = centre_counts[0][1]
+    while (i < len(centre_counts)) and (centre_counts[i][1] == scs):
+        count += 1
+        if i < len(rank_pts):
+            points += rank_pts[i]
+        i += 1
+    # Now share the points between those tied players
+    for j in range(0, i):
+        if j < len(rank_pts):
+            rank_pts[j] = points / count
+        else:
+            rank_pts.append(points / count)
+    # And recursively continue
+    return rank_pts[0:i] + _adjust_rank_score(centre_counts[i:],
+                                              rank_pts[i:])
+
+
 class GScoringSolos(GameScoringSystem):
     """
     Solos score 100 points.
@@ -149,7 +185,7 @@ class GScoringSolos(GameScoringSystem):
         """
         retval = {}
         for p in state.all_powers():
-            retval[p] = 0
+            retval[p] = 0.0
             if state.soloer() == p:
                 retval[p] = 100.0
         return retval
@@ -187,42 +223,6 @@ class GScoringDrawSize(GameScoringSystem):
         return retval
 
 
-def _adjust_rank_score(centre_counts, rank_points):
-    """
-    Takes a list of (power, centre count) 2-tuples for one year of one game,
-    ordered highest-to-lowest, and a list of ranking points for positions,
-    ordered from first place to last.
-    Returns a list of ranking points for positions, ordered to correspond to
-    the centre counts, having made adjustments for any tied positions.
-    Where two or more powers have the same number of SCs, the ranking points
-    for their positions are shared eveny between them.
-    """
-    if not rank_points:
-        # The rest of them get zero points
-        return [] + [0.0] * len(centre_counts)
-    # Work with a copy of rank_points
-    rank_pts = rank_points.copy()
-    # First count up how many powers tied at the top
-    i = 0
-    count = 0
-    points = 0
-    scs = centre_counts[0][1]
-    while (i < len(centre_counts)) and (centre_counts[i][1] == scs):
-        count += 1
-        if i < len(rank_pts):
-            points += rank_pts[i]
-        i += 1
-    # Now share the points between those tied players
-    for j in range(0, i):
-        if j < len(rank_pts):
-            rank_pts[j] = points / count
-        else:
-            rank_pts.append(points / count)
-    # And recursively continue
-    return rank_pts[0:i] + _adjust_rank_score(centre_counts[i:],
-                                              rank_pts[i:])
-
-
 class GScoringCDiplo(GameScoringSystem):
     """
     If there is a solo:
@@ -240,7 +240,7 @@ class GScoringCDiplo(GameScoringSystem):
     - if powers are tied for rank, they split the points for their ranks.
     """
     def __init__(self, name, soloer_pts, played_pts,
-                 first_pts, second_pts, third_pts, loss_pts=0):
+                 first_pts, second_pts, third_pts, loss_pts=0.0):
         self.name = name
         self.soloer_pts = soloer_pts
         self.played_pts = played_pts
@@ -452,7 +452,7 @@ class GScoringSumOfSquares(GameScoringSystem):
         sum_of_squares = 0
         all_powers = state.all_powers()
         for p in all_powers:
-            retval_solo[p] = 0
+            retval_solo[p] = 0.0
             dots = state.dot_count(p)
             retval[p] = dots * dots * 100.0
             sum_of_squares += dots * dots
