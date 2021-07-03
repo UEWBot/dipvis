@@ -147,32 +147,54 @@ class GameSeeder:
         for p in self.powers:
             self.powers_played[player][p] = 0
 
+    def _add_played_game(self, game, matrix):
+        """
+        Add a previously-played game to take into account.
+        game is either a set of (player, power) 2-tuples, or a set of players
+        (player can be any type as long as it's the same in all calls to this object).
+        Can raise InvalidPlayer if any player is unknown.
+        Raises InvalidPlayerCount if the game doesn't have seven players.
+        """
+        with_powers = False
+        for x in game:
+            if with_powers or isinstance(x, tuple):
+                with_powers = True
+                player1, power1 = x
+            else:
+                player1 = x
+            if player1 not in matrix:
+                raise InvalidPlayer(str(player1))
+            for x in game:
+                if with_powers:
+                    player2, _ = x
+                else:
+                    player2 = x
+                if player1 != player2:
+                    try:
+                        matrix[player1][player2] += 1
+                    except KeyError:
+                        if player2 not in matrix:
+                            raise InvalidPlayer(str(player2))
+                        matrix[player1][player2] = 1
+            if with_powers:
+                self.powers_played[player1][power1] += 1
+        self.games_played = True
+
     def add_played_game(self, game):
         """
         Add a previously-played game to take into account.
         game is a set of (player, power) 2-tuples (player can be any type as
         long as it's the same in all calls to this object).
         Can raise InvalidPlayer if any player is unknown.
-        Raises InvalidPlayerCount if the games doesn't have seven players.
+        Raises InvalidPlayerCount if the game doesn't have seven players.
+        Raises PowersNotUnique if any power is present more than once.
         """
         if len(game) != self.num_powers:
             raise InvalidPlayerCount(str(len(game)))
         # Check that each power is only present once
         if len(set([power for player, power in game])) != self.num_powers:
             raise PowersNotUnique()
-        for player1, power1 in game:
-            if player1 not in self.games_played_matrix:
-                raise InvalidPlayer(str(player1))
-            for player2, _ in game:
-                if player1 != player2:
-                    try:
-                        self.games_played_matrix[player1][player2] += 1
-                    except KeyError:
-                        if player2 not in self.games_played_matrix:
-                            raise InvalidPlayer(str(player2))
-                        self.games_played_matrix[player1][player2] = 1
-            self.powers_played[player1][power1] += 1
-        self.games_played = True
+        self._add_played_game(game, self.games_played_matrix)
 
     def add_bias(self, player1, player2, weight):
         """
@@ -256,7 +278,7 @@ class GameSeeder:
                 best_result = g
         return best_result
 
-    def _fitness_score(self, game):
+    def _fitness_score(self, game, games_played_matrix=None):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
         In this case, a game is just a set of seven players.
@@ -265,13 +287,15 @@ class GameSeeder:
         game is a set of players (player can be any type as long as it's the
         same in all calls to this object).
         """
+        if games_played_matrix is None:
+            games_played_matrix = self.games_played_matrix
         f = 0
         # Sum the number of times each pair of players has played together
         for p in game:
             for q in game:
                 if p != q:
                     try:
-                        f += (self.games_played_matrix[p][q] ** 2)
+                        f += (games_played_matrix[p][q] ** 2)
                     except KeyError:
                         # These players have not played each other
                         pass
@@ -305,25 +329,39 @@ class GameSeeder:
                 game = set()
         return res
 
-    def _set_fitness(self, games):
+    def _set_fitness(self, games, include_these_games=False):
         """
-        Calculate a total fitness score for this list of games.
+        Calculate a total fitness score for this set of games.
         Range is 0-(42 * len(games)). Lower is better.
+        If include_these_games is True, add in a fitness score
+        for the games in this set. This helps keeps players
+        playing two games apart but is more work
         """
         fitness = 0
+        matrix = {}
         for g in games:
-            fitness += self._fitness_score(g)
+            if include_these_games:
+                for player in g:
+                    if player not in matrix:
+                        matrix[player] = {}
+            fitness += self._fitness_score(g, self.games_played_matrix)
+            if include_these_games:
+                fitness += self._fitness_score(g, matrix)
+                self._add_played_game(g, matrix)
         return fitness
 
-    def _improve_fitness(self, games):
+    def _improve_fitness(self, games, include_these_games=False):
         """
         Try swapping random players between games to see if we can improve the
         overall fitness score.
         Returns the best set of games it finds and the fitness score
         for that set.
+        If include_these_games is True, add in a fitness score
+        for the games in this set. This helps keeps players
+        playing two games apart but is more work
         """
         best_set = copy.deepcopy(games)
-        best_fitness = self._set_fitness(games)
+        best_fitness = self._set_fitness(games, include_these_games)
         # The more iterations, the better the result, but the longer it takes
         for _ in range(self.iterations):
             # Try swapping a random player between two random games
@@ -338,7 +376,7 @@ class GameSeeder:
                 continue
             g1.add(p2)
             g2.add(p1)
-            fitness = self._set_fitness(games)
+            fitness = self._set_fitness(games, include_these_games)
             if fitness < best_fitness:
                 #print("Improving fitness from %d to %d" % (best_fitness, fitness))
                 #print(games)
@@ -452,8 +490,8 @@ class GameSeeder:
                                           len(omitting_players)))
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
-        if self.games_played:
-            res, fitness = self._improve_fitness(res)
+        if self.games_played or (len(players_doubling_up) > 1):
+            res, fitness = self._improve_fitness(res, include_these_games=(len(players_doubling_up) > 1))
         else:
             fitness = 0
         # Return the resulting list of games
@@ -486,12 +524,13 @@ class GameSeeder:
         Can raise ImpossibleToSeed if no valid seeding is possible.
         """
         # Generate the specified number of seedings
-        # Use the random method if no games have been played yet, because any seeding is fine
-        if (not self.games_played) or (self.seed_method == SeedMethod.RANDOM):
+        # Use the random method if no games have been played yet and at most
+        # one player is playing two games, because any seeding is fine
+        if ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
             seedings = []
             # No point generating multiples if they're all equally good
             starts = 1
-            if self.games_played:
+            if self.games_played or (len(players_doubling_up) > 1):
                 starts = self.starts
             for _ in range(starts):
                 # This gives us a list of 2-tuples with (seeding, fitness)
@@ -502,7 +541,7 @@ class GameSeeder:
             seedings = []
             try:
                 for s in self._all_possible_seedings(players):
-                    fitness = self._set_fitness(s)
+                    fitness = self._set_fitness(s, include_these_games=(len(players_doubling_up) > 1))
                     seedings.append((s, fitness))
             except _AssignmentFailed as e:
                 raise ImpossibleToSeed from e

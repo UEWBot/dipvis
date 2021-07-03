@@ -703,6 +703,25 @@ class GameSeederSeedingTest(unittest.TestCase):
         sits = set(['X'])
         self.assertRaises(InvalidPlayer, s.seed_games, omitting_players=sits)
 
+    def test_seed_games_separate_dups_1(self):
+        s = create_seeder(num_players=26)
+        dups = set(['A', 'B'])
+        r = s.seed_games(players_doubling_up=dups)
+        self.check_game_set(r, 28, duplicates=dups)
+        # Check that no game has both the players playing two games
+        for g in r:
+            self.assertNotEqual('A' in g, 'B' in g)
+
+    def test_seed_games_separate_dups_1(self):
+        s = create_seeder(num_players=18)
+        dups = set(['A', 'B', 'C'])
+        r = s.seed_games(players_doubling_up=dups)
+        self.check_game_set(r, 21, duplicates=dups)
+        # Check that no game has all the players playing two games
+        for g in r:
+            if ('A' in g) and ('B' in g):
+                self.assertNotIn('C', g)
+
 
 class ExhaustiveGameSeederTest(unittest.TestCase):
     """
