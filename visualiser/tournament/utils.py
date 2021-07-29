@@ -101,6 +101,16 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
             print("Player to delete has an email address!")
             return
 
+    if keep_player.backstabbr_username != del_player.backstabbr_username:
+        if del_player.backstabbr_username:
+            print("Player to delete has a backstabbr username!")
+            return
+
+    if keep_player.backstabbr_profile_url != del_player.backstabbr_profile_url:
+        if del_player.backstabbr_profile_url:
+            print("Player to delete has a backstabbr profile URL!")
+            return
+
     if keep_player.picture != del_player.picture:
         if del_player.picture:
             print("Player to delete has a picture!")
