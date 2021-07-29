@@ -731,13 +731,13 @@ class PlayerRoundScoreForm(forms.Form):
             self.fields[name] = forms.FloatField(required=False)
             attrs = self.fields[name].widget.attrs
             attrs['size'] = 10
-            attrs['maxlength'] = 10
+            attrs['maxlength'] = 40
 
         # Last field is for the overall tournament score
         self.fields['overall_score'] = forms.FloatField(required=False)
         attrs = self.fields['overall_score'].widget.attrs
         attrs['size'] = 10
-        attrs['maxlength'] = 10
+        attrs['maxlength'] = 20
 
 
 class BasePlayerRoundScoreFormset(BaseFormSet):
