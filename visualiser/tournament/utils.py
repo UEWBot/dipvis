@@ -142,7 +142,10 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
             tp.player = keep_player
             tp.save()
 
-    print("Player with private key %d ready to delete from the admin" % del_player.pk)
+    if dry_run:
+        print("No issues found")
+    else:
+        print("Player with private key %d ready to delete from the admin" % del_player.pk)
 
 
 def clone_tournament(t):
