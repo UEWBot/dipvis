@@ -198,7 +198,7 @@ def _round_news(r):
         results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': r.number()})
     else:
         # Otherwise, add a count of completed games
-        results.append(ngettext('One of the %(total_num)d games in round %(r_num)d have ended.',
+        results.append(ngettext('One of the %(total_num)d games in round %(r_num)d has ended.',
                                 '%(num_done)d of the %(total_num)d games in round %(r_num)d have ended.',
                                 done_games) % {'num_done': done_games,
                                                'r_num': r.number(),
@@ -370,8 +370,9 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # How many draw votes have there been ?
         dp_queryset = g.drawproposal_set.filter(year__lte=last_year)
         votes = dp_queryset.count()
-        results.append(_('%(count)d draw vote(s) have been taken%(game)s.')
-                       % {'count': votes, 'game': gn_str})
+        results.append(ngettext('One draw vote has been taken%(game)s.',
+                                '%(count)d draw vote(s) have been taken%(game)s.',
+                                votes) % {'count': votes, 'game': gn_str})
         # What draw votes failed recently ?
         # Note that it's fairly arbitrary where we draw the line here
         draws_set = dp_queryset.order_by('-year').filter(year__gte=last_year)
