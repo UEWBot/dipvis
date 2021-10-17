@@ -753,6 +753,92 @@ class GameScoringTests(TestCase):
                     else:
                         self.assertEqual(s, 6)
 
+    # GScoringBangkok
+    def test_g_Scoring_bangkok_no_solo1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Bangkok')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 4:
+                    self.assertAlmostEqual(s, 4 + 0 + 3)
+                elif sc.count == 5:
+                    self.assertAlmostEqual(s, 5 + 0 + 3)
+                elif sc.count == 8:
+                    self.assertAlmostEqual(s, 8 + 6 + 3)
+                else:
+                    self.assertAlmostEqual(s, 0.9)
+
+    def test_g_scoring_bangkok_no_solo2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Bangkok')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 3:
+                    self.assertAlmostEqual(s, 3 + 0 + 3)
+                elif sc.count == 4:
+                    self.assertAlmostEqual(s, 4 + 0 + 3)
+                elif sc.count == 5:
+                    self.assertAlmostEqual(s, 5 + 0 + 3)
+                elif sc.count == 6:
+                    self.assertAlmostEqual(s, 6 + 0 + 3)
+                elif sc.count == 13:
+                    self.assertAlmostEqual(s, 13 + 12 + 3)
+                else:
+                    self.assertAlmostEqual(s, 0.9)
+
+    def test_g_scoring_bangkok_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Bangkok')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 5:
+                    self.assertAlmostEqual(s, 5 + 0 + 3)
+                elif sc.count == 7:
+                    self.assertAlmostEqual(s, 7 + 0 + 3)
+                elif sc.count == 17:
+                    self.assertAlmostEqual(s, 17 + 12 + 3)
+                else:
+                    if sc.power == self.austria:
+                        self.assertAlmostEqual(s, 0.9)
+                    elif sc.power == self.france:
+                        self.assertAlmostEqual(s, 1.5)
+                    elif sc.power == self.italy:
+                        self.assertAlmostEqual(s, 1.5)
+
+    def test_g_scoring_bangkok_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Bangkok')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 18:
+                    self.assertEqual(s, 41)
+                else:
+                    self.assertAlmostEqual(s, 0.5 * sc.count)
+
     # GScoringManorCon
     def test_g_scoring_manorcon_no_solo1(self):
         t = Tournament.objects.get(name='t1')
