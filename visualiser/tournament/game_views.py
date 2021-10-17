@@ -26,7 +26,7 @@ from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from tournament import backstabbr
 

@@ -20,7 +20,7 @@ Django news file for the Diplomacy Tournament Visualiser.
 
 import random
 
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament.models import Tournament, Round, Game, CentreCount

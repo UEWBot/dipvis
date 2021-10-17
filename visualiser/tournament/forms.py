@@ -21,7 +21,7 @@ Forms for the Diplomacy Tournament Visualiser.
 from django import forms
 from django.forms import ModelForm
 from django.forms.formsets import BaseFormSet
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
 from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR

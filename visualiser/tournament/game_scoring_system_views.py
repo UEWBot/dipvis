@@ -22,7 +22,7 @@ from operator import attrgetter
 
 from django.http import Http404
 from django.shortcuts import render
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GreatPower, FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.game_scoring import GameScoringSystem, G_SCORING_SYSTEMS
