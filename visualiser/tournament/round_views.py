@@ -224,53 +224,33 @@ def get_seven(request, tournament_id, round_num):
     if present < 7:
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
-    standbys = r.roundplayer_set.filter(standby=True).count()
-    playing = present - standbys
-    # We can always ask a partial board to sit the round out
-    sitters = playing % 7
-    if sitters > 0:
-        # Do we have enough standbys to make the partial board up to full?
-        if standbys >= 7 - sitters:
-            all_standbys_needed = False
-            standbys = 7 - sitters
-            doubles = 0
-            sitters = 0
-        else:
-            all_standbys_needed = True
-            doubles = 7 - (sitters + standbys)
-    else:
-        standbys = 0
-        doubles = 0
+    playing = r.roundplayer_set.filter(standby=False).count()
     context = {'tournament': t,
                'round': r,
-               'present': present,
                'playing': playing,
-               'standbys': standbys,
-               'sitters': sitters,
-               'doubles': doubles}
+               'standbys': present - playing}
     form = GetSevenPlayersForm(request.POST or None,
                                the_round=r)
     if form.is_valid():
         # Update RoundPlayers to indicate number of games they're playing
         # First clear any old game_counts
         for rp in r.roundplayer_set.all():
-            if rp.standby and not all_standbys_needed:
+            if rp.standby and not form.all_standbys_needed:
                 rp.game_count = 0
             else:
                 rp.game_count = 1
             rp.save()
-        if not all_standbys_needed:
-            for i in range(standbys):
-                rp = form.cleaned_data['standby_%d' % i]
-                if rp:
-                    rp.game_count = 1
-                    rp.save()
-        for i in range(sitters):
+        for i in range(form.standbys):
+            rp = form.cleaned_data['standby_%d' % i]
+            if rp:
+                rp.game_count = 1
+                rp.save()
+        for i in range(form.sitters):
             rp = form.cleaned_data['sitter_%d' % i]
             if rp:
                 rp.game_count = 0
                 rp.save()
-        for i in range(doubles):
+        for i in range(form.doubles):
             rp = form.cleaned_data['double_%d' % i]
             if rp:
                 rp.game_count = 2

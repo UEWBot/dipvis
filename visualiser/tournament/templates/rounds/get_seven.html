@@ -9,23 +9,29 @@
 <form method="post" action={% url 'get_seven' tournament.id round.number %}>
   {% csrf_token %}
   {{ form.non_field_errors }}
-  {% if sitters == 0 and doubles == 0 and standbys == 0 %}
-    <p>{% blocktrans with n_players=playing %}With {{ n_players }} players wanting to play, you don't need anyone to sit out or play two boards.{% endblocktrans %}</p>
-  {% elif doubles == 0 %}
-    <p>{% blocktrans count n_players=standbys %}You need one standby player to play,{% plural %}You need {{ n_players }} standby players to play.{% endblocktrans %}
-    {% for field in form %}
-      <p>{{ field.errors }}
-      {{ field.label_tag }}
-      {{ field }}</p>
-    {% endfor %}
+  <p>{% blocktrans with n_players=playing n_standbys=standbys %}You have {{ n_players }} players wanting to play plus {{ n_standbys }} available if needed.{% endblocktrans %}</p>
+  {% if form.all_standbys_needed %}
+    <p>{% trans "You need all your standby players to play." %}
+  {% elif form.sitters == 0 and form.doubles == 0 and form.standbys == 0 %}
+    <p>{% trans "You don't need anyone to sit out or play two boards." %}</p>
+  {% elif form.doubles == 0 %}
+    <p>{% blocktrans count n_players=form.standbys %}You need one standby player to play,{% plural %}You need {{ n_players }} standby players to play.{% endblocktrans %}
   {% else %}
-    <p>{% blocktrans with standbys=standbys count n_players=doubles %}You need <b>either</b> all your {{ standbys }} standby players to play and one player to play two boards, {% plural %}You need <b>either</b> all your {{ standbys }} standby players to play and {{ n_players}} players to play two boards each, {%endblocktrans %}{% blocktrans count n_players=sitters %}<b>or</b> one player to sit out the round.{% plural %}<b>or</b> {{ n_players }} players to sit out the round.{%endblocktrans %}</p>
-    {% for field in form %}
-      <p>{{ field.errors }}
-      {{ field.label_tag }}
-      {{ field }}</p>
-    {% endfor %}
+    <p>
+      {% if standbys == 0 %}
+        {% trans "You need <b>either</b> " %}
+      {% else %}
+        {% trans "You need <b>either</b> all your standby players to play and " %}
+      {% endif %}
+      {% blocktrans count n_players=form.doubles %}one player to play two boards, {% plural %}{{ n_players}} players to play two boards each, {%endblocktrans %}
+      {% blocktrans count n_players=form.sitters %}<b>or</b> one player to sit out the round.{% plural %}<b>or</b> {{ n_players }} players to sit out the round.{%endblocktrans %}
+    </p>
   {% endif %}
+  {% for field in form %}
+    <p>{{ field.errors }}
+    {{ field.label_tag }}
+    {{ field }}</p>
+  {% endfor %}
   <input type="submit" value="{% trans "Seed Games" %}" />
 </form>
 <p><a href="{% url 'round_roll_call' tournament.id round.number %}">{% trans "Back to roll call" %}</a></p>

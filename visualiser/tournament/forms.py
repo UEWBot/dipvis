@@ -412,6 +412,7 @@ class GetSevenPlayersForm(forms.Form):
         #            or no standbys play and some others also sit the round out
         playing_count = playing.count()
         standby_count = standbys.count()
+        self.all_standbys_needed = False
         if playing_count % 7 == 0:
             # Perfect !
             self.sitters = 0
@@ -420,7 +421,13 @@ class GetSevenPlayersForm(forms.Form):
         else:
             # How many more players do we need to make up another full board?
             short = 7 - (playing_count % 7)
-            if standby_count > short:
+            if standby_count == short:
+                # Need all standbys to play, so no need to pick them
+                self.sitters = 0
+                self.doubles = 0
+                self.standbys = 0
+                self.all_standbys_needed = True
+            elif standby_count > short:
                 # Just need some standbys to play
                 self.sitters = 0
                 self.doubles = 0
