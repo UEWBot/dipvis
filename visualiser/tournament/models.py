@@ -850,6 +850,10 @@ class TournamentPlayer(models.Model):
             if not self.unranked:
                 self.unranked = (self.player.user is not None) and self.player.user.tournament_set.filter(pk=self.tournament.pk).exists()
         super().save(*args, **kwargs)
+        # Update Player if things have changed
+        if self.backstabbr_username != self.player.backstabbr_username:
+            self.player.backstabbr_username = self.backstabbr_username
+            self.player.save()
         # Update background info when a player is added to the Tournament (only)
         if is_new:
             send_prefs_email(self)

@@ -1298,6 +1298,27 @@ class TournamentModelTests(TestCase):
                               player=self.p1)
         tp.save()
         self.assertEqual(tp.backstabbr_username, self.p1.backstabbr_username)
+        # Clean up
+        tp.delete()
+        self.p1.backstabbr_username = ''
+        self.p1.save()
+
+    def test_new_tp_override_bs_username(self):
+        # Can specify different backstabbr_username for new TP
+        # and Player will be updated
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual(len(self.p1.backstabbr_username), 0)
+        self.p1.backstabbr_username = 'My_username'
+        self.p1.save()
+        new_username = 'Different'
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1,
+                              backstabbr_username=new_username)
+        tp.save()
+        self.assertEqual(tp.backstabbr_username, new_username)
+        self.p1.refresh_from_db()
+        self.assertEqual(self.p1.backstabbr_username, new_username)
+        # Clean up
         tp.delete()
         self.p1.backstabbr_username = ''
         self.p1.save()
