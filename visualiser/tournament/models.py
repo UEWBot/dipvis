@@ -434,6 +434,7 @@ class Tournament(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
     start_date = models.DateField()
     end_date = models.DateField()
+    location = models.CharField(max_length=300, blank=True)
     # How do we combine round scores to get an overall player tournament score ?
     # This is the name of a TournamentScoringSystem object
     tournament_scoring_system = models.CharField(max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
@@ -750,6 +751,7 @@ class TournamentPlayer(models.Model):
     backstabbr_username = models.CharField(max_length=MAX_BACKSTABBR_USERNAME_LENGTH,
                                            blank=True,
                                            help_text=_('Username on the backstabbr website'))
+    location = models.CharField(max_length=60, blank=True)
 
     class Meta:
         ordering = ['player']
@@ -847,11 +849,15 @@ class TournamentPlayer(models.Model):
             # Only override if they haven't been provided
             if not self.backstabbr_username:
                 self.backstabbr_username = self.player.backstabbr_username
+            if not self.location:
+                self.location = self.player.location
             if not self.unranked:
                 self.unranked = (self.player.user is not None) and self.player.user.tournament_set.filter(pk=self.tournament.pk).exists()
         super().save(*args, **kwargs)
         # Update Player if things have changed
-        if self.backstabbr_username != self.player.backstabbr_username:
+        if ((self.location != self.player.location) or
+            (self.backstabbr_username != self.player.backstabbr_username)):
+            self.player.location = self.location
             self.player.backstabbr_username = self.backstabbr_username
             self.player.save()
         # Update background info when a player is added to the Tournament (only)

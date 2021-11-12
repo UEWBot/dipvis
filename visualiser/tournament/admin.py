@@ -58,7 +58,7 @@ class RoundInline(admin.StackedInline):
 class TournamentAdmin(admin.ModelAdmin):
     """Include Round as part of Tournament"""
     inlines = [RoundInline]
-    fields = (('name', 'format'),
+    fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
               ('tournament_scoring_system', 'round_scoring_system'),
               ('seed_games', 'power_assignment'),
@@ -68,7 +68,7 @@ class TournamentAdmin(admin.ModelAdmin):
               'wdd_tournament_id')
 
 class TournamentPlayerAdmin(admin.ModelAdmin):
-    list_filter = ('tournament', 'player', 'unranked')
+    list_filter = ('tournament', 'player', 'location', 'unranked')
 
 class RoundPlayerAdmin(admin.ModelAdmin):
     list_filter = ('the_round__tournament', 'the_round', 'player', 'game_count')

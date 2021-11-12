@@ -403,6 +403,7 @@ class Player(models.Model):
                                            help_text=_('Username on the backstabbr website'))
     backstabbr_profile_url = models.URLField(blank=True)
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
+    location = models.CharField(max_length=60, blank=True)
     # Cache of the player's name in the WDD
     _wdd_name = models.CharField(max_length=60, blank=True)
     user = models.OneToOneField(User,

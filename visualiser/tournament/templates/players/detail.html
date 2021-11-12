@@ -10,6 +10,7 @@
   <img src="{{ player.picture.url }}" alt="" style="max-width:10%"/>
 {% endif %}
 <p>{% trans "WDD Name and Id:" %} {% if player.wdd_player_id %}<a href="{{ player.wdd_url }}">{{ player.wdd_name }} {{ player.wdd_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
+{% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
   {% for t in player.tournamentplayers %}

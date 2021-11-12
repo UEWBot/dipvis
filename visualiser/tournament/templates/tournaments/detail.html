@@ -12,6 +12,7 @@
 <p>{% trans "Format: " %}{% if tournament.is_virtual %}{% trans "Virtual Face-to-face" %}{% else %}{% trans "Face-to-face" %}{% endif %}</p>
 <p>{% trans "Tournament scoring: " %}{{ tournament.tournament_scoring_system_obj }}</p>
 <p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
+{% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 
 <p>{% blocktrans with count=tournament.round_set.count %}{{ count }} Rounds{% endblocktrans %}:</p>
 <dl>

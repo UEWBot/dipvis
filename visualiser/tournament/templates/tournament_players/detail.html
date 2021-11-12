@@ -6,6 +6,7 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
 
+{% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 {% if player.unranked %}<p>{% trans "Ineligible for awards." %}</p>{% endif %}
 
 <ul>
