@@ -219,12 +219,12 @@ def get_seven(request, tournament_id, round_num):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     rps = r.roundplayer_set.all()
-    present = r.roundplayer_set.count()
+    present = rps.count()
     # If we have fewer than seven players in total, we're stuffed
     if present < 7:
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
-    playing = r.roundplayer_set.filter(standby=False).count()
+    playing = rps.filter(standby=False).count()
     context = {'tournament': t,
                'round': r,
                'playing': playing,
@@ -234,7 +234,7 @@ def get_seven(request, tournament_id, round_num):
     if form.is_valid():
         # Update RoundPlayers to indicate number of games they're playing
         # First clear any old game_counts
-        for rp in r.roundplayer_set.all():
+        for rp in rps.all():
             if rp.standby and not form.all_standbys_needed:
                 rp.game_count = 0
             else:
