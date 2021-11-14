@@ -365,7 +365,6 @@ class BasePowerAssignFormset(BaseFormSet):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
 
 
-# TODO Should this be a formset?
 class GetSevenPlayersForm(forms.Form):
     """Form to enter players to sit out or play two games"""
 
@@ -472,6 +471,9 @@ class GetSevenPlayersForm(forms.Form):
         sitters = self._check_duplicates(cleaned_data, 'sitter', self.sitters)
         doubles = self._check_duplicates(cleaned_data, 'double', self.doubles)
 
+        if (doubles > 0) and (sitters > 0):
+            raise forms.ValidationError(_('Either have players sit out the round or have players play two games'))
+
         if 0 < standbys < self.standbys:
             raise forms.ValidationError(_('Too few standby players selected to play. Got %(actual)d, expected %(expected)d')
                                         % {'actual': standbys,
@@ -484,15 +486,17 @@ class GetSevenPlayersForm(forms.Form):
             raise forms.ValidationError(_('Too few players playing two games. Got %(actual)d, expected %(expected)d')
                                         % {'actual': doubles,
                                            'expected': self.doubles})
-        if (doubles > 0) and (sitters > 0):
-            raise forms.ValidationError(_('Either have players sit out the round or have players play two games'))
-
         # Note that we always require all standbys to play before anyone is asked to play
         # two boards, so there's no danger of a standby player being listed in doubles
         # but not in standbys
 
         # Also, we only allow either sitters or doubles, so we already error out if
         # the same player is listed in both
+
+        # If the user has chosen to have people play two games,
+        # we need all standby players to play, too
+        if doubles > 0:
+            self.all_standbys_needed = True
 
         return cleaned_data
 
