@@ -612,12 +612,11 @@ def scrape_backstabbr(request, tournament_id, game_name):
     """Import CentreCounts from backstabbr"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # Parse the current game page on Backstabbr
     try:
-        game_number = backstabbr.number_from_game_url(g.notes)
+        bg = backstabbr.Game(g.notes)
     except backstabbr.InvalidGameUrl as e:
         raise Http404 from e
-    # Parse the current game page on Backstabbr
-    bg = backstabbr.Game(game_number)
     # Figure out what year we have centre counts for
     if bg.season == backstabbr.SPRING:
         year = bg.year - 1

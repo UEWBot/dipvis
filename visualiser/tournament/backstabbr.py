@@ -19,11 +19,11 @@ Scrape the interesting parts of a Diplomacy game on Backstabbr.com.
 
 import re
 import urllib.request
+from urllib.parse import urlparse, urlunparse
 from ast import literal_eval
 from bs4 import BeautifulSoup
 
-BACKSTABBR_URL = 'https://www.backstabbr.com/'
-BACKSTABBR_GAME_URL = 'https://www.backstabbr.com/game/'
+BACKSTABBR_NETLOC = 'www.backstabbr.com'
 
 # Names used for the Great Powers on Backstabbr
 POWERS = ['Austria',
@@ -83,23 +83,10 @@ DOTS = re.compile('var territories = (.*);')
 ORDERS = re.compile('var orders = (.*);')
 UNITS = re.compile('var unitsByPlayer = (.*);')
 
-class InvalidGameId(Exception):
-    """The id provided for the game is unused on Backstabbr."""
-    pass
-
 
 class InvalidGameUrl(Exception):
     """Expected a Backstabbr game URL."""
     pass
-
-
-def number_from_game_url(url):
-    """Extracts the backstabbr game id as an int from a backstabbr URL"""
-    if BACKSTABBR_GAME_URL not in url:
-        raise InvalidGameUrl(url)
-    if url[-1] == '/':
-        url = url[:-1]
-    return int(url.split('/')[-1])
 
 
 class Game():
@@ -108,11 +95,19 @@ class Game():
     A single game on Backstabbr
     """
 
-    def __init__(self, number):
+    def __init__(self, url):
         """
-        number is the unique id for the game on backstabbr.
+        url is a link to the game on backstabbr.
         """
-        self.number = number
+        self.url = url
+        self.parsed_url = urlparse(url)
+        if self.parsed_url.netloc != BACKSTABBR_NETLOC:
+            raise InvalidGameUrl(self.url)
+        self.regular_game = ('game/' in self.parsed_url.path)
+        self.sandbox_game = ('sandbox/' in self.parsed_url.path)
+        if not self.regular_game and not self.sandbox_game:
+            raise InvalidGameUrl(self.url)
+        self.number = self._extract_game_number()
         self.gm = 'Unknown'
         self.ongoing = True
         self.soloing_power = None
@@ -125,6 +120,15 @@ class Game():
             self.powers[p] = (0, 'Unknown', '')
         self._parse_page()
         self._calculate_result()
+
+    def _extract_game_number(self):
+        """Extracts the backstabbr game id as an int from the URL"""
+        url = self.parsed_url.path
+        # strip any trailing '/'
+        if url[-1] == '/':
+            url = url[:-1]
+        # game number should be everything after the last '/'
+        return int(url.split('/')[-1])
 
     def _calculate_result(self):
         """
@@ -148,11 +152,10 @@ class Game():
         """
         Read the game page on backstabbr and extract the interesting details.
         """
-        self.url = '%s%d' % (BACKSTABBR_GAME_URL, self.number)
         page = urllib.request.urlopen(self.url)
         if page.geturl() != self.url:
-            # We were redirected - implies invalid game number
-            raise InvalidGameId(self.number)
+            # We were redirected - implies invalid game URL
+            raise InvalidGameUrl(self.url)
         soup = BeautifulSoup(page.read())
         # Extract the game name
         m = soup.find('meta', property="og:title", content=True)
@@ -189,7 +192,10 @@ class Game():
                         t = self.powers[power]
                         self.powers[power] = (t[0],
                                               td.a.string.strip(),
-                                              BACKSTABBR_URL + td.a.get('href'))
+                                              urlunparse(('https',
+                                                          BACKSTABBR_NETLOC,
+                                                          td.a.get('href'),
+                                                          '', '', '')))
         # GM
         for h4 in soup.find_all('h4'):
             if 'Gamemaster' in h4.string:

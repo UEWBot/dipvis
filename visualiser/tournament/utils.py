@@ -46,13 +46,12 @@ def populate_bs_profile_urls(dry_run=False):
     mismatches = 0
     for g in Game.objects.filter(notes__contains='backstabbr.com'):
         print("Checking game %s" % g.notes)
-        try:
-            game_num = backstabbr.number_from_game_url(g.notes)
-        except backstabbr.InvalidGameUrl as e:
-            print("Failed to extract game number from URL - skipping")
-            continue
         # read the game page
-        bg = backstabbr.Game(game_num)
+        try:
+            bg = backstabbr.Game(g.notes)
+        except backstabbr.InvalidGameUrl as e:
+            print("Failed to extract backstabbr URL from notes - skipping")
+            continue
         games += 1
         for gp in g.gameplayer_set.all():
             _, player, url = bg.powers[map_to_backstabbr_power(gp.power)]
