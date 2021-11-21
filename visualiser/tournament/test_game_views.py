@@ -156,7 +156,7 @@ class GameViewTests(TestCase):
                               'Warsaw': cls.russia}
 
     def test_detail(self):
-        response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_detail_non_existant_game(self):
@@ -169,7 +169,7 @@ class GameViewTests(TestCase):
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
         GamePlayer.objects.create(game=self.g1, player=p)
-        response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(b'After Action Report', response.content)
         # Clean up
@@ -181,7 +181,7 @@ class GameViewTests(TestCase):
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
         GamePlayer.objects.create(game=self.g1, player=p, after_action_report='I died')
-        response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'After Action Report', response.content)
         # Clean up
@@ -193,7 +193,7 @@ class GameViewTests(TestCase):
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
         GamePlayer.objects.create(game=self.g1, player=p, after_action_report='I died')
-        response = self.client.get(reverse('aar', args=(self.t1.pk, 'Game1', p.pk)))
+        response = self.client.get(reverse('aar', args=(self.t1.pk, self.g1.name, p.pk)))
         self.assertEqual(response.status_code, 200)
         # Clean up
         p.delete()
@@ -204,7 +204,7 @@ class GameViewTests(TestCase):
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
         GamePlayer.objects.create(game=self.g1, player=p)
-        response = self.client.get(reverse('aar', args=(self.t1.pk, 'Game1', p.pk)))
+        response = self.client.get(reverse('aar', args=(self.t1.pk, self.g1.name, p.pk)))
         self.assertEqual(response.status_code, 404)
         # Clean up
         p.delete()
@@ -212,26 +212,26 @@ class GameViewTests(TestCase):
     def test_aar_non_player(self):
         # Try to retrieve an AAR from somebody who didn't play the Game
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
-        response = self.client.get(reverse('aar', args=(self.t1.pk, 'Game1', p.pk)))
+        response = self.client.get(reverse('aar', args=(self.t1.pk, self.g1.name, p.pk)))
         self.assertEqual(response.status_code, 404)
         # Clean up
         p.delete()
 
     def test_sc_chart(self):
-        response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_sc_chart_refresh(self):
-        response = self.client.get(reverse('game_sc_chart_refresh', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_sc_chart_refresh', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_enter_scs_not_logged_in(self):
-        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 302)
 
     def test_enter_scs(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_post_enter_scs(self):
@@ -282,12 +282,12 @@ class GameViewTests(TestCase):
             for p, c in dots.items():
                 data['scs-%d-%s' % (n, str(p))] = str(c)
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the SC Chart page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
         # And the CentreCounts should be added
         for year, dots in counts.items():
             with self.subTest(year=year):
@@ -367,12 +367,12 @@ class GameViewTests(TestCase):
             for p, c in dots.items():
                 data['scs-%d-%s' % (n, str(p))] = str(c)
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the SC Chart page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
         # And the CentreCounts should be updated
         for year, dots in counts.items():
             with self.subTest(year=year):
@@ -439,7 +439,7 @@ class GameViewTests(TestCase):
             for p, c in dots.items():
                 data['scs-%d-%s' % (n, str(p))] = str(c)
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # Should get an error for the year with too many total SCs
@@ -481,7 +481,7 @@ class GameViewTests(TestCase):
             for p, c in dots.items():
                 data['scs-%d-%s' % (n, str(p))] = str(c)
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # Should get an error for the year with too many total SCs
@@ -526,7 +526,7 @@ class GameViewTests(TestCase):
             for p, c in dots.items():
                 data['scs-%d-%s' % (n, str(p))] = str(c)
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # Should get an error for Russia recovering from an elimination
@@ -537,20 +537,20 @@ class GameViewTests(TestCase):
         self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1908).exists())
 
     def test_sc_owners(self):
-        response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_sc_owners_refresh(self):
-        response = self.client.get(reverse('game_sc_owners_refresh', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_sc_owners_refresh', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_enter_sc_owners_not_logged_in(self):
-        response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 302)
 
     def test_enter_sc_owners(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_post_enter_sc_owners(self):
@@ -566,12 +566,12 @@ class GameViewTests(TestCase):
             for sc, p in self.default_owners.items():
                 data['form-%d-%s' % (n, sc)] = str(p.id)
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the SC Owners page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
         # TODO And the appropriate SupplyCentreOwnerships should have been created
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 34)
         self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 7)
@@ -611,12 +611,12 @@ class GameViewTests(TestCase):
         data['form-0-Rumania'] = ''
         # Serbia will be changed from neutral to Austrian
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the SC Owners page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
         # And the appropriate SupplyCentreOwnerships should have been updated/deleted
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 32)
         self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 7)
@@ -654,12 +654,12 @@ class GameViewTests(TestCase):
             for sc, p in self.default_owners.items():
                 data['form-%d-%s' % (n, sc)] = ''
         data_enc = urlencode(data)
-        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the SC Owners page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, 'Game1')))
+        self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
         # There should still be no SupplyCentreOwnerships
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
         # and the two CentreCounts we added at the start
@@ -668,52 +668,52 @@ class GameViewTests(TestCase):
         self.g1.centrecount_set.filter(year=1907).delete()
 
     def test_current_game_image(self):
-        response = self.client.get(reverse('current_game_image', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('current_game_image', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_game_image(self):
-        response = self.client.get(reverse('game_image', args=(self.t1.pk, 'Game1', 'S1901M')))
+        response = self.client.get(reverse('game_image', args=(self.t1.pk, self.g1.name, 'S1901M')))
         self.assertEqual(response.status_code, 200)
 
     def test_timelapse(self):
-        response = self.client.get(reverse('game_timelapse', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_timelapse', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_game_image_seq(self):
-        response = self.client.get(reverse('game_image_seq', args=(self.t1.pk, 'Game1', 'S1901M')))
+        response = self.client.get(reverse('game_image_seq', args=(self.t1.pk, self.g1.name, 'S1901M')))
         self.assertEqual(response.status_code, 200)
 
     def test_add_position_not_logged_in(self):
-        response = self.client.get(reverse('add_game_image', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('add_game_image', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 302)
 
     def test_add_position(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('add_game_image', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('add_game_image', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_news(self):
-        response = self.client.get(reverse('game_news', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_news', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_news_ticker(self):
-        response = self.client.get(reverse('game_news_ticker', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_news_ticker', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_background(self):
-        response = self.client.get(reverse('game_background', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_background', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_background_ticker(self):
-        response = self.client.get(reverse('game_background_ticker', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_background_ticker', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_ticker(self):
-        response = self.client.get(reverse('game_ticker', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_ticker', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_draw_vote_not_logged_in(self):
-        response = self.client.get(reverse('draw_vote', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('draw_vote', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 302)
 
     def test_post_secret_dias_draw_vote(self):
@@ -723,7 +723,7 @@ class GameViewTests(TestCase):
                           'season': SPRING,
                           'passed': False,
                           'proposer': str(self.austria)})
-        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g1.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -757,7 +757,7 @@ class GameViewTests(TestCase):
                           'passed': False,
                           'powers': [str(self.england), str(self.turkey)],
                           'proposer': str(self.england)}, True)
-        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, 'Game2')),
+        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g2.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -793,7 +793,7 @@ class GameViewTests(TestCase):
                           'season': SPRING,
                           'passed': True,
                           'proposer': str(self.austria)})
-        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, 'Game1')),
+        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g1.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -831,7 +831,7 @@ class GameViewTests(TestCase):
                           'passed': True,
                           'powers': [str(self.england), str(self.turkey)],
                           'proposer': str(self.austria)}, True)
-        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, 'Game2')),
+        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g2.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -871,7 +871,7 @@ class GameViewTests(TestCase):
                           'season': SPRING,
                           'votes_in_favour': 4,
                           'proposer': str(self.austria)})
-        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, 'Game3')),
+        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, self.g3.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -905,7 +905,7 @@ class GameViewTests(TestCase):
                           'powers': [str(self.england), str(self.turkey)],
                           'votes_in_favour': 4,
                           'proposer': str(self.england)}, True)
-        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, 'Game4')),
+        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, self.g4.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -941,7 +941,7 @@ class GameViewTests(TestCase):
                           'season': SPRING,
                           'votes_in_favour': 7,
                           'proposer': str(self.austria)})
-        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, 'Game3')),
+        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, self.g3.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -979,7 +979,7 @@ class GameViewTests(TestCase):
                           'powers': [str(self.england), str(self.turkey)],
                           'votes_in_favour': 7,
                           'proposer': str(self.austria)}, True)
-        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, 'Game4')),
+        response = self.client.post(reverse('draw_vote', args=(self.t2.pk, self.g4.name)),
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the Game page
@@ -1014,7 +1014,7 @@ class GameViewTests(TestCase):
 
     def test_draw_vote(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('draw_vote', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('draw_vote', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     # TODO check initial value for year and season in draw vote page with and without game images
@@ -1027,29 +1027,29 @@ class GameViewTests(TestCase):
     # TODO what about a DrawProposal for a game that was won outright?
 
     def test_views(self):
-        response = self.client.get(reverse('game_views', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_views', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_overview(self):
-        response = self.client.get(reverse('game_overview', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_overview', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_overview2(self):
-        response = self.client.get(reverse('game_overview_2', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_overview_2', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_overview3(self):
-        response = self.client.get(reverse('game_overview_3', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('game_overview_3', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
     def test_scrape_backstabbr_not_logged_in(self):
-        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('enter_scs', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 302)
 
     def test_scrape_backstabbr_no_url(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         self.assertEqual(len(self.g1.notes), 0)
-        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 404)
 
     def test_scrape_backstabbr_success(self):
@@ -1059,7 +1059,7 @@ class GameViewTests(TestCase):
         self.g1.notes = 'https://www.backstabbr.com/game/4917371326693376'
         self.g1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, 'Game1')))
+        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         # TODO Check the information displayed on the page
         self.assertIn(b'1912', response.content)
