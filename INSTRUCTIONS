@@ -1,10 +1,15 @@
 Assuming you have python and Django installed.
 
 You can test out the system as follows:
-1. Create a SQLite database - "python manage.py syncdb"
+0. Run migrations
+   "python manage.py makemigrations"
+   "python manage.py makemigrations"
+1. Create a SQLite database -
+   "python manage.py loaddata players"
+   "python manage.py loaddata game_sets"
    It will be auto-populated with Great Powers and a few known players.
-2. Run the test server - "python manage.py runserver"
-* Missing - add an administrator user ? *
+2. Create an admin account -- "python manage.py createsuperuser"
+3. Run the test server - "python manage.py runserver"
 3. Open the URL "http://127.0.0.1:8000/admin/tournament/player/" in
    a web broswer and add players by filling in the fields.
 4. Open the URL "http://127.0.0.1:8000/admin/tournament/tournament/" in
@@ -17,5 +22,12 @@ You can test out the system as follows:
    web browser and try out some of the links.
 6. Open the Roll Call URL "http://127.0.0.1:8000/tournaments/1/roll_call/"
    in a web browser and add players to one or more rounds.
+   # This didn't work for me. What did work was going to
+   # http://127.0.0.1:8000/tournaments/1 and clicking through from there
+   # to add players. Guessing this got out of sync with updates? -Jason
 7. You'll be taken to the page to create a game for the round. Go ahead and
    do that.
+   # When I create a game, I get an error message, but it does populate
+   # the game into the tournament. I think it's trying to send emails to
+   # the players in the test game and doesn't like that it doesn't have
+   # emails for them.
