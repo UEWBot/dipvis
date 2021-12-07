@@ -25,6 +25,7 @@ You can test out the system as follows:
    # This didn't work for me. What did work was going to
    # http://127.0.0.1:8000/tournaments/1 and clicking through from there
    # to add players. Guessing this got out of sync with updates? -Jason
+   # Or it's supposed to be http://127.0.0.1:8000/tournaments/1/rounds/1/roll_call/ maybe?
 7. You'll be taken to the page to create a game for the round. Go ahead and
    do that.
    # When I create a game, I get an error message, but it does populate
