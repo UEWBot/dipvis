@@ -3,7 +3,7 @@
 #it's not longer a great assumption to just say anything
 #above 2.2.16 is fine. -Jason
 bs4>=0.0.1
-Django==2.2.16
+Django==2.2.24
 django-extensions==2.1.4
 django-slowtests==0.5.1
 Pillow
