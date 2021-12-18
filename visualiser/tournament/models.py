@@ -1372,7 +1372,7 @@ class Game(models.Model):
         if self.is_finished:
             gps = self.gameplayer_set.all()
             toppers = self.board_toppers()
-            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps.get(power=scs.power),
+            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps.get(power=scs.power).player,
                                                                    'power': _(scs.power.abbreviation)} for scs in list(toppers)])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
                                                                                              'top': toppers[0].count,
