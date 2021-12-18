@@ -168,7 +168,7 @@ class GameViewTests(TestCase):
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
-        GamePlayer.objects.create(game=self.g1, player=p)
+        GamePlayer.objects.create(game=self.g1, player=p, power=self.italy)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(b'After Action Report', response.content)
@@ -180,7 +180,10 @@ class GameViewTests(TestCase):
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
-        GamePlayer.objects.create(game=self.g1, player=p, after_action_report='I died')
+        GamePlayer.objects.create(game=self.g1,
+                                  player=p,
+                                  power=self.italy,
+                                  after_action_report='I died')
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'After Action Report', response.content)
