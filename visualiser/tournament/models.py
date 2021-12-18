@@ -1788,7 +1788,7 @@ class GamePlayer(models.Model):
         assert self.power is not None
         self.save()
 
-    def result_str(self):
+    def result_str(self, include_power=False, include_game_name=False):
         """
         Return the result of the Game from this GamePlayer's perspective.
         If the Game is ongoing, this will be the result if the game ended now.
@@ -1802,42 +1802,70 @@ class GamePlayer(models.Model):
         if final_sc.count == 0:
             # We need to look back to find the first CentreCount with no dots
             final_sc = power_cc_set.filter(count=0).order_by('year').first()
-            gs = _('Eliminated as %(power)s in %(year)d') % {'year': final_sc.year,
-                                                             'power': _(self.power.name)}
+            if include_power:
+                gs = _('Eliminated as %(power)s in %(year)d') % {'year': final_sc.year,
+                                                                 'power': _(self.power.name)}
+            else:
+                gs = _('Eliminated in %(year)d') % {'year': final_sc.year}
         else:
             # Final year of the game as a whole
             final_year = cc_set.order_by('-year').first().year
             # Was the game soloed ?
             soloer = g.soloer()
             if self == soloer:
-                gs = ngettext('Solo as %(power)s with %(dots)d centre in %(year)d',
-                              'Solo as %(power)s with %(dots)d centres in %(year)d',
-                              final_sc.count) % {'year': final_year,
-                                                 'power': _(self.power.name),
-                                                 'dots': final_sc.count}
+                if include_power:
+                    gs = ngettext('Solo as %(power)s with %(dots)d centre in %(year)d',
+                                  'Solo as %(power)s with %(dots)d centres in %(year)d',
+                                  final_sc.count) % {'year': final_year,
+                                                     'power': _(self.power.name),
+                                                     'dots': final_sc.count}
+                else:
+                    gs = ngettext('Solo with %(dots)d centre in %(year)d',
+                                  'Solo with %(dots)d centres in %(year)d',
+                                  final_sc.count) % {'year': final_year,
+                                                     'dots': final_sc.count}
             elif soloer is not None:
-                gs = ngettext('Loss as %(power)s with %(dots)d centre in %(year)d',
-                              'Loss as %(power)s with %(dots)d centres in %(year)d',
-                              final_sc.count) % {'year': final_sc.year,
-                                                 'power': _(self.power.name),
-                                                 'dots': final_sc.count}
+                if include_power:
+                    gs = ngettext('Loss as %(power)s with %(dots)d centre in %(year)d',
+                                  'Loss as %(power)s with %(dots)d centres in %(year)d',
+                                  final_sc.count) % {'year': final_sc.year,
+                                                     'power': _(self.power.name),
+                                                     'dots': final_sc.count}
+                else:
+                    gs = ngettext('Loss with %(dots)d centre in %(year)d',
+                                  'Loss with %(dots)d centres in %(year)d',
+                                  final_sc.count) % {'year': final_sc.year,
+                                                     'dots': final_sc.count}
             else:
                 # Did a draw vote pass ?
                 res = g.passed_draw()
                 if res:
                     if self.power in res.powers():
-                        gs = ngettext('%(n)d-way draw as %(power)s with %(dots)d centre in %(year)d',
-                                      '%(n)d-way draw as %(power)s with %(dots)d centres in %(year)d',
-                                      final_sc.count) % {'n': res.draw_size(),
-                                                         'power': _(self.power.name),
-                                                         'dots': final_sc.count,
-                                                         'year': final_year}
+                        if include_power:
+                            gs = ngettext('%(n)d-way draw as %(power)s with %(dots)d centre in %(year)d',
+                                          '%(n)d-way draw as %(power)s with %(dots)d centres in %(year)d',
+                                          final_sc.count) % {'n': res.draw_size(),
+                                                             'power': _(self.power.name),
+                                                             'dots': final_sc.count,
+                                                             'year': final_year}
+                        else:
+                            gs = ngettext('%(n)d-way draw with %(dots)d centre in %(year)d',
+                                          '%(n)d-way draw with %(dots)d centres in %(year)d',
+                                          final_sc.count) % {'n': res.draw_size(),
+                                                             'dots': final_sc.count,
+                                                             'year': final_year}
                     else:
-                        gs = ngettext('Loss as %(power)s with %(dots)d centre in %(year)d',
-                                      'Loss as %(power)s with %(dots)d centres in %(year)d',
-                                      final_sc.count) % {'year': final_sc.year,
-                                                         'power': _(self.power.name),
-                                                         'dots': final_sc.count}
+                        if include_power:
+                            gs = ngettext('Loss as %(power)s with %(dots)d centre in %(year)d',
+                                          'Loss as %(power)s with %(dots)d centres in %(year)d',
+                                          final_sc.count) % {'year': final_sc.year,
+                                                             'power': _(self.power.name),
+                                                             'dots': final_sc.count}
+                        else:
+                            gs = ngettext('Loss with %(dots)d centre in %(year)d',
+                                          'Loss with %(dots)d centres in %(year)d',
+                                          final_sc.count) % {'year': final_sc.year,
+                                                             'dots': final_sc.count}
                 else:
                     # Game is either ongoing or reached a timed end
                     # Is this power topping the board?
@@ -1850,20 +1878,28 @@ class GamePlayer(models.Model):
                                               topper_count) % {'n': topper_count}
                     else:
                         topper_str = ''
-                    gs = ngettext('%(dots)d centre%(topper)s as %(power)s in %(year)d',
-                                  '%(dots)d centres%(topper)s as %(power)s in %(year)d',
-                                  final_sc.count) % {'year': final_sc.year,
-                                                     'power': _(self.power.name),
-                                                     'topper': topper_str,
-                                                     'dots': final_sc.count}
+                    if include_power:
+                        gs = ngettext('%(dots)d centre%(topper)s as %(power)s in %(year)d',
+                                      '%(dots)d centres%(topper)s as %(power)s in %(year)d',
+                                      final_sc.count) % {'year': final_sc.year,
+                                                         'power': _(self.power.name),
+                                                         'topper': topper_str,
+                                                         'dots': final_sc.count}
+                    else:
+                        gs = ngettext('%(dots)d centre%(topper)s in %(year)d',
+                                      '%(dots)d centres%(topper)s in %(year)d',
+                                      final_sc.count) % {'year': final_sc.year,
+                                                         'topper': topper_str,
+                                                         'dots': final_sc.count}
         # game name and link
-        gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name,
-                                                         'url': g.get_absolute_url()}
-        # Additional info
-        if g.is_top_board:
-            gs += _(' [Top Board]')
-        if not g.is_finished:
-            gs += _(' [Ongoing]')
+        if include_game_name:
+            gs += _(' in <a href="%(url)s">%(game)s</a>') % {'game': g.name,
+                                                             'url': g.get_absolute_url()}
+            # Additional info
+            if g.is_top_board:
+                gs += _(' [Top Board]')
+            if not g.is_finished:
+                gs += _(' [Ongoing]')
         return gs
 
     def clean(self):

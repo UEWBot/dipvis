@@ -198,7 +198,7 @@ def tournament_game_results(request,
                     # New line if they played multiple games in this round
                     if gs:
                         gs += '<br>'
-                    gs += gp.result_str()
+                    gs += gp.result_str(include_power=True, include_game_name=True)
             rs.append(gs)
         results.append(['<a href=%s>%s</a>' % (p.get_absolute_url(), p.player)] + rs)
     # Add one final row showing whether each round is ongoing or not
