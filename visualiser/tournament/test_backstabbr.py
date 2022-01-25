@@ -95,7 +95,7 @@ class BackstabbrTests(TestCase):
                    POWERS[3]: (0, 'Mike Moore#5938'),
                    POWERS[4]: (0, 'Chris Brand#8810'),
                    POWERS[5]: (12, 'Riaz #6696'),
-                   POWERS[6]: (15, 'fulhamCF#279'),
+                   POWERS[6]: (15, 'fulhamCF#5591'),
                   }
         self.assertEqual(g.number, DRAW_3_GAME_NUMBER)
         self.assertEqual(g.name, '233: Fibonacci prime')
@@ -123,7 +123,7 @@ class BackstabbrTests(TestCase):
                    POWERS[3]: (0, 'Lex Luthor#8328'),
                    POWERS[4]: (7, 'RobertTheRousse#5998'),
                    POWERS[5]: (0, 'Chris Brand#8810'),
-                   POWERS[6]: (9, 'David Hood#141'),
+                   POWERS[6]: (9, 'David Hood#2887'),
                   }
         self.assertEqual(g.number, DRAW_4_GAME_NUMBER)
         self.assertEqual(g.name, 'VHGunboat 84 - Double-plus ungood')
@@ -173,7 +173,7 @@ class BackstabbrTests(TestCase):
         path = 'game/%s' % DRAW_6_GAME_NUMBER
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
-        RESULTS = {POWERS[0]: (13, 'David Hood#141'),
+        RESULTS = {POWERS[0]: (13, 'David Hood#2887'),
                    POWERS[1]: (1, 'Jason Mastbaum#8314'),
                    POWERS[2]: (5, 'Chris Brand#8810'),
                    POWERS[3]: (8, 'sionolen#8599'),
@@ -201,11 +201,11 @@ class BackstabbrTests(TestCase):
         path = 'game/%s' % DRAW_7_GAME_NUMBER
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
-        RESULTS = {POWERS[0]: (6, 'Medusa#None'),
-                   POWERS[1]: (7, 'JamB#None'),
+        RESULTS = {POWERS[0]: (6, 'Medusa#4960'),
+                   POWERS[1]: (7, 'JamB#4071'),
                    POWERS[2]: (5, 'Melissa#7577'),
                    POWERS[3]: (7, 'ASig#9921'),
-                   POWERS[4]: (3, 'bwtcf#None'),
+                   POWERS[4]: (3, 'bwtcf#4734'),
                    POWERS[5]: (2, 'Chris Brand#8810'),
                    POWERS[6]: (4, 'Maya K2#9400'),
                   }
