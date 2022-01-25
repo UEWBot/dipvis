@@ -1,6 +1,6 @@
-# Tests do pass on Django 3.x, but it's only regularly run on 2.2.24
+# Tests do pass on Django 3.x, but it's only regularly run on these versions
 bs4>=0.0.1
-Django==2.2.24
+Django==2.2.26
 django-extensions==2.1.4
 django-slowtests==0.5.1
 Pillow
