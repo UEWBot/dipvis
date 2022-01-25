@@ -724,12 +724,23 @@ class GScoringBangkok(GameScoringSystem):
 
 class GScoringManorCon(GameScoringSystem):
     """
-    Solo gets 75. Others get 0.1 per year they survived.
+    Solo gets a set number of points. Others get 0.1 per year they survived.
     Otherwise calculate N = S^2 + 4*S + 16 for each power, where S is their centre-count (including N=16 for dead powers).
     Then each surviving power scored 100 * N/(sum of all Ns), and each dead power still scores 0.1 per year they survived.
     """
-    def __init__(self):
-        self.name = _('ManorCon')
+    def __init__(self, name, solo_score=75):
+        self.solo_score = solo_score
+        self.name = name
+
+    @property
+    def description(self):
+        return _("""
+                 Solo gets %(solo_score)d. Others get 0.1 per year they survived.
+                 Otherwise calculate N = S^2 + 4*S + 16 for each power,
+                 where S is their centre-count (including N=16 for dead powers).
+                 Then each surviving power scored 100 * N/(sum of all Ns),
+                 and each dead power still scores 0.1 per year they survived.
+                 """) % {'solo_score': self.solo_score}
 
     def scores(self, state):
         retval = {}
@@ -746,7 +757,7 @@ class GScoringManorCon(GameScoringSystem):
             if soloed:
                 # In this case, "sum of N" is irrelevant, so retval is the actual score
                 if p == soloer:
-                    retval[p] = 75
+                    retval[p] = self.solo_score
                 # Everyone else does still get survival points up to the solo year or their elimination year
                 else:
                     if dots == 0:
@@ -789,6 +800,7 @@ G_SCORING_SYSTEMS = [
     GScoringWorldClassic(),
     GScoringDetour09(),
     GScoringBangkok(),
-    GScoringManorCon(),
+    GScoringManorCon(_('ManorCon'), 75),
+    GScoringManorCon(_('Original ManorCon'), 100),
     GScoringWhipping(_('Whipping'), 468),
 ]
