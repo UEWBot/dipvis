@@ -113,8 +113,8 @@ class Game():
             raise InvalidGameUrl(self.url) from e
         self.gm = 'Unknown'
         self.ongoing = True
-        self.soloing_power = None
         self.players = {}
+        self.soloing_power = None
         self.sc_counts = {}
         for p in POWERS:
             self.sc_counts[p] = 0
@@ -154,17 +154,49 @@ class Game():
         else:
             self.result = '%d-way draw' % alive
 
+    def _url_to_soup(self, url):
+        """
+        Open the specified URL, turn the web page into soup.
+        """
+        page = urllib.request.urlopen(url)
+        if page.geturl() != url:
+            # We were redirected - implies invalid game URL
+            raise InvalidGameUrl(url)
+        return BeautifulSoup(page.read())
+
     def _parse_page(self):
         """
         Read the game page on backstabbr and extract the interesting details.
         """
-        page = urllib.request.urlopen(self.url)
-        if page.geturl() != self.url:
-            # We were redirected - implies invalid game URL
-            raise InvalidGameUrl(self.url)
-        soup = BeautifulSoup(page.read())
+        soup = self._url_to_soup(self.url)
         self._parse_invariants_from_soup(soup)
-        self._parse_turn_from_soup(soup)
+        # These will be the final or current values
+        self.sc_counts, self.soloing_power, self.sc_ownership, self.position, self.orders = self._parse_turn_from_soup(soup)
+
+    def turn_details(self, season, year):
+        """
+        Read the state of the game for the specified turn.
+        Year should be an int that is a valid game year.
+        Season should be 'spring', 'fall', or 'winter'.
+        Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
+        sc_counts is a dict, indexed by power, of ints (number of SCs owned)
+        soloing_power is a power, or None
+        sc_ownership is a dict, indexed by SC, of power (owner of the SC)
+        position is a dict, indexed by power, of dicts, indexed by province, of units.
+           Where the province is coastal, unit is replaced by a dict indexed by 'coast' and 'type'
+        orders is a dict, indexed by power, of dicts, indexed by province, of order dicts.
+           The order dict may contain 'from', 'to', 'result', 'result_reason', 'type', 'to', and probably others.
+        """
+        url = self.url + '/%d/%s' % (year, season)
+        return self._parse_turn_page(url)
+
+    def _parse_turn_page(self, url):
+        """
+        Read the game page on backstabbr and extract the interesting details.
+        Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
+        """
+        soup = self._url_to_soup(url)
+        return self._parse_turn_from_soup(soup)
 
     def _parse_invariants_from_soup(self, soup):
         """
@@ -213,25 +245,33 @@ class Game():
     def _parse_turn_from_soup(self, soup):
         """
         Read the per-turn properties of the game from the soup.
-        Sets self.sc_counts, self.soloing_power, self.sc_ownership, self.position, and self.orders
+        Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
         """
+        sc_counts = {}
+        for p in POWERS:
+            sc_counts[p] = 0
+        soloing_power = None
+        sc_ownership = {}
+        position = {}
+        orders = {}
         # Centre counts
         for span in soup.find_all('span'):
             if span.div:
                 power, count = span.text.strip().split()
                 dots = int(count)
-                self.sc_counts[power] = dots
+                sc_counts[power] = dots
                 if dots > 17:
-                    self.soloing_power = power
+                    soloing_power = power
         # SC ownership, unit locations, and orders
         for scr in soup.find_all('script'):
             if scr.string is not None:
                 match = DOTS.search(scr.string)
                 if match:
-                    self.sc_ownership = literal_eval(match.group(1))
+                    sc_ownership = literal_eval(match.group(1))
                 match = UNITS.search(scr.string)
                 if match:
-                    self.position = literal_eval(match.group(1))
+                    position = literal_eval(match.group(1))
                 match = ORDERS.search(scr.string)
                 if match:
-                    self.orders = literal_eval(match.group(1))
+                    orders = literal_eval(match.group(1))
+        return (sc_counts, soloing_power, sc_ownership, position, orders)
