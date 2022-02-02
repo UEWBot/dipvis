@@ -607,6 +607,35 @@ def add_game_image(request, tournament_id, game_name=''):
                   {'tournament': t,
                    'form': form})
 
+def _bs_ownerships_to_sco(game, year, sc_ownership):
+    """
+    Update or create SupplyCentreOwnership objects from a backstabbr.Game
+    sc_ownership dict.
+    """
+    for k, v in sc_ownership.items():
+        # Map k to SupplyCentre (assuming backstabbr.DOTS match SupplyCentre abbreviations)
+        sc = SupplyCentre.objects.get(abbreviation__iexact=k)
+        # Map v to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+        power = GreatPower.objects.get(abbreviation=v[0])
+        SupplyCentreOwnership.objects.update_or_create(game=game,
+                                                       year=year,
+                                                       sc=sc,
+                                                       defaults={'owner': power})
+
+def _bs_counts_to_cc(game, year, sc_counts):
+    """
+    Update or create CentreCount objects from a backstabbr.Game
+    sc_counts dict.
+    """
+    with transaction.atomic():
+        for k, v in sc_counts.items():
+            # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+            power = GreatPower.objects.get(abbreviation=k[0])
+            CentreCount.objects.update_or_create(power=power,
+                                                 game=game,
+                                                 year=year,
+                                                 defaults={'count': v})
+
 @permission_required('tournament.add_centrecount')
 def scrape_backstabbr(request, tournament_id, game_name):
     """Import CentreCounts from backstabbr"""
@@ -627,28 +656,11 @@ def scrape_backstabbr(request, tournament_id, game_name):
     else:
         raise Http404
     # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
-    have_ownerships = False
-    for k, v in bg.sc_ownership.items():
-        # Map k to SupplyCentre (assuming backstabbr.DOTS match SupplyCentre abbreviations)
-        sc = SupplyCentre.objects.get(abbreviation__iexact=k)
-        # Map v to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
-        power = GreatPower.objects.get(abbreviation=v[0])
-        SupplyCentreOwnership.objects.update_or_create(game=g,
-                                                       year=year,
-                                                       sc=sc,
-                                                       defaults={'owner': power})
-        have_ownerships = True
-    if have_ownerships:
+    _bs_ownerships_to_sco(g, year, bg.sc_ownership)
+    if len(bg.sc_ownership):
         g.create_or_update_sc_counts_from_ownerships(year)
     else:
-        with transaction.atomic():
-            for k, v in bg.sc_counts.items():
-                # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
-                power = GreatPower.objects.get(abbreviation=k[0])
-                CentreCount.objects.update_or_create(power=power,
-                                                     game=g,
-                                                     year=year,
-                                                     defaults={'count': v})
+        _bs_counts_to_cc(g, year, bg.sc_counts)
     g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
