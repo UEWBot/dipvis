@@ -273,5 +273,8 @@ class Game():
                     position = literal_eval(match.group(1))
                 match = ORDERS.search(scr.string)
                 if match:
-                    orders = literal_eval(match.group(1))
+                    try:
+                        orders = literal_eval(match.group(1))
+                    except ValueError:
+                        print(match.group(1))
         return (sc_counts, soloing_power, sc_ownership, position, orders)
