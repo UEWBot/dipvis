@@ -23,9 +23,11 @@ This module provides utility functions for DipVis.
 """
 
 from tournament import backstabbr
+from tournament.diplomacy import FIRST_YEAR
 from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
 from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
+from tournament.game_views import _bs_ownerships_to_sco, _bs_counts_to_cc
 
 
 def map_to_backstabbr_power(gp):
@@ -77,6 +79,27 @@ def populate_bs_profile_urls(dry_run=False):
     else:
         print("Would have updated %d profile URLs" % players_changed)
     print("%d mismatches detected" % mismatches)
+
+def populate_missed_years(game, dry_run=False):
+    """
+    For a game on backstabbr, check for missing years and fill them in.
+    """
+    # Parse the current game page on Backstabbr
+    bg = backstabbr.Game(game.notes)
+    for year in range(FIRST_YEAR, bg.year):
+        if not game.centrecount_set.filter(year=year).exists():
+            print("Reading results for %d" % year)
+            if dry_run:
+                continue
+            parsed_turn = bg.turn_details(backstabbr.SPRING, year+1)
+            sc_counts = parsed_turn[0]
+            sc_ownership = parsed_turn[2]
+            # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
+            _bs_ownerships_to_sco(game, year, sc_ownership)
+            if len(bg.sc_ownership):
+                game.create_or_update_sc_counts_from_ownerships(year)
+            else:
+                _bs_counts_to_cc(game, year, sc_counts)
 
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
