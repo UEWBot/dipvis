@@ -114,13 +114,16 @@ class Game():
         self.gm = 'Unknown'
         self.ongoing = True
         self.soloing_power = None
-        self.powers = {}
+        self.players = {}
+        self.sc_counts = {}
+        for p in POWERS:
+            self.sc_counts[p] = 0
         self.sc_ownership = {}
         self.position = {}
         self.orders = {}
         for p in POWERS:
-            # (centres, player, player profile URL) tuple
-            self.powers[p] = (0, 'Unknown', '')
+            # (player, player profile URL) tuple
+            self.players[p] = ('Unknown', '')
         self._parse_page()
         self._calculate_result()
 
@@ -135,15 +138,15 @@ class Game():
 
     def _calculate_result(self):
         """
-        Set self.result and self.soloer from self.powers and self.ongoing.
+        Set self.result and self.soloer from self.sc_counts, self.players, and self.ongoing.
         """
         alive = 0
         self.soloer = None
-        for count, player, _ in self.powers.values():
+        if self.soloing_power is not None:
+            self.soloer = self.players[self.soloing_power][0]
+        for count in self.sc_counts.values():
             if count > 0:
                 alive += 1
-            if count > 17:
-                self.soloer = player
         if self.soloer is not None:
             self.result = 'Solo'
         elif self.ongoing:
@@ -179,9 +182,8 @@ class Game():
         for span in soup.find_all('span'):
             if span.div:
                 power, count = span.text.strip().split()
-                t = self.powers[power]
                 dots = int(count)
-                self.powers[power] = (dots, t[1], t[2])
+                self.sc_counts[power] = dots
                 if dots > 17:
                     self.soloing_power = power
         # Players
@@ -192,13 +194,11 @@ class Game():
                     if td.div:
                         power = td.div.text.strip()
                     elif td.a:
-                        t = self.powers[power]
-                        self.powers[power] = (t[0],
-                                              td.a.string.strip(),
-                                              urlunparse(('https',
-                                                          BACKSTABBR_NETLOC,
-                                                          td.a.get('href'),
-                                                          '', '', '')))
+                        self.players[power] = (td.a.string.strip(),
+                                               urlunparse(('https',
+                                                           BACKSTABBR_NETLOC,
+                                                           td.a.get('href'),
+                                                           '', '', '')))
         # GM
         for h4 in soup.find_all('h4'):
             if 'Gamemaster' in h4.string:

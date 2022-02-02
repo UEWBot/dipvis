@@ -54,7 +54,7 @@ def populate_bs_profile_urls(dry_run=False):
             continue
         games += 1
         for gp in g.gameplayer_set.all():
-            _, player, url = bg.powers[map_to_backstabbr_power(gp.power)]
+            player, url = bg.players[map_to_backstabbr_power(gp.power)]
             if gp.player.backstabbr_profile_url:
                 if url == gp.player.backstabbr_profile_url:
                     players_left += 1

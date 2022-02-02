@@ -642,13 +642,13 @@ def scrape_backstabbr(request, tournament_id, game_name):
         g.create_or_update_sc_counts_from_ownerships(year)
     else:
         with transaction.atomic():
-            for k, v in bg.powers.items():
+            for k, v in bg.sc_counts.items():
                 # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
                 power = GreatPower.objects.get(abbreviation=k[0])
                 CentreCount.objects.update_or_create(power=power,
                                                      game=g,
                                                      year=year,
-                                                     defaults={'count': v[0]})
+                                                     defaults={'count': v})
     g.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done

@@ -47,9 +47,9 @@ class BackstabbrTests(TestCase):
         """Check that the players and centrecounts are as expected"""
         for k, v in results.items():
             with self.subTest(power=k):
-                self.assertEqual(g.powers[k][0], v[0])
+                self.assertEqual(g.sc_counts[k], v[0])
                 # The "Display name" can be changed, but the number should still match
-                self.assertEqual(g.powers[k][1].split('#')[-1], v[1].split('#')[-1])
+                self.assertEqual(g.players[k][0].split('#')[-1], v[1].split('#')[-1])
 
     @tag('backstabbr')
     def test_backstabbr_game_solo(self):
