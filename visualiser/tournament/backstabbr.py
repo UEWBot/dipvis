@@ -207,7 +207,7 @@ class Game():
                         try:
                             self.gm = s.a.string.strip()
                         except AttributeError:
-                            self.gm = None
+                            pass
                         self.ongoing = False
         # SC ownership, unit locations, and orders
         for scr in soup.find_all('script'):
