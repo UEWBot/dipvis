@@ -107,7 +107,10 @@ class Game():
         self.sandbox_game = ('sandbox/' in self.parsed_url.path)
         if not self.regular_game and not self.sandbox_game:
             raise InvalidGameUrl(self.url)
-        self.number = self._extract_game_number()
+        try:
+            self.number = self._extract_game_number()
+        except ValueError as e:
+            raise InvalidGameUrl(self.url) from e
         self.gm = 'Unknown'
         self.ongoing = True
         self.soloing_power = None
