@@ -163,6 +163,14 @@ class Game():
             # We were redirected - implies invalid game URL
             raise InvalidGameUrl(self.url)
         soup = BeautifulSoup(page.read())
+        self._parse_invariants_from_soup(soup)
+        self._parse_turn_from_soup(soup)
+
+    def _parse_invariants_from_soup(self, soup):
+        """
+        Read the fixed properties of the game from the soup.
+        Sets self.name, self.season, self.year, self.players, self.gm, and self.ongoing
+        """
         # Extract the game name
         m = soup.find('meta', property="og:title", content=True)
         if m:
@@ -178,14 +186,6 @@ class Game():
                     season_year = div.a.string.split()
                     self.season = season_year[0]
                     self.year = int(season_year[1])
-        # Centre counts
-        for span in soup.find_all('span'):
-            if span.div:
-                power, count = span.text.strip().split()
-                dots = int(count)
-                self.sc_counts[power] = dots
-                if dots > 17:
-                    self.soloing_power = power
         # Players
         for h4 in soup.find_all('h4'):
             if 'Players' in h4.string:
@@ -209,6 +209,20 @@ class Game():
                         except AttributeError:
                             pass
                         self.ongoing = False
+
+    def _parse_turn_from_soup(self, soup):
+        """
+        Read the per-turn properties of the game from the soup.
+        Sets self.sc_counts, self.soloing_power, self.sc_ownership, self.position, and self.orders
+        """
+        # Centre counts
+        for span in soup.find_all('span'):
+            if span.div:
+                power, count = span.text.strip().split()
+                dots = int(count)
+                self.sc_counts[power] = dots
+                if dots > 17:
+                    self.soloing_power = power
         # SC ownership, unit locations, and orders
         for scr in soup.find_all('script'):
             if scr.string is not None:
