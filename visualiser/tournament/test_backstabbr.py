@@ -37,9 +37,27 @@ SANDBOX_GAME_NUMBER = 5766492401172480
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
     @tag('backstabbr')
+    def test_backstabbr_game_non_bs_url(self):
+        """Not a backstabbr URL."""
+        path = 'game/%s' % INVALID_GAME_NUMBER
+        url = urlunparse(('https', 'google.com', path, '', '', ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
+
     def test_backstabbr_game_invalid_game_number(self):
         """Invalid game number."""
         path = 'game/%s' % INVALID_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
+
+    def test_backstabbr_game_not_sandbox_or_game(self):
+        """Neither a sandbox nor a regular game."""
+        path = 'member/jHm3Y12XTZGeoRd2kl_cWw'
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
+
+    def test_backstabbr_game_turn_url(self):
+        """URL inside the game (would be nice to support this some day)."""
+        path = 'game/%s/1902/spring' % DRAW_3_GAME_NUMBER
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
@@ -147,8 +165,8 @@ class BackstabbrTests(TestCase):
 
     @tag('backstabbr')
     def test_backstabbr_game_5way(self):
-        """5-way draw."""
-        path = 'game/%s' % DRAW_5_GAME_NUMBER
+        """5-way draw. Also validates trailing / in game URL"""
+        path = 'game/%s/' % DRAW_5_GAME_NUMBER
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (10, 'Mike Moore#5938'),
