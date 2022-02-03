@@ -84,6 +84,14 @@ class GameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
 
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
         CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
         CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
         CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
@@ -1127,6 +1135,46 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 1.25)
                     else:
                         self.assertAlmostEqual(s, 1.5)
+
+    def test_g_scoring_detour09_3_equal_top(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1902)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Detour09')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 4:
+                    # 4+2+0+0=6
+                    self.assertAlmostEqual(s, 100 * 6 / (6+6+6+6++10+10+10))
+                elif sc.count == 6:
+                    # 6+2+0+2=10
+                    self.assertAlmostEqual(s, 100 * 10 / (6+6+6+6+10+10+10))
+                else:
+                    self.assertAlmostEqual(s, 0.75)
+
+    def test_g_scoring_detour09_4_equal_top(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Detour09')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 4:
+                    # 4+2+0+0=6
+                    self.assertAlmostEqual(s, 100 * 6 / (6+6+6+8+8+8+8))
+                elif sc.count == 5:
+                    # 5+2+0+1=8
+                    self.assertAlmostEqual(s, 100 * 8 / (6+6+6+8+8+8+8))
+                else:
+                    self.assertAlmostEqual(s, 0.75)
 
     # GScoringWhipping
     def test_g_scoring_whipping_example_a(self):
