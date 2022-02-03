@@ -861,9 +861,10 @@ class GetSevenPlayersFormTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # We need a Tournament, with 3 Rounds, one with an exact multiple of 7,
-        # one that needs all standby players plus some to play two boards,
-        # and one that needs a subset of the standby players to play
+        # We need a Tournament, with 4 Rounds, one with an exact multiple of 7 (round 2),
+        # one that needs all standby players plus some to play two boards (round 1),
+        # one that needs all the stadby players to play (round 4),
+        # and one that needs a subset of the standby players to play (round 3)
         t = Tournament.objects.create(name='t1',
                                       start_date=timezone.now(),
                                       end_date=timezone.now(),
@@ -882,6 +883,10 @@ class GetSevenPlayersFormTest(TestCase):
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
                                       start=t.start_date + timedelta(hours=16))
+        cls.r4 = Round.objects.create(tournament=t,
+                                      scoring_system=G_SCORING_SYSTEMS[0].name,
+                                      dias=True,
+                                      start=t.start_date + timedelta(hours=24))
 
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
@@ -937,6 +942,14 @@ class GetSevenPlayersFormTest(TestCase):
         cls.rp3_10 = RoundPlayer.objects.create(player=p10, the_round=cls.r3)
         # Again, check sorting
         cls.rp3_6 = RoundPlayer.objects.create(player=p6, the_round=cls.r3, standby=True)
+
+        RoundPlayer.objects.create(player=p2, the_round=cls.r4)
+        RoundPlayer.objects.create(player=p3, the_round=cls.r4)
+        RoundPlayer.objects.create(player=p4, the_round=cls.r4, standby=True)
+        RoundPlayer.objects.create(player=p5, the_round=cls.r4)
+        RoundPlayer.objects.create(player=p6, the_round=cls.r4, standby=True)
+        RoundPlayer.objects.create(player=p7, the_round=cls.r4)
+        RoundPlayer.objects.create(player=p8, the_round=cls.r4)
 
     def test_form_needs_round(self):
         # Omit the_round constructor parameter
@@ -1137,6 +1150,11 @@ class GetSevenPlayersFormTest(TestCase):
                 self.assertEqual(the_choices[3][1], self.rp3_5.player.sortable_str())
                 self.assertEqual(the_choices[4][1], self.rp3_6.player.sortable_str())
                 self.assertEqual(the_choices[5][1], self.rp3_8.player.sortable_str())
+
+    def test_no_choices_needed(self):
+        # If we need all standbys to play, no choices needed
+        form = GetSevenPlayersForm(the_round=self.r4)
+        self.assertEqual(0, len(form.fields))
 
     def test_too_few_standbys(self):
         data = {'standby_0': str(self.rp3_1.pk),
