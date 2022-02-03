@@ -43,7 +43,7 @@ class BackstabbrTests(TestCase):
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
-    def check_results(self, g, results):
+    def check_game_results(self, g, results):
         """Check that the players and centrecounts are as expected"""
         for k, v in results.items():
             with self.subTest(power=k):
@@ -77,7 +77,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, WINTER)
         self.assertEqual(g.year, 1914)
         self.assertEqual(g.gm, 'dance.scholar#1423')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     #@tag('backstabbr')
     #def test_backstabbr_game_2way(self):
@@ -109,7 +109,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, FALL)
         self.assertEqual(g.year, 1913)
         self.assertEqual(g.gm, 'Jason Mastbaum#8314')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     @tag('backstabbr')
     def test_backstabbr_game_4way(self):
@@ -137,7 +137,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, SPRING)
         self.assertEqual(g.year, 1912)
         self.assertEqual(g.gm, 'sloth.dc#9873')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     @tag('backstabbr')
     def test_backstabbr_game_5way(self):
@@ -165,7 +165,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, SPRING)
         self.assertEqual(g.year, 1911)
         self.assertEqual(g.gm, 'OB_GYN_Kenobi#4766')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     @tag('backstabbr')
     def test_backstabbr_game_6way(self):
@@ -193,7 +193,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, SPRING)
         self.assertEqual(g.year, 1917)
         self.assertEqual(g.gm, 'esilverman#6601')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     @tag('backstabbr')
     def test_backstabbr_game_7way(self):
@@ -221,7 +221,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, SPRING)
         self.assertEqual(g.year, 1908)
         self.assertEqual(g.gm, 'Andrew Goff#None')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     @tag('backstabbr')
     def test_backstabbr_sandbox(self):
@@ -249,7 +249,7 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.season, FALL)
         self.assertEqual(g.year, 1905)
         self.assertEqual(g.gm, 'Unknown')
-        self.check_results(g, RESULTS)
+        self.check_game_results(g, RESULTS)
 
     # TODO Would be nice test in-progress games, both anonymous and not
 
