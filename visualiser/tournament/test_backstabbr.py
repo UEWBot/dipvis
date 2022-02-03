@@ -37,19 +37,25 @@ SANDBOX_GAME_NUMBER = 5766492401172480
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
     @tag('backstabbr')
-    def test_backstabbr_game_invalid(self):
+    def test_backstabbr_game_invalid_game_number(self):
         """Invalid game number."""
         path = 'game/%s' % INVALID_GAME_NUMBER
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
-    def check_game_results(self, g, results):
-        """Check that the players and centrecounts are as expected"""
+    def check_results(self, sc_counts, results):
+        """Check that the centrecounts are as expected"""
         for k, v in results.items():
             with self.subTest(power=k):
-                self.assertEqual(g.sc_counts[k], v[0])
+                self.assertEqual(sc_counts[k], v[0])
+
+    def check_game_results(self, g, results):
+        """Check that the players and current centrecounts are as expected"""
+        for k, v in results.items():
+            with self.subTest(power=k):
                 # The "Display name" can be changed, but the number should still match
                 self.assertEqual(g.players[k][0].split('#')[-1], v[1].split('#')[-1])
+        self.check_results(g.sc_counts, results)
 
     @tag('backstabbr')
     def test_backstabbr_game_solo(self):
@@ -250,6 +256,24 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.year, 1905)
         self.assertEqual(g.gm, 'Unknown')
         self.check_game_results(g, RESULTS)
+
+    @tag('backstabbr')
+    def test_backstabbr_turn_details(self):
+        """Game.turn_details()"""
+        path = 'game/%s' % DRAW_6_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        g = Game(url)
+        sc_counts, soloing_power, sc_ownership, position, orders = g.turn_details(FALL, 1912)
+        RESULTS = {POWERS[0]: (10, 'David Hood#2887'),
+                   POWERS[1]: (1, 'Jason Mastbaum#8314'),
+                   POWERS[2]: (4, 'Chris Brand#8810'),
+                   POWERS[3]: (8, 'sionolen#8599'),
+                   POWERS[4]: (8, 'adam.silverman#5954'),
+                   POWERS[5]: (3, 'Grant Steel#4368'),
+                   POWERS[6]: (0, 'maddotter#1574'),
+                  }
+        self.assertIs(soloing_power, None)
+        self.check_results(sc_counts, RESULTS)
 
     # TODO Would be nice test in-progress games, both anonymous and not
 
