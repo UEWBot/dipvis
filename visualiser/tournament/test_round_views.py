@@ -409,7 +409,7 @@ class RoundViewTests(TestCase):
 
     def test_roll_call_post_current_round_with_seeding(self):
         # roll_call POST for current round of a tournament with seeding
-        self.assertTrue(self.t3.current_round().number(), 2)
+        self.assertEqual(self.t3.current_round().number(), 2)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '10',
