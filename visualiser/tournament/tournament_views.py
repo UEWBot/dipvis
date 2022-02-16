@@ -134,7 +134,7 @@ def tournament_scores(request,
                 rs.append('')
             else:
                 str = '%.2f'
-                if rp.game_count == 0:
+                if not rp.gameplayers().exists():
                     # This player sat out the round
                     str += '*'
                 rs.append(str % r_scores[r][p.player])

@@ -158,11 +158,20 @@ class RScoringBest(RoundScoringSystem):
         # Give the appropriate points to anyone who agreed to sit out
         for p in non_players:
             # If the "sitting out" bonus is only allowed once and they've sat out multiple rounds, they get zero
-            if self.non_player_score_once and RoundPlayer.objects.filter(player=p.player,
-                                                                         the_round__tournament=p.the_round.tournament,
-                                                                         game_count=0).count() > 1:
-                retval[p.player] = 0.0
-                continue
+            bonus_already_given = False
+            if self.non_player_score_once:
+                for r in p.the_round.tournament.round_set.all():
+                    if r == p.the_round:
+                        break
+                    rps = RoundPlayer.objects.filter(the_round=r).filter(player=p.player)
+                    gps = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=p.player)
+                    if rps.exists() and not gps.exists():
+                        # Player also didn't play in this earlier round
+                        bonus_already_given = True
+                        break
+                if bonus_already_given:
+                    retval[p.player] = 0.0
+                    continue
             retval[p.player] = self.non_player_score
         return retval
 
@@ -1674,7 +1683,7 @@ class RoundPlayer(models.Model):
                                   help_text=_('check if the player would prefer not to play this round'))
     score = models.FloatField(default=0.0)
     game_count = models.PositiveIntegerField(default=1,
-                                             help_text=_('number of games being played this round'))
+                                             help_text=_('number of games to play this round'))
 
     class Meta:
         ordering = ['player', 'the_round__start']

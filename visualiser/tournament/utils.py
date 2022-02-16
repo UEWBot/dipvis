@@ -292,6 +292,8 @@ def fix_round_players(the_round, dry_run=False):
     corresponding RoundPlayer, and creates one.
     Finally, triggers a score recalculation for all Games in the round.
     If dry_run is True, just report what would be done.
+
+    Note that this can remove RoundPlayers who checked in but didn't play
     """
     # First, check that the Round does have Games. If not, abort
     game_set = the_round.game_set.all()
@@ -299,6 +301,8 @@ def fix_round_players(the_round, dry_run=False):
         print("No games in round - exiting.\n")
         return;
     # Check for spurious RoundPlayers
+    # game_count gets reset back to 1 by the roll call page,
+    # so this could delete a player who sat out the round
     for rp in the_round.roundplayer_set.filter(game_count=1):
         if not game_set.filter(gameplayer__player=rp.player).exists():
             print("%s didn't actually play in the round - deleting.\n" % rp)
