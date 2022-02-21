@@ -277,7 +277,7 @@ class GamePlayersFormTest(TestCase):
         form = GamePlayersForm(the_round=self.r1)
         self.assertIn('game_id', form.fields)
 
-    def test_name_field(self):
+    def test_name_field_two(self):
         form = GamePlayersForm(the_round=self.r1)
         self.assertIn('name', form.fields)
 

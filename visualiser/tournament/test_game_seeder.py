@@ -712,7 +712,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         for g in r:
             self.assertNotEqual('A' in g, 'B' in g)
 
-    def test_seed_games_separate_dups_1(self):
+    def test_seed_games_separate_dups_1_two(self):
         s = create_seeder(num_players=18)
         dups = set(['A', 'B', 'C'])
         r = s.seed_games(players_doubling_up=dups)
