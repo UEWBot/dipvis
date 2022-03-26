@@ -788,19 +788,19 @@ class GScoringManorCon(GameScoringSystem):
 
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
-    GScoringSolos(),
-    GScoringDrawSize(),
-    GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
-    GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
-    GScoringSumOfSquares(),
+    GScoringBangkok(),
     GScoringCarnage(_('Carnage with dead equal'), centre_based=False, dead_equal=True),
     GScoringCarnage(_('Carnage with elimination order'), centre_based=False, dead_equal=False),
     GScoringCarnage(_('Center-count Carnage'), centre_based=True, dead_equal=False),
-    GScoringTribute(),
-    GScoringWorldClassic(),
+    GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
+    GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringDetour09(),
-    GScoringBangkok(),
+    GScoringDrawSize(),
     GScoringManorCon(_('ManorCon'), 75),
     GScoringManorCon(_('Original ManorCon'), 100),
+    GScoringSolos(),
+    GScoringSumOfSquares(),
+    GScoringTribute(),
     GScoringWhipping(_('Whipping'), 468),
+    GScoringWorldClassic(),
 ]

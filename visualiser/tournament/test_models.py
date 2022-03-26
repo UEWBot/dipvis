@@ -54,7 +54,8 @@ class TournamentModelTests(TestCase):
         cls.set1 = GameSet.objects.get(name='Avalon Hill')
         cls.set2 = GameSet.objects.get(name='Gibsons')
 
-        s1 = G_SCORING_SYSTEMS[0].name
+        #s1 = G_SCORING_SYSTEMS[0].name
+        s1 = "Solo or bust"
 
         now = timezone.now()
 
