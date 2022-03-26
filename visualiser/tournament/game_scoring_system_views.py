@@ -26,7 +26,7 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GreatPower, FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.game_scoring import GameScoringSystem, G_SCORING_SYSTEMS
-from tournament.game_scoring import GameState
+from tournament.game_scoring import GameState, DotCountUnknown
 
 
 class InvalidState(Exception):
@@ -112,8 +112,10 @@ class SimpleGameState(GameState):
         """Returns the number of supply centres owned by the strongest power(s)."""
         return max(self.sc_counts.values())
 
-    def dot_count(self, power):
+    def dot_count(self, power, year=None):
         """Returns the number of supply centres owned by the specified power."""
+        if year is not None:
+            raise DotCountUnknown
         return self.sc_counts[power]
 
     def year_eliminated(self, power):
@@ -187,11 +189,20 @@ def game_scoring_detail(request, slug):
         raise Http404
     # Use sys to score some sample games
     state1 = _create_state(GAME_1)
-    scores1 = sys.scores(state1)
+    try:
+        scores1 = sys.scores(state1)
+    except DotCountUnknown:
+        scores1 = None
     state2 = _create_state(GAME_2)
-    scores2 = sys.scores(state2)
+    try:
+        scores2 = sys.scores(state2)
+    except DotCountUnknown:
+        scores2 = None
     state3 = _create_state(GAME_3)
-    scores3 = sys.scores(state3)
+    try:
+        scores3 = sys.scores(state3)
+    except DotCountUnknown:
+        scores3 = None
     return render(request,
                   'game_scoring_systems/detail.html',
                   {'system': sys,

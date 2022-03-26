@@ -1176,6 +1176,181 @@ class GameScoringTests(TestCase):
                 else:
                     self.assertAlmostEqual(s, 0.75)
 
+    # GScoringMaxonian
+    def test_g_scoring_maxonian_no_solo1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Maxonian')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.power == self.austria:
+                    # 7th
+                    self.assertAlmostEqual(s, 1)
+                elif sc.power == self.england:
+                    # 4th
+                    self.assertAlmostEqual(s, 4)
+                elif sc.power == self.france:
+                    # 5th
+                    self.assertAlmostEqual(s, 3)
+                elif sc.power == self.germany:
+                    # 1st
+                    self.assertAlmostEqual(s, 7)
+                elif sc.power == self.italy:
+                    # 6th
+                    self.assertAlmostEqual(s, 2)
+                elif sc.power == self.russia:
+                    # 3rd
+                    self.assertAlmostEqual(s, 5)
+                else:
+                    # 2nd
+                    self.assertAlmostEqual(s, 6)
+
+    def test_g_scoring_maxonian_no_solo2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Maxonian')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.power == self.austria:
+                    # 7th
+                    self.assertAlmostEqual(s, 1)
+                elif sc.power == self.england:
+                    # 3rd
+                    self.assertAlmostEqual(s, 5)
+                elif sc.power == self.france:
+                    # 5th
+                    self.assertAlmostEqual(s, 3)
+                elif sc.power == self.germany:
+                    # 1st
+                    self.assertAlmostEqual(s, 7)
+                elif sc.power == self.italy:
+                    # 6th
+                    self.assertAlmostEqual(s, 2)
+                elif sc.power == self.russia:
+                    # 4th
+                    self.assertAlmostEqual(s, 4)
+                else:
+                    # 2nd
+                    self.assertAlmostEqual(s, 6)
+
+    def test_g_scoring_maxonian_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Maxonian')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.power == self.austria:
+                    # 7th
+                    self.assertAlmostEqual(s, 1)
+                elif sc.power == self.england:
+                    # 3rd
+                    self.assertAlmostEqual(s, 5)
+                elif sc.power == self.france:
+                    # 5th
+                    self.assertAlmostEqual(s, 3)
+                elif sc.power == self.germany:
+                    # 1st
+                    self.assertAlmostEqual(s, 7+4)
+                elif sc.power == self.italy:
+                    # 6th
+                    self.assertAlmostEqual(s, 2)
+                elif sc.power == self.russia:
+                    # 4th
+                    self.assertAlmostEqual(s, 4)
+                else:
+                    # 2nd
+                    self.assertAlmostEqual(s, 6)
+
+    def test_g_scoring_maxonian_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Maxonian')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.power == self.austria:
+                    # 7th
+                    self.assertAlmostEqual(s, 1)
+                elif sc.power == self.england:
+                    # 4th
+                    self.assertAlmostEqual(s, 4)
+                elif sc.power == self.france:
+                    # 5th
+                    self.assertAlmostEqual(s, 3)
+                elif sc.power == self.germany:
+                    # 1st
+                    self.assertAlmostEqual(s, 7+5)
+                elif sc.power == self.italy:
+                    # 6th
+                    self.assertAlmostEqual(s, 2)
+                elif sc.power == self.russia:
+                    # 3rd
+                    self.assertAlmostEqual(s, 5)
+                else:
+                    # 2nd
+                    self.assertAlmostEqual(s, 6)
+
+    def test_g_scoring_maxonian_3_equal_top(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1902)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Maxonian')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if (sc.power == self.austria) or (sc.power == self.france):
+                    # Joint 4th
+                    self.assertAlmostEqual(s, (4 + 3) / 2)
+                elif (sc.power == self.england) or (sc.power == self.italy):
+                    # Joint 6th
+                    self.assertAlmostEqual(s, (2 + 1) / 2)
+                elif (sc.power == self.germany) or (sc.power == self.russia):
+                    # Joint 1st
+                    self.assertAlmostEqual(s, (7 + 6) / 2)
+                else:
+                    # 3rd
+                    self.assertAlmostEqual(s, 5)
+
+    def test_g_scoring_maxonian_4_equal_top(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Maxonian')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 5:
+                    # Joint 1st
+                    self.assertAlmostEqual(s, (7 + 6 + 5 + 4) / 4)
+                else:
+                    # Joint 5th
+                    self.assertAlmostEqual(s, (3 + 2 + 1) / 3)
+
     # GScoringWhipping
     def test_g_scoring_whipping_example_a(self):
         example_a = SimpleGameState(sc_counts={self.austria: 0,

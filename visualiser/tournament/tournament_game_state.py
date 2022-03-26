@@ -19,8 +19,9 @@ This module contains the interface between the game scoring code and the
 tournament database.
 """
 
-from tournament.diplomacy import WINNING_SCS, GreatPower
+from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, GreatPower
 from tournament.game_scoring import GameState
+from tournament.game_scoring import InvalidYear, DotCountUnknown
 
 
 class TournamentGameState(GameState):
@@ -45,6 +46,12 @@ class TournamentGameState(GameState):
         self.draw = self.game.passed_draw()
         self.final_year = self.scs.order_by('-year')[0].year
         self.final_year_scs = self.scs.filter(year=self.final_year).order_by('-count')
+
+    def _validate_year(self, year):
+        """Check that the year is reasonable. Raise InvalidYear if it isn't."""
+        # 1900 gives the starting SC count
+        if (year < FIRST_YEAR - 1) or (year > self.final_year):
+            raise InvalidYear(year)
 
     def all_powers(self):
         """Returns an iterable of all the powers."""
@@ -93,8 +100,15 @@ class TournamentGameState(GameState):
         """Returns the number of supply centres owned by the strongest power(s)."""
         return self.final_year_scs[0].count
 
-    def dot_count(self, power):
+    def dot_count(self, power, year=None):
         """Returns the number of supply centres owned by the specified power."""
+        if year is not None:
+            self._validate_year(year)
+            try:
+                return self.scs.filter(year=year).get(power=power).count
+            # We can't import CentreCount here
+            except BaseException as e:
+                raise DotCountUnknown(e)
         return self.final_year_scs.get(power=power).count
 
     def year_eliminated(self, power):

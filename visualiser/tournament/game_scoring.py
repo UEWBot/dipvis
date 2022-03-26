@@ -28,6 +28,16 @@ from django.utils.translation import gettext as _
 from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 
 
+class InvalidYear(Exception):
+    """The specified year is invalid for the GameState."""
+    pass
+
+
+class DotCountUnknown(Exception):
+    """The dot count for the specified year is unknown."""
+    pass
+
+
 class GameState(ABC):
     """
     The state of a Game to be scored.
@@ -76,8 +86,13 @@ class GameState(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def dot_count(self, power):
-        """Returns the number of supply centres owned by the specified power."""
+    def dot_count(self, power, year=None):
+        """
+        Returns the number of supply centres owned by the specified power.
+        If year is specified, returns the numer of centres owned at the end
+        of that year. Otherwise, returns the latest number.
+        May raise InvaidYear or DotCountUnknown if year is provided.
+        """
         raise NotImplementedError
 
     @abstractmethod
@@ -722,6 +737,100 @@ class GScoringBangkok(GameScoringSystem):
         return retval
 
 
+class GScoringMaxonian(GameScoringSystem):
+    """
+    Players are ranked by supply centre count.
+    Top-ranked player gets 7 points, second gets 6, third gets 5,
+    fourth gets 4, fifth gets 3, sixth gets 2, and last gets 1.
+    If two players are tied, their SC counts in previous years
+    are compared, and the player who most recently was ahead gets
+    the higher score.
+    If two players had the same supply centre count every year,
+    they each score the average of their place and the place below.
+    Any player with more than 13 supply centres scores 1 additional
+    point per SC above 13, unless the game was soloed, in which case
+    only the soloer gets these points.
+    """
+    def __init__(self):
+        self.name = _('Maxonian')
+        self.position_points = [7, 6, 5, 4, 3, 2, 1]
+        self.bonus_threshold = 13
+
+    def _num_equal(self, state, dots, power_list, year):
+        """
+        How many of the specified powers had the specified dot count in the specified year?
+        """
+        count = 0
+        for p in power_list:
+            if state.dot_count(p, year) == dots:
+                count += 1
+        return count
+
+    def _scores_for_powers(self, state, year, power_list, points_list):
+        """
+        Recursive function to calculate position points.
+        points_list must be ordered highest to lowest
+        """
+        retval = {}
+        if year < FIRST_YEAR:
+            # Powers are completely tied
+            pts = sum(points_list) / len(power_list)
+            for p in power_list:
+                retval[p] = pts
+            return retval
+
+        dots = [(p, state.dot_count(p, year)) for p in power_list]
+        dots.sort(key = itemgetter(1), reverse=True)
+
+        for n, (p, d) in enumerate(dots, start=0):
+
+            # We may already have done this power (if it's tied)
+            if p in retval:
+                continue
+
+            count = self._num_equal(state, d, power_list, year)
+            if count == 1:
+                retval[p] = points_list[n]
+            else:
+                # Recurse with the appropriate subsets
+                power_sublist = [p for p, d2 in dots if d2 == d]
+                yr = year - 1
+                while(True):
+                    try:
+                        retval.update(self._scores_for_powers(state,
+                                                              yr,
+                                                              power_sublist,
+                                                              points_list[n:n+count]))
+                        break
+                    except DotCountUnknown:
+                        # Try the previous year
+                        # We always have 1900 counts,
+                        # and if for some reason we don't,
+                        # we'll get InvalidYear instead
+                        yr = yr - 1
+
+        return retval
+
+    def scores(self, state):
+        # Get position points for each power
+        retval = self._scores_for_powers(state,
+                                         state.last_full_year(),
+                                         state.all_powers(),
+                                         self.position_points)
+        soloer = state.soloer()
+
+        # add bonus points
+        for p in retval.keys():
+            d = state.dot_count(p)
+            if d > self.bonus_threshold:
+                if (soloer is None) or (soloer == p):
+                    # All solos score as if they had 18 dots
+                    d = min(d, WINNING_SCS)
+                    retval[p] += d - self.bonus_threshold
+
+        return retval
+
+
 class GScoringManorCon(GameScoringSystem):
     """
     Solo gets a set number of points. Others get 0.1 per year they survived.
@@ -798,6 +907,7 @@ G_SCORING_SYSTEMS = [
     GScoringDrawSize(),
     GScoringManorCon(_('ManorCon'), 75),
     GScoringManorCon(_('Original ManorCon'), 100),
+    GScoringMaxonian(),
     GScoringSolos(),
     GScoringSumOfSquares(),
     GScoringTribute(),
