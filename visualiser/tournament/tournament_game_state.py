@@ -108,7 +108,7 @@ class TournamentGameState(GameState):
                 return self.scs.filter(year=year).get(power=power).count
             # We can't import CentreCount here
             except BaseException as e:
-                raise DotCountUnknown(e)
+                raise DotCountUnknown from e
         return self.final_year_scs.get(power=power).count
 
     def year_eliminated(self, power):
