@@ -24,7 +24,7 @@ from tournament.diplomacy import GreatPower, SupplyCentre, GameSet
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
-from tournament.models import validate_weight, SeederBias
+from tournament.models import SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING
@@ -1348,24 +1348,13 @@ class TournamentModelTests(TestCase):
     # TODO Existing TournamentPlayer should not have unranked cleared when saved
     # TODO Existing TournamentPlayer should not have unranked set when saved
 
-    # validate_weight()
-    def test_validate_weight_0(self):
-        self.assertRaises(ValidationError, validate_weight, 0)
-
-    def test_validate_weight_1(self):
-        validate_weight(1)
-
-    def test_validate_weight_10(self):
-        validate_weight(10)
-
     # SeederBias.clean()
     def test_seederbias_clean_clone(self):
         '''Same player twice'''
         t = Tournament.objects.get(name='t1')
         tp1 = t.tournamentplayer_set.first()
         sb = SeederBias(player1=tp1,
-                        player2=tp1,
-                        weight=3)
+                        player2=tp1)
         self.assertRaises(ValidationError, sb.clean)
 
     def test_seederbias_clean_mixup(self):
@@ -1375,8 +1364,7 @@ class TournamentModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         tp2 = t.tournamentplayer_set.first()
         sb = SeederBias(player1=tp1,
-                        player2=tp2,
-                        weight=3)
+                        player2=tp2)
         self.assertRaises(ValidationError, sb.clean)
 
     def test_seederbias_clean_ok(self):
@@ -1384,8 +1372,7 @@ class TournamentModelTests(TestCase):
         tp1 = t.tournamentplayer_set.first()
         tp2 = t.tournamentplayer_set.last()
         sb = SeederBias(player1=tp1,
-                        player2=tp2,
-                        weight=3)
+                        player2=tp2)
         sb.clean()
 
     # SeederBias.__str__()
@@ -1394,8 +1381,7 @@ class TournamentModelTests(TestCase):
         tp1 = t.tournamentplayer_set.first()
         tp2 = t.tournamentplayer_set.last()
         sb = SeederBias(player1=tp1,
-                        player2=tp2,
-                        weight=3)
+                        player2=tp2)
         # TODO Validate result
         str(sb)
 

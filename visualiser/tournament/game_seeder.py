@@ -196,16 +196,17 @@ class GameSeeder:
             raise PowersNotUnique()
         self._add_played_game(game, self.games_played_matrix)
 
-    def add_bias(self, player1, player2, weight):
+    def _add_bias(self, player1, player2, weight):
         """
         Add a bias to take into account.
         This effectively says "treat player1 and player2 as if they have
         already played weight games together". If called again with the
-        same pair of players, the second call with override the first.
+        same pair of players, the weights will be added.
         It is intended to be used to keep pairs of players apart, e.g. family
         members.
         Could also be used to make pairs of players more likely to play
         together if weight is negative.
+        Can raise InvalidWeight if weight is zero.
         Can raise InvalidPlayer if any player is unknown.
         Raises InvalidPlayerPairing if player1 == player2.
         """
@@ -217,10 +218,32 @@ class GameSeeder:
             raise InvalidPlayer(str(player1))
         if player2 not in self.games_played_matrix:
             raise InvalidPlayer(str(player2))
-        self.games_played_matrix[player1][player2] = weight
-        self.games_played_matrix[player2][player1] = weight
+        try:
+            self.games_played_matrix[player1][player2] += weight
+        except KeyError:
+            self.games_played_matrix[player1][player2] = weight
+        try:
+            self.games_played_matrix[player2][player1] += weight
+        except KeyError:
+            self.games_played_matrix[player2][player1] = weight
         # fitness is now meaningful
         self.games_played = True
+
+    # This is the value used by add_bias()
+    # It represents the number of games the two players will be assumed to have played together
+    _BIAS_WEIGHT = 25
+
+    def add_bias(self, player1, player2):
+        """
+        Add a bias to take into account.
+        This effectively says "treat player1 and player2 as if they have
+        already played several games together".
+        It is intended to be used to keep pairs of players apart, e.g. family
+        members.
+        Can raise InvalidPlayer if any player is unknown.
+        Raises InvalidPlayerPairing if player1 == player2.
+        """
+        self._add_bias(player1, player2, self._BIAS_WEIGHT)
 
     def _power_fitness(self, game):
         """

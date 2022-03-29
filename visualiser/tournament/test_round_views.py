@@ -234,7 +234,7 @@ class RoundViewTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p9,
                                         tournament=cls.t3)
         # Add SeederBias for a pair of players
-        SeederBias.objects.create(player1=cls.tp2, player2=cls.tp3, weight=3)
+        SeederBias.objects.create(player1=cls.tp2, player2=cls.tp3)
         # First Round has exactly seven RoundPlayers
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r31)
         RoundPlayer.objects.create(player=cls.p3, the_round=cls.r31)

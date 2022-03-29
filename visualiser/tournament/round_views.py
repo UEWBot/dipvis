@@ -325,7 +325,7 @@ def _create_game_seeder(tournament, round_number):
         # Just use seederbias_set so we only get each SeederBias once
         # because we only look at their player1
         for sb in tp.seederbias_set.all():
-            seeder.add_bias(sb.player1, sb.player2, sb.weight)
+            seeder.add_bias(sb.player1, sb.player2)
     return seeder
 
 

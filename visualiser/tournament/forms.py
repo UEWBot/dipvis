@@ -812,11 +812,10 @@ class SeederBiasForm(ModelForm):
     """Form to create/update a SeederBias object"""
     player1 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
     player2 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
-    weight = forms.IntegerField(widget=forms.HiddenInput())
 
     class Meta:
         model = SeederBias
-        fields = ['player1', 'player2', 'weight']
+        fields = ['player1', 'player2']
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
@@ -824,8 +823,6 @@ class SeederBiasForm(ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['player1'].queryset = self.tournament.tournamentplayer_set.all()
         self.fields['player2'].queryset = self.tournament.tournamentplayer_set.all()
-        # Set weight to be the number of rounds (if unbound)
-        self.initial['weight'] = max(1, self.tournament.round_set.count())
 
 
 class GameImageForm(ModelForm):

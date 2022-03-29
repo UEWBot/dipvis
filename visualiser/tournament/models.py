@@ -877,11 +877,9 @@ class TournamentPlayer(models.Model):
 
 def validate_weight(value):
     """
-    Checks a SeederBias weight.
+    No longer used. Retained for migrations.
     """
-    if value < 1:
-        raise ValidationError(_('%(value)d is not a valid weighting'),
-                              params={'value': value})
+    assert False, "This function should no longer be used"
 
 
 class SeederBias(models.Model):
@@ -893,8 +891,6 @@ class SeederBias(models.Model):
     player2 = models.ForeignKey(TournamentPlayer,
                                 on_delete=models.CASCADE,
                                 related_name='second_seederbias_set')
-    weight = models.PositiveSmallIntegerField(validators=[validate_weight],
-                                              help_text=_("Number of games to pretend they've already played together"))
 
     class Meta:
         verbose_name_plural = 'Seeder biases'

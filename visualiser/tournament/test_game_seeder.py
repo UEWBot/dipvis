@@ -148,32 +148,27 @@ class GameSeederSetupTest(unittest.TestCase):
     def test_add_bias_same_player(self):
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')
-        self.assertRaises(InvalidPlayerPairing, seeder.add_bias, 'A', 'A', 1)
-
-    def test_add_bias_invalid_weight(self):
-        seeder = GameSeeder(self.powers)
-        seeder.add_player('A')
-        seeder.add_player('B')
-        self.assertRaises(InvalidWeight, seeder.add_bias, 'A', 'B', 0)
+        self.assertRaises(InvalidPlayerPairing, seeder.add_bias, 'A', 'A')
 
     def test_add_bias_unknown_player1(self):
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')
-        self.assertRaises(InvalidPlayer, seeder.add_bias, 'B', 'A', 1)
+        self.assertRaises(InvalidPlayer, seeder.add_bias, 'B', 'A')
 
     def test_add_bias_unknown_player2(self):
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')
-        self.assertRaises(InvalidPlayer, seeder.add_bias, 'A', 'B', 1)
+        self.assertRaises(InvalidPlayer, seeder.add_bias, 'A', 'B')
 
     def test_add_bias_twice(self):
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')
         seeder.add_player('B')
-        seeder.add_bias('A', 'B', 1)
-        seeder.add_bias('B', 'A', 3)
-        # Second call should override the first
-        self.assertEqual(seeder.games_played_matrix['A']['B'], 3)
+        seeder.add_bias('A', 'B')
+        seeder.add_bias('B', 'A')
+        # Result should be the sum
+        self.assertEqual(seeder.games_played_matrix['A']['B'],
+                         2 * seeder._BIAS_WEIGHT)
 
     def test_add_bias(self):
         seeder = GameSeeder(self.powers)
@@ -191,7 +186,7 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('L')
         seeder.add_player('M')
         seeder.add_player('N')
-        seeder.add_bias('A', 'B', 1)
+        seeder.add_bias('A', 'B')
         # That should suffice to keep those players apart
         r = seeder.seed_games()
         for g in r:
@@ -209,8 +204,16 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        seeder.add_bias('A', 'B', 3)
-        self.assertEqual(18, seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
+        seeder.add_bias('A', 'B')
+        self.assertEqual(2 * seeder._BIAS_WEIGHT ** 2,
+                         seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
+
+    # _add_bias()
+    def test_add_bias_invalid_weight(self):
+        seeder = GameSeeder(self.powers)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        self.assertRaises(InvalidWeight, seeder._add_bias, 'A', 'B', 0)
 
     # _power_fitness()
     def test_power_fitness_no_games(self):

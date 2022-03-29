@@ -641,8 +641,7 @@ class TournamentViewTests(TestCase):
         tp2 = self.t2.tournamentplayer_set.last()
         url = reverse('seeder_bias', args=(self.t2.pk,))
         data = urlencode({'player1': str(tp1.pk),
-                          'player2': str(tp2.pk),
-                          'weight': '4'})
+                          'player2': str(tp2.pk)})
         response = self.client.post(url,
                                     data,
                                     content_type='application/x-www-form-urlencoded')
@@ -655,18 +654,15 @@ class TournamentViewTests(TestCase):
         sb = sb_qs.get()
         self.assertEqual(sb.player1, tp1)
         self.assertEqual(sb.player2, tp2)
-        self.assertEqual(sb.weight, 4)
         # Clean up
         sb.delete()
 
     def test_seeder_bias_remove(self):
         # Add two SeederBias objects just for this test
         sb1 = SeederBias.objects.create(player1=self.t2.tournamentplayer_set.first(),
-                                        player2=self.t2.tournamentplayer_set.last(),
-                                        weight=5)
+                                        player2=self.t2.tournamentplayer_set.last())
         sb2 = SeederBias.objects.create(player1=self.t2.tournamentplayer_set.first(),
-                                        player2=self.tp29,
-                                        weight=3)
+                                        player2=self.tp29)
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 2)
         # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
@@ -692,8 +688,7 @@ class TournamentViewTests(TestCase):
         tp2 = self.t4.tournamentplayer_set.last()
         url = reverse('seeder_bias', args=(self.t4.pk,))
         data = urlencode({'player1': str(tp1.pk),
-                          'player2': str(tp2.pk),
-                          'weight': '4'})
+                          'player2': str(tp2.pk)})
         response = self.client.post(url,
                                     data,
                                     content_type='application/x-www-form-urlencoded')

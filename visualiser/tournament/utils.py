@@ -277,8 +277,7 @@ def clone_tournament(t):
         p1 = TournamentPlayer.objects.get(tournament=new_t, player=sb.player1.player)
         p2 = TournamentPlayer.objects.get(tournament=new_t, player=sb.player2.player)
         SeederBias.objects.create(player1=p1,
-                                  player2=p2,
-                                  weight=sb.weight)
+                                  player2=p2)
 
     return new_t
 
