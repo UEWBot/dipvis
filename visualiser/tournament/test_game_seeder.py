@@ -144,6 +144,13 @@ class GameSeederSetupTest(unittest.TestCase):
                                ('F', '6'),
                                ('G', '7')]))
 
+    # _add_bias()
+    def test_add_bias_invalid_weight(self):
+        seeder = GameSeeder(self.powers)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        self.assertRaises(InvalidWeight, seeder._add_bias, 'A', 'B', 0)
+
     # add_bias()
     def test_add_bias_same_player(self):
         seeder = GameSeeder(self.powers)
@@ -207,13 +214,6 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_bias('A', 'B')
         self.assertEqual(2 * seeder._BIAS_WEIGHT ** 2,
                          seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
-
-    # _add_bias()
-    def test_add_bias_invalid_weight(self):
-        seeder = GameSeeder(self.powers)
-        seeder.add_player('A')
-        seeder.add_player('B')
-        self.assertRaises(InvalidWeight, seeder._add_bias, 'A', 'B', 0)
 
     # _power_fitness()
     def test_power_fitness_no_games(self):
@@ -602,6 +602,11 @@ class GameSeederSeedingTest(unittest.TestCase):
                     count += 1
             self.assertEqual(count, 2, "Player %s should be playing 2 games but is actually playing %d" % (p, count))
 
+    def check_no_games_played(self, seeder):
+        for p1 in seeder.games_played_matrix.values():
+            for p2 in p1.values():
+                self.assertEqual(p2, 0)
+
     # seed_games()
     def test_seed_games_initial(self):
         s = create_seeder(num_players=21)
@@ -682,6 +687,12 @@ class GameSeederSeedingTest(unittest.TestCase):
         s = create_seeder(num_players=21)
         self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['U']))
 
+    def test_seed_games_wrong_number_of_players_4(self):
+        # Multiple of 7 players, plus two playing two games
+        s = create_seeder(num_players=21)
+        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['T', 'U']))
+        self.check_no_games_played(s)
+
     def test_seed_games_with_omission(self):
         # Multiple of 7 players plus one, minus one not playing
         s = create_seeder(num_players=22)
@@ -714,8 +725,9 @@ class GameSeederSeedingTest(unittest.TestCase):
         # Check that no game has both the players playing two games
         for g in r:
             self.assertNotEqual('A' in g, 'B' in g)
+        self.check_no_games_played(s)
 
-    def test_seed_games_separate_dups_1(self):
+    def test_seed_games_separate_dups_2(self):
         s = create_seeder(num_players=18)
         dups = set(['A', 'B', 'C'])
         r = s.seed_games(players_doubling_up=dups)
@@ -724,6 +736,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         for g in r:
             if ('A' in g) and ('B' in g):
                 self.assertNotIn('C', g)
+        self.check_no_games_played(s)
 
 
 class ExhaustiveGameSeederTest(unittest.TestCase):

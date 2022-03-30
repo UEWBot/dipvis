@@ -233,6 +233,9 @@ class GameSeeder:
     # It represents the number of games the two players will be assumed to have played together
     _BIAS_WEIGHT = 25
 
+    # This value is used internally to keep players playing two games each apart
+    _TEMP_WEIGHT = 10
+
     def add_bias(self, player1, player2):
         """
         Add a bias to take into account.
@@ -532,6 +535,19 @@ class GameSeeder:
             result.append(self._assign_powers(game))
         return result
 
+    def _add_bias_for_doublers(self, players_doubling_up, add):
+        """
+        Adds or removes bias for every possible pair of players in the list.
+        add is a boolean = True to add bias, False to add negative bias,
+        undoing an earlier call with add=True.
+        """
+        if add:
+            w = self._TEMP_WEIGHT
+        else:
+            w = -self._TEMP_WEIGHT
+        for (p1, p2) in itertools.combinations(players_doubling_up, 2):
+            self._add_bias(p1, p2, w)
+
     def seed_games(self, omitting_players=(), players_doubling_up=()):
         """
         Returns a list of games, where each game is a set of players.
@@ -546,37 +562,45 @@ class GameSeeder:
         an exact multiple of the number of powers.
         Can raise ImpossibleToSeed if no valid seeding is possible.
         """
-        # Generate the specified number of seedings
-        # Use the random method if no games have been played yet and at most
-        # one player is playing two games, because any seeding is fine
-        if ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
-            seedings = []
-            # No point generating multiples if they're all equally good
-            starts = 1
-            if self.games_played or (len(players_doubling_up) > 1):
-                starts = self.starts
-            for _ in range(starts):
-                # This gives us a list of 2-tuples with (seeding, fitness)
-                seedings.append(self._seed_games(omitting_players,
-                                                 players_doubling_up))
-        elif self.seed_method == SeedMethod.EXHAUSTIVE:
-            players = self._player_pool(omitting_players, players_doubling_up)
-            seedings = []
-            try:
-                for s in self._all_possible_seedings(players):
-                    fitness = self._set_fitness(s, include_these_games=(len(players_doubling_up) > 1))
-                    seedings.append((s, fitness))
-            except _AssignmentFailed as e:
-                raise ImpossibleToSeed from e
-        # Sort them by fitness
-        seedings.sort(key=itemgetter(1))
-        if self.seed_method == SeedMethod.RANDOM:
-            bg_str = "With starts=%d and iterations=%d" % (self.starts,
-                                                           self.iterations)
-        else:
-            bg_str = "With Exhaustive seeding"
-        print("%s, best fitness score is %d in %d seedings" % (bg_str,
-                                                               seedings[0][1],
-                                                               len(seedings)))
+        # Add temporary bias to keep players_doubling_up apart
+        self._add_bias_for_doublers(players_doubling_up, add=True)
+        try:
+            # Generate the specified number of seedings
+            # Use the random method if no games have been played yet and at most
+            # one player is playing two games, because any seeding is fine
+            if ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
+                seedings = []
+                # No point generating multiples if they're all equally good
+                starts = 1
+                if self.games_played or (len(players_doubling_up) > 1):
+                    starts = self.starts
+                for _ in range(starts):
+                    # This gives us a list of 2-tuples with (seeding, fitness)
+                    seedings.append(self._seed_games(omitting_players,
+                                                     players_doubling_up))
+            elif self.seed_method == SeedMethod.EXHAUSTIVE:
+                players = self._player_pool(omitting_players, players_doubling_up)
+                seedings = []
+                try:
+                    for s in self._all_possible_seedings(players):
+                        fitness = self._set_fitness(s, include_these_games=(len(players_doubling_up) > 1))
+                        seedings.append((s, fitness))
+                except _AssignmentFailed as e:
+                    # Remove temporary bias
+                    self._add_bias_for_doublers(players_doubling_up, add=False)
+                    raise ImpossibleToSeed from e
+            # Sort them by fitness
+            seedings.sort(key=itemgetter(1))
+            if self.seed_method == SeedMethod.RANDOM:
+                bg_str = "With starts=%d and iterations=%d" % (self.starts,
+                                                               self.iterations)
+            else:
+                bg_str = "With Exhaustive seeding"
+            print("%s, best fitness score is %d in %d seedings" % (bg_str,
+                                                                   seedings[0][1],
+                                                                   len(seedings)))
+        finally:
+            # Remove temporary bias
+            self._add_bias_for_doublers(players_doubling_up, add=False)
         # Return the best (we don't care if multiple seedings are equally good)
         return seedings[0][0]
