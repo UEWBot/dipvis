@@ -166,7 +166,7 @@ def _adjust_rank_score(centre_counts, rank_points):
     Returns a list of ranking points for positions, ordered to correspond to
     the centre counts, having made adjustments for any tied positions.
     Where two or more powers have the same number of SCs, the ranking points
-    for their positions are shared eveny between them.
+    for their positions are shared evenly between them.
     """
     if not rank_points:
         # The rest of them get zero points
@@ -530,6 +530,54 @@ class GScoringTribute(GameScoringSystem):
             elif dots:
                 retval[p] -= bonus_per_survivor
         return retval
+
+class GScoringOMG(GameScoringSystem):
+    """
+    a) Each supply center (SC) is worth 1.5 points (total = 51 points)
+    b) Surviving in a draw is worth 9 points (average = 40.5 points per game)
+    c) Bonuses for the Top 3: 4.5 points for 1st, 3 points for 2nd, 1.5 points for 3rd.
+       If positions are tied, position points are shared between powers
+       (e.g. a 2-way tie for second awards each player (3 + 1.5) / 2 = 2.25 points.
+    d) Tribute paid to the board topper is equal to 1st place SCs - 2nd place SCs,
+       capped at 50% of a players score from a, b, and c
+    e) a solo victory is worth 100 points, with others scoring zero.
+    """
+    def __init__(self):
+        self.name = _('OMG')
+
+    def scores(self, state):
+        retval = {}
+        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
+        dots.sort(key = itemgetter(1), reverse=True)
+        gap = dots[0][1] - dots[1][1]
+        num_leaders = state.num_powers_with(dots[0][1])
+        rank_pts = _adjust_rank_score(dots, [4.5, 3, 1.5])
+        soloer = state.soloer()
+        soloed = soloer is not None
+        tribute = 0
+        for i, (p, c) in enumerate(dots):
+            if soloed:
+                if p == soloer:
+                    retval[p] = 100
+                else:
+                    retval[p] = 0
+                continue
+            # 1.5 point per dot
+            retval[p] = 1.5 * c
+            # Plus the survival points
+            if c:
+                retval[p] += 9
+            # and position points
+            retval[p] += rank_pts[i]
+            if num_leaders == 1:
+                # Leader(s) gets tribute from all the rest
+                x = min(gap, retval[p]/2)
+                retval[p] -= x
+                tribute += x
+        # Tribute goes to the leader
+        retval[dots[0][0]] += tribute
+        return retval
+
 
 
 class GScoringWorldClassic(GameScoringSystem):
@@ -908,6 +956,7 @@ G_SCORING_SYSTEMS = [
     GScoringManorCon(_('ManorCon'), 75),
     GScoringManorCon(_('Original ManorCon'), 100),
     GScoringMaxonian(),
+    GScoringOMG(),
     GScoringSolos(),
     GScoringSumOfSquares(),
     GScoringTribute(),
