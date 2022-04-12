@@ -452,7 +452,7 @@ def seed_games(request, tournament_id, round_num):
                                              formset=BasePowerAssignFormset,
                                              extra=0)
         formset = PowerAssignFormset(the_round=r, initial=data)
-    # Note that we wait for confirmation before adding them to the database
+
     context = {'tournament': t, 'round': r, 'formset': formset}
     return render(request, 'rounds/seeded_games.html', context)
 
