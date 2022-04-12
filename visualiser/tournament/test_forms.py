@@ -589,6 +589,11 @@ class PowerAssignFormTest(TestCase):
             with self.subTest(gp=str(gp)):
                 self.assertTrue(form.fields[gp.pk].required)
 
+    def test_issues_field(self):
+        form = PowerAssignForm(game=self.g)
+        self.assertIn('issues', form.fields)
+        self.assertTrue(form.fields['issues'].disabled)
+
     def test_player_choices(self):
         # Each player should have a choice of all seven GreatPowers
         form = PowerAssignForm(game=self.g)
@@ -618,7 +623,8 @@ class PowerAssignFormTest(TestCase):
                 self.gp4.pk: str(self.france.pk),
                 self.gp5.pk: str(self.germany.pk),
                 self.gp6.pk: str(self.italy.pk),
-                self.gp7.pk: str(self.russia.pk)}
+                self.gp7.pk: str(self.russia.pk),
+                'issues': ''}
         form = PowerAssignForm(data, game=self.g)
         self.assertTrue(form.is_valid())
 
@@ -631,7 +637,8 @@ class PowerAssignFormTest(TestCase):
                 self.gp4.pk: str(self.france.pk),
                 self.gp5.pk: str(self.germany.pk),
                 self.gp6.pk: str(self.italy.pk),
-                self.gp7.pk: str(self.russia.pk)}
+                self.gp7.pk: str(self.russia.pk),
+                'issues': ''}
         form = PowerAssignForm(data, game=self.g)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
@@ -647,7 +654,8 @@ class PowerAssignFormTest(TestCase):
                 self.gp4.pk: str(self.france.pk),
                 self.gp5.pk: str(self.germany.pk),
                 self.gp6.pk: str(self.italy.pk),
-                self.gp7.pk: str(self.russia.pk)}
+                self.gp7.pk: str(self.russia.pk),
+                'issues': ''}
         form = PowerAssignForm(data, game=self.g)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
@@ -663,7 +671,8 @@ class PowerAssignFormTest(TestCase):
                 self.gp4.pk: str(self.france.pk),
                 self.gp5.pk: str(self.germany.pk),
                 self.gp6.pk: str(self.italy.pk),
-                self.gp7.pk: str(self.russia.pk)}
+                self.gp7.pk: str(self.russia.pk),
+                'issues': ''}
         form = PowerAssignForm(data, game=self.g)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
@@ -788,6 +797,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
         data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
         data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data['form-0-issues'] = ''
         data['form-1-name'] = 'Game2'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
@@ -797,6 +807,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
         data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
         data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertTrue(formset.is_valid())
 
@@ -812,6 +823,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
         data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
         data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data['form-0-issues'] = ''
         data['form-1-name'] = 'RidiculouslyLongGameName'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
@@ -821,6 +833,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
         data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
         data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
@@ -840,6 +853,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
         data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
         data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data['form-0-issues'] = ''
         data['form-1-name'] = GAME_NAME
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
         data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
@@ -849,6 +863,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
         data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
         data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error

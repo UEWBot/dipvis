@@ -321,6 +321,12 @@ class PowerAssignForm(forms.Form):
             self.fields[c] = forms.ModelChoiceField(label=str(gp.player),
                                                     queryset=queryset)
 
+        # And add the Issues (read-only) field last
+        self.fields['issues'] = forms.CharField(label=_('Issues'),
+                                                required=False)
+        self.fields['issues'].disabled = True
+
+
     def clean(self):
         """Checks that no power is played by multiple players"""
         cleaned_data = super().clean()

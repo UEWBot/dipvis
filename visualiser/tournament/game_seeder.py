@@ -26,6 +26,8 @@ import random
 from enum import Enum
 from operator import itemgetter
 
+from django.utils.translation import gettext as _
+
 
 class InvalidPlayer(Exception):
     """A player is invalid in some way (unknown, already present, etc)."""
@@ -287,7 +289,8 @@ class GameSeeder:
 
     def _assign_powers(self, game):
         """
-        Returns a set of (player, power) 2-tuples.
+        Returns a 2-tuple containing a set of (player, power) 2-tuples and
+        a list of "issues".
         game is a set of players.
         """
         # Try every combination of power assignments in a random order,
@@ -302,7 +305,10 @@ class GameSeeder:
             if score < best_fitness:
                 best_fitness = score
                 best_result = g
-        return best_result
+        issues = []
+        if best_fitness > 0:
+            issues.append(_('Game has %(num)d player(s) who have already played their power') % {'num': best_fitness})
+        return best_result, issues
 
     def _fitness_score(self, game, games_played_matrix=None):
         """
@@ -525,8 +531,8 @@ class GameSeeder:
 
     def seed_games_and_powers(self, omitting_players=(), players_doubling_up=()):
         """
-        Returns a list of games, where each game is a set of
-        (player, power) 2-tuples.
+        Returns a list of games, where each game is a 2-tuple containing a set of
+        (player, power) 2-tuples and a list of issues.
         Parameters and exceptions are the same as seed_games()
         """
         result = list()

@@ -384,7 +384,7 @@ def seed_games(request, tournament_id, round_num):
                 g.gameplayer_set.all().update(power=None)
                 # Assign the powers to the players
                 for gp_id, field in f.cleaned_data.items():
-                    if gp_id in ['the_set', 'name', 'notes']:
+                    if gp_id in ['the_set', 'name', 'notes', 'issues']:
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
@@ -415,12 +415,13 @@ def seed_games(request, tournament_id, round_num):
         if t.power_assignment == Tournament.AUTO:
             games = _seed_games_and_powers(t, r)
             # Add the Games and GamePlayers to the database
-            for i, g in enumerate(games, start=1):
-                new_game = Game.objects.create(name=_generate_game_name(round_num, i),
+            for n, (g, i) in enumerate(games, start=1):
+                new_game = Game.objects.create(name=_generate_game_name(round_num, n),
                                                the_round=r,
                                                the_set=default_set)
                 current = {'name': new_game.name,
-                           'the_set': new_game.the_set}
+                           'the_set': new_game.the_set,
+                           'issues': '\n'.join(i)}
                 for tp, power in g:
                     gp = GamePlayer.objects.create(player=tp.player,
                                                    game=new_game,
@@ -430,12 +431,13 @@ def seed_games(request, tournament_id, round_num):
         else:
             games = _seed_games(t, r)
             # Add the Games and GamePlayers to the database
-            for i, g in enumerate(games, start=1):
-                new_game = Game.objects.create(name=_generate_game_name(round_num, i),
+            for n, g in enumerate(games, start=1):
+                new_game = Game.objects.create(name=_generate_game_name(round_num, n),
                                                the_round=r,
                                                the_set=default_set)
                 current = {'name': new_game.name,
-                           'the_set': new_game.the_set}
+                           'the_set': new_game.the_set,
+                           'issues': ''}
                 for tp in g:
                     gp = GamePlayer.objects.create(player=tp.player,
                                                    game=new_game)
