@@ -1132,6 +1132,98 @@ class GameScoringTests(TestCase):
                     else:
                         self.assertAlmostEqual(s, 0.6)
 
+    def test_g_scoring_manorconv2_no_solo1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('ManorCon v2')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 4:
+                    self.assertAlmostEqual(s, 100 * 48 / 442)
+                elif sc.count == 5:
+                    self.assertAlmostEqual(s, 100 * 61 / 442)
+                elif sc.count == 8:
+                    self.assertAlmostEqual(s, 100 * 112 / 442)
+                else:
+                    self.assertAlmostEqual(s, 0.3)
+
+    def test_g_scoring_manorconv2_no_solo2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('ManorCon v2')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 3:
+                    self.assertAlmostEqual(s, 100 * 37 / 496)
+                elif sc.count == 4:
+                    self.assertAlmostEqual(s, 100 * 48 / 496)
+                elif sc.count == 5:
+                    self.assertAlmostEqual(s, 100 * 61 / 496)
+                elif sc.count == 6:
+                    self.assertAlmostEqual(s, 100 * 76 / 496)
+                elif sc.count == 13:
+                    self.assertAlmostEqual(s, 100 * 237 / 496)
+                else:
+                    self.assertAlmostEqual(s, 0.3)
+
+    def test_g_scoring_manorconv2_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('ManorCon v2')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 5:
+                    self.assertAlmostEqual(s, 100 * 61 / 588)
+                elif sc.count == 7:
+                    self.assertAlmostEqual(s, 100 * 93 / 588)
+                elif sc.count == 17:
+                    self.assertAlmostEqual(s, 100 * 373 / 588)
+                else:
+                    if sc.power == self.austria:
+                        self.assertAlmostEqual(s, 0.3)
+                    elif sc.power == self.france:
+                        self.assertAlmostEqual(s, 0.5)
+                    elif sc.power == self.italy:
+                        self.assertAlmostEqual(s, 0.5)
+
+    def test_g_scoring_manorconv2_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('ManorCon v2')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 18:
+                    self.assertEqual(s, 100)
+                else:
+                    if sc.power == self.austria:
+                        self.assertAlmostEqual(s, 0.3)
+                    elif sc.power == self.france:
+                        self.assertAlmostEqual(s, 0.5)
+                    elif sc.power == self.italy:
+                        self.assertAlmostEqual(s, 0.5)
+                    else:
+                        self.assertAlmostEqual(s, 0.6)
+
     # GScoringDetour09
     def test_g_scoring_detour09_no_solo1(self):
         t = Tournament.objects.get(name='t1')

@@ -882,22 +882,28 @@ class GScoringMaxonian(GameScoringSystem):
 class GScoringManorCon(GameScoringSystem):
     """
     Solo gets a set number of points. Others get 0.1 per year they survived.
-    Otherwise calculate N = S^2 + 4*S + 16 for each power, where S is their centre-count (including N=16 for dead powers).
+    Otherwise calculate N = S^2 + 4*S + 16 for each power, where S is their centre-count (optionally including N=16 for dead powers).
     Then each surviving power scored 100 * N/(sum of all Ns), and each dead power still scores 0.1 per year they survived.
     """
-    def __init__(self, name, solo_score=75):
+    def __init__(self, name, solo_score=75, dead_get_16=True):
         self.solo_score = solo_score
+        self.dead_get_16 = dead_get_16
         self.name = name
 
     @property
     def description(self):
+        if self.dead_get_16:
+            dead_sum_str = ' (including N=16 for dead powers)'
+        else:
+            dead_sum_str = ''
         return _("""
                  Solo gets %(solo_score)d. Others get 0.1 per year they survived.
                  Otherwise calculate N = S^2 + 4*S + 16 for each power,
-                 where S is their centre-count (including N=16 for dead powers).
+                 where S is their centre-count%(dead_sum_str)s.
                  Then each surviving power scored 100 * N/(sum of all Ns),
                  and each dead power still scores 0.1 per year they survived.
-                 """) % {'solo_score': self.solo_score}
+                 """) % {'solo_score': self.solo_score,
+                         'dead_sum_str': dead_sum_str}
 
     def scores(self, state):
         retval = {}
@@ -926,7 +932,10 @@ class GScoringManorCon(GameScoringSystem):
                 # 0.1 point per season survived if eliminated, regardless of the game result
                 if dots == 0:
                     year = state.year_eliminated(p)
-                    n = 16
+                    if self.dead_get_16:
+                        n = 16
+                    else:
+                        n = 0
                     # retval gets the actual score
                     retval[p] = 0.1 * (year - FIRST_YEAR)
                 else:
@@ -953,8 +962,9 @@ G_SCORING_SYSTEMS = [
     GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringDetour09(),
     GScoringDrawSize(),
-    GScoringManorCon(_('ManorCon'), 75),
-    GScoringManorCon(_('Original ManorCon'), 100),
+    GScoringManorCon(_('ManorCon'), 75, True),
+    GScoringManorCon(_('Original ManorCon'), 100, True),
+    GScoringManorCon(_('ManorCon v2'), 100, False),
     GScoringMaxonian(),
     GScoringOMG(),
     GScoringSolos(),
