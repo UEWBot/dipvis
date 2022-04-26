@@ -24,7 +24,8 @@ from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy import GreatPower, FIRST_YEAR, TOTAL_SCS, WINNING_SCS
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.game_scoring import GameScoringSystem, G_SCORING_SYSTEMS
 from tournament.game_scoring import GameState, DotCountUnknown
 

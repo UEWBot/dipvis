@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='gameset',
             name='initial_image',
-            field=models.ImageField(upload_to=tournament.diplomacy.game_image_location),
+            field=models.ImageField(upload_to=tournament.diplomacy.utils.game_image_location),
         ),
         migrations.AlterField(
             model_name='round',

@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
             name='Preference',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('ranking', models.PositiveSmallIntegerField(validators=[tournament.diplomacy.validate_ranking])),
+                ('ranking', models.PositiveSmallIntegerField(validators=[tournament.diplomacy.tasks.validate_ranking])),
                 ('player', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournament.TournamentPlayer')),
                 ('power', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournament.GreatPower')),
             ],

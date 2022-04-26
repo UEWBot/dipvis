@@ -42,8 +42,9 @@ from tournament.forms import SCOwnerForm
 from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
 
-from tournament.diplomacy import GreatPower, SupplyCentre
-from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.models.supply_centre import SupplyCentre
+from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 from tournament.models import Game, GamePlayer, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import SPRING

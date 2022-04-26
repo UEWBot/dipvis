@@ -25,7 +25,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
+from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 
 
 class InvalidYear(Exception):

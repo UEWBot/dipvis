@@ -41,7 +41,8 @@ from tournament.forms import PowerAssignForm
 from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
 
-from tournament.diplomacy import GreatPower, GameSet
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call
 from tournament.game_seeder import GameSeeder
 from tournament.models import Tournament, Round, Game

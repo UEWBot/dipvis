@@ -36,10 +36,15 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament.background import WDD_BASE_URL
-from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
-from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
-from tournament.diplomacy import validate_year_including_start, validate_year
-from tournament.diplomacy import validate_ranking, validate_preference_string
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.models.supply_centre import SupplyCentre
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
+from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
+from tournament.diplomacy.tasks.validate_ranking import validate_ranking
+from tournament.diplomacy.tasks.validate_year import validate_year
+from tournament.diplomacy.tasks.validate_year_including_start import validate_year_including_start
+
 from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
 from tournament.players import Player, add_player_bg
