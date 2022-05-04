@@ -35,6 +35,9 @@ from django.utils import timezone
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
+from tournament import backstabbr
+
+from tournament.backstabbr import InvalidGameUrl
 from tournament.background import WDD_BASE_URL
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
@@ -1125,6 +1128,17 @@ class Game(models.Model):
 
     class Meta:
         ordering = ['name']
+
+    def backstabbr_game(self):
+        """
+        Returns a backstabbr.Game for the Game, or None.
+        """
+        try:
+            return backstabbr.Game(self.notes)
+        except InvalidGameUrl:
+            # notes may be something other than a backstabbr URL
+            pass
+        return None
 
     def assign_powers_from_prefs(self):
         """

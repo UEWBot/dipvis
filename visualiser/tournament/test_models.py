@@ -116,12 +116,12 @@ class TournamentModelTests(TestCase):
                                    dias=True,
                                    start=t3.start_date,
                                    final_year=1907)
-        r32 = Round.objects.create(tournament=t3,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=t3.start_date + HOURS_8,
-                                   earliest_end_time=t3.start_date + HOURS_8,
-                                   latest_end_time=t3.start_date + HOURS_9)
+        cls.r32 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=t3.start_date + HOURS_8,
+                                       earliest_end_time=t3.start_date + HOURS_8,
+                                       latest_end_time=t3.start_date + HOURS_9)
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11',
@@ -171,8 +171,8 @@ class TournamentModelTests(TestCase):
                             the_set=cls.set1)
         # Add Games to r32
         Game.objects.create(name='g32',
-                            started_at=r32.start,
-                            the_round=r32,
+                            started_at=cls.r32.start,
+                            the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
 
@@ -301,7 +301,7 @@ class TournamentModelTests(TestCase):
         # Add a RoundPlayer to r31
         RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
         # Add a RoundPlayer to r32
-        RoundPlayer.objects.create(player=cls.p5, the_round=r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
 
     # RScoringBest.scores() without sitting-out bonus
     def test_r_scoring_best(self):
@@ -1683,6 +1683,33 @@ class TournamentModelTests(TestCase):
         r = Round.objects.first()
         # TODO Validate result
         str(r)
+
+    # Game.backstabbr_game()
+    def test_game_backstabbr_game(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1,
+                 notes = 'https://www.backstabbr.com/game/4917371326693376')
+        self.assertNotEqual(g.backstabbr_game(), None)
+
+    def test_game_backstabbr_game_empty_notes(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1)
+        self.assertEqual(g.backstabbr_game(), None)
+
+    def test_game_backstabbr_game_non_url(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1,
+                 notes='Back right corner table')
+        self.assertEqual(g.backstabbr_game(), None)
 
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):

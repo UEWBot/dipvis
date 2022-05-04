@@ -49,9 +49,8 @@ def populate_bs_profile_urls(dry_run=False):
     for g in Game.objects.filter(notes__contains='backstabbr.com'):
         print("Checking game %s" % g.notes)
         # read the game page
-        try:
-            bg = backstabbr.Game(g.notes)
-        except backstabbr.InvalidGameUrl as e:
+        bg = g.backstabbr_game()
+        if bg is None:
             print("Failed to extract backstabbr URL from notes - skipping")
             continue
         games += 1
@@ -85,7 +84,10 @@ def populate_missed_years(game, dry_run=False):
     For a game on backstabbr, check for missing years and fill them in.
     """
     # Parse the current game page on Backstabbr
-    bg = backstabbr.Game(game.notes)
+    bg = game.backstabbr_game()
+    if bg is None:
+        print("No Backstabbr URL for %s" % game)
+        return
     for year in range(FIRST_YEAR, bg.year):
         if not game.centrecount_set.filter(year=year).exists():
             print("Reading results for %d" % year)
