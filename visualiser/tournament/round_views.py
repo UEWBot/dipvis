@@ -173,7 +173,7 @@ def roll_call(request, tournament_id, round_num):
                                                                'standby': is_standby})
             elif r.game_set.filter(gameplayer__player=p).exists():
                 # Refuse to delete this one
-                form.add_error(None, _('Player did play this round'))
+                form.add_error(None, _('%(player)s did play this round') % {'player': p})
                 errors_added = True
             else:
                 # delete any corresponding RoundPlayer

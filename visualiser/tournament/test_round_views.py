@@ -517,7 +517,7 @@ class RoundViewTests(TestCase):
                                     data,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Player did play this round', response.content)
+        self.assertIn(b' did play this round', response.content)
         # Clean up
         GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
 
