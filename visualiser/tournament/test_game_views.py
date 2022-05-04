@@ -32,6 +32,7 @@ from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
 HOURS_8 = timedelta(hours=8)
+VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
 
 class GameViewTests(TestCase):
     fixtures = ['game_sets.json']
@@ -162,6 +163,25 @@ class GameViewTests(TestCase):
     def test_detail_non_existant_game(self):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game42')))
         self.assertEqual(response.status_code, 404)
+
+    def test_detail_no_scrape_link(self):
+        self.assertEqual(self.g1.notes, '')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(b'from Backstabbr', response.content)
+
+    def test_detail_scrape_link(self):
+        # Give g1 a backstabbr URL
+        self.g1.notes = VALID_BS_URL
+        self.g1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'from Backstabbr', response.content)
+        # Clean up
+        self.g1.notes = ''
+        self.g1.save()
 
     def test_detail_no_aar_link(self):
         # Add a GamePlayer without an AAR
@@ -1059,7 +1079,7 @@ class GameViewTests(TestCase):
         self.assertEqual(len(self.g1.notes), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)
         # Give g1 a backstabbr URL
-        self.g1.notes = 'https://www.backstabbr.com/game/4917371326693376'
+        self.g1.notes = VALID_BS_URL
         self.g1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
