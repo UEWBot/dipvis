@@ -48,10 +48,10 @@ def send_board_call(the_round):
     for g in the_round.game_set.all():
         game_text = 'Board %(game)s:\n' % {'game': g.name}
         if g.notes:
-            game_text += g.notes + '\n'
+            game_text += ' ' + g.notes + '\n'
         recipients = []
         for gp in g.gameplayer_set.order_by('power'):
-            game_text += '%(power)s: %(player)s' % {'power': gp.power or 'Power TBD',
+            game_text += ' %(power)s: %(player)s' % {'power': gp.power or 'Power TBD',
                                                     'player': gp.player}
             bs_un = gp.tournamentplayer().backstabbr_username
             if the_round.tournament.is_virtual() and bs_un:
