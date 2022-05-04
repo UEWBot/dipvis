@@ -19,7 +19,7 @@ Scrape the interesting parts of a Diplomacy game on Backstabbr.com.
 
 import re
 import urllib.request
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urljoin, urlparse, urlunparse
 from ast import literal_eval
 from bs4 import BeautifulSoup
 
@@ -187,7 +187,7 @@ class Game():
         orders is a dict, indexed by power, of dicts, indexed by province, of order dicts.
            The order dict may contain 'from', 'to', 'result', 'result_reason', 'type', 'to', and probably others.
         """
-        url = self.url + '/%d/%s' % (year, season)
+        url = urljoin(self.url + '/', '%d/%s' % (year, season))
         return self._parse_turn_page(url)
 
     def _parse_turn_page(self, url):
