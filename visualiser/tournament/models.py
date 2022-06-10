@@ -251,8 +251,9 @@ class TournamentScoringSystem(ABC):
     @abstractmethod
     def scores_detail(self, round_players):
         """
-        This is the same as scores(), excpet that it also returns the Round
-        scores.
+        Returns the tournament scores. Where Games and Rounds are complete,
+        this is the final score. Where Games and Rounds are still in progress,
+        this is the "if all games finished now" scores.
         Returns a 2-tuple:
         - a dict, indexed by player key, of tournament scores
         - a list, indexed by round, of dicts, indexed by player key,
