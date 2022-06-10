@@ -538,7 +538,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
             elif p == self.russia:
                 self.assertEqual(s, 1 * 500 + 2002)
-            elif p == self.turkey:
+            else:
+                # Turkey:
                 self.assertEqual(s, 1001)
 
     def test_g_scoring_centrecarnage_2(self):
@@ -570,7 +571,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 4 * 500 + 3003)
             elif p == self.russia:
                 self.assertEqual(s, 2002)
-            elif p == self.turkey:
+            else:
+                # Turkey:
                 self.assertEqual(s, 1001)
 
     # GScoringTribute
@@ -928,7 +930,8 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.9)
                     elif sc.power == self.france:
                         self.assertAlmostEqual(s, 1.5)
-                    elif sc.power == self.italy:
+                    else:
+                        # Italy
                         self.assertAlmostEqual(s, 1.5)
 
     def test_g_scoring_bangkok_solo(self):
@@ -1014,7 +1017,8 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.3)
                     elif sc.power == self.france:
                         self.assertAlmostEqual(s, 0.5)
-                    elif sc.power == self.italy:
+                    else:
+                        # Italy
                         self.assertAlmostEqual(s, 0.5)
 
     def test_g_scoring_manorcon_solo(self):
@@ -1106,7 +1110,8 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.3)
                     elif sc.power == self.france:
                         self.assertAlmostEqual(s, 0.5)
-                    elif sc.power == self.italy:
+                    else:
+                        # Italy
                         self.assertAlmostEqual(s, 0.5)
 
     def test_g_scoring_manorcon2_solo(self):
@@ -1198,7 +1203,8 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.3)
                     elif sc.power == self.france:
                         self.assertAlmostEqual(s, 0.5)
-                    elif sc.power == self.italy:
+                    else:
+                        # Italy
                         self.assertAlmostEqual(s, 0.5)
 
     def test_g_scoring_manorconv2_solo(self):
@@ -1302,7 +1308,8 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.75)
                     elif sc.power == self.france:
                         self.assertAlmostEqual(s, 1.25)
-                    elif sc.power == self.italy:
+                    else:
+                        # Italy
                         self.assertAlmostEqual(s, 1.25)
 
     def test_g_scoring_detour09_solo(self):
@@ -1342,11 +1349,10 @@ class GameScoringTests(TestCase):
                 if sc.count == 4:
                     # 4+2+0+0=6
                     self.assertAlmostEqual(s, 100 * 6 / (6+6+6+6++10+10+10))
-                elif sc.count == 6:
+                else:
+                    # sc.count == 6
                     # 6+2+0+2=10
                     self.assertAlmostEqual(s, 100 * 10 / (6+6+6+6+10+10+10))
-                else:
-                    self.assertAlmostEqual(s, 0.75)
 
     def test_g_scoring_detour09_4_equal_top(self):
         t = Tournament.objects.get(name='t1')
@@ -1362,11 +1368,10 @@ class GameScoringTests(TestCase):
                 if sc.count == 4:
                     # 4+2+0+0=6
                     self.assertAlmostEqual(s, 100 * 6 / (6+6+6+8+8+8+8))
-                elif sc.count == 5:
+                else:
+                    # sc.count == 5
                     # 5+2+0+1=8
                     self.assertAlmostEqual(s, 100 * 8 / (6+6+6+8+8+8+8))
-                else:
-                    self.assertAlmostEqual(s, 0.75)
 
     # GScoringMaxonian
     def test_g_scoring_maxonian_no_solo1(self):
@@ -1572,7 +1577,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, (90 + 12))
             elif p == self.russia:
                 self.assertEqual(s, 8)
-            elif p == self.turkey:
+            else:
+                # Turkey
                 self.assertEqual(s, (40 + 12))
 
     def test_g_scoring_whipping_example_b(self):
@@ -1604,7 +1610,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 6)
             elif p == self.russia:
                 self.assertEqual(s, (40 + 15))
-            elif p == self.turkey:
+            else:
+                # Turkey
                 self.assertEqual(s, 5)
 
     def test_g_scoring_whipping_example_c(self):
@@ -1636,7 +1643,8 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 5)
             elif p == self.russia:
                 self.assertEqual(s, 11)
-            elif p == self.turkey:
+            else:
+                # Turkey
                 self.assertEqual(s, 4)
 
     def test_g_scoring_whipping_example_d(self):
@@ -1668,5 +1676,6 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 7)
             elif p == self.russia:
                 self.assertEqual(s, 6)
-            elif p == self.turkey:
+            else:
+                # Turkey
                 self.assertEqual(s, (80 + 15))

@@ -892,7 +892,3 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         for i in range(13):
             seeder.add_player('%dp' %i)
         self.assertRaises(InvalidPlayerCount, seeder.seed_games)
-
-
-if __name__ == '__main__':
-    unittest.main()

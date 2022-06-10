@@ -43,10 +43,9 @@ class WikipediaBackgroundTests(TestCase):
                 self.assertEqual(t['Second'], name)
             elif t['Year'] == 2013:
                 self.assertEqual(t['World Champion'], name)
-            elif t['Year'] == 2015:
-                self.assertEqual(t['European Champion'], name)
             else:
-                self.assertLessThan(t['Year'], 2020)
+                # 2015
+                self.assertEqual(t['European Champion'], name)
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
