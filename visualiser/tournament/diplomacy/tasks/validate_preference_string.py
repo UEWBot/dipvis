@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
 
 from ..models.great_power import GreatPower
 
