@@ -22,7 +22,8 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from tournament.diplomacy import GameSet, GreatPower
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import Tournament, TournamentPlayer, SeederBias
 from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal

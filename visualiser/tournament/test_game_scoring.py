@@ -17,7 +17,9 @@
 from django.test import TestCase
 from django.utils import timezone
 
-from tournament.diplomacy import GameSet, GreatPower, TOTAL_SCS
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount

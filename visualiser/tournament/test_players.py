@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django.utils import timezone
 
-from tournament.diplomacy import GreatPower
+from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player, PlayerRanking, PlayerAward
