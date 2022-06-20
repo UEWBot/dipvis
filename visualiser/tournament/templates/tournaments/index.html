@@ -2,39 +2,40 @@
 {% load i18n %}
 
 {% block content %}
-<h1>{% trans "DipTV - Diplomacy Tournament Visualiser" %}</h1>
-{% if tournament_list %}
-<p>{% trans "Tournaments:" %}</p>
+  <h1>{% trans "DipTV - Diplomacy Tournament Visualiser" %}</h1>
+  {% if tournament_list %}
+    <p>{% trans "Tournaments:" %}</p>
     <ul>
-    {% for t in tournament_list %}
+      {% for t in tournament_list %}
         <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
-            <a href="{% url 'tournament_scores' t.id %}">Scores</a>
-            {% if not t.is_finished %}
-              <a href="{% url 'tournament_round' t.id %}">Current Round</a></li>
-            {% endif %}
-    {% endfor %}
+          <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+          {% if not t.is_finished %}
+            <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
+          {% endif %}
+        </li>
+      {% endfor %}
     </ul>
-{% else %}
+  {% else %}
     <p>{% trans "No tournaments are available." %}</p>
-{% endif %}
-{% if user.is_active %}
-{% if unpublished_list %}
-<p>{% trans "Unpublished Tournaments:" %}</p>
-    <ul>
-    {% for t in unpublished_list %}
-        <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
-            <a href="{% url 'tournament_scores' t.id %}">Scores</a>
+  {% endif %}
+  {% if user.is_active %}
+    {% if unpublished_list %}
+      <p>{% trans "Unpublished Tournaments:" %}</p>
+      <ul>
+        {% for t in unpublished_list %}
+          <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
+            <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
             {% if not t.is_finished %}
-              <a href="{% url 'tournament_round' t.id %}">Current Round</a></li>
+              <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
             {% endif %}
-    {% endfor %}
-    </ul>
-    <p>{% trans "Unpublished tournaments are not visible to most site users. To make one visible, check the 'is_published' checkbox for it in the " %}<a href="{% url 'admin:tournament_tournament_changelist' %}">{% trans "admin page" %}</a>.</p>
-{% else %}
-    <p>{% trans "No unpublished tournaments are available." %}</p>
-{% endif %}
-<p><a href="{% url 'admin:tournament_tournament_add' %}">{% trans "Add a tournament" %}</a></p>
-<p><a href="https://raw.githubusercontent.com/UEWBot/dipvis/master/TD_USER_GUIDE">{% trans "Tournament Director's User Guide" %}</a></p>
-</ul>
-{% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <p>{% trans "Unpublished tournaments are not visible to most site users. To make one visible, check the 'is_published' checkbox for it in the " %}<a href="{% url 'admin:tournament_tournament_changelist' %}">{% trans "admin page" %}</a>.</p>
+    {% else %}
+      <p>{% trans "No unpublished tournaments are available." %}</p>
+    {% endif %}
+    <p><a href="{% url 'admin:tournament_tournament_add' %}">{% trans "Add a tournament" %}</a></p>
+    <p><a href="https://raw.githubusercontent.com/UEWBot/dipvis/master/TD_USER_GUIDE">{% trans "Tournament Director's User Guide" %}</a></p>
+  {% endif %}
 {% endblock %}
