@@ -8,9 +8,13 @@
     <ul>
       {% for t in tournament_list %}
         <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
-          <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
-          {% if not t.is_finished %}
-            <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
+          {% if t.in_progress or t.is_finished %}
+            <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+            {% if not t.is_finished %}
+              <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
+            {% endif %}
+          {% else %}
+            <a href="{% url 'tournament_players' t.id %}">{% blocktrans with num=t.tournamentplayer_set.count %}{{ num }} Registered Players</a>{% endblocktrans %}
           {% endif %}
         </li>
       {% endfor %}
@@ -24,9 +28,13 @@
       <ul>
         {% for t in unpublished_list %}
           <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
-            <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
-            {% if not t.is_finished %}
-              <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
+            {% if t.in_progress or t.is_finished %}
+              <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
+              {% if not t.is_finished %}
+                <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
+              {% endif %}
+            {% else %}
+              <a href="{% url 'tournament_players' t.id %}">{% blocktrans with num=t.tournamentplayer_set.count %}{{ num }} Registered Players</a>{% endblocktrans %}
             {% endif %}
           </li>
         {% endfor %}

@@ -731,6 +731,22 @@ class Tournament(models.Model):
                 return False
         return True
 
+    def in_progress(self):
+        """
+        Returns True if the tournament has rounds, any is in progress,
+        and not all have finished.
+        Returns False otherwise.
+        """
+        r = self.current_round()
+        if r is None:
+            # Either no rounds, or all are finished
+            return False
+        if r.number() != 1:
+            # First round is finished
+            return True
+        # r is round 1, so the tournament is in_progress if the round is
+        return r.in_progress()
+
     def wdd_url(self):
         """
         URL for this tournament in the World Diplomacy Database, if known.

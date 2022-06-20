@@ -44,6 +44,8 @@ HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
+s1 = "Solo or bust"
+
 
 @override_settings(HOSTNAME='example.com')
 class TournamentModelTests(TestCase):
@@ -53,9 +55,6 @@ class TournamentModelTests(TestCase):
     def setUpTestData(cls):
         cls.set1 = GameSet.objects.get(name='Avalon Hill')
         cls.set2 = GameSet.objects.get(name='Gibsons')
-
-        #s1 = G_SCORING_SYSTEMS[0].name
-        s1 = "Solo or bust"
 
         now = timezone.now()
 
@@ -1109,6 +1108,43 @@ class TournamentModelTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
         self.assertFalse(t.is_finished())
+
+    # Tournament.in_progress()
+    def test_tourney_in_progress_some_rounds_over(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertTrue(t.in_progress())
+
+    def test_tourney_in_progress_no_rounds_over(self):
+        t = Tournament.objects.get(name='t2')
+        self.assertTrue(t.in_progress())
+
+    def test_tourney_in_progress_all_rounds_over(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertFalse(t.in_progress())
+
+    def test_tourney_in_progress_no_rounds(self):
+        t = Tournament.objects.create(name='Roundless',
+                                      start_date=timezone.now(),
+                                      end_date=timezone.now(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+        self.assertFalse(t.in_progress())
+
+    def test_tourney_in_progress_rounds_not_started(self):
+        t = Tournament.objects.create(name='Preparing',
+                                      start_date=timezone.now(),
+                                      end_date=timezone.now(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+        t.save()
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s1,
+                                 dias=True,
+                                 start=t.start_date)
+        r.save()
+        self.assertFalse(t.in_progress())
+        # Clean-up
+        t.delete()
 
     # Tournament.wdd_url()
     def test_tournament_wdd_url(self):
