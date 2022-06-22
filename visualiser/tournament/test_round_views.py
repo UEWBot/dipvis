@@ -94,7 +94,8 @@ class RoundViewTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=Tournament.SECRET,
                                            is_published=True,
-                                           seed_games=False)
+                                           seed_games=False,
+                                           format = Tournament.VFTF)
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,

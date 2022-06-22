@@ -423,6 +423,31 @@ class TournamentPlayerViewTests(TestCase):
         # ... and the TournamentPlayer should still exist
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
 
+    def test_index_unregister_from_finished(self):
+        # TODO: Why does this not behave the same as when it's not editable?
+        # A tournament that the user could edit, except that it is finished
+        self.assertFalse(self.t4.editable)
+        self.t4.editable = True
+        self.t4.save()
+        # Use an existing TournamentPlayer
+        tp = self.t4.tournamentplayer_set.get(player=self.p1)
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        url = reverse('tournament_players', args=(self.t4.pk,))
+        data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
+                          'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0})
+        response = self.client.post(url,
+                                    data,
+                                    content_type='application/x-www-form-urlencoded')
+        # We shouldn't be allowed to change an uneditable Tournament
+        self.assertEqual(response.status_code, 404)
+        # the TournamentPlayer should still exist
+        self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
+        # Clean-up
+        self.t4.editable = False
+        self.t4.save()
+
     def test_index_register_player(self):
         # Use the form to register a Player
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
