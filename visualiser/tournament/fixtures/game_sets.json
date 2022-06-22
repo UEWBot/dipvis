@@ -366,6 +366,14 @@
     }
 },
 {
+    "pk": 3,
+    "model": "tournament.gameset",
+    "fields": {
+        "name": "Backstabbr",
+        "initial_image": "games/backstabbr_start_position.jpg"
+    }
+},
+{
     "pk": 1,
     "model": "tournament.setpower",
     "fields": {
@@ -487,6 +495,69 @@
     "model": "tournament.setpower",
     "fields": {
         "the_set": 2,
+        "power": 7,
+        "colour": "yellow"
+    }
+},
+{
+    "pk": 15,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
+        "power": 1,
+        "colour": "red"
+    }
+},
+{
+    "pk": 16,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
+        "power": 2,
+        "colour": "blue"
+    }
+},
+{
+    "pk": 17,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
+        "power": 3,
+        "colour": "cyan"
+    }
+},
+{
+    "pk": 18,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
+        "power": 4,
+        "colour": "grey"
+    }
+},
+{
+    "pk": 19,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
+        "power": 5,
+        "colour": "lightgreen"
+    }
+},
+{
+    "pk": 20,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
+        "power": 6,
+        "colour": "magenta"
+    }
+},
+{
+    "pk": 21,
+    "model": "tournament.setpower",
+    "fields": {
+        "the_set": 3,
         "power": 7,
         "colour": "yellow"
     }
