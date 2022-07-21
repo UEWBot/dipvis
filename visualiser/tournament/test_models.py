@@ -1902,6 +1902,57 @@ class TournamentModelTests(TestCase):
 
     # TODO Game.assign_powers_from_prefs() raising PowerAlreadyAssigned
 
+
+    # Game.check_whether_finished()
+    def test_check_whether_finished_solo(self):
+        # Game is finished because somebody won
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertFalse(g.is_finished)
+        g.check_whether_finished()
+        self.assertTrue(g.is_finished)
+        # Cleanup
+        g.is_finished = False
+        g.save()
+
+    def test_check_whether_finished_reached(self):
+        # Game is finished because it reached the final year
+        t = Tournament.objects.get(name='t3')
+        r = t.round_numbered(1)
+        y = r.final_year
+        g = r.game_set.get(name='g31')
+        self.assertTrue(g.is_finished)
+        g.is_finished = False
+        g.save()
+        g.check_whether_finished(y)
+        self.assertTrue(g.is_finished)
+        # No cleanup needed
+
+    def test_check_whether_finished_not_reached(self):
+        # Game is not finished because it didn't yet reach the final year
+        t = Tournament.objects.get(name='t3')
+        r = t.round_numbered(1)
+        y = r.final_year
+        g = r.game_set.get(name='g31')
+        self.assertTrue(g.is_finished)
+        g.is_finished = False
+        g.save()
+        g.check_whether_finished(y - 1)
+        self.assertFalse(g.is_finished)
+        # Cleanup
+        g.is_finished = True
+        g.save()
+
+    def test_check_whether_finished_unlimited(self):
+        # Game not finished because there is no final year
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        self.assertFalse(g.is_finished)
+        g.check_whether_finished(1999)
+        self.assertFalse(g.is_finished)
+        # No cleanup needed
+
+
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
         # Arbitrary game

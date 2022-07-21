@@ -1192,7 +1192,7 @@ class Game(models.Model):
         """
         if year is None:
             year = self.final_year()
-        if (self.soloer() is not None) or (year == self.final_year):
+        if (self.soloer() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
             self.save()
 
