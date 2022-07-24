@@ -6,7 +6,6 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
 
-{% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 {% if player.unranked %}<p>{% trans "Ineligible for awards." %}</p>{% endif %}
 
 <ul>
@@ -14,7 +13,7 @@
     <li>{% blocktrans with r=rp.the_round.number %}Round {{ r }}{% endblocktrans %}</li>
     <ul>
       {% for gp in rp.gameplayers.all %}
-        <li>{{ gp.result_str|safe }}</li>
+        <li>{{ gp.result_str|safe }} {% blocktrans with power=gp.power game=gp.game.name url=gp.game.get_absolute_url %}as {{power}} in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
       {% empty %}
         <li>{% trans "Did not play." %}</li>
       {% endfor %}
