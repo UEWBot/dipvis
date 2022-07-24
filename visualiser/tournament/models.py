@@ -1140,6 +1140,7 @@ class Game(models.Model):
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
+                             verbose_name=_('URL/Notes'),
                              help_text=_('Will be included in board call emails and game page'))
 
     class Meta:

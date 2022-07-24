@@ -228,7 +228,7 @@ class GamePlayersForm(forms.Form):
     name = forms.CharField(label=_(u'Game Name'), max_length=Game.MAX_NAME_LENGTH)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
-    notes = forms.CharField(label=_('Notes'),
+    notes = forms.CharField(label=_('URL/Notes'),
                             required=False,
                             max_length=Game.MAX_NOTES_LENGTH)
 
@@ -300,7 +300,7 @@ class PowerAssignForm(forms.Form):
     name = forms.CharField(label=_(u'Game Name'), max_length=Game.MAX_NAME_LENGTH)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
-    notes = forms.CharField(label=_('Notes'),
+    notes = forms.CharField(label=_('URL/Notes'),
                             required=False,
                             max_length=Game.MAX_NOTES_LENGTH)
 
