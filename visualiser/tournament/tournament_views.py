@@ -245,11 +245,11 @@ def tournament_best_countries(request,
                 gp = gps[p.power].pop(0)
             except IndexError:
                 continue
-            cell = '<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%f' % (gp.tournamentplayer().get_absolute_url(),
-                                                                           gp.player,
-                                                                           all_urls_and_scores[gp.game][0],  # URL
-                                                                           all_urls_and_scores[gp.game][1],  # name
-                                                                           all_urls_and_scores[gp.game][2][gp.power])  # score
+            cell = '<a href="%s">%s</a><br/><a href="%s">%s</a><br/>%.2f' % (gp.tournamentplayer().get_absolute_url(),
+                                                                             gp.player,
+                                                                             all_urls_and_scores[gp.game][0],  # URL
+                                                                             all_urls_and_scores[gp.game][1],  # name
+                                                                             all_urls_and_scores[gp.game][2][gp.power])  # score
             if gp.tournamentplayer().unranked:
                 cell += '*'
             cell += '<br/>%d %s' % (gp.final_sc_count(),  # dots

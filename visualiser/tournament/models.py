@@ -181,7 +181,7 @@ class RScoringBest(RoundScoringSystem):
     def __str__(self):
         ret = 'Best game score in each round counts'
         if self.non_player_score > 0.0:
-            ret += '. Sitting out scores %f' % self.non_player_score
+            ret += '. Sitting out scores %.2f' % self.non_player_score
         if self.non_player_score_once:
             ret += ' once only'
         return ret
