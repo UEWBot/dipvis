@@ -980,9 +980,9 @@ class Round(models.Model):
     A single round of a Tournament
     """
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    # How do we combine game scores to get an overall player score for a round ?
+    # How do we score games in this round ?
     # This is the name of a GameScoringSystem object
-    # There has at least been talk of tournaments using multiple scoring systems, one per round
+    # There have been tournaments using multiple scoring systems, one per round
     scoring_system = models.CharField(max_length=GameScoringSystem.MAX_NAME_LENGTH,
                                       verbose_name=_(u'Game scoring system'),
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
@@ -1007,7 +1007,7 @@ class Round(models.Model):
         Return the GameScoringSystem for the Round.
         Can raise InvalidScoringSystem.
         """
-        # Calculate the scores for the game using the specified ScoringSystem
+        # Find the scoring system to score games in this Round
         system = find_game_scoring_system(self.scoring_system)
         if not system:
             raise InvalidScoringSystem(self.scoring_system)
