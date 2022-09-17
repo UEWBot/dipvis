@@ -29,6 +29,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from tournament.email import send_roll_call_emails
 
@@ -252,8 +253,9 @@ def tournament_best_countries(request,
                                                                              all_urls_and_scores[gp.game][2][gp.power])  # score
             if gp.tournamentplayer().unranked:
                 cell += '*'
-            cell += '<br/>%d %s' % (gp.final_sc_count(),  # dots
-                                    _('centre(s)'))
+            cell += ngettext('<br/>One centre',
+                             '<br/>%(dots)d centres',
+                             gp.final_sc_count()) % {'dots': gp.final_sc_count()}
             row.append(cell)
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}

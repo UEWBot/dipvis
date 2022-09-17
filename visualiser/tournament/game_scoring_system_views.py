@@ -23,6 +23,7 @@ from operator import attrgetter
 from django.http import Http404
 from django.shortcuts import render
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
@@ -65,9 +66,12 @@ class SimpleGameState(GameState):
                                                                                                                    'year': y,
                                                                                                                    'end': final_year})
             if sc_counts[p]:
-                raise InvalidState(_('%(power)s cannot be eliminated in %(year)d and now have %(dots)d centre(s)') % {'power': str(p),
-                                                                                                                      'year': y,
-                                                                                                                      'dots': sc_counts[p]})
+                raise InvalidState(ngettext('%(power)s cannot be eliminated in %(year)d and now have one centre',
+                                            '%(power)s cannot be eliminated in %(year)d and now have %(dots)d centres',
+                                            sc_counts[p])
+                                   % {'power': str(p),
+                                      'year': y,
+                                      'dots': sc_counts[p]})
 
     def all_powers(self):
         """Returns an iterable of all the powers."""

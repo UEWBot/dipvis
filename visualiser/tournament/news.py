@@ -82,7 +82,9 @@ def _tournament_news(t):
         for power, gps in t.best_countries().items():
             gp = gps[0]
             if len(gps) == 1:
-                results.append(_(u'%(player)s won Best %(country)s with %(dots)d centre(s) and a score of %(score).2f in game %(game)s of round %(round)d.')
+                results.append(ngettext('%(player)s won Best %(country)s with one centre and a score of %(score).2f in game %(game)s of round %(round)d.',
+                                        '%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.',
+                                  gp.final_sc_count())
                                % {'player': str(gp.player),
                                   'country': _(power.name),
                                   'dots': gp.final_sc_count(),
@@ -92,7 +94,9 @@ def _tournament_news(t):
             else:
                 # Tie for best power
                 winner_str = ', '.join([str(p.player) for p in gps])
-                results.append(_(u'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centre(s) and a score of %(score).2f.')
+                results.append(ngettext('Best %(country)s was jointly won by %(winner_str)s with one centre and a score of %(score).2f.',
+                                        'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.',
+                               gp.final_sc_count())
                                % {'country': _(power.name),
                                   'winner_str': winner_str,
                                   'dots': gp.final_sc_count(),
@@ -123,7 +127,9 @@ def _tournament_news(t):
                               'players': player_str})
             # How many players are close to the leader?
             contenders = len([s for s in the_scores.values() if s >= max_score * 0.9]) - 1
-            results.append(_("%(count)d players have at least 90%% of the leader's current tournament score") % {'count': contenders})
+            results.append(ngettext("One player has at least 90%% of the leader's current tournament score",
+                                    "%(count)d players have at least 90%% of the leader's current tournament score",
+                                    contenders) % {'count': contenders})
         # Include the top score from each previous round (if any)
         for r in t.round_set.all():
             if r.is_finished():
@@ -324,7 +330,9 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # Who lost 2 or more centres in the last year ?
         if (mask & MASK_LOSERS) != 0:
             if prev.count - scs.count > 1:
-                results.append(_(u'%(player)s (%(power)s) shrank from %(old)d to %(new)d centre(s)%(game)s.')
+                results.append(ngettext('%(player)s (%(power)s) shrank from %(old)d to %(new)d centre%(game)s.',
+                                        '%(player)s (%(power)s) shrank from %(old)d to %(new)d centres%(game)s.',
+                                        scs.count)
                                % {'player': gps.get(power=power).player,
                                   'power': _(power.abbreviation),
                                   'old': prev.count,
@@ -363,7 +371,9 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         count = 0
         for l in sc_losses.values():
             count += len(l)
-        results.append(_('%(count)d non-neutral centre(s) changed hands%(game)s.')
+        results.append(ngettext('One non-neutral centre changed hands%(game)s.',
+                                '%(count)d non-neutral centres changed hands%(game)s.',
+                                count)
                        % {'count': count,
                           'game': gn_str})
     if (mask & MASK_DRAW_VOTES) != 0:
@@ -371,7 +381,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         dp_queryset = g.drawproposal_set.filter(year__lte=last_year)
         votes = dp_queryset.count()
         results.append(ngettext('One draw vote has been taken%(game)s.',
-                                '%(count)d draw vote(s) have been taken%(game)s.',
+                                '%(count)d draw votes have been taken%(game)s.',
                                 votes) % {'count': votes, 'game': gn_str})
         # What draw votes failed recently ?
         # Note that it's fairly arbitrary where we draw the line here

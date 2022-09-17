@@ -1240,12 +1240,16 @@ class Game(models.Model):
                                              game=self,
                                              year=year)
             except CentreCount.DoesNotExist:
-                retval.append(_('Missing count of %(dots)d centre(s) for %(power)s')
+                retval.append(ngettext('Missing count of one centre for %(power)s',
+                                       'Missing count of %(dots)d centres for %(power)s',
+                                       sco_dots)
                               % {'dots': sco_dots,
                                  'power': p})
             else:
                 if cc.count != sco_dots:
-                    retval.append(_('%(power)s owns %(sco_dots)d centre(s) in %(year)d, but their centrecount is %(dots)d')
+                    retval.append(ngettext('%(power)s owns one centre in %(year)d, but their centrecount is %(dots)d',
+                                           '%(power)s owns %(sco_dots)d centres in %(year)d, but their centrecount is %(dots)d',
+                                           sco_dots)
                                   % {'power': p,
                                      'year': year,
                                      'sco_dots': sco_dots,

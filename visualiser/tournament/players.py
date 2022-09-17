@@ -37,6 +37,7 @@ from django.db import models
 from django.db.models import Max, Min, Q
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.utils.translation import ngettext
 
 from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
@@ -554,7 +555,9 @@ class Player(models.Model):
                                % {'name': self})
             return results
         if (mask & MASK_TOURNEY_COUNT) != 0:
-            results.append(_(u'%(name)s has competed in %(number)d tournament(s).')
+            results.append(ngettext('%(name)s has competed in one tournament.',
+                                    '%(name)s has competed in %(number)d tournaments.',
+                                    plays)
                            % {'name': self, 'number': plays})
         if (mask & MASK_TITLES) != 0:
             # Add summaries of actual titles
