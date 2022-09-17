@@ -26,7 +26,7 @@ from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy import GreatPower
+from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_prefs_email
 from tournament.forms import AuctionBidForm
 from tournament.forms import PlayerForm

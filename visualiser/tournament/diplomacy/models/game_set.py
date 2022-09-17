@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2020 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,21 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This file contains the basics of the standard game of Diplomacy.
-# Which powers exist, how many Supply Centres there are, which colour
-# represents each power, etc.
 
-
-
-import os
-
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import gettext as _
 
+from ..utils.game_image_location import game_image_location
 
+class GameSet(models.Model):
+    """
+    A Diplomacy board game set.
+    Over the years, different sets have been produced with different pieces,
+    maps, etc.
+    The main purpose of separating this out is so that we can display SC
+    counts with power colours matching those of any photos of the board.
+    """
+    name = models.CharField(max_length=20, unique=True)
+    initial_image = models.ImageField(upload_to=game_image_location)
 
-
-
-
-
+    def __str__(self):
+        return self.name

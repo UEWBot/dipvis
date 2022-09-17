@@ -16,7 +16,10 @@
 
 from django.contrib import admin
 
-from tournament.diplomacy import GreatPower, GameSet, SetPower, SupplyCentre
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.models.set_power import SetPower
+from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
 from tournament.models import PowerBid, RoundPlayer

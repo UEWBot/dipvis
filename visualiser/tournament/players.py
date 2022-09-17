@@ -40,7 +40,9 @@ from django.utils.translation import gettext as _
 
 from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
-from tournament.diplomacy import WINNING_SCS, GreatPower, validate_year
+from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.tasks.validate_year import validate_year
 
 # These happen to co-incide with the coding used by the WDD
 WIN = 'W'

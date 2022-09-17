@@ -39,7 +39,7 @@ from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
 
-from tournament.diplomacy import GameSet
+from tournament.diplomacy.models.game_set import GameSet
 from tournament.models import Tournament, Game, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList

@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2020 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,21 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# This file contains the basics of the standard game of Diplomacy.
-# Which powers exist, how many Supply Centres there are, which colour
-# represents each power, etc.
-
-
-
-import os
-
 from django.core.exceptions import ValidationError
-from django.db import models
 from django.utils.translation import gettext as _
 
+from ..values.diplomacy_values import FIRST_YEAR
 
-
-
-
-
-
+def validate_year(value):
+    """
+    Checks for a valid game year
+    """
+    if value < FIRST_YEAR:
+        raise ValidationError(_(u'%(value)d is not a valid game year'),
+                              params={'value': value})

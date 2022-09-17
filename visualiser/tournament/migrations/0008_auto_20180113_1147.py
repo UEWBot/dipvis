@@ -29,7 +29,7 @@ class Migration(migrations.Migration):
             name='SupplyCentreOwnership',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('year', models.PositiveSmallIntegerField(validators=[tournament.diplomacy.validate_year_including_start])),
+                ('year', models.PositiveSmallIntegerField(validators=[tournament.diplomacy.tasks.validate_year_including_start])),
                 ('game', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournament.Game')),
                 ('owner', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournament.GreatPower')),
                 ('sc', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='tournament.SupplyCentre')),

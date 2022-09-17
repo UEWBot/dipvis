@@ -23,9 +23,11 @@ from django.forms import ModelForm
 from django.forms.formsets import BaseFormSet
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy import GreatPower, GameSet, SupplyCentre
-from tournament.diplomacy import TOTAL_SCS, FIRST_YEAR
-from tournament.diplomacy import validate_preference_string
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.models.supply_centre import SupplyCentre
+from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
+from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
 from tournament.models import Game, GameImage, SeederBias
 from tournament.models import SEASONS
 from tournament.models import PowerBid, Tournament, TournamentPlayer

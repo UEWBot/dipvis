@@ -22,7 +22,8 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from tournament.diplomacy import GameSet, GreatPower
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer

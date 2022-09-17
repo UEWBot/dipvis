@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2020 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -13,22 +13,23 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-# This file contains the basics of the standard game of Diplomacy.
-# Which powers exist, how many Supply Centres there are, which colour
-# represents each power, etc.
-
-
-
-import os
-
-from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.translation import gettext as _
 
+from .great_power import GreatPower
 
+class SupplyCentre(models.Model):
+    """
+    A supply centre on the Diplomacy board.
+    """
+    name = models.CharField(max_length=20, unique=True)
+    abbreviation = models.CharField(max_length=4, unique=True)
+    initial_owner = models.ForeignKey(GreatPower,
+                                      on_delete=models.CASCADE,
+                                      null=True,
+                                      blank=True)
 
+    class Meta:
+        ordering = ['name']
 
-
-
-
+    def __str__(self):
+        return self.name
