@@ -1405,10 +1405,10 @@ class Game(models.Model):
         # Did a power reach 18 (or more) centres ?
         soloer = self.soloer()
         if soloer:
-            # TODO would be nice to include their SC count
-            return _(u'Game%(game)s won by %(player)s (%(power)s)') % {'game': gn_str,
-                                                                       'player': soloer.player,
-                                                                       'power': _(soloer.power.abbreviation)}
+            return _(u'Game%(game)s won by %(player)s (%(power)s) with %(dots)d centres') % {'game': gn_str,
+                                                                                             'player': soloer.player,
+                                                                                             'power': _(soloer.power.abbreviation),
+                                                                                             'dots': soloer.final_sc_count()}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
             gps = self.gameplayer_set.all()
