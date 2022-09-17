@@ -478,9 +478,9 @@ class RoundViewTests(TestCase):
         response = self.client.post(url,
                                     data,
                                     content_type='application/x-www-form-urlencoded')
-        # Should redirect to the same page (as a GET)
+        # Should still redirect to the get seven page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, url)
+        self.assertEqual(response.url, reverse('get_seven', args=(self.t3.pk, 1)))
         # No clean up needed because we left the same 7 players playing
 
     def test_roll_call_post_old_round_refuse_delete(self):
@@ -519,6 +519,7 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b' did play this round', response.content)
+        self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
         # Clean up
         GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
 

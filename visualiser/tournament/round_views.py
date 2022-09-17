@@ -181,22 +181,15 @@ def roll_call(request, tournament_id, round_num):
                 RoundPlayer.objects.filter(player=p,
                                            the_round=r).delete()
         if not errors_added:
-            r = t.current_round()
-            # we only want to seed boards if it's the current round
-            if r and (r.number() == int(round_num)):
-                if t.seed_games:
-                    # Ensure that we have the right number of players
-                    return HttpResponseRedirect(reverse('get_seven',
-                                                args=(tournament_id,
-                                                      round_num)))
-                # Next job is almost certainly to create the actual games
-                return HttpResponseRedirect(reverse('create_games',
+            if t.seed_games:
+                # Ensure that we have the right number of players
+                return HttpResponseRedirect(reverse('get_seven',
                                             args=(tournament_id,
                                                   round_num)))
-            # Back to the same page, but as a GET
-            return HttpResponseRedirect(reverse('round_roll_call',
-                                                args=(tournament_id,
-                                                      round_num)))
+            # Next job is almost certainly to create the actual games
+            return HttpResponseRedirect(reverse('create_games',
+                                        args=(tournament_id,
+                                              round_num)))
 
     # Warn the user if they're changing players for an earlier round
     warning = ''
