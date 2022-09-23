@@ -684,6 +684,116 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
 
+    # GScoringOpenTribute
+    def test_g_scoring_opentribute_no_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('OpenTribute')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+                if sc.count == 4:
+                    self.assertEqual(s, 34 + 3 * 4 - 1)
+                else:
+                    self.assertEqual(s, 34 + 3 * 5 + 3 / 4 ** 2)
+        # 7 players alive, with a total of 32 dots. Tribute of 3 shared between 4 powers
+        self.assertAlmostEqual(sum(scores.values()), 34 * 7 + 32 * 3 - 3 + 3/4)
+
+    def test_g_scoring_opentribute_tied_top(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('OpenTribute')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 0:
+                    self.assertEqual(s, 0)
+                elif sc.count == 4:
+                    self.assertEqual(s, 34 + 3 * 4 - 4)
+                elif sc.count == 5:
+                    self.assertEqual(s, 34 + 3 * 5 - 3)
+                else:
+                    self.assertEqual(s, 34 + 3 * 8 + 22 / 2 ** 2)
+        # 6 players alive, with a total of 34 dots. Tribute of 22 shared between two powers
+        # one power eliminated contributes tribute of 8
+        self.assertAlmostEqual(sum(scores.values()), 34 * 6 + 34 * 3 - 22 + 11 + 8)
+
+    def test_g_scoring_opentribute_no_solo_2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('OpenTribute')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 0:
+                    self.assertEqual(s, 0)
+                elif sc.count == 3:
+                    self.assertEqual(s, 34 + 3 * 3 - 10)
+                elif sc.count == 4:
+                    self.assertEqual(s, 34 + 3 * 4 - 9)
+                elif sc.count == 5:
+                    self.assertEqual(s, 34 + 3 * 5 - 8)
+                elif sc.count == 6:
+                    self.assertEqual(s, 34 + 3 * 6 - 7)
+                else:
+                    self.assertEqual(s, 34 + 3 * 13 + (13 + 10 + 10 + 9 + 8 + 7))
+        # 6 players alive, with a total of 34 dots. Tribute of 57, unshared
+        # one power eliminated contributes tribute of 13
+        self.assertAlmostEqual(sum(scores.values()), 34 * 6 + 34 * 3 - 57 + 57 + 13)
+
+    def test_g_scoring_opentribute_no_solo_3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('OpenTribute')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 0:
+                    self.assertEqual(s, 0)
+                elif sc.count == 5:
+                    self.assertEqual(s, 34 + 3 * 5 - 12)
+                elif sc.count == 7:
+                    self.assertEqual(s, 34 + 3 * 7 - 10)
+                else:
+                    self.assertEqual(s, 34 + 3 * 17 + (17 + 17 + 17 + 12 + 12 + 10))
+        # 4 players alive, with a total of 34 dots. Tribute of 85, unshared
+        # Three powers eliminated contribute tribute of 17 each
+        self.assertAlmostEqual(sum(scores.values()), 34 * 4 + 34 * 3 - 85 + 85 + 3 * 17)
+
+    def test_g_scoring_opentribute_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('OpenTribute')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 18:
+                    self.assertEqual(s, 340)
+                else:
+                    self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 340)
+
     # GScoringOMG
     def test_g_scoring_omg_no_solo(self):
         t = Tournament.objects.get(name='t1')

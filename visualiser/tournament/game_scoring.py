@@ -531,6 +531,55 @@ class GScoringTribute(GameScoringSystem):
                 retval[p] -= bonus_per_survivor
         return retval
 
+class GScoringOpenTribute(GameScoringSystem):
+    """
+    Base score of 34 plus 3 points per dot.
+    Each player pays the board leader(s) 1 point for each dot
+    the leader has more than them.
+    Eliminated players lose all remaining points, scoring zero.
+    If the board top is shared by N players, each gets 1/(N^2) of the total tribute.
+    With a solo, soloer gets 340, everyone else gets 0.
+    """
+    def __init__(self):
+        self.name = _('OpenTribute')
+
+    def scores(self, state):
+        retval = {}
+        num_survivors = len(state.survivors())
+        leader_scs = state.highest_dot_count()
+        num_leaders = state.num_powers_with(leader_scs)
+        soloer = state.soloer()
+        soloed = soloer is not None
+        tribute = 0
+        for p in state.all_powers():
+            if soloed:
+                if p == soloer:
+                    retval[p] = 340
+                else:
+                    retval[p] = 0
+                continue
+            dots = state.dot_count(p)
+            if dots:
+                # Start with 34
+                retval[p] = 34
+                # 3 points per dot
+                retval[p] += 3 * dots
+                # pay the tribute
+                t = leader_scs - dots
+                retval[p] -= t
+                tribute += t
+            else:
+                retval[p] = 0
+                # pay the tribute
+                tribute += leader_scs
+        if not soloed:
+            # Leader(s) gets tribute
+            for p in state.all_powers():
+                dots = state.dot_count(p)
+                if dots == leader_scs:
+                    retval[p] += tribute / (num_leaders * num_leaders)
+        return retval
+
 class GScoringOMG(GameScoringSystem):
     """
     a) Each supply center (SC) is worth 1.5 points (total = 51 points)
@@ -970,6 +1019,7 @@ G_SCORING_SYSTEMS = [
     GScoringSolos(),
     GScoringSumOfSquares(),
     GScoringTribute(),
+    GScoringOpenTribute(),
     GScoringWhipping(_('Whipping'), 468),
     GScoringWorldClassic(),
 ]
