@@ -17,9 +17,9 @@
 """
 This module contains scoring systems for individual diplomacy games.
 """
-from operator import itemgetter
-
 from abc import ABC, abstractmethod
+from math import floor
+from operator import itemgetter
 
 from django.urls import reverse
 from django.utils.text import slugify
@@ -537,7 +537,7 @@ class GScoringOpenTribute(GameScoringSystem):
     Each player pays the board leader(s) 1 point for each dot
     the leader has more than them.
     Eliminated players lose all remaining points, scoring zero.
-    If the board top is shared by N players, each gets 1/(N^2) of the total tribute.
+    If the board top is shared by N players, each gets 1/(N^2) of the total tribute, rounded down.
     With a solo, soloer gets 340, everyone else gets 0.
     """
     def __init__(self):
@@ -577,7 +577,7 @@ class GScoringOpenTribute(GameScoringSystem):
             for p in state.all_powers():
                 dots = state.dot_count(p)
                 if dots == leader_scs:
-                    retval[p] += tribute / (num_leaders * num_leaders)
+                    retval[p] += floor(tribute / (num_leaders * num_leaders))
         return retval
 
 class GScoringOMG(GameScoringSystem):

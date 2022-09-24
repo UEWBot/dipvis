@@ -28,6 +28,7 @@ from tournament.models import find_game_scoring_system
 from tournament.tournament_game_state import TournamentGameState
 
 from datetime import timedelta
+from math import floor
 
 HOURS_8 = timedelta(hours=8)
 HOURS_16 = timedelta(hours=16)
@@ -700,9 +701,7 @@ class GameScoringTests(TestCase):
                 if sc.count == 4:
                     self.assertEqual(s, 34 + 3 * 4 - 1)
                 else:
-                    self.assertEqual(s, 34 + 3 * 5 + 3 / 4 ** 2)
-        # 7 players alive, with a total of 32 dots. Tribute of 3 shared between 4 powers
-        self.assertAlmostEqual(sum(scores.values()), 34 * 7 + 32 * 3 - 3 + 3/4)
+                    self.assertEqual(s, 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2))
 
     def test_g_scoring_opentribute_tied_top(self):
         t = Tournament.objects.get(name='t1')
@@ -722,10 +721,7 @@ class GameScoringTests(TestCase):
                 elif sc.count == 5:
                     self.assertEqual(s, 34 + 3 * 5 - 3)
                 else:
-                    self.assertEqual(s, 34 + 3 * 8 + 22 / 2 ** 2)
-        # 6 players alive, with a total of 34 dots. Tribute of 22 shared between two powers
-        # one power eliminated contributes tribute of 8
-        self.assertAlmostEqual(sum(scores.values()), 34 * 6 + 34 * 3 - 22 + 11 + 8)
+                    self.assertEqual(s, 34 + 3 * 8 + floor((8 + 4 + 4 + 3 + 3) / 2 ** 2))
 
     def test_g_scoring_opentribute_no_solo_2(self):
         t = Tournament.objects.get(name='t1')
