@@ -63,7 +63,7 @@
 <p>{% trans "Data Entry:" %}</p>
 <ul>
   {% if perms.tournament.add_centrecount %}
-    <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a> - {% trans "Use this to update the supply centre chart for the game." %}</li>
+    <li><a href="{% url 'enter_scs' tournament.id game.name %}">{% trans "Enter SC Counts" %}</a> - {% trans "Use this to update the supply centre chart for the game or to flag the game as ended" %}</li>
   {% endif %}
   {% if perms.tournament.add_supplycentreownership %}
     <li><a href="{% url 'enter_sc_owners' tournament.id game.name %}">{% trans "Enter SC Ownership" %}</a> - {% trans "Use this to update the supply centre ownership for the game." %}</li>
