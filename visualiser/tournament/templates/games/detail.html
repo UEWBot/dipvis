@@ -13,7 +13,7 @@
    {% else %}{% trans "Game is ongoing." %}
    {% endif %}{% endwith %}</p><p>{% blocktrans with year=game.final_year %}Last year played is {{year}}.{% endblocktrans %}</p>
 
-{% if game.notes %}<p>{{ game.notes|urlize }}</p>{% endif %}
+{% if tournament.show_game_urls and game.notes %}<p>{{ game.notes|urlize }}</p>{% endif %}
 
 <dl>
   {% for gp in game.gameplayer_set.all %}

@@ -518,6 +518,12 @@ class Tournament(models.Model):
         """
         return self.format == self.VFTF
 
+    def show_game_urls(self):
+        """
+        Return a boolean indicating whether Game notes should be displayed.
+        """
+        return True
+
     def tournament_scoring_system_obj(self):
         """
         Return the TournamentScoringSystem object for the Tournament.
