@@ -63,11 +63,11 @@ class TournamentAdmin(admin.ModelAdmin):
     inlines = [RoundInline]
     fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
-              ('tournament_scoring_system', 'round_scoring_system'),
               ('seed_games', 'power_assignment'),
+              ('tournament_scoring_system', 'round_scoring_system'),
               ('draw_secrecy', 'best_country_criterion'),
-              ('managers', 'is_published', 'editable'),
-              'no_email',
+              ('is_published', 'delay_game_url_publication'),
+              ('managers', 'editable', 'no_email'),
               'wdd_tournament_id')
 
 class TournamentPlayerAdmin(admin.ModelAdmin):

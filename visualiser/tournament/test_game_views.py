@@ -186,6 +186,8 @@ class GameViewTests(TestCase):
         self.g1.save()
 
     def test_detail_show_url(self):
+        self.assertFalse(self.t1.delay_game_url_publication)
+        self.assertEqual(self.g1.notes, '')
         # Give g1 a backstabbr URL
         self.g1.notes = VALID_BS_URL
         self.g1.save()
@@ -196,6 +198,25 @@ class GameViewTests(TestCase):
         # Clean up
         self.g1.notes = ''
         self.g1.save()
+
+    def test_detail_dont_show_url(self):
+        self.assertFalse(self.t1.delay_game_url_publication)
+        self.assertEqual(self.g1.notes, '')
+        # Give g1 a backstabbr URL
+        self.g1.notes = VALID_BS_URL
+        self.g1.save()
+        # Delay publication for t1
+        self.t1.delay_game_url_publication = True
+        self.t1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(VALID_BS_URL.encode('utf-8'), response.content)
+        # Clean up
+        self.g1.notes = ''
+        self.g1.save()
+        self.t1.delay_game_url_publication = False
+        self.t1.save()
 
     def test_detail_no_aar_link(self):
         # Add a GamePlayer without an AAR

@@ -38,7 +38,7 @@ from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, Invali
 from tournament.models import InvalidPreferenceList
 from tournament.players import Player, MASK_ALL_BG
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
@@ -757,7 +757,7 @@ class TournamentModelTests(TestCase):
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
         t = Tournament.objects.first()
-        self.assertEqual(t.powers_assigned_from_prefs(), False)
+        self.assertFalse(t.powers_assigned_from_prefs())
 
     def test_tournament_powers_assigned_from_prefs_true(self):
         t = Tournament(name='Test Tournament',
@@ -766,7 +766,41 @@ class TournamentModelTests(TestCase):
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        power_assignment=Tournament.PREFERENCES)
-        self.assertEqual(t.powers_assigned_from_prefs(), True)
+        self.assertTrue(t.powers_assigned_from_prefs())
+
+    # Tournament.show_game_urls()
+    def test_tournament_show_game_urls_flag_unset(self):
+        t = Tournament.objects.first()
+        self.assertFalse(t.delay_game_url_publication)
+        self.assertTrue(t.show_game_urls())
+
+    def test_tournament_show_game_urls_still_playing(self):
+        t = Tournament.objects.first()
+        self.assertFalse(t.delay_game_url_publication)
+        end = t.end_date
+        # Move the end date of the Tournament and flag as delaying game URL display
+        t.delay_game_url_publication = True
+        t.end_date = datetime.now()
+        t.save()
+        self.assertFalse(t.show_game_urls())
+        # Clean up
+        t.delay_game_url_publication = False
+        t.end_date = end
+        t.save()
+
+    def test_tournament_show_game_urls_later(self):
+        t = Tournament.objects.first()
+        self.assertFalse(t.delay_game_url_publication)
+        end = t.end_date
+        # Move the end date of the Tournament and flag as delaying game URL display
+        t.delay_game_url_publication = True
+        t.end_date = datetime.now() - HOURS_24
+        t.save()
+        self.assertTrue(t.show_game_urls())
+        # Clean up
+        t.delay_game_url_publication = False
+        t.end_date = end
+        t.save()
 
     # Tournament.calculated_scores()
     def test_tournament_scores_invalid(self):

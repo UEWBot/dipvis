@@ -19,6 +19,7 @@ Django models file for the Diplomacy Tournament Visualiser.
 """
 
 from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
 import inspect
 from operator import itemgetter
 import os
@@ -492,6 +493,9 @@ class Tournament(models.Model):
                               default=FTF)
     no_email = models.BooleanField(default=False,
                                    help_text=_('Check to only generate email to tournament managers'))
+    delay_game_url_publication = models.BooleanField(default=False,
+                                                     verbose_name=_('Delay publishing game notes'),
+                                                     help_text=_('Check to keep game notes/URL secret until after the tournament completes'))
 
     class Meta:
         ordering = ['-start_date']
@@ -522,6 +526,10 @@ class Tournament(models.Model):
         """
         Return a boolean indicating whether Game notes should be displayed.
         """
+        if self.delay_game_url_publication:
+            # Wait until 24 hours after the end of the last Round
+            # (we ignore timezone issues - the delay doesn't have to be precise)
+            return (datetime.now() > self.end_date + timedelta(hours=24))
         return True
 
     def tournament_scoring_system_obj(self):
