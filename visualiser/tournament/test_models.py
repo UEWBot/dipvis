@@ -1772,10 +1772,10 @@ class TournamentModelTests(TestCase):
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1,
-                 notes = 'https://www.backstabbr.com/game/4917371326693376')
+                 external_url = 'https://www.backstabbr.com/game/4917371326693376')
         self.assertNotEqual(g.backstabbr_game(), None)
 
-    def test_game_backstabbr_game_empty_notes(self):
+    def test_game_backstabbr_game_empty_external_url(self):
         g = Game(name='newgame1',
                  started_at=self.r32.start,
                  the_round=self.r32,
@@ -1783,13 +1783,13 @@ class TournamentModelTests(TestCase):
                  the_set=self.set1)
         self.assertEqual(g.backstabbr_game(), None)
 
-    def test_game_backstabbr_game_non_url(self):
+    def test_game_backstabbr_game_non_bs_url(self):
         g = Game(name='newgame1',
                  started_at=self.r32.start,
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1,
-                 notes='Back right corner table')
+                 external_url='https://www.webdiplomacy.net/board.php?gameID=436906')
         self.assertEqual(g.backstabbr_game(), None)
 
     # Game.assign_powers_from_prefs()

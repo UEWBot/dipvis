@@ -495,8 +495,8 @@ class Tournament(models.Model):
     no_email = models.BooleanField(default=False,
                                    help_text=_('Check to only generate email to tournament managers'))
     delay_game_url_publication = models.BooleanField(default=False,
-                                                     verbose_name=_('Delay publishing game notes'),
-                                                     help_text=_('Check to keep game notes/URL secret until after the tournament completes'))
+                                                     verbose_name=_('Delay publishing game URL'),
+                                                     help_text=_('Check to keep game URL secret until after the tournament completes'))
 
     class Meta:
         ordering = ['-start_date']
@@ -525,7 +525,7 @@ class Tournament(models.Model):
 
     def show_game_urls(self):
         """
-        Return a boolean indicating whether Game notes should be displayed.
+        Return a boolean indicating whether Game external_url should be displayed.
         """
         if self.delay_game_url_publication:
             # Wait until 24 hours after the end of the last Round
@@ -1158,10 +1158,9 @@ class Game(models.Model):
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
-    notes = models.CharField(max_length=MAX_NOTES_LENGTH,
-                             blank=True,
-                             verbose_name=_('URL/Notes'),
-                             help_text=_('Will be included in board call emails and game page'))
+    external_url = models.URLField(blank=True,
+                                   verbose_name=_('Backstabbr URL'),
+                                   help_text=_('Will be included in board call emails and game page'))
 
     class Meta:
         ordering = ['name']
@@ -1171,9 +1170,9 @@ class Game(models.Model):
         Returns a backstabbr.Game for the Game, or None.
         """
         try:
-            return backstabbr.Game(self.notes)
+            return backstabbr.Game(self.external_url)
         except InvalidGameUrl:
-            # notes may be something other than a backstabbr URL
+            # external_url may be something other than a backstabbr URL
             pass
         return None
 

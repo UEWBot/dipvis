@@ -167,7 +167,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_detail_no_scrape_link(self):
-        self.assertEqual(self.g1.notes, '')
+        self.assertEqual(self.g1.external_url, '')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
@@ -175,35 +175,35 @@ class GameViewTests(TestCase):
 
     def test_detail_scrape_link(self):
         # Give g1 a backstabbr URL
-        self.g1.notes = VALID_BS_URL
+        self.g1.external_url = VALID_BS_URL
         self.g1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'from Backstabbr', response.content)
         # Clean up
-        self.g1.notes = ''
+        self.g1.external_url = ''
         self.g1.save()
 
     def test_detail_show_url(self):
         self.assertFalse(self.t1.delay_game_url_publication)
-        self.assertEqual(self.g1.notes, '')
+        self.assertEqual(self.g1.external_url, '')
         # Give g1 a backstabbr URL
-        self.g1.notes = VALID_BS_URL
+        self.g1.external_url = VALID_BS_URL
         self.g1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertIn(VALID_BS_URL.encode('utf-8'), response.content)
         # Clean up
-        self.g1.notes = ''
+        self.g1.external_url = ''
         self.g1.save()
 
     def test_detail_dont_show_url(self):
         self.assertFalse(self.t1.delay_game_url_publication)
-        self.assertEqual(self.g1.notes, '')
+        self.assertEqual(self.g1.external_url, '')
         # Give g1 a backstabbr URL
-        self.g1.notes = VALID_BS_URL
+        self.g1.external_url = VALID_BS_URL
         self.g1.save()
         # Delay publication for t1
         self.t1.delay_game_url_publication = True
@@ -213,7 +213,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(VALID_BS_URL.encode('utf-8'), response.content)
         # Clean up
-        self.g1.notes = ''
+        self.g1.external_url = ''
         self.g1.save()
         self.t1.delay_game_url_publication = False
         self.t1.save()
@@ -1106,15 +1106,15 @@ class GameViewTests(TestCase):
 
     def test_scrape_backstabbr_no_url(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        self.assertEqual(len(self.g1.notes), 0)
+        self.assertEqual(len(self.g1.external_url), 0)
         response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 404)
 
     def test_scrape_backstabbr_success(self):
-        self.assertEqual(len(self.g1.notes), 0)
+        self.assertEqual(len(self.g1.external_url), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)
         # Give g1 a backstabbr URL
-        self.g1.notes = VALID_BS_URL
+        self.g1.external_url = VALID_BS_URL
         self.g1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
@@ -1127,7 +1127,7 @@ class GameViewTests(TestCase):
         scos = self.g1.supplycentreownership_set.filter(year=1912)
         self.assertEqual(len(scos), 34)
         # Clean up
-        self.g1.notes = ''
+        self.g1.external_url = ''
         ccs.delete()
         scos.delete()
         self.g1.save()

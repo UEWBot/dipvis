@@ -46,12 +46,12 @@ def populate_bs_profile_urls(dry_run=False):
     players_left = 0
     players_changed = 0
     mismatches = 0
-    for g in Game.objects.filter(notes__contains='backstabbr.com'):
-        print("Checking game %s" % g.notes)
+    for g in Game.objects.filter(external_url__contains='backstabbr.com'):
+        print("Checking game %s" % g.external_url)
         # read the game page
         bg = g.backstabbr_game()
         if bg is None:
-            print("Failed to extract backstabbr URL from notes - skipping")
+            print("Failed to extract backstabbr URL - skipping")
             continue
         games += 1
         for gp in g.gameplayer_set.all():

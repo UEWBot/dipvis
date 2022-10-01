@@ -1019,17 +1019,18 @@ class RoundViewTests(TestCase):
                   self.italy : self.rp16,
                   self.france : self.rp17,
                   self.germany : self.rp19}
+        URL = 'http://example.com/test.html'
         data = {'form-TOTAL_FORMS': '2',
                 'form-INITIAL_FORMS': '0',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-game_id': '',
                 'form-0-name': 'NewName',
-                'form-0-notes': 'No Notes',
+                'form-0-external_url': URL,
                 'form-0-the_set': str(self.gibsons.pk),
                 'form-1-game_id': '',
                 'form-1-name': '',
-                'form-1-notes': '',
+                'form-1-external_url': '',
                 'form-1-the_set': ''}
         for p, rp in powers.items():
             data['form-0-%s' % p.name] = str(rp.pk)
@@ -1048,7 +1049,7 @@ class RoundViewTests(TestCase):
         g = self.r11.game_set.get()
         self.assertEqual(g.name, 'NewName')
         self.assertEqual(g.the_set, self.gibsons)
-        self.assertEqual(g.notes, 'No Notes')
+        self.assertEqual(g.external_url, URL)
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
@@ -1068,7 +1069,7 @@ class RoundViewTests(TestCase):
         g = Game.objects.create(the_round=self.r11,
                                 name='Existing',
                                 the_set=self.gibsons,
-                                notes='Old notes')
+                                external_url='http://example.com/old.html')
         for p, rp in powers.items():
             # Swap England and Russia
             if p == self.england:
@@ -1083,17 +1084,18 @@ class RoundViewTests(TestCase):
                 GamePlayer.objects.create(game=g,
                                           power=p,
                                           player=rp.player)
+        URL = 'http://example.com/new.html'
         data = {'form-TOTAL_FORMS': '2',
                 'form-INITIAL_FORMS': '0',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-game_id': str(g.id),
                 'form-0-name': 'NewName',
-                'form-0-notes': 'New Notes',
+                'form-0-external_url': URL,
                 'form-0-the_set': str(self.ah.pk),
                 'form-1-game_id': '',
                 'form-1-name': '',
-                'form-1-notes': '',
+                'form-1-external_url': '',
                 'form-1-the_set': ''}
         for p, rp in powers.items():
             data['form-0-%s' % p.name] = str(rp.pk)
@@ -1112,7 +1114,7 @@ class RoundViewTests(TestCase):
         g = self.r11.game_set.get()
         self.assertEqual(g.name, 'NewName')
         self.assertEqual(g.the_set, self.ah)
-        self.assertEqual(g.notes, 'New Notes')
+        self.assertEqual(g.external_url, URL)
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
@@ -1140,11 +1142,11 @@ class RoundViewTests(TestCase):
                 'form-MIN_NUM_FORMS': '0',
                 'form-0-game_id': '',
                 'form-0-name': 'Duplicate',
-                'form-0-notes': 'No Notes',
+                'form-0-external_url': 'http://example.com/game.html',
                 'form-0-the_set': str(self.ah.pk),
                 'form-1-game_id': '',
                 'form-1-name': '',
-                'form-1-notes': '',
+                'form-1-external_url': '',
                 'form-1-the_set': ''}
         for p, rp in powers.items():
             data['form-0-%s' % p.name] = str(rp.pk)

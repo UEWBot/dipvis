@@ -362,7 +362,7 @@ def seed_games(request, tournament_id, round_num):
                 g = f.game
                 g.name = f.cleaned_data['name']
                 g.the_set = f.cleaned_data['the_set']
-                g.notes = f.cleaned_data['notes']
+                g.external_url = f.cleaned_data['external_url']
                 try:
                     g.full_clean()
                 except ValidationError as e:
@@ -378,7 +378,7 @@ def seed_games(request, tournament_id, round_num):
                 g.gameplayer_set.all().update(power=None)
                 # Assign the powers to the players
                 for gp_id, field in f.cleaned_data.items():
-                    if gp_id in ['the_set', 'name', 'notes', 'issues']:
+                    if gp_id in ['the_set', 'name', 'external_url', 'issues']:
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
@@ -465,7 +465,7 @@ def create_games(request, tournament_id, round_num):
         current = {'game_id': g.id,
                    'name': g.name,
                    'the_set': g.the_set,
-                   'notes': g.notes}
+                   'external_url': g.external_url}
         for gp in g.gameplayer_set.all():
             current[gp.power.name] = gp.roundplayer()
         data.append(current)
@@ -489,12 +489,12 @@ def create_games(request, tournament_id, round_num):
                     g = Game.objects.get(pk=f.cleaned_data['game_id'])
                     g.name = f.cleaned_data['name']
                     g.the_set = f.cleaned_data['the_set']
-                    g.notes = f.cleaned_data['notes']
+                    g.external_url = f.cleaned_data['external_url']
                 else:
                     g = Game(name=f.cleaned_data['name'],
                              the_round=r,
                              the_set=f.cleaned_data['the_set'],
-                             notes=f.cleaned_data['notes'])
+                             external_url=f.cleaned_data['external_url'])
             except KeyError:
                 # This must be an extra, unused formset
                 continue

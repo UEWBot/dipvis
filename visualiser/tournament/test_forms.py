@@ -287,6 +287,10 @@ class GamePlayersFormTest(TestCase):
         form = GamePlayersForm(the_round=self.r1)
         self.assertIn('the_set', form.fields)
 
+    def test_url_field(self):
+        form = GamePlayersForm(the_round=self.r1)
+        self.assertIn('external_url', form.fields)
+
     def test_power_fields(self):
         form = GamePlayersForm(the_round=self.r1)
         for power in GreatPower.objects.all():
@@ -584,6 +588,10 @@ class PowerAssignFormTest(TestCase):
     def test_set_field(self):
         form = PowerAssignForm(game=self.g)
         self.assertIn('the_set', form.fields)
+
+    def test_url_field(self):
+        form = PowerAssignForm(game=self.g)
+        self.assertIn('external_url', form.fields)
 
     def test_player_fields(self):
         form = PowerAssignForm(game=self.g)

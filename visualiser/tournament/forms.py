@@ -230,9 +230,8 @@ class GamePlayersForm(forms.Form):
     name = forms.CharField(label=_(u'Game Name'), max_length=Game.MAX_NAME_LENGTH)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
-    notes = forms.CharField(label=_('URL/Notes'),
-                            required=False,
-                            max_length=Game.MAX_NOTES_LENGTH)
+    external_url = forms.URLField(label=_('URL'),
+                                  required=False)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one player field per Great Power"""
@@ -302,9 +301,8 @@ class PowerAssignForm(forms.Form):
     name = forms.CharField(label=_(u'Game Name'), max_length=Game.MAX_NAME_LENGTH)
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
-    notes = forms.CharField(label=_('URL/Notes'),
-                            required=False,
-                            max_length=Game.MAX_NOTES_LENGTH)
+    external_url = forms.URLField(label=_('URL'),
+                                  required=False)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one GreatPower field per RoundPlayer"""

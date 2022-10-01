@@ -85,7 +85,7 @@ class EmailTests(TestCase):
                                  started_at=r1.start,
                                  the_round=r1,
                                  the_set=s,
-                                 notes='Table in the far corner')
+                                 external_url='https://example.com/this_game.html')
 
         g4 = Game.objects.create(name='g4',
                                  started_at=r2.start,
