@@ -15,6 +15,8 @@
 
 {% if tournament.show_game_urls and game.external_url %}<p>{{ game.external_url|urlize }}</p>{% endif %}
 
+{% if game.notes %}<p>{{ game.notes }}</p>{% endif %}
+
 <dl>
   {% for gp in game.gameplayer_set.all %}
     <dt>{{ gp.power }}</dt>

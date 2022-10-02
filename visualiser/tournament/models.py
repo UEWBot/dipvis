@@ -1161,6 +1161,9 @@ class Game(models.Model):
     external_url = models.URLField(blank=True,
                                    verbose_name=_('Backstabbr URL'),
                                    help_text=_('Will be included in board call emails and game page'))
+    notes = models.CharField(max_length=MAX_NOTES_LENGTH,
+                             blank=True,
+                             help_text=_('Will be included in board call emails and game page'))
 
     class Meta:
         ordering = ['name']

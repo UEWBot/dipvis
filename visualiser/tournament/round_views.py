@@ -363,6 +363,7 @@ def seed_games(request, tournament_id, round_num):
                 g.name = f.cleaned_data['name']
                 g.the_set = f.cleaned_data['the_set']
                 g.external_url = f.cleaned_data['external_url']
+                g.notes = f.cleaned_data['notes']
                 try:
                     g.full_clean()
                 except ValidationError as e:
@@ -378,7 +379,7 @@ def seed_games(request, tournament_id, round_num):
                 g.gameplayer_set.all().update(power=None)
                 # Assign the powers to the players
                 for gp_id, field in f.cleaned_data.items():
-                    if gp_id in ['the_set', 'name', 'external_url', 'issues']:
+                    if gp_id in ['the_set', 'name', 'external_url', 'notes', 'issues']:
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
@@ -465,7 +466,8 @@ def create_games(request, tournament_id, round_num):
         current = {'game_id': g.id,
                    'name': g.name,
                    'the_set': g.the_set,
-                   'external_url': g.external_url}
+                   'external_url': g.external_url,
+                   'notes': g.notes}
         for gp in g.gameplayer_set.all():
             current[gp.power.name] = gp.roundplayer()
         data.append(current)
@@ -490,11 +492,13 @@ def create_games(request, tournament_id, round_num):
                     g.name = f.cleaned_data['name']
                     g.the_set = f.cleaned_data['the_set']
                     g.external_url = f.cleaned_data['external_url']
+                    g.notes = f.cleaned_data['notes']
                 else:
                     g = Game(name=f.cleaned_data['name'],
                              the_round=r,
                              the_set=f.cleaned_data['the_set'],
-                             external_url=f.cleaned_data['external_url'])
+                             external_url=f.cleaned_data['external_url'],
+                             notes=f.cleaned_data['notes'])
             except KeyError:
                 # This must be an extra, unused formset
                 continue

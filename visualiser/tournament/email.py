@@ -49,6 +49,8 @@ def send_board_call(the_round):
         game_text = 'Board %(game)s:\n' % {'game': g.name}
         if g.external_url:
             game_text += ' ' + g.external_url + '\n'
+        if g.notes:
+            game_text += ' ' + g.notes + '\n'
         recipients = []
         for gp in g.gameplayer_set.order_by('power'):
             game_text += ' %(power)s: %(player)s' % {'power': gp.power or 'Power TBD',

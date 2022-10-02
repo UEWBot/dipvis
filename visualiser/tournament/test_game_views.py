@@ -35,6 +35,7 @@ from tournament.players import Player
 
 HOURS_8 = timedelta(hours=8)
 VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
+NOTE = 'Played on the wooden board'
 
 class GameViewTests(TestCase):
     fixtures = ['game_sets.json']
@@ -76,7 +77,8 @@ class GameViewTests(TestCase):
         cls.g1 = Game.objects.create(name='Game1',
                                      started_at=cls.r1.start,
                                      the_round=cls.r1,
-                                     the_set=GameSet.objects.first())
+                                     the_set=GameSet.objects.first(),
+                                     notes=NOTE)
         # And one non-DIAS round, with 1 game
         r = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -159,8 +161,10 @@ class GameViewTests(TestCase):
                               'Warsaw': cls.russia}
 
     def test_detail(self):
+        self.assertEqual(self.g1.notes, NOTE)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
+        self.assertIn(NOTE.encode('utf-8'), response.content)
 
     def test_detail_non_existant_game(self):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, 'Game42')))

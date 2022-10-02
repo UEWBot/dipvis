@@ -232,6 +232,8 @@ class GamePlayersForm(forms.Form):
                                      queryset=GameSet.objects.all())
     external_url = forms.URLField(label=_('URL'),
                                   required=False)
+    notes = forms.CharField(required=False,
+                            max_length=Game.MAX_NOTES_LENGTH)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one player field per Great Power"""
@@ -244,11 +246,18 @@ class GamePlayersForm(forms.Form):
 
         queryset = self.the_round.roundplayer_set.all()
 
+        field_order = ['name', 'the_set', 'external_url']
+
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
             self.fields[c] = RoundPlayerChoiceField(queryset)
             self.fields[c].label = _(c)
+            field_order.append(c)
+
+        # Put notes at the end
+        field_order.append('notes')
+        self.order_fields(field_order)
 
     def clean(self):
         """Checks that no player is playing multiple powers"""
@@ -303,6 +312,8 @@ class PowerAssignForm(forms.Form):
                                      queryset=GameSet.objects.all())
     external_url = forms.URLField(label=_('URL'),
                                   required=False)
+    notes = forms.CharField(required=False,
+                            max_length=Game.MAX_NOTES_LENGTH)
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one GreatPower field per RoundPlayer"""
@@ -315,17 +326,23 @@ class PowerAssignForm(forms.Form):
 
         queryset = GreatPower.objects.all()
 
+        field_order = ['name', 'the_set', 'external_url']
+
         # Create the right player fields
         for gp in self.game.gameplayer_set.all().order_by('power__abbreviation'):
             c = gp.id
             self.fields[c] = forms.ModelChoiceField(label=str(gp.player),
                                                     queryset=queryset)
+            field_order.append(c)
 
         # And add the Issues (read-only) field last
         self.fields['issues'] = forms.CharField(label=_('Issues'),
                                                 required=False)
         self.fields['issues'].disabled = True
 
+        # Put notes and issues at the end
+        field_order.extend(['notes', 'issues'])
+        self.order_fields(field_order)
 
     def clean(self):
         """Checks that no power is played by multiple players"""
