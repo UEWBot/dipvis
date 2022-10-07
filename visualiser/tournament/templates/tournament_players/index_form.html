@@ -53,7 +53,7 @@
       {% endfor %}
     </tbody>
   </table>
-  <p>{% trans "WARNING: You will really mess things up if you unregister a player who has played in the tournament" %}</p>
+  <p>{% trans "<b>Warning!</b> You will really mess things up if you unregister a player who has played in the tournament" %}</p>
 <h2>{% trans "Register Players" %}</h2>
 <p>{% trans "If a player doesn't appear in the dropdown, you'll first have to add them to the database, which you can do from" %} <a href="{% url 'admin:tournament_player_add' %}">{% trans "this page" %}</a>.</p>
   {% include "formset_table.html" %}
