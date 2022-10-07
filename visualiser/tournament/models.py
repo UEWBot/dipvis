@@ -33,6 +33,7 @@ from django.db import models, transaction
 from django.db.models import Sum, Max
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
@@ -797,6 +798,35 @@ class Tournament(models.Model):
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)
+
+
+class Series(models.Model):
+    """
+    A series of Diplomacy tournaments, related in some way.
+    """
+    MAX_NAME_LENGTH = 60
+    MAX_DESC_LENGTH = 2000
+
+    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    description = models.CharField(max_length=MAX_DESC_LENGTH, null=True)
+    tournaments = models.ManyToManyField(Tournament)
+    slug = models.SlugField(null=False, unique=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Series'
+
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('series_detail', args=[self.slug])
+
+    def __str__(self):
+        return '%s' % (self.name)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        return super().save(*args, **kwargs)
 
 
 class TournamentPlayer(models.Model):

@@ -12,6 +12,15 @@
   <p><a href="{{ tournament.wdd_url }}">{% trans "View on WDD" %}</a></p>
 {% endif %}
 
+{% if tournament.series_set.exists %}
+  <p>{% trans "Part of the following series:" %}</p>
+  <ul>
+    {% for series in tournament.series_set.all %}
+      <li><a href="{{ series.get_absolute_url }}">{{ series }}</a></li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
 <p><a href="{% url 'tournament_players' tournament.id %}">{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</a></p>
 <p>{% trans "Format: " %}{% if tournament.is_virtual %}{% trans "Virtual Face-to-face" %}{% else %}{% trans "Face-to-face" %}{% endif %}</p>
 <p>{% trans "Tournament scoring: " %}{{ tournament.tournament_scoring_system_obj }}</p>

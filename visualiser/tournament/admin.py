@@ -23,7 +23,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import Game, GameImage, GamePlayer
 from tournament.models import PowerBid, Round, RoundPlayer
-from tournament.models import SeederBias, SupplyCentreOwnership
+from tournament.models import SeederBias, Series, SupplyCentreOwnership
 from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
 from tournament.players import PlayerGameResult, PlayerRanking
@@ -157,6 +157,7 @@ admin.site.register(PowerBid, PowerBidAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(RoundPlayer, RoundPlayerAdmin)
 admin.site.register(SeederBias, SeederBiasAdmin)
+admin.site.register(Series)
 admin.site.register(SupplyCentre)
 admin.site.register(SupplyCentreOwnership, SCOwnershipAdmin)
 admin.site.register(Tournament, TournamentAdmin)

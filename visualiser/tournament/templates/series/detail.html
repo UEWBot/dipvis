@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}DipTV - {{ object }}{% endblock %}
+
+{% block content %}
+<h1>{{ object }}</h1>
+<p>{{ object.description }}</p>
+<h2>{% trans "Tournaments" %}</h2>
+<ul>
+  {% for t in object.tournaments.all %}
+  <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> - {% if t.is_finished %}{% blocktrans with winner=t.winner %}Won by {{ winner }}{% endblocktrans %}{% else %}{% trans "Not finished" %}{% endif %}</li>
+  {% empty %}
+    <li>{% trans "No tournaments in the database" %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

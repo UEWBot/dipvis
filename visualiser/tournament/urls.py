@@ -15,9 +15,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.conf.urls import url, include
+from django.urls import path
 
 from tournament import game_views
 from tournament import round_views
+from tournament import series_views
 from tournament import tournament_views
 from tournament import tournament_player_views
 from tournament import wdd_views
@@ -99,6 +101,12 @@ tp_patterns = [
         name='tournament_player_detail'),
 ]
 
+series_patterns = [
+    path('', series_views.SeriesIndexView.as_view(), name='series_index'),
+    path('<slug:slug>/', series_views.SeriesDetailView.as_view(),
+         name='series_detail'),
+]
+
 tournament_patterns = [
     url(r'^$', tournament_views.tournament_simple,
         {'template': 'detail'}, name='tournament_detail'),
@@ -169,5 +177,6 @@ tournament_patterns = [
 
 urlpatterns = [
     url(r'^$', tournament_views.tournament_index, name='index'),
+    url(r'^series/', include(series_patterns)),
     url(r'^(?P<tournament_id>\d+)/', include(tournament_patterns)),
 ]

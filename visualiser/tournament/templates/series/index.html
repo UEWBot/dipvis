@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "DipTV - Tournament Series Index" %}{% endblock %}
+
+{% block content %}
+<h1>{% trans "Tournament Series Index" %}</h1>
+{% if object_list %}
+    <ul>
+    {% for s in object_list %}
+        <li><a href="{{ s.get_absolute_url }}">{{ s }}</a></li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>{% trans "No series exist in the database." %}</p>
+{% endif %}
+{% endblock %}
