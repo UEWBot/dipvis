@@ -627,6 +627,16 @@ class Tournament(models.Model):
             result[k] = (place, v)
         return result, r_scores
 
+    def winner(self):
+        """
+        Return the player who won, or None if the tournament isn't yet finished
+        """
+        if self.is_finished():
+            for p, (rank, _) in self.positions_and_scores()[0].items():
+                if rank == 1:
+                    return p
+        return None
+
     def store_scores(self):
         """
         Recalculate the scores for the Tournament,

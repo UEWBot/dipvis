@@ -1023,6 +1023,15 @@ class ModelTests(TestCase):
                 with self.subTest(k=k):
                     self.assertEqual(p_and_s[k][0], 1)
 
+    # Tournament.winner()
+    def test_tourney_winner_not_finished(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.winner(), None)
+
+    def test_tourney_winner_finished(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.winner(), self.p5)
+
     # Tournament.store_scores()
     def test_tourney_store_scores(self):
         now = timezone.now()
