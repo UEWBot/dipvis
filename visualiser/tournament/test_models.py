@@ -3321,7 +3321,6 @@ class ModelTests(TestCase):
                                        game=g,
                                        year=1901,
                                        count=c)
-        print(g.final_year())
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
                                          season=FALL,
