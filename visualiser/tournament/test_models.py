@@ -297,12 +297,15 @@ class ModelTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p7, tournament=t1)
         TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
-        # Add a TournamentPlayer to t3
+        # Add TournamentPlayers to t3
         TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
-        # Add a RoundPlayer to r31
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        # Add RoundPlayers to r31
         RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
-        # Add a RoundPlayer to r32
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        # Add RoundPlayers to r32
         RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # RScoringBest.scores() without sitting-out bonus
     def test_r_scoring_best(self):
@@ -929,10 +932,16 @@ class ModelTests(TestCase):
 
     def test_tournament_scores_recalculate(self):
         t = Tournament.objects.get(name='t3')
+        tp1 = t.tournamentplayer_set.get(player=self.p5)
+        self.assertEqual(tp1.score, 147.3)
+        tp2 = t.tournamentplayer_set.get(player=self.p7)
+        self.assertEqual(tp2.score, 47.3)
         scores = t.calculated_scores()
-        self.assertEqual(len(scores), 1)
+        self.assertEqual(len(scores), 2)
         # This should be recalculated from the round scores
-        self.assertEqual(scores[t.tournamentplayer_set.get().player], 47.3)
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertEqual(scores[tp.player], 47.3)
 
     def test_tournament_scores_with_non_player(self):
         # Only interesting for unfinished tournaments
@@ -956,10 +965,15 @@ class ModelTests(TestCase):
 
     def test_tournament_scores_detail_finished(self):
         t = Tournament.objects.get(name='t3')
+        tp1 = t.tournamentplayer_set.get(player=self.p5)
+        self.assertEqual(tp1.score, 147.3)
+        tp2 = t.tournamentplayer_set.get(player=self.p7)
+        self.assertEqual(tp2.score, 47.3)
         scores = t.scores_detail()[0]
-        self.assertEqual(len(scores), 1)
+        self.assertEqual(len(scores), 2)
         # This should just be retrieved from the TournamentPlayer
-        self.assertEqual(scores[t.tournamentplayer_set.get().player], 147.3)
+        self.assertEqual(scores[tp1.player], 147.3)
+        self.assertEqual(scores[tp2.player], 47.3)
 
     def test_tournament_scores_detail_unfinished(self):
         t = Tournament.objects.get(name='t1')
@@ -1310,9 +1324,12 @@ class ModelTests(TestCase):
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):
         t = Tournament.objects.get(name='t3')
-        # Should only be one
-        tp = t.tournamentplayer_set.first()
-        self.assertEqual(tp.position(), 1)
+        tp1 = t.tournamentplayer_set.get(player=self.p5)
+        self.assertEqual(tp1.score, 147.3)
+        tp2 = t.tournamentplayer_set.get(player=self.p7)
+        self.assertEqual(tp2.score, 47.3)
+        self.assertEqual(tp1.position(), 1)
+        self.assertEqual(tp2.position(), 2)
 
     # TournamentPlayer.roundplayers()
     def test_tournamentplayer_roundplayers(self):
