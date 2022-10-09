@@ -8,7 +8,9 @@
 
 <p>{{ tournament.start_date }} - {{tournament.end_date }}</p>
 
-{% if tournament.wdd_tournament_id %}<p><a href="{{ tournament.wdd_url }}">{% trans "View on WDD" %}</a></p>{% endif %}
+{% if tournament.wdd_tournament_id %}
+  <p><a href="{{ tournament.wdd_url }}">{% trans "View on WDD" %}</a></p>
+{% endif %}
 
 <p><a href="{% url 'tournament_players' tournament.id %}">{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</a></p>
 <p>{% trans "Format: " %}{% if tournament.is_virtual %}{% trans "Virtual Face-to-face" %}{% else %}{% trans "Face-to-face" %}{% endif %}</p>
