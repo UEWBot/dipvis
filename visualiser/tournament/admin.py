@@ -20,12 +20,51 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.set_power import SetPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.models import Tournament, Round, Game, TournamentPlayer, GamePlayer
-from tournament.models import CentreCount, DrawProposal, GameImage, SupplyCentreOwnership
-from tournament.models import PowerBid, RoundPlayer
-from tournament.models import SeederBias
-from tournament.players import Player, PlayerTournamentRanking, PlayerGameResult
-from tournament.players import PlayerAward, PlayerRanking
+from tournament.models import CentreCount, DrawProposal
+from tournament.models import Game, GameImage, GamePlayer
+from tournament.models import PowerBid, Round, RoundPlayer
+from tournament.models import SeederBias, SupplyCentreOwnership
+from tournament.models import Tournament, TournamentPlayer
+from tournament.players import Player, PlayerAward
+from tournament.players import PlayerGameResult, PlayerRanking
+from tournament.players import PlayerTournamentRanking
+
+class CentreCountAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'power', 'game', 'year')
+
+class DrawProposalAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
+    fieldsets = (
+        (None, {
+            'fields': ('game', 'season', 'year', 'proposer', 'passed', 'votes_in_favour')
+        }),
+        ('Powers', {
+            'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')
+        })
+    )
+
+class GamePlayerInline(admin.TabularInline):
+    model = GamePlayer
+    fieldsets = (
+        (None, {
+            'fields': ('player', 'power', 'score')
+        }),
+    )
+    def get_extra(self, request, obj=None, **kwargs):
+        # We're going to want 7 players
+        return 7
+
+class GameAdmin(admin.ModelAdmin):
+    """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
+    fields = ['the_round', 'name', 'external_url', 'notes', 'is_top_board', 'started_at', 'is_finished']
+    inlines = [GamePlayerInline]
+    list_filter = ('the_round__tournament', 'name', 'is_finished')
+
+class GameImageAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'game', 'year', 'season', 'phase')
+
+class GamePlayerAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'power', 'game', 'player')
 
 class SetPowerInline(admin.TabularInline):
     model = SetPower
@@ -41,9 +80,37 @@ class GameSetAdmin(admin.ModelAdmin):
     """Include SetPower as part of GameSet"""
     inlines = [SetPowerInline]
 
+class PlayerAdmin(admin.ModelAdmin):
+    exclude = ('_wdd_name',)
+    list_filter = ('first_name', 'last_name')
+
+class PlayerAwardAdmin(admin.ModelAdmin):
+    list_filter = ('player', 'tournament', 'name', 'power')
+
+class PlayerGameResultAdmin(admin.ModelAdmin):
+    list_filter = ('player', 'tournament_name', 'power', 'position', 'result')
+
+class PlayerRankingAdmin(admin.ModelAdmin):
+    list_filter = ('system', 'player')
+
+class PlayerTournamentRankingAdmin(admin.ModelAdmin):
+    list_filter = ('player', 'tournament', 'position', 'year', 'title')
+
+class PowerBidAdmin(admin.ModelAdmin):
+    list_filter = ('player__tournament', 'the_round', 'player__player')
+
 class RoundAdmin(admin.ModelAdmin):
     list_filter = ('tournament',)
     ordering = ['tournament__name', 'start']
+
+class RoundPlayerAdmin(admin.ModelAdmin):
+    list_filter = ('the_round__tournament', 'the_round', 'player', 'game_count')
+
+class SCOwnershipAdmin(admin.ModelAdmin):
+    list_filter = ('game__the_round__tournament', 'game', 'owner', 'year')
+
+class SeederBiasAdmin(admin.ModelAdmin):
+    list_filter = ('player1__tournament', )
 
 class RoundInline(admin.StackedInline):
     model = Round
@@ -73,89 +140,24 @@ class TournamentAdmin(admin.ModelAdmin):
 class TournamentPlayerAdmin(admin.ModelAdmin):
     list_filter = ('tournament', 'player', 'location', 'unranked')
 
-class RoundPlayerAdmin(admin.ModelAdmin):
-    list_filter = ('the_round__tournament', 'the_round', 'player', 'game_count')
-
-class GamePlayerInline(admin.TabularInline):
-    model = GamePlayer
-    fieldsets = (
-        (None, {
-            'fields': ('player', 'power', 'score')
-        }),
-    )
-    def get_extra(self, request, obj=None, **kwargs):
-        # We're going to want 7 players
-        return 7
-
-class GamePlayerAdmin(admin.ModelAdmin):
-    list_filter = ('game__the_round__tournament', 'power', 'game', 'player')
-
-class CentreCountAdmin(admin.ModelAdmin):
-    list_filter = ('game__the_round__tournament', 'power', 'game', 'year')
-
-class DrawProposalAdmin(admin.ModelAdmin):
-    list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
-    fieldsets = (
-        (None, {
-            'fields': ('game', 'season', 'year', 'proposer', 'passed', 'votes_in_favour')
-        }),
-        ('Powers', {
-            'fields': ('power_1', 'power_2', 'power_3', 'power_4', 'power_5', 'power_6', 'power_7')
-        })
-    )
-
-class SCOwnershipAdmin(admin.ModelAdmin):
-    list_filter = ('game__the_round__tournament', 'game', 'owner', 'year')
-
-class GameAdmin(admin.ModelAdmin):
-    """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
-    fields = ['the_round', 'name', 'external_url', 'notes', 'is_top_board', 'started_at', 'is_finished']
-    inlines = [GamePlayerInline]
-    list_filter = ('the_round__tournament', 'name', 'is_finished')
-
-class GameImageAdmin(admin.ModelAdmin):
-    list_filter = ('game__the_round__tournament', 'game', 'year', 'season', 'phase')
-
-class PlayerAdmin(admin.ModelAdmin):
-    exclude = ('_wdd_name',)
-    list_filter = ('first_name', 'last_name')
-
-class PowerBidAdmin(admin.ModelAdmin):
-    list_filter = ('player__tournament', 'the_round', 'player__player')
-
-class SeederBiasAdmin(admin.ModelAdmin):
-    list_filter = ('player1__tournament', )
-
-class PlayerTournamentRankingAdmin(admin.ModelAdmin):
-    list_filter = ('player', 'tournament', 'position', 'year', 'title')
-
-class PlayerGameResultAdmin(admin.ModelAdmin):
-    list_filter = ('player', 'tournament_name', 'power', 'position', 'result')
-
-class PlayerAwardAdmin(admin.ModelAdmin):
-    list_filter = ('player', 'tournament', 'name', 'power')
-
-class PlayerRankingAdmin(admin.ModelAdmin):
-    list_filter = ('system', 'player')
-
 # Register models
-admin.site.register(GameImage, GameImageAdmin)
-admin.site.register(GreatPower)
-admin.site.register(SupplyCentre)
-admin.site.register(GameSet, GameSetAdmin)
-admin.site.register(Player, PlayerAdmin)
-admin.site.register(DrawProposal, DrawProposalAdmin)
 admin.site.register(CentreCount, CentreCountAdmin)
-admin.site.register(SupplyCentreOwnership, SCOwnershipAdmin)
-admin.site.register(TournamentPlayer, TournamentPlayerAdmin)
-admin.site.register(Tournament, TournamentAdmin)
+admin.site.register(DrawProposal, DrawProposalAdmin)
 admin.site.register(Game, GameAdmin)
-admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
-admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
+admin.site.register(GameImage, GameImageAdmin)
+admin.site.register(GamePlayer, GamePlayerAdmin)
+admin.site.register(GameSet, GameSetAdmin)
+admin.site.register(GreatPower)
+admin.site.register(Player, PlayerAdmin)
 admin.site.register(PlayerAward, PlayerAwardAdmin)
+admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
 admin.site.register(PlayerRanking, PlayerRankingAdmin)
+admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
 admin.site.register(PowerBid, PowerBidAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(RoundPlayer, RoundPlayerAdmin)
-admin.site.register(GamePlayer, GamePlayerAdmin)
 admin.site.register(SeederBias, SeederBiasAdmin)
+admin.site.register(SupplyCentre)
+admin.site.register(SupplyCentreOwnership, SCOwnershipAdmin)
+admin.site.register(Tournament, TournamentAdmin)
+admin.site.register(TournamentPlayer, TournamentPlayerAdmin)
