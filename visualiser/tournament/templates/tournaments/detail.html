@@ -18,7 +18,7 @@
 <p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
 {% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 
-<p>{% blocktrans with count=tournament.round_set.count %}{{ count }} Rounds{% endblocktrans %}:</p>
+<p>{% blocktrans count count=tournament.round_set.count %}1 Round{% plural %}{{ count }} Rounds{% endblocktrans %}:</p>
 <dl>
   {% for r in tournament.round_set.all %}
     <dt><a href="{{ r.get_absolute_url }}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a></dt>
