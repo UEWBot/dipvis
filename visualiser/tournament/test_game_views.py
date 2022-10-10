@@ -359,7 +359,7 @@ class GameViewTests(TestCase):
                     with self.subTest(year=year, power=p):
                         self.assertEqual(ccs.get(power=p).count, c)
         # Turkey should be eliminated in 1908
-        cc = CentreCount.objects.get(game=self.g1, year=1909, power=self.turkey)
+        cc = CentreCount.objects.get(game=self.g1, year=1908, power=self.turkey)
         self.assertEqual(cc.count, 0)
         # Game should now be finished
         self.g1.refresh_from_db()
