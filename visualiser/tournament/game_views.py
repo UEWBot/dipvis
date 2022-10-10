@@ -401,6 +401,8 @@ def sc_counts(request, tournament_id, game_name):
             g.is_finished = True
             g.save()
         else:
+            g.is_finished = False
+            g.save()
             g.check_whether_finished()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',

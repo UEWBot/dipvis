@@ -372,6 +372,61 @@ class GameViewTests(TestCase):
         self.g1.is_finished = False
         self.g1.save()
 
+    def test_post_un_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        counts = {1912: {self.austria: 9,
+                         self.england: 9,
+                         self.france: 3,
+                         self.germany: 3,
+                         self.italy: 3,
+                         self.russia: 7,
+                         self.turkey: 0}}
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {'scs-TOTAL_FORMS': '4',
+                'scs-INITIAL_FORMS': '0',
+                'scs-MAX_NUM_FORMS': '1000',
+                'scs-MIN_NUM_FORMS': '0',
+                'death-%s' % str(self.austria): '',
+                'death-%s' % str(self.england): '',
+                'death-%s' % str(self.france): '',
+                'death-%s' % str(self.germany): '',
+                'death-%s' % str(self.italy): '',
+                'death-%s' % str(self.russia): '',
+                'death-%s' % str(self.turkey): '1908',
+                'end-is_finished': ''}
+        for n, (y, dots) in enumerate(counts.items()):
+            data['scs-%d-year' % n] = str(y)
+            for p, c in dots.items():
+                data['scs-%d-%s' % (n, str(p))] = str(c)
+        data_enc = urlencode(data)
+        response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
+                                    data_enc,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the SC Chart page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
+        # And the CentreCounts should be added
+        for year, dots in counts.items():
+            with self.subTest(year=year):
+                ccs = CentreCount.objects.filter(game=self.g1, year=year)
+                self.assertEqual(ccs.count(), 7)
+                for p, c in dots.items():
+                    with self.subTest(year=year, power=p):
+                        self.assertEqual(ccs.get(power=p).count, c)
+        # Turkey should be eliminated in 1908
+        cc = CentreCount.objects.get(game=self.g1, year=1908, power=self.turkey)
+        self.assertEqual(cc.count, 0)
+        # Game should now not be finished
+        self.g1.refresh_from_db()
+        self.assertFalse(self.g1.is_finished)
+        # Clean up
+        for year in counts.keys():
+            ccs = CentreCount.objects.filter(game=self.g1, year=year)
+            ccs.delete()
+        cc.delete()
+
     def test_post_enter_scs_modify(self):
         self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1907).count(), 0)
         self.assertEqual(CentreCount.objects.filter(game=self.g1, year=1908).count(), 0)
