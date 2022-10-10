@@ -1207,6 +1207,11 @@ class TournamentModelTests(TestCase):
                 t.background(mask=mask)
             mask *= 2
 
+    # Tournament.game_set()
+    def test_tourney_game_set(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.game_set().count(), 2)
+
     # Tournament.current_round()
     def test_tourney_current_round_none(self):
         # All games in t3 are finished

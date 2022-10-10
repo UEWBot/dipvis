@@ -26,6 +26,8 @@
    {% endfor %}
 </dl>
 
+<p>{% blocktrans count count=tournament.game_set.count %}1 Game in total{% plural %}{{ count }} Games in total{% endblocktrans %}</p>
+
 {% if tournament.draw_secrecy == "C" %}
   <p/><p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p><p/>
 {% endif %}

@@ -720,6 +720,12 @@ class Tournament(models.Model):
         random.shuffle(results)
         return results
 
+    def game_set(self):
+        """
+        Returns a queryset of all the Games in the Tournament
+        """
+        return Game.objects.filter(the_round__tournament=self)
+
     def current_round(self):
         """
         Returns the Round in progress, or None
