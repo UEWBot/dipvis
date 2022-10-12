@@ -50,7 +50,7 @@ s1 = "Solo or bust"
 
 
 @override_settings(HOSTNAME='example.com')
-class TournamentModelTests(TestCase):
+class ModelTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
     @classmethod

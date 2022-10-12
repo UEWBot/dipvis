@@ -22,7 +22,7 @@ from django.urls import reverse
 
 from tournament.players import Player
 
-class TournamentViewTests(TestCase):
+class PlayerViewTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
