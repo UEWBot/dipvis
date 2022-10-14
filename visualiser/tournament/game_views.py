@@ -219,7 +219,7 @@ def game_sc_chart(request,
     return render(request, 'games/sc_count.html', context)
 
 
-def _blank_row_num(game, queryset, final_year):
+def _blank_row_num(queryset, final_year):
     """Return the number of blank forms to provide"""
     # If the round ends with a certain year, provide the right number of blank rows
     # Otherwise, just give them four
@@ -240,7 +240,7 @@ def sc_owners(request, tournament_id, game_name):
     sco_set = g.supplycentreownership_set.all()
     final_year = g.the_round.final_year
     SCOwnerFormset = formset_factory(SCOwnerForm,
-                                     extra=_blank_row_num(g, sco_set, final_year),
+                                     extra=_blank_row_num(sco_set, final_year),
                                      formset=BaseSCOwnerFormset)
     # Put in all the existing SupplyCentreOwnerships for this game
     data = []
@@ -301,7 +301,7 @@ def sc_counts(request, tournament_id, game_name):
     cc_set = g.centrecount_set.all()
     final_year = g.the_round.final_year
     SCCountFormset = formset_factory(SCCountForm,
-                                     extra=_blank_row_num(g, cc_set, final_year),
+                                     extra=_blank_row_num(cc_set, final_year),
                                      formset=BaseSCCountFormset)
     # Put in all the existing CentreCounts for this game
     data = []
