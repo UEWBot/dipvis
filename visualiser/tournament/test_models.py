@@ -289,12 +289,12 @@ class ModelTests(TestCase):
         RoundPlayer.objects.create(player=cls.p8, the_round=r12)
         # And TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
         TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
         TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
         TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
         TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
         TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
         # Add TournamentPlayers to t3
