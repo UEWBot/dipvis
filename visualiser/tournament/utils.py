@@ -23,7 +23,7 @@ This module provides utility functions for DipVis.
 """
 
 from tournament import backstabbr
-from tournament.diplomacy import FIRST_YEAR
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
 from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
@@ -36,6 +36,7 @@ def map_to_backstabbr_power(gp):
         if gp.abbreviation == power[0]:
             return power
     raise ValueError(gp)
+
 
 def populate_bs_profile_urls(dry_run=False):
     """
@@ -79,6 +80,7 @@ def populate_bs_profile_urls(dry_run=False):
         print("Would have updated %d profile URLs" % players_changed)
     print("%d mismatches detected" % mismatches)
 
+
 def populate_missed_years(game, dry_run=False):
     """
     For a game on backstabbr, check for missing years and fill them in.
@@ -102,6 +104,7 @@ def populate_missed_years(game, dry_run=False):
                 game.create_or_update_sc_counts_from_ownerships(year)
             else:
                 _bs_counts_to_cc(game, year, sc_counts)
+
 
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
