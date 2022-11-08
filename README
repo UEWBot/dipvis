@@ -1,8 +1,10 @@
 Diplomacy Tournament Visualiser
 
-Inspired by the TV coverage for sports events, the intent is to provide
-something analagous for Diplomacy tournaments, whereby spectators (and
-players) can follow the tournament.
+Inspired by the TV coverage for sports events, the intent was originally to
+provide something analagous for Diplomacy tournaments, whereby spectators (and
+players) could follow the tournament. It has evolved to be primarily a Tournament
+Director aid - seeding boards, scoring tournaments, etc, although the live
+tracking of scores is also used a lot by players at tournaments.
 
 It’s been used for several tournaments already, at https://diplomacytv.com/
 
