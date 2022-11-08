@@ -28,10 +28,9 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_prefs_email
-from tournament.forms import AuctionBidForm
 from tournament.forms import PlayerForm
 from tournament.forms import PrefsForm
-from tournament.models import PowerBid, Tournament, TournamentPlayer
+from tournament.models import Tournament, TournamentPlayer
 from tournament.tournament_views import get_visible_tournament_or_404
 
 
@@ -147,95 +146,3 @@ def player_prefs(request, tournament_id, uuid):
                    'uuid': uuid,
                    'prefs_list': tp.preference_set.all(),
                    'form': prefs_form})
-
-
-# Note: No permission_required decorator
-# because this one should be available to any who have the URL
-def auction_bids(request, tournament_id, uuid):
-    """
-    Display the current bids for a single TournamentPlayer,
-    and give them the ability to change them.
-    TournamentPlayer is (indirectly) identified by the uuid string.
-    """
-    # Allow access regardless of published state
-    t = get_object_or_404(Tournament, pk=tournament_id)
-    # But don't allow modification of archived tournaments
-    if not t.editable:
-        raise Http404
-    # Find the first round without Games
-    all_rounds_qs = t.round_set.all()
-    for_round = None
-    for r in all_rounds_qs:
-        if not r.game_set.exists():
-            for_round = r
-            break;
-    # Fail if the last round already has Games (too late)
-    if for_round is None:
-        raise Http404
-    # Find the TournamentPlayer in question
-    try:
-        tp = t.tournamentplayer_set.get(uuid_str=uuid)
-    except TournamentPlayer.DoesNotExist as e:
-        raise Http404 from e
-
-    # Find any existing bids
-    data = {}
-    tp_bids_qs = tp.powerbid_set.all()
-    for power in GreatPower.objects.all():
-        try:
-            bid = tp_bids_qs.get(power=power, the_round=for_round)
-        except PowerBid.DoesNotExist:
-            pass
-        else:
-            data[_(power.name)] = bid.bid
-
-    # Which style of auction is it?
-    if t.power_assignment == t.AUCTION_PER_ROUND:
-        funds = PowerBid.BID_TOTAL_PER_ROUND
-    elif t.power_assignment == t.AUCTION_TOTAL:
-        # How much do they get in total?
-        total_rounds = len(all_rounds_qs)
-        funds = PowerBid.BID_TOTAL_PER_ROUND * total_rounds
-        print('Initial total funds is %d' % funds)
-        # How much did they spend in previous rounds ?
-        for r in all_rounds_qs:
-            # Stop when we get to the round we're bidding for
-            if r is for_round:
-                break;
-            spent = tp_bids_qs.filter(the_round=r).aggregate(Sum('bid'))['bid__sum']
-            if spent is not None:
-                funds -= spent
-            print('Minus spend in %s leaves %d' % (str(r), funds))
-        # And how much do they need to save for future rounds?
-        # TODO "21" should be derived from the number of GreatPowers
-        funds -= (21 * (total_rounds - for_round.number()))
-        print('Minus 21 per future round leaves %d' % funds)
-
-    bids_form = AuctionBidForm(request.POST or None,
-                               funds=funds,
-                               initial=data)
-
-    if bids_form.is_valid() and bids_form.has_changed():
-        with transaction.atomic():
-            for power in GreatPower.objects.all():
-                bid = bids_form.cleaned_data[_(power.name)]
-
-                PowerBid.objects.update_or_create(player=tp,
-                                                  power=power,
-                                                  the_round=for_round,
-                                                  defaults={'bid': bid})
-
-        # Redirect back here to flush the POST data
-        return HttpResponseRedirect(reverse('auction_bids',
-                                            args=(tournament_id, uuid)))
-
-    return render(request,
-                  'tournaments/auction_bids.html',
-                  {'tournament': t,
-                   'player': tp,
-                   'uuid': uuid,
-                   'round_num': for_round.number(),
-                   'min_bid': PowerBid.MIN_BID,
-                   'max_bid': PowerBid.MAX_BID,
-                   'bid_total': funds,
-                   'form': bids_form})

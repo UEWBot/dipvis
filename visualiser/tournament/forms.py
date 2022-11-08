@@ -30,7 +30,7 @@ from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
 from tournament.models import Game, GameImage, SeederBias
 from tournament.models import SEASONS
-from tournament.models import PowerBid, Tournament, TournamentPlayer
+from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player
 
 
@@ -78,47 +78,6 @@ class BaseCheckInFormset(BaseFormSet):
         kwargs['tp'] = self.tp
         kwargs['round'] = self.rounds[index]
         return super()._construct_form(index, **kwargs)
-
-
-class AuctionBidForm(forms.Form):
-    """Form for bids for all GreatPowers"""
-    def __init__(self, *args, **kwargs):
-        self.duplicate_bids_allowed = False
-        # Remove our kwarg from the list
-        self.funds = kwargs.pop('funds')
-        super().__init__(*args, **kwargs)
-        # Create the right country fields
-        for power in GreatPower.objects.all():
-            c = power.name
-            self.fields[c] = forms.IntegerField(min_value=PowerBid.MIN_BID,
-                                                max_value=PowerBid.MAX_BID)
-            self.fields[c].label = _(c)
-            self.fields[c].help_text = _('Your bid to play %(power)s') % {'power': _(c)}
-            attrs = self.fields[c].widget.attrs
-
-    def clean(self):
-        # Check for duplicate bids
-        if not self.duplicate_bids_allowed:
-            bid_dict = {}
-            for power in GreatPower.objects.all():
-                bid = self.cleaned_data[_(power.name)]
-                bid_dict.setdefault(bid, []).append(_(power.name))
-            errs = []
-            for k, v in bid_dict.items():
-                if len(v) > 1:
-                    errs.append(_('Duplicate bid %(bid)d for %(powers)s.') % {'bid': k,
-                                                                              'powers': ', '.join(v)})
-            if errs:
-                raise forms.ValidationError(' '.join(errs))
-
-        # Check the total amount bid
-        total = 0
-        for power in GreatPower.objects.all():
-            total += self.cleaned_data[_(power.name)]
-        if total > self.funds:
-            raise forms.ValidationError(_('Bids total %(sum)d - greater than %(expected)d') % {'sum': total,
-                                                                                               'expected': self.funds})
-        return self.cleaned_data
 
 
 class PrefsForm(forms.Form):

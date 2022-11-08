@@ -40,9 +40,6 @@
 <p>{% trans "CSV file download:" %}</p>
 <ul>
   <li><a href="{% url 'board_call_csv' tournament.id round.number %}">{% trans "Board call" %}</a></li>
-  {% if tournament.powers_assigned_from_bids %}
-    <li><a href="{% url 'blind_auction_csv' tournament.id round.number %}">{% trans "Blind Auction Bids" %}</a></li>
-  {% endif %}
 </ul>
 
 {% if user.is_active and tournament.editable %}

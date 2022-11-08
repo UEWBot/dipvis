@@ -36,8 +36,6 @@ round_patterns = [
     url(r'^board_call_csv/$', round_views.board_call_csv, name='board_call_csv'),
     url(r'^board_call/$', round_views.round_simple,
         {'template': 'board_call'}, name='board_call'),
-    url(r'^blind_auction_csv/$', round_views.blind_auction_csv,
-        name='blind_auction_csv'),
 ]
 
 game_patterns = [
@@ -177,8 +175,6 @@ tournament_patterns = [
     url(r'^seeder_bias/$', tournament_views.seeder_bias, name='seeder_bias'),
     url(r'^player_prefs/(?P<uuid>[^/]+)/$', tournament_player_views.player_prefs,
         name='player_prefs'),
-    url(r'^auction_bids/(?P<uuid>[^/]+)/$', tournament_player_views.auction_bids,
-        name='auction_bids'),
     url(r'^players/', include(tp_patterns)),
     url(r'^rounds/(?P<round_num>\d+)/', include(round_patterns)),
     url(r'^games/(?P<game_name>\w+)/', include(game_patterns)),

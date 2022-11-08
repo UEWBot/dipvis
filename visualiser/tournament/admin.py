@@ -23,7 +23,7 @@ from tournament.diplomacy.models.set_power import SetPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import Game, GameImage, GamePlayer
-from tournament.models import PowerBid, Round, RoundPlayer
+from tournament.models import Round, RoundPlayer
 from tournament.models import SeederBias, Series, SupplyCentreOwnership
 from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
@@ -89,9 +89,6 @@ class PlayerRankingAdmin(admin.ModelAdmin):
 class PlayerTournamentRankingAdmin(admin.ModelAdmin):
     list_filter = ('player', 'tournament', 'position', 'year', 'title')
 
-class PowerBidAdmin(admin.ModelAdmin):
-    list_filter = ('player__tournament', 'the_round', 'player__player')
-
 class RoundAdmin(admin.ModelAdmin):
     list_filter = ('tournament',)
     ordering = ['tournament__name', 'start']
@@ -152,7 +149,6 @@ admin.site.register(PlayerAward, PlayerAwardAdmin)
 admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
 admin.site.register(PlayerRanking, PlayerRankingAdmin)
 admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
-admin.site.register(PowerBid, PowerBidAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(RoundPlayer, RoundPlayerAdmin)
 admin.site.register(SeederBias, SeederBiasAdmin)

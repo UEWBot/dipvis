@@ -97,28 +97,7 @@ You can change your preference list at any time.
 The list at the time of board call for each round is the one that will be used for that round.
 """
 
-BIDS_EMAIL = """
-Hi,
-You're receiving this because you are registered for the %(tourney)s Diplomacy tournament.
-The tournament is using a blind auction to assign Great Powers.
-To enter or update your bids, go to the following web page:
-%(url)s
-Note 1: this address is unique to you - if you share it with anyone, they will be able to change your bids!
-Note 2: you will get a "Page Not Found" error before the tournament starts.
-
-You must bid between %(min)d and %(max)d for each Great Power.
-You cannot bid the same for any two Great Powers.
-%(rule)s
-You can change your bids at any time.
-Your bids as they stand at the time of board call for the round are what will be used for that round.
-"""
-
-BIDS_RULE_1 = "You get a total of %(total)d to spend each round."
-BIDS_RULE_2 = "You get a total of %(total)d to spend, split between rounds as you see fit."
-
 PREFS_SUBJECT = 'Specify power preferences for %s'
-
-BIDS_SUBJECT = 'Specify power blind auction bids for %s'
 
 
 def send_prefs_email(tournamentplayer, force=False):
@@ -128,7 +107,6 @@ def send_prefs_email(tournamentplayer, force=False):
     Unless force is True, will only send the email if one hasn't already been sent.
     Note that if force is True, any previous URL will no longer be valid.
     """
-    from tournament.models import PowerBid
 
     t = tournamentplayer.tournament
     # Bail if preferences aren't needed for the Tournament
@@ -136,15 +114,6 @@ def send_prefs_email(tournamentplayer, force=False):
         body = PREFS_EMAIL
         subject = PREFS_SUBJECT
         rule = None
-    elif t.power_assignment == t.AUCTION_PER_ROUND:
-        body = BIDS_EMAIL
-        subject = BIDS_SUBJECT
-        rule = BIDS_RULE_1 % {'total': PowerBid.BID_TOTAL_PER_ROUND}
-    elif t.power_assignment == t.AUCTION_TOTAL:
-        rounds = t.round_set.count()
-        body = BIDS_EMAIL
-        subject = BIDS_SUBJECT
-        rule = BIDS_RULE_2 % {'total': PowerBid.BID_TOTAL_PER_ROUND * rounds}
     else:
         return
     addr = tournamentplayer.player.email
@@ -163,8 +132,6 @@ def send_prefs_email(tournamentplayer, force=False):
     # Create the email and send it
     msg_body = body % {'tourney': t,
                        'url': tournamentplayer.get_prefs_url(),
-                       'min': PowerBid.MIN_BID,
-                       'max': PowerBid.MAX_BID,
                        'rule': rule}
     send_mail(subject % t,
               msg_body,
