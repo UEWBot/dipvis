@@ -13,7 +13,11 @@
     <li>{% blocktrans with r=rp.the_round.number %}Round {{ r }}{% endblocktrans %}</li>
     <ul>
       {% for gp in rp.gameplayers.all %}
-        <li>{{ gp.result_str|safe }} {% blocktrans with power=gp.power game=gp.game.name url=gp.game.get_absolute_url %}as {{power}} in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
+        {% if gp.power %}
+          <li>{{ gp.result_str|safe }} {% blocktrans with power=gp.power game=gp.game.name url=gp.game.get_absolute_url %}as {{power}} in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
+        {% else %}
+          <li>{% blocktrans with game=gp.game.name url=gp.game.get_absolute_url %}Power not yet assigned in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
+        {% endif %}
       {% empty %}
         <li>{% trans "Did not play." %}</li>
       {% endfor %}

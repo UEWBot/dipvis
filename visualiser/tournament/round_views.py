@@ -89,10 +89,11 @@ def board_call_csv(request, tournament_id, round_num):
         for gp in g.gameplayer_set.all():
             row_dict = {_('Round'): round_num,
                         _('Board'): g.name,
-                        _('Power'): _(gp.power.name),
                         _('Player Name'): str(gp.player),
                         _('Player Id'): gp.player.pk,
                         _('Backstabbr Username'): gp.tournamentplayer().backstabbr_username}
+            if gp.power:
+                row_dict[_('Power')] = _(gp.power.name)
             writer.writerow(row_dict)
 
     return response

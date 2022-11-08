@@ -19,7 +19,7 @@
 
 <dl>
   {% for gp in game.gameplayer_set.all %}
-    <dt>{{ gp.power }}</dt>
+    <dt>{% if gp.power %}{{ gp.power }}{% else %}{% trans "Power not yet assigned" %}{% endif %}</dt>
     <dd><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %} ( {% if gp.player.backstabbr_profile_url %}<a href="{{ gp.player.backstabbr_profile_url }}">{{ gp.player.backstabbr_username }}</a>{% else %}{{ gp.player.backstabbr_username }}{% endif %} ){% endif %}</dd>
     <dd>{{ gp.result_str }}</dd>
     {% if game.is_finished %}

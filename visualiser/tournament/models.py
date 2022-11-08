@@ -698,6 +698,8 @@ class Tournament(models.Model):
         for r in self.round_set.all().prefetch_related('game_set'):
             for g in r.game_set.all().prefetch_related('gameplayer_set'):
                 for gp in g.gameplayer_set.all():
+                    if not gp.power:
+                        continue
                     score = all_scores[gp.game][gp.power]
                     tuple_ = (gp, score, gp.final_sc_count(), gp.tournamentplayer().unranked)
                     tuples.setdefault(gp.power, []).append(tuple_)
@@ -1847,6 +1849,8 @@ class GamePlayer(models.Model):
         If the Game is ongoing, this will be the result if the game ended now.
         Returned string includes an HTML <a> link to the game details page.
         """
+        if not self.power:
+            return ''
         g = self.game
         cc_set = g.centrecount_set.all()
         power_cc_set = cc_set.filter(power=self.power)
