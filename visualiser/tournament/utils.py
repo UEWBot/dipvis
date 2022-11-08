@@ -22,6 +22,9 @@
 This module provides utility functions for DipVis.
 """
 
+import urllib.request
+from bs4 import BeautifulSoup
+
 from tournament import backstabbr
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
@@ -324,10 +327,38 @@ def fix_round_players(the_round, dry_run=False):
 
 def find_missing_wdd_ids():
     """
-    Report all Players with no wdd_id that should have one.
+    Report all Players with no wdd_player_id that should have one.
     """
     for p in Player.objects.all():
         if p.wdd_player_id:
             continue
         if p.tournamentplayer_set.filter(tournament__wdd_tournament_id__isnull=False).exists():
             print(p)
+
+
+def add_missing_wdd_ids(dry_run=False):
+    """
+    Find Players with no wdd_player_id that should have one and add it.
+    """
+    for p in Player.objects.all():
+        if p.wdd_player_id:
+            continue
+        tp = p.tournamentplayer_set.filter(tournament__wdd_tournament_id__isnull=False).first()
+        if not tp:
+            continue
+        url = tp.tournament.wdd_url()
+        page = urllib.request.urlopen(url)
+        soup = BeautifulSoup(page.read())
+        for a in soup.find_all('a'):
+            if not a.string:
+                continue
+            url = a['href']
+            if 'id_player' not in url:
+                continue
+            wdd_id = url.split('=')[-1]
+            name = str(a.string)
+            if name.lower() == str(p).lower():
+                print("Giving %s WDD id %s" % (str(p), wdd_id))
+                if not dry_run:
+                    p.wdd_player_id = int(wdd_id)
+                    p.save()
