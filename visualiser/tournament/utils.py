@@ -27,6 +27,7 @@ from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
 from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
+from tournament.players import Player
 from tournament.game_views import _bs_ownerships_to_sco, _bs_counts_to_cc
 
 
@@ -319,3 +320,14 @@ def fix_round_players(the_round, dry_run=False):
         print("Saving game %s to trigger score recalculation\n" % g);
         if not dry_run:
             g.save()
+
+
+def find_missing_wdd_ids():
+    """
+    Report all Players with no wdd_id that should have one.
+    """
+    for p in Player.objects.all():
+        if p.wdd_player_id:
+            continue
+        if p.tournamentplayer_set.filter(tournament__wdd_tournament_id__isnull=False).exists():
+            print(p)
