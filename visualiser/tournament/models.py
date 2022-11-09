@@ -1757,6 +1757,13 @@ class RoundPlayer(models.Model):
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError(_(u'Player is not yet in the tournament'))
 
+    def delete(self, *args, **kwargs):
+        ret = super().delete(*args, **kwargs)
+        # Force a recalculation of scores, if necessary
+        if self.score != 0.0:
+            self.the_round.store_scores()
+        return ret
+
     def __str__(self):
         return _(u'%(player)s in %(round)s') % {'player': self.player,
                                                 'round': self.the_round}

@@ -3470,6 +3470,103 @@ class ModelTests(TestCase):
         # TODO Validate result
         str(rp)
 
+    # RoundPlayer deletion
+    def test_roundplayer_delete(self):
+        # Chris
+        now = timezone.now()
+        # Single Round Tournament, with points for sitting out a round
+        s = 'Best game counts. Sitters get 4005'
+        t = Tournament.objects.create(name='rp_test',
+                                      start_date=now,
+                                      end_date=now,
+                                      round_scoring_system=s,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=Tournament.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s1,
+                                 dias=True,
+                                 start=t.start_date)
+        g = Game.objects.create(name='g11',
+                                started_at=r.start,
+                                the_round=r,
+                                the_set=self.set1)
+        # 10 TournamentPlayers and RoundPlayers
+        # Three RoundPlayers present but sitting out
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        TournamentPlayer.objects.create(player=self.p3, tournament=t)
+        TournamentPlayer.objects.create(player=self.p4, tournament=t)
+        TournamentPlayer.objects.create(player=self.p5, tournament=t)
+        TournamentPlayer.objects.create(player=self.p6, tournament=t)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t)
+        TournamentPlayer.objects.create(player=self.p8, tournament=t)
+        TournamentPlayer.objects.create(player=self.p9, tournament=t)
+        TournamentPlayer.objects.create(player=self.p10, tournament=t)
+        RoundPlayer.objects.create(player=self.p1, the_round=r)
+        RoundPlayer.objects.create(player=self.p2, the_round=r)
+        RoundPlayer.objects.create(player=self.p3, the_round=r)
+        RoundPlayer.objects.create(player=self.p4, the_round=r)
+        RoundPlayer.objects.create(player=self.p5, the_round=r)
+        RoundPlayer.objects.create(player=self.p6, the_round=r)
+        RoundPlayer.objects.create(player=self.p7, the_round=r)
+        RoundPlayer.objects.create(player=self.p8, the_round=r)
+        RoundPlayer.objects.create(player=self.p9, the_round=r)
+        RoundPlayer.objects.create(player=self.p10, the_round=r)
+        GamePlayer.objects.create(player=self.p1, game=g, power=self.austria)
+        GamePlayer.objects.create(player=self.p3, game=g, power=self.england)
+        GamePlayer.objects.create(player=self.p4, game=g, power=self.france)
+        GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        GamePlayer.objects.create(player=self.p6, game=g, power=self.italy)
+        GamePlayer.objects.create(player=self.p7, game=g, power=self.russia)
+        GamePlayer.objects.create(player=self.p8, game=g, power=self.turkey)
+
+        CentreCount.objects.create(power=self.austria, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.england, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.france, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.germany, game=g, year=1903, count=10)
+        CentreCount.objects.create(power=self.italy, game=g, year=1903, count=0)
+        CentreCount.objects.create(power=self.russia, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1903, count=4)
+
+        # Finish the game, so scores get calculated and stored
+        g.is_finished = True
+        g.save()
+
+        # Check that we have the scores we expect
+        tp1 = t.tournamentplayer_set.get(player=self.p2)
+        self.assertEqual(tp1.score, 4005)
+
+        # Now delete one RoundPlayer who's sitting out, using the delete() method
+        rp = r.roundplayer_set.get(player=self.p2)
+        rp.delete()
+
+        # Validate their score
+        tp1.refresh_from_db()
+        self.assertEqual(tp1.score, 0)
+
+        # This next block will only work in Django 4.1 and above,
+        # where we can use signals
+        if False:
+            # Check that we have the scores we expect
+            tp1 = t.tournamentplayer_set.get(player=self.p9)
+            self.assertEqual(tp1.score, 4005)
+            tp2 = t.tournamentplayer_set.get(player=self.p10)
+            self.assertEqual(tp2.score, 4005)
+
+            # Delete the other two RoundPlayers who are sitting out, using QuerySet.delete()
+            qs = r.roundplayer_set.filter(score=4005)
+            self.assertEqual(len(qs), 2)
+            qs.delete()
+
+            # Validate their scores
+            tp1.refresh_from_db()
+            self.assertEqual(tp1.score, 0)
+            tp2.refresh_from_db()
+            self.assertEqual(tp2.score, 0)
+
+        # Clean up
+        t.delete()
+
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):
         t = Tournament.objects.get(name='t1')

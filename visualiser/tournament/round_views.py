@@ -180,8 +180,11 @@ def roll_call(request, tournament_id, round_num):
             else:
                 # delete any corresponding RoundPlayer
                 # This could be a player who was previously checked-off in error
-                RoundPlayer.objects.filter(player=p,
-                                           the_round=r).delete()
+                try:
+                    RoundPlayer.objects.get(player=p,
+                                            the_round=r).delete()
+                except RoundPlayer.DoesNotExist:
+                    pass
         if not errors_added:
             if t.seed_games:
                 # Ensure that we have the right number of players

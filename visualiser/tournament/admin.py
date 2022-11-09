@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.contrib import admin
+from django.db import transaction
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -97,6 +98,12 @@ class RoundAdmin(admin.ModelAdmin):
 
 class RoundPlayerAdmin(admin.ModelAdmin):
     list_filter = ('the_round__tournament', 'the_round', 'player', 'game_count')
+
+    # RoundPlayer.delete() needs to be called for each object
+    def delete_queryset(self, request, queryset):
+        with transaction.atomic():
+            for obj in queryset:
+                obj.delete()
 
 class SCOwnershipAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'game', 'owner', 'year')
