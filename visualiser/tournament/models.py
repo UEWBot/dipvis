@@ -1089,6 +1089,11 @@ class Round(models.Model):
             p.score = scores[p.player]
             p.save()
 
+        # if the tournament is finished, store the player scores
+        t = self.tournament
+        if t.is_finished():
+            t.store_scores()
+
     def is_finished(self):
         """
         Returns True if the Round has games, and they have all finished.
@@ -1543,12 +1548,8 @@ class Game(models.Model):
             # If the round is (now) finished, store the player scores
             r = self.the_round
             if r.is_finished():
+                # This will update the Tournament scores if needed
                 r.store_scores()
-
-            # if the tournament is (now) finished, store the player scores
-            t = self.the_round.tournament
-            if t.is_finished():
-                t.store_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
