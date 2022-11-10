@@ -417,6 +417,10 @@ class Player(models.Model):
     class Meta:
         ordering = ['last_name', 'first_name']
 
+    def __init__(self, *args, **kwargs):
+        super(Player, self).__init__(*args, **kwargs)
+        self._old_wdd_id = self.wdd_player_id
+
     def __str__(self):
         return u'%s %s' % (self.first_name, self.last_name)
 
@@ -424,18 +428,11 @@ class Player(models.Model):
         return u'%s, %s' % (self.last_name, self.first_name)
 
     def save(self, *args, **kwargs):
-        # Re-cache WDD Name in case WDD id has changed
-        self._wdd_name = ''
-        if self.wdd_player_id:
-            bg = WDDBackground(self.wdd_player_id)
-            try:
-                self._wdd_name = bg.wdd_name()
-            except Exception:
-                # Handle all exceptions, because failing to set the cached name is ok
-                print("Failed to cache WDD name for player %s, wdd id %s" %
-                      (self, str(self.wdd_player_id)))
+        # Clear cached WDD Name if WDD id has changed
+        if (not self.wdd_player_id) or (self._old_wdd_id != self.wdd_player_id):
+            self._wdd_name = ''
+        self._old_wdd_id = self.wdd_player_id
         super(Player, self).save(*args, **kwargs)
-        add_player_bg(self)
 
     def wdd_name(self):
         """Name for this player in the World Diplomacy Database."""
