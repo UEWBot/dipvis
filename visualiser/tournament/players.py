@@ -427,10 +427,21 @@ class Player(models.Model):
     def sortable_str(self):
         return u'%s, %s' % (self.last_name, self.first_name)
 
+    def _clear_background(self):
+        """
+        Remove all background info on the Player from the database.
+        This undoes add_player_bg()
+        """
+        self.playerranking_set.all().delete()
+        self.playeraward_set.all().delete()
+        self.playertournamentranking_set.all().delete()
+        self.playergameresult_set.all().delete()
+
     def save(self, *args, **kwargs):
         # Clear cached WDD Name if WDD id has changed
         if (not self.wdd_player_id) or (self._old_wdd_id != self.wdd_player_id):
             self._wdd_name = ''
+            self._clear_background()
         self._old_wdd_id = self.wdd_player_id
         super(Player, self).save(*args, **kwargs)
 
