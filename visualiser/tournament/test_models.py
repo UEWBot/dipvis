@@ -1121,6 +1121,23 @@ class ModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         self.assertEqual({}, t.best_countries())
 
+    def test_tournament_best_countries_without_powers(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        # Remember the power assignments for g11, and unset them all
+        powers = {}
+        for gp in g.gameplayer_set.all():
+            powers[gp.player] = gp.power
+            gp.power = None
+            gp.save()
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        t.best_countries()
+        # Restore power assignments
+        for gp in g.gameplayer_set.all():
+            gp.power = powers[gp.player]
+            gp.save()
+
     def test_tournament_best_countries_with_unranked(self):
         t = Tournament.objects.get(name='t1')
         bc = t.best_countries()
@@ -3710,7 +3727,7 @@ class ModelTests(TestCase):
         t.delete()
         self.assertEqual(Preference.objects.count(), 0)
 
-    # TODO GamePlayer.result_str()
+    # TODO GamePlayer.result_str(), including wihtout power assigned
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
