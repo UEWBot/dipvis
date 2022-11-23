@@ -23,6 +23,8 @@ from urllib.parse import urljoin, urlparse, urlunparse
 from ast import literal_eval
 from bs4 import BeautifulSoup
 
+from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
+
 BACKSTABBR_NETLOC = 'www.backstabbr.com'
 
 # Names used for the Great Powers on Backstabbr
@@ -118,12 +120,11 @@ class Game():
         self.sc_counts = {}
         for p in POWERS:
             self.sc_counts[p] = 0
+            # (player, player profile URL) tuple
+            self.players[p] = ('Unknown', '')
         self.sc_ownership = {}
         self.position = {}
         self.orders = {}
-        for p in POWERS:
-            # (player, player profile URL) tuple
-            self.players[p] = ('Unknown', '')
         self._parse_page()
         self._calculate_result()
 
@@ -140,13 +141,10 @@ class Game():
         """
         Set self.result and self.soloer from self.sc_counts, self.players, and self.ongoing.
         """
-        alive = 0
         self.soloer = None
         if self.soloing_power is not None:
             self.soloer = self.players[self.soloing_power][0]
-        for count in self.sc_counts.values():
-            if count > 0:
-                alive += 1
+        alive = len([count for count in self.sc_counts.values() if count > 0])
         if self.soloer is not None:
             self.result = 'Solo'
         elif self.ongoing:
@@ -260,7 +258,7 @@ class Game():
                 power, count = span.text.strip().split()
                 dots = int(count)
                 sc_counts[power] = dots
-                if dots > 17:
+                if dots >= WINNING_SCS:
                     soloing_power = power
         # SC ownership, unit locations, and orders
         for scr in soup.find_all('script'):
