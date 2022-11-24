@@ -157,10 +157,7 @@ class Game():
             power = span.span.string
             if power[0] == '-':
                 power = power.split(' ')[1]
-            # No idea why td.next_sibling doesn't give this same TD
-            td2 = td.parent.find('td', {'class': 'memberRightSide '})
-            if not td2:
-                td2 = td.parent.find('td', {'class': 'memberRightSide memberStatusFade'})
+            td2 = td.next_sibling.next_sibling
             # Get the player link
             span = td2.find('span', {'class': 'memberName'})
             a = span.a
