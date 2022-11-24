@@ -88,8 +88,8 @@ game_patterns = [
     url(r'^overview3/$', game_views.game_image,
         {'timelapse': True, 'redirect_url_name': 'game_overview'},
         name='game_overview_3'),
-    url(r'^scrape_backstabbr/$', game_views.scrape_backstabbr,
-        name='scrape_backstabbr'),
+    url(r'^scrape_backstabbr/$', game_views.scrape_external_site,
+        name='scrape_external_site'),
     url(r'^aar/(?P<player_id>\d+)/$', game_views.aar,
         name='aar'),
 ]

@@ -271,7 +271,7 @@ class Game():
                     position = literal_eval(match.group(1))
                 match = ORDERS.search(scr.string)
                 if match:
-                    # Reteat-off-the-board orders contain "null", which breaks literal_eval()
+                    # Retreat-off-the-board orders contain "null", which breaks literal_eval()
                     str = match.group(1).replace(': null,', ': None,')
                     try:
                         orders = literal_eval(str)

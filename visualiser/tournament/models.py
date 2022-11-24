@@ -38,8 +38,8 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament import backstabbr
+from tournament import webdip
 
-from tournament.backstabbr import InvalidGameUrl
 from tournament.background import WDD_BASE_URL
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -1212,7 +1212,7 @@ class Game(models.Model):
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
     external_url = models.URLField(blank=True,
-                                   verbose_name=_('Backstabbr URL'),
+                                   verbose_name=_('Backstabbr/WebDiplomacy URL'),
                                    help_text=_('Will be included in board call emails and game page'))
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
@@ -1227,8 +1227,19 @@ class Game(models.Model):
         """
         try:
             return backstabbr.Game(self.external_url)
-        except InvalidGameUrl:
+        except backstabbr.InvalidGameUrl:
             # external_url may be something other than a backstabbr URL
+            pass
+        return None
+
+    def webdiplomacy_game(self):
+        """
+        Returns a webdip.Game for the Game, or None.
+        """
+        try:
+            return webdip.Game(self.external_url)
+        except webdip.InvalidGameUrl:
+            # external_url may be something other than a WebDiplomacy URL
             pass
         return None
 

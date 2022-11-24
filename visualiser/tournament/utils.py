@@ -31,7 +31,7 @@ from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePl
 from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 from tournament.players import Player
-from tournament.game_views import _bs_ownerships_to_sco, _bs_counts_to_cc
+from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 
 
 def map_to_backstabbr_power(gp):
@@ -87,7 +87,7 @@ def populate_bs_profile_urls(dry_run=False):
 
 def populate_missed_years(game, dry_run=False):
     """
-    For a game on backstabbr, check for missing years and fill them in.
+    For a game on Backstabbr, check for missing years and fill them in.
     """
     # Parse the current game page on Backstabbr
     bg = game.backstabbr_game()
@@ -107,7 +107,7 @@ def populate_missed_years(game, dry_run=False):
             if len(bg.sc_ownership):
                 game.create_or_update_sc_counts_from_ownerships(year)
             else:
-                _bs_counts_to_cc(game, year, sc_counts)
+                _sc_counts_to_cc(game, year, sc_counts)
 
 
 def clean_duplicate_player(del_player, keep_player, dry_run=False):

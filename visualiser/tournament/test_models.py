@@ -1942,8 +1942,35 @@ class ModelTests(TestCase):
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1,
-                 external_url='https://www.webdiplomacy.net/board.php?gameID=436906')
+                 external_url='https://webdiplomacy.net/board.php?gameID=436906')
         self.assertEqual(g.backstabbr_game(), None)
+
+    # Game.webdiplomacy_game()
+    def test_game_webdiplomacy_game(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1,
+                 external_url='https://webdiplomacy.net/board.php?gameID=436906')
+        self.assertNotEqual(g.webdiplomacy_game(), None)
+
+    def test_game_webdiplomacy_game_empty_external_url(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1)
+        self.assertEqual(g.webdiplomacy_game(), None)
+
+    def test_game_webdiplomacy_game_non_wd_url(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1,
+                 external_url = 'https://www.backstabbr.com/game/4917371326693376')
+        self.assertEqual(g.webdiplomacy_game(), None)
 
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):

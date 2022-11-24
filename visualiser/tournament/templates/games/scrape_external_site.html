@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} Backstabbr import{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} import{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> Backstabbr import{% endblocktrans %}</h1>
+<h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> external site import{% endblocktrans %}</h1>
 <p>{% blocktrans with year=year %}Imported centre counts for {{ year }}:{% endblocktrans %}</p>
 <ul>
   {% for cc in centrecounts %}

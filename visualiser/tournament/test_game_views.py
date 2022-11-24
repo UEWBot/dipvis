@@ -35,6 +35,7 @@ from tournament.players import Player
 
 HOURS_8 = timedelta(hours=8)
 VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
+VALID_WD_URL = 'https://webdiplomacy.net/board.php?gameID=340030'
 NOTE = 'Played on the wooden board'
 
 class GameViewTests(TestCase):
@@ -217,8 +218,9 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertNotIn(b'from Backstabbr', response.content)
+        self.assertNotIn(b'from WebDiplomacy', response.content)
 
-    def test_detail_scrape_link(self):
+    def test_detail_scrape_bs_link(self):
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
         self.g1.save()
@@ -226,6 +228,20 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'from Backstabbr', response.content)
+        self.assertNotIn(b'from WebDiplomacy', response.content)
+        # Clean up
+        self.g1.external_url = ''
+        self.g1.save()
+
+    def test_detail_scrape_wd_link(self):
+        # Give g1 a webdip URL
+        self.g1.external_url = VALID_WD_URL
+        self.g1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn(b'from Backstabbr', response.content)
+        self.assertIn(b'from WebDiplomacy', response.content)
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -1200,14 +1216,14 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_overview_3', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
-    def test_scrape_backstabbr_not_logged_in(self):
+    def test_scrape_external_not_logged_in(self):
         response = self.client.get(reverse('enter_scs', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 302)
 
-    def test_scrape_backstabbr_no_url(self):
+    def test_scrape_external_no_url(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         self.assertEqual(len(self.g1.external_url), 0)
-        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
+        response = self.client.get(reverse('scrape_external_site', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 404)
 
     def test_scrape_backstabbr_success(self):
@@ -1217,7 +1233,7 @@ class GameViewTests(TestCase):
         self.g1.external_url = VALID_BS_URL
         self.g1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('scrape_backstabbr', args=(self.t1.pk, self.g1.name)))
+        response = self.client.get(reverse('scrape_external_site', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
         # TODO Check the information displayed on the page
         self.assertIn(b'1912', response.content)
@@ -1230,5 +1246,25 @@ class GameViewTests(TestCase):
         self.g1.external_url = ''
         ccs.delete()
         scos.delete()
+        self.g1.save()
+        self.g1.refresh_from_db()
+
+    def test_scrape_webdip_success(self):
+        self.assertEqual(len(self.g1.external_url), 0)
+        self.assertEqual(self.g1.centrecount_set.count(), 7)
+        # Give g1 a webdip URL
+        self.g1.external_url = VALID_WD_URL
+        self.g1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('scrape_external_site', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # TODO Check the information displayed on the page
+        self.assertIn(b'1911', response.content)
+        # We should have added CentreCounts for 1911
+        ccs = self.g1.centrecount_set.filter(year=1911)
+        self.assertEqual(len(ccs), 7)
+        # Clean up
+        self.g1.external_url = ''
+        ccs.delete()
         self.g1.save()
         self.g1.refresh_from_db()

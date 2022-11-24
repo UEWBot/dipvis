@@ -29,6 +29,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from tournament import backstabbr
+from tournament import webdip
 
 from tournament.forms import BaseSCCountFormset
 from tournament.forms import BaseSCOwnerFormset
@@ -621,29 +622,23 @@ def _bs_ownerships_to_sco(game, year, sc_ownership):
                                                        sc=sc,
                                                        defaults={'owner': power})
 
-def _bs_counts_to_cc(game, year, sc_counts):
+def _sc_counts_to_cc(game, year, sc_counts):
     """
-    Update or create CentreCount objects from a backstabbr.Game
+    Update or create CentreCount objects from a backstabbr.Game or webdip.Game
     sc_counts dict.
     """
     with transaction.atomic():
         for k, v in sc_counts.items():
-            # Map k to GreatPower (assuming that backstabbr.POWERS all start with the appropriate abbreviation)
+            # Map k to GreatPower (assuming that backstabbr.POWERS and webdip.POWERS all start with the appropriate abbreviation)
             power = GreatPower.objects.get(abbreviation=k[0])
             CentreCount.objects.update_or_create(power=power,
                                                  game=game,
                                                  year=year,
                                                  defaults={'count': v})
 
-@permission_required('tournament.add_centrecount')
-def scrape_backstabbr(request, tournament_id, game_name):
-    """Import CentreCounts from backstabbr"""
-    t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    g = get_game_or_404(t, game_name)
-    # Parse the current game page on Backstabbr
-    bg = g.backstabbr_game()
-    if bg is None:
-        raise Http404
+def _scrape_backstabbr(request, tournament, game, backstabbr_game):
+    """Import CentreCounts and SupplyCentreOwnerships from Backstabbr"""
+    bg = backstabbr_game
     # Figure out what year we have centre counts for
     if bg.season == backstabbr.SPRING:
         year = bg.year - 1
@@ -654,18 +649,56 @@ def scrape_backstabbr(request, tournament_id, game_name):
     else:
         raise Http404
     # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
-    _bs_ownerships_to_sco(g, year, bg.sc_ownership)
+    _bs_ownerships_to_sco(game, year, bg.sc_ownership)
     if len(bg.sc_ownership):
-        g.create_or_update_sc_counts_from_ownerships(year)
+        game.create_or_update_sc_counts_from_ownerships(year)
     else:
-        _bs_counts_to_cc(g, year, bg.sc_counts)
-    g.check_whether_finished(year)
+        _sc_counts_to_cc(game, year, bg.sc_counts)
+    game.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
-                  'games/scrape_backstabbr.html',
-                  {'tournament': t,
-                   'game': g,
+                  'games/scrape_external_site.html',
+                  {'tournament': tournament,
+                   'game': game,
                    'year': year,
-                   'ownerships': g.supplycentreownership_set.filter(year=year).order_by('owner'),
-                   'centrecounts': g.centrecount_set.filter(year=year).order_by('power')})
+                   'ownerships': game.supplycentreownership_set.filter(year=year).order_by('owner'),
+                   'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
+
+def _scrape_webdip(request, tournament, game, webdip_game):
+    """Import CentreCounts from WebDiplomacy"""
+    wg = webdip_game
+    # Figure out what year we have centre counts for
+    if wg.season == webdip.SPRING:
+        year = wg.year - 1
+    elif wg.season == webdip.FALL:
+        year = wg.year
+    else:
+        raise Http404
+    # Add the appropriate CentreCounts
+    _sc_counts_to_cc(game, year, wg.sc_counts)
+    game.check_whether_finished(year)
+    # TODO There's more information in wg - like whether the game is over...
+    # Report what was done
+    return render(request,
+                  'games/scrape_external_site.html',
+                  {'tournament': tournament,
+                   'game': game,
+                   'year': year,
+                   'ownerships': [],
+                   'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
+
+@permission_required('tournament.add_centrecount')
+def scrape_external_site(request, tournament_id, game_name):
+    """Import CentreCounts from another site"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    # Do we have a Backstabbr URL ?
+    bg = g.backstabbr_game()
+    if bg is not None:
+        return _scrape_backstabbr(request, t, g, bg)
+    # How about WebDiplomacy?
+    wg = g.webdiplomacy_game()
+    if wg is not None:
+        return _scrape_webdip(request, t, g, wg)
+    raise Http404
