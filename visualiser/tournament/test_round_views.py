@@ -1009,6 +1009,23 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('create_games', args=(self.t3.pk, 1)))
         self.assertEqual(response.status_code, 200)
 
+    def test_create_games_when_games_exist_powers_unassigned(self):
+        r = self.t3.round_numbered(1)
+        g = r.game_set.first()
+        # Unassign powers to GamePlayers
+        powers = {}
+        for gp in g.gameplayer_set.all():
+            powers[gp] = gp.power
+            gp.power = None
+            gp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('create_games', args=(self.t3.pk, 1)))
+        self.assertEqual(response.status_code, 200)
+        # Clean-up
+        for gp in g.gameplayer_set.all():
+            gp.power = powers[gp]
+            gp.save()
+
     def test_create_games_post(self):
         # Simple case - no pre-existing Games. Create one.
         self.assertEqual(self.r11.game_set.count(), 0)

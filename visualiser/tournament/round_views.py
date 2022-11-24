@@ -473,7 +473,8 @@ def create_games(request, tournament_id, round_num):
                    'external_url': g.external_url,
                    'notes': g.notes}
         for gp in g.gameplayer_set.all():
-            current[gp.power.name] = gp.roundplayer()
+            if gp.power:
+                current[gp.power.name] = gp.roundplayer()
         data.append(current)
     # Estimate the number of games for the round
     round_players = r.roundplayer_set.count()
