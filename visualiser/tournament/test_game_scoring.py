@@ -40,8 +40,7 @@ class GameScoringTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.set1 = GameSet.objects.get(name='Avalon Hill')
-        cls.set2 = GameSet.objects.get(name='Gibsons')
+        set1 = GameSet.objects.get(name='Avalon Hill')
 
         s1 = G_SCORING_SYSTEMS[0].name
 
@@ -61,14 +60,14 @@ class GameScoringTests(TestCase):
         Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
 
         # Add Games to r11
-        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=cls.set1)
-        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=cls.set1)
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
         # Add Games to r12
-        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=cls.set1)
-        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=cls.set1)
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
         # Add Games to r13
-        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
-        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=cls.set1)
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
