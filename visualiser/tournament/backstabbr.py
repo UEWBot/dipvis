@@ -113,7 +113,13 @@ class Game():
             self.number = self._extract_game_number()
         except ValueError as e:
             raise InvalidGameUrl(self.url) from e
+        # Default all the other instance variables
+        self.name = 'Unknown'
         self.gm = 'Unknown'
+        self.season = SPRING
+        self.year = 1901
+        self.result = 'Unknown'
+        self.soloer = None
         self.ongoing = True
         self.players = {}
         self.soloing_power = None
@@ -125,6 +131,7 @@ class Game():
         self.sc_ownership = {}
         self.position = {}
         self.orders = {}
+        # Now parse the current state of the game
         self._parse_page()
         self._calculate_result()
 
