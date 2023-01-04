@@ -607,6 +607,7 @@ def add_game_image(request, tournament_id, game_name=''):
                   {'tournament': t,
                    'form': form})
 
+
 def _bs_ownerships_to_sco(game, year, sc_ownership):
     """
     Update or create SupplyCentreOwnership objects from a backstabbr.Game
@@ -622,6 +623,7 @@ def _bs_ownerships_to_sco(game, year, sc_ownership):
                                                        sc=sc,
                                                        defaults={'owner': power})
 
+
 def _sc_counts_to_cc(game, year, sc_counts):
     """
     Update or create CentreCount objects from a backstabbr.Game or webdip.Game
@@ -635,6 +637,7 @@ def _sc_counts_to_cc(game, year, sc_counts):
                                                  game=game,
                                                  year=year,
                                                  defaults={'count': v})
+
 
 def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     """Import CentreCounts and SupplyCentreOwnerships from Backstabbr"""
@@ -654,7 +657,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
         game.create_or_update_sc_counts_from_ownerships(year)
     else:
         _sc_counts_to_cc(game, year, bg.sc_counts)
-    game.check_whether_finished(year)
+        game.check_whether_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
@@ -664,6 +667,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
                    'year': year,
                    'ownerships': game.supplycentreownership_set.filter(year=year).order_by('owner'),
                    'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
+
 
 def _scrape_webdip(request, tournament, game, webdip_game):
     """Import CentreCounts from WebDiplomacy"""
@@ -687,6 +691,7 @@ def _scrape_webdip(request, tournament, game, webdip_game):
                    'year': year,
                    'ownerships': [],
                    'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
+
 
 @permission_required('tournament.add_centrecount')
 def scrape_external_site(request, tournament_id, game_name):
