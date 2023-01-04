@@ -358,6 +358,13 @@ def get_scoring_systems(systems):
     return sorted([(s.name, s.name) for s in systems if not inspect.isabstract(s)])
 
 
+def validate_weight(value):
+    """
+    No longer used. Retained for migrations.
+    """
+    assert False, "This function should no longer be used"
+
+
 def validate_sc_count(value):
     """
     Checks for a valid SC count
@@ -390,6 +397,36 @@ def validate_bid(value):
     """
     if (value < PowerBid.MIN_BID) or (value > PowerBid.MAX_BID):
         raise ValidationError(_('%(value)d is not a valid bid'),
+                              params={'value': value})
+
+
+def validate_tournament_scoring_system(value):
+    """
+    Validator for Tournament.tournament_scoring_system
+    """
+    system = find_tournament_scoring_system(value)
+    if not system:
+        raise ValidationError(_("%{value} is not a valid tournament scoring system"),
+                              params={'value': value})
+
+
+def validate_round_scoring_system(value):
+    """
+    Validator for Tournament.round_scoring_system
+    """
+    system = find_round_scoring_system(value)
+    if not system:
+        raise ValidationError(_("%{value} is not a valid round scoring system"),
+                              params={'value': value})
+
+
+def validate_game_scoring_system(value):
+    """
+    Validator for Round.scoring_system.
+    """
+    system = find_game_scoring_system(value)
+    if not system:
+        raise ValidationError(_("%{value} is not a valid game scoring system"),
                               params={'value': value})
 
 
@@ -457,12 +494,14 @@ class Tournament(models.Model):
     location = models.CharField(max_length=300, blank=True)
     # How do we combine round scores to get an overall player tournament score ?
     # This is the name of a TournamentScoringSystem object
-    tournament_scoring_system = models.CharField(max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
+    tournament_scoring_system = models.CharField(validators=[validate_tournament_scoring_system],
+                                                 max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
                                                  help_text=_(u'How to combine round scores into a tournament score'))
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a RoundScoringSystem object
-    round_scoring_system = models.CharField(max_length=RoundScoringSystem.MAX_NAME_LENGTH,
+    round_scoring_system = models.CharField(validators=[validate_round_scoring_system],
+                                            max_length=RoundScoringSystem.MAX_NAME_LENGTH,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS),
                                             help_text=_(u'How to combine game scores into a round score'))
     draw_secrecy = models.CharField(max_length=1,
@@ -962,13 +1001,6 @@ class TournamentPlayer(models.Model):
             add_player_bg(self.player)
 
 
-def validate_weight(value):
-    """
-    No longer used. Retained for migrations.
-    """
-    assert False, "This function should no longer be used"
-
-
 class SeederBias(models.Model):
     """
     Tell the game seeder to avoid putting two players in the same game.
@@ -1031,7 +1063,8 @@ class Round(models.Model):
     # How do we score games in this round ?
     # This is the name of a GameScoringSystem object
     # There have been tournaments using multiple scoring systems, one per round
-    scoring_system = models.CharField(max_length=GameScoringSystem.MAX_NAME_LENGTH,
+    scoring_system = models.CharField(validators=[validate_game_scoring_system],
+                                      max_length=GameScoringSystem.MAX_NAME_LENGTH,
                                       verbose_name=_(u'Game scoring system'),
                                       choices=get_scoring_systems(G_SCORING_SYSTEMS),
                                       help_text=_(u'How to calculate a score for one game'))

@@ -34,6 +34,9 @@ from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
 from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
+from tournament.models import validate_game_scoring_system
+from tournament.models import validate_round_scoring_system
+from tournament.models import validate_tournament_scoring_system
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
 from tournament.models import InvalidPreferenceList
 from tournament.players import Player, MASK_ALL_BG
@@ -858,9 +861,28 @@ class ModelTests(TestCase):
     def test_validate_vote_count_7(self):
         self.assertIsNone(validate_vote_count(7))
 
-    # TODO game_image_location()
+    # validate_tournament_scoring_system()
+    def test_validate_tournament_scoring_system_ok(self):
+        self.assertIsNone(validate_tournament_scoring_system(T_SCORING_SYSTEMS[0].name))
 
-    # TODO add_local_player_bg()
+    def test_validate_tournament_scoring_system_bad(self):
+        self.assertRaises(ValidationError, validate_tournament_scoring_system, "Chris Wins")
+
+    # validate_round_scoring_system()
+    def test_validate_round_scoring_system_ok(self):
+        self.assertIsNone(validate_round_scoring_system(R_SCORING_SYSTEMS[0].name))
+
+    def test_validate_round_scoring_system_bad(self):
+        self.assertRaises(ValidationError, validate_round_scoring_system, "Chris Wins")
+
+    # validate_game_scoring_system()
+    def test_validate_game_scoring_system_ok(self):
+        self.assertIsNone(validate_game_scoring_system(G_SCORING_SYSTEMS[0].name))
+
+    def test_validate__scoring_system_bad(self):
+        self.assertRaises(ValidationError, validate_game_scoring_system, "Chris Wins")
+
+    # TODO game_image_location()
 
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
