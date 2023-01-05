@@ -393,7 +393,8 @@ class ModelTests(TestCase):
                             self.p11: 1,
                             self.p12: 0,
                            }
-        scores = r.scores(force_recalculation=True)
+        r.update_scores()
+        scores = r.scores()
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
@@ -461,7 +462,8 @@ class ModelTests(TestCase):
                             self.p7: 5,
                             self.p8: 6,
                            }
-        scores = r.scores(force_recalculation=True)
+        r.update_scores()
+        scores = r.scores()
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
@@ -556,7 +558,8 @@ class ModelTests(TestCase):
                             self.p8: 15,
                             self.p9: 16,
                            }
-        scores = r2.scores(force_recalculation=True)
+        r2.update_scores()
+        scores = r2.scores()
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
@@ -650,7 +653,8 @@ class ModelTests(TestCase):
                             self.p12: 0,
                             self.p13: 0,
                            }
-        scores = r.scores(force_recalculation=True)
+        r.update_scores()
+        scores = r.scores()
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
@@ -796,7 +800,8 @@ class ModelTests(TestCase):
             for p, s in round_scores[r].items():
                 RoundPlayer.objects.create(player=p, the_round=r, score=s)
 
-        t_scores, r_scores = t._scores_detail_calculated()
+        t.update_scores()
+        t_scores, r_scores = t.scores_detail()
 
         self.assertEqual(t_scores[self.p1], 706)
         self.assertEqual(t_scores[self.p2], 57)
@@ -977,13 +982,13 @@ class ModelTests(TestCase):
         tp.delete()
 
     # Tournament.scores_detail()
-    def test_tournament_scores_detail_invalid(self):
+    def test_tournament_calculated_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=timezone.now(),
                                                       end_date=timezone.now(),
                                                       tournament_scoring_system='Invalid System',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
-        self.assertRaises(InvalidScoringSystem, t.scores_detail)
+        self.assertRaises(InvalidScoringSystem, t.calculated_scores)
 
     def test_tournament_scores_detail_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -1054,8 +1059,8 @@ class ModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.winner(), self.p5)
 
-    # Tournament.store_scores()
-    def test_tourney_store_scores(self):
+    # Tournament.update_scores()
+    def test_tourney_update_scores(self):
         now = timezone.now()
         t = Tournament(name='t5',
                        start_date=now,
@@ -1107,7 +1112,7 @@ class ModelTests(TestCase):
                  is_finished=True,
                  the_set=self.set1)
         g.save()
-        t.store_scores()
+        t.update_scores()
         # Score for all TournamentPlayers should be updated
         # from the RoundPlayer scores
         for tp in t.tournamentplayer_set.all():
@@ -1680,7 +1685,7 @@ class ModelTests(TestCase):
         #t.delete()
 
     # Round.scores()
-    def test_round_scores_invalid(self):
+    def test_round_update_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=timezone.now(),
                                                       end_date=timezone.now(),
@@ -1690,7 +1695,7 @@ class ModelTests(TestCase):
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
                                  start=t.start_date)
-        self.assertRaises(InvalidScoringSystem, r.scores)
+        self.assertRaises(InvalidScoringSystem, r.update_scores)
 
     def test_round_scores_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -1708,7 +1713,7 @@ class ModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
         # TODO Validate results
-        r.scores(True)
+        r.scores()
 
     def test_round_scores_with_unplayed(self):
         t = Tournament.objects.get(name='t1')
@@ -1719,8 +1724,8 @@ class ModelTests(TestCase):
         self.assertTrue(self.p9 in r.scores())
         rp.delete()
 
-    # Round.store_scores()
-    def test_round_store_scores(self):
+    # Round.update_scores()
+    def test_round_update_scores(self):
         now = timezone.now()
         t = Tournament(name='t5',
                        start_date=now,
@@ -1772,7 +1777,7 @@ class ModelTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g, player=self.p7, power=self.turkey, score=7)
         gp.save()
-        r.store_scores()
+        r.update_scores()
         for rp in r.roundplayer_set.all():
             with self.subTest(player=rp.player):
                 try:
@@ -2355,7 +2360,7 @@ class ModelTests(TestCase):
             cc.delete()
 
     # Game.scores
-    def test_game_scores_invalid(self):
+    def test_game_update_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=timezone.now(),
                                                       end_date=timezone.now(),
@@ -2366,7 +2371,7 @@ class ModelTests(TestCase):
                                  dias=True,
                                  start=t.start_date)
         g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
-        self.assertRaises(InvalidScoringSystem, g.scores)
+        self.assertRaises(InvalidScoringSystem, g.update_scores)
 
     # Game.positions()
     def test_game_positions(self):
@@ -2789,10 +2794,14 @@ class ModelTests(TestCase):
                     self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
                 else:
                     self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
-        # But not for the Round
+        # And propagated to the Round
         for rp in r.roundplayer_set.all():
             with self.subTest(player=rp.player):
-                self.assertEqual(rp.score, 0.0)
+                gp = g1.gameplayer_set.get(player=rp.player)
+                if gp.power == self.russia:
+                    self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
         g2.delete()
         # Note that this will also delete all GamePlayers for that Game
         g1.delete()
@@ -2976,10 +2985,14 @@ class ModelTests(TestCase):
                     self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
                 else:
                     self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
-        # But not for the Round
+        # And propagated to the Round
         for rp in r.roundplayer_set.all():
             with self.subTest(player=rp.player):
-                self.assertEqual(rp.score, 0.0)
+                gp = g1.gameplayer_set.get(player=rp.player)
+                if gp.power == self.russia:
+                    self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
+                else:
+                    self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
         g2.delete()
         # Note that this will also delete all GamePlayers for that Game
         g1.delete()

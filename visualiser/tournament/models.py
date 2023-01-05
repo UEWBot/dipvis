@@ -250,15 +250,12 @@ class TournamentScoringSystem(ABC):
     name = u''
 
     @abstractmethod
-    def scores_detail(self, round_players):
+    def scores(self, round_players):
         """
         Returns the tournament scores. Where Games and Rounds are complete,
         this is the final score. Where Games and Rounds are still in progress,
         this is the "if all games finished now" scores.
-        Returns a 2-tuple:
-        - a dict, indexed by player key, of tournament scores
-        - a list, indexed by round, of dicts, indexed by player key,
-          of round scores
+        Returns a dict, indexed by player key, of tournament scores
         """
         raise NotImplementedError
 
@@ -277,14 +274,11 @@ class TScoringSum(TournamentScoringSystem):
         self.name = name
         self.scored_rounds = scored_rounds
 
-    def scores_detail(self, round_players):
+    def scores(self, round_players):
         """
         If a player played more than N rounds, sum the best N round scores.
         Otherwise, sum all their round scores.
-        Return a 2-tuple:
-        - a dict, indexed by player key, of tournament scores
-        - a dict, indexed by round, of dicts, indexed by player key,
-          of round scores
+        Returns a dict, indexed by player key, of tournament scores
         """
         # Retrieve all the scores for all the rounds involved.
         # This will give us "if the round ended now" scores for in-progress round(s)
@@ -303,7 +297,7 @@ class TScoringSum(TournamentScoringSystem):
             player_scores.sort(reverse=True)
             # Add up the first N
             t_scores[p] = sum(player_scores[:self.scored_rounds])
-        return (t_scores, round_scores)
+        return t_scores
 
 
 # All the tournament scoring systems we support
@@ -595,51 +589,38 @@ class Tournament(models.Model):
             raise InvalidScoringSystem(self.round_scoring_system)
         return system
 
-    def _scores_detail_calculated(self):
-        """
-        Calculate the scores.
-        Return a 2-tuple:
-        - Dict, keyed by player, of float tournament scores.
-        - Dict, keyed by round, of dicts, keyed by player,
-          of float round scores
-        """
-        system = self.tournament_scoring_system_obj()
-        t_scores, r_scores = system.scores_detail(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
-        # Now add in anyone who has yet to attend a round
-        for tp in self.tournamentplayer_set.all():
-            if tp.player not in t_scores:
-                t_scores[tp.player] = 0.0
-                # TODO Do we need to tweak r_scores here, too?
-        return t_scores, r_scores
-
     def calculated_scores(self):
         """
         Calculates the scores for everyone registered for the tournament.
         Return a dict, keyed by player, of floats.
         """
-        return self._scores_detail_calculated()[0]
+        system = self.tournament_scoring_system_obj()
+        t_scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
+        # Now add in anyone who has yet to attend a round
+        for tp in self.tournamentplayer_set.all():
+            if tp.player not in t_scores:
+                t_scores[tp.player] = 0.0
+                # TODO Do we need to tweak r_scores here, too?
+        return t_scores
 
     def scores_detail(self):
         """
         Returns the scores for everyone registered for the tournament.
         If the tournament is over, this will be the stored scores.
-        If the tournament is ongoing, it will calculate the "if all games
+        If the tournament is ongoing, it will be the "if all games
             ended now" scores.
         Return a 2-tuple:
         - Dict, keyed by player, of float tournament scores.
         - Dict, keyed by round, of dicts, keyed by player,
           of float round scores
         """
-        # If the tournament is over, report the stored scores
-        if self.is_finished():
-            t_scores = {}
-            for p in self.tournamentplayer_set.all():
-                t_scores[p.player] = p.score
-            r_scores = {}
-            for r in self.round_set.all():
-                r_scores[r] = r.scores()
-            return t_scores, r_scores
-        return self._scores_detail_calculated()
+        t_scores = {}
+        for p in self.tournamentplayer_set.all():
+            t_scores[p.player] = p.score
+        r_scores = {}
+        for r in self.round_set.all():
+            r_scores[r] = r.scores()
+        return t_scores, r_scores
 
     def positions_and_scores(self):
         """
@@ -677,15 +658,15 @@ class Tournament(models.Model):
                     return p
         return None
 
-    def store_scores(self):
+    def update_scores(self):
         """
         Recalculate the scores for the Tournament,
         and store them in the TournamentPlayers.
         """
         scores = self.calculated_scores()
-        for p in self.tournamentplayer_set.all():
-            p.score = scores[p.player]
-            p.save()
+        for tp in self.tournamentplayer_set.all():
+            tp.score = scores[tp.player]
+            tp.save()
 
     def round_numbered(self, number):
         """
@@ -836,6 +817,21 @@ class Tournament(models.Model):
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
         return reverse('tournament_detail', args=[str(self.id)])
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object to the database.
+        Updates score attributes of any TournamentPlayers.
+        """
+        super().save(*args, **kwargs)
+
+        # Change may affect the scoring
+        try:
+            validate_tournament_scoring_system(self.tournament_scoring_system)
+        except ValidationError:
+            pass
+        else:
+            self.update_scores()
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)
@@ -1094,38 +1090,31 @@ class Round(models.Model):
             raise InvalidScoringSystem(self.scoring_system)
         return system
 
-    def scores(self, force_recalculation=False):
+    def scores(self):
         """
         Returns the scores for everyone who played in the round.
         Returns a dict, keyed by Player, of floats.
         """
-        # If the round is over, report the stored scores unless we're told to recalculate
-        if not force_recalculation and self.is_finished():
-            retval = {}
-            for p in self.roundplayer_set.all():
-                retval[p.player] = p.score
-            return retval
+        retval = {}
+        for p in self.roundplayer_set.all():
+            retval[p.player] = p.score
+        return retval
 
+    def update_scores(self):
+        """
+        Updates every RoundPlayer's score attribute.
+        If the Round is ongoing, this will be the "if all games ended now" score.
+        """
         system = self.tournament.round_scoring_system_obj()
         # Identify any players who were checked in but didn't play
         gps = GamePlayer.objects.filter(game__the_round=self).distinct()
         non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
-        return system.scores(gps, non_players)
-
-    def store_scores(self):
-        """
-        Recalculate the scores for the Round,
-        and store them in the RoundPlayers.
-        """
-        scores = self.scores(True)
-        for p in self.roundplayer_set.all():
-            p.score = scores[p.player]
-            p.save()
-
-        # if the tournament is finished, store the player scores
-        t = self.tournament
-        if t.is_finished():
-            t.store_scores()
+        scores = system.scores(gps, non_players)
+        for rp in self.roundplayer_set.all():
+            rp.score = scores[rp.player]
+            rp.save()
+        # That could change the Tournament scoring
+        self.tournament.update_scores()
 
     def is_finished(self):
         """
@@ -1192,6 +1181,21 @@ class Round(models.Model):
             raise ValidationError(_(u'Earliest end time specified without latest end time'))
         if self.latest_end_time and not self.earliest_end_time:
             raise ValidationError(_(u'Latest end time specified without earliest end time'))
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object to the database.
+        Updates score attributes of any RoundPlayers and TournamentPlayers.
+        """
+        super().save(*args, **kwargs)
+
+        # Change may affect the scoring
+        try:
+            validate_round_scoring_system(self.tournament.round_scoring_system)
+        except ValidationError:
+            pass
+        else:
+            self.update_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -1303,18 +1307,21 @@ class Game(models.Model):
             for gp in position_to_gps[pos]:
                 gp.set_power_from_prefs()
 
+    # TODO: Rename this method?
     def check_whether_finished(self, year=None):
         """
-        Checks whether the Game has been soloed or the final_year has been reached.
+        Checks whether the Game has been soloed or drawn or the final_year has been reached.
         If so, sets is_finished to True.
         Should be called whenever CentreCounts for a year have been added.
         If year is not provided, uses the most recent year for the Game.
         """
         if year is None:
             year = self.final_year()
-        if (self.soloer() is not None) or (year == self.the_round.final_year):
+        if (self.soloer() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
             self.save()
+        # CentreCounts may have changed, so re-calculate scores
+        self.update_scores()
 
     def create_or_update_sc_counts_from_ownerships(self, year):
         """
@@ -1370,26 +1377,45 @@ class Game(models.Model):
                                      'dots': cc.count})
         return retval
 
-    def scores(self, force_recalculation=False):
+    def _calc_scores(self):
         """
-        If the game has ended and force_recalculation is False,
-        report the recorded scores.
-        If the game has not ended or force_recalculation is True,
-        calculate the scores if the game were to end now.
+        Calculate the scores for the Game.
         Return value is a dict, indexed by power id, of scores.
         """
-        if not force_recalculation and self.is_finished:
-            # Return the stored scores for the game
-            retval = {}
-            players = self.gameplayer_set.all()
-            for p in players:
-                retval[p.power] = p.score
-            return retval
-
-        # Calculate the scores for the game using the specified ScoringSystem
         system = self.the_round.game_scoring_system_obj()
         tgs = TournamentGameState(self.centrecount_set.all())
         return system.scores(tgs)
+
+    def scores(self):
+        """
+        Returns the Game scores.
+        Return value is a dict, indexed by power id, of scores.
+        """
+        # If we have GamePlayers, and they have assigned powers,
+        # we can just retrieve the scores from them
+        gps = self.gameplayer_set.all()
+        # Assume that if any GamePlayer has a power assigned, they all do
+        if gps and gps.first().power:
+            retval = {}
+            players = self.gameplayer_set.all()
+            for gp in players:
+                if gp.power:
+                    retval[gp.power] = gp.score
+            return retval
+        return self._calc_scores()
+
+    def update_scores(self):
+        """
+        Calculates the scores for the game using the specified ScoringSystem,
+        and stores them in the GamePlayers.
+        Then calls the equivalent function for the Round this Game is in.
+        """
+        scores = self._calc_scores()
+        for gp in self.gameplayer_set.all():
+            if gp.power:
+                gp.score = scores[gp.power]
+                gp.save()
+        self.the_round.update_scores()
 
     def positions(self):
         """
@@ -1554,9 +1580,7 @@ class Game(models.Model):
         Save the object to the database.
         Ensures that 1901 SC counts and ownership info exists.
         Ensures that S1901M image exists.
-        If the Game is now finished, calculates and saves the scores.
-        If the round is now finished, calculates and saves the scores.
-        If the tournament is now finished, calculates and saves the scores.
+        Updates score attributes of any associated GamePlayers, RoundPlayers, and TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
@@ -1581,19 +1605,13 @@ class Game(models.Model):
                                            phase=GameImage.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
 
-        # If the game is (now) finished, store the player scores
-        if self.is_finished:
-            scores = self.scores(True)
-            players = self.gameplayer_set.all()
-            for p in players:
-                p.score = scores[p.power]
-                p.save()
-
-            # If the round is (now) finished, store the player scores
-            r = self.the_round
-            if r.is_finished():
-                # This will update the Tournament scores if needed
-                r.store_scores()
+        # Change may affect the scoring
+        try:
+            validate_game_scoring_system(self.the_round.scoring_system)
+        except ValidationError:
+            pass
+        else:
+            self.update_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -1805,7 +1823,7 @@ class RoundPlayer(models.Model):
         ret = super().delete(*args, **kwargs)
         # Force a recalculation of scores, if necessary
         if self.score != 0.0:
-            self.the_round.store_scores()
+            self.the_round.update_scores()
         return ret
 
     def __str__(self):

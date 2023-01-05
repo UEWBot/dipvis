@@ -388,6 +388,8 @@ def seed_games(request, tournament_id, round_num):
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
                     gp.save()
+                # Generate initial scores
+                g.update_scores()
             # Notify the players
             send_board_call(r)
             # Redirect to the board call page
@@ -526,6 +528,8 @@ def create_games(request, tournament_id, round_num):
                 GamePlayer.objects.update_or_create(game=g,
                                                     power=p,
                                                     defaults={'player': field.player})
+            # Generate initial scores
+            g.update_scores()
         # Notify the players
         send_board_call(r)
         # Redirect to the board call page
@@ -571,7 +575,7 @@ def game_scores(request, tournament_id, round_num):
                 GamePlayer.objects.filter(game=g,
                                           power=p).update(score=field)
         # Update the Round and Tournament scores to reflect the changes
-        r.store_scores()
+        r.update_scores()
         # Redirect to the round index
         return HttpResponseRedirect(reverse('round_index',
                                             args=(tournament_id,)))
