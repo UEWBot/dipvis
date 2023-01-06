@@ -117,14 +117,6 @@ class GameViewTests(TestCase):
                                      the_round=r,
                                      the_set=GameSet.objects.first())
 
-        # Add SO ownerships for Game1, but skip 1901
-        #for sco in cls.g1.supplycentreownership_set.filter(year=1900):
-        #    SupplyCentreOwnership.objects.create(game=sco.game, year=1902, sc=sco.sc, owner=sco.owner)
-        #cls.g1.create_or_update_sc_counts_from_ownerships(1902)
-        #print(len(cls.g1.years_played()))
-        #print(cls.g1.years_played()[0])
-        #print(cls.g1.years_played()[-1])
-
         # Default SC ownerships, used to test post of sc ownerships
         cls.default_owners = {'Ankara': cls.turkey,
                               'Belgium': cls.france,
@@ -339,6 +331,24 @@ class GameViewTests(TestCase):
     def test_sc_chart(self):
         response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
+
+    def test_sc_chart_gap_year(self):
+        self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
+        # Add some pre-existing CentreCounts for 1903, but skip 1901 and 1902
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.austria, count=0)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.england, count=5)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.france, count=5)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.germany, count=6)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.italy, count=6)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.russia, count=6)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.turkey, count=6)
+        # Add a CentreCount for just one eliminated power in 1902
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.austria, count=0)
+        response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        self.g1.centrecount_set.filter(year=1902).delete()
+        self.g1.centrecount_set.filter(year=1903).delete()
 
     def test_sc_chart_refresh(self):
         response = self.client.get(reverse('game_sc_chart_refresh', args=(self.t1.pk, self.g1.name)))
@@ -714,6 +724,32 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_owners_with_gap_year(self):
+        self.assertEqual(self.g1.centrecount_set.filter(year=1902).count(), 0)
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1903).count(), 0)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
+        # Add SC ownerships for 1903, skipping 1901 and 1902
+        for sc, p in self.default_owners.items():
+            SupplyCentreOwnership.objects.create(game=self.g1,
+                                                 sc=SupplyCentre.objects.get(name=sc),
+                                                 owner=p,
+                                                 year=1903)
+        self.g1.create_or_update_sc_counts_from_ownerships(1903)
+        # Add just CentreCounts (no ownerships) for 1902
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.austria, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.england, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.france, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.germany, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.italy, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.russia, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.turkey, count=4)
+        response = self.client.get(reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        self.g1.supplycentreownership_set.filter(year=1903).delete()
+        self.g1.centrecount_set.filter(year=1903).delete()
+        self.g1.centrecount_set.filter(year=1902).delete()
+
     def test_sc_owners_refresh(self):
         response = self.client.get(reverse('game_sc_owners_refresh', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
@@ -726,6 +762,21 @@ class GameViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
+
+    def test_enter_sc_owners_fixed_end(self):
+        r = self.g1.the_round
+        self.assertFalse(r.final_year)
+        r.final_year = 1905
+        r.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # Validate the number of empty rows
+        # Header, 1900, plus 5 empty rows (1901..1905)
+        self.assertEqual(response.content.count(b'</tr>'), 1 + 1 + 5)
+        # Clean up
+        r.final_year = None
+        r.save()
 
     def test_post_enter_sc_owners(self):
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
