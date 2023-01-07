@@ -78,7 +78,7 @@
       {% endif %}
     {% endif %}
     {% if perms.tournament.change_roundplayer %}
-      <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a> - {% trans "Use this if you need to modify the scores that the system calculates when games end." %}</li>
+      <li><a href="{% url 'enter_scores' tournament.id %}">{% trans "Enter Scores" %}</a> - {% trans "Use this if you need to modify the players' round and/or tournament scores." %}</li>
     {% endif %}
     {% if perms.tournament.add_gameimage %}
       <li><a href="{% url 'add_game_image' tournament.id %}">{% trans "Upload Game Image" %}</a> - {% trans "Use this to add a picture of a game in progress." %}</li>

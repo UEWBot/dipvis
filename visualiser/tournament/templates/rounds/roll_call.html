@@ -7,7 +7,7 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Roll Call" %}</h1>
 
-<p>{% blocktrans with warning=warning %}<b>Warning!</b> {{ warning }}{% endblocktrans %}</p>
+{% if warning %}<p>{% blocktrans with warning=warning %}<b>Warning!</b> {{ warning }}{% endblocktrans %}</p>{% endif %}
 
 <form method="post" action={{ post_url }}>
     <h2>{% trans "Players checked in" %}</h2>

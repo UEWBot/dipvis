@@ -7,6 +7,8 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Scores" %}</h1>
 
+<p>{% trans "Game scores can be modified from the round details page" %}</p>
+
 <form method="post" action="{% url 'enter_scores' tournament.id %}">
     {% include "formset_table.html" %}
 </form>
