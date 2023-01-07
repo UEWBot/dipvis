@@ -589,7 +589,7 @@ class Tournament(models.Model):
             raise InvalidScoringSystem(self.round_scoring_system)
         return system
 
-    def calculated_scores(self):
+    def _calculated_scores(self):
         """
         Calculates the scores for everyone registered for the tournament.
         Return a dict, keyed by player, of floats.
@@ -600,7 +600,6 @@ class Tournament(models.Model):
         for tp in self.tournamentplayer_set.all():
             if tp.player not in t_scores:
                 t_scores[tp.player] = 0.0
-                # TODO Do we need to tweak r_scores here, too?
         return t_scores
 
     def scores_detail(self):
@@ -663,7 +662,7 @@ class Tournament(models.Model):
         Recalculate the scores for the Tournament,
         and store them in the TournamentPlayers.
         """
-        scores = self.calculated_scores()
+        scores = self._calculated_scores()
         for tp in self.tournamentplayer_set.all():
             tp.score = scores[tp.player]
             tp.save()

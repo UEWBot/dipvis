@@ -937,25 +937,25 @@ class ModelTests(TestCase):
         t.end_date = end
         t.save()
 
-    # Tournament.calculated_scores()
+    # Tournament._calculated_scores()
     def test_tournament_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=timezone.now(),
                                                       end_date=timezone.now(),
                                                       tournament_scoring_system='Invalid System',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
-        self.assertRaises(InvalidScoringSystem, t.calculated_scores)
+        self.assertRaises(InvalidScoringSystem, t._calculated_scores)
 
     def test_tournament_scores_unfinished(self):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
-        scores = t.calculated_scores()
+        scores = t._calculated_scores()
 
     def test_tournament_scores_before_start(self):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
         # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
-        scores = t.calculated_scores()
+        scores = t._calculated_scores()
 
     def test_tournament_scores_recalculate(self):
         t = Tournament.objects.get(name='t3')
@@ -963,7 +963,7 @@ class ModelTests(TestCase):
         self.assertEqual(tp1.score, 147.3)
         tp2 = t.tournamentplayer_set.get(player=self.p7)
         self.assertEqual(tp2.score, 47.3)
-        scores = t.calculated_scores()
+        scores = t._calculated_scores()
         self.assertEqual(len(scores), 2)
         # This should be recalculated from the round scores
         for tp in t.tournamentplayer_set.all():
@@ -976,7 +976,7 @@ class ModelTests(TestCase):
         # Add an extra player, who didn't actually play
         tp = TournamentPlayer(tournament=t, player=self.p10)
         tp.save()
-        scores = t.calculated_scores()
+        scores = t._calculated_scores()
         # Players who didn't play should get a score of zero
         self.assertEqual(scores[self.p10], 0.0)
         tp.delete()
@@ -988,7 +988,7 @@ class ModelTests(TestCase):
                                                       end_date=timezone.now(),
                                                       tournament_scoring_system='Invalid System',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
-        self.assertRaises(InvalidScoringSystem, t.calculated_scores)
+        self.assertRaises(InvalidScoringSystem, t._calculated_scores)
 
     def test_tournament_scores_detail_finished(self):
         t = Tournament.objects.get(name='t3')
