@@ -510,7 +510,7 @@ class Tournament(models.Model):
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=_('How powers are assigned'),
                                         choices=POWER_ASSIGN_METHODS,
-                                        default=MANUAL)
+                                        default=AUTO)
     editable = models.BooleanField(default=True,
                                    help_text=_('Uncheck to disallow any further changes to the tournament'))
     best_country_criterion = models.CharField(max_length=1,
