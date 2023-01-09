@@ -76,6 +76,8 @@ ROOT_URLCONF = 'visualiser.urls'
 
 WSGI_APPLICATION = 'visualiser.wsgi.application'
 
+X_FRAME_OPTIONS = 'SAMEORIGIN'
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
