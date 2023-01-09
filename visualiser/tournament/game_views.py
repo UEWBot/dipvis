@@ -174,29 +174,20 @@ def game_sc_chart(request,
     """Display the SupplyCentre chart for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    set_powers = g.the_set.setpower_set.order_by('power')
-    # TODO Sort set_powers alphabetically by translated power.name
-    # Massage ps so we have one entry per power
-    gameplayers = g.gameplayer_set.all()
-    ps = []
-    for sp in set_powers:
-        power_players = ['<a href="%s">%s</a>'
-                         % (gp.tournamentplayer().get_absolute_url(),
-                            gp.player) for gp in gameplayers.filter(power=sp.power)]
-        names = '<br>'.join(map(str, power_players))
-        ps.append(names)
-    scs = g.centrecount_set.order_by('power', 'year')
+    # Template relies on set_powers and ps having the same ordering
+    # TODO Sort alphabetically by translated power.name
+    set_powers = g.the_set.setpower_set.order_by('power__name')
+    ps = g.gameplayer_set.order_by('power__name')
+    # We might have GamePlayers but without powers assigned
+    if ps.first() and not ps.first().power:
+        # Just pass an empty list to the template
+        ps = []
+    scs = g.centrecount_set.all()
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
     # Create a list of rows, each with a year and each power's SC count
     rows = []
-    # Start with a row with the current scores
-    scores = g.scores()
-    row = [_(u'Score')]
-    for sp in set_powers:
-        row.append(scores[sp.power])
-    rows.append(row)
     for year in years:
         yscs = scs.filter(year=year)
         row = []

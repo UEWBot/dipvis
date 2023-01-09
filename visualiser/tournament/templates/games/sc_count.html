@@ -16,12 +16,19 @@
    </tr>
    <tr>
        {% for gameplayer in players %}
-           <th>{{ gameplayer|safe }}</th>
+           <th><a href="{{ gameplayer.tournamentplayer.get_absolute_url }}">{{ gameplayer.player }}</a></th>
        {% endfor %}
    </tr></thead>
    <tbody>
+     <tr class="odd_row">
+         <th align-center>{% trans "Score" %}</th>
+         {% for gameplayer in players %}
+             <td>{{ gameplayer.score|floatformat:2 }}</td>
+         {% endfor %}
+         <td/>
+     </tr>
    {% for row in rows %}
-       <tr class="{% cycle 'odd_row' 'even_row' %}">
+       <tr class="{% cycle 'even_row' 'odd_row' %}">
            {% for cell in row %}
                {% if forloop.first %}
                  <th align=center>{{ cell }} </th>
