@@ -328,9 +328,59 @@ class GameViewTests(TestCase):
         # Clean up
         p.delete()
 
-    def test_sc_chart(self):
+    def test_sc_chart_no_players(self):
         response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
+
+    def test_sc_chart_no_powers(self):
+        # GamePlayers exists but don't have powers assigned
+        self.assertEqual(self.g1.gameplayer_set.count(), 0)
+        p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
+        p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
+        p3 = Player.objects.create(first_name='Charles', last_name='Cockerspaniel')
+        p4 = Player.objects.create(first_name='Dorothy', last_name='Dirigible')
+        p5 = Player.objects.create(first_name='Edward', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Florence', last_name='Florist')
+        p7 = Player.objects.create(first_name='Graham', last_name='Gorgonzola')
+        GamePlayer.objects.create(player=p1, game=self.g1)
+        GamePlayer.objects.create(player=p2, game=self.g1)
+        GamePlayer.objects.create(player=p3, game=self.g1)
+        GamePlayer.objects.create(player=p4, game=self.g1)
+        GamePlayer.objects.create(player=p5, game=self.g1)
+        GamePlayer.objects.create(player=p6, game=self.g1)
+        GamePlayer.objects.create(player=p7, game=self.g1)
+        response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        p1.delete()
+        p2.delete()
+        p3.delete()
+        p4.delete()
+        p5.delete()
+        p6.delete()
+        p7.delete()
+
+    def test_sc_chart(self):
+        # GamePlayers exist with powers assigned
+        self.assertEqual(self.g1.gameplayer_set.count(), 0)
+        p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
+        p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
+        p3 = Player.objects.create(first_name='Charles', last_name='Cockerspaniel')
+        p4 = Player.objects.create(first_name='Dorothy', last_name='Dirigible')
+        p5 = Player.objects.create(first_name='Edward', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Florence', last_name='Florist')
+        p7 = Player.objects.create(first_name='Graham', last_name='Gorgonzola')
+        GamePlayer.objects.create(player=p1, game=self.g1, power=self.turkey, score=7)
+        GamePlayer.objects.create(player=p2, game=self.g1, power=self.england, score=2)
+        GamePlayer.objects.create(player=p3, game=self.g1, power=self.russia, score=6)
+        GamePlayer.objects.create(player=p4, game=self.g1, power=self.germany, score=4)
+        GamePlayer.objects.create(player=p5, game=self.g1, power=self.austria, score=1)
+        GamePlayer.objects.create(player=p6, game=self.g1, power=self.france, score=3)
+        GamePlayer.objects.create(player=p7, game=self.g1, power=self.italy, score=5)
+        response = self.client.get(reverse('game_sc_chart', args=(self.t1.pk, self.g1.name)))
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.g1.gameplayer_set.all().delete()
 
     def test_sc_chart_gap_year(self):
         self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
