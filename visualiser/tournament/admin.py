@@ -108,6 +108,9 @@ class SCOwnershipAdmin(admin.ModelAdmin):
 class SeederBiasAdmin(admin.ModelAdmin):
     list_filter = ('player1__tournament', )
 
+class SeriesAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ["name"]}
+
 class RoundInline(admin.StackedInline):
     model = Round
     extra = 4
@@ -152,7 +155,7 @@ admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
 admin.site.register(Round, RoundAdmin)
 admin.site.register(RoundPlayer, RoundPlayerAdmin)
 admin.site.register(SeederBias, SeederBiasAdmin)
-admin.site.register(Series)
+admin.site.register(Series, SeriesAdmin)
 admin.site.register(SupplyCentre)
 admin.site.register(SupplyCentreOwnership, SCOwnershipAdmin)
 admin.site.register(Tournament, TournamentAdmin)
