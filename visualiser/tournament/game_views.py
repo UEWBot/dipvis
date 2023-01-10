@@ -172,7 +172,6 @@ def game_sc_chart(request,
                   refresh=False,
                   redirect_url_name='game_sc_chart_refresh'):
     """Display the SupplyCentre chart for a game"""
-    #CentreCountFormSet = inlineformset_factory(Game, CentreCount)
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     set_powers = g.the_set.setpower_set.order_by('power')
@@ -219,7 +218,6 @@ def game_sc_chart(request,
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse(redirect_url_name,
                                           args=(tournament_id, game_name))
-    #formset = CentreCountFormSet(instance=g, queryset=scs)
     return render(request, 'games/sc_count.html', context)
 
 
