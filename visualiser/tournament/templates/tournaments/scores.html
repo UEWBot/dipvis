@@ -15,7 +15,7 @@
     <th>{% trans "Position" %}</th>
     <th>{% trans "Player" %}</th>
     {% for r in rounds %}
-      <th><a href="{% url 'round_detail' tournament.id r %}">{% blocktrans with round=r %}Round {{ round }}{% endblocktrans %}</a></th>
+      <th><a href="{% url 'round_detail' tournament.id r.number %}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a></th>
     {% endfor %}
     <th>{% trans "Tournament" %}</th>
   </tr></thead>
@@ -27,6 +27,14 @@
         {% endfor %}
       </tr>
     {% endfor %}
+    <tr>
+      <td/>
+      <td/>
+      {% for r in rounds %}
+        <td>{% if r.is_finished %}{% trans "Final" %}{% endif %}</td>
+      {% endfor %}
+      <td>{% if tournament.is_finished %}{% trans "Final" %}{% endif %}</td>
+    </tr>
   </tbody>
 </table>
 <p>* - {% trans "did not play" %}</p>

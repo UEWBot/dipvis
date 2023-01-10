@@ -120,7 +120,6 @@ def tournament_scores(request,
                                           'player__last_name',
                                           'player__first_name')
     rds = t.round_set.all()
-    rounds = [r.number() for r in rds]
     # Grab the tournament scores and positions and round scores, all "if it ended now"
     t_positions_and_scores, r_scores = t.positions_and_scores()
     # Construct a list of lists with [position, player name, round 1 score, ..., round n score, tournament score]
@@ -148,19 +147,7 @@ def tournament_scores(request,
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
         row[0] = row[0].replace('%d' % Tournament.UNRANKED, _('Unranked'))
-    # Add one final row showing whether each round is ongoing or not
-    row = ['', '']
-    for r in rds:
-        if r.is_finished():
-            row.append(_(u'Final'))
-        else:
-            row.append('')
-    if t.is_finished():
-        row.append(_(u'Final'))
-    else:
-        row.append('')
-    scores.append(row)
-    context = {'tournament': t, 'scores': scores, 'rounds': rounds}
+    context = {'tournament': t, 'scores': scores, 'rounds': rds}
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
