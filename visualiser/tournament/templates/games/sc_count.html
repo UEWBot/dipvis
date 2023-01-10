@@ -23,7 +23,7 @@
      <tr class="odd_row">
          <th align-center>{% trans "Score" %}</th>
          {% for gameplayer in players %}
-             <td>{{ gameplayer.score|floatformat:2 }}</td>
+             <td align=right>{{ gameplayer.score|floatformat:2 }}</td>
          {% endfor %}
          <td/>
      </tr>
