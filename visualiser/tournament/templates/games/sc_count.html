@@ -5,38 +5,40 @@
 
 {% block content %}
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> SC Chart{% endblocktrans %}</h1>
+
 <p>{% if game.is_finished %}{{ game.result_str }}{% else %}{% trans "Game ongoing" %}{% endif %}</p>
 <table class="form">
-   <thead><tr>
-       <th rowspan=2 />
-       {% for sp in powers %}
-           <th bgcolor={{ sp.colour }}>{% trans sp.power.name %}</th>
-       {% endfor %}
-       <th rowspan=2>{% trans "Neutrals" %}</th>
-   </tr>
-   <tr>
-       {% for gameplayer in players %}
-           <th><a href="{{ gameplayer.tournamentplayer.get_absolute_url }}">{{ gameplayer.player }}</a></th>
-       {% endfor %}
-   </tr></thead>
-   <tbody>
-     <tr class="odd_row">
-         <th align-center>{% trans "Score" %}</th>
-         {% for gameplayer in players %}
-             <td align=right>{{ gameplayer.score|floatformat:2 }}</td>
-         {% endfor %}
-         <td/>
-     </tr>
-   {% for row in rows %}
-       <tr class="{% cycle 'even_row' 'odd_row' %}">
-           {% for cell in row %}
-               {% if forloop.first %}
-                 <th align=center>{{ cell }} </th>
-               {% else %}
-                 <td align=center>{{ cell|floatformat }} </td>
-               {% endif %}
-           {% endfor %}
-       </tr>
-   {% endfor %}
+  <thead><tr>
+    <th rowspan=2 />
+    {% for sp in powers %}
+      <th bgcolor={{ sp.colour }}>{% trans sp.power.name %}</th>
+    {% endfor %}
+    <th rowspan=2>{% trans "Neutrals" %}</th>
+  </tr>
+  <tr>
+    {% for gameplayer in players %}
+      <th><a href="{{ gameplayer.tournamentplayer.get_absolute_url }}">{{ gameplayer.player }}</a></th>
+    {% endfor %}
+  </tr></thead>
+  <tbody>
+    <tr class="odd_row">
+      <th align-center>{% trans "Score" %}</th>
+      {% for gameplayer in players %}
+        <td align=right>{{ gameplayer.score|floatformat:2 }}</td>
+      {% endfor %}
+      <td/>
+    </tr>
+    {% for row in rows %}
+      <tr class="{% cycle 'even_row' 'odd_row' %}">
+        {% for cell in row %}
+          {% if forloop.first %}
+            <th align=center>{{ cell }}</th>
+          {% else %}
+            <td align=center>{{ cell|floatformat }}</td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% endblock %}
