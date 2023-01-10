@@ -26,7 +26,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
-from tournament.models import SeederBias
+from tournament.models import SeederBias, Series
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING, FALL
@@ -38,7 +38,8 @@ from tournament.models import validate_game_scoring_system
 from tournament.models import validate_round_scoring_system
 from tournament.models import validate_tournament_scoring_system
 from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
-from tournament.models import InvalidPreferenceList
+from tournament.models import InvalidPreferenceList, InvalidPowerAssignmentMethod
+from tournament.models import PowerAlreadyAssigned
 from tournament.players import Player, MASK_ALL_BG
 
 from datetime import datetime, timedelta
@@ -889,6 +890,23 @@ class ModelTests(TestCase):
 
     # TODO game_image_location()
 
+    # Series.save() and get_absolute_url()
+    def test_series_get_absolute_url(self):
+        s = Series(name="Test Series", description="Text")
+        s.save()
+        url = s.get_absolute_url()
+        self.assertIn('test-series', url)
+        # Clean up
+        s.delete()
+
+    def test_series_save_with_slug(self):
+        s = Series(name="Test Series", description="Text", slug="sluggy")
+        s.save()
+        url = s.get_absolute_url()
+        self.assertIn('sluggy', url)
+        # Clean up
+        s.delete()
+
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
         t = Tournament.objects.first()
@@ -1506,6 +1524,13 @@ class ModelTests(TestCase):
         t.power_assignment = old_pa
         t.save()
 
+    def test_tp_get_prefs_url_wrong_tournament(self):
+        # A Tournament where powers are not assigned by preferences
+        tp = TournamentPlayer.objects.filter(uuid_str='').first()
+        self.assertNotEqual(tp.tournament.power_assignment,
+                            Tournament.PREFERENCES)
+        self.assertRaises(InvalidPowerAssignmentMethod, tp.get_prefs_url)
+
     # TODO TournamentPlayer.send_prefs_email()
 
     # TODO TournamentPlayer.get_absolute_url()
@@ -1920,7 +1945,7 @@ class ModelTests(TestCase):
                   scoring_system=s1,
                   dias=True,
                   start=t.start_date + HOURS_8,
-                  earliest_end_time=t.start_date + HOURS_9)
+                  latest_end_time=t.start_date + HOURS_10)
         self.assertRaises(ValidationError, r.clean)
 
     def test_round_clean_missing_latest_end(self):
@@ -1930,8 +1955,19 @@ class ModelTests(TestCase):
                   scoring_system=s1,
                   dias=True,
                   start=t.start_date + HOURS_8,
-                  latest_end_time=t.start_date + HOURS_10)
+                  earliest_end_time=t.start_date + HOURS_9)
         self.assertRaises(ValidationError, r.clean)
+
+    def test_round_clean_ok(self):
+        t = Tournament.objects.get(name='t1')
+        s1 = G_SCORING_SYSTEMS[0].name
+        r = Round(tournament=t,
+                  scoring_system=s1,
+                  dias=True,
+                  start=t.start_date + HOURS_8,
+                  earliest_end_time=t.start_date + HOURS_9,
+                  latest_end_time=t.start_date + HOURS_10)
+        r.clean()
 
     # Round.get_absolute_url()
     def test_round_get_absolute_url(self):
@@ -2143,8 +2179,11 @@ class ModelTests(TestCase):
         t.delete()
         self.assertEqual(Preference.objects.count(), 0)
 
-    # TODO Game.assign_powers_from_prefs() raising PowerAlreadyAssigned
-
+    def test_assign_powers_from_prefs_already_done(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertTrue(g.gameplayer_set.filter(power__isnull=False).exists())
+        self.assertRaises(PowerAlreadyAssigned, g.assign_powers_from_prefs)
 
     # Game.check_whether_finished()
     def test_check_whether_finished_solo(self):
@@ -2306,6 +2345,8 @@ class ModelTests(TestCase):
 
     # TODO Game.compare_sc_counts_and_ownerships() with missing CentreCount
 
+    # TODO Game._calc_scores()
+
     # Game.scores
     def test_update_sc_count(self):
         test_data = {
@@ -2372,6 +2413,8 @@ class ModelTests(TestCase):
                                  start=t.start_date)
         g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
         self.assertRaises(InvalidScoringSystem, g.update_scores)
+
+    # TODO Game.update_scores()
 
     # Game.positions()
     def test_game_positions(self):
@@ -3543,6 +3586,11 @@ class ModelTests(TestCase):
         rp = RoundPlayer(player=p, the_round=r)
         self.assertRaises(ValidationError, rp.clean)
 
+    def test_roundplayer_clean_ok(self):
+        tp = TournamentPlayer.objects.first()
+        rp = tp.roundplayers().first()
+        rp.clean()
+
     # RoundPlayer.__str__()
     def test_roundplayer_str(self):
         rp = RoundPlayer.objects.first()
@@ -3826,6 +3874,13 @@ class ModelTests(TestCase):
         gi1 = GameImage.objects.get(game=g)
         gi2 = GameImage(game=g, year=1902, season=SPRING, phase=GameImage.ADJUSTMENTS, image=gi1.image)
         self.assertRaises(ValidationError, gi2.clean)
+
+    def test_gameimage_clean_ok(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g12')
+        gi1 = GameImage.objects.get(game=g)
+        gi2 = GameImage(game=g, year=1902, season=FALL, phase=GameImage.ADJUSTMENTS, image=gi1.image)
+        gi2.clean()
 
     # GameImage.get_absolute_url()
     def test_game_image_get_absolute_url(self):
