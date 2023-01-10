@@ -20,13 +20,13 @@
     <th>{% trans "Tournament" %}</th>
   </tr></thead>
   <tbody>
-  {% for player in scores %}
-    <tr class="{% cycle 'odd_row' 'even_row' %}">
-      {% for data in player %}
-        <td align='right'>{{ data|safe }}</td>
-      {% endfor %}
-    </tr>
-  {% endfor %}
+    {% for player in scores %}
+      <tr class="{% cycle 'odd_row' 'even_row' %}">
+        {% for data in player %}
+          <td align='right'>{{ data|safe }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
   </tbody>
 </table>
 <p>* - {% trans "did not play" %}</p>
