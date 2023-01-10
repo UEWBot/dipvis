@@ -18,9 +18,9 @@
       <tr class="{% cycle 'odd_row' 'even_row' %}">
         {% for cell in row %}
           {% if forloop.first %}
-            <th style="text-align:center">{{ cell }} </th>
+            <th style="text-align:center;">{{ cell }} </th>
           {% else %}
-            <td style="text-align:center" bgcolor={{ cell.color }}>{{ cell.text }} </td>
+            <td style="text-align:center; background-color:{{ cell.color }};">{{ cell.text }} </td>
           {% endif %}
         {% endfor %}
       </tr>

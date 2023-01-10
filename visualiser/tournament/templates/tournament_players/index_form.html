@@ -33,10 +33,10 @@
           {% if tournament.is_virtual %}
             <td>{{tp.backstabbr_username }}</td>
           {% endif %}
-          <td style="text-align:center">{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
+          <td style="text-align:center;">{% if tp.unranked %}{% trans "Yes" %}{% endif %}</td>
           <td>{% if tp.player.email != "" %}{% trans "Yes" %}{% endif %}</td>
           {% if tournament.powers_assigned_from_prefs %}
-              <td style="text-align:center">{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
+              <td style="text-align:center;">{% if tp.uuid_str != "" %}{% trans "Yes" %}{% endif %}</td>
               <td>{% if tp.player.email != "" %}
                 <input type="submit" name="prefs_{{ tp.pk }}" value="{% trans "Send prefs email" %}" />
                 {% endif %}</td>

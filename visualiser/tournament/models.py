@@ -499,7 +499,7 @@ class Tournament(models.Model):
     is_published = models.BooleanField(default=False,
                                        help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
-                                      help_text=_(u'Which users can modify the tournament,<br/> and see it while it is unpublished.<br/>'))
+                                      help_text=_(u'Which users can modify the tournament,<br> and see it while it is unpublished.<br>'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_("This tournament's id in the WDD"),
                                                     blank=True,

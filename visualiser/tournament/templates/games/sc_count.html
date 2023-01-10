@@ -11,7 +11,7 @@
   <thead><tr>
     <th rowspan=2 />
     {% for sp in powers %}
-      <th bgcolor={{ sp.colour }}>{% trans sp.power.name %}</th>
+      <th style="background-color:{{ sp.colour }};">{% trans sp.power.name %}</th>
     {% endfor %}
     <th rowspan=2>{% trans "Neutrals" %}</th>
   </tr>
@@ -22,9 +22,9 @@
   </tr></thead>
   <tbody>
     <tr class="odd_row">
-      <th style="text-align:center">{% trans "Score" %}</th>
+      <th style="text-align:center;">{% trans "Score" %}</th>
       {% for gameplayer in players %}
-        <td style="text-align:right">{{ gameplayer.score|floatformat:2 }}</td>
+        <td style="text-align:right;">{{ gameplayer.score|floatformat:2 }}</td>
       {% endfor %}
       <td/>
     </tr>
@@ -32,9 +32,9 @@
       <tr class="{% cycle 'even_row' 'odd_row' %}">
         {% for cell in row %}
           {% if forloop.first %}
-            <th style="text-align:center">{{ cell }}</th>
+            <th style="text-align:center;">{{ cell }}</th>
           {% else %}
-            <td style="text-align:center">{{ cell|floatformat }}</td>
+            <td style="text-align:center;">{{ cell|floatformat }}</td>
           {% endif %}
         {% endfor %}
       </tr>

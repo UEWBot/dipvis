@@ -8,14 +8,14 @@
 <table class="form">
    <thead><tr>
        {% for sp in powers %}
-           <th bgcolor={{ sp.colour }}>{% trans sp.power.name %}</th>
+           <th "style="background-color:{{ sp.colour }};">{% trans sp.power.name %}</th>
        {% endfor %}
    </tr></thead>
    <tbody>
    {% for row in rows %}
        <tr class="{% cycle 'odd_row' 'even_row' %}">
            {% for cell in row %}
-               <td style="text-align:right">{{ cell|safe }}</td>
+               <td style="text-align:right;">{{ cell|safe }}</td>
            {% endfor %}
        </tr>
    {% endfor %}
