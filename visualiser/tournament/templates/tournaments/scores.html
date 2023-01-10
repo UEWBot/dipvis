@@ -20,11 +20,14 @@
     <th>{% trans "Tournament" %}</th>
   </tr></thead>
   <tbody>
-    {% for player in scores %}
+    {% for p_data in scores %}
       <tr class="{% cycle 'odd_row' 'even_row' %}">
-        {% for data in player %}
-          <td align='right'>{{ data|safe }}</td>
+        <td style="text-align:right">{{ p_data.rank }}</td>
+        <td style="text-align:right"><a href="{{ p_data.player.get_absolute_url }}">{{ p_data.player.player }}</a></td>
+        {% for rp in p_data.rounds %}
+          <td style="text-align:right">{{ rp.score|floatformat:2 }}{% if rp and not rp.gameplayers.exists %}*{% endif %}</td>
         {% endfor %}
+        <td style="text-align:right">{{ p_data.score|floatformat:2 }}</td>
       </tr>
     {% endfor %}
     <tr>

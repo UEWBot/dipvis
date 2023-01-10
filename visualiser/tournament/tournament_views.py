@@ -122,7 +122,7 @@ def tournament_scores(request,
     rds = t.round_set.all()
     # Grab the tournament scores and positions and round scores, all "if it ended now"
     t_positions_and_scores, r_scores = t.positions_and_scores()
-    # Construct a list of lists with [position, player name, round 1 score, ..., round n score, tournament score]
+    # Construct a list of dicts with [rank, tournament player, round 1 player, ..., round n player, tournament score]
     scores = []
     for p in tps:
         rs = []
@@ -131,22 +131,19 @@ def tournament_scores(request,
                 rp = p.roundplayers().get(the_round=r)
             except RoundPlayer.DoesNotExist:
                 # This player didn't play this round
-                rs.append('')
+                rs.append(None)
             else:
-                str = '%.2f'
-                if not rp.gameplayers().exists():
-                    # This player sat out the round
-                    str += '*'
-                rs.append(str % r_scores[r][p.player])
-        scores.append(['%d' % t_positions_and_scores[p.player][0]]
-                      + ['<a href="%s">%s</a>' % (p.get_absolute_url(), p.player)]
-                      + rs
-                      + ['%.2f' % t_positions_and_scores[p.player][1]])
+                rs.append(rp)
+        row = {'rank': '%d' % t_positions_and_scores[p.player][0],
+               'player': p,
+               'rounds': rs,
+               'score': t_positions_and_scores[p.player][1]}
+        scores.append(row)
     # sort rows by position (they'll retain the alphabetic sorting if equal)
-    scores.sort(key=lambda row: float(row[0]))
+    scores.sort(key=lambda row: float(row['rank']))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
-        row[0] = row[0].replace('%d' % Tournament.UNRANKED, _('Unranked'))
+        row['rank'] = row['rank'].replace('%d' % Tournament.UNRANKED, _('Unranked'))
     context = {'tournament': t, 'scores': scores, 'rounds': rds}
     if refresh:
         context['refresh'] = True
