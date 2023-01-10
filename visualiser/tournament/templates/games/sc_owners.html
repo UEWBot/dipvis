@@ -7,24 +7,25 @@
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> SC Ownership{% endblocktrans %}</h1>
 <p>{% if game.is_finished %}{{ game.result_str }}{% else %}{% trans "Game ongoing" %}{% endif %}</p>
 <table class="form">
-   <thead><tr>
-       <th></th>
-       {% for dot in centres %}
-           <th>{% trans dot.abbreviation %}</th>
-       {% endfor %}
-   </tr></thead>
-   <tbody>
-   {% for row in rows %}
-       <tr class="{% cycle 'odd_row' 'even_row' %}">
-           {% for cell in row %}
-               {% if forloop.first %}
-                   <th align=center>{{ cell }} </th>
-               {% else %}
-                   <td align=center bgcolor={{ cell.color }}>{{ cell.text }} </td>
-               {% endif %}
-           {% endfor %}
-       </tr>
-   {% endfor %}
+  <thead><tr>
+    <th/>
+    {% for dot in centres %}
+      <th>{% trans dot.abbreviation %}</th>
+    {% endfor %}
+  </tr></thead>
+  <tbody>
+    {% for row in rows %}
+      <tr class="{% cycle 'odd_row' 'even_row' %}">
+        {% for cell in row %}
+          {% if forloop.first %}
+            <th align=center>{{ cell }} </th>
+          {% else %}
+            <td align=center bgcolor={{ cell.color }}>{{ cell.text }} </td>
+          {% endif %}
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </tbody>
 </table>
 {% for issue in issues %}
   <p>{{ issue }}</p>
