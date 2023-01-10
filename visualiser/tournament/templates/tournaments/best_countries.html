@@ -15,7 +15,7 @@
    {% for row in rows %}
        <tr class="{% cycle 'odd_row' 'even_row' %}">
            {% for cell in row %}
-               <td align=right>{{ cell|safe }}</td>
+               <td style="text-align:right">{{ cell|safe }}</td>
            {% endfor %}
        </tr>
    {% endfor %}

@@ -22,9 +22,9 @@
   </tr></thead>
   <tbody>
     <tr class="odd_row">
-      <th align-center>{% trans "Score" %}</th>
+      <th style="text-align:center">{% trans "Score" %}</th>
       {% for gameplayer in players %}
-        <td align=right>{{ gameplayer.score|floatformat:2 }}</td>
+        <td style="text-align:right">{{ gameplayer.score|floatformat:2 }}</td>
       {% endfor %}
       <td/>
     </tr>
@@ -32,9 +32,9 @@
       <tr class="{% cycle 'even_row' 'odd_row' %}">
         {% for cell in row %}
           {% if forloop.first %}
-            <th align=center>{{ cell }}</th>
+            <th style="text-align:center">{{ cell }}</th>
           {% else %}
-            <td align=center>{{ cell|floatformat }}</td>
+            <td style="text-align:center">{{ cell|floatformat }}</td>
           {% endif %}
         {% endfor %}
       </tr>
