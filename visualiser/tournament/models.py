@@ -639,9 +639,8 @@ class Tournament(models.Model):
         Return the player who won, or None if the tournament isn't yet finished
         """
         if self.is_finished():
-            for p, (rank, _) in self.positions_and_scores()[0].items():
-                if rank == 1:
-                    return p
+            # TODO This assumes no tie
+            return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
         return None
 
     def update_scores(self):
