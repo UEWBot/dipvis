@@ -38,11 +38,11 @@
 
 <dl>
   {% for d in game.drawproposal_set.all %}
-  <dt>{% blocktrans with size=d.draw_size season=d.season year=d.year %}{{ size }}-way draw proposed {{ season }} {{ year }}{% endblocktrans %}</dt>
-  {% if d.proposer %}<dd>{% blocktrans with proposer=d.proposer %}Proposed by {{ proposer }}{% endblocktrans %}</dd>{% endif %}
-  {% if d.votes_in_favour %}<dd>{% blocktrans with votes=d.votes_in_favour %}{{ votes }} votes in favour{% endblocktrans %}</dd>{% endif %}
+    <dt>{% blocktrans with size=d.draw_size season=d.season year=d.year %}{{ size }}-way draw proposed {{ season }} {{ year }}{% endblocktrans %}</dt>
+    {% if d.proposer %}<dd>{% blocktrans with proposer=d.proposer %}Proposed by {{ proposer }}{% endblocktrans %}</dd>{% endif %}
+    {% if d.votes_in_favour %}<dd>{% blocktrans with votes=d.votes_in_favour %}{{ votes }} votes in favour{% endblocktrans %}</dd>{% endif %}
   {% empty %}
-    <li>{% trans "No draw votes" %}</li>
+    <dt>{% trans "No draw votes" %}</dt>
   {% endfor %}
 </dl>
 
