@@ -186,14 +186,6 @@ def tournament_game_results(request,
                     gs += gp.result_str(include_power=True, include_game_name=True)
             rs.append(gs)
         results.append(['<a href=%s>%s</a>' % (p.get_absolute_url(), p.player)] + rs)
-    # Add one final row showing whether each round is ongoing or not
-    row = ['']
-    for r in rds:
-        if r.is_finished():
-            row.append(_(u'Final'))
-        else:
-            row.append('')
-    results.append(row)
     context = {'tournament': t, 'scores': results, 'rounds': rounds}
     if refresh:
         context['refresh'] = True

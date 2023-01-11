@@ -18,13 +18,19 @@
     {% endfor %}
   </tr></thead>
   <tbody>
-  {% for player in scores %}
-    <tr class="{% cycle 'odd_row' 'even_row' %}">
-      {% for data in player %}
-        <td>{{ data|safe }}</td>
+    {% for player in scores %}
+      <tr class="{% cycle 'odd_row' 'even_row' %}">
+        {% for data in player %}
+          <td>{{ data|safe }}</td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+    <tr>
+      <td></td>
+      {% for r in rounds %}
+        <td>{% if r.is_finished %}{% trans "Final" %}{% endif %}</td>
       {% endfor %}
     </tr>
-  {% endfor %}
   </tbody>
 </table>
 {% endblock %}
