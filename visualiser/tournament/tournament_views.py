@@ -208,12 +208,6 @@ def tournament_best_countries(request,
                               redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    # We're going to need the name and URL for every game in the tournament
-    # Avoid retrieving this information seven times for each game
-    all_games = Game.objects.filter(the_round__tournament=t)
-    all_urls_and_names = {}
-    for g in all_games:
-        all_urls_and_names[g] = (g.get_absolute_url(), g.name)
     # gps is a dict, keyed by power, of lists of all gameplayers,
     # sorted by best country criterion
     gps = t.best_countries(whole_list=True)
@@ -229,11 +223,8 @@ def tournament_best_countries(request,
             try:
                 gp = gps[p.power].pop(0)
             except IndexError:
-                continue
-            cell = {'game_player': gp,
-                    'game_url': all_urls_and_names[gp.game][0],
-                    'game_name': all_urls_and_names[gp.game][1]}
-            row.append(cell)
+                gp = None
+            row.append(gp)
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
     if refresh:
