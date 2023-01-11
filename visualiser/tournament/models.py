@@ -1869,11 +1869,21 @@ class GamePlayer(models.Model):
         assert self.power is not None
         self.save()
 
+    def result_str_long(self):
+        """
+        Wrapper for result_str with both parameters set to True,
+        for use by template code.
+        Returned string includes an HTML <a> link to the game details page,
+        so use the safe filter.
+        """
+        return self.result_str(include_power=True, include_game_name=True)
+
     def result_str(self, include_power=False, include_game_name=False):
         """
         Return the result of the Game from this GamePlayer's perspective.
         If the Game is ongoing, this will be the result if the game ended now.
-        Returned string includes an HTML <a> link to the game details page.
+        Returned string includes an HTML <a> link to the game details page,
+        if include_game_name=True.
         """
         if not self.power:
             return ''

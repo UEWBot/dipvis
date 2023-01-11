@@ -18,19 +18,27 @@
     {% endfor %}
   </tr></thead>
   <tbody>
-    {% for player in scores %}
+    {% for row in results %}
       <tr class="{% cycle 'odd_row' 'even_row' %}">
-        {% for data in player %}
-          <td>{{ data|safe }}</td>
+        <th><a href="{{ row.tournament_player.get_absolute_url }}">{{ row.tournament_player.player }}</a></th>
+        {% for r in row.rounds %}
+          <td>
+            {% for gp in r %}
+              {{ gp.result_str_long|safe }}
+	      {% if not forloop.last %}<br>{% endif %}
+            {% endfor %}
+          </td>
         {% endfor %}
       </tr>
     {% endfor %}
-    <tr>
-      <td></td>
-      {% for r in rounds %}
-        <td>{% if r.is_finished %}{% trans "Final" %}{% endif %}</td>
-      {% endfor %}
-    </tr>
+    {% if tournament.in_progress %}
+      <tr>
+        <td></td>
+        {% for r in rounds %}
+          <td>{% if r.is_finished %}{% trans "Final" %}{% elif r.in_progress %}{% trans "Ongoing" %}{% endif %}</td>
+        {% endfor %}
+      </tr>
+    {% endif %}
   </tbody>
 </table>
 {% endblock %}

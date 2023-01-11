@@ -165,28 +165,21 @@ def tournament_game_results(request,
     round_games = {}
     for r in rds:
         round_games[r] = r.game_set.all()
-    # Construct a list of lists with [player name, round 1 game results, ..., round n game results]
+    # Construct a list of dicts with tournament player and a list of gameplayer sets, one per round
     results = []
-    for p in tps:
+    for tp in tps:
         # All the games (in every tournament) this player has played in
-        gps = p.player.gameplayer_set.all()
+        gps = tp.player.gameplayer_set.all()
+        # Create a list of GamePlayers, indexed by Round
         rs = []
         for r in rds:
-            gs = ''
-            for g in round_games[r]:
-                # Is this game one that this player played in?
-                try:
-                    gp = gps.get(game=g)
-                except GamePlayer.DoesNotExist:
-                    pass
-                else:
-                    # New line if they played multiple games in this round
-                    if gs:
-                        gs += '<br>'
-                    gs += gp.result_str(include_power=True, include_game_name=True)
+            # Create a list of GamePlayers for this Player and Round
+            gs = gps.filter(game__the_round=r).distinct()
             rs.append(gs)
-        results.append(['<a href=%s>%s</a>' % (p.get_absolute_url(), p.player)] + rs)
-    context = {'tournament': t, 'scores': results, 'rounds': rounds}
+        row = {'tournament_player': tp,
+               'rounds': rs}
+        results.append(row)
+    context = {'tournament': t, 'results': results, 'rounds': rounds}
     if refresh:
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME

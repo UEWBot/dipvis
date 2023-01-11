@@ -14,7 +14,7 @@
     <ul>
       {% for gp in rp.gameplayers.all %}
         {% if gp.power %}
-          <li>{{ gp.result_str|safe }} {% blocktrans with power=gp.power game=gp.game.name url=gp.game.get_absolute_url %}as {{power}} in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
+	  <li>{{ gp.result_str_long|safe }}</li>
         {% else %}
           <li>{% blocktrans with game=gp.game.name url=gp.game.get_absolute_url %}Power not yet assigned in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
         {% endif %}
