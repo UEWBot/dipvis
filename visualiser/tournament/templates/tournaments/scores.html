@@ -30,14 +30,16 @@
         <td style="text-align:right">{{ p_data.score|floatformat:2 }}</td>
       </tr>
     {% endfor %}
-    <tr>
-      <td/>
-      <td/>
-      {% for r in rounds %}
-        <td>{% if r.is_finished %}{% trans "Final" %}{% endif %}</td>
-      {% endfor %}
-      <td>{% if tournament.is_finished %}{% trans "Final" %}{% endif %}</td>
-    </tr>
+    {% if tournament.in_progress %}
+      <tr>
+        <td/>
+        <td/>
+        {% for r in rounds %}
+	<td>{% if r.is_finished %}{% trans "Final" %}{% elif r.in_progress %}{% trans "Ongoing" %}{% endif %}</td>
+        {% endfor %}
+        <td/>
+      </tr>
+    {% endif %}
   </tbody>
 </table>
 <p>* - {% trans "did not play" %}</p>
