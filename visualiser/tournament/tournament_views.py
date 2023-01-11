@@ -230,16 +230,9 @@ def tournament_best_countries(request,
                 gp = gps[p.power].pop(0)
             except IndexError:
                 continue
-            cell = '<a href="%s">%s</a><br><a href="%s">%s</a><br>%.2f' % (gp.tournamentplayer().get_absolute_url(),
-                                                                           gp.player,
-                                                                           all_urls_and_names[gp.game][0],  # URL
-                                                                           all_urls_and_names[gp.game][1],  # name
-                                                                           gp.score)
-            if gp.tournamentplayer().unranked:
-                cell += '*'
-            cell += ngettext('<br>One centre',
-                             '<br>%(dots)d centres',
-                             gp.final_sc_count()) % {'dots': gp.final_sc_count()}
+            cell = {'game_player': gp,
+                    'game_url': all_urls_and_names[gp.game][0],
+                    'game_name': all_urls_and_names[gp.game][1]}
             row.append(cell)
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}

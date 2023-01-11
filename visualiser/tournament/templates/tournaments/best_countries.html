@@ -6,20 +6,25 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Best Countries" %}</h1>
 <table class="form">
-   <thead><tr>
-       {% for sp in powers %}
-           <th style="background-color:{{ sp.colour }};">{% trans sp.power.name %}</th>
-       {% endfor %}
-   </tr></thead>
-   <tbody>
-   {% for row in rows %}
-       <tr class="{% cycle 'odd_row' 'even_row' %}">
-           {% for cell in row %}
-               <td style="text-align:right;">{{ cell|safe }}</td>
-           {% endfor %}
-       </tr>
-   {% endfor %}
-   </tbody>
+  <thead><tr>
+    {% for sp in powers %}
+      <th style="background-color:{{ sp.colour }};">{% trans sp.power.name %}</th>
+    {% endfor %}
+  </tr></thead>
+  <tbody>
+  {% for row in rows %}
+    <tr class="{% cycle 'odd_row' 'even_row' %}">
+      {% for cell in row %}
+        <td style="text-align:right;">
+          <a href="{{ cell.game_player.tournament_player.get_absolute_url }}">{{ cell.game_player.player }}</a><br>
+          <a href="{{ cell.game_url }}">{{ cell.game_name }}</a><br>
+          {{ cell.game_player.score|floatformat:2 }}{% if cell.game_player.tournamentplayer.unranked %}*{% endif %}<br>
+          {% blocktrans count dots=cell.game_player.final_sc_count %}1 centre{% plural %}{{ dots }} centres{% endblocktrans %}
+        </td>
+      {% endfor %}
+    </tr>
+  {% endfor %}
+  </tbody>
 </table>
 <p>* - {% trans "unranked" %}</p>
 {% endblock %}
