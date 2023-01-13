@@ -16,10 +16,23 @@
     <tr class="{% cycle 'odd_row' 'even_row' %}">
       {% for gp in row %}
         <td style="text-align:right;">
-          <a href="{{ gp.tournament_player.get_absolute_url }}">{{ gp.player }}</a><br>
-          <a href="{{ gp.game.get_absolute__url }}">{{ gp.game.name }}</a><br>
-          {{ gp.score|floatformat:2 }}{% if gp.tournamentplayer.unranked %}*{% endif %}<br>
-          {% blocktrans count dots=gp.final_sc_count %}1 centre{% plural %}{{ dots }} centres{% endblocktrans %}
+          <a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a><br>
+          <a href="{{ gp.game.get_absolute_url }}">{{ gp.game.name }}</a><br>
+          {% if not gp.score_is_final %}
+            <i>
+          {% endif %}
+            {{ gp.score|floatformat:2 }}{% if gp.tournamentplayer.unranked %}*{% endif %}
+          {% if not gp.score_is_final %}
+            </i>
+          {% endif %}
+          <br>
+          {% if not gp.game.is_finished %}
+            <i>
+          {% endif %}
+            {% blocktrans count dots=gp.final_sc_count %}1 centre{% plural %}{{ dots }} centres{% endblocktrans %}
+          {% if not gp.game.is_finished %}
+            </i>
+          {% endif %}
         </td>
       {% endfor %}
     </tr>

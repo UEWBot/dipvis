@@ -25,9 +25,25 @@
         <td style="text-align:right">{{ p_data.rank }}</td>
         <td style="text-align:right"><a href="{{ p_data.player.get_absolute_url }}">{{ p_data.player.player }}</a></td>
         {% for rp in p_data.rounds %}
-          <td style="text-align:right">{{ rp.score|floatformat:2 }}{% if rp and not rp.gameplayers.exists %}*{% endif %}</td>
+          <td style="text-align:right">
+            {% if not rp.score_is_final %}
+              <i>
+            {% endif %}
+              {{ rp.score|floatformat:2 }}{% if rp and not rp.gameplayers.exists %}*{% endif %}
+            {% if not rp.score_is_final %}
+              </i>
+            {% endif %}
+          </td>
         {% endfor %}
-        <td style="text-align:right">{{ p_data.score|floatformat:2 }}</td>
+        <td style="text-align:right">
+          {% if not p_data.player.score_is_final %}
+            <i>
+          {% endif %}
+            {{ p_data.score|floatformat:2 }}
+          {% if not p_data.player.score_is_final %}
+            </i>
+          {% endif %}
+        </td>
       </tr>
     {% endfor %}
     {% if tournament.in_progress %}

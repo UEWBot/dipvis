@@ -24,7 +24,15 @@
     <tr class="odd_row">
       <th style="text-align:center;">{% trans "Score" %}</th>
       {% for gameplayer in players %}
-        <td style="text-align:right;">{{ gameplayer.score|floatformat:2 }}</td>
+        <td style="text-align:right;">
+          {% if not gameplayer.score_is_final %}
+	    <i>
+          {% endif %}
+            {{ gameplayer.score|floatformat:2 }}
+          {% if not gameplayer.score_is_final %}
+	    </i>
+          {% endif %}
+        </td>
       {% endfor %}
       <td/>
     </tr>
