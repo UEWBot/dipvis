@@ -150,39 +150,30 @@ class RScoringBest(RoundScoringSystem):
         Return a dict, indexed by player key, of scores.
         """
         retval = {}
-        # First retrieve all the scores of all the games that are involved
-        # This will give us the "if the game ended now" score for in-progress games
-        game_scores = {}
-        for g in Game.objects.filter(gameplayer__in=game_players).distinct():
-            game_scores[g] = g.scores()
         # for each player who played any of the specified games
         for p in Player.objects.filter(gameplayer__in=game_players).distinct():
             # Find just their games
-            # filter out games where they haven't been assigned a power
-            player_games = game_players.filter(player=p).filter(power__isnull=False)
+            player_games = game_players.filter(player=p)
             # Find the highest score
-            if player_games.exists():
-                retval[p] = max(game_scores[g.game][g.power] for g in player_games)
-            else:
-                retval[p] = 0.0
+            retval[p] = max((gp.score for gp in player_games), default=0.0)
         # Give the appropriate points to anyone who agreed to sit out
-        for p in non_players:
-            # If the "sitting out" bonus is only allowed once and they've sat out multiple rounds, they get zero
-            bonus_already_given = False
+        for rp in non_players:
             if self.non_player_score_once:
-                for r in p.the_round.tournament.round_set.all():
-                    if r == p.the_round:
+                # If the "sitting out" bonus is only allowed once and they've sat out multiple rounds, they get zero
+                bonus_already_given = False
+                for r in rp.the_round.tournament.round_set.all():
+                    if r == rp.the_round:
                         break
-                    rps = RoundPlayer.objects.filter(the_round=r).filter(player=p.player)
-                    gps = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=p.player)
+                    rps = RoundPlayer.objects.filter(the_round=r).filter(player=rp.player)
+                    gps = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=rp.player)
                     if rps.exists() and not gps.exists():
                         # Player also didn't play in this earlier round
                         bonus_already_given = True
                         break
                 if bonus_already_given:
-                    retval[p.player] = 0.0
+                    retval[rp.player] = 0.0
                     continue
-            retval[p.player] = self.non_player_score
+            retval[rp.player] = self.non_player_score
         return retval
 
     def __str__(self):
@@ -211,24 +202,15 @@ class RScoringAll(RoundScoringSystem):
         Returns a dict, indexed by player key, of scores.
         """
         retval = {}
-        # First retrieve all the scores of all the games that are involved
-        # This will give us the "if the game ended now" score for in-progress games
-        game_scores = {}
-        for g in Game.objects.filter(gameplayer__in=game_players).distinct():
-            game_scores[g] = g.scores()
         # for each player who played any of the specified games
         for p in Player.objects.filter(gameplayer__in=game_players).distinct():
             # Find just their games
-            # filter out games where they haven't been assigned a power
-            player_games = game_players.filter(player=p).filter(power__isnull=False)
+            player_games = game_players.filter(player=p)
             # Add all game scores
-            if player_games.exists():
-                retval[p] = sum(game_scores[g.game][g.power] for g in player_games)
-            else:
-                retval[p] = 0.0
+            retval[p] = sum(gp.score for gp in player_games)
         # Give zero to anyone who didn't play
-        for p in non_players:
-            retval[p.player] = 0.0
+        for rp in non_players:
+            retval[rp.player] = 0.0
         return retval
 
 
@@ -280,23 +262,13 @@ class TScoringSum(TournamentScoringSystem):
         Otherwise, sum all their round scores.
         Returns a dict, indexed by player key, of tournament scores
         """
-        # Retrieve all the scores for all the rounds involved.
-        # This will give us "if the round ended now" scores for in-progress round(s)
-        round_scores = {}
-        for r in Round.objects.filter(roundplayer__in=round_players).distinct():
-            round_scores[r] = r.scores()
         t_scores = {}
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
-            # Find just their rounds
-            player_rounds = round_players.filter(player=p)
-            # Extract the scores into a sorted list, highest first
-            player_scores = []
-            for r in player_rounds:
-                player_scores.append(round_scores[r.the_round][r.player])
-            player_scores.sort(reverse=True)
+            # Find just their rounds, sort by score, descending
+            player_rounds = round_players.filter(player=p).order_by('-score')
             # Add up the first N
-            t_scores[p] = sum(player_scores[:self.scored_rounds])
+            t_scores[p] = sum(rp.score for rp in player_rounds[:self.scored_rounds])
         return t_scores
 
 
