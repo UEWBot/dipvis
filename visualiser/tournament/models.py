@@ -874,6 +874,28 @@ class TournamentPlayer(models.Model):
         # Each player can only be in each tournament once
         unique_together = ('player', 'tournament')
 
+    def score_is_final(self):
+        """
+        Returns True if the score attribute represents the final score for the TournamentPlayer,
+        False if it is the "if all games ended now" score.
+        """
+        if self.tournament.is_finished():
+            return True
+        # If any round score for this player isn't final, this score also could change
+        for rp in self.roundplayers():
+            if not rp.score_is_final():
+                return False
+        t = self.tournament
+        final_round = t.round_set.last()
+        if not final_round.in_progress():
+            # There are more rounds to go, so more opportunities to score
+            return False
+        # The final round has started
+        # They're either not playing in it
+        # or they are playing and we already checked their round score,
+        # and it can't change
+        return True
+
     def position(self):
         """
         Where is the player (currently) ranked overall in the tournament?
@@ -1754,6 +1776,19 @@ class RoundPlayer(models.Model):
         ordering = ['player', 'the_round__start']
         unique_together = ('player', 'the_round')
 
+    def score_is_final(self):
+        """
+        Returns True if the score attribute represents the final score for the RoundPlayer,
+        False if it is the "if all games ended now" score.
+        """
+        if self.the_round.is_finished():
+            return True
+        # If any of this player's game scores aren't final, the round score isn't final
+        for gp in self.gameplayers():
+            if not gp.score_is_final():
+                return False
+        return True
+
     def tournamentplayer(self):
         """
         Returns the TournamentPlayer corresponding to this RoundPlayer.
@@ -1806,6 +1841,15 @@ class GamePlayer(models.Model):
         ordering = ['game', 'power']
         unique_together = ('player', 'game')
         unique_together = ('power', 'game')
+
+    def score_is_final(self):
+        """
+        Returns True if the score attribute represents the final score for the GamePlayer,
+        False if it is the "if the game ended now" score.
+        """
+        # Technically, an eliminated player's score is usually final even if the
+        # game is ongoing, but that's not true under all scoring systems
+        return self.game.is_finished
 
     def roundplayer(self):
         """

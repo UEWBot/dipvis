@@ -1392,6 +1392,25 @@ class ModelTests(TestCase):
         t = Tournament.objects.get(name='t3')
         t.get_absolute_url()
 
+    # TournamentPlayer.score_is_final()
+    def test_tournamentplayer_score_is_final_afterwards(self):
+        t = Tournament.objects.get(name='t3')
+        tp = t.tournamentplayer_set.first()
+        self.assertTrue(t.is_finished())
+        self.assertTrue(tp.score_is_final())
+
+    def test_tournamentplayer_score_is_final_before_last_round(self):
+        # TODO More round(s) to go
+        pass
+
+    def test_tournamentplayer_score_is_final_not_playing_last_round(self):
+        # TODO Final round in progress, but this person isn't playing in it
+        pass
+
+    def test_tournamentplayer_score_is_final_playing_last_round(self):
+        # TODO Final round in progress, and this person is playing in it
+        pass
+
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -3554,6 +3573,32 @@ class ModelTests(TestCase):
         str(dp)
         dp.delete()
 
+    # RoundPlayer.score_is_final()
+    def test_roundplayer_score_is_final_round_finished(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(3)
+        self.assertTrue(r.is_finished())
+        rp = RoundPlayer(the_round=r,
+                         player=self.p1,
+                         score=7)
+        self.assertTrue(rp.score_is_final())
+
+    def test_roundplayer_score_is_final_round_not_started(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        self.assertFalse(r.is_finished(), False)
+        rp = r.roundplayer_set.first()
+        self.assertFalse(rp.score_is_final())
+
+    def test_roundplayer_score_is_final_round_mixed(self):
+        # Player playing two games, one of which is done
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(2)
+        self.assertFalse(r.is_finished())
+        rp = r.roundplayer_set.first()
+        self.assertEqual(rp.gameplayers().count(), 2)
+        self.assertFalse(rp.score_is_final())
+
     # RoundPlayer.tournamentplayer()
     def test_round_player_tournamentplayer(self):
         t = Tournament.objects.get(name='t1')
@@ -3693,6 +3738,11 @@ class ModelTests(TestCase):
 
         # Clean up
         t.delete()
+
+    # GamePlayer.score_is_final()
+    def test_gameplayer_score_is_final(self):
+        gp = GamePlayer.objects.first()
+        self.assertEqual(gp.score_is_final(), gp.game.is_finished)
 
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):
