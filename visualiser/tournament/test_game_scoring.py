@@ -186,6 +186,22 @@ class GameScoringTests(TestCase):
                 desc = system.description
                 # TODO verify desc
 
+    # dead_score_can_change() for a system
+    def test_score_changes(self):
+        # Compare score for eliminated power before and after a solo
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs1 = g.centrecount_set.filter(year__lte=1906)
+        tgs1 = TournamentGameState(scs1)
+        scs2 = g.centrecount_set.filter(year__lte=1907)
+        tgs2 = TournamentGameState(scs2)
+        for system in G_SCORING_SYSTEMS:
+            with self.subTest(system=system.name):
+                scores1 = system.scores(tgs1)
+                scores2 = system.scores(tgs2)
+                changes = scores1[self.france] != scores2[self.france]
+                self.assertEqual(changes, system.dead_score_can_change)
+
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -212,6 +228,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 100)
             else:
                 self.assertEqual(s, 0)
+
 
     # GScoringDrawSize
     def test_g_scoring_draws_no_solo(self):

@@ -1847,9 +1847,12 @@ class GamePlayer(models.Model):
         Returns True if the score attribute represents the final score for the GamePlayer,
         False if it is the "if the game ended now" score.
         """
-        # Technically, an eliminated player's score is usually final even if the
-        # game is ongoing, but that's not true under all scoring systems
-        return self.game.is_finished
+        if self.game.is_finished:
+            return True
+        # Game is ongoing - is the player alive?
+        if self.elimination_year():
+            return not self.game.the_round.game_scoring_system_obj().dead_score_can_change
+        return False
 
     def roundplayer(self):
         """

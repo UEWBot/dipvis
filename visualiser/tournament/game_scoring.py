@@ -119,6 +119,11 @@ class GameScoringSystem(ABC):
     """
     MAX_NAME_LENGTH = 40
     name = u''
+    """
+    Returns False if a power's score is fixed at elimination,
+    True if their score may still change.
+    """
+    dead_score_can_change = False
 
     @abstractmethod
     def scores(self, state):
@@ -267,6 +272,7 @@ class GScoringCDiplo(GameScoringSystem):
     def __init__(self, name, soloer_pts, played_pts,
                  first_pts, second_pts, third_pts, loss_pts=0.0):
         self.name = name
+        self.dead_score_can_change = loss_pts != played_pts
         self.soloer_pts = soloer_pts
         self.played_pts = played_pts
         self.position_pts = [first_pts, second_pts, third_pts]
@@ -373,6 +379,7 @@ class GScoringCarnage(GameScoringSystem):
     """
     def __init__(self, name, centre_based, dead_equal):
         self.name = name
+        self.dead_score_can_change = True
         self.dead_equal = dead_equal
         if centre_based:
             self.points_per_dot = 500
@@ -794,6 +801,7 @@ class GScoringBangkok(GameScoringSystem):
     """
     def __init__(self):
         self.name = _('Bangkok')
+        self.dead_score_can_change = True
 
     def scores(self, state):
         retval = {}

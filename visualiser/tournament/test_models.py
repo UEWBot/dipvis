@@ -3740,9 +3740,20 @@ class ModelTests(TestCase):
         t.delete()
 
     # GamePlayer.score_is_final()
-    def test_gameplayer_score_is_final(self):
-        gp = GamePlayer.objects.first()
-        self.assertEqual(gp.score_is_final(), gp.game.is_finished)
+    def test_gameplayer_score_is_final_game_over(self):
+        g = Game.objects.filter(is_finished=True).first()
+        gp = g.gameplayer_set.first()
+        self.assertTrue(gp.score_is_final())
+
+    # GamePlayer.roundplayer()
+    def test_gameplayer_score_is_final_game_ongoing(self):
+        # TODO player not eliminated in a game that's still going
+        pass
+
+    # GamePlayer.roundplayer()
+    def test_gameplayer_score_is_final_game_eliminated(self):
+        # TODO player eliminated in a game that's still going
+        pass
 
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):
