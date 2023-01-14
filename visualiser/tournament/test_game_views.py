@@ -209,8 +209,7 @@ class GameViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn(b'from Backstabbr', response.content)
-        self.assertNotIn(b'from WebDiplomacy', response.content)
+        self.assertNotIn(b'from Backstabbr/WebDiplomacy', response.content)
 
     def test_detail_scrape_bs_link(self):
         # Give g1 a backstabbr URL
@@ -219,8 +218,7 @@ class GameViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'from Backstabbr', response.content)
-        self.assertNotIn(b'from WebDiplomacy', response.content)
+        self.assertIn(b'from Backstabbr/WebDiplomacy', response.content)
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -232,8 +230,7 @@ class GameViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn(b'from Backstabbr', response.content)
-        self.assertIn(b'from WebDiplomacy', response.content)
+        self.assertIn(b'from Backstabbr/WebDiplomacy', response.content)
         # Clean up
         self.g1.external_url = ''
         self.g1.save()

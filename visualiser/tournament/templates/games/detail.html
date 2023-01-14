@@ -72,10 +72,8 @@
     <li><a href="{% url 'enter_sc_owners' tournament.id game.name %}">{% trans "Enter SC Ownership" %}</a> - {% trans "Use this to update the supply centre ownership for the game." %}</li>
   {% endif %}
   {% if perms.tournament.add_centrecount %}
-    {% if game.backstabbr_game %}
-      <li><a href="{% url 'scrape_external_site' tournament.id game.name %}">{% trans "Import SC Counts from Backstabbr" %}</a> - {% trans "Use this to update the supply centre chart from a game on Backstabbr." %}</li>
-    {% elif game.webdiplomacy_game %}
-      <li><a href="{% url 'scrape_external_site' tournament.id game.name %}">{% trans "Import SC Counts from WebDiplomacy" %}</a> - {% trans "Use this to update the supply centre chart from a game on WebDiplomacy." %}</li>
+    {% if game.external_url %}
+      <li><a href="{% url 'scrape_external_site' tournament.id game.name %}">{% trans "Import SC Counts from Backstabbr/WebDiplomacy" %}</a> - {% trans "Use this to update the supply centre chart from a game on Backstabbr or WebDiplomacy." %}</li>
     {% endif %}
   {% endif %}
   {% if perms.tournament.add_gameimage %}
