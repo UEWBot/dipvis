@@ -399,7 +399,17 @@ class ModelTests(TestCase):
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
-
+        # Check the score_dropped attribute of each GamePlayer
+        for gp in g1.gameplayer_set.all():
+            if gp.score == 5:
+                self.assertTrue(gp.score_dropped)
+            else:
+                self.assertFalse(gp.score_dropped)
+        for gp in g2.gameplayer_set.all():
+            if gp.score == 5:
+                self.assertTrue(gp.score_dropped)
+            else:
+                self.assertFalse(gp.score_dropped)
         # Clean up
         t.delete()
 
@@ -468,7 +478,6 @@ class ModelTests(TestCase):
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
-
         # Clean up
         t.delete()
 
@@ -564,7 +573,11 @@ class ModelTests(TestCase):
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
-
+        # Check the score_dropped attribute of each GamePlayer
+        for gp in g1.gameplayer_set.all():
+            self.assertFalse(gp.score_dropped)
+        for gp in g2.gameplayer_set.all():
+            self.assertFalse(gp.score_dropped)
         # Clean up
         t.delete()
 
@@ -659,7 +672,11 @@ class ModelTests(TestCase):
         for p, s in expected_results.items():
             with self.subTest(player=p):
                 self.assertEqual(scores[p], s)
-
+        # Check the score_dropped attribute of each GamePlayer
+        for gp in g1.gameplayer_set.all():
+            self.assertFalse(gp.score_dropped)
+        for gp in g2.gameplayer_set.all():
+            self.assertFalse(gp.score_dropped)
         # Clean up
         t.delete()
 
@@ -822,6 +839,16 @@ class ModelTests(TestCase):
                 for p, s in round_scores[r].items():
                     with self.subTest(player=p):
                         self.assertEqual(r_scores[r][p], s)
+                for rp in r.roundplayer_set.all():
+                    with self.subTest(player=rp.player):
+                        #rp.refresh_from_db()
+                        if r.number() == 1:
+                            if rp.player in [self.p8, self.p9, self.p12]:
+                                self.assertTrue(rp.score_dropped)
+                            else:
+                                self.assertFalse(rp.score_dropped)
+                        else:
+                            self.assertFalse(rp.score_dropped)
 
     # find_scoring_system()
     # Mostly tested implicitly, but we do want to check the error case

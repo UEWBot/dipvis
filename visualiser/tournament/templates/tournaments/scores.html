@@ -29,7 +29,13 @@
             {% if not rp.score_is_final %}
               <i>
             {% endif %}
+            {% if rp.score_dropped %}
+              <del>
+            {% endif %}
               {{ rp.score|floatformat:2 }}{% if rp and not rp.gameplayers.exists %}*{% endif %}
+            {% if rp.score_dropped %}
+              </del>
+            {% endif %}
             {% if not rp.score_is_final %}
               </i>
             {% endif %}

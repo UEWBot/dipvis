@@ -142,7 +142,7 @@ class RScoringBest(RoundScoringSystem):
 
     def scores(self, game_players, non_players):
         """
-        If any player played multiple games, take the best game score.
+        If any player played multiple games, take the best game score and flag the rest as dropped.
         Otherwise, just take their game score.
         game_players is a QuerySet of GamePlayers.
         non_players is a QuerySet of RoundPlayers who were present but agreed
@@ -155,7 +155,20 @@ class RScoringBest(RoundScoringSystem):
             # Find just their games
             player_games = game_players.filter(player=p)
             # Find the highest score
-            retval[p] = max((gp.score for gp in player_games), default=0.0)
+            best = None
+            for gp in player_games:
+                if not best:
+                    best = gp
+                elif gp.score > best.score:
+                    best.score_dropped = True
+                    best.save()
+                    best = gp
+                else:
+                    gp.score_dropped = True
+                    gp.save()
+            best.score_dropped = False
+            best.save()
+            retval[p] = best.score
         # Give the appropriate points to anyone who agreed to sit out
         for rp in non_players:
             if self.non_player_score_once:
@@ -258,7 +271,7 @@ class TScoringSum(TournamentScoringSystem):
 
     def scores(self, round_players):
         """
-        If a player played more than N rounds, sum the best N round scores.
+        If a player played more than N rounds, sum the best N round scores and flag the rest as dropped.
         Otherwise, sum all their round scores.
         Returns a dict, indexed by player key, of tournament scores
         """
@@ -268,7 +281,15 @@ class TScoringSum(TournamentScoringSystem):
             # Find just their rounds, sort by score, descending
             player_rounds = round_players.filter(player=p).order_by('-score')
             # Add up the first N
-            t_scores[p] = sum(rp.score for rp in player_rounds[:self.scored_rounds])
+            t_scores[p] = 0.0
+            for n, rp in enumerate(player_rounds):
+                if n < self.scored_rounds:
+                    t_scores[p] += rp.score
+                    rp.score_dropped = False
+                    rp.save()
+                else:
+                    rp.score_dropped = True
+                    rp.save()
         return t_scores
 
 
@@ -1741,6 +1762,8 @@ class RoundPlayer(models.Model):
     standby = models.BooleanField(default=False,
                                   help_text=_('check if the player would prefer not to play this round'))
     score = models.FloatField(default=0.0)
+    score_dropped = models.BooleanField(default=False,
+                                        help_text=_('Set if this score does not contribute towards the tournament score'))
     game_count = models.PositiveIntegerField(default=1,
                                              help_text=_('number of games to play this round'))
 
@@ -1806,6 +1829,8 @@ class GamePlayer(models.Model):
                               related_name='+',
                               on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
+    score_dropped = models.BooleanField(default=False,
+                                        help_text=_('Set if this score does not contribute towards the round score'))
     after_action_report = models.TextField(blank=True,
                                            help_text=_("This player's account of the game"))
 

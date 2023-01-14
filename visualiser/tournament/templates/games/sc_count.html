@@ -28,7 +28,13 @@
           {% if not gameplayer.score_is_final %}
 	    <i>
           {% endif %}
+          {% if gameplayer.score_dropped %}
+	    <del>
+          {% endif %}
             {{ gameplayer.score|floatformat:2 }}
+          {% if gameplayer.score_dropped %}
+	    </del>
+          {% endif %}
           {% if not gameplayer.score_is_final %}
 	    </i>
           {% endif %}
