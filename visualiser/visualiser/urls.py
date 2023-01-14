@@ -29,6 +29,8 @@ player_patterns = [
         name='player_detail'),
     url(r'^upload_players/$', player_views.upload_players,
         name='upload_players'),
+    url(r'^(?P<pk>\d+)/wep7/$', player_views.wpe,
+        {'years': 7, 'count': 7}, name='wep7'),
 ]
 
 game_scoring_patterns = [

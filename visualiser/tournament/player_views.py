@@ -28,6 +28,7 @@ from django.core.validators import validate_email
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.views import generic
 
 from tournament.players import Player, add_player_bg, validate_wdd_player_id
@@ -49,13 +50,30 @@ def player_detail(request, pk):
     if request.method == 'POST':
         # Technically, we should check permissions here,
         # but the impact of not doing so is minor
-        add_player_bg(player)
+        add_player_bg(player, include_wpe=True)
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('player_detail',
                                             args=(pk,)))
     return render(request,
                   'players/detail.html',
                   {'player': player})
+
+
+def wpe(request, pk, years=7, count=7):
+    """
+    World Performance Evaluation details for a single player.
+    Displays the best <count> WPE numbers from the previous <years> years.
+    """
+    player = get_object_or_404(Player, pk=pk)
+    now = timezone.now()
+    start_date = now.replace(year=now.year - years)
+    # TODO If I append [:count] here, the template doesn't work properly
+    rankings = player.playertournamentranking_set.filter(date__gte=start_date).order_by('-wpe_score')
+    return render(request,
+                  'players/wpe.html',
+                  {'start_date': start_date,
+                   'player': player,
+                   'rankings': rankings})
 
 
 @permission_required('tournament.add_player')

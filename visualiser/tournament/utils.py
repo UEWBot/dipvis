@@ -26,12 +26,29 @@ import urllib.request
 from bs4 import BeautifulSoup
 
 from tournament import backstabbr
+from tournament.background import WDDBackground
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
 from tournament.models import Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
-from tournament.players import Player
+from tournament.players import wdd_url_to_id, Player
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
+
+
+def add_wep_scores(player, dry_run=False):
+    """Update the Player's PlayerTournamentRankings to set the wep_score attribute."""
+    # First get the WPE scores
+    bg = WDDBackground(player.wdd_player_id)
+    scores = bg.wpe_scores()
+    # Now update their rankings
+    ptr_s = player.playertournamentranking_set.all()
+    for score in scores:
+        wdd_id = wdd_url_to_id(score['WDD WPE URL'])
+        for ptr in ptr_s.filter(wdd_tournament_id=wdd_id):
+            print("Setting wpe_score for %s to %.2f" % (score['Tournament'], float(score['Score'])))
+            if not dry_run:
+                ptr.wpe_score = score['Score']
+                ptr.save()
 
 
 def map_to_backstabbr_power(gp):

@@ -474,3 +474,36 @@ class WDDBackground():
                 if '20' not in result['Name']:
                     results.append(result)
         return results
+
+    def wpe_scores(self):
+        """Parse a World Performance Evaluation page on the World Diplomacy Database"""
+        # TODO This is quite similar to finishes(), above
+        url = WDD_BASE_RANKING_URL + 'ranking_player.php?id_ranking=2&id_player=%d' % self.wdd_id
+        page = urllib.request.urlopen(url)
+        if page.geturl() != url:
+            raise InvalidUrl(url)
+        soup = BeautifulSoup(page.read())
+        # Find the table we need to parse
+        tr = None
+        for th in soup.find_all('th'):
+            if th.string and 'Name of the tournament' in th.string:
+                tr = th.parent
+        if not tr:
+            return {}
+        columns = []
+        for th in tr.find_all('th'):
+            col = MAP.get(th.string, str(th.string))
+            columns.append(col)
+        results = []
+        for row in tr.next_siblings:
+            result = {}
+            for key, td in zip(columns, row.find_all('td')):
+                if len(td.contents):
+                    if td.string:
+                        result[key] = str(td.string)
+                    else:
+                        result[key] = img_to_country(td.img['src'])
+                if key == 'Tournament':
+                    result['WDD WPE URL'] = WDD_BASE_RANKING_URL + td.a['href']
+            results.append(result)
+        return results

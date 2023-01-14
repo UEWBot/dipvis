@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block title %}{% blocktrans with player=player %}DipTV - {{ player }} WPE7{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{{ player }} WPE7</h1>
+<p>{% trans "Start date:" %} {{ start_date }}</p>
+<table>
+  <thead>
+    <tr>
+      <th>{% trans "Date" %}</th><th>{% trans "Tournament" %}</th><th>{% trans "WPE Score" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rankings %}
+      {% if r.wpe_score %}
+      <tr class="{% cycle 'odd_row' 'even_row' %}">
+        <td>{{ r.date }}</td><td>{{ r.tournament }}</td><td>{{ r.wpe_score }}</td>
+      </tr>
+      {% endif %}
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -1009,7 +1009,7 @@ class TournamentPlayer(models.Model):
         # Update background info when a player is added to the Tournament (only)
         if is_new:
             send_prefs_email(self)
-            add_player_bg(self.player)
+            add_player_bg(self.player, include_wpe=False)
 
 
 class SeederBias(models.Model):

@@ -132,9 +132,11 @@ def wdd_url_to_id(url):
     return 0
 
 
-def add_player_bg(player):
+def add_player_bg(player, include_wpe=False):
     """
     Cache background data for the player
+    include_wpe=True will set PlayerTournamentRanking.wpe_score,
+    which involves parsing an additional WDD page
     """
     # First check wikipedia
     bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
@@ -174,6 +176,13 @@ def add_player_bg(player):
     if not wdd:
         return
     bg = WDDBackground(wdd)
+    if include_wpe:
+        # Construct a dict, keyed by WDD Id, of WPE scores
+        wpe_scores = {}
+        for score in bg.wpe_scores():
+            key = wdd_url_to_id(score['WDD WPE URL'])
+            if key:
+                wpe_scores[key] = score['Score']
     # Podium finishes
     finishes = bg.finishes()
     for finish in finishes:
@@ -195,6 +204,9 @@ def add_player_bg(player):
                 i.wdd_tournament_id = wdd_url_to_id(finish['WDD URL'])
             except KeyError:
                 pass
+            else:
+                if include_wpe:
+                    i.wpe_score = wpe_scores[i.wdd_tournament_id]
             i.save()
         except Exception:
             # Handle all exceptions
@@ -728,6 +740,9 @@ class PlayerTournamentRanking(models.Model):
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
+    wpe_score = models.FloatField(blank=True,
+                                  null=True,
+                                  help_text=_('World Performance Evaluation score'))
 
     def __str__(self):
         pos = position_str(self.position)
