@@ -18,7 +18,7 @@ from datetime import timedelta
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.urls import reverse
 from django.utils import timezone
 
@@ -1341,6 +1341,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('scrape_external_site', args=(self.t1.pk, self.g1.name)))
         self.assertEqual(response.status_code, 404)
 
+    @tag('backstabbr')
     def test_scrape_backstabbr_success(self):
         self.assertEqual(len(self.g1.external_url), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)
@@ -1364,6 +1365,7 @@ class GameViewTests(TestCase):
         self.g1.save()
         self.g1.refresh_from_db()
 
+    @tag('webdip')
     def test_scrape_webdip_success(self):
         self.assertEqual(len(self.g1.external_url), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)

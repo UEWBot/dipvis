@@ -2001,6 +2001,7 @@ class ModelTests(TestCase):
         str(r)
 
     # Game.backstabbr_game()
+    @tag('backstabbr')
     def test_game_backstabbr_game(self):
         g = Game(name='newgame1',
                  started_at=self.r32.start,
@@ -2028,6 +2029,7 @@ class ModelTests(TestCase):
         self.assertEqual(g.backstabbr_game(), None)
 
     # Game.webdiplomacy_game()
+    @tag('webdip')
     def test_game_webdiplomacy_game(self):
         g = Game(name='newgame1',
                  started_at=self.r32.start,
