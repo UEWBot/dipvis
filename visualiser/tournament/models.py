@@ -53,7 +53,7 @@ from tournament.diplomacy.tasks.validate_year_including_start import validate_ye
 from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
 from tournament.players import Player, add_player_bg
-from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS
+from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WINS
 from tournament.players import validate_wdd_tournament_id
 from tournament.tournament_game_state import TournamentGameState
 
@@ -727,6 +727,17 @@ class Tournament(models.Model):
         results = []
         for tp in self.tournamentplayer_set.all():
             results += tp.player.background(mask=mask)
+        if (mask & MASK_SERIES_WINS) != 0:
+            # Add in background for any series this Tournament is in
+            for s in self.series_set.all():
+                for t in s.tournaments.all():
+                    p = t.winner()
+                    if not p:
+                        continue
+                    # Is the winner of that Tournament also playing in this one?
+                    if self.tournamentplayer_set.filter(player=p).exists():
+                        results.append(_('%(name)s won %(tourney)s')
+                                       % {'name': p, 'tourney': t})
         # Shuffle the resulting list
         random.shuffle(results)
         return results
