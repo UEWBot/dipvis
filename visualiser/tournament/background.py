@@ -29,7 +29,8 @@ Database for everything else.
 import urllib.request
 from bs4 import BeautifulSoup
 
-WDD_BASE_URL = 'http://world-diplomacy-database.com/php/results/'
+WDD_BASE_RESULTS_URL = 'http://world-diplomacy-database.com/php/results/'
+WDD_BASE_RANKING_URL = 'http://world-diplomacy-database.com/php/ranking/'
 WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
 
 MAP = {'Name of the tournament': 'Tournament',
@@ -134,7 +135,7 @@ class WDDBackground():
         Returns the name of the player, as read from the WDD
         Can raise WDDNotAccessible or InvalidWDDId
         """
-        url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         try:
             page = urllib.request.urlopen(url)
         except urllib.request.URLError as e:
@@ -176,7 +177,7 @@ class WDDBackground():
         Can raise InvalidWDDId
         """
         # Individual Prize List
-        url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
@@ -215,7 +216,7 @@ class WDDBackground():
                             result[key] = img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Tournament':
-                        result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
+                        result[u'WDD URL'] = WDD_BASE_RESULTS_URL + td.a['href']
                 results.append(result)
         return results
 
@@ -228,7 +229,7 @@ class WDDBackground():
         Can raise InvalidWDDId
         """
         # Tournaments competed in
-        url = WDD_BASE_URL + 'player_fiche5.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche5.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
@@ -276,7 +277,7 @@ class WDDBackground():
                         result[key] = img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Name of the tournament':
-                        result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
+                        result[u'WDD URL'] = WDD_BASE_RESULTS_URL + td.a['href']
                     # Don't populate "Step of the following circuits"
                 results.append(result)
         return results
@@ -293,7 +294,7 @@ class WDDBackground():
         Can raise InvalidWDDId
         """
         # Tournament board listings
-        url = WDD_BASE_URL + 'player_fiche9.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche9.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
@@ -371,9 +372,9 @@ class WDDBackground():
                         result[key] = img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Name of the tournament':
-                        result[u'WDD Tournament URL'] = WDD_BASE_URL + td.a['href']
+                        result[u'WDD Tournament URL'] = WDD_BASE_RESULTS_URL + td.a['href']
                     elif key == u'Round / Board':
-                        result[u'WDD Board URL'] = WDD_BASE_URL + td.a['href']
+                        result[u'WDD Board URL'] = WDD_BASE_RESULTS_URL + td.a['href']
                 results.append(result)
         return results
 
@@ -384,7 +385,7 @@ class WDDBackground():
         plus either 'SCs' and 'Score' (for best country awards) or 'Name' (for other awards)
         Can raise InvalidWDDId
         """
-        url = WDD_BASE_URL + 'player_fiche3.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche3.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id
@@ -435,7 +436,7 @@ class WDDBackground():
                                 result = {}
                         # Add URLs to the results dict
                         if key == u'Tournament':
-                            result[u'WDD URL'] = WDD_BASE_URL + td.a['href']
+                            result[u'WDD URL'] = WDD_BASE_RESULTS_URL + td.a['href']
                     # Don't add empty dicts
                     if result == {}:
                         continue
@@ -451,7 +452,7 @@ class WDDBackground():
         Keys for the dict are 'Name', 'Score', 'International rank', and 'National rank'.
         Can raise InvalidWDDId
         """
-        url = WDD_BASE_URL + 'player_fiche4.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche4.php?id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
             # We were redirected - implies invalid WDD id

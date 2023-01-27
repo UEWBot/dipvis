@@ -39,7 +39,7 @@ from django.utils.translation import ngettext
 from tournament import backstabbr
 from tournament import webdip
 
-from tournament.background import WDD_BASE_URL
+from tournament.background import WDD_BASE_RESULTS_URL
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
@@ -793,7 +793,7 @@ class Tournament(models.Model):
         URL for this tournament in the World Diplomacy Database, if known.
         """
         if self.wdd_tournament_id:
-            return WDD_BASE_URL + 'tournament_class.php?id_tournament=%d' % self.wdd_tournament_id
+            return WDD_BASE_RESULTS_URL + 'tournament_class.php?id_tournament=%d' % self.wdd_tournament_id
         return u''
 
     def get_absolute_url(self):

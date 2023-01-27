@@ -39,7 +39,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_URL
+from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_RESULTS_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
@@ -87,7 +87,7 @@ def validate_wdd_player_id(value):
     """
     Checks a WDD player id
     """
-    url = WDD_BASE_URL + 'player_fiche.php?id_player=%d' % value
+    url = WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % value
     try:
         p = urllib.request.urlopen(url)
     except urllib.request.URLError:
@@ -102,7 +102,7 @@ def validate_wdd_tournament_id(value):
     """
     Checks a WDD tournament id
     """
-    url = WDD_BASE_URL + 'tournament_class.php?id_tournament=%d' % value
+    url = WDD_BASE_RESULTS_URL + 'tournament_class.php?id_tournament=%d' % value
     try:
         p = urllib.request.urlopen(url)
     except urllib.request.URLError:
@@ -468,7 +468,7 @@ class Player(models.Model):
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
         if self.wdd_player_id:
-            return WDD_BASE_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
+            return WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
         return u''
 
     def wdd_firstname_lastname(self):
