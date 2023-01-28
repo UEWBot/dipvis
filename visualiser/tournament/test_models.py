@@ -54,132 +54,12 @@ s1 = "Solo or bust"
 
 
 @override_settings(HOSTNAME='example.com')
-class ModelTests(TestCase):
+class RoundScoringTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
     @classmethod
     def setUpTestData(cls):
         cls.set1 = GameSet.objects.get(name='Avalon Hill')
-        cls.set2 = GameSet.objects.get(name='Gibsons')
-
-        now = timezone.now()
-
-        t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now,
-                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
-        t2 = Tournament.objects.create(name='t2',
-                                       start_date=now,
-                                       end_date=now,
-                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
-        t3 = Tournament.objects.create(name='t3',
-                                       start_date=now,
-                                       end_date=now,
-                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
-        t4 = Tournament.objects.create(name='t4',
-                                       start_date=timezone.now(),
-                                       end_date=timezone.now(),
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       power_assignment=Tournament.PREFERENCES)
-
-        # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=t1.start_date + HOURS_16)
-        Round.objects.create(tournament=t1,
-                             scoring_system=s1,
-                             dias=True,
-                             start=t1.start_date + HOURS_24)
-        # Add Rounds to t2
-        r21 = Round.objects.create(tournament=t2,
-                                   scoring_system=s1,
-                                   dias=False,
-                                   start=t2.start_date)
-        r22 = Round.objects.create(tournament=t2,
-                                   scoring_system=s1,
-                                   dias=False,
-                                   start=t2.start_date + HOURS_8)
-        # Add Rounds to t3
-        r31 = Round.objects.create(tournament=t3,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=t3.start_date,
-                                   final_year=1907)
-        cls.r32 = Round.objects.create(tournament=t3,
-                                       scoring_system=s1,
-                                       dias=True,
-                                       start=t3.start_date + HOURS_8,
-                                       earliest_end_time=t3.start_date + HOURS_8,
-                                       latest_end_time=t3.start_date + HOURS_9)
-
-        # Add Games to r11
-        g11 = Game.objects.create(name='g11',
-                                  started_at=r11.start,
-                                  the_round=r11,
-                                  the_set=cls.set1)
-        g12 = Game.objects.create(name='g12',
-                                  started_at=r11.start,
-                                  the_round=r11,
-                                  the_set=cls.set1)
-        # Add Games to r12
-        g13 = Game.objects.create(name='g13',
-                                  started_at=r12.start,
-                                  the_round=r12,
-                                  is_finished=True,
-                                  the_set=cls.set1)
-        g14 = Game.objects.create(name='g14',
-                                  started_at=r12.start,
-                                  the_round=r12,
-                                  the_set=cls.set1)
-        # Add Games to r13
-        Game.objects.create(name='g15',
-                            started_at=r13.start,
-                            the_round=r13,
-                            is_finished=True,
-                            the_set=cls.set1)
-        Game.objects.create(name='g16',
-                            started_at=r13.start,
-                            the_round=r13,
-                            is_finished=True,
-                            the_set=cls.set1)
-        # Add Games to r21
-        Game.objects.create(name='g21',
-                            started_at=r21.start,
-                            the_round=r21,
-                            the_set=cls.set1)
-        # Add Games to r22
-        Game.objects.create(name='g22',
-                            started_at=r22.start,
-                            the_round=r22,
-                            the_set=cls.set1)
-        # Add Games to r31
-        Game.objects.create(name='g31',
-                            started_at=r31.start,
-                            the_round=r31,
-                            is_finished=True,
-                            the_set=cls.set1)
-        # Add Games to r32
-        Game.objects.create(name='g32',
-                            started_at=cls.r32.start,
-                            the_round=cls.r32,
-                            is_finished=True,
-                            the_set=cls.set1)
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -189,33 +69,6 @@ class ModelTests(TestCase):
         cls.italy = GreatPower.objects.get(abbreviation='I')
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
-
-        # Add CentreCounts to g11
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
-
-        # Eliminate Italy in 1903
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=5)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=5)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=10)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=0)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
-
-        # Solo victory for Germany in 1904
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
 
         # Create some players
         # Avoid hitting the WDD by not providing a WDD id
@@ -234,82 +87,6 @@ class ModelTests(TestCase):
         cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
         cls.p12 = Player.objects.create(first_name='Wilfred', last_name='Xylophone')
         cls.p13 = Player.objects.create(first_name='Yannis', last_name='Zygote')
-
-        # Tournament.news() will call Game.news() for all games in the current round,
-        # which will need a player for every country
-        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
-        # Add GamePlayers to g11
-        GamePlayer.objects.create(player=cls.p1,
-                                  game=g11,
-                                  power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
-        # Add GamePlayers to g12
-        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england)
-        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
-        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
-        # Add GamePlayers to g13
-        GamePlayer.objects.create(player=cls.p1,
-                                  game=g13,
-                                  power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
-        # Add GamePlayers to g14
-        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england)
-        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france)
-        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
-        # And the corresponding RoundPlayers
-        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
-        # And TournamentPlayers
-        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
-        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
-        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
-        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
-
-        # Add TournamentPlayers to t3
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
-        # Add RoundPlayers to r31
-        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
-        # Add RoundPlayers to r32
-        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
-        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # RScoringBest.scores() without sitting-out bonus
     def test_r_scoring_best(self):
@@ -713,6 +490,31 @@ class ModelTests(TestCase):
         self.assertIn('ll game scores', r_str)
 
 
+@override_settings(HOSTNAME='example.com')
+class TournamentScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+        cls.p12 = Player.objects.create(first_name='Wilfred', last_name='Xylophone')
+
     # TScoringSum.__str__()
     def test_tscoringsum0_str(self):
         # TODO This depends on the ordering
@@ -850,6 +652,11 @@ class ModelTests(TestCase):
                         else:
                             self.assertFalse(rp.score_dropped)
 
+
+@override_settings(HOSTNAME='example.com')
+class ModelTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
     # find_scoring_system()
     # Mostly tested implicitly, but we do want to check the error case
     def test_find_g_scoring_system_invalid(self):
@@ -917,6 +724,11 @@ class ModelTests(TestCase):
 
     # TODO game_image_location()
 
+
+@override_settings(HOSTNAME='example.com')
+class SeriesTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
     # Series.save() and get_absolute_url()
     def test_series_get_absolute_url(self):
         s = Series(name="Test Series", description="Text")
@@ -933,6 +745,256 @@ class ModelTests(TestCase):
         self.assertIn('sluggy', url)
         # Clean up
         s.delete()
+
+
+@override_settings(HOSTNAME='example.com')
+class TournamentTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t2 = Tournament.objects.create(name='t2',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+        # Add Rounds to t2
+        r21 = Round.objects.create(tournament=t2,
+                                   scoring_system=s1,
+                                   dias=False,
+                                   start=t2.start_date)
+        r22 = Round.objects.create(tournament=t2,
+                                   scoring_system=s1,
+                                   dias=False,
+                                   start=t2.start_date + HOURS_8)
+        # Add Rounds to t3
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+        cls.r32 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=t3.start_date + HOURS_8,
+                                       earliest_end_time=t3.start_date + HOURS_8,
+                                       latest_end_time=t3.start_date + HOURS_9)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r12
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  is_finished=True,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+        # Add Games to r13
+        Game.objects.create(name='g15',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+        Game.objects.create(name='g16',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+        # Add Games to r21
+        Game.objects.create(name='g21',
+                            started_at=r21.start,
+                            the_round=r21,
+                            the_set=cls.set1)
+        # Add Games to r22
+        Game.objects.create(name='g22',
+                            started_at=r22.start,
+                            the_round=r22,
+                            the_set=cls.set1)
+        # Add Games to r31
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+        # Add Games to r32
+        Game.objects.create(name='g32',
+                            started_at=cls.r32.start,
+                            the_round=cls.r32,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        # Eliminate Italy in 1903
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=10)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
+
+        # Solo victory for Germany in 1904
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+
+        # Tournament.news() will call Game.news() for all games in the current round,
+        # which will need a player for every country
+        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
+        # Add GamePlayers to g11
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
+        # Add GamePlayers to g12
+        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
+        # Add GamePlayers to g13
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g13,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
+        # Add GamePlayers to g14
+        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
+        # Add TournamentPlayers to t3
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        # Add RoundPlayers to r31
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        # Add RoundPlayers to r32
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
@@ -1319,6 +1381,8 @@ class ModelTests(TestCase):
                 t.background(mask=mask)
             mask *= 2
 
+    # TODO test Tournament.background() for a Tournament in a series
+
     # Tournament.game_set()
     def test_tourney_game_set(self):
         t = Tournament.objects.get(name='t3')
@@ -1418,6 +1482,136 @@ class ModelTests(TestCase):
     def test_tournament_get_absolute_url(self):
         t = Tournament.objects.get(name='t3')
         t.get_absolute_url()
+
+
+@override_settings(HOSTNAME='example.com')
+class TournamentPlayerTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+        t4 = Tournament.objects.create(name='t4',
+                                       start_date=timezone.now(),
+                                       end_date=timezone.now(),
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       power_assignment=Tournament.PREFERENCES)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+        # Add Rounds to t3
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+        cls.r32 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=t3.start_date + HOURS_8,
+                                       earliest_end_time=t3.start_date + HOURS_8,
+                                       latest_end_time=t3.start_date + HOURS_9)
+
+        # Add finished Games to r31
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+        # Add Games to r32
+        Game.objects.create(name='g32',
+                            started_at=cls.r32.start,
+                            the_round=cls.r32,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+
+        # And RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
+        # Add TournamentPlayers to t3
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        # Add RoundPlayers to r31
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        # Add RoundPlayers to r32
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # TournamentPlayer.score_is_final()
     def test_tournamentplayer_score_is_final_afterwards(self):
@@ -1680,6 +1874,53 @@ class ModelTests(TestCase):
     # TODO Existing TournamentPlayer should not have unranked cleared when saved
     # TODO Existing TournamentPlayer should not have unranked set when saved
 
+
+@override_settings(HOSTNAME='example.com')
+class SeederBiasTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
+        # Add TournamentPlayers to t3
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+
     # SeederBias.clean()
     def test_seederbias_clean_clone(self):
         '''Same player twice'''
@@ -1717,6 +1958,29 @@ class ModelTests(TestCase):
         # TODO Validate result
         str(sb)
 
+
+@override_settings(HOSTNAME='example.com')
+class PreferenceTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+
+        # Create a player
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+
+        # And TournamentPlayer
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+
     # Preference._str__()
     def test_preference_str(self):
         tp = TournamentPlayer.objects.first()
@@ -1726,6 +1990,180 @@ class ModelTests(TestCase):
         # TODO Validate result
         str(p)
         tp.preference_set.all().delete()
+
+
+@override_settings(HOSTNAME='example.com')
+class RoundTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t2 = Tournament.objects.create(name='t2',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+        # Add Rounds to t2
+        r21 = Round.objects.create(tournament=t2,
+                                   scoring_system=s1,
+                                   dias=False,
+                                   start=t2.start_date)
+        r22 = Round.objects.create(tournament=t2,
+                                   scoring_system=s1,
+                                   dias=False,
+                                   start=t2.start_date + HOURS_8)
+        # Add Rounds to t3
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+        cls.r32 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=t3.start_date + HOURS_8,
+                                       earliest_end_time=t3.start_date + HOURS_8,
+                                       latest_end_time=t3.start_date + HOURS_9)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r12
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  is_finished=True,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+        # Add Games to r13
+        Game.objects.create(name='g15',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+        Game.objects.create(name='g16',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+        # Add Games to r31
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+        # Add Games to r32
+        Game.objects.create(name='g32',
+                            started_at=cls.r32.start,
+                            the_round=cls.r32,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
+        # Add TournamentPlayers to t3
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        # Add RoundPlayers to r31
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        # Add RoundPlayers to r32
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # Round uniqueness
     def test_two_rounds_same_start(self):
@@ -2027,6 +2465,205 @@ class ModelTests(TestCase):
         # TODO Validate result
         str(r)
 
+
+@override_settings(HOSTNAME='example.com')
+class GameTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+        cls.set2 = GameSet.objects.get(name='Gibsons')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+        # Add Rounds to t3
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+        cls.r32 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=t3.start_date + HOURS_8,
+                                       earliest_end_time=t3.start_date + HOURS_8,
+                                       latest_end_time=t3.start_date + HOURS_9)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r12
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  is_finished=True,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+        # Add Games to r31
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        # Eliminate Italy in 1903
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=10)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
+
+        # Solo victory for Germany in 1904
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+
+        # Tournament.news() will call Game.news() for all games in the current round,
+        # which will need a player for every country
+        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
+        # Add GamePlayers to g11
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
+        # Add GamePlayers to g12
+        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
+        # Add GamePlayers to g13
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g13,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
+        # Add GamePlayers to g14
+        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
     # Game.backstabbr_game()
     @tag('backstabbr')
     def test_game_backstabbr_game(self):
@@ -2217,13 +2854,7 @@ class ModelTests(TestCase):
         gp = GamePlayer.objects.get(game=g2, player=self.p3)
         self.assertEqual(gp.power, self.italy)
         # Others have no preferences, and all prefs gone
-        # Note that this will also delete all GamePlayers for that Game
-        g2.delete()
-        g1.delete()
-        # Note that this will also delete all RoundPlayers for that Round
-        r2.delete()
-        r1.delete()
-        # Note that this will also delete all TournamentPlayers for that Tournament
+        # Note that this will also delete everything associated with the Tournament
         t.delete()
         self.assertEqual(Preference.objects.count(), 0)
 
@@ -2287,9 +2918,16 @@ class ModelTests(TestCase):
     def test_create_sc_count_invalid(self):
         # Arbitrary game
         g = Game.objects.first()
-        self.assertRaises(SCOwnershipsNotFound, g.create_or_update_sc_counts_from_ownerships, 1901)
+        self.assertRaises(SCOwnershipsNotFound,
+                          g.create_or_update_sc_counts_from_ownerships,
+                          1901)
 
     def test_create_sc_count(self):
+        # Arbitrary game
+        g = Game.objects.first()
+        YEAR = 1920
+        self.assertFalse(g.supplycentreownership_set.filter(year=YEAR).exists())
+        self.assertFalse(g.centrecount_set.filter(year=YEAR).exists())
         test_data = {
                         SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
                         SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
@@ -2312,18 +2950,11 @@ class ModelTests(TestCase):
                   self.russia : 0,
                   self.turkey : 0,
               }
-        # Arbitrary game
-        g = Game.objects.first()
         # Add some SC ownerships for a far off year
-        YEAR = 1920
-        scos = []
         for k, v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
             sco.save()
-            scos.append(sco)
             res[v] += 1
-        # Quickly check that no CentreCounts exist already
-        self.assertEqual(0, g.centrecount_set.filter(year=YEAR).count())
         g.create_or_update_sc_counts_from_ownerships(YEAR)
         ccs = g.centrecount_set.filter(year=YEAR)
         # We should always have CentreCounts for all powers
@@ -2333,13 +2964,16 @@ class ModelTests(TestCase):
             with self.subTest(power=cc.power):
                 self.assertEqual(cc.count, res[cc.power])
         # Remove everything we added to the database
-        for sco in scos:
-            sco.delete()
-        for cc in ccs:
-            cc.delete()
+        g.supplycentreownership_set.filter(year=YEAR).delete()
+        ccs.delete()
 
     # Game.compare_sc_counts_and_ownerships()
     def test_game_compare_sc_counts_and_ownerships(self):
+        # Arbitrary game
+        g = Game.objects.first()
+        YEAR = 1920
+        self.assertFalse(g.supplycentreownership_set.filter(year=YEAR).exists())
+        self.assertFalse(g.centrecount_set.filter(year=YEAR).exists())
         test_data = {
                         SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
                         SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
@@ -2352,28 +2986,10 @@ class ModelTests(TestCase):
                         SupplyCentre.objects.get(abbreviation='Bud'): self.italy,
                         SupplyCentre.objects.get(abbreviation='Bul'): self.austria,
                     }
-        # expected results
-        res = {
-                  self.austria : 0,
-                  self.england : 0,
-                  self.france : 0,
-                  self.germany : 0,
-                  self.italy : 0,
-                  self.russia : 0,
-                  self.turkey : 0,
-              }
-        # Arbitrary game
-        g = Game.objects.first()
         # Add some SC ownerships for a far off year
-        YEAR = 1920
-        scos = []
         for k,v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
             sco.save()
-            scos.append(sco)
-            res[v] += 1
-        # Quickly check that no CentreCounts exist already
-        self.assertEqual(0, g.centrecount_set.filter(year=YEAR).count())
         g.create_or_update_sc_counts_from_ownerships(YEAR)
         ccs = g.centrecount_set.filter(year=YEAR)
         # Hopefully everything matches!
@@ -2384,10 +3000,8 @@ class ModelTests(TestCase):
         # That should give us two mismatches (the old and new owners)
         self.assertEqual(2, len(g.compare_sc_counts_and_ownerships(YEAR)))
         # Remove everything we added to the database
-        for sco in scos:
-            sco.delete()
-        for cc in ccs:
-            cc.delete()
+        g.supplycentreownership_set.filter(year=YEAR).delete()
+        ccs.delete()
 
     # TODO Game.compare_sc_counts_and_ownerships() raises SCOwnershipsNotFound
 
@@ -2397,6 +3011,11 @@ class ModelTests(TestCase):
 
     # Game.scores
     def test_update_sc_count(self):
+        # Arbitrary game
+        g = Game.objects.first()
+        YEAR = 1920
+        self.assertFalse(g.supplycentreownership_set.filter(year=YEAR).exists())
+        self.assertFalse(g.centrecount_set.filter(year=YEAR).exists())
         test_data = {
                         SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
                         SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
@@ -2419,18 +3038,13 @@ class ModelTests(TestCase):
                   self.russia : 0,
                   self.turkey : 0,
               }
-        # Arbitrary game
-        g = Game.objects.first()
         # Add some SC ownerships for a far off year
-        YEAR = 1920
         scos = []
         for k, v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
             sco.save()
             scos.append(sco)
             res[v] += 1
-        # Quickly check that no CentreCounts exist already
-        self.assertEqual(0, g.centrecount_set.filter(year=YEAR).count())
         # Add some CentreCounts to be updated by the method being tested
         cc = CentreCount(power=self.england, game=g, year=YEAR, count=17)
         cc = CentreCount(power=self.turkey, game=g, year=YEAR, count=17)
@@ -2443,10 +3057,8 @@ class ModelTests(TestCase):
             with self.subTest(power=cc.power):
                 self.assertEqual(cc.count, res[cc.power])
         # Remove everything we added to the database
-        for sco in scos:
-            sco.delete()
-        for cc in ccs:
-            cc.delete()
+        g.supplycentreownership_set.filter(year=YEAR).delete()
+        ccs.delete()
 
     # Game.scores
     def test_game_update_scores_invalid(self):
@@ -2893,12 +3505,7 @@ class ModelTests(TestCase):
                     self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
                 else:
                     self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
-        g2.delete()
-        # Note that this will also delete all GamePlayers for that Game
-        g1.delete()
-        # Note that this will also delete all RoundPlayers for that Round
-        r.delete()
-        # Note that this will also delete all TournamentPlayers for that Tournament
+        # Note that this will also delete all associated objects
         t.delete()
 
     @tag('slow')
@@ -2987,11 +3594,7 @@ class ModelTests(TestCase):
                     self.assertAlmostEqual(tp.score, 100.0 * 16 / 70)
                 else:
                     self.assertAlmostEqual(tp.score, 100.0 * 9 / 70)
-        # Note that this will also delete all GamePlayers for that Game
-        g1.delete()
-        # Note that this will also delete all RoundPlayers for that Round
-        r.delete()
-        # Note that this will also delete all TournamentPlayers for that Tournament
+        # Note that this will also delete all associated objects
         t.delete()
 
     @tag('slow')
@@ -3084,18 +3687,46 @@ class ModelTests(TestCase):
                     self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
                 else:
                     self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
-        g2.delete()
-        # Note that this will also delete all GamePlayers for that Game
-        g1.delete()
-        # Note that this will also delete all RoundPlayers for that Round
-        r.delete()
-        # Note that this will also delete all TournamentPlayers for that Tournament
+        # Note that this will also delete all associated objects
         t.delete()
 
     # Game.get_absolute_url()
     def test_game_get_absolute_url(self):
         g = Game.objects.first()
         g.get_absolute_url()
+
+
+@override_settings(HOSTNAME='example.com')
+class SupplyCentreOwnershipTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
 
     # SupplyCentreOwnership.__str__()
     def test_supplycentreownership_str(self):
@@ -3104,6 +3735,165 @@ class ModelTests(TestCase):
         sco = SupplyCentreOwnership.objects.create(sc=sc, owner=self.austria, year=1909, game=g)
         # TODO validate result
         str(sco)
+
+
+@override_settings(HOSTNAME='example.com')
+class DrawProposalTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+        # Add Rounds to t3
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+        cls.r32 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=t3.start_date + HOURS_8,
+                                       earliest_end_time=t3.start_date + HOURS_8,
+                                       latest_end_time=t3.start_date + HOURS_9)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r31
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Eliminate Italy in 1903
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=10)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
+
+        # Solo victory for Germany in 1904
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+
+        # Tournament.news() will call Game.news() for all games in the current round,
+        # which will need a player for every country
+        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
+        # Add GamePlayers to g11
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
+        # Add TournamentPlayers to t3
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        # Add RoundPlayers to r31
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        # Add RoundPlayers to r32
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # DrawProposal.draw_size()
     def test_draw_proposal_draw_size_one(self):
@@ -3456,6 +4246,8 @@ class ModelTests(TestCase):
         dp.clean()
         dp.delete()
 
+    # TODO DrawProposal.clean() after Game has been won
+
     def test_draw_proposal_clean_votes_in_favour_not_set(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
@@ -3532,6 +4324,8 @@ class ModelTests(TestCase):
         self.assertRaises(ValidationError, dp2.clean)
         dp1.delete()
 
+    # TODO Test DrawProposal.clean() when votes_in_favour is > number of surviving powers
+
     # DrawProposal.save()
 
     def test_draw_proposal_save_vote_passed(self):
@@ -3582,6 +4376,8 @@ class ModelTests(TestCase):
         g.is_finished = True
         g.save()
 
+    # TODO DrawProposal.save() for a second successful DrawProposal for a Game
+
     # DrawProposal.__str__()
     def test_drawproposal_str(self):
         t = Tournament.objects.get(name='t1')
@@ -3601,6 +4397,164 @@ class ModelTests(TestCase):
         # TODO Validate result
         str(dp)
         dp.delete()
+
+
+@override_settings(HOSTNAME='example.com')
+class RoundPlayerTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r12
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  is_finished=True,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+        # Add Games to r13
+        Game.objects.create(name='g15',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+        Game.objects.create(name='g16',
+                            started_at=r13.start,
+                            the_round=r13,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+
+        # Tournament.news() will call Game.news() for all games in the current round,
+        # which will need a player for every country
+        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
+        # Add GamePlayers to g11
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
+        # Add GamePlayers to g12
+        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
+        # Add GamePlayers to g13
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g13,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
+        # Add GamePlayers to g14
+        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england)
+        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france)
+        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
     # RoundPlayer.score_is_final()
     def test_roundplayer_score_is_final_round_finished(self):
@@ -3768,21 +4722,167 @@ class ModelTests(TestCase):
         # Clean up
         t.delete()
 
+
+@override_settings(HOSTNAME='example.com')
+class GamePlayerTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r12
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  is_finished=True,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Eliminate Italy in 1903
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1903, count=10)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1903, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
+
+        # Solo victory for Germany in 1904
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        # The remainder are not used in this method but are available for use in tests
+        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+
+        # Tournament.news() will call Game.news() for all games in the current round,
+        # which will need a player for every country
+        # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
+        # Add GamePlayers to g11
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
+        # Add GamePlayers to g13
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g13,
+                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+
     # GamePlayer.score_is_final()
     def test_gameplayer_score_is_final_game_over(self):
         g = Game.objects.filter(is_finished=True).first()
         gp = g.gameplayer_set.first()
         self.assertTrue(gp.score_is_final())
 
-    # GamePlayer.roundplayer()
     def test_gameplayer_score_is_final_game_ongoing(self):
-        # TODO player not eliminated in a game that's still going
-        pass
+        # player not eliminated in a game that's still going
+        g = Game.objects.filter(is_finished=False).first()
+        cc = g.survivors()[0]
+        gp = g.gameplayer_set.get(power=cc.power)
+        self.assertFalse(gp.score_is_final())
 
-    # GamePlayer.roundplayer()
     def test_gameplayer_score_is_final_game_eliminated(self):
-        # TODO player eliminated in a game that's still going
-        pass
+        # player eliminated in a game that's still going
+        g = Game.objects.filter(is_finished=False).first()
+        self.assertFalse(g.the_round.game_scoring_system_obj().dead_score_can_change)
+        cc = g.centrecount_set.filter(count=0).first()
+        gp = g.gameplayer_set.get(power=cc.power)
+        self.assertTrue(gp.score_is_final())
 
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):
@@ -3919,15 +5019,11 @@ class ModelTests(TestCase):
         # All preferences gone, should get a random available power
         gp4.set_power_from_prefs()
         self.assertIn(gp4.power, [self.england, self.italy, self.russia, self.turkey])
-        # Note that this will also delete all GamePlayers for that Game
-        g1.delete()
-        # Note that this will also delete all RoundPlayers for that Round
-        r.delete()
-        # Note that this will also delete all TournamentPlayers for that Tournament
+        # Clean up
+        # Note that this will also delete all associated objects
         t.delete()
-        self.assertEqual(Preference.objects.count(), 0)
 
-    # TODO GamePlayer.result_str(), including wihtout power assigned
+    # TODO GamePlayer.result_str(), including without power assigned
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
@@ -3937,6 +5033,8 @@ class ModelTests(TestCase):
                         game=g,
                         power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
+
+    # TODO GamePlayer.clean() successful
 
     # GamePlayer.__str__()
     def test_gameplayer_str_with_power(self):
@@ -3949,6 +5047,40 @@ class ModelTests(TestCase):
         gp = GamePlayer.objects.create(player=self.p8, game=g)
         # TODO Validate result
         str(gp)
+
+
+@override_settings(HOSTNAME='example.com')
+class GameImageTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
 
     # GameImage.turn_str()
     def test_gameimage_turn_str(self):
@@ -3983,6 +5115,80 @@ class ModelTests(TestCase):
         # TODO Validate result
         str(gi)
 
+
+@override_settings(HOSTNAME='example.com')
+class CentreCountTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.SECRET)
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=Tournament.COUNTS)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=t1.start_date + HOURS_24)
+        # Add Rounds to t3
+        r31 = Round.objects.create(tournament=t3,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=t3.start_date,
+                                   final_year=1907)
+
+        # Add Games to r31
+        Game.objects.create(name='g31',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+
     # CentreCount.clean()
     def test_centrecount_clean_past_final_year(self):
         t = Tournament.objects.get(name='t3')
@@ -3997,6 +5203,7 @@ class ModelTests(TestCase):
         cc2 = CentreCount(power=self.austria, game=g, year=1903, count=1)
         cc1.save()
         self.assertRaises(ValidationError, cc2.clean)
+        # Clean up
         cc1.delete()
 
     def test_centrecount_clean_more_than_double(self):
@@ -4006,6 +5213,7 @@ class ModelTests(TestCase):
         cc2 = CentreCount(power=self.austria, game=g, year=1903, count=11)
         cc1.save()
         self.assertRaises(ValidationError, cc2.clean)
+        # Clean up
         cc1.delete()
 
     # Make sure that Issue #44 hasn't re-appeared
@@ -4020,47 +5228,31 @@ class ModelTests(TestCase):
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
         # TODO Remove reliance on primary keys
-        gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
-        gp2 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
-        gp3 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
-        gp4 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g, power=self.germany)
-        gp5 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g, power=self.italy)
-        gp6 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g, power=self.russia)
-        gp7 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g, power=self.turkey)
-        cc0 = CentreCount(game=g, count=0, power=self.austria, year=r.final_year - 1)
-        cc0.save()
-        cc1 = CentreCount(game=g, count=0, power=self.austria, year=r.final_year)
-        cc1.save()
-        cc2 = CentreCount(game=g, count=0, power=self.england, year=r.final_year)
-        cc2.save()
-        cc3 = CentreCount(game=g, count=9, power=self.france, year=r.final_year)
-        cc3.save()
-        cc4 = CentreCount(game=g, count=9, power=self.germany, year=r.final_year)
-        cc4.save()
-        cc5 = CentreCount(game=g, count=2, power=self.italy, year=r.final_year)
-        cc5.save()
-        cc6 = CentreCount(game=g, count=7, power=self.russia, year=r.final_year)
-        cc6.save()
-        cc7 = CentreCount(game=g, count=7, power=self.turkey, year=r.final_year)
-        cc7.save()
+        GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
+        GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
+        GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
+        GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g, power=self.germany)
+        GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g, power=self.italy)
+        GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g, power=self.russia)
+        GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g, power=self.turkey)
+        cc = CentreCount(game=g, count=0, power=self.austria, year=r.final_year - 1)
+        cc.save()
+        cc = CentreCount(game=g, count=0, power=self.austria, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=0, power=self.england, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=9, power=self.france, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=9, power=self.germany, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=2, power=self.italy, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=7, power=self.russia, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=7, power=self.turkey, year=r.final_year)
+        cc.save()
         # We no longer expect CentreCount.save() to update Game.is_finished
         self.assertFalse(g.is_finished)
-        cc0.delete()
-        cc1.delete()
-        cc2.delete()
-        cc3.delete()
-        cc4.delete()
-        cc5.delete()
-        cc6.delete()
-        cc7.delete()
-        gp1.delete()
-        gp2.delete()
-        gp3.delete()
-        gp4.delete()
-        gp5.delete()
-        gp6.delete()
-        gp7.delete()
-        g.delete()
         r.delete()
 
     # We should be able to save the CentreCounts for all 7 powers for a game with a soloer
@@ -4073,44 +5265,30 @@ class ModelTests(TestCase):
                                  final_year=1910)
         g = Game.objects.create(name='g41', started_at=r.start, the_round=r, the_set=self.set1)
         # TODO Remove reliance on primary keys
-        gp1 = GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
-        gp2 = GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
-        gp3 = GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
-        gp4 = GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g, power=self.germany)
-        gp5 = GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g, power=self.italy)
-        gp6 = GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g, power=self.russia)
-        gp7 = GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g, power=self.turkey)
-        cc1 = CentreCount(game=g, count=0, power=self.austria, year=r.final_year)
-        cc1.save()
-        cc2 = CentreCount(game=g, count=0, power=self.england, year=r.final_year)
-        cc2.save()
-        cc3 = CentreCount(game=g, count=7, power=self.france, year=r.final_year)
-        cc3.save()
-        cc4 = CentreCount(game=g, count=7, power=self.germany, year=r.final_year)
-        cc4.save()
-        cc5 = CentreCount(game=g, count=2, power=self.italy, year=r.final_year)
-        cc5.save()
-        cc6 = CentreCount(game=g, count=18, power=self.russia, year=r.final_year)
-        cc6.save()
-        cc7 = CentreCount(game=g, count=0, power=self.turkey, year=r.final_year)
-        cc7.save()
+        GamePlayer.objects.create(player=Player.objects.get(pk=7), game=g, power=self.austria)
+        GamePlayer.objects.create(player=Player.objects.get(pk=6), game=g, power=self.england)
+        GamePlayer.objects.create(player=Player.objects.get(pk=5), game=g, power=self.france)
+        GamePlayer.objects.create(player=Player.objects.get(pk=4), game=g, power=self.germany)
+        GamePlayer.objects.create(player=Player.objects.get(pk=3), game=g, power=self.italy)
+        GamePlayer.objects.create(player=Player.objects.get(pk=2), game=g, power=self.russia)
+        GamePlayer.objects.create(player=Player.objects.get(pk=1), game=g, power=self.turkey)
+        cc = CentreCount(game=g, count=0, power=self.austria, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=0, power=self.england, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=7, power=self.france, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=7, power=self.germany, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=2, power=self.italy, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=18, power=self.russia, year=r.final_year)
+        cc.save()
+        cc = CentreCount(game=g, count=0, power=self.turkey, year=r.final_year)
+        cc.save()
         # We no longer expect CentreCount.save() to update Game.is_finished
         self.assertFalse(g.is_finished)
-        cc1.delete()
-        cc2.delete()
-        cc3.delete()
-        cc4.delete()
-        cc5.delete()
-        cc6.delete()
-        cc7.delete()
-        gp1.delete()
-        gp2.delete()
-        gp3.delete()
-        gp4.delete()
-        gp5.delete()
-        gp6.delete()
-        gp7.delete()
-        g.delete()
+        # Clean up
         r.delete()
 
     # CentreCount.__str__()
