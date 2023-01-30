@@ -1684,8 +1684,10 @@ class DrawProposal(models.Model):
     def clean(self):
         """
         Validate the object.
+        Game must not yet have been won.
+        Only living powers get to vote.
         Only one DrawProposal for a given Game can be successful.
-        A successful DrawProposal for a Game cannot happen after any
+        A successful DrawProposal for a Game cannot happen prior to any
         CentreCount.
         Dead powers cannot be included.
         If the Tournament has its draw_secrecy attribute set to SECRET,
@@ -1693,6 +1695,10 @@ class DrawProposal(models.Model):
         If the Tournament has its draw_secrecy attribute set to COUNTS,
         the votes_in_favour attribute must be set.
         """
+        final_year = self.game.final_year()
+        if self.game.soloer() and (final_year <= self.year):
+            raise ValidationError(_(u'Game was soloed in %(year)d'),
+                                  params={'year': final_year})
         # Figure out how many powers are still alive
         survivors = len(self.game.survivors(self.year))
         if self.votes_in_favour and (self.votes_in_favour > survivors):
@@ -1708,7 +1714,6 @@ class DrawProposal(models.Model):
             except DrawProposal.DoesNotExist:
                 pass
         # No successful proposal prior to the latest SC count
-        final_year = self.game.final_year()
         if (self.passed or
             (self.votes_in_favour == survivors)) and (self.year <= final_year):
             raise ValidationError(_(u'Game already has a centre count for %(year)d'),

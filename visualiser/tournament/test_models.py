@@ -3820,15 +3820,6 @@ class DrawProposalTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1903, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1903, count=4)
 
-        # Solo victory for Germany in 1904
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=18)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=0)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=3)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=5)
-
         # Create some players
         # Avoid hitting the WDD by not providing a WDD id
         cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
@@ -3896,7 +3887,7 @@ class DrawProposalTests(TestCase):
         RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
 
     # DrawProposal.draw_size()
-    def test_draw_proposal_draw_size_one(self):
+    def test_draw_proposal_concession(self):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
@@ -4165,10 +4156,10 @@ class DrawProposalTests(TestCase):
                                          year=1905,
                                          season=FALL,
                                          proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
         dp.drawing_powers.add(self.england)
         dp.drawing_powers.add(self.france)
         dp.drawing_powers.add(self.germany)
-        dp.drawing_powers.add(self.italy)
         dp.drawing_powers.add(self.russia)
         dp.drawing_powers.add(self.turkey)
         self.assertRaises(ValidationError, dp.clean)
@@ -4182,6 +4173,7 @@ class DrawProposalTests(TestCase):
                                          season=FALL,
                                          passed=False,
                                          proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
         dp.drawing_powers.add(self.england)
         dp.drawing_powers.add(self.france)
         dp.drawing_powers.add(self.germany)
@@ -4199,6 +4191,7 @@ class DrawProposalTests(TestCase):
                                          season=FALL,
                                          passed=True,
                                          proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
         dp.drawing_powers.add(self.england)
         dp.drawing_powers.add(self.france)
         dp.drawing_powers.add(self.germany)
@@ -4246,7 +4239,32 @@ class DrawProposalTests(TestCase):
         dp.clean()
         dp.delete()
 
-    # TODO DrawProposal.clean() after Game has been won
+    # DrawProposal.clean() after Game has been won
+    def test_draw_proposal_clean_after_win(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertFalse(g.centrecount_set.filter(year=1904).exists())
+        CentreCount.objects.create(power=self.austria, game=g, year=1904, count=0)
+        CentreCount.objects.create(power=self.england, game=g, year=1904, count=4)
+        CentreCount.objects.create(power=self.france, game=g, year=1904, count=4)
+        CentreCount.objects.create(power=self.germany, game=g, year=1904, count=18)
+        CentreCount.objects.create(power=self.italy, game=g, year=1904, count=0)
+        CentreCount.objects.create(power=self.russia, game=g, year=1904, count=3)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1904, count=5)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=FALL,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        # This one should be fine
+        self.assertRaises(ValidationError, dp.clean)
+        # Clean up
+        g.centrecount_set.filter(year=1904).delete()
 
     def test_draw_proposal_clean_votes_in_favour_not_set(self):
         t = Tournament.objects.get(name='t3')
@@ -4324,7 +4342,41 @@ class DrawProposalTests(TestCase):
         self.assertRaises(ValidationError, dp2.clean)
         dp1.delete()
 
-    # TODO Test DrawProposal.clean() when votes_in_favour is > number of surviving powers
+    # Test DrawProposal.clean() when votes_in_favour is > number of surviving powers
+    def test_draw_proposal_clean_votes_in_favour_too_many(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        self.assertEqual(CentreCount.objects.filter(game=g, year=1903).count(), 0)
+        self.assertEqual(g.final_year(), 1900)
+        # We need to add some SupplyCentreCounts to the Game
+        scs = {self.austria: 4,
+               self.england: 0,
+               self.france: 7,
+               self.germany: 7,
+               self.italy: 4,
+               self.russia: 7,
+               self.turkey: 5}
+        for p, c in scs.items():
+            CentreCount.objects.create(power=p,
+                                       game=g,
+                                       year=1903,
+                                       count=c)
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1904,
+                                         season=FALL,
+                                         proposer=self.austria,
+                                         votes_in_favour=7)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
+        self.assertRaises(ValidationError, dp.clean)
+        # Clean up
+        CentreCount.objects.filter(game=g, year=1903).delete()
+        dp.delete()
 
     # DrawProposal.save()
 
@@ -4376,7 +4428,32 @@ class DrawProposalTests(TestCase):
         g.is_finished = True
         g.save()
 
-    # TODO DrawProposal.save() for a second successful DrawProposal for a Game
+    def test_draw_proposal_save_two_successful(self):
+        t = Tournament.objects.get(name='t3')
+        g = t.round_numbered(1).game_set.get(name='g31')
+        # Modify the game to not yet be finished
+        g.is_finished = False
+        g.save()
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=SPRING,
+                                         votes_in_favour=7,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        dp.drawing_powers.add(self.austria)
+        dp2 = DrawProposal(game=g,
+                           year=1905,
+                           season=FALL,
+                           votes_in_favour=7,
+                           proposer=self.austria)
+        self.assertRaises(ValidationError, dp2.save)
+        # Cleanup
+        dp.delete()
 
     # DrawProposal.__str__()
     def test_drawproposal_str(self):
