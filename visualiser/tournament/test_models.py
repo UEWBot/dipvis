@@ -5100,18 +5100,25 @@ class GamePlayerTests(TestCase):
         # Note that this will also delete all associated objects
         t.delete()
 
+    # TODO GamePlayer.result_str_long()
+
     # TODO GamePlayer.result_str(), including without power assigned
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
         t = Tournament.objects.get(name='t1')
+        p = Player.objects.first()
+        self.assertFalse(t.tournamentplayer_set.filter(player=p).exists())
         g = t.round_numbered(2).game_set.get(name='g13')
-        gp = GamePlayer(player=Player.objects.first(),
-                        game=g,
-                        power=self.austria)
+        gp = GamePlayer(player=p, game=g, power=self.austria)
         self.assertRaises(ValidationError, gp.clean)
 
-    # TODO GamePlayer.clean() successful
+    def test_gameplayer_clean_ok(self):
+        t = Tournament.objects.get(name='t1')
+        p = t.tournamentplayer_set.first().player
+        g = t.round_numbered(2).game_set.get(name='g13')
+        gp = GamePlayer(player=p, game=g, power=self.austria)
+        gp.clean()
 
     # GamePlayer.__str__()
     def test_gameplayer_str_with_power(self):
@@ -5124,6 +5131,12 @@ class GamePlayerTests(TestCase):
         gp = GamePlayer.objects.create(player=self.p8, game=g)
         # TODO Validate result
         str(gp)
+
+    # GamePlayer.get_aar_url()
+    def test_gameplayer_get_aar_url(self):
+        gp = GamePlayer.objects.first()
+        # TODO Validate result
+        gp.get_aar_url()
 
 
 @override_settings(HOSTNAME='example.com')
