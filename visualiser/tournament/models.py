@@ -292,11 +292,88 @@ class TScoringSum(TournamentScoringSystem):
         return t_scores
 
 
+class TScoringSumGames(TournamentScoringSystem):
+    """
+    Just add up the best N Game scores.
+    """
+    scored_games = 0
+
+    def __init__(self, name, scored_games):
+        self.name = name
+        self.scored_games = scored_games
+
+    def scores(self, round_players):
+        """
+        If a player played more than N games, sum the best N game scores.
+        Otherwise, sum all their game scores.
+        Also updates all Round scores to relfect which games count towards the tournament score.
+        Returns a dict, indexed by player key, of tournament scores
+        """
+        t_scores = {}
+        # for each player who played any of the specified rounds
+        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
+            # Find just the rounds they played
+            player_rounds = round_players.filter(player=p)
+            # Assume all round scores are dropped unless we find out otherwise
+            rounds = []
+            for rp in player_rounds:
+                rp.score = 0.0
+                rp.score_dropped = True
+                rp.save()
+                rounds.append(rp.the_round)
+            player_scores = GamePlayer.objects.filter(player=p,
+                                                      game__the_round__in=rounds).order_by('score')
+            t_scores[p] = 0
+            if len(player_scores) <= self.scored_games:
+                # All games count for this player
+                for gp in player_scores:
+                    t_scores[p] += gp.score
+                    # This game counts towards the round score
+                    # (and this round counts towards the tournament score)
+                    r = gp.game.the_round
+                    rp = gp.roundplayer()
+                    rp.score += gp.score
+                    rp.score_dropped = False
+                    rp.save()
+            else:
+                # Add up the best N, flag the rest as dropped
+                player_scores = list(player_scores)
+                for _ in range(self.scored_games):
+                    gp = player_scores.pop()
+                    t_scores[p] += gp.score
+                    # It's possible that a player's current score has dropped below an earlier score
+                    gp.score_dropped = False
+                    gp.save()
+                    # This game counts towards the round score
+                    # (and this round counts towards the tournament score)
+                    r = gp.game.the_round
+                    rp = gp.roundplayer()
+                    rp.score += gp.score
+                    rp.score_dropped = False
+                    rp.save()
+                for gp in player_scores:
+                    gp.score_dropped = True
+                    gp.save()
+                    # If every Game in this Round is dropped, score the Round as the sum,
+                    # and dropped, to keep us consistent with other socring systems
+                    rp = gp.roundplayer()
+                    if rp.score_dropped:
+                        rp.score += gp.score
+                        rp.save()
+        # The problem is that we go up from Game, to Round, to Tournament,
+        # but now we want to go back to set the Round scores.
+        # I guess we need to set them here and have a NOP RoundScoringSystem.
+        # There's still the issue of what the RoundScoringSystem will report,
+        # but maybe that doesn't matter - the calculation will be done before we ever use the round scores
+        return t_scores
+
+
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [
     TScoringSum(_('Sum best 2 rounds'), 2),
     TScoringSum(_('Sum best 3 rounds'), 3),
     TScoringSum(_('Sum best 4 rounds'), 4),
+    TScoringSumGames(_('Sum best 4 games in any rounds'), 4),
 ]
 
 
@@ -890,18 +967,26 @@ class TournamentPlayer(models.Model):
         Returns True if the score attribute represents the final score for the TournamentPlayer,
         False if it is the "if all games ended now" score.
         """
-        if self.tournament.is_finished():
-            return True
-        # If any round score for this player isn't final, this score also could change
-        for rp in self.roundplayers():
-            if not rp.score_is_final():
-                return False
         t = self.tournament
+        if t.is_finished():
+            return True
+        if not isinstance(t.tournament_scoring_system_obj(), TScoringSumGames):
+            # If any round score for this player isn't final, this score also could change
+            for rp in self.roundplayers():
+                if not rp.score_is_final():
+                    return False
         final_round = t.round_set.last()
         if not final_round.in_progress():
             # There are more rounds to go, so more opportunities to score
             return False
-        # The final round has started
+        if isinstance(t.tournament_scoring_system_obj(), TScoringSumGames):
+            # If the final Round is in progress, just check all their Games
+            for gp in GamePlayer.objects.filter(player=self.player,
+                                                game__the_round__tournament=t):
+                if not gp.score_is_final():
+                    return False
+            return True
+        # The final Round has started
         # They're either not playing in it
         # or they are playing and we already checked their round score,
         # and it can't change
@@ -1799,6 +1884,10 @@ class RoundPlayer(models.Model):
         Returns True if the score attribute represents the final score for the RoundPlayer,
         False if it is the "if all games ended now" score.
         """
+        if (self.score > 0.0) and isinstance(self.the_round.tournament.tournament_scoring_system_obj(),
+                                             TScoringSumGames):
+            # Any later rounds may change the score for this round
+            return self.the_round.tournament.score_is_final()
         if self.the_round.is_finished():
             return True
         # If any of this player's game scores aren't final, the round score isn't final
