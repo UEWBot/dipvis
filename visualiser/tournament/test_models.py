@@ -594,30 +594,30 @@ class TournamentScoringTests(TestCase):
         # Mix of players playing 1, 2, and all 3 rounds
         # p1 skips round 2, p4 skips round 1, p7 skips round 3
         # p3 and p6 play just round 3, p10 plays just round 2, p11 plays just round 1
-        round_scores = {r1: {self.p1: 6,
-                             self.p2: 7,
-                             self.p7: 3,
-                             self.p8: 5,
-                             self.p9: 1,
-                             self.p11: 4,
-                             self.p12: 2},
-                        r2: {self.p2: 50,
-                             self.p4: 70,
-                             self.p7: 30,
-                             self.p8: 10,
-                             self.p9: 20,
-                             self.p10: 60,
-                             self.p12: 40},
-                        r3: {self.p1: 700,
-                             self.p3: 400,
-                             self.p4: 200,
-                             self.p6: 100,
-                             self.p8: 500,
-                             self.p9: 600,
-                             self.p12: 300}}
+        round_scores = {r1: {self.p1: (6, False),
+                             self.p2: (7, False),
+                             self.p7: (3, False),
+                             self.p8: (10, False),
+                             self.p9: (1, True),
+                             self.p11: (4, False),
+                             self.p12: (40, False)},
+                        r2: {self.p2: (50, False),
+                             self.p4: (70, False),
+                             self.p7: (30, False),
+                             self.p8: (500, False),
+                             self.p9: (20, False),
+                             self.p10: (60, False),
+                             self.p12: (2, True)},
+                        r3: {self.p1: (700, False),
+                             self.p3: (400, False),
+                             self.p4: (200, False),
+                             self.p6: (100, False),
+                             self.p8: (5, True),
+                             self.p9: (600, False),
+                             self.p12: (300, False)}}
 
         for r in round_scores.keys():
-            for p, s in round_scores[r].items():
+            for p, (s, _) in round_scores[r].items():
                 RoundPlayer.objects.create(player=p, the_round=r, score=s)
 
         t.update_scores()
@@ -638,19 +638,12 @@ class TournamentScoringTests(TestCase):
 
         for r in round_scores.keys():
             with self.subTest(round_num=r.number()):
-                for p, s in round_scores[r].items():
+                for p, (s, drop) in round_scores[r].items():
                     with self.subTest(player=p):
                         self.assertEqual(r_scores[r][p], s)
-                for rp in r.roundplayer_set.all():
-                    with self.subTest(player=rp.player):
-                        #rp.refresh_from_db()
-                        if r.number() == 1:
-                            if rp.player in [self.p8, self.p9, self.p12]:
-                                self.assertTrue(rp.score_dropped)
-                            else:
-                                self.assertFalse(rp.score_dropped)
-                        else:
-                            self.assertFalse(rp.score_dropped)
+                        # check score_dropped
+                        rp = RoundPlayer.objects.get(player=p, the_round=r)
+                        self.assertEqual(rp.score_dropped, drop)
 
 
 @override_settings(HOSTNAME='example.com')
