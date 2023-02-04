@@ -256,6 +256,7 @@ def graph(request,
         plt.legend(loc='upper left')
         plt.savefig(f, format='png')
         graphic = f.getvalue()
+        plt.close()
     response = HttpResponse(graphic, content_type="image/png")
     return response
 
