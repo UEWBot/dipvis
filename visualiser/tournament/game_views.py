@@ -243,20 +243,19 @@ def graph(request,
     g = get_game_or_404(t, game_name)
     with io.BytesIO() as f:
         # plot the SC counts
-        plt.figure()
+        fig, ax = plt.subplots()
         years = g.years_played()
         for power in GreatPower.objects.all():
             colour = _map_to_fg(g.the_set.setpower_set.get(power=power).colour)
             dots = [cc.count for cc in g.centrecount_set.filter(power=power)]
             # X-axis is year, y-axis is SC count. Colour by power
-            plt.plot(years, dots, label=_(power.name), color=colour, linewidth=2)
-        plt.axis([1900, _graph_end_year(g), 0, 18])
-        plt.xlabel(_('Year'))
-        plt.ylabel(_('Centres'))
-        plt.legend(loc='upper left')
-        plt.savefig(f, format='png')
+            ax.plot(years, dots, label=_(power.name), color=colour, linewidth=2)
+        ax.axis([1900, _graph_end_year(g), 0, 18])
+        ax.set_xlabel(_('Year'))
+        ax.set_ylabel(_('Centres'))
+        ax.legend(loc='upper left')
+        fig.savefig(f, format='png')
         graphic = f.getvalue()
-        plt.close()
     response = HttpResponse(graphic, content_type="image/png")
     return response
 
