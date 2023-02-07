@@ -663,7 +663,7 @@ class Tournament(models.Model):
         (highest to lowest).
         """
         # First sort criterion is always whether they're ranked or not
-        # Second a third are score and centre count, with the order they're
+        # Second and third are score and centre count, with the order they're
         # used depending on how the Tournament is set up.
         # For ranking, we want regular order (so False is before True),
         # for the others, we want reverse order (highest first)
@@ -688,9 +688,6 @@ class Tournament(models.Model):
             for power in GreatPower.objects.all():
                 tuples[power] = []
             return tuples
-        all_scores = {}
-        for g in all_games:
-            all_scores[g] = g.scores()
         # Populate tuples. Dict, keyed by GreatPower,
         # of lists of (GamePlayer, score, dots, unranked) 4-tuples
         for r in self.round_set.all().prefetch_related('game_set'):
@@ -698,8 +695,7 @@ class Tournament(models.Model):
                 for gp in g.gameplayer_set.all():
                     if not gp.power:
                         continue
-                    score = all_scores[gp.game][gp.power]
-                    tuple_ = (gp, score, gp.final_sc_count(), gp.tournamentplayer().unranked)
+                    tuple_ = (gp, gp.score, gp.final_sc_count(), gp.tournamentplayer().unranked)
                     tuples.setdefault(gp.power, []).append(tuple_)
         for power in tuples:
             self._sort_best_country_list(tuples[power])
