@@ -1,0 +1,24 @@
+<html>
+<head>
+</head>
+<frameset rows="*, 5%">
+  <frameset cols="50%, 50%, *">
+    <frame src="{% url 'tournament_views' tournament.id %}">
+    <noframes>
+      no frames
+    </noframes>
+    <frameset rows="33%, 33%, *">
+      <frame src="{% url 'tournament_views' tournament.id %}">
+      <frame src="{% url 'tournament_views' tournament.id %}">
+      <frame src="{% url 'tournament_views' tournament.id %}">
+      <noframes>
+        no frames
+      </noframes>
+    </frameset>
+  </frameset>
+  <frame src="{% url 'tournament_ticker' tournament.id %}">
+  <noframes>
+    no frames
+  </noframes>
+</frameset>
+</html>

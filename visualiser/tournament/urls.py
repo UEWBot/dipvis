@@ -123,6 +123,8 @@ tournament_patterns = [
         {'template': 'frameset_3x3'}, name='frameset_3x3'),
     url(r'^frameset_top_board/$', tournament_views.tournament_simple,
         {'template': 'frameset_top_board'}, name='frameset_top_board'),
+    url(r'^frameset_3_games/$', tournament_views.tournament_simple,
+        {'template': 'frameset_3_games'}, name='frameset_3_games'),
     url(r'^frameset_2x2/$', tournament_views.tournament_simple,
         {'template': 'frameset_2x2'}, name='frameset_2x2'),
     url(r'^frameset_1x1/$', tournament_views.tournament_simple,
