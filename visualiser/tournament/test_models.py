@@ -1247,9 +1247,16 @@ class TournamentTests(TestCase):
 
     # Tournament.best_countries()
     def test_tournament_best_countries_with_games(self):
+        # TODO modify GamePlayer scores so they're not all zero
         t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        t.best_countries()
+        bc = t.best_countries()
+        # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
+        self.assertEqual(len(bc), 7)
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                best_gp = bc[power].pop(0)
+                for gp in bc[power]:
+                    self.assertTrue(best_gp.score >= gp.score)
 
     def test_tournament_best_countries_without_games(self):
         t = Tournament.objects.get(name='t3')
@@ -1266,7 +1273,14 @@ class TournamentTests(TestCase):
             gp.save()
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
-        t.best_countries()
+        bc = t.best_countries()
+        # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
+        self.assertEqual(len(bc), 7)
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                best_gp = bc[power].pop(0)
+                for gp in bc[power]:
+                    self.assertTrue(best_gp.score >= gp.score)
         # Restore power assignments
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp.player]
