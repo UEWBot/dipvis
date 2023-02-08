@@ -53,6 +53,7 @@ HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
 s1 = "Solo or bust"
+s2 = "Sum of Squares"
 
 
 class RoundScoringTests(TestCase):
@@ -5106,11 +5107,11 @@ class GamePlayerTests(TestCase):
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
+                                   scoring_system=s2,
                                    dias=True,
                                    start=t1.start_date)
         r12 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
+                                   scoring_system=s2,
                                    dias=True,
                                    start=t1.start_date + HOURS_8)
 
@@ -5227,6 +5228,10 @@ class GamePlayerTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
         TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
+        # Set some scores to work with
+        for g in Game.objects.filter(the_round__tournament=t1):
+            g.update_scores()
+
     # GamePlayer.score_is_final()
     def test_gameplayer_score_is_final_game_over(self):
         g = Game.objects.filter(is_finished=True).first()
@@ -5247,6 +5252,46 @@ class GamePlayerTests(TestCase):
         cc = g.centrecount_set.filter(count=0).first()
         gp = g.gameplayer_set.get(power=cc.power)
         self.assertTrue(gp.score_is_final())
+
+    # GamePlayer.is_best_country()
+    def test_gameplayer_is_best_country_unranked(self):
+        t = Tournament.objects.get(name='t1')
+        bc = t.best_countries(True)
+        gp = bc[self.germany][0]
+        # Check test setup
+        tp = TournamentPlayer.objects.filter(player=gp.player,
+                                             tournament=gp.game.the_round.tournament).get()
+        self.assertTrue(tp.unranked)
+        self.assertTrue(gp.is_best_country())
+        gp = bc[self.germany][-1]
+        # Check test setup
+        tp = TournamentPlayer.objects.filter(player=gp.player,
+                                             tournament=gp.game.the_round.tournament).get()
+        self.assertTrue(tp.unranked)
+        self.assertFalse(gp.is_best_country())
+
+    def test_gameplayer_is_best_country_score(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
+        bc = t.best_countries(True)
+        gp = bc[self.austria][0]
+        self.assertTrue(gp.is_best_country())
+        gp = bc[self.austria][-1]
+        self.assertFalse(gp.is_best_country())
+
+    def test_gameplayer_is_best_country_dots(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
+        t.best_country_criterion = BestCountryCriteria.DOTS
+        t.save()
+        bc = t.best_countries(True)
+        gp = bc[self.austria][0]
+        self.assertTrue(gp.is_best_country())
+        gp = bc[self.austria][-1]
+        self.assertFalse(gp.is_best_country())
+        # Cleanup
+        t.best_country_criterion = BestCountryCriteria.SCORE
+        t.save()
 
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):

@@ -2004,6 +2004,38 @@ class GamePlayer(models.Model):
             return not self.game.the_round.game_scoring_system_obj().dead_score_can_change
         return False
 
+    def is_best_country(self):
+        """
+        Returns True if this GamePlayer is the best result for this power (so far)
+        """
+        # Check all the other players of this power in the tournament
+        t = self.game.the_round.tournament
+        gps = GamePlayer.objects.filter(power=self.power,
+                                        game__the_round__tournament=t)
+        if self.tournamentplayer().unranked:
+            # If there are ranked GamePlayers of the same power,
+            # they will rank ahead of this GamePlayer.
+            # If they're all unranked, fall through to compare scores/dots
+            tps = t.tournamentplayer_set.filter(unranked=False)
+            for gp in gps:
+                if tps.filter(player=gp.player).exists():
+                    return False
+        if self.game.the_round.tournament.best_country_criterion == BestCountryCriteria.SCORE:
+            gp = gps.order_by('-score').first()
+            if gp.score > self.score:
+                return False
+            if (gp.score == self.score) and (gp.final_sc_count() > self.final_sc_count()):
+                return False
+        else:
+            gp = sorted(gps, key=lambda gp: gp.final_sc_count(), reverse=True)[0]
+            gp_dots = gp.final_sc_count()
+            self_dots = self.final_sc_count()
+            if gp_dots > self_dots:
+                return False
+            if (gp_dots == self_dots) and (gp.score > self.score):
+                return False
+        return True
+
     def roundplayer(self):
         """
         Returns the RoundPlayer corresponding to this GamePlayer.
