@@ -26,7 +26,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
-from tournament.models import SeederBias, Series
+from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import SPRING, FALL
@@ -745,6 +745,32 @@ class SeriesTests(TestCase):
         self.assertIn('sluggy', url)
         # Clean up
         s.delete()
+
+    def test_series_str(self):
+        s = Series(name="Test Series", description="Text", slug="sluggy")
+        str(s)
+
+
+@override_settings(HOSTNAME='example.com')
+class DBNCoverageTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        now = timezone.now()
+
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=now,
+                                          end_date=now,
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=Tournament.SECRET)
+
+    def test_dbncoverage_str(self):
+        c = DBNCoverage(tournament=self.t,
+                        dbn_url='https://www.youtube.com/watch?v=jtqvNeVU1tI',
+                        description='description')
+        str(c)
 
 
 @override_settings(HOSTNAME='example.com')

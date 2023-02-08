@@ -1,4 +1,3 @@
-# Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
@@ -818,6 +817,20 @@ class Tournament(models.Model):
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)
+
+
+class DBNCoverage(models.Model):
+    """
+    A Diplomacy Broadcast Network broadcast for a Tournament.
+    """
+    MAX_DESC_LENGTH = 30
+
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    dbn_url = models.URLField(verbose_name=_('DBN URL on YouTube'))
+    description = models.CharField(max_length=MAX_DESC_LENGTH)
+
+    def __str__(self):
+        return '%s %s' % (self.tournament, self.description)
 
 
 class Series(models.Model):

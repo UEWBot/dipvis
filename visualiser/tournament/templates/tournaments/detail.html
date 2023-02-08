@@ -25,6 +25,9 @@
 <p>{% trans "Format: " %}{% if tournament.is_virtual %}{% trans "Virtual Face-to-face" %}{% else %}{% trans "Face-to-face" %}{% endif %}</p>
 <p>{% trans "Tournament scoring: " %}{{ tournament.tournament_scoring_system_obj }}</p>
 <p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
+{% if tournament.draw_secrecy == "C" %}
+  <p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p>
+{% endif %}
 {% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 
 <p>{% blocktrans count count=tournament.round_set.count %}1 Round{% plural %}{{ count }} Rounds{% endblocktrans %}:</p>
@@ -36,12 +39,13 @@
 </dl>
 
 <p>{% blocktrans count count=tournament.game_set.count %}1 Game in total{% plural %}{{ count }} Games in total{% endblocktrans %}</p>
+<ul>
+  {% for dbn in tournament.dbncoverage_set.all %}
+    <li><a href="{{ dbn.dbn_url }}">{% trans dbn.description %}</a></li>
+  {% endfor %}
+</ul>
 
-{% if tournament.draw_secrecy == "C" %}
-  <br>
-  <p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p>
-  <br>
-{% endif %}
+<br>
 <p>{% trans "Views:" %}</p>
 <ul>
   <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>

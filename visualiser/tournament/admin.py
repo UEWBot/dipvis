@@ -23,7 +23,7 @@ from tournament.diplomacy.models.set_power import SetPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import Game, GameImage, GamePlayer
-from tournament.models import Round, RoundPlayer
+from tournament.models import Round, RoundPlayer, DBNCoverage
 from tournament.models import SeederBias, Series, SupplyCentreOwnership
 from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
@@ -32,6 +32,9 @@ from tournament.players import PlayerTournamentRanking
 
 class CentreCountAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'power', 'game', 'year')
+
+class DBNCoverageAdmin(admin.ModelAdmin):
+    list_filter = ('tournament',)
 
 class DrawProposalAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
@@ -141,6 +144,7 @@ class TournamentPlayerAdmin(admin.ModelAdmin):
 
 # Register models
 admin.site.register(CentreCount, CentreCountAdmin)
+admin.site.register(DBNCoverage, DBNCoverageAdmin)
 admin.site.register(DrawProposal, DrawProposalAdmin)
 admin.site.register(Game, GameAdmin)
 admin.site.register(GameImage, GameImageAdmin)
