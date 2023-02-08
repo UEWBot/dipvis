@@ -1230,10 +1230,7 @@ class TournamentTests(TestCase):
                     self.assertEqual(tp.score, rp.score)
                 except RoundPlayer.DoesNotExist:
                     self.assertEqual(tp.score, 0.0)
-        g.delete()
-        # Note that this will also delete all RoundPlayers for the Round
-        r.delete()
-        # Note that this will also delete all TournamentPlayers for the Tournament
+        # Note that this will also delete all other objects for the Tournament
         t.delete()
 
     # Tournament.round_numbered()
