@@ -27,13 +27,13 @@ frame can show an aspect of a game, round, or tournament.
 
 ## Instructions
 
-Can be found [here](https://github.com/ByteOfKathy/dipvis/blob/master/INSTRUCTIONS)
+Can be found [here](https://github.com/UEWBot/dipvis/blob/master/INSTRUCTIONS)
 
 This section contains useful information for setting up Dipvis for a game.
 
 ## User guide
 
-Can be found [here](https://github.com/ByteOfKathy/dipvis/blob/master/TD_USER_GUIDE)
+Can be found [here](https://github.com/UEWBot/dipvis/blob/master/TD_USER_GUIDE)
 
 This section contains a manual that goes into more detail about how to track the game
 and some basic concepts about the game. It also holds some do's and don'ts regarding
@@ -50,8 +50,8 @@ how Dipvis should be used.
 
 ## Testing
 
-Can be found [here](https://github.com/ByteOfKathy/dipvis/blob/master/TESTING)
+Can be found [here](https://github.com/UEWBot/dipvis/blob/master/TESTING)
 
 ## Licensing
 
-[License](https://github.com/ByteOfKathy/dipvis/blob/master/LICENSE)
+[License](https://github.com/UEWBot/dipvis/blob/master/LICENSE)
