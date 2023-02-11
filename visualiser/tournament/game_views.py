@@ -482,7 +482,7 @@ def game_news(request, tournament_id, game_name, for_year=None, as_ticker=False)
     context = {'tournament': t,
                'game': g,
                'subject': 'News',
-               'content': news(g, int(for_year) if for_year else None)}
+               'content': news(g, for_year)}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
@@ -597,7 +597,7 @@ def game_image(request,
         this_year = g.years_played()[-1]
         # If we don't have any image for the current year,
         # and we're refreshing to somewhere else, just move straight along
-        if (redirect_url_name != 'game_image_seq'
+        if (redirect_url_name not in ['game_image_seq', 'current_game_image']
                 and not g.gameimage_set.filter(year=this_year).exists()):
             refresh_time = 0
     else:

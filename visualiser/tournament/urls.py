@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.urls import path, re_path, include
+from django.urls import path, include, register_converter
 
 from tournament import game_views
 from tournament import round_views
@@ -22,6 +22,39 @@ from tournament import series_views
 from tournament import tournament_views
 from tournament import tournament_player_views
 from tournament import wdd_views
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
+
+class YearConverter:
+    """URL converter for a game year (int)"""
+    regex = r'[0-9]{4,}'
+
+    def to_python(self, value):
+        val = int(value)
+        if val < FIRST_YEAR:
+            raise ValueError
+        return val
+
+    def to_url(self, value):
+        return '%d' % value
+
+register_converter(YearConverter, 'year')
+
+
+class TurnConverter:
+    """URL converter for a game phase (e.g. S1901M) (str)"""
+    regex = r'[SF][0-9]+[MRA]'
+
+    def to_python(self, value):
+        val = int(value[1:-1])
+        if val < FIRST_YEAR:
+            raise ValueError
+        return value
+
+    def to_url(self, value):
+        return '%s' % value
+
+register_converter(TurnConverter, 'turn')
+
 
 round_patterns = [
     path('', round_views.round_simple,
@@ -56,21 +89,22 @@ game_patterns = [
     path('enter_sc_owners/', game_views.sc_owners, name='enter_sc_owners'),
     # Always the latest position
     path('positions/latest/', game_views.game_image,
-         {'turn': '', 'timelapse': True}, name='current_game_image'),
+         {'turn': '', 'timelapse': True, 'redirect_url_name': 'current_game_image'},
+         name='current_game_image'),
     # Fixed at the specified turn
-    re_path(r'^positions/(?P<turn>\w+)/$', game_views.game_image, name='game_image'),
+    path('positions/<turn:turn>/', game_views.game_image, name='game_image'),
     # Cycle through all images, from S1901M
     path('timelapse/', game_views.game_image,
          {'turn': 'S1901M', 'timelapse': True}, name='game_timelapse'),
     # Same as either current_game_image or game_timelapse, depending on turn
     # This is the URL they both redirect to. Don't expect users to go there
     # TODO Begs the question of why not just use this one...
-    re_path(r'^timelapse/(?P<turn>\w*)/$', game_views.game_image,
-            {'timelapse': True}, name='game_image_seq'),
+    path('timelapse/<turn:turn>/', game_views.game_image,
+         {'timelapse': True}, name='game_image_seq'),
     path('add_position/', game_views.add_game_image, name='add_game_image'),
     path('news/', game_views.game_news, name='game_news'),
-    re_path(r'^news/(?P<for_year>\d{4,})/$', game_views.game_news,
-            name='game_news_for_year'),
+    path('news/<year:for_year>/', game_views.game_news,
+         name='game_news_for_year'),
     path('news_ticker/', game_views.game_news,
          {'as_ticker': True}, name='game_news_ticker'),
     path('background/', game_views.game_background, name='game_background'),
