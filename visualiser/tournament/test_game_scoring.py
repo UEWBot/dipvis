@@ -1910,6 +1910,39 @@ class MaxonianGameScoringTests(TestCase):
                     # 2nd, 1 over threshold
                     self.assertAlmostEqual(s, 6+1)
 
+    def test_g_scoring_7eleven_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('7Eleven')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.power == self.austria:
+                    # 7th
+                    self.assertAlmostEqual(s, 1)
+                elif sc.power == self.england:
+                    # 3rd
+                    self.assertAlmostEqual(s, 5)
+                elif sc.power == self.france:
+                    # 5th
+                    self.assertAlmostEqual(s, 3)
+                elif sc.power == self.germany:
+                    # 1st, 6 over threshold
+                    self.assertAlmostEqual(s, 7+6)
+                elif sc.power == self.italy:
+                    # 6th
+                    self.assertAlmostEqual(s, 2)
+                elif sc.power == self.russia:
+                    # 4th
+                    self.assertAlmostEqual(s, 4)
+                else:
+                    # 2nd, 3 over threshold
+                    self.assertAlmostEqual(s, 6+3)
+
     def test_g_scoring_maxonian_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')

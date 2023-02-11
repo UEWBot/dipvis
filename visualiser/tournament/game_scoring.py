@@ -1039,6 +1039,7 @@ G_SCORING_SYSTEMS = [
     GScoringManorCon(_('Original ManorCon'), 100, True),
     GScoringManorCon(_('ManorCon v2'), 100, False),
     GScoringMaxonian(_('Maxonian'), 13),
+    GScoringMaxonian(_('7Eleven'), 11),
     GScoringOMG(),
     GScoringSolos(),
     GScoringSumOfSquares(),
