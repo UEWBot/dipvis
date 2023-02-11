@@ -852,14 +852,30 @@ class GScoringMaxonian(GameScoringSystem):
     the higher score.
     If two players had the same supply centre count every year,
     they each score the average of their place and the place below.
-    Any player with more than 13 supply centres scores 1 additional
-    point per SC above 13, unless the game was soloed, in which case
-    only the soloer gets these points.
+    Any player with more than (threshold) supply centres scores 1 additional
+    point per SC above that threshold, unless the game was soloed,
+    in which case only the soloer gets these points.
     """
-    def __init__(self):
-        self.name = _('Maxonian')
+    def __init__(self, name, threshold=13):
+        self.name = name
         self.position_points = [7, 6, 5, 4, 3, 2, 1]
-        self.bonus_threshold = 13
+        self.bonus_threshold = threshold
+
+    @property
+    def description(self):
+        return _("""
+                 Players are ranked by supply centre count.
+                 Top-ranked player gets 7 points, second gets 6, third gets 5,
+                 fourth gets 4, fifth gets 3, sixth gets 2, and last gets 1.
+                 If two players are tied, their SC counts in previous years
+                 are compared, and the player who most recently was ahead gets
+                 the higher score.
+                 If two players had the same supply centre count every year,
+                 they each score the average of their place and the place below.
+                 Any player with more than %(threshold)d supply centres scores 1 additional
+                 point per SC above that threshold, unless the game was soloed,
+                 in which case only the soloer gets these points.
+                 """) % {'threshold': self.bonus_threshold}
 
     def _num_equal(self, state, dots, power_list, year):
         """
@@ -1022,7 +1038,7 @@ G_SCORING_SYSTEMS = [
     GScoringManorCon(_('ManorCon'), 75, True),
     GScoringManorCon(_('Original ManorCon'), 100, True),
     GScoringManorCon(_('ManorCon v2'), 100, False),
-    GScoringMaxonian(),
+    GScoringMaxonian(_('Maxonian'), 13),
     GScoringOMG(),
     GScoringSolos(),
     GScoringSumOfSquares(),
