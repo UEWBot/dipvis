@@ -14,23 +14,22 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.conf.urls import url, include
 from django.contrib import admin
-from django.urls import path
+from django.urls import include, path
 
 from tournament import game_scoring_system_views, player_views
 
 admin.autodiscover()
 
 player_patterns = [
-    url(r'^$', player_views.PlayerIndexView.as_view(),
-        name='player_index'),
-    url(r'^(?P<pk>\d+)/$', player_views.player_detail,
-        name='player_detail'),
-    url(r'^upload_players/$', player_views.upload_players,
-        name='upload_players'),
-    url(r'^(?P<pk>\d+)/wep7/$', player_views.wpe,
-        {'years': 7, 'count': 7}, name='wep7'),
+    path('', player_views.PlayerIndexView.as_view(),
+         name='player_index'),
+    path('<int:pk>/', player_views.player_detail,
+         name='player_detail'),
+    path('upload_players/', player_views.upload_players,
+         name='upload_players'),
+    path('<int:pk>/wep7/', player_views.wpe,
+         {'years': 7, 'count': 7}, name='wep7'),
 ]
 
 game_scoring_patterns = [
@@ -45,9 +44,9 @@ urlpatterns = [
     # url(r'^$', 'visualiser.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
-    url(r'^tournaments/', include('tournament.urls')),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
-    url(r'^admin/', admin.site.urls),
-    url(r'^players/', include(player_patterns)),
-    url(r'^game_scoring/', include(game_scoring_patterns)),
+    path('tournaments/', include('tournament.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('admin/', admin.site.urls),
+    path('players/', include(player_patterns)),
+    path('game_scoring/', include(game_scoring_patterns)),
 ]

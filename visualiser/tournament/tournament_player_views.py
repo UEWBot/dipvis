@@ -98,7 +98,7 @@ def detail(request, tournament_id, tp_id):
     """Display details of a single registered player for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     try:
-        tp = t.tournamentplayer_set.get(id=int(tp_id))
+        tp = t.tournamentplayer_set.get(id=tp_id)
     except TournamentPlayer.DoesNotExist as e:
         raise Http404 from e
     context = {'tournament': t, 'player': tp}
@@ -124,7 +124,7 @@ def player_prefs(request, tournament_id, uuid):
         raise Http404
     # Find the TournamentPlayer in question
     try:
-        tp = t.tournamentplayer_set.get(uuid_str=uuid)
+        tp = t.tournamentplayer_set.get(uuid_str=str(uuid))
     except TournamentPlayer.DoesNotExist as e:
         raise Http404 from e
 
