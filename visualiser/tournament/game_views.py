@@ -482,7 +482,7 @@ def game_news(request, tournament_id, game_name, for_year=None, as_ticker=False)
     context = {'tournament': t,
                'game': g,
                'subject': 'News',
-               'content': news(g, for_year)}
+               'content': news(g, int(for_year))}
     if as_ticker:
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse('game_ticker',
