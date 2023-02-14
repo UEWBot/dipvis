@@ -150,13 +150,14 @@ def _update_or_create_playertournamentranking_wiki(player, title):
             pass
     if pos:
         try:
-            i, _ = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                                 tournament=title['Tournament'],
-                                                                 position=pos,
-                                                                 year=title['Year'])
+            defaults = {}
             if the_title:
-                i.title = the_title
-                i.save()
+                defaults['title'] = the_title
+            PlayerTournamentRanking.objects.update_or_create(player=player,
+                                                             tournament=title['Tournament'],
+                                                             position=pos,
+                                                             year=title['Year'],
+                                                             defaults=defaults)
         except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single ranking rather than all the background
@@ -177,28 +178,29 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
     """
     d = finish['Date']
     try:
-        i, _ = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                             tournament=finish['Tournament'],
-                                                             position=finish['Position'],
-                                                             year=d[:4])
+        defaults = {}
         try:
             # WDD contains some invalid dates (e.g. '2017-09-0')
             datetime.datetime.strptime(d, '%Y-%m-%d')
         except ValueError:
             pass
         else:
-            i.date = d
+            defaults['date'] = d
         # Ignore if not present
         try:
-            i.wdd_tournament_id = wdd_url_to_id(finish['WDD URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_id(finish['WDD URL'])
         except KeyError:
             pass
         else:
             try:
-                i.wpe_score = wpe_scores[i.wdd_tournament_id]
+                defaults['wpe_score'] = wpe_scores[defaults['wdd_tournament_id']]
             except KeyError:
                 pass
-        i.save()
+        PlayerTournamentRanking.objects.update_or_create(player=player,
+                                                         tournament=finish['Tournament'],
+                                                         position=finish['Position'],
+                                                         year=d[:4],
+                                                         defaults=defaults)
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
@@ -218,23 +220,24 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
     """
     d = t['Date']
     try:
-        i, _ = PlayerTournamentRanking.objects.get_or_create(player=player,
-                                                             tournament=t['Name of the tournament'],
-                                                             position=t['Rank'],
-                                                             year=d[:4])
+        defaults = {}
         try:
             # WDD contains some invalid dates (e.g. '2017-09-0')
             datetime.datetime.strptime(d, '%Y-%m-%d')
         except ValueError:
             pass
         else:
-            i.date = d
+            defaults['date'] = d
         # Ignore if not present
         try:
-            i.wdd_tournament_id = wdd_url_to_id(t['WDD URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_id(t['WDD URL'])
         except KeyError:
             pass
-        i.save()
+        PlayerTournamentRanking.objects.update_or_create(player=player,
+                                                         tournament=t['Name of the tournament'],
+                                                         position=t['Rank'],
+                                                         year=d[:4],
+                                                         defaults=defaults)
     except KeyError:
         # No rank implies they were the TD or similar - just ignore that tournament
         print("Ignoring unranked %s for %s" % (t['Name of the tournament'], player))
@@ -267,39 +270,40 @@ def _update_or_create_playergameresult(player, b):
                                                                   str(player)))
         return
     try:
-        i, _ = PlayerGameResult.objects.get_or_create(tournament_name=b['Name of the tournament'],
-                                                      game_name=b['Round / Board'],
-                                                      player=player,
-                                                      power=p,
-                                                      date=b['Date'],
-                                                      position=b['Position'])
+        defaults = {}
         # If there's no 'Position sharing', they were alone at that position
         try:
-            i.position_equals = b['Position sharing']
+            defaults['position_equals'] = b['Position sharing']
         except KeyError:
-            i.position_equals = 1
+            defaults['position_equals'] = 1
         # Ignore any of these that aren't present
         try:
-            i.score = b['Score']
+            defaults['score'] = b['Score']
         except KeyError:
             pass
         try:
-            i.final_sc_count = b['Final SCs']
+            defaults['final_sc_count'] = b['Final SCs']
         except KeyError:
             pass
         try:
-            i.result = b['Game end']
+            defaults['result'] = b['Game end']
         except KeyError:
             pass
         try:
-            i.year_eliminated = b['Elimination year']
+            defaults['year_eliminated'] = b['Elimination year']
         except KeyError:
             pass
         try:
-            i.wdd_tournament_id = wdd_url_to_id(b['WDD Tournament URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_id(b['WDD Tournament URL'])
         except KeyError:
             pass
-        i.save()
+        PlayerGameResult.objects.update_or_create(tournament_name=b['Name of the tournament'],
+                                                  game_name=b['Round / Board'],
+                                                  player=player,
+                                                  power=p,
+                                                  date=b['Date'],
+                                                  position=b['Position'],
+                                                  defaults=defaults)
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
@@ -340,26 +344,27 @@ def _update_or_create_playeraward(player, k, a):
         print('Ignoring award with no date %s' % str(a))
         return
     try:
-        i, _ = PlayerAward.objects.get_or_create(player=player,
-                                                 tournament=a['Tournament'],
-                                                 date=date_str,
-                                                 name=award_name)
+        defaults = {}
         if k != 'Awards':
-            i.power = p
+            defaults['power'] = p
         # Ignore any of these that aren't present
         try:
-            i.score = a['Score']
+            defaults['score'] = a['Score']
         except KeyError:
             pass
         try:
-            i.final_sc_count = a['SCs']
+            defaults['final_sc_count'] = a['SCs']
         except KeyError:
             pass
         try:
-            i.wdd_tournament_id = wdd_url_to_id(a['WDD URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_id(a['WDD URL'])
         except KeyError:
             pass
-        i.save()
+        PlayerAward.objects.update_or_create(player=player,
+                                             tournament=a['Tournament'],
+                                             date=date_str,
+                                             name=award_name,
+                                             defaults=defaults)
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
