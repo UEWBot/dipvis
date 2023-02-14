@@ -297,11 +297,13 @@ def _update_or_create_playergameresult(player, b):
             defaults['wdd_tournament_id'] = wdd_url_to_id(b['WDD Tournament URL'])
         except KeyError:
             pass
+        # WDD has been known to change the date
+        # The result should still be unique without it, though
+        defaults['date'] = b['Date']
         PlayerGameResult.objects.update_or_create(tournament_name=b['Name of the tournament'],
                                                   game_name=b['Round / Board'],
                                                   player=player,
                                                   power=p,
-                                                  date=b['Date'],
                                                   position=b['Position'],
                                                   defaults=defaults)
     except Exception:
