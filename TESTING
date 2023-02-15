@@ -2,11 +2,19 @@ To run all the unit tests:
 $ cd visualiser
 $ python3 ./manage.py test
 
+Note that some of the board seeding tests have some randomness and so may occasionally fail.
+Also some tests involve parsing websites, so they can fail if those sites have issues.
+Those tests should all have an appropriate tag (wdd, backstabbr, or webdip) so they can be
+skipped if there are known issues with those sites.
+
 To run a particular subset:
 $ cd visualiser
 $ python3 ./manage.py test tournament.<test package name>
 e.g.
 $ python3 ./manage.py test tournament.test_game_seeder
+
+To run all tests except those with the 'wdd' tag:
+$ python3 ./manage.py test --exclude-tag wdd
 
 To generate test coverage information:
 $ cd visualiser
