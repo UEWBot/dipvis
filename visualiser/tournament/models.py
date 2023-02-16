@@ -84,6 +84,12 @@ class DrawSecrecy(models.TextChoices):
     COUNTS = 'C', _('Numbers for and against')
 
 
+class BestCountryCriteria(models.TextChoices):
+    """How Best Country awards are determined"""
+    SCORE = 'S', _('Highest score')
+    DOTS = 'D', _('Highest centre count')
+
+
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -536,14 +542,6 @@ class Tournament(models.Model):
         (PREFERENCES, _('Using player preferences and ranking')),
     )
 
-    # Best Country Criterion
-    SCORE = 'S'
-    DOTS = 'D'
-    BEST_COUNTRY_CRITERION = (
-        (SCORE, _('Highest score')),
-        (DOTS, _('Highest centre count')),
-    )
-
     # Formats
     FTF = 'F'
     VFTF = 'V'
@@ -596,8 +594,8 @@ class Tournament(models.Model):
                                    help_text=_('Uncheck to disallow any further changes to the tournament'))
     best_country_criterion = models.CharField(max_length=1,
                                               verbose_name=_(u'How Best Country awards are determined'),
-                                              choices=BEST_COUNTRY_CRITERION,
-                                              default=SCORE)
+                                              choices=BestCountryCriteria.choices,
+                                              default=BestCountryCriteria.SCORE)
     format = models.CharField(max_length=1,
                               choices=FORMATS,
                               default=FTF)
@@ -758,7 +756,7 @@ class Tournament(models.Model):
         # used depending on how the Tournament is set up.
         # For ranking, we want regular order (so False is before True),
         # for the others, we want reverse order (highest first)
-        if self.best_country_criterion == self.SCORE:
+        if self.best_country_criterion == BestCountryCriteria.SCORE:
             gp_list.sort(key=itemgetter(1, 2), reverse=True)
         else:
             gp_list.sort(key=itemgetter(2, 1), reverse=True)

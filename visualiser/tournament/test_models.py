@@ -30,7 +30,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Phases, Seasons
+from tournament.models import BestCountryCriteria, DrawSecrecy, Phases, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -1615,7 +1615,7 @@ class TournamentTests(TestCase):
         # Check best countries with criterion of score
         bc = t.best_countries(True)
         for power in GreatPower.objects.all():
-            with self.subTest(criterion=Tournament.SCORE, power=power):
+            with self.subTest(criterion=BestCountryCriteria.SCORE, power=power):
                 gp1 = g12.gameplayer_set.get(power=power)
                 gp2 = g14.gameplayer_set.get(power=power)
                 if gp1.score > gp2.score:
@@ -1623,12 +1623,12 @@ class TournamentTests(TestCase):
                 if gp1.score < gp2.score:
                     self.assertTrue(bc[power].index(gp1) > bc[power].index(gp2))
         # Change the Tournament to rank best countries by dot count
-        t.best_country_criterion = Tournament.DOTS
+        t.best_country_criterion = BestCountryCriteria.DOTS
         t.save()
         # Now best countries should be different
         bc = t.best_countries(True)
         for power in GreatPower.objects.all():
-            with self.subTest(criterion=Tournament.DOTS, power=power):
+            with self.subTest(criterion=BestCountryCriteria.DOTS, power=power):
                 gp1 = g12.gameplayer_set.get(power=power)
                 gp2 = g14.gameplayer_set.get(power=power)
                 if gp1.final_sc_count() > gp2.final_sc_count():
@@ -1636,7 +1636,7 @@ class TournamentTests(TestCase):
                 if gp1.final_sc_count() < gp2.final_sc_count():
                     self.assertTrue(bc[power].index(gp1) > bc[power].index(gp2))
         # Clean up
-        t.best_country_criterion = Tournament.SCORE
+        t.best_country_criterion = BestCountryCriteria.SCORE
         t.save()
         for gp in gp_list:
             gp.unranked = True
