@@ -25,7 +25,7 @@ from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.models import DrawSecrecy
+from tournament.models import DrawSecrecy, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
@@ -135,7 +135,7 @@ class TournamentPlayerViewTests(TestCase):
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
-                                           power_assignment=Tournament.PREFERENCES,
+                                           power_assignment=PowerAssignMethods.PREFERENCES,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        start=cls.t2.start_date,

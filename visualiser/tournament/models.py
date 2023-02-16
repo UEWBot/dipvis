@@ -96,6 +96,13 @@ class Formats(models.TextChoices):
     VFTF = 'V', _('Virtual Face to Face')
 
 
+class PowerAssignMethods(models.TextChoices):
+    """How powers are assigned to players"""
+    AUTO = 'A', _('Minimising playing the same power')
+    MANUAL = 'M', _('Manually by TD or at the board')
+    PREFERENCES = 'P', _('Using player preferences and ranking')
+
+
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -538,16 +545,6 @@ class Tournament(models.Model):
     """
     A Diplomacy tournament
     """
-    # Power assignment methods
-    AUTO = 'A'
-    MANUAL = 'M'
-    PREFERENCES = 'P'
-    POWER_ASSIGN_METHODS = (
-        (AUTO, _('Minimising playing the same power')),
-        (MANUAL, _('Manually by TD or at the board')),
-        (PREFERENCES, _('Using player preferences and ranking')),
-    )
-
     # Flag value to use for players who are excluded from the rankings
     UNRANKED = 999999
 
@@ -586,8 +583,8 @@ class Tournament(models.Model):
                                      help_text=_('Check to let the software seed players to games'))
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=_('How powers are assigned'),
-                                        choices=POWER_ASSIGN_METHODS,
-                                        default=AUTO)
+                                        choices=PowerAssignMethods.choices,
+                                        default=PowerAssignMethods.AUTO)
     editable = models.BooleanField(default=True,
                                    help_text=_('Uncheck to disallow any further changes to the tournament'))
     best_country_criterion = models.CharField(max_length=1,
@@ -615,7 +612,7 @@ class Tournament(models.Model):
         Returns True is power_assignment is PREFERENCES.
         Intended for use in template code.
         """
-        return self.power_assignment == self.PREFERENCES
+        return self.power_assignment == PowerAssignMethods.PREFERENCES
 
     def is_virtual(self):
         """
@@ -1063,7 +1060,7 @@ class TournamentPlayer(models.Model):
         """
         if not self.uuid_str:
             self._generate_uuid()
-        if self.tournament.power_assignment == Tournament.PREFERENCES:
+        if self.tournament.power_assignment == PowerAssignMethods.PREFERENCES:
             path = reverse('player_prefs',
                            args=[str(self.tournament.id), self.uuid_str])
         else:

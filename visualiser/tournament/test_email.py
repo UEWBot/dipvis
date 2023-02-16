@@ -24,7 +24,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call, send_prefs_email
 from tournament.email import send_roll_call_emails
-from tournament.models import DrawSecrecy, Formats
+from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer
@@ -264,7 +264,7 @@ class EmailTests(TestCase):
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
-                                           power_assignment=Tournament.PREFERENCES)
+                                           power_assignment=PowerAssignMethods.PREFERENCES)
 
         # One TournamentPlayer in t2
         p23 = Player.objects.create(first_name='Shirley',
@@ -474,7 +474,7 @@ class EmailTests(TestCase):
         self.assertIsNotNone(tp)
         t = tp.tournament
         old_pa = t.power_assignment
-        t.power_assignment = Tournament.PREFERENCES
+        t.power_assignment = PowerAssignMethods.PREFERENCES
         t.save()
         send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 1)

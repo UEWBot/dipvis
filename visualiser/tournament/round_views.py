@@ -46,6 +46,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call
 from tournament.game_seeder import GameSeeder
+from tournament.models import PowerAssignMethods
 from tournament.models import Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 
@@ -387,7 +388,7 @@ def seed_games(request, tournament_id, round_num):
             default_set = GameSet.objects.get(pk=1)
         data = []
         # Generate a seeding, and assign powers if required
-        if t.power_assignment == Tournament.AUTO:
+        if t.power_assignment == PowerAssignMethods.AUTO:
             games = _seed_games_and_powers(t, r)
             # Add the Games and GamePlayers to the database
             for n, (g, i) in enumerate(games, start=1):
@@ -417,7 +418,7 @@ def seed_games(request, tournament_id, round_num):
                     gp = GamePlayer.objects.create(player=tp.player,
                                                    game=new_game)
                 # If we're assigning powers from preferences, do so now
-                if t.power_assignment == Tournament.PREFERENCES:
+                if t.power_assignment == PowerAssignMethods.PREFERENCES:
                     new_game.assign_powers_from_prefs()
                 for tp in g:
                     gp = GamePlayer.objects.get(player=tp.player,

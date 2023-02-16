@@ -30,7 +30,8 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import BestCountryCriteria, DrawSecrecy, Phases, Seasons
+from tournament.models import BestCountryCriteria, DrawSecrecy, Phases
+from tournament.models import PowerAssignMethods, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -1288,7 +1289,7 @@ class TournamentTests(TestCase):
                        end_date=timezone.now(),
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       power_assignment=Tournament.PREFERENCES)
+                       power_assignment=PowerAssignMethods.PREFERENCES)
         self.assertTrue(t.powers_assigned_from_prefs())
 
     # Tournament.show_game_urls()
@@ -1803,7 +1804,7 @@ class TournamentPlayerTests(TestCase):
                                        end_date=timezone.now(),
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       power_assignment=Tournament.PREFERENCES)
+                                       power_assignment=PowerAssignMethods.PREFERENCES)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -2040,7 +2041,7 @@ class TournamentPlayerTests(TestCase):
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
         t = tp.tournament
         old_pa = t.power_assignment
-        t.power_assignment = Tournament.PREFERENCES
+        t.power_assignment = PowerAssignMethods.PREFERENCES
         t.save()
         tp._generate_uuid()
         self.assertIn('https://', tp.get_prefs_url())
@@ -2053,7 +2054,7 @@ class TournamentPlayerTests(TestCase):
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
         t = tp.tournament
         old_pa = t.power_assignment
-        t.power_assignment = Tournament.PREFERENCES
+        t.power_assignment = PowerAssignMethods.PREFERENCES
         t.save()
         self.assertIn('https://', tp.get_prefs_url())
         # Clean up
@@ -2064,7 +2065,7 @@ class TournamentPlayerTests(TestCase):
         # A Tournament where powers are not assigned by preferences
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
         self.assertNotEqual(tp.tournament.power_assignment,
-                            Tournament.PREFERENCES)
+                            PowerAssignMethods.PREFERENCES)
         self.assertRaises(InvalidPowerAssignmentMethod, tp.get_prefs_url)
 
     # TODO TournamentPlayer.send_prefs_email()
