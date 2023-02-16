@@ -77,6 +77,13 @@ PHASE_STR = {
     Phases.ADJUSTMENTS: 'A',
 }
 
+
+class DrawSecrecy(models.TextChoices):
+    """What is revealed about draw votes"""
+    SECRET = 'S', _('Pass/Fail')
+    COUNTS = 'C', _('Numbers for and against')
+
+
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -519,14 +526,6 @@ class Tournament(models.Model):
     """
     A Diplomacy tournament
     """
-    # Draw secrecy levels
-    SECRET = 'S'
-    COUNTS = 'C'
-    DRAW_SECRECY = (
-        (SECRET, _('Pass/Fail')),
-        (COUNTS, _('Numbers for and against')),
-    )
-
     # Power assignment methods
     AUTO = 'A'
     MANUAL = 'M'
@@ -576,8 +575,8 @@ class Tournament(models.Model):
                                             help_text=_(u'How to combine game scores into a round score'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=_(u'What players are told about failed draw votes'),
-                                    choices=DRAW_SECRECY,
-                                    default=SECRET)
+                                    choices=DrawSecrecy.choices,
+                                    default=DrawSecrecy.SECRET)
     is_published = models.BooleanField(default=False,
                                        help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
@@ -1861,17 +1860,17 @@ class DrawProposal(models.Model):
                         raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
                                               params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
-        if self.game.the_round.tournament.draw_secrecy == Tournament.SECRET:
+        if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.SECRET:
             if self.passed is None:
                 raise ValidationError(_('Passed needs a value'))
-        elif self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
+        elif self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
             if self.votes_in_favour is None:
                 raise ValidationError(_('Votes_in_favour needs a value'))
         else:
             assert 0, 'Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy
 
     def save(self, *args, **kwargs):
-        if self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
+        if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
             # Derive passed from votes_in_favour and survivor count
             survivors = len(self.game.survivors(self.year))
             if self.votes_in_favour:

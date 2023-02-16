@@ -23,6 +23,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.models import DrawSecrecy
 from tournament.models import Tournament, Round, Game
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -57,13 +58,13 @@ class NewsTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,

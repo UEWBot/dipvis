@@ -30,7 +30,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import Phases, Seasons
+from tournament.models import DrawSecrecy, Phases, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -99,7 +99,7 @@ class RoundScoringTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertNotIn("Sitters", t.round_scoring_system)
         # One Round
@@ -201,7 +201,7 @@ class RoundScoringTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[1].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("Sitters", t.round_scoring_system)
         self.assertNotIn("once", t.round_scoring_system)
@@ -269,7 +269,7 @@ class RoundScoringTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[2].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("once", t.round_scoring_system)
         # Two Rounds
@@ -369,7 +369,7 @@ class RoundScoringTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[3].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertNotIn("Sitters", t.round_scoring_system)
         # One Round
@@ -555,7 +555,7 @@ class TournamentScoringTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("2 rounds", t.tournament_scoring_system)
         # Three Rounds
@@ -665,7 +665,7 @@ class TournamentScoringTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[3].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn('4 games in any rounds', t.tournament_scoring_system)
 
@@ -1019,7 +1019,7 @@ class DBNCoverageTests(TestCase):
                                           end_date=now,
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                          draw_secrecy=Tournament.SECRET)
+                                          draw_secrecy=DrawSecrecy.SECRET)
 
     def test_dbncoverage_str(self):
         c = DBNCoverage(tournament=self.t,
@@ -1043,19 +1043,19 @@ class TournamentTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -1455,7 +1455,7 @@ class TournamentTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
         tp.save()
@@ -1791,13 +1791,13 @@ class TournamentPlayerTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
         t4 = Tournament.objects.create(name='t4',
                                        start_date=timezone.now(),
                                        end_date=timezone.now(),
@@ -2184,13 +2184,13 @@ class SeederBiasTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Create some players
         # Avoid hitting the WDD by not providing a WDD id
@@ -2268,7 +2268,7 @@ class PreferenceTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Create a player
         # Avoid hitting the WDD by not providing a WDD id
@@ -2303,19 +2303,19 @@ class RoundTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -2471,7 +2471,7 @@ class RoundTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[2].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("once", t.round_scoring_system)
         # Two Rounds
@@ -2537,7 +2537,7 @@ class RoundTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         # We need a round with a finished game
         r = Round(tournament=t,
@@ -2778,13 +2778,13 @@ class GameTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -3024,7 +3024,7 @@ class GameTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp1 = TournamentPlayer(tournament=t, player=self.p1)
         tp1.save()
@@ -3722,7 +3722,7 @@ class GameTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
         tp.save()
@@ -3812,7 +3812,7 @@ class GameTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
         tp.save()
@@ -3901,7 +3901,7 @@ class GameTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
         tp.save()
@@ -4007,7 +4007,7 @@ class SupplyCentreOwnershipTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -4048,13 +4048,13 @@ class DrawProposalTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -4787,7 +4787,7 @@ class RoundPlayerTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -5013,7 +5013,7 @@ class RoundPlayerTests(TestCase):
                                       end_date=now,
                                       round_scoring_system=s,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=Tournament.SECRET)
+                                      draw_secrecy=DrawSecrecy.SECRET)
         r = Round.objects.create(tournament=t,
                                  scoring_system=s1,
                                  dias=True,
@@ -5115,7 +5115,7 @@ class GamePlayerTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -5318,7 +5318,7 @@ class GamePlayerTests(TestCase):
                        end_date=now,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                       draw_secrecy=Tournament.SECRET)
+                       draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp1 = TournamentPlayer(tournament=t, player=self.p1)
         tp1.save()
@@ -5454,7 +5454,7 @@ class GameImageTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -5529,13 +5529,13 @@ class CentreCountTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.COUNTS)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,

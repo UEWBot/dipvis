@@ -23,6 +23,7 @@ from django.utils import timezone
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.models import DrawSecrecy
 from tournament.models import Tournament, Round, Game
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -51,7 +52,7 @@ class WddViewTests(TestCase):
                                           end_date=now,
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                          draw_secrecy=Tournament.SECRET,
+                                          draw_secrecy=DrawSecrecy.SECRET,
                                           is_published=True)
         # Two Rounds
         r1 = Round.objects.create(tournament=cls.t,

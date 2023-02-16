@@ -25,6 +25,7 @@ from django.utils import timezone
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.models import DrawSecrecy
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer, SeederBias
@@ -93,7 +94,7 @@ class RoundViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            seed_games=False,
                                            format = Tournament.VFTF)
@@ -149,7 +150,7 @@ class RoundViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            power_assignment=Tournament.PREFERENCES,
                                            is_published=True)
         cls.r21 = Round.objects.create(tournament=cls.t2,
@@ -205,7 +206,7 @@ class RoundViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            power_assignment=Tournament.AUTO,
                                            is_published=True,
                                            seed_games=True)
@@ -274,7 +275,7 @@ class RoundViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            power_assignment=Tournament.AUTO,
                                            is_published=True,
                                            seed_games=True)

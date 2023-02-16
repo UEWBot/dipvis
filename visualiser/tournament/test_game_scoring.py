@@ -24,7 +24,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import Seasons
+from tournament.models import DrawSecrecy, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.tournament_game_state import TournamentGameState
 
@@ -51,7 +51,7 @@ class GameScoringTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
@@ -1521,7 +1521,7 @@ class Detour09GameScoringTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
@@ -1743,7 +1743,7 @@ class MaxonianGameScoringTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=Tournament.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)

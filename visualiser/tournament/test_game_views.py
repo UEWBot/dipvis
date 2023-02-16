@@ -29,7 +29,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import Seasons
+from tournament.models import DrawSecrecy, Seasons
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
@@ -68,7 +68,7 @@ class GameViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         # One DIAS round, with 1 game
         cls.r1 = Round.objects.create(tournament=cls.t1,
@@ -96,7 +96,7 @@ class GameViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.COUNTS,
+                                           draw_secrecy=DrawSecrecy.COUNTS,
                                            is_published=True)
         # One DIAS round, with 1 game
         r = Round.objects.create(tournament=cls.t2,
