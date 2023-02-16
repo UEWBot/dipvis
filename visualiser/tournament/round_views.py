@@ -495,14 +495,18 @@ def create_games(request, tournament_id, round_num):
             g.save()
             # Assign the players to the game
             with transaction.atomic():
+                # We may already have a set of GamePlayers, and changing
+                # them may (temporarily) violate uniqueness constraints,
+                # so delete any that already exist and then create new ones
+                g.gameplayer_set.all().delete()
                 for power, field in f.cleaned_data.items():
                     try:
                         p = GreatPower.objects.get(name=power)
                     except GreatPower.DoesNotExist:
                         continue
-                    GamePlayer.objects.update_or_create(game=g,
-                                                        power=p,
-                                                        defaults={'player': field.player})
+                    GamePlayer.objects.create(game=g,
+                                              power=p,
+                                              player=field.player)
             # Generate initial scores
             g.update_scores()
         # Notify the players

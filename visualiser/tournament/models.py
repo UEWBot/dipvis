@@ -1971,10 +1971,8 @@ class GamePlayer(models.Model):
     class Meta:
         ordering = ['game', 'power']
         constraints = [
-            # TODO Ideally we want this one, too, but changing power
-            # assignments for a game currently breaks it
-            #models.UniqueConstraint(fields=['player', 'game'],
-            #                        name='unique_player_game'),
+            models.UniqueConstraint(fields=['player', 'game'],
+                                    name='unique_player_game'),
             models.UniqueConstraint(fields=['power', 'game'],
                                     name='unique_power_game'),
         ]
