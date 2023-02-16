@@ -852,7 +852,10 @@ class PlayerGameResult(models.Model):
                                                     null=True)
 
     class Meta:
-        unique_together = ('tournament_name', 'game_name', 'player', 'power')
+        constraints = [
+            models.UniqueConstraint(fields=['tournament_name', 'game_name', 'player', 'power'],
+                                    name='unique_names_player_power'),
+        ]
 
     def __str__(self):
         return _(u'%(player)s played %(power)s in %(game)s at %(tourney)s') % {'player': self.player,
@@ -883,7 +886,10 @@ class PlayerAward(models.Model):
                                                     null=True)
 
     class Meta:
-        unique_together = ('player', 'tournament', 'date', 'name')
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'tournament', 'date', 'name'],
+                                    name='unique_player_tournament_date_name'),
+        ]
 
     def __str__(self):
         return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
@@ -903,7 +909,10 @@ class PlayerRanking(models.Model):
     national_rank = models.CharField(max_length=20)
 
     class Meta:
-        unique_together = ('player', 'system')
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'system'],
+                                    name='unique_player_system'),
+        ]
 
     def national_str(self):
         """Returns a string describing the national_rank"""

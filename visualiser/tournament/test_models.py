@@ -5428,7 +5428,7 @@ class GamePlayerTests(TestCase):
 
     def test_gameplayer_str_no_power(self):
         g = Game.objects.first()
-        gp = GamePlayer.objects.create(player=self.p8, game=g)
+        gp = GamePlayer(player=self.p2, game=g)
         # TODO Validate result
         str(gp)
 

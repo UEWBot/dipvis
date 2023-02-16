@@ -597,7 +597,10 @@ class Tournament(models.Model):
 
     class Meta:
         ordering = ['-start_date']
-        unique_together = ('name', 'start_date')
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'start_date'],
+                                    name='unique_name_date'),
+        ]
 
     def powers_assigned_from_prefs(self):
         """
@@ -960,7 +963,10 @@ class TournamentPlayer(models.Model):
     class Meta:
         ordering = ['player']
         # Each player can only be in each tournament once
-        unique_together = ('player', 'tournament')
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'tournament'],
+                                    name='unique_player_tournament'),
+        ]
 
     def score_is_final(self):
         """
@@ -1110,7 +1116,10 @@ class SeederBias(models.Model):
     class Meta:
         verbose_name_plural = 'Seeder biases'
         # Only one weighting per pair of players
-        unique_together = ('player1', 'player2')
+        constraints = [
+            models.UniqueConstraint(fields=['player1', 'player2'],
+                                    name='unique_player_pair'),
+        ]
 
     def clean(self):
         """
@@ -1139,9 +1148,13 @@ class Preference(models.Model):
 
     class Meta:
         # Each player can only have one ranking per power
-        unique_together = (('player', 'power'),
-                           # Every ranking by a player must be unique
-                           ('player', 'ranking'))
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'power'],
+                                    name='unique_player_power'),
+            # Every ranking by a player must be unique
+            models.UniqueConstraint(fields=['player', 'ranking'],
+                                    name='unique_player_ranking'),
+        ]
         # Highest-rank first
         ordering = ['ranking']
 
@@ -1177,7 +1190,10 @@ class Round(models.Model):
 
     class Meta:
         ordering = ['start']
-        unique_together = ('tournament', 'start')
+        constraints = [
+            models.UniqueConstraint(fields=['tournament', 'start'],
+                                    name='unique_tournament_start'),
+        ]
 
     def game_scoring_system_obj(self):
         """
@@ -1708,7 +1724,10 @@ class SupplyCentreOwnership(models.Model):
     owner = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
 
     class Meta:
-        unique_together = ('sc', 'game', 'year')
+        constraints = [
+            models.UniqueConstraint(fields=['sc', 'game', 'year'],
+                                    name='unique_sc_game_year'),
+        ]
         ordering = ['game', 'year']
 
     def __str__(self):
@@ -1877,7 +1896,10 @@ class RoundPlayer(models.Model):
 
     class Meta:
         ordering = ['player', 'the_round__start']
-        unique_together = ('player', 'the_round')
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'the_round'],
+                                    name='unique_player_round'),
+        ]
 
     def score_is_final(self):
         """
@@ -1948,8 +1970,14 @@ class GamePlayer(models.Model):
 
     class Meta:
         ordering = ['game', 'power']
-        unique_together = ('player', 'game')
-        unique_together = ('power', 'game')
+        constraints = [
+            # TODO Ideally we want this one, too, but changing power
+            # assignments for a game currently breaks it
+            #models.UniqueConstraint(fields=['player', 'game'],
+            #                        name='unique_player_game'),
+            models.UniqueConstraint(fields=['power', 'game'],
+                                    name='unique_power_game'),
+        ]
 
     def score_is_final(self):
         """
@@ -2206,7 +2234,10 @@ class GameImage(models.Model):
     image = models.ImageField(upload_to=game_image_location)
 
     class Meta:
-        unique_together = ('game', 'year', 'season', 'phase')
+        constraints = [
+            models.UniqueConstraint(fields=['game', 'year', 'season', 'phase'],
+                                    name='unique_game_year_season_phase'),
+        ]
         ordering = ['game', 'year', '-season', 'phase']
 
     def turn_str(self):
@@ -2246,7 +2277,10 @@ class CentreCount(models.Model):
     count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
 
     class Meta:
-        unique_together = ('power', 'game', 'year')
+        constraints = [
+            models.UniqueConstraint(fields=['power', 'game', 'year'],
+                                    name='unique_power_game_year'),
+        ]
         ordering = ['game', 'year']
 
     def clean(self):

@@ -31,7 +31,9 @@ class SetPower(models.Model):
     colour = models.CharField(max_length=20)
 
     class Meta:
-        unique_together = ('the_set', 'power')
+        constraints = [
+            models.UniqueConstraint(fields=['the_set', 'power'], name='unique_set_power')
+        ]
 
     def __str__(self):
         return _(u'%(power)s in %(the_set)s') % {'power': self.power.name,
