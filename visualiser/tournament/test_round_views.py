@@ -25,7 +25,7 @@ from django.utils import timezone
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy
+from tournament.models import DrawSecrecy, Formats
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer, SeederBias
@@ -97,7 +97,7 @@ class RoundViewTests(TestCase):
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            seed_games=False,
-                                           format = Tournament.VFTF)
+                                           format = Formats.VFTF)
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,

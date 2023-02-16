@@ -24,7 +24,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call, send_prefs_email
 from tournament.email import send_roll_call_emails
-from tournament.models import DrawSecrecy
+from tournament.models import DrawSecrecy, Formats
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer
@@ -351,7 +351,7 @@ class EmailTests(TestCase):
     def test_send_board_call_virtual(self):
         r = Round.objects.first()
         t = r.tournament
-        t.format = Tournament.VFTF
+        t.format = Formats.VFTF
         t.save()
         send_board_call(r)
         # 3 Games, but one where no players has an email address, so we expect to send 2 emails
@@ -381,7 +381,7 @@ class EmailTests(TestCase):
             # Check that the backstabbr username is in the email body
             self.assertIn('(AbbeyBrown)', m.body)
         # Cleanup
-        t.format = Tournament.FTF
+        t.format = Formats.FTF
         t.save()
 
     # TournamentPlayer.save() calls send_prefs_email()

@@ -90,6 +90,12 @@ class BestCountryCriteria(models.TextChoices):
     DOTS = 'D', _('Highest centre count')
 
 
+class Formats(models.TextChoices):
+    """Tournament formats"""
+    FTF = 'F', _('Face to Face')
+    VFTF = 'V', _('Virtual Face to Face')
+
+
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -542,14 +548,6 @@ class Tournament(models.Model):
         (PREFERENCES, _('Using player preferences and ranking')),
     )
 
-    # Formats
-    FTF = 'F'
-    VFTF = 'V'
-    FORMATS = (
-        (FTF, _('Face to Face')),
-        (VFTF, _('Virtual Face to Face')),
-    )
-
     # Flag value to use for players who are excluded from the rankings
     UNRANKED = 999999
 
@@ -597,8 +595,8 @@ class Tournament(models.Model):
                                               choices=BestCountryCriteria.choices,
                                               default=BestCountryCriteria.SCORE)
     format = models.CharField(max_length=1,
-                              choices=FORMATS,
-                              default=FTF)
+                              choices=Formats.choices,
+                              default=Formats.FTF)
     no_email = models.BooleanField(default=False,
                                    help_text=_('Check to only generate email to tournament managers'))
     delay_game_url_publication = models.BooleanField(default=False,
@@ -624,7 +622,7 @@ class Tournament(models.Model):
         Returns True if the Tournament is online,
         False if it is truly face-to-face.
         """
-        return self.format == self.VFTF
+        return self.format == Formats.VFTF
 
     def show_game_urls(self):
         """
