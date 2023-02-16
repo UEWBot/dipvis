@@ -807,6 +807,12 @@ class PlayerTournamentRanking(models.Model):
                                   null=True,
                                   help_text=_('World Performance Evaluation score'))
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'tournament', 'year'],
+                                    name='unique_player_tournament_year'),
+        ]
+
     def __str__(self):
         pos = position_str(self.position)
         s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
