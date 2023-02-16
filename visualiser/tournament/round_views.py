@@ -22,6 +22,7 @@ import csv
 
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Sum
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect, HttpResponse
@@ -493,14 +494,15 @@ def create_games(request, tournament_id, round_num):
                                'formset': formset})
             g.save()
             # Assign the players to the game
-            for power, field in f.cleaned_data.items():
-                try:
-                    p = GreatPower.objects.get(name=power)
-                except GreatPower.DoesNotExist:
-                    continue
-                GamePlayer.objects.update_or_create(game=g,
-                                                    power=p,
-                                                    defaults={'player': field.player})
+            with transaction.atomic():
+                for power, field in f.cleaned_data.items():
+                    try:
+                        p = GreatPower.objects.get(name=power)
+                    except GreatPower.DoesNotExist:
+                        continue
+                    GamePlayer.objects.update_or_create(game=g,
+                                                        power=p,
+                                                        defaults={'player': field.player})
             # Generate initial scores
             g.update_scores()
         # Notify the players
