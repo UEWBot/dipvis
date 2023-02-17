@@ -45,16 +45,6 @@ from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.tasks.validate_year import validate_year
 
-# These happen to co-incide with the coding used by the WDD
-WIN = 'W'
-DRAW_2 = 'D2'
-DRAW_3 = 'D3'
-DRAW_4 = 'D4'
-DRAW_5 = 'D5'
-DRAW_6 = 'D6'
-DRAW_7 = 'D7'
-LOSS = 'L'
-
 # Mask values to choose which background strings to include
 MASK_TITLES = 1 << 0
 MASK_TOURNEY_COUNT = 1 << 1
@@ -758,7 +748,7 @@ class Player(models.Model):
                                % {'name': self,
                                   'power': c_str})
         if (mask & MASK_BOARD_TOP_COUNT) != 0:
-            query = Q(result=WIN) | Q(position=1)
+            query = Q(result=GameResults.WIN) | Q(position=1)
             board_tops = results_set.filter(query).count()
             if board_tops > 0:
                 results.append(_(u'%(name)s topped the board in %(tops)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
@@ -823,21 +813,24 @@ class PlayerTournamentRanking(models.Model):
         return s
 
 
+class GameResults(models.TextChoices):
+    """How a game ended, from one player's perspective"""
+    # These encodings happen to co-incide with the coding used by the WDD
+    WIN = 'W', _('Win')
+    DRAW_2 = 'D2', _('2-way draw')
+    DRAW_3 = 'D3', _('3-way draw')
+    DRAW_4 = 'D4', _('4-way draw')
+    DRAW_5 = 'D5', _('5-way draw')
+    DRAW_6 = 'D6', _('6-way draw')
+    DRAW_7 = 'D7', _('7-way draw')
+    LOSS = 'L', _('Loss')
+
+
 class PlayerGameResult(models.Model):
     """
     One player's result for a tournament game.
     Used to import background information from the WDD.
     """
-    GAME_RESULT = (
-        (WIN, _('Win')),
-        (DRAW_2, _('2-way draw')),
-        (DRAW_3, _('3-way draw')),
-        (DRAW_4, _('4-way draw')),
-        (DRAW_5, _('5-way draw')),
-        (DRAW_6, _('6-way draw')),
-        (DRAW_7, _('7-way draw')),
-        (LOSS, _('Loss')),
-    )
 
     tournament_name = models.CharField(max_length=60)
     game_name = models.CharField(max_length=20)
@@ -848,7 +841,7 @@ class PlayerGameResult(models.Model):
     position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
-    result = models.CharField(max_length=2, choices=GAME_RESULT, blank=True)
+    result = models.CharField(max_length=2, choices=GameResults.choices, blank=True)
     year_eliminated = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
                                                        validators=[validate_year])
