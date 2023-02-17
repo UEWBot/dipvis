@@ -63,6 +63,20 @@ class Seasons(models.TextChoices):
     FALL = 'F', _('fall')
 
 
+class Phases(models.TextChoices):
+    """Game turn phase"""
+    MOVEMENT = 'M', _('movement')
+    RETREATS = 'R', _('retreats')
+    # Use X for adjustments to simplify sorting
+    ADJUSTMENTS = 'X', _('adjustments')
+
+# Map a PHASE to its human-readable form
+PHASE_STR = {
+    Phases.MOVEMENT: 'M',
+    Phases.RETREATS: 'R',
+    Phases.ADJUSTMENTS: 'A',
+}
+
 class InvalidScoringSystem(Exception):
     """The specified scoring systm name is not recognised"""
     pass
@@ -1691,7 +1705,7 @@ class Game(models.Model):
         GameImage.objects.update_or_create(game=self,
                                            year=FIRST_YEAR,
                                            season=Seasons.SPRING,
-                                           phase=GameImage.MOVEMENT,
+                                           phase=Phases.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
 
         # Change may affect the scoring
@@ -2207,27 +2221,10 @@ class GameImage(models.Model):
     The year, season, and phase together indicate the phase that is about to
     be played.
     """
-    MOVEMENT = 'M'
-    RETREATS = 'R'
-    # Use X for adjustments to simplify sorting
-    ADJUSTMENTS = 'X'
-
-    PHASES = (
-        (MOVEMENT, _('movement')),
-        (RETREATS, _('retreats')),
-        (ADJUSTMENTS, _('adjustments')),
-    )
-    # Map a PHASE to its human-readable form
-    PHASE_STR = {
-        MOVEMENT: 'M',
-        RETREATS: 'R',
-        ADJUSTMENTS: 'A',
-    }
-
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=Seasons.choices, default=Seasons.SPRING)
-    phase = models.CharField(max_length=1, choices=PHASES, default=MOVEMENT)
+    phase = models.CharField(max_length=1, choices=Phases.choices, default=Phases.MOVEMENT)
     image = models.ImageField(upload_to=game_image_location)
 
     class Meta:
@@ -2242,7 +2239,7 @@ class GameImage(models.Model):
         Short string version of season/year/phase
         e.g. 'S1901M'
         """
-        return u'%s%d%s' % (self.season, self.year, self.PHASE_STR[self.phase])
+        return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
 
     def clean(self):
         """
@@ -2250,7 +2247,7 @@ class GameImage(models.Model):
         The phase attribute can only be set to ADJUSTMENTS when the season
         attribute is set to FALL.
         """
-        if self.season == Seasons.SPRING and self.phase == self.ADJUSTMENTS:
+        if self.season == Seasons.SPRING and self.phase == Phases.ADJUSTMENTS:
             raise ValidationError(_(u'No adjustment phase in spring'))
 
     def get_absolute_url(self):

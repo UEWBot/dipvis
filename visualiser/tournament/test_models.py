@@ -30,7 +30,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import Seasons
+from tournament.models import Phases, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -5487,7 +5487,7 @@ class GameImageTests(TestCase):
         gi2 = GameImage(game=g,
                         year=1902,
                         season=Seasons.SPRING,
-                        phase=GameImage.ADJUSTMENTS,
+                        phase=Phases.ADJUSTMENTS,
                         image=gi1.image)
         self.assertRaises(ValidationError, gi2.clean)
 
@@ -5498,7 +5498,7 @@ class GameImageTests(TestCase):
         gi2 = GameImage(game=g,
                         year=1902,
                         season=Seasons.FALL,
-                        phase=GameImage.ADJUSTMENTS,
+                        phase=Phases.ADJUSTMENTS,
                         image=gi1.image)
         gi2.clean()
 
