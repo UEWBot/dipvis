@@ -29,7 +29,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
@@ -603,6 +603,14 @@ class Tournament(models.Model):
     class Meta:
         ordering = ['-start_date']
         constraints = [
+            models.CheckConstraint(check=Q(draw_secrecy__in=DrawSecrecy.values),
+                                   name='%(class)s_draw_secrecy_valid'),
+            models.CheckConstraint(check=Q(power_assignment__in=PowerAssignMethods.values),
+                                   name='%(class)s_power_assignment_valid'),
+            models.CheckConstraint(check=Q(best_country_criterion__in=BestCountryCriteria.values),
+                                   name='%(class)s_best_country_criterion_valid'),
+            models.CheckConstraint(check=Q(format__in=Formats.values),
+                                   name='%(class)s_format_valid'),
             models.UniqueConstraint(fields=['name', 'start_date'],
                                     name='unique_name_date'),
         ]
@@ -1762,6 +1770,8 @@ class DrawProposal(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(season__in=Seasons.values),
+                                   name='%(class)s_season_valid'),
             models.UniqueConstraint(fields=['game'],
                                     condition=models.Q(passed=True),
                                     name='only one passed'),
@@ -2221,6 +2231,10 @@ class GameImage(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(season__in=Seasons.values),
+                                   name='%(class)s_season_valid'),
+            models.CheckConstraint(check=Q(phase__in=Phases.values),
+                                   name='%(class)s_phase_valid'),
             models.UniqueConstraint(fields=['game', 'year', 'season', 'phase'],
                                     name='unique_game_year_season_phase'),
         ]

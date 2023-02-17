@@ -852,6 +852,8 @@ class PlayerGameResult(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(result__in=GameResults.values) | Q(result=''),
+                                   name='%(class)s_result_valid'),
             models.UniqueConstraint(fields=['tournament_name', 'game_name', 'player', 'power'],
                                     name='unique_names_player_power'),
         ]
