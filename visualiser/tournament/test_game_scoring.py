@@ -24,7 +24,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SPRING
+from tournament.models import Seasons
 from tournament.models import find_game_scoring_system
 from tournament.tournament_game_state import TournamentGameState
 
@@ -248,7 +248,7 @@ class GameScoringTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -272,7 +272,7 @@ class GameScoringTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)

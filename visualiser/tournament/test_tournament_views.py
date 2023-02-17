@@ -29,7 +29,7 @@ from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import G_SCORING_SYSTEMS
-from tournament.models import SPRING
+from tournament.models import Seasons
 from tournament.players import Player
 
 @override_settings(HOSTNAME='example.com')
@@ -280,7 +280,7 @@ class TournamentViewTests(TestCase):
         CentreCount.objects.create(power=cls.turkey, game=g41, year=1902, count=5)
         dp = DrawProposal.objects.create(game=g41,
                                          year=1903,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=cls.france)
         dp.drawing_powers.add(cls.england)

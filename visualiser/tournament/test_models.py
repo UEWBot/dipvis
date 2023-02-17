@@ -30,7 +30,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SPRING, FALL
+from tournament.models import Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
@@ -3422,7 +3422,7 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -3441,7 +3441,7 @@ class GameTests(TestCase):
         g1 = t.round_numbered(2).game_set.get(name='g14')
         dp = DrawProposal.objects.create(game=g1,
                                          year=1905,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -3459,7 +3459,7 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -3477,7 +3477,7 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         dp1 = DrawProposal.objects.create(game=g,
                                           year=1905,
-                                          season=SPRING,
+                                          season=Seasons.SPRING,
                                           passed=False,
                                           proposer=self.austria)
         dp1.drawing_powers.add(self.austria)
@@ -3489,7 +3489,7 @@ class GameTests(TestCase):
         dp1.drawing_powers.add(self.turkey)
         dp2 = DrawProposal.objects.create(game=g,
                                           year=1905,
-                                          season=FALL,
+                                          season=Seasons.FALL,
                                           passed=True,
                                           proposer=self.austria)
         dp2.drawing_powers.add(self.austria)
@@ -3629,7 +3629,7 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -3647,7 +3647,7 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=self.england)
         dp.drawing_powers.add(self.england)
@@ -3659,7 +3659,7 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g12')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4187,7 +4187,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4198,7 +4198,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4216,7 +4216,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4227,7 +4227,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4245,7 +4245,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4265,7 +4265,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4292,7 +4292,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          votes_in_favour=7,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4310,7 +4310,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          votes_in_favour=2,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4328,7 +4328,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4346,7 +4346,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4358,7 +4358,7 @@ class DrawProposalTests(TestCase):
         g = Game.objects.first()
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4371,7 +4371,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4389,7 +4389,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4406,7 +4406,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1903,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4424,7 +4424,7 @@ class DrawProposalTests(TestCase):
         done = g.is_finished
         dp1 = DrawProposal.objects.create(game=g,
                                           year=1901,
-                                          season=FALL,
+                                          season=Seasons.FALL,
                                           passed=True,
                                           proposer=self.austria)
         dp1.drawing_powers.add(self.austria)
@@ -4436,7 +4436,7 @@ class DrawProposalTests(TestCase):
         dp1.drawing_powers.add(self.turkey)
         dp2 = DrawProposal(game=g,
                            year=1902,
-                           season=FALL,
+                           season=Seasons.FALL,
                            passed=True,
                            proposer=self.austria)
         self.assertRaises(ValidationError, dp2.clean)
@@ -4450,7 +4450,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
         dp.drawing_powers.add(self.england)
@@ -4466,7 +4466,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4484,7 +4484,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -4502,7 +4502,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          votes_in_favour=7,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
@@ -4521,7 +4521,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          votes_in_favour=0,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
@@ -4549,7 +4549,7 @@ class DrawProposalTests(TestCase):
         CentreCount.objects.create(power=self.turkey, game=g, year=1904, count=5)
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
@@ -4567,7 +4567,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
         dp.drawing_powers.add(self.france)
@@ -4599,7 +4599,7 @@ class DrawProposalTests(TestCase):
                                        count=c)
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          proposer=self.austria,
                                          votes_in_favour=7)
         dp.drawing_powers.add(self.england)
@@ -4619,7 +4619,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         dp1 = DrawProposal.objects.create(game=g,
                                           year=1901,
-                                          season=FALL,
+                                          season=Seasons.FALL,
                                           proposer=self.austria,
                                           votes_in_favour=7)
         dp1.drawing_powers.add(self.england)
@@ -4632,7 +4632,7 @@ class DrawProposalTests(TestCase):
         self.assertTrue(dp1.passed)
         dp2 = DrawProposal(game=g,
                            year=1902,
-                           season=FALL,
+                           season=Seasons.FALL,
                            proposer=self.austria,
                            votes_in_favour=7)
         self.assertRaises(ValidationError, dp2.clean)
@@ -4659,7 +4659,7 @@ class DrawProposalTests(TestCase):
                                        count=c)
         dp = DrawProposal.objects.create(game=g,
                                          year=1904,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          proposer=self.austria,
                                          votes_in_favour=7)
         dp.drawing_powers.add(self.england)
@@ -4684,7 +4684,7 @@ class DrawProposalTests(TestCase):
         g.save()
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          votes_in_favour=7,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
@@ -4707,7 +4707,7 @@ class DrawProposalTests(TestCase):
         g.save()
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          votes_in_favour=6,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
@@ -4732,7 +4732,7 @@ class DrawProposalTests(TestCase):
         g.save()
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          votes_in_favour=7,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.england)
@@ -4744,7 +4744,7 @@ class DrawProposalTests(TestCase):
         dp.drawing_powers.add(self.austria)
         dp2 = DrawProposal(game=g,
                            year=1905,
-                           season=FALL,
+                           season=Seasons.FALL,
                            votes_in_favour=7,
                            proposer=self.austria)
         self.assertRaises(ValidationError, dp2.save)
@@ -4757,7 +4757,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1901,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=True,
                                          proposer=self.austria)
         dp.drawing_powers.add(self.austria)
@@ -5484,14 +5484,22 @@ class GameImageTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
         gi1 = GameImage.objects.get(game=g)
-        gi2 = GameImage(game=g, year=1902, season=SPRING, phase=GameImage.ADJUSTMENTS, image=gi1.image)
+        gi2 = GameImage(game=g,
+                        year=1902,
+                        season=Seasons.SPRING,
+                        phase=GameImage.ADJUSTMENTS,
+                        image=gi1.image)
         self.assertRaises(ValidationError, gi2.clean)
 
     def test_gameimage_clean_ok(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
         gi1 = GameImage.objects.get(game=g)
-        gi2 = GameImage(game=g, year=1902, season=FALL, phase=GameImage.ADJUSTMENTS, image=gi1.image)
+        gi2 = GameImage(game=g,
+                        year=1902,
+                        season=Seasons.FALL,
+                        phase=GameImage.ADJUSTMENTS,
+                        image=gi1.image)
         gi2.clean()
 
     # GameImage.get_absolute_url()

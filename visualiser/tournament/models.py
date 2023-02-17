@@ -56,12 +56,11 @@ from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WI
 from tournament.players import validate_wdd_tournament_id
 from tournament.tournament_game_state import TournamentGameState
 
-SPRING = 'S'
-FALL = 'F'
-SEASONS = (
-    (SPRING, _('spring')),
-    (FALL, _('fall')),
-)
+
+class Seasons(models.TextChoices):
+    """Game turn season"""
+    SPRING = 'S', _('spring')
+    FALL = 'F', _('fall')
 
 
 class InvalidScoringSystem(Exception):
@@ -1691,7 +1690,7 @@ class Game(models.Model):
         # Auto-create S1901M image (if it doesn't exist)
         GameImage.objects.update_or_create(game=self,
                                            year=FIRST_YEAR,
-                                           season=SPRING,
+                                           season=Seasons.SPRING,
                                            phase=GameImage.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
 
@@ -1743,7 +1742,7 @@ class DrawProposal(models.Model):
     """
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
-    season = models.CharField(max_length=1, choices=SEASONS)
+    season = models.CharField(max_length=1, choices=Seasons.choices)
     passed = models.BooleanField(blank=True, null=True)
     proposer = models.ForeignKey(GreatPower,
                                  blank=True,
@@ -2227,7 +2226,7 @@ class GameImage(models.Model):
 
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
-    season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
+    season = models.CharField(max_length=1, choices=Seasons.choices, default=Seasons.SPRING)
     phase = models.CharField(max_length=1, choices=PHASES, default=MOVEMENT)
     image = models.ImageField(upload_to=game_image_location)
 
@@ -2251,7 +2250,7 @@ class GameImage(models.Model):
         The phase attribute can only be set to ADJUSTMENTS when the season
         attribute is set to FALL.
         """
-        if self.season == SPRING and self.phase == self.ADJUSTMENTS:
+        if self.season == Seasons.SPRING and self.phase == self.ADJUSTMENTS:
             raise ValidationError(_(u'No adjustment phase in spring'))
 
     def get_absolute_url(self):

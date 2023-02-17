@@ -29,7 +29,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
 from tournament.models import Game, GameImage, SeederBias
-from tournament.models import SEASONS
+from tournament.models import Seasons
 from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player
 
@@ -125,7 +125,7 @@ class BasePrefsFormset(BaseFormSet):
 class DrawForm(forms.Form):
     """Form for a draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
-    season = forms.ChoiceField(choices=SEASONS)
+    season = forms.ChoiceField(choices=Seasons.choices)
     proposer = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
                                       required=False,
                                       to_field_name='name')

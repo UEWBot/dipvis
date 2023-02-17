@@ -26,7 +26,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import CentreCount, DrawProposal, FALL
+from tournament.models import CentreCount, DrawProposal, Seasons
 from tournament.players import Player
 
 class WddViewTests(TestCase):
@@ -301,7 +301,7 @@ class WddViewTests(TestCase):
         # Another with an elimination and a draw
         dp = DrawProposal.objects.create(game=g2,
                                          year=1908,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=germany)
         dp.drawing_powers.add(germany)
@@ -309,7 +309,7 @@ class WddViewTests(TestCase):
         dp.drawing_powers.add(england)
         dp = DrawProposal.objects.create(game=g2,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=True,
                                          proposer=france)
         dp.drawing_powers.add(england)
