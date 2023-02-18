@@ -30,12 +30,15 @@ from tournament.players import Player, PlayerAward
 from tournament.players import PlayerGameResult, PlayerRanking
 from tournament.players import PlayerTournamentRanking
 
+@admin.register(CentreCount)
 class CentreCountAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'power', 'game', 'year')
 
+@admin.register(DBNCoverage)
 class DBNCoverageAdmin(admin.ModelAdmin):
     list_filter = ('tournament',)
 
+@admin.register(DrawProposal)
 class DrawProposalAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'passed', 'game', 'year')
 
@@ -50,15 +53,18 @@ class GamePlayerInline(admin.TabularInline):
         # We're going to want 7 players
         return 7
 
+@admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
     fields = ['the_round', 'name', 'external_url', 'notes', 'is_top_board', 'started_at', 'is_finished']
     inlines = [GamePlayerInline]
     list_filter = ('the_round__tournament', 'name', 'is_finished')
 
+@admin.register(GameImage)
 class GameImageAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'game', 'year', 'season', 'phase')
 
+@admin.register(GamePlayer)
 class GamePlayerAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'power', 'game', 'player')
 
@@ -72,30 +78,38 @@ class SetPowerInline(admin.TabularInline):
         # We're going to want 7 set powers
         return 7
 
+@admin.register(GameSet)
 class GameSetAdmin(admin.ModelAdmin):
     """Include SetPower as part of GameSet"""
     inlines = [SetPowerInline]
 
+@admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     exclude = ('_wdd_name',)
     list_filter = ('first_name', 'last_name')
 
+@admin.register(PlayerAward)
 class PlayerAwardAdmin(admin.ModelAdmin):
     list_filter = ('player', 'tournament', 'name', 'power')
 
+@admin.register(PlayerGameResult)
 class PlayerGameResultAdmin(admin.ModelAdmin):
     list_filter = ('player', 'tournament_name', 'power', 'position', 'result')
 
+@admin.register(PlayerRanking)
 class PlayerRankingAdmin(admin.ModelAdmin):
     list_filter = ('system', 'player')
 
+@admin.register(PlayerTournamentRanking)
 class PlayerTournamentRankingAdmin(admin.ModelAdmin):
     list_filter = ('player', 'tournament', 'position', 'year', 'title')
 
+@admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
     list_filter = ('tournament',)
     ordering = ['tournament__name', 'start']
 
+@admin.register(RoundPlayer)
 class RoundPlayerAdmin(admin.ModelAdmin):
     list_filter = ('the_round__tournament', 'the_round', 'player', 'game_count')
 
@@ -105,12 +119,15 @@ class RoundPlayerAdmin(admin.ModelAdmin):
             for obj in queryset:
                 obj.delete()
 
+@admin.register(SupplyCentreOwnership)
 class SCOwnershipAdmin(admin.ModelAdmin):
     list_filter = ('game__the_round__tournament', 'game', 'owner', 'year')
 
+@admin.register(SeederBias)
 class SeederBiasAdmin(admin.ModelAdmin):
     list_filter = ('player1__tournament', )
 
+@admin.register(Series)
 class SeriesAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ["name"]}
 
@@ -127,6 +144,7 @@ class RoundInline(admin.StackedInline):
         }),
     )
 
+@admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
     """Include Round as part of Tournament"""
     inlines = [RoundInline]
@@ -139,28 +157,10 @@ class TournamentAdmin(admin.ModelAdmin):
               ('managers', 'editable', 'no_email'),
               'wdd_tournament_id')
 
+@admin.register(TournamentPlayer)
 class TournamentPlayerAdmin(admin.ModelAdmin):
     list_filter = ('tournament', 'player', 'location', 'unranked')
 
 # Register models
-admin.site.register(CentreCount, CentreCountAdmin)
-admin.site.register(DBNCoverage, DBNCoverageAdmin)
-admin.site.register(DrawProposal, DrawProposalAdmin)
-admin.site.register(Game, GameAdmin)
-admin.site.register(GameImage, GameImageAdmin)
-admin.site.register(GamePlayer, GamePlayerAdmin)
-admin.site.register(GameSet, GameSetAdmin)
 admin.site.register(GreatPower)
-admin.site.register(Player, PlayerAdmin)
-admin.site.register(PlayerAward, PlayerAwardAdmin)
-admin.site.register(PlayerGameResult, PlayerGameResultAdmin)
-admin.site.register(PlayerRanking, PlayerRankingAdmin)
-admin.site.register(PlayerTournamentRanking, PlayerTournamentRankingAdmin)
-admin.site.register(Round, RoundAdmin)
-admin.site.register(RoundPlayer, RoundPlayerAdmin)
-admin.site.register(SeederBias, SeederBiasAdmin)
-admin.site.register(Series, SeriesAdmin)
 admin.site.register(SupplyCentre)
-admin.site.register(SupplyCentreOwnership, SCOwnershipAdmin)
-admin.site.register(Tournament, TournamentAdmin)
-admin.site.register(TournamentPlayer, TournamentPlayerAdmin)
