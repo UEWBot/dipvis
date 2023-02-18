@@ -524,10 +524,10 @@ class Player(models.Model):
             except WDDNotAccessible:
                 # Not much we can do in this case
                 return u''
-            except InvalidWDDId:
+            except InvalidWDDId as e:
                 # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
                 raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                      params={'wdd_id': self.wdd_player_id})
+                                      params={'wdd_id': self.wdd_player_id}) from e
         return self._wdd_name
 
     def wdd_url(self):
@@ -543,10 +543,10 @@ class Player(models.Model):
         bg = WDDBackground(self.wdd_player_id)
         try:
             return bg.wdd_firstname_lastname()
-        except InvalidWDDId:
+        except InvalidWDDId as e:
             # This can only happen if we couldn't get to the WDD when the Player was created
             raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                  params={'wdd_id': self.wdd_player_id})
+                                  params={'wdd_id': self.wdd_player_id}) from e
         except Exception:
             return (self.first_name, self.last_name)
 
