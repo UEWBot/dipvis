@@ -29,8 +29,8 @@ Database for everything else.
 import urllib.request
 from bs4 import BeautifulSoup
 
-WDD_BASE_RESULTS_URL = 'http://world-diplomacy-database.com/php/results/'
-WDD_BASE_RANKING_URL = 'http://world-diplomacy-database.com/php/ranking/'
+WDD_BASE_RESULTS_URL = 'https://world-diplomacy-database.com/php/results/'
+WDD_BASE_RANKING_URL = 'https://world-diplomacy-database.com/php/ranking/'
 WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
 
 MAP = {'Name of the tournament': 'Tournament',
