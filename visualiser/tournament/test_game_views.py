@@ -29,7 +29,7 @@ from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import SPRING
+from tournament.models import DrawSecrecy, Seasons
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
@@ -68,7 +68,7 @@ class GameViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         # One DIAS round, with 1 game
         cls.r1 = Round.objects.create(tournament=cls.t1,
@@ -96,7 +96,7 @@ class GameViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.COUNTS,
+                                           draw_secrecy=DrawSecrecy.COUNTS,
                                            is_published=True)
         # One DIAS round, with 1 game
         r = Round.objects.create(tournament=cls.t2,
@@ -992,7 +992,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g1.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'passed': False,
                           'proposer': str(self.austria)})
         response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g1.name)),
@@ -1006,7 +1006,7 @@ class GameViewTests(TestCase):
         dp = self.g1.drawproposal_set.get()
         self.assertEqual(dp.game, self.g1)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertFalse(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
@@ -1025,7 +1025,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g2.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'passed': False,
                           'powers': [str(self.england), str(self.turkey)],
                           'proposer': str(self.england)}, True)
@@ -1040,7 +1040,7 @@ class GameViewTests(TestCase):
         dp = self.g2.drawproposal_set.get()
         self.assertEqual(dp.game, self.g2)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertFalse(dp.passed)
         self.assertEqual(dp.proposer, self.england)
         # Draws in this round are non-DIAS
@@ -1062,7 +1062,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g1.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1903',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'passed': True,
                           'proposer': str(self.austria)})
         response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g1.name)),
@@ -1076,7 +1076,7 @@ class GameViewTests(TestCase):
         dp = self.g1.drawproposal_set.get()
         self.assertEqual(dp.game, self.g1)
         self.assertEqual(dp.year, 1903)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertTrue(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
@@ -1099,7 +1099,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g2.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'passed': True,
                           'powers': [str(self.england), str(self.turkey)],
                           'proposer': str(self.austria)}, True)
@@ -1114,7 +1114,7 @@ class GameViewTests(TestCase):
         dp = self.g2.drawproposal_set.get()
         self.assertEqual(dp.game, self.g2)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertTrue(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are non-DIAS, and all powers are still alive
@@ -1140,7 +1140,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g3.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'votes_in_favour': 4,
                           'proposer': str(self.austria)})
         response = self.client.post(reverse('draw_vote', args=(self.t2.pk, self.g3.name)),
@@ -1154,7 +1154,7 @@ class GameViewTests(TestCase):
         dp = self.g3.drawproposal_set.get()
         self.assertEqual(dp.game, self.g3)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertFalse(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
@@ -1173,7 +1173,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g4.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'powers': [str(self.england), str(self.turkey)],
                           'votes_in_favour': 4,
                           'proposer': str(self.england)}, True)
@@ -1188,7 +1188,7 @@ class GameViewTests(TestCase):
         dp = self.g4.drawproposal_set.get()
         self.assertEqual(dp.game, self.g4)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertFalse(dp.passed)
         self.assertEqual(dp.proposer, self.england)
         # Draws in this round are non-DIAS
@@ -1210,7 +1210,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g3.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'votes_in_favour': 7,
                           'proposer': str(self.austria)})
         response = self.client.post(reverse('draw_vote', args=(self.t2.pk, self.g3.name)),
@@ -1224,7 +1224,7 @@ class GameViewTests(TestCase):
         dp = self.g3.drawproposal_set.get()
         self.assertEqual(dp.game, self.g3)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertTrue(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
@@ -1247,7 +1247,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g4.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = urlencode({'year': '1902',
-                          'season': SPRING,
+                          'season': Seasons.SPRING,
                           'powers': [str(self.england), str(self.turkey)],
                           'votes_in_favour': 7,
                           'proposer': str(self.austria)}, True)
@@ -1262,7 +1262,7 @@ class GameViewTests(TestCase):
         dp = self.g4.drawproposal_set.get()
         self.assertEqual(dp.game, self.g4)
         self.assertEqual(dp.year, 1902)
-        self.assertEqual(dp.season, SPRING)
+        self.assertEqual(dp.season, Seasons.SPRING)
         self.assertTrue(dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are non-DIAS, and all powers are still alive

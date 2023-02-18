@@ -110,12 +110,12 @@ def send_prefs_email(tournamentplayer, force=False):
 
     t = tournamentplayer.tournament
     # Bail if preferences aren't needed for the Tournament
-    if t.power_assignment == t.PREFERENCES:
-        body = PREFS_EMAIL
-        subject = PREFS_SUBJECT
-        rule = None
-    else:
+    if not t.powers_assigned_from_prefs():
         return
+
+    body = PREFS_EMAIL
+    subject = PREFS_SUBJECT
+    rule = None
     addr = tournamentplayer.player.email
     # Can't do anything unless we have an email address for the player
     if not addr:

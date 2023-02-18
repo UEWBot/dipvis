@@ -396,7 +396,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                 incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                             'power': _(power.abbreviation)})
             incl_str = ', '.join(incl)
-            if g.the_round.tournament.draw_secrecy == Tournament.COUNTS:
+            if g.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
                 count_str = _(', %(for)d for, %(against)d against' % {'for': d.votes_in_favour,
                                                                       'against': d.votes_against()})
             else:

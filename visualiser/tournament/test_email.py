@@ -24,6 +24,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call, send_prefs_email
 from tournament.email import send_roll_call_emails
+from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer
@@ -61,7 +62,7 @@ class EmailTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET)
+                                           draw_secrecy=DrawSecrecy.SECRET)
 
         r1 = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -262,8 +263,8 @@ class EmailTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
-                                           power_assignment=Tournament.PREFERENCES)
+                                           draw_secrecy=DrawSecrecy.SECRET,
+                                           power_assignment=PowerAssignMethods.PREFERENCES)
 
         # One TournamentPlayer in t2
         p23 = Player.objects.create(first_name='Shirley',
@@ -350,7 +351,7 @@ class EmailTests(TestCase):
     def test_send_board_call_virtual(self):
         r = Round.objects.first()
         t = r.tournament
-        t.format = Tournament.VFTF
+        t.format = Formats.VFTF
         t.save()
         send_board_call(r)
         # 3 Games, but one where no players has an email address, so we expect to send 2 emails
@@ -380,7 +381,7 @@ class EmailTests(TestCase):
             # Check that the backstabbr username is in the email body
             self.assertIn('(AbbeyBrown)', m.body)
         # Cleanup
-        t.format = Tournament.FTF
+        t.format = Formats.FTF
         t.save()
 
     # TournamentPlayer.save() calls send_prefs_email()
@@ -473,7 +474,7 @@ class EmailTests(TestCase):
         self.assertIsNotNone(tp)
         t = tp.tournament
         old_pa = t.power_assignment
-        t.power_assignment = Tournament.PREFERENCES
+        t.power_assignment = PowerAssignMethods.PREFERENCES
         t.save()
         send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 1)

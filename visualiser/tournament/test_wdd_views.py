@@ -23,10 +23,11 @@ from django.utils import timezone
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.models import DrawSecrecy
 from tournament.models import Tournament, Round, Game
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import CentreCount, DrawProposal, FALL
+from tournament.models import CentreCount, DrawProposal, Seasons
 from tournament.players import Player
 
 class WddViewTests(TestCase):
@@ -51,7 +52,7 @@ class WddViewTests(TestCase):
                                           end_date=now,
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                          draw_secrecy=Tournament.SECRET,
+                                          draw_secrecy=DrawSecrecy.SECRET,
                                           is_published=True)
         # Two Rounds
         r1 = Round.objects.create(tournament=cls.t,
@@ -301,7 +302,7 @@ class WddViewTests(TestCase):
         # Another with an elimination and a draw
         dp = DrawProposal.objects.create(game=g2,
                                          year=1908,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=False,
                                          proposer=germany)
         dp.drawing_powers.add(germany)
@@ -309,7 +310,7 @@ class WddViewTests(TestCase):
         dp.drawing_powers.add(england)
         dp = DrawProposal.objects.create(game=g2,
                                          year=1910,
-                                         season=FALL,
+                                         season=Seasons.FALL,
                                          passed=True,
                                          proposer=france)
         dp.drawing_powers.add(england)

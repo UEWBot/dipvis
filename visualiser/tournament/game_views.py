@@ -51,7 +51,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
 from tournament.models import Game, GamePlayer, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
-from tournament.models import SPRING
+from tournament.models import Seasons
 from tournament.models import SCOwnershipsNotFound
 from tournament.news import news
 
@@ -519,7 +519,7 @@ def draw_vote(request, tournament_id, game_name):
     if last_image.year < final_year:
         # In this case, we only have the centre count to go on
         year = final_year + 1
-        season = SPRING
+        season = Seasons.SPRING
     else:
         # Assume we're currently playing the season the image is for
         year = last_image.year

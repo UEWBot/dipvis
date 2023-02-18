@@ -29,7 +29,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
@@ -56,12 +56,51 @@ from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WI
 from tournament.players import validate_wdd_tournament_id
 from tournament.tournament_game_state import TournamentGameState
 
-SPRING = 'S'
-FALL = 'F'
-SEASONS = (
-    (SPRING, _('spring')),
-    (FALL, _('fall')),
-)
+
+class Seasons(models.TextChoices):
+    """Game turn season"""
+    SPRING = 'S', _('spring')
+    FALL = 'F', _('fall')
+
+
+class Phases(models.TextChoices):
+    """Game turn phase"""
+    MOVEMENT = 'M', _('movement')
+    RETREATS = 'R', _('retreats')
+    # Use X for adjustments to simplify sorting
+    ADJUSTMENTS = 'X', _('adjustments')
+
+# Map a PHASE to its human-readable form
+PHASE_STR = {
+    Phases.MOVEMENT: 'M',
+    Phases.RETREATS: 'R',
+    Phases.ADJUSTMENTS: 'A',
+}
+
+
+class DrawSecrecy(models.TextChoices):
+    """What is revealed about draw votes"""
+    SECRET = 'S', _('Pass/Fail')
+    COUNTS = 'C', _('Numbers for and against')
+
+
+class BestCountryCriteria(models.TextChoices):
+    """How Best Country awards are determined"""
+    SCORE = 'S', _('Highest score')
+    DOTS = 'D', _('Highest centre count')
+
+
+class Formats(models.TextChoices):
+    """Tournament formats"""
+    FTF = 'F', _('Face to Face')
+    VFTF = 'V', _('Virtual Face to Face')
+
+
+class PowerAssignMethods(models.TextChoices):
+    """How powers are assigned to players"""
+    AUTO = 'A', _('Minimising playing the same power')
+    MANUAL = 'M', _('Manually by TD or at the board')
+    PREFERENCES = 'P', _('Using player preferences and ranking')
 
 
 class InvalidScoringSystem(Exception):
@@ -506,40 +545,6 @@ class Tournament(models.Model):
     """
     A Diplomacy tournament
     """
-    # Draw secrecy levels
-    SECRET = 'S'
-    COUNTS = 'C'
-    DRAW_SECRECY = (
-        (SECRET, _('Pass/Fail')),
-        (COUNTS, _('Numbers for and against')),
-    )
-
-    # Power assignment methods
-    AUTO = 'A'
-    MANUAL = 'M'
-    PREFERENCES = 'P'
-    POWER_ASSIGN_METHODS = (
-        (AUTO, _('Minimising playing the same power')),
-        (MANUAL, _('Manually by TD or at the board')),
-        (PREFERENCES, _('Using player preferences and ranking')),
-    )
-
-    # Best Country Criterion
-    SCORE = 'S'
-    DOTS = 'D'
-    BEST_COUNTRY_CRITERION = (
-        (SCORE, _('Highest score')),
-        (DOTS, _('Highest centre count')),
-    )
-
-    # Formats
-    FTF = 'F'
-    VFTF = 'V'
-    FORMATS = (
-        (FTF, _('Face to Face')),
-        (VFTF, _('Virtual Face to Face')),
-    )
-
     # Flag value to use for players who are excluded from the rankings
     UNRANKED = 999999
 
@@ -563,8 +568,8 @@ class Tournament(models.Model):
                                             help_text=_(u'How to combine game scores into a round score'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=_(u'What players are told about failed draw votes'),
-                                    choices=DRAW_SECRECY,
-                                    default=SECRET)
+                                    choices=DrawSecrecy.choices,
+                                    default=DrawSecrecy.SECRET)
     is_published = models.BooleanField(default=False,
                                        help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
@@ -578,17 +583,17 @@ class Tournament(models.Model):
                                      help_text=_('Check to let the software seed players to games'))
     power_assignment = models.CharField(max_length=1,
                                         verbose_name=_('How powers are assigned'),
-                                        choices=POWER_ASSIGN_METHODS,
-                                        default=AUTO)
+                                        choices=PowerAssignMethods.choices,
+                                        default=PowerAssignMethods.AUTO)
     editable = models.BooleanField(default=True,
                                    help_text=_('Uncheck to disallow any further changes to the tournament'))
     best_country_criterion = models.CharField(max_length=1,
                                               verbose_name=_(u'How Best Country awards are determined'),
-                                              choices=BEST_COUNTRY_CRITERION,
-                                              default=SCORE)
+                                              choices=BestCountryCriteria.choices,
+                                              default=BestCountryCriteria.SCORE)
     format = models.CharField(max_length=1,
-                              choices=FORMATS,
-                              default=FTF)
+                              choices=Formats.choices,
+                              default=Formats.FTF)
     no_email = models.BooleanField(default=False,
                                    help_text=_('Check to only generate email to tournament managers'))
     delay_game_url_publication = models.BooleanField(default=False,
@@ -598,6 +603,14 @@ class Tournament(models.Model):
     class Meta:
         ordering = ['-start_date']
         constraints = [
+            models.CheckConstraint(check=Q(draw_secrecy__in=DrawSecrecy.values),
+                                   name='%(class)s_draw_secrecy_valid'),
+            models.CheckConstraint(check=Q(power_assignment__in=PowerAssignMethods.values),
+                                   name='%(class)s_power_assignment_valid'),
+            models.CheckConstraint(check=Q(best_country_criterion__in=BestCountryCriteria.values),
+                                   name='%(class)s_best_country_criterion_valid'),
+            models.CheckConstraint(check=Q(format__in=Formats.values),
+                                   name='%(class)s_format_valid'),
             models.UniqueConstraint(fields=['name', 'start_date'],
                                     name='unique_name_date'),
         ]
@@ -607,14 +620,14 @@ class Tournament(models.Model):
         Returns True is power_assignment is PREFERENCES.
         Intended for use in template code.
         """
-        return self.power_assignment == self.PREFERENCES
+        return self.power_assignment == PowerAssignMethods.PREFERENCES
 
     def is_virtual(self):
         """
         Returns True if the Tournament is online,
         False if it is truly face-to-face.
         """
-        return self.format == self.VFTF
+        return self.format == Formats.VFTF
 
     def show_game_urls(self):
         """
@@ -746,7 +759,7 @@ class Tournament(models.Model):
         # used depending on how the Tournament is set up.
         # For ranking, we want regular order (so False is before True),
         # for the others, we want reverse order (highest first)
-        if self.best_country_criterion == self.SCORE:
+        if self.best_country_criterion == BestCountryCriteria.SCORE:
             gp_list.sort(key=itemgetter(1, 2), reverse=True)
         else:
             gp_list.sort(key=itemgetter(2, 1), reverse=True)
@@ -1055,7 +1068,7 @@ class TournamentPlayer(models.Model):
         """
         if not self.uuid_str:
             self._generate_uuid()
-        if self.tournament.power_assignment == Tournament.PREFERENCES:
+        if self.tournament.power_assignment == PowerAssignMethods.PREFERENCES:
             path = reverse('player_prefs',
                            args=[str(self.tournament.id), self.uuid_str])
         else:
@@ -1691,8 +1704,8 @@ class Game(models.Model):
         # Auto-create S1901M image (if it doesn't exist)
         GameImage.objects.update_or_create(game=self,
                                            year=FIRST_YEAR,
-                                           season=SPRING,
-                                           phase=GameImage.MOVEMENT,
+                                           season=Seasons.SPRING,
+                                           phase=Phases.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
 
         # Change may affect the scoring
@@ -1743,7 +1756,7 @@ class DrawProposal(models.Model):
     """
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
-    season = models.CharField(max_length=1, choices=SEASONS)
+    season = models.CharField(max_length=1, choices=Seasons.choices)
     passed = models.BooleanField(blank=True, null=True)
     proposer = models.ForeignKey(GreatPower,
                                  blank=True,
@@ -1757,6 +1770,8 @@ class DrawProposal(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(season__in=Seasons.values),
+                                   name='%(class)s_season_valid'),
             models.UniqueConstraint(fields=['game'],
                                     condition=models.Q(passed=True),
                                     name='only one passed'),
@@ -1848,17 +1863,17 @@ class DrawProposal(models.Model):
                         raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
                                               params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
-        if self.game.the_round.tournament.draw_secrecy == Tournament.SECRET:
+        if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.SECRET:
             if self.passed is None:
                 raise ValidationError(_('Passed needs a value'))
-        elif self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
+        elif self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
             if self.votes_in_favour is None:
                 raise ValidationError(_('Votes_in_favour needs a value'))
         else:
             assert 0, 'Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy
 
     def save(self, *args, **kwargs):
-        if self.game.the_round.tournament.draw_secrecy == Tournament.COUNTS:
+        if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
             # Derive passed from votes_in_favour and survivor count
             survivors = len(self.game.survivors(self.year))
             if self.votes_in_favour:
@@ -2208,31 +2223,18 @@ class GameImage(models.Model):
     The year, season, and phase together indicate the phase that is about to
     be played.
     """
-    MOVEMENT = 'M'
-    RETREATS = 'R'
-    # Use X for adjustments to simplify sorting
-    ADJUSTMENTS = 'X'
-
-    PHASES = (
-        (MOVEMENT, _('movement')),
-        (RETREATS, _('retreats')),
-        (ADJUSTMENTS, _('adjustments')),
-    )
-    # Map a PHASE to its human-readable form
-    PHASE_STR = {
-        MOVEMENT: 'M',
-        RETREATS: 'R',
-        ADJUSTMENTS: 'A',
-    }
-
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
-    season = models.CharField(max_length=1, choices=SEASONS, default=SPRING)
-    phase = models.CharField(max_length=1, choices=PHASES, default=MOVEMENT)
+    season = models.CharField(max_length=1, choices=Seasons.choices, default=Seasons.SPRING)
+    phase = models.CharField(max_length=1, choices=Phases.choices, default=Phases.MOVEMENT)
     image = models.ImageField(upload_to=game_image_location)
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(season__in=Seasons.values),
+                                   name='%(class)s_season_valid'),
+            models.CheckConstraint(check=Q(phase__in=Phases.values),
+                                   name='%(class)s_phase_valid'),
             models.UniqueConstraint(fields=['game', 'year', 'season', 'phase'],
                                     name='unique_game_year_season_phase'),
         ]
@@ -2243,7 +2245,7 @@ class GameImage(models.Model):
         Short string version of season/year/phase
         e.g. 'S1901M'
         """
-        return u'%s%d%s' % (self.season, self.year, self.PHASE_STR[self.phase])
+        return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
 
     def clean(self):
         """
@@ -2251,7 +2253,7 @@ class GameImage(models.Model):
         The phase attribute can only be set to ADJUSTMENTS when the season
         attribute is set to FALL.
         """
-        if self.season == SPRING and self.phase == self.ADJUSTMENTS:
+        if self.season == Seasons.SPRING and self.phase == Phases.ADJUSTMENTS:
             raise ValidationError(_(u'No adjustment phase in spring'))
 
     def get_absolute_url(self):

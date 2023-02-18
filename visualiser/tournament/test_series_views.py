@@ -19,6 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import DrawSecrecy
 from tournament.models import Series, Tournament
 
 class SeriesViewTests(TestCase):
@@ -32,7 +33,7 @@ class SeriesViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET)
+                                           draw_secrecy=DrawSecrecy.SECRET)
         # And a series it belongs to
         cls.s1 = Series.objects.create(name='Test series')
         cls.s1.tournaments.add(cls.t1)

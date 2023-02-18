@@ -24,12 +24,13 @@ from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
+from tournament.models import DrawSecrecy, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer, SeederBias
 from tournament.models import Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import G_SCORING_SYSTEMS
-from tournament.models import SPRING
+from tournament.models import Seasons
 from tournament.players import Player
 
 @override_settings(HOSTNAME='example.com')
@@ -111,7 +112,7 @@ class TournamentViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         Round.objects.create(tournament=cls.t1,
                              start=cls.t1.start_date,
@@ -130,8 +131,8 @@ class TournamentViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
-                                           power_assignment=Tournament.PREFERENCES,
+                                           draw_secrecy=DrawSecrecy.SECRET,
+                                           power_assignment=PowerAssignMethods.PREFERENCES,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        start=cls.t2.start_date,
@@ -194,7 +195,7 @@ class TournamentViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=False)
 
         # Published Tournament, without a manager, but not editable
@@ -204,7 +205,7 @@ class TournamentViewTests(TestCase):
                                            end_date=now,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                           draw_secrecy=Tournament.SECRET,
+                                           draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            editable=False)
         cls.r41 = Round.objects.create(tournament=cls.t4,
@@ -280,7 +281,7 @@ class TournamentViewTests(TestCase):
         CentreCount.objects.create(power=cls.turkey, game=g41, year=1902, count=5)
         dp = DrawProposal.objects.create(game=g41,
                                          year=1903,
-                                         season=SPRING,
+                                         season=Seasons.SPRING,
                                          passed=True,
                                          proposer=cls.france)
         dp.drawing_powers.add(cls.england)
