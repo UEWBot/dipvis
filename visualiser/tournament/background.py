@@ -481,7 +481,8 @@ class WDDBackground():
         url = WDD_BASE_RANKING_URL + 'ranking_player.php?id_ranking=2&id_player=%d' % self.wdd_id
         page = urllib.request.urlopen(url)
         if page.geturl() != url:
-            raise InvalidUrl(url)
+            # Unranked players don't get a WDD page at all
+            return {}
         soup = BeautifulSoup(page.read())
         # Find the table we need to parse
         tr = None
