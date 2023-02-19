@@ -14,16 +14,33 @@
     <ul>
       {% for gp in rp.gameplayers.all %}
         {% if gp.power %}
-	  <li>{{ gp.result_str_long|safe }}</li>
+	  <li>
+            {{ gp.result_str_long|safe }}
+            {% if gp.is_best_country %}
+              {% if tournament.is_finished %}
+                {% blocktrans with power=gp.power%}(Best {{ power }}){% endblocktrans %}
+              {% else %}
+                {% blocktrans with power=gp.power%}(Currently best {{ power }}){% endblocktrans %}
+              {% endif %}
+            {% endif %}
+          </li>
         {% else %}
-          <li>{% blocktrans with game=gp.game.name url=gp.game.get_absolute_url %}Power not yet assigned in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}</li>
+          <li>
+            {% blocktrans with game=gp.game.name url=gp.game.get_absolute_url %}Power not yet assigned in <a href="{{ url }}">{{ game }}</a>{% endblocktrans %}
+          </li>
         {% endif %}
       {% empty %}
         <li>{% trans "Did not play." %}</li>
       {% endfor %}
     </ul>
   {% empty %}
-    <li>{% if tournament.is_finished %}{% trans "Did not play." %}{% else %}{% trans "Has not yet played." %}{% endif %}</li>
+    <li>
+      {% if tournament.is_finished %}
+        {% trans "Did not play." %}
+      {% else %}
+        {% trans "Has not yet played." %}
+      {% endif %}
+    </li>
   {% endfor %}
 </ul>
 

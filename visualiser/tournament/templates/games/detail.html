@@ -24,6 +24,10 @@
     <dd>{{ gp.result_str }}</dd>
     {% if game.is_finished %}
       <dd>{{ gp.score|floatformat:2 }} {% trans "points" %}</dd>
+      <dd>{% if gp.is_best_country %}{% blocktrans with power=gp.power %}Best {{ power}}{% endblocktrans %}{% endif %}</dd>
+    {% elif gp.power %}
+      <dd>{% blocktrans with dots=gp.final_sc_count %}{{ dots }} centres{% endblocktrans %}</dd>
+      <dd>{% if gp.is_best_country %}{% blocktrans with power=gp.power %}Currently best {{ power}}{% endblocktrans %}{% endif %}</dd>
     {% endif %}
     {% if gp.after_action_report %}
       <dd><a href="{{ gp.get_aar_url }}">{% trans "After Action Report" %}</a></dd>
