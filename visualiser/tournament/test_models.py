@@ -55,7 +55,6 @@ HOURS_24 = timedelta(hours=24)
 s1 = "Solo or bust"
 
 
-@override_settings(HOSTNAME='example.com')
 class RoundScoringTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -492,7 +491,6 @@ class RoundScoringTests(TestCase):
         self.assertIn('ll game scores', r_str)
 
 
-@override_settings(HOSTNAME='example.com')
 class TournamentScoringTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -909,7 +907,6 @@ class TournamentScoringTests(TestCase):
                                 self.assertFalse(rp.score_dropped)
 
 
-@override_settings(HOSTNAME='example.com')
 class ModelTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -981,7 +978,6 @@ class ModelTests(TestCase):
     # TODO game_image_location()
 
 
-@override_settings(HOSTNAME='example.com')
 class SeriesTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -1007,7 +1003,6 @@ class SeriesTests(TestCase):
         str(s)
 
 
-@override_settings(HOSTNAME='example.com')
 class DBNCoverageTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -1029,7 +1024,6 @@ class DBNCoverageTests(TestCase):
         str(c)
 
 
-@override_settings(HOSTNAME='example.com')
 class TournamentTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -2172,7 +2166,6 @@ class TournamentPlayerTests(TestCase):
     # TODO Existing TournamentPlayer should not have unranked set when saved
 
 
-@override_settings(HOSTNAME='example.com')
 class SeederBiasTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -2256,7 +2249,6 @@ class SeederBiasTests(TestCase):
         str(sb)
 
 
-@override_settings(HOSTNAME='example.com')
 class PreferenceTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -2289,7 +2281,6 @@ class PreferenceTests(TestCase):
         tp.preference_set.all().delete()
 
 
-@override_settings(HOSTNAME='example.com')
 class RoundTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -2763,7 +2754,6 @@ class RoundTests(TestCase):
         str(r)
 
 
-@override_settings(HOSTNAME='example.com')
 class GameTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -3993,7 +3983,6 @@ class GameTests(TestCase):
         g.get_absolute_url()
 
 
-@override_settings(HOSTNAME='example.com')
 class SupplyCentreOwnershipTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -4034,7 +4023,6 @@ class SupplyCentreOwnershipTests(TestCase):
         str(sco)
 
 
-@override_settings(HOSTNAME='example.com')
 class DrawProposalTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -4773,7 +4761,6 @@ class DrawProposalTests(TestCase):
         dp.delete()
 
 
-@override_settings(HOSTNAME='example.com')
 class RoundPlayerTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -5101,7 +5088,6 @@ class RoundPlayerTests(TestCase):
         t.delete()
 
 
-@override_settings(HOSTNAME='example.com')
 class GamePlayerTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -5440,7 +5426,6 @@ class GamePlayerTests(TestCase):
         gp.get_aar_url()
 
 
-@override_settings(HOSTNAME='example.com')
 class GameImageTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -5515,7 +5500,6 @@ class GameImageTests(TestCase):
         str(gi)
 
 
-@override_settings(HOSTNAME='example.com')
 class CentreCountTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 

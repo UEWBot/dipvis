@@ -39,7 +39,6 @@ HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
-@override_settings(HOSTNAME='example.com')
 class NewsTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
