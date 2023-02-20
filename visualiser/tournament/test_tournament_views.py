@@ -318,34 +318,31 @@ class TournamentViewTests(TestCase):
     def test_index(self):
         response = self.client.get(reverse('index'),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # Check that we get the right tournaments listed
-        self.assertIn(b't1', response.content) # Published
-        self.assertNotIn(b't2', response.content) # Unpublished
-        self.assertNotIn(b't3', response.content) # Unpublished
-        self.assertIn(b't4', response.content) # Published
+        self.assertContains(response, 't1') # Published
+        self.assertNotContains(response, 't2') # Unpublished
+        self.assertNotContains(response, 't3') # Unpublished
+        self.assertContains(response, 't4') # Published
 
     def test_index_superuser(self):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('index'),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # Check that we get the right tournaments listed
-        self.assertIn(b't1', response.content) # Published
-        self.assertIn(b't2', response.content) # Unpublished
-        self.assertIn(b't3', response.content) # Unpublished
-        self.assertIn(b't4', response.content) # Published
+        self.assertContains(response, 't1') # Published
+        self.assertContains(response, 't2') # Unpublished
+        self.assertContains(response, 't3') # Unpublished
+        self.assertContains(response, 't4') # Published
 
     def test_index_manager(self):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('index'),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # Check that we get the right tournaments listed
-        self.assertIn(b't1', response.content) # Published
-        self.assertIn(b't2', response.content) # Unpublished, manager
-        self.assertNotIn(b't3', response.content) # Unpublished
-        self.assertIn(b't4', response.content) # Published
+        self.assertContains(response, 't1') # Published
+        self.assertContains(response, 't2') # Unpublished, manager
+        self.assertNotContains(response, 't3') # Unpublished
+        self.assertContains(response, 't4') # Published
 
     def test_detail_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
@@ -433,38 +430,33 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_overview',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_overview2(self):
         response = self.client.get(reverse('tournament_overview_2',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_overview3(self):
         response = self.client.get(reverse('tournament_overview_3',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_scores(self):
         # Scores page for an in-progress Tournament
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Current Scores', response.content)
+        self.assertContains(response, 'Current Scores')
 
     def test_scores_completed(self):
         # Scores page for a completed Tournament
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Final Scores', response.content)
+        self.assertContains(response, 'Final Scores')
 
     def test_scores_with_sitter(self):
         # Scores page for a Tournament where somebody sat out a round
@@ -475,8 +467,7 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Final Scores', response.content)
+        self.assertContains(response, 'Final Scores')
         rp.delete()
         tp.delete()
 
@@ -484,8 +475,7 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_scores_refresh',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_game_results(self):
         response = self.client.get(reverse('tournament_game_results',
@@ -511,8 +501,7 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_best_countries_refresh',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_enter_scores_not_logged_in(self):
         response = self.client.get(reverse('enter_scores',
@@ -626,8 +615,7 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_news_ticker',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_background(self):
         response = self.client.get(reverse('tournament_background',
@@ -639,15 +627,13 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_ticker',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_background_ticker(self):
         response = self.client.get(reverse('tournament_background_ticker',
                                            args=(self.t1.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'<meta http-equiv="refresh"', response.content)
+        self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_rounds(self):
         response = self.client.get(reverse('round_index',

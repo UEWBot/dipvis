@@ -364,10 +364,9 @@ class TournamentPlayerViewTests(TestCase):
         response = self.client.get(reverse('tournament_players',
                                            args=(self.t2.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # Verify that the page includes buttons to send preferences emails out
-        self.assertIn(b'Register Players', response.content)
-        self.assertIn(b'prefs_', response.content)
+        self.assertContains(response, 'Register Players')
+        self.assertContains(response, 'prefs_')
 
     def test_index_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
@@ -375,10 +374,9 @@ class TournamentPlayerViewTests(TestCase):
         response = self.client.get(reverse('tournament_players',
                                            args=(self.t3.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # Verify that the page doesn't include buttons to send preferences emails out
-        self.assertIn(b'Register Players', response.content)
-        self.assertNotIn(b'prefs_', response.content)
+        self.assertContains(response, 'Register Players')
+        self.assertNotContains(response, 'prefs_')
 
     def test_index_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
@@ -386,9 +384,8 @@ class TournamentPlayerViewTests(TestCase):
         response = self.client.get(reverse('tournament_players',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # Verify that we get the read-only version of the page
-        self.assertNotIn(b'Register Players', response.content)
+        self.assertNotContains(response, 'Register Players')
 
     def test_index_unregister_from_editable(self):
         # A tournament that can be edited
@@ -432,9 +429,8 @@ class TournamentPlayerViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # We shouldn't be allowed to change an uneditable Tournament
-        self.assertEqual(response.status_code, 200)
         # Verify that we get the read-only version of the page
-        self.assertNotIn(b'Register Players', response.content)
+        self.assertNotContains(response, 'Register Players')
         # ... and the TournamentPlayer should still exist
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
 

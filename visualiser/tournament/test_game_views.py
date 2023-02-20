@@ -216,8 +216,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn(b'from Backstabbr/WebDiplomacy', response.content)
+        self.assertNotContains(response, 'from Backstabbr/WebDiplomacy')
 
     def test_detail_scrape_bs_link(self):
         # Give g1 a backstabbr URL
@@ -227,8 +226,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'from Backstabbr/WebDiplomacy', response.content)
+        self.assertContains(response, 'from Backstabbr/WebDiplomacy')
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -241,8 +239,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'from Backstabbr/WebDiplomacy', response.content)
+        self.assertContains(response, 'from Backstabbr/WebDiplomacy')
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -276,8 +273,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn(VALID_BS_URL.encode('utf-8'), response.content)
+        self.assertNotContains(response, VALID_BS_URL.encode('utf-8'))
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -293,8 +289,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn(b'After Action Report', response.content)
+        self.assertNotContains(response, 'After Action Report')
         # Clean up
         p.delete()
 
@@ -310,8 +305,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'After Action Report', response.content)
+        self.assertContains(response, 'After Action Report')
         # Clean up
         p.delete()
 
@@ -1465,9 +1459,8 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('scrape_external_site',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # TODO Check the information displayed on the page
-        self.assertIn(b'1912', response.content)
+        self.assertContains(response, '1912')
         # We should have added CentreCounts and SupplyCentreOwnerships for 1912
         ccs = self.g1.centrecount_set.filter(year=1912)
         self.assertEqual(len(ccs), 7)
@@ -1491,9 +1484,8 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('scrape_external_site',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
         # TODO Check the information displayed on the page
-        self.assertIn(b'1911', response.content)
+        self.assertContains(response, '1911')
         # We should have added CentreCounts for 1911
         ccs = self.g1.centrecount_set.filter(year=1911)
         self.assertEqual(len(ccs), 7)

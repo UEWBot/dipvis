@@ -531,8 +531,7 @@ class RoundViewTests(TestCase):
                                     data,
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b' did play this round', response.content)
+        self.assertContains(response, ' did play this round')
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
         # Clean up
         GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
@@ -571,8 +570,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # There should be a validation error for the last player
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'appears more than once', response.content)
+        self.assertContains(response, 'appears more than once')
         # Should re-load the same page
         self.assertEqual(response.context['post_url'], url)
         # No clean up needed because there was an error
@@ -1237,8 +1235,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # We should get an error due to the duplicate name
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b'must be unique', response.content)
+        self.assertContains(response, 'must be unique')
         # Clean up
         self.r21.game_set.all().delete()
         self.r23.game_set.all().delete()
