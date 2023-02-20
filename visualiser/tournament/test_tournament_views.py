@@ -316,7 +316,8 @@ class TournamentViewTests(TestCase):
         cls.INVALID_T_PK = 99999
 
     def test_index(self):
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('index'),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Check that we get the right tournaments listed
         self.assertIn(b't1', response.content) # Published
@@ -326,7 +327,8 @@ class TournamentViewTests(TestCase):
 
     def test_index_superuser(self):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('index'),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Check that we get the right tournaments listed
         self.assertIn(b't1', response.content) # Published
@@ -336,7 +338,8 @@ class TournamentViewTests(TestCase):
 
     def test_index_manager(self):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('index'))
+        response = self.client.get(reverse('index'),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Check that we get the right tournaments listed
         self.assertIn(b't1', response.content) # Published
@@ -346,86 +349,120 @@ class TournamentViewTests(TestCase):
 
     def test_detail_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
-        response = self.client.get(reverse('tournament_detail', args=(self.INVALID_T_PK,)))
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.INVALID_T_PK,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_detail_manager_wrong_tournament(self):
         # A manager can't see an unpublished tournament that isn't theirs
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('tournament_detail', args=(self.t3.pk,)))
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t3.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
         # Don't have to be logged in to see a published tournament
-        response = self.client.get(reverse('tournament_detail', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_regular_user(self):
         # Any user can see a published tournament
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('tournament_detail', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_superuser(self):
         # A superuser can see any tournament
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('tournament_detail', args=(self.t3.pk,)))
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t3.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_manager(self):
         # A manager see their unpublished tournament
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('tournament_detail', args=(self.t2.pk,)))
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_framesets(self):
-        response = self.client.get(reverse('framesets', args=(self.t1.pk,)))
+        response = self.client.get(reverse('framesets',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_frameset_3x3(self):
-        response = self.client.get(reverse('frameset_3x3', args=(self.t1.pk,)))
+        response = self.client.get(reverse('frameset_3x3',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_frameset_top_board(self):
-        response = self.client.get(reverse('frameset_top_board', args=(self.t1.pk,)))
+        response = self.client.get(reverse('frameset_top_board',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_frameset_2x2(self):
-        response = self.client.get(reverse('frameset_2x2', args=(self.t1.pk,)))
+        response = self.client.get(reverse('frameset_2x2',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_frameset_1x1(self):
-        response = self.client.get(reverse('frameset_1x1', args=(self.t1.pk,)))
+        response = self.client.get(reverse('frameset_1x1',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_views(self):
-        response = self.client.get(reverse('tournament_views', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_views',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_overview(self):
-        response = self.client.get(reverse('tournament_overview', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_overview',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_overview2(self):
-        response = self.client.get(reverse('tournament_overview_2', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_overview_2',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_overview3(self):
-        response = self.client.get(reverse('tournament_overview_3', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_overview_3',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_scores(self):
         # Scores page for an in-progress Tournament
-        response = self.client.get(reverse('tournament_scores', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Current Scores', response.content)
 
     def test_scores_completed(self):
         # Scores page for a completed Tournament
-        response = self.client.get(reverse('tournament_scores', args=(self.t4.pk,)))
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Final Scores', response.content)
 
@@ -435,68 +472,92 @@ class TournamentViewTests(TestCase):
         tp = TournamentPlayer.objects.create(player=self.p2,
                                              tournament=self.t4)
         rp = RoundPlayer.objects.create(player=self.p2, the_round=self.r41, game_count=0)
-        response = self.client.get(reverse('tournament_scores', args=(self.t4.pk,)))
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'Final Scores', response.content)
         rp.delete()
         tp.delete()
 
     def test_scores_refresh(self):
-        response = self.client.get(reverse('tournament_scores_refresh', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_scores_refresh',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_game_results(self):
-        response = self.client.get(reverse('tournament_game_results', args=(self.t4.pk,)))
+        response = self.client.get(reverse('tournament_game_results',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_game_results_ongoing(self):
         # Ongoing tournament
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('tournament_game_results', args=(self.t2.pk,)))
+        response = self.client.get(reverse('tournament_game_results',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_best_countries(self):
-        response = self.client.get(reverse('tournament_best_countries', args=(self.t4.pk,)))
+        response = self.client.get(reverse('tournament_best_countries',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_best_countries_refresh(self):
-        response = self.client.get(reverse('tournament_best_countries_refresh', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_best_countries_refresh',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_enter_scores_not_logged_in(self):
-        response = self.client.get(reverse('enter_scores', args=(self.t1.pk,)))
+        response = self.client.get(reverse('enter_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_enter_scores_regular_user(self):
         # A regular user can't enter scores for any old tournament
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('enter_scores', args=(self.t1.pk,)))
+        response = self.client.get(reverse('enter_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_enter_scores_manager_wrong_tournament(self):
         # A manager can't enter scores for a tournament that isn't theirs
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('enter_scores', args=(self.t3.pk,)))
+        response = self.client.get(reverse('enter_scores',
+                                           args=(self.t3.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_enter_scores_archived(self):
         # Nobody can enter scores for an archived tournament
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('enter_scores', args=(self.t4.pk,)))
+        response = self.client.get(reverse('enter_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_enter_scores_superuser(self):
         # A superuser can enter scores for any tournament
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('enter_scores', args=(self.t1.pk,)))
+        response = self.client.get(reverse('enter_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_enter_scores_manager(self):
         # A manager can enter scores for their tournament
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('enter_scores', args=(self.t2.pk,)))
+        response = self.client.get(reverse('enter_scores',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_enter_scores_post(self):
@@ -520,6 +581,7 @@ class TournamentViewTests(TestCase):
         data = urlencode(data)
         response = self.client.post(reverse('enter_scores', args=(self.t2.pk,)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the scores page
         self.assertEqual(response.status_code, 302)
@@ -536,53 +598,75 @@ class TournamentViewTests(TestCase):
         rp.save()
 
     def test_current_round(self):
-        response = self.client.get(reverse('tournament_round', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_round',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_current_round_completed(self):
         # "Current round" for a tournament that has ended
-        response = self.client.get(reverse('tournament_round', args=(self.t4.pk,)))
+        response = self.client.get(reverse('tournament_round',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_game_image_not_logged_in(self):
-        response = self.client.get(reverse('add_game_image', args=(self.t1.pk,)))
+        response = self.client.get(reverse('add_game_image',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_news(self):
-        response = self.client.get(reverse('tournament_news', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_news',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_news_ticker(self):
-        response = self.client.get(reverse('tournament_news_ticker', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_news_ticker',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_background(self):
-        response = self.client.get(reverse('tournament_background', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_background',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_ticker(self):
-        response = self.client.get(reverse('tournament_ticker', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_ticker',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_background_ticker(self):
-        response = self.client.get(reverse('tournament_background_ticker', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_background_ticker',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<meta http-equiv="refresh"', response.content)
 
     def test_rounds(self):
-        response = self.client.get(reverse('round_index', args=(self.t1.pk,)))
+        response = self.client.get(reverse('round_index',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_enter_prefs_not_logged_in(self):
-        response = self.client.get(reverse('enter_prefs', args=(self.t1.pk,)))
+        response = self.client.get(reverse('enter_prefs',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_enter_prefs_manager(self):
         # A manager can enter preferences for players in their Tournament
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('enter_prefs', args=(self.t2.pk,)))
+        response = self.client.get(reverse('enter_prefs',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_enter_prefs(self):
@@ -602,6 +686,7 @@ class TournamentViewTests(TestCase):
                           'form-8-prefs': 'FART'})
         response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the tournament_detail page
         self.assertEqual(response.status_code, 302)
@@ -614,25 +699,35 @@ class TournamentViewTests(TestCase):
             tp.preference_set.all().delete()
 
     def test_upload_prefs_not_logged_in(self):
-        response = self.client.get(reverse('upload_prefs', args=(self.t1.pk,)))
+        response = self.client.get(reverse('upload_prefs',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_prefs_csv(self):
-        response = self.client.get(reverse('prefs_csv', args=(self.t1.pk,)))
+        response = self.client.get(reverse('prefs_csv',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_seeder_bias_not_logged_in(self):
-        response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
+        response = self.client.get(reverse('seeder_bias',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_seeder_bias_missing_perm(self):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
+        response = self.client.get(reverse('seeder_bias',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_seeder_bias(self):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('seeder_bias', args=(self.t1.pk,)))
+        response = self.client.get(reverse('seeder_bias',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_seeder_bias_add(self):
@@ -647,6 +742,7 @@ class TournamentViewTests(TestCase):
                           'player2': str(tp2.pk)})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # it should redirect back to the same URL
         self.assertEqual(response.status_code, 302)
@@ -673,6 +769,7 @@ class TournamentViewTests(TestCase):
         data = urlencode({'delete_%d' % sb2.pk: 'Remove Bias'})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # it should redirect back to the same URL
         self.assertEqual(response.status_code, 302)
@@ -694,5 +791,6 @@ class TournamentViewTests(TestCase):
                           'player2': str(tp2.pk)})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 404)

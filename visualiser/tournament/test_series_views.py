@@ -43,14 +43,19 @@ class SeriesViewTests(TestCase):
 
 
     def test_index(self):
-        response = self.client.get(reverse('series_index'))
+        response = self.client.get(reverse('series_index'),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_invalid_series(self):
-        response = self.client.get(reverse('series_detail', args=(self.INVALID_S_SLUG,)))
+        response = self.client.get(reverse('series_detail',
+                                           args=(self.INVALID_S_SLUG,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
         # Don't have to be logged in to see a series
-        response = self.client.get(reverse('series_detail', args=(self.s1.slug,)))
+        response = self.client.get(reverse('series_detail',
+                                           args=(self.s1.slug,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)

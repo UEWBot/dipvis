@@ -347,17 +347,23 @@ class TournamentPlayerViewTests(TestCase):
 
     def test_index_invalid(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
-        response = self.client.get(reverse('tournament_players', args=(self.INVALID_T_PK,)))
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.INVALID_T_PK,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_index(self):
-        response = self.client.get(reverse('tournament_players', args=(self.t1.pk,)))
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_index_editable_prefs(self):
         # A tournament that can be edited, that uses preferences for power assignment
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        response = self.client.get(reverse('tournament_players', args=(self.t2.pk,)))
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Verify that the page includes buttons to send preferences emails out
         self.assertIn(b'Register Players', response.content)
@@ -366,7 +372,9 @@ class TournamentPlayerViewTests(TestCase):
     def test_index_editable_no_prefs(self):
         # A tournament that can be edited, that doesn't use preferences for power assignment
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('tournament_players', args=(self.t3.pk,)))
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t3.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Verify that the page doesn't include buttons to send preferences emails out
         self.assertIn(b'Register Players', response.content)
@@ -375,7 +383,9 @@ class TournamentPlayerViewTests(TestCase):
     def test_index_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        response = self.client.get(reverse('tournament_players', args=(self.t4.pk,)))
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Verify that we get the read-only version of the page
         self.assertNotIn(b'Register Players', response.content)
@@ -398,6 +408,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-INITIAL_FORMS': 0})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
@@ -418,6 +429,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-INITIAL_FORMS': 0})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # We shouldn't be allowed to change an uneditable Tournament
         self.assertEqual(response.status_code, 200)
@@ -442,6 +454,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-INITIAL_FORMS': 0})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # We shouldn't be allowed to change an uneditable Tournament
         self.assertEqual(response.status_code, 404)
@@ -462,6 +475,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-1-player': str(self.p2.pk)})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
@@ -486,6 +500,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-1-player': str(self.p1.pk)})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
@@ -502,6 +517,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-INITIAL_FORMS': 0})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
@@ -520,6 +536,7 @@ class TournamentPlayerViewTests(TestCase):
                           'form-1-player': str(self.p11.pk)})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 302)
@@ -535,43 +552,55 @@ class TournamentPlayerViewTests(TestCase):
 
     def test_details_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
-        response = self.client.get(reverse('tournament_player_detail', args=(self.INVALID_T_PK,
-                                                                             self.tp11.pk)))
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.INVALID_T_PK, self.tp11.pk)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_details_invalid_player(self):
         self.assertFalse(self.t1.tournamentplayer_set.filter(pk=self.INVALID_TP_PK).exists())
-        response = self.client.get(reverse('tournament_player_detail', args=(self.t1.pk,
-                                                                             self.INVALID_TP_PK)))
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.INVALID_TP_PK)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_details_player_not_in_tourney(self):
-        response = self.client.get(reverse('tournament_player_detail', args=(self.t1.pk,
-                                                                             self.tp51.pk)))
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp51.pk)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_details_valid(self):
-        response = self.client.get(reverse('tournament_player_detail', args=(self.t1.pk,
-                                                                             self.tp11.pk)))
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp11.pk)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_player_prefs(self):
-        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, self.tp11.uuid_str)))
+        response = self.client.get(reverse('player_prefs',
+                                           args=(self.t1.pk, self.tp11.uuid_str)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_player_prefs_invalid_uuid(self):
         # Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer
-        response = self.client.get(reverse('player_prefs', args=(self.t1.pk, uuid.uuid4())))
+        response = self.client.get(reverse('player_prefs',
+                                           args=(self.t1.pk, uuid.uuid4())),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_archived(self):
         # Should get a 404 error if the Tournament has been achived
-        response = self.client.get(reverse('player_prefs', args=(self.t4.pk, self.tp41.uuid_str)))
+        response = self.client.get(reverse('player_prefs',
+                                           args=(self.t4.pk, self.tp41.uuid_str)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_too_late(self):
         # Should get a 404 error if the final round has started
-        response = self.client.get(reverse('player_prefs', args=(self.t5.pk, self.tp51.uuid_str)))
+        response = self.client.get(reverse('player_prefs',
+                                           args=(self.t5.pk, self.tp51.uuid_str)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_post(self):
@@ -583,6 +612,7 @@ class TournamentPlayerViewTests(TestCase):
                           'prefs': 'FART'})
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect
         self.assertEqual(response.status_code, 302)

@@ -337,22 +337,30 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=cls.p9, game=g2, power=cls.austria, score=7)
 
     def test_detail(self):
-        response = self.client.get(reverse('round_detail', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('round_detail',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_non_existant_round(self):
-        response = self.client.get(reverse('round_detail', args=(self.t1.pk, 2)))
+        response = self.client.get(reverse('round_detail',
+                                           args=(self.t1.pk, 2)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     # TODO board_call_csv(), including a game without powers assigned
 
     def test_roll_call_not_logged_in(self):
-        response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('round_roll_call',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_roll_call_one_round(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('round_roll_call', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('round_roll_call',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_roll_call_post_current_round_no_seeding(self):
@@ -385,6 +393,7 @@ class RoundViewTests(TestCase):
                           'form-14-player': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t1.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the create games page
         self.assertEqual(response.status_code, 302)
@@ -442,6 +451,7 @@ class RoundViewTests(TestCase):
                           'form-9-present': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the get seven page
         self.assertEqual(response.status_code, 302)
@@ -479,6 +489,7 @@ class RoundViewTests(TestCase):
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # Should still redirect to the get seven page
         self.assertEqual(response.status_code, 302)
@@ -518,6 +529,7 @@ class RoundViewTests(TestCase):
                           'form-8-present': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         self.assertIn(b' did play this round', response.content)
@@ -556,6 +568,7 @@ class RoundViewTests(TestCase):
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # There should be a validation error for the last player
         self.assertEqual(response.status_code, 200)
@@ -565,18 +578,24 @@ class RoundViewTests(TestCase):
         # No clean up needed because there was an error
 
     def test_get_seven_not_logged_in(self):
-        response = self.client.get(reverse('get_seven', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('get_seven',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_get_seven(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('get_seven', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('get_seven',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_get_seven_too_few_players(self):
         # Nothing we can do if have fewer than seven players
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('get_seven', args=(self.t2.pk, 2)))
+        response = self.client.get(reverse('get_seven',
+                                           args=(self.t2.pk, 2)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_players', args=(self.t2.pk,)))
 
@@ -584,7 +603,9 @@ class RoundViewTests(TestCase):
         # No action needed if we have an exact multiple of seven players
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('get_seven', args=(self.t2.pk, 3)))
+        response = self.client.get(reverse('get_seven',
+                                           args=(self.t2.pk, 3)),
+                                   secure=True)
         # We should still get the "get seven" page
         self.assertEqual(response.status_code, 200)
 
@@ -603,6 +624,7 @@ class RoundViewTests(TestCase):
                           'sitter_5': str(self.rp17.pk)})
         response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
@@ -648,6 +670,7 @@ class RoundViewTests(TestCase):
         data = urlencode({'double_0': str(self.rp12.pk)})
         response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
@@ -713,6 +736,7 @@ class RoundViewTests(TestCase):
                           })
         response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('seed_games', args=(self.t1.pk, 1)))
@@ -750,13 +774,17 @@ class RoundViewTests(TestCase):
             rp.save()
 
     def test_seed_games_not_logged_in(self):
-        response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_seed_games_odd_number(self):
         # if we dont have a mutiple of 7 players, this view should redirect to fix that
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('get_seven', args=(self.t1.pk, 1)))
 
@@ -765,7 +793,9 @@ class RoundViewTests(TestCase):
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games', args=(self.t2.pk, 3)))
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t2.pk, 3)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # A single Game should have been created
         g_qs = self.t2.round_numbered(3).game_set
@@ -780,7 +810,9 @@ class RoundViewTests(TestCase):
         # Eight players, one sitting out, AUTO power assignment
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games', args=(self.t3.pk, 2)))
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t3.pk, 2)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # A single Game should have been created
         g_qs = self.t3.round_numbered(2).game_set
@@ -798,7 +830,9 @@ class RoundViewTests(TestCase):
         self.rp112.game_count = 1
         self.rp112.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('seed_games', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Two Games should have been created
         g_qs = self.t1.round_numbered(1).game_set
@@ -846,6 +880,7 @@ class RoundViewTests(TestCase):
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('board_call', args=(self.t3.pk, 2)))
@@ -896,6 +931,7 @@ class RoundViewTests(TestCase):
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         # Check error(s)
@@ -940,6 +976,7 @@ class RoundViewTests(TestCase):
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         # Check error(s)
@@ -983,6 +1020,7 @@ class RoundViewTests(TestCase):
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         # Check error(s)
@@ -992,22 +1030,30 @@ class RoundViewTests(TestCase):
         g.delete()
 
     def test_create_games_not_logged_in(self):
-        response = self.client.get(reverse('create_games', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('create_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_create_games(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('create_games', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('create_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_create_games_no_players(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('create_games', args=(self.t2.pk, 1)))
+        response = self.client.get(reverse('create_games',
+                                           args=(self.t2.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_create_games_when_games_exist(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('create_games', args=(self.t3.pk, 1)))
+        response = self.client.get(reverse('create_games',
+                                           args=(self.t3.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_create_games_when_games_exist_powers_unassigned(self):
@@ -1020,7 +1066,9 @@ class RoundViewTests(TestCase):
             gp.power = None
             gp.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('create_games', args=(self.t3.pk, 1)))
+        response = self.client.get(reverse('create_games',
+                                           args=(self.t3.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Clean-up
         for gp in g.gameplayer_set.all():
@@ -1061,6 +1109,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should re-direct to the board call page
         self.assertEqual(response.status_code, 302)
@@ -1130,6 +1179,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should re-direct to the board call page
         self.assertEqual(response.status_code, 302)
@@ -1184,6 +1234,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.post(reverse('create_games', args=(self.t2.pk, 3)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # We should get an error due to the duplicate name
         self.assertEqual(response.status_code, 200)
@@ -1193,12 +1244,16 @@ class RoundViewTests(TestCase):
         self.r23.game_set.all().delete()
 
     def test_game_scores_not_logged_in(self):
-        response = self.client.get(reverse('game_scores', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('game_scores',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 302)
 
     def test_game_scores(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        response = self.client.get(reverse('game_scores', args=(self.t3.pk, 1)))
+        response = self.client.get(reverse('game_scores',
+                                           args=(self.t3.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_game_scores_post(self):
@@ -1219,6 +1274,7 @@ class RoundViewTests(TestCase):
         data = urlencode(data)
         response = self.client.post(reverse('game_scores', args=(self.t4.pk, 1)),
                                     data,
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # Should redirect to the round index page
         self.assertEqual(response.status_code, 302)
@@ -1242,13 +1298,19 @@ class RoundViewTests(TestCase):
                     self.assertEqual(tp.score, tp.player.pk)
 
     def test_game_index(self):
-        response = self.client.get(reverse('game_index', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('game_index',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_board_call(self):
-        response = self.client.get(reverse('board_call', args=(self.t1.pk, 1)))
+        response = self.client.get(reverse('board_call',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_board_call_csv(self):
-        response = self.client.get(reverse('board_call_csv', args=(self.t4.pk, 1)))
+        response = self.client.get(reverse('board_call_csv',
+                                           args=(self.t4.pk, 1)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)

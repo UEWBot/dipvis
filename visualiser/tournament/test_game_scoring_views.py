@@ -24,7 +24,8 @@ class GameScoringViewTests(TestCase):
     fixtures = ['game_sets.json']
 
     def test_index(self):
-        response = self.client.get(reverse('game_scoring_index'))
+        response = self.client.get(reverse('game_scoring_index'),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Check sorting - systems should be listed in alphabetical order
         # TODO Probably needs work for translation
@@ -39,18 +40,24 @@ class GameScoringViewTests(TestCase):
             last_name = name
 
     def test_detail_invalid_system(self):
-        response = self.client.get(reverse('game_scoring_detail', kwargs={'slug': 'invalid-scoring-system'}))
+        response = self.client.get(reverse('game_scoring_detail',
+                                           kwargs={'slug': 'invalid-scoring-system'}),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
         # Don't have to be logged in to see a scoring system
-        response = self.client.get(reverse('game_scoring_detail', args=(G_SCORING_SYSTEMS[0].slug,)))
+        response = self.client.get(reverse('game_scoring_detail',
+                                           args=(G_SCORING_SYSTEMS[0].slug,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_all(self):
         for sys in G_SCORING_SYSTEMS:
             with self.subTest(sys):
-                response = self.client.get(reverse('game_scoring_detail', args=(sys.slug,)))
+                response = self.client.get(reverse('game_scoring_detail',
+                                                   args=(sys.slug,)),
+                                           secure=True)
                 self.assertEqual(response.status_code, 200)
 
     def test_invalid_simplegamestate_1(self):

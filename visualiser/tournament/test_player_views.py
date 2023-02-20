@@ -43,16 +43,21 @@ class PlayerViewTests(TestCase):
 
 
     def test_index(self):
-        response = self.client.get(reverse('player_index'))
+        response = self.client.get(reverse('player_index'),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_invalid_player(self):
-        response = self.client.get(reverse('player_detail', args=(self.INVALID_P_PK,)))
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.INVALID_P_PK,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
         # Don't have to be logged in to see a player
-        response = self.client.get(reverse('player_detail', args=(self.p1.pk,)))
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_refresh_wdd(self):
@@ -61,6 +66,7 @@ class PlayerViewTests(TestCase):
         player_url = reverse('player_detail', args=(self.p1.pk,))
         response = self.client.post(player_url,
                                     urlencode({}),
+                                    secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same URL
         self.assertEqual(response.status_code, 302)

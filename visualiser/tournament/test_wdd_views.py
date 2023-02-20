@@ -402,7 +402,9 @@ class WddViewTests(TestCase):
                                    count=7)
 
     def test_classification(self):
-        response = self.client.get(reverse('csv_classification', args=(self.t.pk,)))
+        response = self.client.get(reverse('csv_classification',
+                                           args=(self.t.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_classification_no_top_board(self):
@@ -410,13 +412,17 @@ class WddViewTests(TestCase):
         g = Game.objects.get(is_top_board=True)
         g.is_top_board=False
         g.save()
-        response = self.client.get(reverse('csv_classification', args=(self.t.pk,)))
+        response = self.client.get(reverse('csv_classification',
+                                           args=(self.t.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
         # Clean up
         g.is_top_board=True
         g.save()
 
     def test_boards(self):
-        response = self.client.get(reverse('csv_boards', args=(self.t.pk,)))
+        response = self.client.get(reverse('csv_boards',
+                                           args=(self.t.pk,)),
+                                   secure=True)
         self.assertEqual(response.status_code, 200)
 
