@@ -922,6 +922,9 @@ class DBNCoverage(models.Model):
     dbn_url = models.URLField(verbose_name=_('DBN URL on YouTube'))
     description = models.CharField(max_length=MAX_DESC_LENGTH)
 
+    class Meta:
+        verbose_name_plural = 'DBN coverages'
+
     def __str__(self):
         return '%s %s' % (self.tournament, self.description)
 
