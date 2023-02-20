@@ -43,6 +43,7 @@ from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_R
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
 
 # Mask values to choose which background strings to include
@@ -840,7 +841,9 @@ class PlayerGameResult(models.Model):
     position = models.PositiveSmallIntegerField()
     position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
-    final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
+    final_sc_count = models.PositiveSmallIntegerField(blank=True,
+                                                      null=True,
+                                                      validators=[validate_sc_count])
     result = models.CharField(max_length=2, choices=GameResults.choices, blank=True)
     year_eliminated = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
