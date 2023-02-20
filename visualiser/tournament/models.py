@@ -1155,8 +1155,8 @@ class Preference(models.Model):
     ranking = models.PositiveSmallIntegerField(validators=[validate_ranking])
 
     class Meta:
-        # Each player can only have one ranking per power
         constraints = [
+            # Each player can only have one ranking per power
             models.UniqueConstraint(fields=['player', 'power'],
                                     name='unique_player_power'),
             # Every ranking by a player must be unique
@@ -1199,6 +1199,8 @@ class Round(models.Model):
     class Meta:
         ordering = ['start']
         constraints = [
+            models.CheckConstraint(check=Q(final_year__gte=FIRST_YEAR) | Q(final_year__isnull=True),
+                                   name='%(class)s_final_year_valid'),
             models.UniqueConstraint(fields=['tournament', 'start'],
                                     name='unique_tournament_start'),
         ]
@@ -1733,6 +1735,8 @@ class SupplyCentreOwnership(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(year__gte=FIRST_YEAR-1),
+                                   name='%(class)s_year_valid'),
             models.UniqueConstraint(fields=['sc', 'game', 'year'],
                                     name='unique_sc_game_year'),
         ]
@@ -1765,6 +1769,8 @@ class DrawProposal(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(year__gte=FIRST_YEAR),
+                                   name='%(class)s_year_valid'),
             models.CheckConstraint(check=Q(season__in=Seasons.values),
                                    name='%(class)s_season_valid'),
             models.UniqueConstraint(fields=['game'],
@@ -2258,6 +2264,8 @@ class GameImage(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(year__gte=FIRST_YEAR),
+                                   name='%(class)s_year_valid'),
             models.CheckConstraint(check=Q(season__in=Seasons.values),
                                    name='%(class)s_season_valid'),
             models.CheckConstraint(check=Q(phase__in=Phases.values),
@@ -2305,6 +2313,10 @@ class CentreCount(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(year__gte=FIRST_YEAR-1),
+                                   name='%(class)s_year_valid'),
+            models.CheckConstraint(check=Q(count__lte=TOTAL_SCS),
+                                   name='%(class)s_count_valid'),
             models.UniqueConstraint(fields=['power', 'game', 'year'],
                                     name='unique_power_game_year'),
         ]

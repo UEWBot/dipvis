@@ -41,7 +41,7 @@ from django.utils.translation import ngettext
 
 from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_RESULTS_URL
 from tournament.background import InvalidWDDId, WDDNotAccessible
-from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
@@ -855,8 +855,12 @@ class PlayerGameResult(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(final_sc_count__lte=TOTAL_SCS) | Q(final_sc_count__isnull=True),
+                                   name='%(class)s_final_sc_count_valid'),
             models.CheckConstraint(check=Q(result__in=GameResults.values) | Q(result=''),
                                    name='%(class)s_result_valid'),
+            models.CheckConstraint(check=Q(year_eliminated__gte=FIRST_YEAR) | Q(year_eliminated__isnull=True),
+                                   name='%(class)s_year_eliminated_valid'),
             models.UniqueConstraint(fields=['tournament_name', 'game_name', 'player', 'power'],
                                     name='unique_names_player_power'),
         ]
@@ -891,6 +895,8 @@ class PlayerAward(models.Model):
 
     class Meta:
         constraints = [
+            models.CheckConstraint(check=Q(final_sc_count__lte=TOTAL_SCS) | Q(final_sc_count__isnull=True),
+                                   name='%(class)s_final_sc_count_valid'),
             models.UniqueConstraint(fields=['player', 'tournament', 'date', 'name'],
                                     name='unique_player_tournament_date_name'),
         ]
