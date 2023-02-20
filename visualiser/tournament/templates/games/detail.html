@@ -85,6 +85,7 @@
   {% endif %}
   {% if perms.tournament.add_drawvote %}
     <li><a href="{% url 'draw_vote' tournament.id game.name %}">{% trans "Enter Draw Vote" %}</a> - {% trans "Use this to record draw votes, whether they succeed or fail." %}</li>
+    <li><a href="{% url 'concession' tournament.id game.name %}">{% trans "Enter Concession Vote" %}</a> - {% trans "Use this to record concession votes, whether they succeed or fail." %}</li>
   {% endif %}
   {% if perms.tournament.change_game %}
     <li><a href="{% url 'create_games' tournament.id game.the_round.number %}">{% trans "Modify Game" %}</a> - {% trans "Use this to change the players assigned to games (e.g. to replace a player) or the great power assignments." %}</li>

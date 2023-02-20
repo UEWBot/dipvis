@@ -1,11 +1,25 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} Draw Vote{% endblocktrans %}{% endblock %}
+{% block title %}
+{% if concession %}
+  {% blocktrans with game=game %}DipTV - Game {{ game }} Concession Vote{% endblocktrans %}
+{% else %}
+  {% blocktrans with game=game %}DipTV - Game {{ game }} Draw Vote{% endblocktrans %}
+{% endif %}
+{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with game=game %}Game {{ game }} Draw Vote{% endblocktrans %}</h1>
-<form action={% url 'draw_vote' tournament.id game.name %} method="post">
+{% if concession %}
+  <h1>{% blocktrans with game=game %}Game {{ game }} Concession Vote{% endblocktrans %}</h1>
+{% else %}
+  <h1>{% blocktrans with game=game %}Game {{ game }} Draw Vote{% endblocktrans %}</h1>
+{% endif %}
+{% if concession %}
+  <form action={% url 'concession' tournament.id game.name %} method="post">
+{% else %}
+  <form action={% url 'draw_vote' tournament.id game.name %} method="post">
+{% endif %}
   {% csrf_token %}
   {{ form.non_field_errors }}
   {% for field in form %}

@@ -131,14 +131,19 @@ class DrawForm(forms.Form):
                                       to_field_name='name')
 
     def __init__(self, *args, **kwargs):
-        """Adds powers field if game is not set Draws Include All Survivors"""
+        """Adds powers field if concession or DIAS"""
         # Remove our special kwargs from the list
+        concession = kwargs.pop('concession')
         is_dias = kwargs.pop('dias')
         secrecy = kwargs.pop('secrecy')
         player_count = kwargs.pop('player_count')
         super().__init__(*args, **kwargs)
 
-        if not is_dias:
+        if concession:
+            self.fields['powers'] = forms.ModelChoiceField(queryset=GreatPower.objects.all(),
+                                                           label=_('Concede to'),
+                                                           to_field_name='name')
+        elif not is_dias:
             self.fields['powers'] = forms.ModelMultipleChoiceField(queryset=GreatPower.objects.all(),
                                                                    to_field_name='name',
                                                                    widget=forms.SelectMultiple(attrs={'size': '7'}))

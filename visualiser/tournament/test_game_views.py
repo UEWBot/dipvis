@@ -1067,6 +1067,12 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 302)
 
+    def test_concession_not_logged_in(self):
+        response = self.client.get(reverse('concession',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+
     def test_post_secret_dias_draw_vote(self):
         self.assertEqual(self.g1.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1374,6 +1380,169 @@ class GameViewTests(TestCase):
     def test_draw_vote(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('draw_vote',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_post_secret_concession(self):
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'passed': False,
+                          'powers': str(self.england),
+                          'proposer': str(self.england)}, True)
+        response = self.client.post(reverse('concession', args=(self.t1.pk, self.g2.name)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g2.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g2.drawproposal_set.count(), 1)
+        dp = self.g2.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g2)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, Seasons.SPRING)
+        self.assertFalse(dp.passed)
+        self.assertEqual(dp.proposer, self.england)
+        self.assertEqual(dp.draw_size(), 1)
+        powers = dp.powers()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                if power in [self.england]:
+                    self.assertIn(power, powers)
+                else:
+                    self.assertNotIn(power, powers)
+        # Draws in this tournament are secret
+        self.assertIsNone(dp.votes_in_favour)
+        self.assertFalse(self.g2.is_finished)
+        # Clean up
+        dp.delete()
+
+    def test_post_secret_concession_passed(self):
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'passed': True,
+                          'powers': str(self.england),
+                          'proposer': str(self.austria)}, True)
+        response = self.client.post(reverse('concession', args=(self.t1.pk, self.g2.name)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g2.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g2.drawproposal_set.count(), 1)
+        dp = self.g2.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g2)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, Seasons.SPRING)
+        self.assertTrue(dp.passed)
+        self.assertEqual(dp.proposer, self.austria)
+        self.assertEqual(dp.draw_size(), 1)
+        powers = dp.powers()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                if power in [self.england]:
+                    self.assertIn(power, powers)
+                else:
+                    self.assertNotIn(power, powers)
+        # Draws in this tournament are secret
+        self.assertIsNone(dp.votes_in_favour)
+        self.g2.refresh_from_db()
+        self.assertTrue(self.g2.is_finished)
+        # Clean up
+        dp.delete()
+        self.g2.is_finished = False
+        self.g2.save()
+        self.g2.refresh_from_db()
+
+    def test_post_counts_concession(self):
+        self.assertEqual(self.g4.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'powers': str(self.turkey),
+                          'votes_in_favour': 4,
+                          'proposer': str(self.england)}, True)
+        response = self.client.post(reverse('concession', args=(self.t2.pk, self.g4.name)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g4.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g4.drawproposal_set.count(), 1)
+        dp = self.g4.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g4)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, Seasons.SPRING)
+        self.assertFalse(dp.passed)
+        self.assertEqual(dp.proposer, self.england)
+        self.assertEqual(dp.draw_size(), 1)
+        powers = dp.powers()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                if power in [self.turkey]:
+                    self.assertIn(power, powers)
+                else:
+                    self.assertNotIn(power, powers)
+        # Draws in this tournament reveal the for/against counts
+        self.assertEqual(dp.votes_in_favour, 4)
+        self.assertFalse(self.g4.is_finished)
+        # Clean up
+        dp.delete()
+
+    def test_post_counts_concession_passed(self):
+        self.assertEqual(self.g4.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'powers': str(self.turkey),
+                          'votes_in_favour': 7,
+                          'proposer': str(self.austria)}, True)
+        response = self.client.post(reverse('concession', args=(self.t2.pk, self.g4.name)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the Game page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g4.get_absolute_url())
+        # And the DrawProposal should be added
+        self.assertEqual(self.g4.drawproposal_set.count(), 1)
+        dp = self.g4.drawproposal_set.get()
+        self.assertEqual(dp.game, self.g4)
+        self.assertEqual(dp.year, 1902)
+        self.assertEqual(dp.season, Seasons.SPRING)
+        self.assertTrue(dp.passed)
+        self.assertEqual(dp.proposer, self.austria)
+        self.assertEqual(dp.draw_size(), 1)
+        powers = dp.powers()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                if power in [self.turkey]:
+                    self.assertIn(power, powers)
+                else:
+                    self.assertNotIn(power, powers)
+        # Draws in this tournament reveal the for/against counts
+        self.assertEqual(dp.votes_in_favour, 7)
+        self.g4.refresh_from_db()
+        self.assertTrue(self.g4.is_finished)
+        # Clean up
+        dp.delete()
+        self.g4.is_finished = False
+        self.g4.save()
+        self.g4.refresh_from_db()
+
+    def test_concession(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('concession',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)

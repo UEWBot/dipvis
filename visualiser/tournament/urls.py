@@ -112,7 +112,10 @@ game_patterns = [
          {'as_ticker': True}, name='game_background_ticker'),
     path('ticker/', game_views.game_simple,
          {'template': 'ticker'}, name='game_ticker'),
-    path('draw_vote/', game_views.draw_vote, name='draw_vote'),
+    path('draw_vote/', game_views.draw_vote,
+         {'concession': False}, name='draw_vote'),
+    path('concession/', game_views.draw_vote,
+         {'concession': True}, name='concession'),
     path('views/', game_views.game_simple,
          {'template': 'view'}, name='game_views'),
     # These three go together as a cycle

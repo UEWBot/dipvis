@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 
 from django.db import transaction
 from django.db.models import Count
+from django.db.models.query import QuerySet
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
@@ -508,7 +509,7 @@ def game_background(request, tournament_id, game_name, as_ticker=False):
 
 
 @permission_required('tournament.add_drawproposal')
-def draw_vote(request, tournament_id, game_name):
+def draw_vote(request, tournament_id, game_name, concession):
     """Provide a form to enter a draw vote for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
@@ -525,6 +526,7 @@ def draw_vote(request, tournament_id, game_name):
         year = last_image.year
         season = last_image.season
     form = DrawForm(request.POST or None,
+                    concession=concession,
                     dias=g.is_dias(),
                     secrecy=t.draw_secrecy,
                     player_count=len(g.survivors()),
@@ -540,6 +542,10 @@ def draw_vote(request, tournament_id, game_name):
                 years_played.pop()
             scs = g.survivors(years_played[-1])
             countries = [sc.power for sc in scs]
+        else:
+            # For a concession, countries will be the power being conceded to,
+            # whereas for a draw it will be a QuerySet of included powers
+            if type(countries) is not QuerySet: countries = [ countries ]
 
         passed = form.cleaned_data.get('passed')
         votes_in_favour = form.cleaned_data.get('votes_in_favour')
@@ -559,6 +565,7 @@ def draw_vote(request, tournament_id, game_name):
                           'games/vote.html',
                           {'tournament': t,
                            'game': g,
+                           'concession': concession,
                            'form': form})
         with transaction.atomic():
             dp.save()
@@ -572,6 +579,7 @@ def draw_vote(request, tournament_id, game_name):
                   'games/vote.html',
                   {'tournament': t,
                    'game': g,
+                   'concession': concession,
                    'form': form})
 
 
