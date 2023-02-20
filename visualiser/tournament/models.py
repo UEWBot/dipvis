@@ -46,6 +46,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
 from tournament.diplomacy.tasks.validate_ranking import validate_ranking
+from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
 from tournament.diplomacy.tasks.validate_year_including_start import validate_year_including_start
 
@@ -465,15 +466,6 @@ def validate_weight(value):
     No longer used. Retained for migrations.
     """
     assert False, "This function should no longer be used"
-
-
-def validate_sc_count(value):
-    """
-    Checks for a valid SC count
-    """
-    if (value < 0) or (value > TOTAL_SCS):
-        raise ValidationError(_(u'%(value)d is not a valid SC count'),
-                              params={'value': value})
 
 
 def validate_game_name(value):

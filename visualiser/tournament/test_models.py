@@ -35,7 +35,7 @@ from tournament.models import PowerAssignMethods, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
-from tournament.models import validate_game_name, validate_sc_count, validate_vote_count
+from tournament.models import validate_game_name, validate_vote_count
 from tournament.models import validate_game_scoring_system
 from tournament.models import validate_round_scoring_system
 from tournament.models import validate_tournament_scoring_system
@@ -921,19 +921,6 @@ class ModelTests(TestCase):
 
     def test_find_t_scoring_system_invalid(self):
         self.assertEqual(None, find_tournament_scoring_system('Invalid System'))
-
-    # validate_sc_count()
-    def test_validate_sc_count_negative(self):
-        self.assertRaises(ValidationError, validate_sc_count, -1)
-
-    def test_validate_sc_count_0(self):
-        self.assertIsNone(validate_sc_count(0))
-
-    def test_validate_sc_count_34(self):
-        self.assertIsNone(validate_sc_count(34))
-
-    def test_validate_sc_count_35(self):
-        self.assertRaises(ValidationError, validate_sc_count, 35)
 
     # validate_game_name()
     def test_validate_game_name_spaces(self):

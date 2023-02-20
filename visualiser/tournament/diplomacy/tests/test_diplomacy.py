@@ -20,6 +20,7 @@ from django.test import TestCase
 from ..tasks.validate_year import validate_year
 from ..tasks.validate_year_including_start import  validate_year_including_start
 from ..tasks.validate_ranking import validate_ranking
+from ..tasks.validate_sc_count import validate_sc_count
 from ..models.great_power import GreatPower
 from ..models.game_set import GameSet
 from ..models.set_power import SetPower
@@ -36,6 +37,19 @@ class DiplomacyTests(TestCase):
     # WINNING_SCS
     def test_winning_scs(self):
         self.assertEqual(WINNING_SCS, 18)
+
+    # validate_sc_count()
+    def test_validate_sc_count_negative(self):
+        self.assertRaises(ValidationError, validate_sc_count, -1)
+
+    def test_validate_sc_count_0(self):
+        self.assertIsNone(validate_sc_count(0))
+
+    def test_validate_sc_count_34(self):
+        self.assertIsNone(validate_sc_count(34))
+
+    def test_validate_sc_count_35(self):
+        self.assertRaises(ValidationError, validate_sc_count, 35)
 
     # validate_year()
     def test_validate_year_negative(self):
