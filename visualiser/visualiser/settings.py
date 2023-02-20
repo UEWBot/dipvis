@@ -77,8 +77,6 @@ ROOT_URLCONF = 'visualiser.urls'
 
 WSGI_APPLICATION = 'visualiser.wsgi.application'
 
-X_FRAME_OPTIONS = 'SAMEORIGIN'
-
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -134,7 +132,7 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
-X_FRAME_ORIGINS = 'SAMEORIGIN'
+X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
 # Static files (CSS, JavaScript, Images)
