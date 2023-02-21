@@ -560,9 +560,10 @@ def draw_vote(request, tournament_id, game_name):
                           {'tournament': t,
                            'game': g,
                            'form': form})
-        dp.save()
-        for c in countries:
-            dp.drawing_powers.add(c)
+        with transaction.atomic():
+            dp.save()
+            for c in countries:
+                dp.drawing_powers.add(c)
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
                                             args=(tournament_id, game_name)))
