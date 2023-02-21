@@ -1711,7 +1711,8 @@ class PlayerRoundFormTest(TestCase):
                 'standby': 'on'}
         initial = {'player': self.p1,
                    'present': False,
-                   'standby': False}
+                   'standby': False,
+                   'rounds_played': 0}
         form = PlayerRoundForm(data,
                                initial=initial,
                                round_num=1)
@@ -1722,7 +1723,8 @@ class PlayerRoundFormTest(TestCase):
         data = {'player': str(self.p1.pk)}
         initial = {'player': self.p1,
                    'present': False,
-                   'standby': False}
+                   'standby': False,
+                   'rounds_played': 0}
         form = PlayerRoundForm(data,
                                initial=initial,
                                round_num=1)
@@ -1731,8 +1733,8 @@ class PlayerRoundFormTest(TestCase):
     def test_round_fields(self):
         # Check that the correct round fields are created
         form = PlayerRoundForm(round_num=2)
-        # We should have three fields - player, present, and standby
-        self.assertEqual(len(form.fields), 3)
+        # We should have four fields - player, present, standby, and rounds_played
+        self.assertEqual(len(form.fields), 4)
 
     def test_player_labels(self):
         # Check the player names
@@ -1832,7 +1834,8 @@ class BasePlayerRoundFormsetTest(TestCase):
                     if field == 'player':
                         continue
                     # There should be checkboxes for present and standby
-                    self.assertIn(field, ['present', 'standby'])
+                    # and an integer rounds_played
+                    self.assertIn(field, ['present', 'standby', 'rounds_played'])
 
     def test_no_players(self):
         # Should be fine for a Tournament with no TournamentPlayers

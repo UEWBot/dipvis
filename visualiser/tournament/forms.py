@@ -699,6 +699,10 @@ class PlayerRoundForm(forms.Form):
     player = PlayerChoiceField(queryset=Player.objects.all())
     present = forms.BooleanField(required=False, initial=False)
     standby = forms.BooleanField(required=False, initial=False)
+    rounds_played = forms.IntegerField(required=False,
+                                       disabled=True,
+                                       max_value=10,
+                                       min_value=0)
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list

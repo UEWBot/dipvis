@@ -121,9 +121,15 @@ def roll_call(request, tournament_id, round_num):
         except RoundPlayer.DoesNotExist:
             current['present'] = False
             current['standby'] = False
+            current['rounds_played'] = tp.rounds_played()
         else:
             current['present'] = True
             current['standby'] = rp.standby
+            if rp.gameplayers().exists():
+                # This is one of the Rounds they played
+                current['rounds_played'] = tp.rounds_played() - 1
+            else:
+                current['rounds_played'] = tp.rounds_played()
         player_data.append(current)
     formset = PlayerRoundFormset(request.POST or None,
                                  tournament=t,
