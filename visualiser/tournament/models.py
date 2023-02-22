@@ -1019,6 +1019,13 @@ class TournamentPlayer(models.Model):
         """
         return self.player.roundplayer_set.filter(the_round__tournament=self.tournament).distinct()
 
+    def rounds_played(self):
+        """
+        Returns the number of Rounds in which the Player actually played.
+        """
+        # I suspect there's some clever QuerySet stuff that could avoid the loop...
+        return sum(1 for rp in self.roundplayers() if rp.gameplayers().exists())
+
     def create_preferences_from_string(self, the_string):
         """
         Given a string like "AEGFIRT", creates the corresponding Preferences

@@ -1819,7 +1819,12 @@ class TournamentPlayerTests(TestCase):
                                        latest_end_time=t3.start_date + HOURS_9)
 
         # Add finished Games to r31
-        Game.objects.create(name='g31',
+        Game.objects.create(name='g311',
+                            started_at=r31.start,
+                            the_round=r31,
+                            is_finished=True,
+                            the_set=cls.set1)
+        Game.objects.create(name='g312',
                             started_at=r31.start,
                             the_round=r31,
                             is_finished=True,
@@ -1927,6 +1932,42 @@ class TournamentPlayerTests(TestCase):
         tp = t.tournamentplayer_set.first()
         rps = tp.roundplayers()
         self.assertEqual(rps.count(), 2)
+
+    # TournamentPlayer.rounds_played()
+    def test_tournamentplayer_rounds_played_none(self):
+        t = Tournament.objects.get(name='t3')
+        tp = t.tournamentplayer_set.first()
+        rounds = tp.rounds_played()
+        self.assertEqual(rounds, 0)
+
+    def test_tournamentplayer_rounds_played_multiple_games_per_round(self):
+        t = Tournament.objects.get(name='t3')
+        r = t.round_numbered(1)
+        g1 = r.game_set.first()
+        g2 = r.game_set.last()
+        self.assertNotEqual(g1, g2)
+        tp = t.tournamentplayer_set.first()
+        gp1 = GamePlayer.objects.create(player=tp.player,
+                                        game=g1)
+        gp2 = GamePlayer.objects.create(player=tp.player,
+                                        game=g2)
+        rounds = tp.rounds_played()
+        self.assertEqual(rounds, 1)
+        # Cleanup
+        gp1.delete()
+        gp2.delete()
+
+    def test_tournamentplayer_rounds_played_normal(self):
+        t = Tournament.objects.get(name='t3')
+        g1 = Game.objects.last()
+        self.assertEqual(g1.the_round.tournament, t)
+        tp = t.tournamentplayer_set.first()
+        gp1 = GamePlayer.objects.create(player=tp.player,
+                                        game=g1)
+        rounds = tp.rounds_played()
+        self.assertEqual(rounds, 1)
+        # Cleanup
+        gp1.delete()
 
     # TournamentPlayer.create_preferences_from_string()
     # some of these also test prefs_string(), for convenience
