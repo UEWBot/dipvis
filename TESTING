@@ -18,6 +18,6 @@ $ python3 ./manage.py test --exclude-tag wdd
 
 To generate test coverage information:
 $ cd visualiser
-$ coverage run --source='.' ./manage.py test
+$ coverage run --source='.' --branch ./manage.py test
 $ coverage html
 results will be generated in htmlcov/index.html
