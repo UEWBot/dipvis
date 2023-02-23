@@ -54,6 +54,14 @@ class WddViewTests(TestCase):
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET,
                                           is_published=True)
+        # Awards
+        a1 = cls.t.awards.create(name='Meanest Player',
+                                 description='Who was mean')
+        cls.t.awards.create(name='Nicest Player',
+                            description='Who bought the most drinks')
+        cls.t.awards.create(name='Best England',
+                            description='England is the only country we care about',
+                            power=england)
         # Two Rounds
         r1 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -191,8 +199,8 @@ class WddViewTests(TestCase):
         GamePlayer.objects.create(player=p9,
                                   game=g2,
                                   power=germany)
-        TournamentPlayer.objects.create(player=p10,
-                                        tournament=cls.t)
+        tp10 = TournamentPlayer.objects.create(player=p10,
+                                               tournament=cls.t)
         RoundPlayer.objects.create(player=p10,
                                    the_round=r1)
         RoundPlayer.objects.create(player=p10,
@@ -241,6 +249,8 @@ class WddViewTests(TestCase):
         GamePlayer.objects.create(player=p14,
                                   game=g3,
                                   power=england)
+        # Hand out one non-best-country award
+        tp10.awards.add(a1)
         # CentreCounts and DrawProposals
         # One game ends in a solo
         CentreCount.objects.create(power=austria,
@@ -299,6 +309,7 @@ class WddViewTests(TestCase):
                                    game=g1,
                                    year=1909,
                                    count=0)
+        g1.check_whether_finished()
         # Another with an elimination and a draw
         dp = DrawProposal.objects.create(game=g2,
                                          year=1908,
@@ -371,6 +382,7 @@ class WddViewTests(TestCase):
                                    game=g2,
                                    year=1910,
                                    count=3)
+        g2.check_whether_finished()
         # Top board ends after 1907
         CentreCount.objects.create(power=austria,
                                    game=g3,
@@ -400,12 +412,14 @@ class WddViewTests(TestCase):
                                    game=g3,
                                    year=1907,
                                    count=7)
+        g1.check_whether_finished()
 
     def test_classification(self):
         response = self.client.get(reverse('csv_classification',
                                            args=(self.t.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        # TODO Check CSV file content
 
     def test_classification_no_top_board(self):
         # Switch the top board to a regular board
@@ -416,6 +430,7 @@ class WddViewTests(TestCase):
                                            args=(self.t.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        # TODO Check CSV file content
         # Clean up
         g.is_top_board=True
         g.save()
@@ -425,4 +440,5 @@ class WddViewTests(TestCase):
                                            args=(self.t.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        # TODO Check CSV file content
 

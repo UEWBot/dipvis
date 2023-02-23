@@ -6,8 +6,21 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
 
-{% if player.unranked %}<p>{% trans "Ineligible for awards." %}</p>{% endif %}
+<p>{% blocktrans with pos=player.position %}Position: {{ pos }}{% endblocktrans %}</p>
+{% if player.unranked %}
+  <p>{% trans "Ineligible for awards." %}</p>
+{% else %}
+  <h2>{% trans "Awards" %}</h2>
+  <ul>
+    {% for a in player.awards.all %}
+      <li>{{ award.name }}</li>
+    {% empty %}
+      <li>{% trans "None" %}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
 
+<h2>{% trans "Games Played" %}</h2>
 <ul>
   {% for rp in player.roundplayers.all %}
     <li>{% blocktrans with r=rp.the_round.number %}Round {{ r }}{% endblocktrans %}</li>

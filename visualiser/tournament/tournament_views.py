@@ -23,6 +23,7 @@ from io import StringIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.db import transaction
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
@@ -31,6 +32,8 @@ from django.utils.translation import gettext as _
 
 from tournament.email import send_roll_call_emails
 
+from tournament.forms import AwardsForm
+from tournament.forms import BaseAwardsFormset
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
 from tournament.forms import EnableCheckInForm
@@ -489,6 +492,34 @@ def seeder_bias(request, tournament_id):
                'biases': sb_set,
                'form': form}
     return render(request, 'tournaments/seeder_bias.html', context)
+
+
+@permission_required('tournament.change_tournamentplayer')
+def enter_awards(request, tournament_id):
+    """Enter awards for the Tournament"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    AwardsFormset = formset_factory(AwardsForm,
+                                    extra=0,
+                                    formset=BaseAwardsFormset)
+    formset = AwardsFormset(request.POST or None, tournament=t)
+    if formset.is_valid():
+        with transaction.atomic():
+            # Delete any existing awards
+            for tp in t.tournamentplayer_set.exclude(awards=None).all():
+                tp.awards.clear()
+                tp.save()
+            for form in formset:
+                award = form.cleaned_data['award']
+                tps = form.cleaned_data['players']
+                for tp in tps:
+                    tp.awards.add(award)
+                    tp.save()
+        # Redirect to the read-only version
+        return HttpResponseRedirect(reverse('tournament_awards',
+                                            args=(tournament_id,)))
+    context = {'tournament': t,
+               'formset': formset}
+    return render(request, 'tournaments/awards_form.html', context)
 
 
 def round_index(request, tournament_id):

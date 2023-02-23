@@ -24,7 +24,7 @@ from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.models import DrawSecrecy, PowerAssignMethods
+from tournament.models import Award, DrawSecrecy, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer, SeederBias
 from tournament.models import Preference, Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
@@ -104,6 +104,18 @@ class TournamentViewTests(TestCase):
                                         last_name='Krispy',
                                         user = cls.u3)
 
+        # A few awards
+        cls.a1 = Award.objects.create(name='Longest Hair',
+                                      description='Player whose hair is longer than the rest')
+        cls.a2 = Award.objects.create(name='Greenest Shirt',
+                                      description='Player with the greenest shirt')
+        cls.a3 = Award.objects.create(name='Best Italy',
+                                      description='Player who got the best result playing Italy',
+                                      power=cls.italy)
+        # This one should not be associated with any Tournament
+        cls.a4 = Award.objects.create(name='Whitest Teeth',
+                                      description='Player whose teeth are whiter than the rest')
+
         now = timezone.now()
         # Published Tournament, so it's visible to all
         # Ongoing, one round
@@ -114,6 +126,10 @@ class TournamentViewTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
+        cls.t1.awards.add(cls.a1)
+        cls.t1.awards.add(cls.a2)
+        cls.t1.awards.add(cls.a3)
+        cls.t1.save()
         Round.objects.create(tournament=cls.t1,
                              start=cls.t1.start_date,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -808,3 +824,52 @@ class TournamentViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 404)
+
+
+    def test_tournament_awards(self):
+        # Should be viewable without logging in
+        response = self.client.get(reverse('tournament_awards',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+
+    def test_enter_awards_post_not_logged_in(self):
+        response = self.client.get(reverse('enter_awards',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_enter_awards_post_missing_perms(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_awards',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        # TODO This isn't right given that they are logged in...
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_enter_awards_get(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('enter_awards',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_enter_awards_post(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, a in enumerate(self.t1.awards.all()):
+            data['form-%d-award' % i] = str(a.id)
+            data['form-%d-player' % i] = [str(self.t1.tournamentplayer_set.first().id)]
+        i += 1
+        data['form-TOTAL_FORMS'] = '%d' % i
+        data['form-INITIAL_FORMS'] = '%d' % i
+        data = urlencode(data, doseq=True)
+        response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_awards', args=(self.t1.pk,)))

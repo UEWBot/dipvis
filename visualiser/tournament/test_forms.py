@@ -29,10 +29,11 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy
-from tournament.models import Tournament, Round, Game
+from tournament.models import Award, Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
+from tournament.forms import AwardsForm, BaseAwardsFormset
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
@@ -42,6 +43,114 @@ from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
 from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
 from tournament.forms import SeederBiasForm
+
+
+class AwardsFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        p2 = Player.objects.create(first_name='Charlotte', last_name='Dotty')
+        p3 = Player.objects.create(first_name='Edward', last_name='Foxtrot')
+        p4 = Player.objects.create(first_name='Georgette', last_name='Halitosis')
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=timezone.now(),
+                                          end_date=timezone.now(),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.a1 = Award.objects.create(name='Nicest Player',
+                                      description='Player who was the nicest')
+        cls.tp1 = TournamentPlayer.objects.create(player=p3, tournament=cls.t)
+        # Include one unranked player, who shouldn't be pickable
+        cls.tp2 = TournamentPlayer.objects.create(player=p4, tournament=cls.t, unranked=True)
+        cls.tp3 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
+        cls.t.awards.add(cls.a1)
+        cls.t.save()
+
+    def test_init_needs_tournament(self):
+        with self.assertRaises(KeyError):
+            AwardsForm(award_name=str(self.a1))
+
+    def test_init_needs_award_name(self):
+        with self.assertRaises(KeyError):
+            AwardsForm(tournament=self.t)
+
+    def test_awards_form_player_field_label(self):
+        form = AwardsForm(tournament=self.t, award_name=str(self.a1))
+        self.assertEqual(form.fields['players'].label, str(self.a1))
+
+    def test_awards_form_player_choices(self):
+        form = AwardsForm(tournament=self.t, award_name=str(self.a1))
+        the_choices = list(form.fields['players'].choices)
+        # We should have one per TournamentPlayer
+        self.assertEqual(len(the_choices), self.t.tournamentplayer_set.filter(unranked=False).count())
+        # The keys should be the TournamentPlayer pks
+        self.assertEqual(the_choices[0][0].value, self.tp3.pk)
+        # and the values should be the Player names, in alphabetical order
+        self.assertEqual(the_choices[0][1], self.tp3.player.sortable_str())
+        self.assertEqual(the_choices[1][1], self.tp1.player.sortable_str())
+
+
+class AwardsFormsetTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=timezone.now(),
+                                          end_date=timezone.now(),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
+        p3 = Player.objects.create(first_name='Edwin', last_name='Flubber')
+        cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
+        cls.tp2 = TournamentPlayer.objects.create(player=p2, tournament=cls.t)
+        cls.tp3 = TournamentPlayer.objects.create(player=p3, tournament=cls.t)
+        cls.a1 = Award.objects.create(name='Nicest Player',
+                                      description='Player who was the nicest')
+        cls.a2 = Award.objects.create(name='Best Austria',
+                                      description='Who got the best result playing Austria',
+                                      power=GreatPower.objects.get(abbreviation='A'))
+        cls.a3 = Award.objects.create(name='Tallest Player',
+                                      description='Player of unusual size')
+        cls.t.awards.add(cls.a1)
+        cls.t.awards.add(cls.a2)
+        cls.t.awards.add(cls.a3)
+        cls.t.save()
+        cls.tp1.awards.add(cls.a1)
+        cls.tp2.awards.add(cls.a2)
+        cls.tp3.awards.add(cls.a2)
+
+        cls.AwardsFormset = formset_factory(AwardsForm, extra=0, formset=BaseAwardsFormset)
+
+    def test_awards_formset_creation(self):
+        formset = self.AwardsFormset(tournament=self.t)
+        awards = set()
+        for form in formset:
+            with self.subTest(award=form['award'].initial):
+                if form['award'].initial == self.a1.id:
+                    self.assertEqual(form['players'].initial, [self.tp1.id])
+                elif form['award'].initial == self.a2.id:
+                    self.assertEqual(form['players'].initial, [self.tp2.id, self.tp3.id])
+                else:
+                    self.assertEqual(form['players'].initial, [])
+            awards.add(form['award'].initial)
+        # All three Awards should be present
+        self.assertEqual(len(formset), 3)
+        self.assertIn(self.a1.id, awards)
+        self.assertIn(self.a2.id, awards)
+        self.assertIn(self.a3.id, awards)
+
+    def test_awards_formset_initial(self):
+        initial = []
+        initial.append({'award': self.a1.id, 'players': [self.tp2.id]})
+        formset = self.AwardsFormset(tournament=self.t, initial=initial)
+        # Explicit initial should override implicit
+        for form in formset:
+            self.assertEqual(form['players'].initial, [self.tp2.id])
+        self.assertEqual(len(formset), len(initial))
 
 
 class PrefsFormTest(TestCase):

@@ -49,14 +49,38 @@ def _game_to_wdd_id(game):
     return game.id
 
 
+def _power_award_to_gameplayers(tournament, award):
+    """
+    Map a "best country" award to the corresponding GamePlayers in the Tournament.
+    Returns a list of GamePlayers.
+    """
+    assert award.power is not None
+    ret = []
+    # First find the TournamentPlayers who got the specified award at this tournament
+    for tp in award.tournamentplayer_set.filter(tournament=tournament):
+        # Find the corresponding GamePlayer
+        for rp in tp.roundplayers().all():
+            for gp in rp.gameplayers.filter(power=award.power):
+                ret.append(gp)
+    return ret
+
+
+def _award_number(tournament, award):
+    """Returns the number (1..12) for the specified award at the tournament"""
+    # We don't actually check that we return <= 12. WDD will ignore any extras
+    assert award.power is None
+    for i, a in enumerate(tournament.awards.order_by('name'), 1):
+        if a == award:
+            return i
+    raise AssertionError(f'award {award} not found in {tournament}')
+
+
 def view_classification_csv(request, tournament_id):
     """Return a WDD-compatible "classification" CSV file for the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('-score')
     # Grab the tournament scores and positions, "if it ended now"
     t_positions_and_scores = t.positions_and_scores()[0]
-    # Grab the best country rankings
-    best_countries = t.best_countries()
     # Grab the top board, if any
     try:
         top_board = Game.objects.get(is_top_board=True,
@@ -84,6 +108,9 @@ def view_classification_csv(request, tournament_id):
         headers.append('CT_%s' % wdd_pwr)
         headers.append('HEAT_%s' % wdd_pwr)
         headers.append('BOARD_%s' % wdd_pwr)
+    # Other awards
+    for n in range(1, 13):
+        headers.append('RK_AWA_%d' % n)
     # Top Board stuff
     # Only add these headers if there was a top board
     if top_board:
@@ -120,18 +147,19 @@ def view_classification_csv(request, tournament_id):
         # Add in round score for each round played
         for rp in tp.roundplayers():
             row_dict['R%d' % rp.the_round.number()] = rp.score
-        # Add best country fields if any
-        for power, bc in best_countries.items():
-            # Did this player win best country with this power?
-            for gp in bc:
-                if gp.player == p:
-                    wdd_pwr = _power_name_to_wdd(power.name)
-                    row_dict['RK_%s' % wdd_pwr] = 1
-                    row_dict['PT_%s' % wdd_pwr] = gp.score
-                    row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=power).last().count
-                    row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
-                    row_dict['BOARD_%s' % wdd_pwr] = _game_to_wdd_id(gp.game)
-                    break
+        # Add awards
+        for award in tp.awards.all():
+            if award.power is not None:
+                for gp in _power_award_to_gameplayers(t, award):
+                    if gp.player == p:
+                        wdd_pwr = _power_name_to_wdd(award.power.name)
+                        row_dict['RK_%s' % wdd_pwr] = 1
+                        row_dict['PT_%s' % wdd_pwr] = gp.score
+                        row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=power).last().count
+                        row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
+                        row_dict['BOARD_%s' % wdd_pwr] = _game_to_wdd_id(gp.game)
+            else:
+                row_dict['RK_AWA_%d' % _award_number(t, award)] = 1
         # Add top board fields if applicable
         if top_board:
             try:

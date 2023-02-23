@@ -21,7 +21,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.set_power import SetPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.models import CentreCount, DrawProposal
+from tournament.models import Award, CentreCount, DrawProposal
 from tournament.models import Game, GameImage, GamePlayer
 from tournament.models import Round, RoundPlayer, DBNCoverage
 from tournament.models import SeederBias, Series, SupplyCentreOwnership
@@ -29,6 +29,10 @@ from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
 from tournament.players import PlayerGameResult, PlayerRanking
 from tournament.players import PlayerTournamentRanking
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    list_filter = ['power']
 
 @admin.register(CentreCount)
 class CentreCountAdmin(admin.ModelAdmin):
@@ -155,7 +159,8 @@ class TournamentAdmin(admin.ModelAdmin):
               ('draw_secrecy', 'best_country_criterion'),
               ('is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
-              'wdd_tournament_id')
+              'wdd_tournament_id',
+              'awards')
 
 @admin.register(TournamentPlayer)
 class TournamentPlayerAdmin(admin.ModelAdmin):

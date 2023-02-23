@@ -28,8 +28,8 @@ from bs4 import BeautifulSoup
 from tournament import backstabbr
 from tournament.background import WDDBackground
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
-from tournament.models import CentreCount, DrawProposal, Game, GameImage, GamePlayer
-from tournament.models import Preference, Round, RoundPlayer, SeederBias
+from tournament.models import Award, CentreCount, DrawProposal, Game, GameImage
+from tournament.models import GamePlayer, Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 from tournament.players import wdd_url_to_id, Player
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
@@ -380,3 +380,24 @@ def add_missing_wdd_ids(dry_run=False):
                 if not dry_run:
                     p.wdd_player_id = int(wdd_id)
                     p.save()
+
+
+def add_best_country_awards(dry_run=False):
+        """
+        Add "Best Country" awards to existing Tournaments.
+        Useful after the new Award class is added and Tournaments already exist.
+        Assumes that the seven "Best Country" awards have been created.
+        """
+        for t in Tournament.objects.all():
+            for power, gp_list in t.best_countries().items():
+                a = Award.objects.filter(power=power).first()
+                # First, add the Award to the Tournament
+                print(f'Adding award "{a}" to {t}')
+                if not dry_run:
+                    t.awards.add(a)
+                # Then give to the appropriate TournamentPlayers
+                for gp in gp_list:
+                    tp = gp.tournamentplayer()
+                    print(f'  Adding award "{a}" to {tp}')
+                    if not dry_run:
+                        tp.awards.add(a)

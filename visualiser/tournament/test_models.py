@@ -29,7 +29,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
-from tournament.models import SeederBias, Series, DBNCoverage
+from tournament.models import Award, SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import BestCountryCriteria, DrawSecrecy, Formats, Phases
@@ -971,6 +971,14 @@ class ModelTests(TestCase):
     # TODO game_image_location()
 
 
+class AwardTests(TestCase):
+    # Award.__str__()
+    def test_award_str(self):
+        a = Award(name="Test Award", description="The best")
+        # TODO validate results
+        str(a)
+
+
 class SeriesTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -1499,6 +1507,76 @@ class TournamentTests(TestCase):
                     self.assertEqual(tp.score, rp.score)
                 except RoundPlayer.DoesNotExist:
                     self.assertEqual(tp.score, 0.0)
+        # Note that this will also delete all other objects for the Tournament
+        t.delete()
+
+    def test_tourney_update_scores_awards(self):
+        # Verify that best country awards get set
+        now = timezone.now()
+        t = Tournament(name='t5',
+                       start_date=now,
+                       end_date=now,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=DrawSecrecy.SECRET)
+        t.save()
+        best_a = t.awards.create(name='Best Austria', power=self.austria, description='')
+        best_e = t.awards.create(name='Best England', power=self.england, description='')
+        best_f = t.awards.create(name='Best France', power=self.france, description='')
+        best_g = t.awards.create(name='Best Germany', power=self.germany, description='')
+        best_i = t.awards.create(name='Best Italy', power=self.italy, description='')
+        best_r = t.awards.create(name='Best Russia', power=self.russia, description='')
+        best_t = t.awards.create(name='Best Turkey', power=self.turkey, description='')
+        TournamentPlayer.objects.create(tournament=t, player=self.p1, score=1)
+        TournamentPlayer.objects.create(tournament=t, player=self.p2, score=2)
+        TournamentPlayer.objects.create(tournament=t, player=self.p3, score=3)
+        TournamentPlayer.objects.create(tournament=t, player=self.p4, score=4)
+        TournamentPlayer.objects.create(tournament=t, player=self.p5, score=5)
+        TournamentPlayer.objects.create(tournament=t, player=self.p6, score=6)
+        TournamentPlayer.objects.create(tournament=t, player=self.p7, score=7)
+        # Include a player who didn't play any games
+        TournamentPlayer.objects.create(tournament=t, player=self.p8, score=8)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Sum of Squares',
+                                 dias=True,
+                                 start=t.start_date)
+        RoundPlayer.objects.create(the_round=r, player=self.p1, score=7)
+        RoundPlayer.objects.create(the_round=r, player=self.p2, score=6)
+        RoundPlayer.objects.create(the_round=r, player=self.p3, score=5)
+        RoundPlayer.objects.create(the_round=r, player=self.p4, score=4)
+        RoundPlayer.objects.create(the_round=r, player=self.p5, score=3)
+        RoundPlayer.objects.create(the_round=r, player=self.p6, score=2)
+        RoundPlayer.objects.create(the_round=r, player=self.p7, score=1)
+        # We need a finished Game in the Round so the Round is finished
+        g = Game.objects.create(name='newgame2',
+                                started_at=r.start,
+                                the_round=r,
+                                is_finished=True,
+                                the_set=self.set1)
+        GamePlayer.objects.create(game=g, player=self.p1, power=self.italy, score=7)
+        GamePlayer.objects.create(game=g, player=self.p2, power=self.russia, score=6)
+        GamePlayer.objects.create(game=g, player=self.p3, power=self.turkey, score=5)
+        GamePlayer.objects.create(game=g, player=self.p4, power=self.england, score=4)
+        GamePlayer.objects.create(game=g, player=self.p5, power=self.france, score=3)
+        GamePlayer.objects.create(game=g, player=self.p6, power=self.austria, score=2)
+        GamePlayer.objects.create(game=g, player=self.p7, power=self.germany, score=1)
+
+        t.update_scores()
+
+        # Awards should be given to the corresponding TournamentPlayers
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                try:
+                    # Each player of the game should get the corresponding Best Country award
+                    gp = GamePlayer.objects.get(player=tp.player, game=g)
+                    self.assertEqual(tp.awards.count(), 1)
+                    self.assertEqual(tp.awards.first().power, gp.power)
+                except GamePlayer.DoesNotExist:
+                    self.assertEqual(tp.awards.count(), 0)
+
+        # Clean up
+        for a in t.awards.all():
+            a.delete()
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
@@ -2565,6 +2643,30 @@ class RoundTests(TestCase):
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p7)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p8)
+        tp.save()
         # We need a round with a finished game
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',

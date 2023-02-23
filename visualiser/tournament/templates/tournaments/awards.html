@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Awards{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Awards{% endblocktrans %}</h1>
+<dl>
+  {% for tp in tournament.tournamentplayer_set.all %}
+    {% if tp.awards.count %}
+      <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
+        {% for a in tp.awards.all %}
+          <dd>{{ a }}</dd>
+        {% endfor %}
+      {% endif %}
+  {% empty %}
+    {% trans "No players" %}
+  {% endfor %}
+</dl>
+{% endblock %}

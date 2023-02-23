@@ -533,6 +533,22 @@ def game_image_location(instance, filename):
     return os.path.join('games', directory, filename)
 
 
+class Award(models.Model):
+    MAX_NAME_LENGTH = 40
+    MAX_DESCRIPTION_LENGTH = 200
+
+    name = models.CharField(max_length=MAX_NAME_LENGTH, unique=True)
+    description = models.CharField(max_length=MAX_DESCRIPTION_LENGTH)
+    power = models.ForeignKey(GreatPower,
+                              blank=True,
+                              null=True,
+                              on_delete=models.CASCADE,
+                              help_text=_(u'Set if this award is associated with a specific power (e.g. "Best Italy")'))
+
+    def __str__(self):
+        return _(f'{self.name}')
+
+
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -591,6 +607,8 @@ class Tournament(models.Model):
     delay_game_url_publication = models.BooleanField(default=False,
                                                      verbose_name=_('Delay publishing game URL'),
                                                      help_text=_('Check to keep game URL secret until after the tournament completes'))
+    awards = models.ManyToManyField(Award,
+                                    help_text=_('Which achievements may be recognised.'))
 
     class Meta:
         ordering = ['-start_date']
@@ -724,11 +742,20 @@ class Tournament(models.Model):
         """
         Recalculate the scores for the Tournament,
         and store them in the TournamentPlayers.
+        If the Tournament has now ended, add Best Country awards to
+        the appropriate TournamentPlayers.
         """
         scores = self._calculated_scores()
         for tp in self.tournamentplayer_set.all():
             tp.score = scores[tp.player]
             tp.save()
+        if self.is_finished():
+            # Hand out Best Country awards
+            for power, gp_list in self.best_countries().items():
+                for award in self.awards.filter(power=power).all():
+                    for gp in gp_list:
+                        # TODO What if this gets called more than once?
+                        gp.tournamentplayer().awards.add(award)
 
     def round_numbered(self, number):
         """
@@ -967,6 +994,7 @@ class TournamentPlayer(models.Model):
                                            blank=True,
                                            help_text=_('Username on the backstabbr website'))
     location = models.CharField(max_length=60, blank=True)
+    awards = models.ManyToManyField(Award)
 
     class Meta:
         ordering = ['player']

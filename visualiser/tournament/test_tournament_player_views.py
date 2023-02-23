@@ -117,6 +117,13 @@ class TournamentPlayerViewTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
+        cls.t1.awards.create(name='Whitest Teeth',
+                             description='Tom Cruise award')
+        a1 = cls.t1.awards.create(name='Reddest Hair',
+                                  description='Gingers need love too')
+        a2 = cls.t1.awards.create(name='Best Turkey',
+                                  description='They cook a great Christmas dinner',
+                                  power=cls.turkey)
         Round.objects.create(tournament=cls.t1,
                              start=cls.t1.start_date,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -127,6 +134,8 @@ class TournamentPlayerViewTests(TestCase):
                                                    uuid_str=str(uuid.uuid4()))
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t1)
+        cls.tp11.awards.add(a1)
+        cls.tp11.awards.add(a2)
 
         # Unpublished Tournament, with a manager (u3)
         cls.t2 = Tournament.objects.create(name='t2',
@@ -190,6 +199,7 @@ class TournamentPlayerViewTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g21, year=1901, count=6)
         CentreCount.objects.create(power=cls.russia, game=g21, year=1901, count=7)
         CentreCount.objects.create(power=cls.turkey, game=g21, year=1901, count=5)
+        g21.check_whether_finished()
         cls.t2.managers.add(cls.u3)
 
         # Unpublished Tournament, without a manager
@@ -292,6 +302,7 @@ class TournamentPlayerViewTests(TestCase):
         dp.drawing_powers.add(cls.italy)
         dp.drawing_powers.add(cls.russia)
         dp.drawing_powers.add(cls.turkey)
+        g41.check_whether_finished()
         # Add CentreCounts for g42 - solo for Russia. Austria eliminated
         CentreCount.objects.create(power=cls.austria, game=g42, year=1901, count=4)
         CentreCount.objects.create(power=cls.england, game=g42, year=1901, count=4)
@@ -314,6 +325,7 @@ class TournamentPlayerViewTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g42, year=1903, count=4)
         CentreCount.objects.create(power=cls.russia, game=g42, year=1903, count=19)
         CentreCount.objects.create(power=cls.turkey, game=g42, year=1903, count=1)
+        g42.check_whether_finished()
 
         # Hopefully this isn't the pk for any Tournament
         cls.INVALID_T_PK = 99999
@@ -586,7 +598,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_archived(self):
-        # Should get a 404 error if the Tournament has been achived
+        # Should get a 404 error if the Tournament has been archived
         response = self.client.get(reverse('player_prefs',
                                            args=(self.t4.pk, self.tp41.uuid_str)),
                                    secure=True)

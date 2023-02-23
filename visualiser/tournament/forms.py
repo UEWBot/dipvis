@@ -28,11 +28,60 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
-from tournament.models import Game, GameImage, SeederBias
+from tournament.models import Award, Game, GameImage, SeederBias
 from tournament.models import DrawSecrecy, Seasons
 from tournament.models import TournamentPlayer
 from tournament.models import validate_game_name
 from tournament.players import Player
+
+
+class TournamentPlayerMultipleChoiceField(forms.ModelMultipleChoiceField):
+    """Field to pick TournamentPlayers"""
+    def label_from_instance(self, obj):
+        return obj.player.sortable_str()
+
+
+class AwardsForm(forms.Form):
+    """Form to give one Award to TournamentPlayers"""
+    award = forms.ModelChoiceField(queryset=Award.objects.all(),
+                                   widget=forms.HiddenInput())
+    players = TournamentPlayerMultipleChoiceField(queryset=TournamentPlayer.objects.none(),
+                                                  required=False)
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwargs from the list
+        tournament = kwargs.pop('tournament')
+        award_name = kwargs.pop('award_name')
+        super().__init__(*args, **kwargs)
+        # TODO we could create this queryset just once, in the formset
+        self.fields['players'].queryset = tournament.tournamentplayer_set.filter(unranked=False)
+        # Set the label to the award's name
+        self.fields['players'].label = award_name
+
+
+class BaseAwardsFormset(BaseFormSet):
+    """Formset for giving Awards to TournamentPlayers"""
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament')
+        # Get the list of Awards
+        self.awards = list(self.tournament.awards.order_by('name').all())
+        # Create initial if not provided
+        if 'initial' not in kwargs.keys():
+            # And construct initial data from it
+            # __init__() uses len(initial) to decide how many forms to create
+            initial = []
+            for award in self.awards:
+                tps = [tp.id for tp in self.tournament.tournamentplayer_set.filter(awards=award).all()]
+                initial.append({'award': award.id, 'players': tps})
+            kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special kwargs down to the form itself
+        kwargs['tournament'] = self.tournament
+        kwargs['award_name'] = str(self.awards[index])
+        return super()._construct_form(index, **kwargs)
 
 
 class SelfCheckInForm(forms.Form):

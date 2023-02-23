@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Awards{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{% blocktrans with tournament=tournament %}{{ tournament }} Awards{% endblocktrans %}</h1>
+<form method="post" action={% url 'enter_awards' tournament.id %}>
+  {% csrf_token %}
+  {{ formset.management_form }}
+  {{ formset.non_form_errors.as_ul }}
+  <table class="form">
+    {% for form in formset.forms %}
+      <thead><tr>
+        {% for field in form.visible_fields %}
+          <th>{{ field.label }}</th>
+        {% endfor %}
+      </th></tr>
+      <tbody<tr>
+        {{ form.non_field_errors }}
+        {% for hidden in form.hidden_fields %}
+          {{ hidden }}
+        {% endfor %}
+        {% for field in form.visible_fields %}
+          <td>
+            {{ field.error.as_ul }}
+            {{ field }}
+          </td>
+        {% endfor %}
+      </tr></tbody>
+    {% endfor %}
+  </table>
+  <input type="submit" value={% trans "Submit" %} />
+</form>
+{% endblock %}
