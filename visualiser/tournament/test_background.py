@@ -120,3 +120,22 @@ class WDDBackgroundTests(TestCase):
     def test_wdd_background_rankings_invalid(self):
         b = WDDBackground(INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.rankings)
+
+    # WDDBackground.wpe_scores()
+    @tag('wdd')
+    def test_wdd_background_wpe_scores_invalid(self):
+        b = WDDBackground(INVALID_WDD_ID)
+        s = b.wpe_scores()
+        self.assertEqual(len(s), 0)
+
+    def test_wdd_background_wpe_scores(self):
+        b = WDDBackground(MELINDA_HOLLEY_WDD_ID)
+        scores = b.wpe_scores()
+        for s in scores:
+            with self.subTest(s['Tournament']):
+                if s['Date'] == '2013-10-13':
+                    self.assertEqual(s['Score'], '21.00')
+                elif s['Date'] == '2009-09-19':
+                    self.assertEqual(s['Score'], '14.40')
+                elif s['Date'] == '1998-07-06':
+                    self.assertEqual(s['Score'], '4.00')

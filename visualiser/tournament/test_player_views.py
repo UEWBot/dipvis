@@ -72,4 +72,12 @@ class PlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, player_url)
 
+    def test_wpe(self):
+        # Test WPE page
+        response = self.client.get(reverse('wep7',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # TODO validate result
+
     # TODO test upload_players(), including fields with trailing spaces
