@@ -17,7 +17,7 @@
 Scrape the interesting parts of a Diplomacy game on WebDiplomacy.net.
 """
 
-import urllib.request
+import requests
 from urllib.parse import urlparse, parse_qs, urlunparse
 from bs4 import BeautifulSoup
 
@@ -96,13 +96,14 @@ class Game():
         """
         Open the specified URL, turn the web page into soup.
         """
-        #page = urllib.request.urlopen(url)
-        req = urllib.request.Request(url, headers={'User-Agent': "Magic Browser"})
-        page = urllib.request.urlopen( req )
-        if page.url != url:
-            # We were redirected - implies invalid game URL
+        # TODO Ideally, I think we should pass the gameID in params
+        page = requests.get(url,
+                            headers={'User-Agent': "Magic Browser"},
+                            allow_redirects=False,
+                            timeout=1.5)
+        if page.status_code != requests.codes.ok:
             raise InvalidGameUrl(url)
-        return BeautifulSoup(page.read())
+        return BeautifulSoup(page.text)
 
     def _parse_page(self):
         """

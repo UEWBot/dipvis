@@ -26,7 +26,7 @@ Currently those sources are Wikipedia for titles and the World Diplomacy
 Database for everything else.
 """
 
-import urllib.request
+import requests
 from bs4 import BeautifulSoup
 
 WDD_BASE_RESULTS_URL = 'https://world-diplomacy-database.com/php/results/'
@@ -73,8 +73,11 @@ class WikipediaBackground():
         Keys are Tournament and position.
         """
         url = WIKIPEDIA_URL
-        page = urllib.request.urlopen(url)
-        soup = BeautifulSoup(page.read())
+        try:
+            page = requests.get(url, timeout=1.5)
+        except requests.exceptions.Timeout:
+            return []
+        soup = BeautifulSoup(page.text)
         # Find the first H2 with a span inside
         h2 = None
         for h2 in soup.find_all('h2'):
@@ -135,16 +138,17 @@ class WDDBackground():
         Returns the name of the player, as read from the WDD
         Can raise WDDNotAccessible or InvalidWDDId
         """
-        url = WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
+        url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
         try:
-            page = urllib.request.urlopen(url)
-        except urllib.request.URLError as e:
-            # Most likely, WDD is not available
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=1.5)
+        except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId(self.wdd_id, url, page.geturl())
-        soup = BeautifulSoup(page.read())
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
         return soup.title.string[6:]
 
     def wdd_firstname_lastname(self):
@@ -177,12 +181,17 @@ class WDDBackground():
         Can raise InvalidWDDId
         """
         # Individual Prize List
-        url = WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % self.wdd_id
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId(self.wdd_id, url, page.geturl())
-        soup = BeautifulSoup(page.read())
+        url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
+        try:
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=1.5)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
         table = soup.find('table', width='65%')
         if not table:
             return []
@@ -229,12 +238,17 @@ class WDDBackground():
         Can raise InvalidWDDId
         """
         # Tournaments competed in
-        url = WDD_BASE_RESULTS_URL + 'player_fiche5.php?id_player=%d' % self.wdd_id
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId(self.wdd_id, url, page.geturl())
-        soup = BeautifulSoup(page.read())
+        url = WDD_BASE_RESULTS_URL + 'player_fiche5.php'
+        try:
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=1.5)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
         results = []
         # This page really confuses BeautifulSoup. Have to just find all th and td tags
         for row in soup.find_all('tr'):
@@ -294,12 +308,17 @@ class WDDBackground():
         Can raise InvalidWDDId
         """
         # Tournament board listings
-        url = WDD_BASE_RESULTS_URL + 'player_fiche9.php?id_player=%d' % self.wdd_id
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId(self.wdd_id, url, page.geturl())
-        soup = BeautifulSoup(page.read())
+        url = WDD_BASE_RESULTS_URL + 'player_fiche9.php'
+        try:
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=1.5)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
         results = []
         # This page really confuses BeautifulSoup. Have to just find all th and td tags
         for row in soup.find_all('tr'):
@@ -385,12 +404,17 @@ class WDDBackground():
         plus either 'SCs' and 'Score' (for best country awards) or 'Name' (for other awards)
         Can raise InvalidWDDId
         """
-        url = WDD_BASE_RESULTS_URL + 'player_fiche3.php?id_player=%d' % self.wdd_id
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId(self.wdd_id, url, page.geturl())
-        soup = BeautifulSoup(page.read())
+        url = WDD_BASE_RESULTS_URL + 'player_fiche3.php'
+        try:
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=1.5)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
         results = {}
         for table in soup.find_all('table', width='65%'):
             for th in table.find_all('th'):
@@ -452,12 +476,17 @@ class WDDBackground():
         Keys for the dict are 'Name', 'Score', 'International rank', and 'National rank'.
         Can raise InvalidWDDId
         """
-        url = WDD_BASE_RESULTS_URL + 'player_fiche4.php?id_player=%d' % self.wdd_id
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid WDD id
-            raise InvalidWDDId(self.wdd_id, url, page.geturl())
-        soup = BeautifulSoup(page.read())
+        url = WDD_BASE_RESULTS_URL + 'player_fiche4.php'
+        try:
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=2.0)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
         results = []
         for table in soup.find_all('table', width='70%'):
             columns = []
@@ -478,12 +507,19 @@ class WDDBackground():
     def wpe_scores(self):
         """Parse a World Performance Evaluation page on the World Diplomacy Database"""
         # TODO This is quite similar to finishes(), above
-        url = WDD_BASE_RANKING_URL + 'ranking_player.php?id_ranking=2&id_player=%d' % self.wdd_id
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
+        url = WDD_BASE_RANKING_URL + 'ranking_player.php'
+        try:
+            page = requests.get(url,
+                                params={'id_ranking': 2,
+                                        'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=1.5)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
             # Unranked players don't get a WDD page at all
             return {}
-        soup = BeautifulSoup(page.read())
+        soup = BeautifulSoup(page.text)
         # Find the table we need to parse
         tr = None
         for th in soup.find_all('th'):

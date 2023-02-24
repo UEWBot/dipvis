@@ -29,7 +29,7 @@ about a player and retrieving it as needed.
 import datetime
 import re
 import traceback
-import urllib.request
+import requests
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -78,13 +78,16 @@ def validate_wdd_player_id(value):
     """
     Checks a WDD player id
     """
-    url = WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % value
+    url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
     try:
-        p = urllib.request.urlopen(url)
-    except urllib.request.URLError:
-        # Most likely WDD is not available - assume the value is ok
+        r = requests.get(url,
+                         params={'id_player': value},
+                         allow_redirects=False,
+                         timeout=1.0)
+    except requests.exceptions.Timeout:
+        # Assume the id is ok
         return
-    if p.geturl() != url:
+    if r.status_code != requests.codes.ok:
         raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
                               params={'value': value})
 
@@ -93,13 +96,16 @@ def validate_wdd_tournament_id(value):
     """
     Checks a WDD tournament id
     """
-    url = WDD_BASE_RESULTS_URL + 'tournament_class.php?id_tournament=%d' % value
+    url = WDD_BASE_RESULTS_URL + 'tournament_class.php'
     try:
-        p = urllib.request.urlopen(url)
-    except urllib.request.URLError:
-        # Most likely WDD is not available - assume the value is ok
+        r = requests.get(url,
+                         params={'id_tournament': value},
+                         allow_redirects=False,
+                         timeout=1.0)
+    except requests.exceptions.Timeout:
+        # Assume the id is ok
         return
-    if p.geturl() != url:
+    if r.status_code != requests.codes.ok:
         raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
                               params={'value': value})
 

@@ -18,7 +18,7 @@ Scrape the interesting parts of a Diplomacy game on Backstabbr.com.
 """
 
 import re
-import urllib.request
+import requests
 from urllib.parse import urljoin, urlparse, urlunparse
 from ast import literal_eval
 from bs4 import BeautifulSoup
@@ -163,11 +163,12 @@ class Game():
         """
         Open the specified URL, turn the web page into soup.
         """
-        page = urllib.request.urlopen(url)
-        if page.geturl() != url:
-            # We were redirected - implies invalid game URL
+        page = requests.get(url,
+                            allow_redirects=False,
+                            timeout=1.5)
+        if page.status_code != requests.codes.ok:
             raise InvalidGameUrl(url)
-        return BeautifulSoup(page.read())
+        return BeautifulSoup(page.text)
 
     def _parse_page(self):
         """

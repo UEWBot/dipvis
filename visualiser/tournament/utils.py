@@ -22,7 +22,7 @@
 This module provides utility functions for DipVis.
 """
 
-import urllib.request
+import requests
 from bs4 import BeautifulSoup
 
 from tournament import backstabbr
@@ -349,7 +349,7 @@ def find_missing_wdd_ids():
     for p in Player.objects.all():
         if p.wdd_player_id:
             continue
-        if p.tournamentplayer_set.filter(tournament__wdd_tournament_id__isnull=False).exists():
+        if p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).exists()
             print(p)
 
 
@@ -360,12 +360,13 @@ def add_missing_wdd_ids(dry_run=False):
     for p in Player.objects.all():
         if p.wdd_player_id:
             continue
-        tp = p.tournamentplayer_set.filter(tournament__wdd_tournament_id__isnull=False).first()
+        tp = p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).first()
         if not tp:
             continue
         url = tp.tournament.wdd_url()
-        page = urllib.request.urlopen(url)
-        soup = BeautifulSoup(page.read())
+        page = requests.get(url,
+                            timeout=1.0)
+        soup = BeautifulSoup(page.text)
         for a in soup.find_all('a'):
             if not a.string:
                 continue

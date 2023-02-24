@@ -41,8 +41,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_non_wd_url(self):
         """Not a webdip URL."""
         path = 'board.php'
-        query = {'gameID': '%s' % INVALID_GAME_ID}
-        url = urlunparse(('https', 'google.com', path, '', urlencode(query), ''))
+        url = urlunparse(('https', 'google.com', path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
     def test_webdip_game_invalid_game_id(self):
