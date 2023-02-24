@@ -609,6 +609,10 @@ class Tournament(models.Model):
                                                      help_text=_('Check to keep game URL secret until after the tournament completes'))
     awards = models.ManyToManyField(Award,
                                     help_text=_('Which achievements may be recognised.'))
+    discord_url = models.URLField(verbose_name=_('Discord webhook URL'),
+                                  blank=True,
+                                  null=True,
+                                  help_text=_('Board calls will be posted here'))
 
     class Meta:
         ordering = ['-start_date']

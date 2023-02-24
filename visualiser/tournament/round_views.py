@@ -19,6 +19,7 @@ Round Views for the Diplomacy Tournament Visualiser.
 """
 
 import csv
+import requests
 
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
@@ -329,6 +330,18 @@ def _generate_game_name(round_num, i):
     return 'R%sG%s' % (round_num, chr(ord('A') + i - 1))
 
 
+def _send_board_call_to_discord(the_round):
+    """Send a board call message to the discord webhook for the tournament, if any"""
+    if not the_round.tournament.discord_url:
+        return
+    text = the_round.board_call_msg()
+    data = {
+        "content": text,
+        "username": "Diplomacy TV"
+           }
+    requests.post(the_round.tournament.discord_url, json=data)
+
+
 @permission_required('tournament.add_game')
 def seed_games(request, tournament_id, round_num):
     """Seed players to the games for a round"""
@@ -371,6 +384,7 @@ def seed_games(request, tournament_id, round_num):
                 g.update_scores()
             # Notify the players
             send_board_call_email(r)
+            _send_board_call_to_discord(r)
             # Redirect to the board call page
             return HttpResponseRedirect(reverse('board_call',
                                                 args=(tournament_id, round_num)))
@@ -516,6 +530,7 @@ def create_games(request, tournament_id, round_num):
             g.update_scores()
         # Notify the players
         send_board_call_email(r)
+        _send_board_call_to_discord(r)
         # Redirect to the board call page
         return HttpResponseRedirect(reverse('board_call',
                                             args=(tournament_id, round_num)))
