@@ -12,6 +12,7 @@
     <thead><tr>
       <th></th>
       <th>{% trans "Player" %}</th>
+      <th>{% trans "Location" %}</th>
       {% if tournament.is_virtual %}
         <th>{% trans "Backstabbr Username" %}</th>
       {% endif %}
@@ -29,7 +30,8 @@
       {% for tp in tournament.tournamentplayer_set.all %}
         <tr class="{% cycle 'odd_row' 'even_row' %}">
           <td>{{ forloop.counter }}</td>
-          <td>{{ tp.player }}</td>
+          <td><a href="{% if tournament.current_round.gameset.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a></td>
+          <td>{% if tp.location %} ({{ tp.location }}){% endif %}</td>
           {% if tournament.is_virtual %}
             <td>{{tp.backstabbr_username }}</td>
           {% endif %}
