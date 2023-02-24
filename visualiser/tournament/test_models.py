@@ -30,7 +30,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import BestCountryCriteria, DrawSecrecy, Phases
+from tournament.models import BestCountryCriteria, DrawSecrecy, Formats, Phases
 from tournament.models import PowerAssignMethods, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
@@ -2708,6 +2708,39 @@ class RoundTests(TestCase):
         r22 = t.round_set.all()[1]
         self.assertEqual(r22.number(), 2)
 
+    # Round.board_call_msg()
+    def test_round_board_call_msg(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.all()[0]
+        for g in r.game_set.all():
+            self.assertEqual(g.gameplayer_set.count(), 0)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p1,
+                                      power=self.austria)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p2,
+                                      power=self.england)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p3,
+                                      power=self.france)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p4,
+                                      power=self.germany)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p5,
+                                      power=self.italy)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p6,
+                                      power=self.russia)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p7,
+                                      power=self.turkey)
+        msg = r.board_call_msg()
+        # TODO Validate results
+        # Cleanup
+        for g in r.game_set.all():
+            g.gameplayer_set.all().delete()
+
     # Round.background()
     def test_round_background(self):
         t = Tournament.objects.get(name='t1')
@@ -2971,13 +3004,21 @@ class GameTests(TestCase):
         RoundPlayer.objects.create(player=cls.p7, the_round=r12)
         RoundPlayer.objects.create(player=cls.p8, the_round=r12)
         # And TournamentPlayers
-        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p1,
+                                        tournament=t1,
+                                        backstabbr_username='AbbeyBrown')
+        TournamentPlayer.objects.create(player=cls.p2,
+                                        tournament=t1,
+                                        backstabbr_username='nobody')
         TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
         TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p5,
+                                        tournament=t1,
+                                        unranked=True)
         TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p7,
+                                        tournament=t1,
+                                        location='The Moon')
         TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
     # Game.backstabbr_game()
@@ -3632,6 +3673,72 @@ class GameTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g11')
         # As the Game has not yeat reached 1905, we should get the most recent state
         self.assertEqual(len(g.survivors(1905)), len(g.survivors()))
+
+    # Game.board_call_msg()
+    def test_game_board_call_msg(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        # TODO validate results
+        g.board_call_msg()
+
+    def test_game_board_call_msg_external_url(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(len(g.external_url), 0)
+        URL = 'www.example.com/nonsense'
+        g.external_url = URL
+        g.save()
+        msg = g.board_call_msg()
+        self.assertIn(URL, msg)
+        # Cleanup
+        g.external_url = ''
+        g.save()
+
+    def test_game_board_call_msg_notes(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertEqual(len(g.notes), 0)
+        NOTES = 'Actual notes go here'
+        g.notes = NOTES
+        g.save()
+        msg = g.board_call_msg()
+        self.assertIn(NOTES, msg)
+        # Cleanup
+        g.notes = ''
+        g.save()
+
+    def test_game_board_call_msg_virtual(self):
+        # Ensure some, but not all, players have backstabbr usernames
+        t = Tournament.objects.get(name='t1')
+        self.assertFalse(t.is_virtual())
+        t.format = Formats.VFTF
+        t.save()
+        g = t.round_numbered(1).game_set.get(name='g11')
+        msg = g.board_call_msg()
+        self.assertNotIn('  ', msg)
+        self.assertNotIn('()', msg)
+        # Check for backstabbr username
+        self.assertIn('(AbbeyBrown)', msg)
+        # Cleanup
+        t.format = Formats.FTF
+        t.save()
+
+    def test_game_board_call_msg_no_powers(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertFalse(t.is_virtual())
+        g = t.round_numbered(1).game_set.get(name='g11')
+        powers = {}
+        for gp in g.gameplayer_set.all():
+            self.assertIsNotNone(gp.power)
+            powers[gp] = gp.power
+            gp.power = None
+            gp.save()
+        msg = g.board_call_msg()
+        self.assertIn('Power TBD', msg)
+        # Cleanup
+        for gp in g.gameplayer_set.all():
+            gp.power = powers[gp]
+            gp.save()
 
     # Game.result_str()
     def test_game_result_str_soloed(self):

@@ -1284,6 +1284,14 @@ class Round(models.Model):
                 return count
         assert 0, u"Round doesn't exist within its own tournament"
 
+    def board_call_msg(self):
+        """
+        Returns a message listing the boards, players, and powers for the Round,
+        suitable for sending by email or posting to discord.
+        """
+        text = 'Round %(number)d Board Call\n\n' % {'number': self.number()}
+        return text + '\n'.join([g.board_call_msg() for g in self.game_set.all()])
+
     def background(self, mask=MASK_ALL_BG):
         """
         Returns a list of background strings for the round
@@ -1628,6 +1636,29 @@ class Game(models.Model):
             year = final_year
         final_scs = self.centrecount_set.filter(year=year)
         return [sc for sc in final_scs if sc.count > 0]
+
+    def board_call_msg(self):
+        """
+        Returns a message listing the game name, players, and powers,
+        suitable for sending by email or posting to discord.
+        """
+        game_text = 'Board %(game)s:\n' % {'game': self.name}
+        if self.external_url:
+            game_text += ' ' + self.external_url + '\n'
+        if self.notes:
+            game_text += ' ' + self.notes + '\n'
+        for gp in self.gameplayer_set.order_by('power'):
+            game_text += ' %(power)s: %(player)s' % {'power': gp.power or 'Power TBD',
+                                                     'player': gp.player}
+            if self.the_round.tournament.is_virtual():
+                bs_un = gp.tournamentplayer().backstabbr_username
+                if bs_un:
+                    game_text += ' (%(backstabbr)s)\n' % {'backstabbr': bs_un}
+                else:
+                    game_text += '\n'
+            else:
+                game_text += '\n'
+        return game_text
 
     def result_str(self, include_game_name=False):
         """

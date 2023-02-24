@@ -338,52 +338,6 @@ class EmailTests(TestCase):
         t.no_email = False
         t.save()
 
-    def test_send_board_call_email_powers_unassigned(self):
-        # Send the players to the board to pick powers
-        r = Round.objects.last()
-        send_board_call_email(r)
-        # Just one Game
-        self.assertEqual(len(mail.outbox), 1)
-        for m in mail.outbox:
-            self.assertIn('Power TBD', m.body)
-
-    @override_settings(EMAIL_HOST_USER=TD_EMAIL)
-    def test_send_board_call_email_virtual(self):
-        r = Round.objects.first()
-        t = r.tournament
-        t.format = Formats.VFTF
-        t.save()
-        send_board_call_email(r)
-        # 3 Games, but one where no players has an email address, so we expect to send 2 emails
-        self.assertEqual(len(mail.outbox), 2)
-        for m in mail.outbox:
-            # Both should be "from" the TD
-            self.assertEqual(m.from_email, TD_EMAIL)
-            # Both should have just the TD in "To:"
-            self.assertEqual(len(m.to), 1)
-            self.assertEqual(m.to[0], TD_EMAIL)
-            # Both should have nobody in "CC:"
-            self.assertEqual(len(m.cc), 0)
-            # Player emails should be in "BCC:"
-            self.assertEqual(len(m.bcc), 6)
-            # p13 should get both emails (playing both games)
-            self.assertIn(self.p13.email, m.bcc)
-            # p16 shouldn't get any email (not in Tournament)
-            self.assertNotIn(self.p16.email, m.bcc)
-            # p15 shouldn't get any email (not in Round)
-            self.assertNotIn(self.p15.email, m.bcc)
-            # p12 shouldn't get any email (not in any Game in the Round)
-            self.assertNotIn(self.p12.email, m.bcc)
-            # There shouldn't be any double spaces
-            self.assertNotIn('  ', m.body)
-            # or any empty parentheses
-            self.assertNotIn('()', m.body)
-            # Check that the backstabbr username is in the email body
-            self.assertIn('(AbbeyBrown)', m.body)
-        # Cleanup
-        t.format = Formats.FTF
-        t.save()
-
     # TournamentPlayer.save() calls send_prefs_email()
     def test_send_prefs_email_no_prefs_new(self):
         # Save a TournamentPlayer with email in a tournament without prefs
