@@ -813,6 +813,12 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_owners_refresh(self):
+        response = self.client.get(reverse('game_sc_owners_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
     def test_sc_owners_with_gap_year(self):
         self.assertEqual(self.g1.centrecount_set.filter(year=1902).count(), 0)
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1903).count(), 0)
