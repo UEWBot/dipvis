@@ -22,7 +22,7 @@ from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.email import send_board_call, send_prefs_email
+from tournament.email import send_board_call_email, send_prefs_email
 from tournament.email import send_roll_call_emails
 from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
@@ -290,13 +290,13 @@ class EmailTests(TestCase):
                                     email='y.zebra@example.com')
         tp = TournamentPlayer.objects.create(player=p26, tournament=cls.t2)
 
-    # send_board_call()
+    # send_board_call_email()
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
-    def test_send_board_call(self):
+    def test_send_board_call_email(self):
         r = Round.objects.first()
         t = r.tournament
         self.assertEqual(t.is_virtual(), False)
-        send_board_call(r)
+        send_board_call_email(r)
         # 3 Games, but one where no players have an email address, so we expect to send 2 emails
         self.assertEqual(len(mail.outbox), 2)
         for m in mail.outbox:
@@ -331,29 +331,29 @@ class EmailTests(TestCase):
         self.assertEqual(t.no_email, False)
         t.no_email = True
         t.save()
-        send_board_call(r)
+        send_board_call_email(r)
         # 3 Games, but no managers, so we expect no emails
         self.assertEqual(len(mail.outbox), 0)
         # Clean up
         t.no_email = False
         t.save()
 
-    def test_send_board_call_powers_unassigned(self):
+    def test_send_board_call_email_powers_unassigned(self):
         # Send the players to the board to pick powers
         r = Round.objects.last()
-        send_board_call(r)
+        send_board_call_email(r)
         # Just one Game
         self.assertEqual(len(mail.outbox), 1)
         for m in mail.outbox:
             self.assertIn('Power TBD', m.body)
 
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
-    def test_send_board_call_virtual(self):
+    def test_send_board_call_email_virtual(self):
         r = Round.objects.first()
         t = r.tournament
         t.format = Formats.VFTF
         t.save()
-        send_board_call(r)
+        send_board_call_email(r)
         # 3 Games, but one where no players has an email address, so we expect to send 2 emails
         self.assertEqual(len(mail.outbox), 2)
         for m in mail.outbox:

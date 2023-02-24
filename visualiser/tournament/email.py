@@ -33,7 +33,7 @@ def _filtered_recipients(recipients, tournament):
         recipients = list(set(recipients) & set(managers))
     return recipients
 
-def send_board_call(the_round):
+def send_board_call_email(the_round):
     """Send an email to all players in the round with the board calls"""
     # TODO Translation is complex, because we don't want to use the language of the
     # person who triggered sending the email but of the person it's going to

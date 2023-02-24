@@ -44,7 +44,7 @@ from tournament.tournament_views import get_visible_tournament_or_404
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.email import send_board_call
+from tournament.email import send_board_call_email
 from tournament.game_seeder import GameSeeder
 from tournament.models import PowerAssignMethods
 from tournament.models import Tournament, Round, Game
@@ -372,7 +372,7 @@ def seed_games(request, tournament_id, round_num):
                 # Generate initial scores
                 g.update_scores()
             # Notify the players
-            send_board_call(r)
+            send_board_call_email(r)
             # Redirect to the board call page
             return HttpResponseRedirect(reverse('board_call',
                                                 args=(tournament_id, round_num)))
@@ -517,7 +517,7 @@ def create_games(request, tournament_id, round_num):
             # Generate initial scores
             g.update_scores()
         # Notify the players
-        send_board_call(r)
+        send_board_call_email(r)
         # Redirect to the board call page
         return HttpResponseRedirect(reverse('board_call',
                                             args=(tournament_id, round_num)))
