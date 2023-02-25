@@ -100,7 +100,7 @@ class Game():
         page = requests.get(url,
                             headers={'User-Agent': "Magic Browser"},
                             allow_redirects=False,
-                            timeout=1.5)
+                            timeout=2.0)
         if page.status_code != requests.codes.ok:
             raise InvalidGameUrl(url)
         return BeautifulSoup(page.text)
