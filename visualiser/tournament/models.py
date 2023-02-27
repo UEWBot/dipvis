@@ -465,7 +465,7 @@ def validate_weight(value):
     """
     No longer used. Retained for migrations.
     """
-    assert False, "This function should no longer be used"
+    raise AssertionError("This function should no longer be used")
 
 
 def validate_game_name(value):
@@ -489,7 +489,7 @@ def validate_bid(value):
     """
     No longer used. Retained for migrations.
     """
-    assert False, "This function should no longer be used"
+    raise AssertionError("This function should no longer be used")
 
 
 def validate_tournament_scoring_system(value):
@@ -1282,7 +1282,7 @@ class Round(models.Model):
         for count, r in enumerate(rounds, 1):
             if r == self:
                 return count
-        assert 0, u"Round doesn't exist within its own tournament"
+        raise AssertionError("Round doesn't exist within its own tournament")
 
     def board_call_msg(self):
         """
@@ -1909,7 +1909,7 @@ class DrawProposal(models.Model):
             if self.votes_in_favour is None:
                 raise ValidationError(_('Votes_in_favour needs a value'))
         else:
-            assert 0, 'Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy
+            raise AssertionError('Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy)
 
     def save(self, *args, **kwargs):
         if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:

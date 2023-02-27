@@ -154,7 +154,7 @@ class DrawForm(forms.Form):
             self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
                                                                 max_value=player_count)
         else:
-            assert 0, 'Unexpected draw secrecy value %c' % secrecy
+            raise AssertionError('Unexpected draw secrecy value %c' % secrecy)
 
 
 class GameScoreForm(forms.Form):
