@@ -29,8 +29,8 @@ def _filtered_recipients(recipients, tournament):
     If tournament.no_email is set, this will remove anyone not in tournament.managers.
     """
     if tournament.no_email:
-        managers = [m.player.email for m in tournament.managers.all()]
-        recipients = list(set(recipients) & set(managers))
+        managers = {m.player.email for m in tournament.managers.all()}
+        recipients = list(set(recipients) & managers)
     return recipients
 
 def send_board_call_email(the_round):
