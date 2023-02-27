@@ -400,6 +400,21 @@ class EmailTests(TestCase):
         tp.player.email = ''
         tp.player.save()
 
+    def test_send_prefs_no_email(self):
+        tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
+        self.assertIsNotNone(tp)
+        t = tp.tournament
+        self.assertEqual(t.is_virtual(), False)
+        self.assertEqual(t.no_email, False)
+        t.no_email = True
+        t.save()
+        send_prefs_email(tp)
+        # We expect no email
+        self.assertEqual(len(mail.outbox), 0)
+        # Clean up
+        t.no_email = False
+        t.save()
+
     # send_prefs_email(force=True)
     def test_send_prefs_email_no_prefs_force(self):
         # Call with force=True for a Player with an email, but for a Tournament without prefs
@@ -433,5 +448,22 @@ class EmailTests(TestCase):
         send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 1)
         # Clean up
+        t.power_assignment = old_pa
+        t.save()
+
+    def test_send_roll_call_no_email(self):
+        tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
+        self.assertIsNotNone(tp)
+        t = tp.tournament
+        self.assertEqual(t.is_virtual(), False)
+        self.assertEqual(t.no_email, False)
+        t.no_email = True
+        old_pa = t.power_assignment
+        t.power_assignment = PowerAssignMethods.PREFERENCES
+        t.save()
+        send_roll_call_emails(1, [tp])
+        self.assertEqual(len(mail.outbox), 0)
+        # Clean up
+        t.no_email = False
         t.power_assignment = old_pa
         t.save()

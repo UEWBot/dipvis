@@ -1510,7 +1510,7 @@ class Detour09GameScoringTests(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        set1 = GameSet.objects.get(name='Avalon Hill')
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
 
         s1 = G_SCORING_SYSTEMS[0].name
 
@@ -1527,7 +1527,7 @@ class Detour09GameScoringTests(TestCase):
         r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
 
         # Add Games to r11
-        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=cls.set1)
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -1725,6 +1725,91 @@ class Detour09GameScoringTests(TestCase):
                     # sc.count == 5
                     # 5+2+0+1=8
                     self.assertAlmostEqual(s, 100 * 8 / (6+6+6+8+8+8+8))
+
+    def test_g_scoring_maxonian_2_equal_below_top(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        g = Game.objects.create(name='g12', started_at=r.start, the_round=r, the_set=self.set1)
+        CentreCount.objects.create(power=self.austria, game=g, year=1907, count=2)
+        CentreCount.objects.create(power=self.england, game=g, year=1907, count=3)
+        CentreCount.objects.create(power=self.france, game=g, year=1907, count=4)
+        CentreCount.objects.create(power=self.germany, game=g, year=1907, count=10)
+        CentreCount.objects.create(power=self.italy, game=g, year=1907, count=4)
+        CentreCount.objects.create(power=self.russia, game=g, year=1907, count=5)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1907, count=6)
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Detour09')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 10:
+                    # 1st
+                    # 10+2+4+4=20
+                    self.assertAlmostEqual(s, 100 * 20 / (20+11+9+6+6+5+4))
+                elif sc.count == 6:
+                    # 2nd
+                    # 6+2+3=11
+                    self.assertAlmostEqual(s, 100 * 11 / (20+11+9+6+6+5+4))
+                elif sc.count == 5:
+                    # 3rd
+                    # 5+2+2=9
+                    self.assertAlmostEqual(s, 100 * 9 / (20+11+9+6+6+5+4))
+                elif sc.count == 4:
+                    # Joint 4th
+                    # 4+2=6
+                    self.assertAlmostEqual(s, 100 * 6 / (20+11+9+6+6+5+4))
+                elif sc.count == 3:
+                    # 6th
+                    # 3+2=5
+                    self.assertAlmostEqual(s, 100 * 5 / (20+11+9+6+6+5+4))
+                else:
+                    # 7th
+                    # 2+2=4
+                    self.assertAlmostEqual(s, 100 * 4 / (20+11+9+6+6+5+4))
+
+    def test_g_scoring_maxonian_3_equal_below_top(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        g = Game.objects.create(name='g12', started_at=r.start, the_round=r, the_set=self.set1)
+        CentreCount.objects.create(power=self.austria, game=g, year=1907, count=2)
+        CentreCount.objects.create(power=self.england, game=g, year=1907, count=3)
+        CentreCount.objects.create(power=self.france, game=g, year=1907, count=4)
+        CentreCount.objects.create(power=self.germany, game=g, year=1907, count=10)
+        CentreCount.objects.create(power=self.italy, game=g, year=1907, count=4)
+        CentreCount.objects.create(power=self.russia, game=g, year=1907, count=4)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1907, count=7)
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Detour09')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 10:
+                    # 1st
+                    # 10+2+3+4=19
+                    self.assertAlmostEqual(s, 100 * 19 / (19+12+6+6+6+5+4))
+                elif sc.count == 7:
+                    # 2nd
+                    # 7+2+3=12
+                    self.assertAlmostEqual(s, 100 * 12 / (19+12+6+6+6+5+4))
+                elif sc.count == 4:
+                    # Joint 3rd
+                    # 4+2=6
+                    self.assertAlmostEqual(s, 100 * 6 / (19+12+6+6+6+5+4))
+                elif sc.count == 3:
+                    # 6th
+                    # 3+2=5
+                    self.assertAlmostEqual(s, 100 * 5 / (19+12+6+6+6+5+4))
+                else:
+                    # 7th
+                    # 2+2=4
+                    self.assertAlmostEqual(s, 100 * 4 / (19+12+6+6+6+5+4))
+
 
 # GScoringMaxonian
 class MaxonianGameScoringTests(TestCase):
