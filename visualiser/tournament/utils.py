@@ -349,7 +349,7 @@ def find_missing_wdd_ids():
     for p in Player.objects.all():
         if p.wdd_player_id:
             continue
-        if p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).exists()
+        if p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).exists():
             print(p)
 
 
