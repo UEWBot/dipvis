@@ -847,12 +847,6 @@ class GameViewTests(TestCase):
         self.g1.centrecount_set.filter(year=1903).delete()
         self.g1.centrecount_set.filter(year=1902).delete()
 
-    def test_sc_owners_refresh(self):
-        response = self.client.get(reverse('game_sc_owners_refresh',
-                                           args=(self.t1.pk, self.g1.name)),
-                                   secure=True)
-        self.assertEqual(response.status_code, 200)
-
     def test_enter_sc_owners_not_logged_in(self):
         response = self.client.get(reverse('enter_sc_owners',
                                            args=(self.t1.pk, self.g1.name)),
