@@ -89,6 +89,9 @@ class TournamentGameState(GameState):
         top = self.final_year_scs[0]
         if top.count >= WINNING_SCS:
             return top.year
+        if self.draw is not None:
+            if len(self.draw.powers()) == 1:
+                return self.draw.year
         return None
 
     def num_powers_with(self, centres):
@@ -114,8 +117,10 @@ class TournamentGameState(GameState):
 
     def year_eliminated(self, power):
         """Returns the year in which the specified power was eliminated, or None."""
-        # TODO Need to add an exception handler to return None
-        return self.scs.filter(power=power).filter(count=0).order_by('year').first().year
+        try:
+            return self.scs.filter(power=power).filter(count=0).order_by('year').first().year
+        except AttributeError:
+            return None
 
     def last_full_year(self):
         """Returns the last year for which SCs have been entered."""

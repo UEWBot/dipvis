@@ -20,7 +20,7 @@ from django.utils import timezone
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring import InvalidYear, G_SCORING_SYSTEMS
 from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -201,6 +201,79 @@ class GameScoringTests(TestCase):
                 scores2 = system.scores(tgs2)
                 changes = scores1[self.france] != scores2[self.france]
                 self.assertEqual(changes, system.dead_score_can_change)
+
+    # Some tests for TournamentGameState
+    def test_concession_is_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertIsNone(g.passed_draw())
+        scs = g.centrecount_set.filter(year__lte=1901)
+        # Add a passed draw
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=Seasons.SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.france)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Solo or bust')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            if p == self.france:
+                self.assertEqual(s, 100)
+            else:
+                self.assertEqual(s, 0)
+        self.assertEqual(tgs.solo_year(), dp.year)
+        # Clean up
+        dp.delete()
+
+    def test_draw_is_not_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertIsNone(g.passed_draw())
+        scs = g.centrecount_set.filter(year__lte=1901)
+        # Add a passed draw
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1901,
+                                         season=Seasons.SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.turkey)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Solo or bust')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for s in scores.values():
+            self.assertEqual(s, 0)
+        self.assertIsNone(tgs.solo_year())
+        # Clean up
+        dp.delete()
+
+    def test_solo_year_none(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertIsNone(g.passed_draw())
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        self.assertIsNone(tgs.solo_year())
+
+    def test_dot_count_invalid_year(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertIsNone(g.passed_draw())
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        self.assertRaises(InvalidYear, tgs.dot_count, self.france, year=1899)
+
+    def test_year_eliminated_none(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        self.assertIsNone(g.passed_draw())
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        self.assertIsNone(tgs.year_eliminated(self.france))
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
