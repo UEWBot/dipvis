@@ -31,7 +31,7 @@ from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player
 
 from tournament.news import _tournament_news, _round_leader_str, _round_news, _game_news
-from tournament.news import MASK_ALL_NEWS
+from tournament.news import news, MASK_ALL_NEWS
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
@@ -377,4 +377,18 @@ class NewsTests(TestCase):
         for sc in g.centrecount_set.filter(year=1901):
             sc.delete()
 
-    # TODO news()
+    # news()
+    def test_news_for_tournament(self):
+        t = Tournament.objects.first()
+        # TODO Validate results
+        news(t)
+
+    def test_news_for_round(self):
+        r = Round.objects.first()
+        # TODO Validate results
+        news(r)
+
+    def test_news_for_game(self):
+        g = Game.objects.first()
+        # TODO Validate results
+        news(g)

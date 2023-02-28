@@ -1006,6 +1006,20 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_game_image_invalid1(self):
+        # Year too early
+        response = self.client.get(reverse('game_image',
+                                           args=(self.t1.pk, self.g1.name, 'S1900M')),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_game_image_invalid2(self):
+        # Invalid season/phase combo
+        response = self.client.get(reverse('game_image',
+                                           args=(self.t1.pk, self.g1.name, 'S1901A')),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
     def test_timelapse(self):
         response = self.client.get(reverse('game_timelapse',
                                            args=(self.t1.pk, self.g1.name)),
@@ -1036,6 +1050,62 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_news_for_year(self):
+        p1 = Player.objects.create(first_name='Abbey', last_name='Artichoke')
+        TournamentPlayer.objects.create(player=p1, tournament=self.t1)
+        RoundPlayer.objects.create(player=p1, the_round=self.r1)
+        GamePlayer.objects.create(player=p1, game=self.g1, power=self.turkey)
+        p2 = Player.objects.create(first_name='Brian', last_name='Balderdash')
+        TournamentPlayer.objects.create(player=p2, tournament=self.t1)
+        RoundPlayer.objects.create(player=p2, the_round=self.r1)
+        GamePlayer.objects.create(player=p2, game=self.g1, power=self.russia)
+        p3 = Player.objects.create(first_name='Charlene', last_name='Cat')
+        TournamentPlayer.objects.create(player=p3, tournament=self.t1)
+        RoundPlayer.objects.create(player=p3, the_round=self.r1)
+        GamePlayer.objects.create(player=p3, game=self.g1, power=self.italy)
+        p4 = Player.objects.create(first_name='Doug', last_name='Dog')
+        TournamentPlayer.objects.create(player=p4, tournament=self.t1)
+        RoundPlayer.objects.create(player=p4, the_round=self.r1)
+        GamePlayer.objects.create(player=p4, game=self.g1, power=self.germany)
+        p5 = Player.objects.create(first_name='Eliza', last_name='Elephant')
+        TournamentPlayer.objects.create(player=p5, tournament=self.t1)
+        RoundPlayer.objects.create(player=p5, the_round=self.r1)
+        GamePlayer.objects.create(player=p5, game=self.g1, power=self.france)
+        p6 = Player.objects.create(first_name='Freddie', last_name='Femur')
+        TournamentPlayer.objects.create(player=p6, tournament=self.t1)
+        RoundPlayer.objects.create(player=p6, the_round=self.r1)
+        GamePlayer.objects.create(player=p6, game=self.g1, power=self.england)
+        p7 = Player.objects.create(first_name='Ginny', last_name='Grape')
+        TournamentPlayer.objects.create(player=p7, tournament=self.t1)
+        RoundPlayer.objects.create(player=p7, the_round=self.r1)
+        GamePlayer.objects.create(player=p7, game=self.g1, power=self.austria)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.austria, count=0)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.england, count=5)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.france, count=5)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.germany, count=6)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.italy, count=6)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.russia, count=6)
+        CentreCount.objects.create(game=self.g1, year=1903, power=self.turkey, count=6)
+        response = self.client.get(reverse('game_news_for_year',
+                                           args=(self.t1.pk, self.g1.name, 1903)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.g1.centrecount_set.filter(year=1903).all().delete()
+        p1.delete()
+        p2.delete()
+        p3.delete()
+        p4.delete()
+        p5.delete()
+        p6.delete()
+        p7.delete()
+
+    def test_news_for_invalid_year(self):
+        response = self.client.get(reverse('game_news_for_year',
+                                           args=(self.t1.pk, self.g1.name, 1900)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
 
     def test_news_ticker(self):
         response = self.client.get(reverse('game_news_ticker',
