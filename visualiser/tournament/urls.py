@@ -48,6 +48,9 @@ class TurnConverter:
         val = int(value[1:-1])
         if val < FIRST_YEAR:
             raise ValueError
+        # Adjustments only happen in Fall
+        if (value[0] == 'S') and (value[-1] == 'A'):
+            raise ValueError
         return value
 
     def to_url(self, value):
