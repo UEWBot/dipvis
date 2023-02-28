@@ -7,8 +7,12 @@
 {% block content %}
 <h1>{{ player }}</h1>
 {% if player.picture %}
-  <img src="{{ player.picture.url }}" alt="" style="max-width:10%;">
+  <img src="{{ player.picture.url }}" alt="{{ player }}" style="max-width:10%;">
 {% endif %}
+<br>
+{% for country in player.nationalities %}
+  <img src="{{ country.flag }}" alt="{{ country.name }}" style="width:32px;">
+{% endfor %}
 <p>{% trans "WDD Name and Id:" %} {% if player.wdd_player_id %}<a href="{{ player.wdd_url }}">{{ player.wdd_name }} {{ player.wdd_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
 {% if player.location %}<p>{% trans "Location: " %}{{ player.location }}</p>{% endif %}
 <h2>{% trans "Tournaments" %}</h2>

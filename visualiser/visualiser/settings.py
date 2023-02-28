@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tournament',
+    'django_countries',
     'django_extensions',
 )
 

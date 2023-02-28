@@ -113,6 +113,10 @@ class WikipediaBackground():
                             except ValueError:
                                 pass
                             result[key] = val
+                            for span in td.find_all('span', recursive=False):
+                                if span.a:
+                                    nat = span.a['title']
+                                    result.setdefault(f'{key} Flags', []).append(nat)
                     results.append(result)
             tag = tag.find_next_sibling()
         # Now results contains all the results
@@ -175,6 +179,32 @@ class WDDBackground():
                 # Likely part of the first name
                 first_name = first_name + ' ' + word
         return (first_name, last_name)
+
+    def nationalities(self):
+        """
+        Returns a list of country 3-letter codes.
+        WDD doesn't currently support multiple citizenships,
+        but does have players without nationalities,
+        so the list will currently always be empty or have a single entry.
+        """
+        url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
+        try:
+            page = requests.get(url,
+                                params={'id_player': self.wdd_id},
+                                allow_redirects=False,
+                                timeout=2.5)
+        except requests.exceptions.Timeout as e:
+            raise WDDNotAccessible from e
+        if page.status_code != requests.codes.ok:
+            raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        soup = BeautifulSoup(page.text)
+        table = soup.find('table', bgcolor='black')
+        if not table:
+            return []
+        td = table.tr.th.table.tr.td
+        if td.img:
+            return [img_to_country(td.img['src'])]
+        return []
 
     def finishes(self):
         """

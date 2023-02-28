@@ -25,6 +25,8 @@ This module provides utility functions for DipVis.
 import requests
 from bs4 import BeautifulSoup
 
+from django_countries.fields import Country
+
 from tournament import backstabbr
 from tournament.background import WDDBackground
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
@@ -383,21 +385,61 @@ def add_missing_wdd_ids(dry_run=False):
 
 
 def add_best_country_awards(dry_run=False):
-        """
-        Add "Best Country" awards to existing Tournaments.
-        Useful after the new Award class is added and Tournaments already exist.
-        Assumes that the seven "Best Country" awards have been created.
-        """
-        for t in Tournament.objects.all():
-            for power, gp_list in t.best_countries().items():
-                a = Award.objects.filter(power=power).first()
-                # First, add the Award to the Tournament
-                print(f'Adding award "{a}" to {t}')
+    """
+    Add "Best Country" awards to existing Tournaments.
+    Useful after the new Award class is added and Tournaments already exist.
+    Assumes that the seven "Best Country" awards have been created.
+    """
+    for t in Tournament.objects.all():
+        for power, gp_list in t.best_countries().items():
+            a = Award.objects.filter(power=power).first()
+            # First, add the Award to the Tournament
+            print(f'Adding award "{a}" to {t}')
+            if not dry_run:
+                t.awards.add(a)
+            # Then give to the appropriate TournamentPlayers
+            for gp in gp_list:
+                tp = gp.tournamentplayer()
+                print(f'  Adding award "{a}" to {tp}')
                 if not dry_run:
-                    t.awards.add(a)
-                # Then give to the appropriate TournamentPlayers
-                for gp in gp_list:
-                    tp = gp.tournamentplayer()
-                    print(f'  Adding award "{a}" to {tp}')
-                    if not dry_run:
-                        tp.awards.add(a)
+                    tp.awards.add(a)
+
+
+# Map the country codes used by WDD to ISO 366 alpha-2 codes
+wdd_country_to_code = {
+        'ALL': 'DE',
+        'ANG': 'GB',
+        'HOL': 'NL',
+        'NZE': 'NZ',
+        'POR': 'PT',
+        'SUE': 'SE',
+        'SUI': 'CH',
+}
+
+def set_nationalities(dry_run=False):
+    """
+    Set Player.nationalities as specified in the WDD, unless already set.
+    """
+    for p in Player.objects.filter(nationalities='', wdd_player_id__isnull=False):
+        bg = WDDBackground(p.wdd_player_id)
+        nats = bg.nationalities()
+        if not nats:
+            continue
+        if len(nats) > 1:
+            print('Setting multiple nationalities is not supported')
+        n = nats[0]
+        # WDD uses 3-letter abbreviations of the French names for countries
+        # django_countires uses 2-letter ISO codes, but also supports
+        # 3-letter ISO codes, which is many cases match the codes used by WDD
+        try:
+            n = wdd_country_to_code[n]
+        except KeyError:
+            pass
+        c = Country(code=n)
+        if c.name == '':
+            print(f'Skipping unrecognised country "{n}" for WDD player {p.wdd_player_id}')
+            continue
+        print(f'Setting nationality of {p} to {c.name}')
+        if not dry_run:
+            p.nationalities = c
+            p.save()

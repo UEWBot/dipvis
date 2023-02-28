@@ -40,6 +40,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
+from django_countries.fields import CountryField
+
 from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_RESULTS_URL
 from tournament.background import WDD_NETLOC, WDD_BASE_RESULTS_PATH, WDD_BASE_RANKING_PATH
 from tournament.background import InvalidWDDId, WDDNotAccessible
@@ -482,6 +484,7 @@ class Player(models.Model):
     backstabbr_profile_url = models.URLField(blank=True)
     picture = models.ImageField(upload_to=player_picture_location, blank=True, null=True)
     location = models.CharField(max_length=60, blank=True)
+    nationalities = CountryField(multiple=True, blank=True)
     # Cache of the player's name in the WDD
     _wdd_name = models.CharField(max_length=60, blank=True)
     user = models.OneToOneField(User,
