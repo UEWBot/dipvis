@@ -259,7 +259,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         gn_str = _(u' in game %(name)s') % {'name': g.name}
     else:
         gn_str = ''
-    if g.is_finished and (for_year is None):
+    if g.is_finished and ((for_year is None) or (for_year >= g.final_year())):
         # Just report the final result
         return [g.result_str(include_game_name) + '.']
     centres_set = g.centrecount_set.order_by('-year')
@@ -384,7 +384,6 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # What draw votes failed recently ?
         # Note that it's fairly arbitrary where we draw the line here
         draws_set = dp_queryset.order_by('-year').filter(year__gte=last_year)
-        # TODO Lots of overlap with result_str()
         for d in draws_set:
             powers = d.powers()
             sz = len(powers)
