@@ -165,7 +165,7 @@ class Game():
         """
         page = requests.get(url,
                             allow_redirects=False,
-                            timeout=2.0)
+                            timeout=2.5)
         if page.status_code != requests.codes.ok:
             raise InvalidGameUrl(url)
         return BeautifulSoup(page.text)

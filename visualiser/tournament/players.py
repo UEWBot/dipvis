@@ -80,10 +80,10 @@ def validate_wdd_player_id(value):
     """
     url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
     try:
-        r = requests.get(url,
-                         params={'id_player': value},
-                         allow_redirects=False,
-                         timeout=1.0)
+        r = requests.head(url,
+                          params={'id_player': value},
+                          allow_redirects=False,
+                          timeout=1.0)
     except requests.exceptions.Timeout:
         # Assume the id is ok
         return
@@ -98,10 +98,10 @@ def validate_wdd_tournament_id(value):
     """
     url = WDD_BASE_RESULTS_URL + 'tournament_class.php'
     try:
-        r = requests.get(url,
-                         params={'id_tournament': value},
-                         allow_redirects=False,
-                         timeout=1.0)
+        r = requests.head(url,
+                          params={'id_tournament': value},
+                          allow_redirects=False,
+                          timeout=1.0)
     except requests.exceptions.Timeout:
         # Assume the id is ok
         return
