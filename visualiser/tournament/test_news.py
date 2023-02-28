@@ -314,6 +314,10 @@ class NewsTests(TestCase):
                 _game_news(g, mask=mask)
             mask *= 2
 
+    def test_game_news_year_too_late(self):
+        g = Game.objects.first()
+        _game_news(g, for_year=1920)
+
     def test_game_news_without_ownerships(self):
         # Test with no SupplyCentreOwnership objects
         # We need a year with CentreCounts but no SupplyCentreOwnerships,

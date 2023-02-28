@@ -264,11 +264,9 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         return [g.result_str(include_game_name) + '.']
     centres_set = g.centrecount_set.order_by('-year')
     if for_year:
-        last_year = for_year
-        centres_set = centres_set.filter(year__lte=last_year)
-    else:
-        # Which is the most recent year we have info for ?
-        last_year = centres_set[0].year
+        centres_set = centres_set.filter(year__lte=for_year)
+    # Which is the most recent year we have info for ?
+    last_year = centres_set[0].year
     # If the game just started, there is no news, so return the background instead
     if last_year == 1900:
         return g.background()
