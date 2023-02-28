@@ -26,7 +26,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import DrawSecrecy, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer, SeederBias
-from tournament.models import Round, RoundPlayer, Game, GamePlayer
+from tournament.models import Preference, Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import G_SCORING_SYSTEMS
@@ -657,6 +657,10 @@ class TournamentViewTests(TestCase):
 
     def test_enter_prefs(self):
         # A manager can enter preferences for players in their Tournament
+        self.assertFalse(Preference.objects.filter(player__tournament=self.t2).exists())
+        # Add a Preference for one Player
+        tp = self.t2.tournamentplayer_set.last()
+        tp.create_preferences_from_string('FART')
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = urlencode({'form-TOTAL_FORMS': '9',
                           'form-MAX_NUM_FORMS': '1000',
@@ -681,8 +685,7 @@ class TournamentViewTests(TestCase):
         for tp in self.t2.tournamentplayer_set.all():
             self.assertEqual(tp.prefs_string(), 'FART')
         # Clean up
-        for tp in self.t2.tournamentplayer_set.all():
-            tp.preference_set.all().delete()
+        Preference.objects.filter(player__tournament=self.t2).all().delete()
 
     def test_upload_prefs_not_logged_in(self):
         response = self.client.get(reverse('upload_prefs',
@@ -741,6 +744,24 @@ class TournamentViewTests(TestCase):
         self.assertEqual(sb.player2, tp2)
         # Clean up
         sb.delete()
+
+    def test_seeder_bias_add_error(self):
+        self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)
+        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        # Pick two suitable TournamentPlayers
+        tp1 = self.t2.tournamentplayer_set.first()
+        url = reverse('seeder_bias', args=(self.t2.pk,))
+        data = urlencode({'player1': str(tp1.pk),
+                          'player2': str(tp1.pk)})
+        response = self.client.post(url,
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # page should contain an error
+        self.assertContains(response, 'players must differ')
+        # ... and no SeederBias should be created
+        self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)
 
     def test_seeder_bias_remove(self):
         # Add two SeederBias objects just for this test

@@ -348,7 +348,28 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
-    # TODO board_call_csv(), including a game without powers assigned
+    def test_board_call_csv(self):
+        response = self.client.get(reverse('board_call_csv',
+                                           args=(self.t4.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_board_call_csv_no_powers(self):
+        r = self.t4.round_numbered(1)
+        g = r.game_set.first()
+        powers = {}
+        for gp in g.gameplayer_set.all():
+            powers[gp] = gp.power
+            gp.power = None
+            gp.save()
+        response = self.client.get(reverse('board_call_csv',
+                                           args=(self.t4.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        for gp, power in powers.items():
+            gp.power = power
+            gp.save()
 
     def test_roll_call_not_logged_in(self):
         response = self.client.get(reverse('round_roll_call',
@@ -803,6 +824,29 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         # Clean up
         g.delete()
+
+    def test_seed_games_manual_good_number(self):
+        # Simple case with exactly seven players with MANUAL power assignment
+        self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
+        self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
+        self.assertEqual(self.t2.power_assignment, PowerAssignMethods.PREFERENCES)
+        self.t2.power_assignment = PowerAssignMethods.MANUAL
+        self.t2.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t2.pk, 3)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # A single Game should have been created
+        g_qs = self.t2.round_numbered(3).game_set
+        self.assertEqual(g_qs.count(), 1)
+        # with seven GamePlayers
+        g = g_qs.get()
+        self.assertEqual(g.gameplayer_set.count(), 7)
+        # Clean up
+        g.delete()
+        self.t2.power_assignment = PowerAssignMethods.PREFERENCES
+        self.t2.save()
 
     def test_seed_games_auto_good_number_with_sitters(self):
         # Eight players, one sitting out, AUTO power assignment
@@ -1303,11 +1347,5 @@ class RoundViewTests(TestCase):
     def test_board_call(self):
         response = self.client.get(reverse('board_call',
                                            args=(self.t1.pk, 1)),
-                                   secure=True)
-        self.assertEqual(response.status_code, 200)
-
-    def test_board_call_csv(self):
-        response = self.client.get(reverse('board_call_csv',
-                                           args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
