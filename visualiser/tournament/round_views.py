@@ -221,9 +221,8 @@ def get_seven(request, tournament_id, round_num):
             rp.save()
         for i in range(form.standbys):
             rp = form.cleaned_data['standby_%d' % i]
-            if rp:
-                rp.game_count = 1
-                rp.save()
+            rp.game_count = 1
+            rp.save()
         for i in range(form.sitters):
             rp = form.cleaned_data['sitter_%d' % i]
             if rp:

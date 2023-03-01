@@ -485,7 +485,9 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '9',
-        data = urlencode({'form-TOTAL_FORMS': '7',
+        # This just confirms the actual players.
+        # Note that one who didn't play is flagged as "not present"
+        data = urlencode({'form-TOTAL_FORMS': '8',
                           'form-INITIAL_FORMS': '7',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
@@ -503,7 +505,7 @@ class RoundViewTests(TestCase):
                           'form-5-present': 'ok',
                           'form-6-player': str(self.p8.pk),
                           'form-6-present': 'ok',
-                          'form-7-player': '',
+                          'form-7-player': str(self.p2.pk),
                           'form-7-present': '',
                           'form-8-player': '',
                           'form-8-present': ''})
