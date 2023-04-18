@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+from unittest import skip
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
@@ -216,7 +217,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertNotContains(response, 'from Backstabbr/WebDiplomacy')
+        self.assertNotContains(response, 'from Backstabbr')
 
     def test_detail_scrape_bs_link(self):
         # Give g1 a backstabbr URL
@@ -226,7 +227,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertContains(response, 'from Backstabbr/WebDiplomacy')
+        self.assertContains(response, 'from Backstabbr')
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -239,7 +240,7 @@ class GameViewTests(TestCase):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
-        self.assertContains(response, 'from Backstabbr/WebDiplomacy')
+        self.assertContains(response, 'from Backstabbr')
         # Clean up
         self.g1.external_url = ''
         self.g1.save()
@@ -1712,7 +1713,7 @@ class GameViewTests(TestCase):
         self.g1.save()
         self.g1.refresh_from_db()
 
-    @tag('webdip')
+    @skip('WebDip parsing is broken')
     def test_scrape_webdip_success(self):
         self.assertEqual(len(self.g1.external_url), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)

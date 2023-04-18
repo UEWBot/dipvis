@@ -1364,7 +1364,7 @@ class Game(models.Model):
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
     external_url = models.URLField(blank=True,
-                                   verbose_name=_('Backstabbr/WebDiplomacy URL'),
+                                   verbose_name=_('Backstabbr URL'),
                                    help_text=_('Will be included in board call emails and game page'))
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
