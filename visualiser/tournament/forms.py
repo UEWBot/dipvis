@@ -274,7 +274,9 @@ class BaseGamePlayersFormset(BaseFormSet):
 
 class PowerAssignForm(forms.Form):
     """Form for players of a single game"""
-    name = forms.CharField(label=_(u'Game Name'), max_length=Game.MAX_NAME_LENGTH)
+    name = forms.CharField(label=_(u'Game Name'),
+                           max_length=Game.MAX_NAME_LENGTH,
+                           validators=[validate_game_name])
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
     external_url = forms.URLField(label=_('URL'),

@@ -737,6 +737,40 @@ class PowerAssignFormTest(TestCase):
         form = PowerAssignForm(data, game=self.g)
         self.assertTrue(form.is_valid())
 
+    def test_name_error1(self):
+        data = {'name': 'R1 G1',
+                'the_set': str(GameSet.objects.first().pk),
+                self.gp1.pk: str(self.turkey.pk),
+                self.gp2.pk: str(self.austria.pk),
+                self.gp3.pk: str(self.england.pk),
+                self.gp4.pk: str(self.france.pk),
+                self.gp5.pk: str(self.germany.pk),
+                self.gp6.pk: str(self.italy.pk),
+                self.gp7.pk: str(self.russia.pk),
+                'issues': ''}
+        form = PowerAssignForm(data, game=self.g)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Game names cannot contain spaces', form.errors['name'][0])
+
+    def test_name_error2(self):
+        data = {'name': 'R1/G1',
+                'the_set': str(GameSet.objects.first().pk),
+                self.gp1.pk: str(self.turkey.pk),
+                self.gp2.pk: str(self.austria.pk),
+                self.gp3.pk: str(self.england.pk),
+                self.gp4.pk: str(self.france.pk),
+                self.gp5.pk: str(self.germany.pk),
+                self.gp6.pk: str(self.italy.pk),
+                self.gp7.pk: str(self.russia.pk),
+                'issues': ''}
+        form = PowerAssignForm(data, game=self.g)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Game names cannot contain / characters', form.errors['name'][0])
+
     def test_field_error(self):
         data = {'name': 'R1G1',
                 'the_set': 'Non-existent set',
