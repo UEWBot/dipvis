@@ -470,10 +470,12 @@ def validate_weight(value):
 
 def validate_game_name(value):
     """
-    Game names cannot contain spaces because they are used in URLs.
+    Game names cannot contain spaces or '/' because they are used in URLs.
     """
-    if u' ' in value:
+    if ' ' in value:
         raise ValidationError(_(u'Game names cannot contain spaces'))
+    if '/' in value:
+        raise ValidationError(_(u'Game names cannot contain / characters'))
 
 
 def validate_vote_count(value):

@@ -928,6 +928,9 @@ class ModelTests(TestCase):
     def test_validate_game_name_spaces(self):
         self.assertRaises(ValidationError, validate_game_name, u'space name')
 
+    def test_validate_game_name_slash(self):
+        self.assertRaises(ValidationError, validate_game_name, u'nam/e')
+
     def test_validate_game_name_valid(self):
         self.assertIsNone(validate_game_name(u'ok'))
 
