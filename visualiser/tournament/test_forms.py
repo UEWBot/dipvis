@@ -405,6 +405,22 @@ class GamePlayersFormTest(TestCase):
         form = GamePlayersForm(data, the_round=self.r1)
         self.assertTrue(form.is_valid())
 
+    def test_name_error(self):
+        data = {'name': 'R1 G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Game names cannot contain spaces', form.errors['name'][0])
+
     def test_field_error(self):
         data = {'name': 'R1G1',
                 'the_set': 'Non-existent set',
@@ -551,7 +567,7 @@ class BaseGamePlayersFormsetTest(TestCase):
 
     def test_formset_duplicate_names(self):
         # Add two Games, with the same name
-        GAME_NAME = 'Best Game'
+        GAME_NAME = 'BestGame'
         data = self.data.copy()
         data['form-0-name'] = GAME_NAME
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
