@@ -258,7 +258,7 @@ class PlayerTests(TestCase):
         p = Player(first_name='Joe',
                    last_name='Bloggs')
         p.save()
-        # Nofinal_sc_count (or other optional fields)
+        # No final_sc_count (or other optional fields)
         pgr = PlayerGameResult(tournament_name='Best Tournament',
                                game_name='Top Board',
                                player=p,
@@ -275,7 +275,7 @@ class PlayerTests(TestCase):
         p = Player(first_name='Joe',
                    last_name='Bloggs')
         p.save()
-        # Nofinal_sc_count (or other optional fields)
+        # No final_sc_count (or other optional fields)
         pgr = PlayerGameResult(tournament_name='Best Tournament',
                                game_name='Top Board',
                                player=p,
@@ -306,6 +306,79 @@ class PlayerTests(TestCase):
         self.assertIn(ptr.tournament, p_str)
 
     # PlayerGameResult
+    # TODO PlayerGameResult.for_same_game()
+    def test_playergameresult_same(self):
+        p1 = Player.objects.first()
+        p2 = Player.objects.last()
+        # No final_sc_count (or other optional fields)
+        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+                                game_name='Top Board',
+                                player=p1,
+                                power=self.austria,
+                                date=timezone.now(),
+                                position=2)
+        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+                                game_name=pgr1.game_name,
+                                player=p2,
+                                power=self.russia,
+                                date=pgr1.date,
+                                position=4)
+        self.assertTrue(pgr1.for_same_game(pgr2))
+
+    def test_playergameresult_same_wrong_tournament(self):
+        p1 = Player.objects.first()
+        p2 = Player.objects.last()
+        # No final_sc_count (or other optional fields)
+        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+                                game_name='Top Board',
+                                player=p1,
+                                power=self.austria,
+                                date=timezone.now(),
+                                position=2)
+        pgr2 = PlayerGameResult(tournament_name='Worst Tournament',
+                                game_name=pgr1.game_name,
+                                player=p2,
+                                power=self.russia,
+                                date=pgr1.date,
+                                position=4)
+        self.assertFalse(pgr1.for_same_game(pgr2))
+
+    def test_playergameresult_same_wrong_game(self):
+        p1 = Player.objects.first()
+        p2 = Player.objects.last()
+        # No final_sc_count (or other optional fields)
+        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+                                game_name='Top Board',
+                                player=p1,
+                                power=self.austria,
+                                date=timezone.now(),
+                                position=2)
+        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+                                game_name='Bottom Board',
+                                player=p2,
+                                power=self.russia,
+                                date=pgr1.date,
+                                position=4)
+        self.assertFalse(pgr1.for_same_game(pgr2))
+
+    def test_playergameresult_same_wrong_date(self):
+        p1 = Player.objects.first()
+        p2 = Player.objects.last()
+        # No final_sc_count (or other optional fields)
+        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+                                game_name='Top Board',
+                                player=p1,
+                                power=self.austria,
+                                date=timezone.now(),
+                                position=2)
+        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+                                game_name=pgr1.game_name,
+                                player=p2,
+                                power=self.russia,
+                                date=timezone.now(),
+                                position=4)
+        self.assertFalse(pgr1.for_same_game(pgr2))
+
     # PlayerGameResult.__str__()
     @tag('slow', 'wdd')
     def test_playergameresult_str(self):

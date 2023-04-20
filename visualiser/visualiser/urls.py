@@ -26,6 +26,8 @@ player_patterns = [
          name='player_index'),
     path('<int:pk>/', player_views.player_detail,
          name='player_detail'),
+    path('<int:pk1>/<int:pk2>/', player_views.player_versus,
+         name='player_versus'),
     path('upload_players/', player_views.upload_players,
          name='upload_players'),
     path('<int:pk>/wep7/', player_views.wpe,

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block title %}{% blocktrans with player1=player1 player2=player2 %}DipTV - {{ player1 }} versus {{ player2 }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{% blocktrans with player1=player1 player2=player2 %}{{ player1 }} versus {{ player2 }}{% endblocktrans %}</h1>
+{% if matches %}
+<table>
+  <tr>
+    <th rowspan=2>{% trans "Tournament" %}</th>
+    <th rowspan=2>{% trans "Game" %}</th>
+    <th rowspan=2>{% trans "Date" %}</th>
+    <th colspan=4>{{ player1 }}</th>
+    <th colspan=4>{{ player2 }}</th>
+  </tr>
+  <tr>
+    <th>{% trans "Power" %}</th>
+    <th>{% trans "Position" %}</th>
+    <th>{% trans "Score" %}</th>
+    <th>{% trans "Final SCs" %}</th>
+    <th>{% trans "Power" %}</th>
+    <th>{% trans "Position" %}</th>
+    <th>{% trans "Score" %}</th>
+    <th>{% trans "Final SCs" %}</th>
+  </tr>
+  {% for match1, match2 in matches %}
+    <tr class="{% cycle 'even_row' 'odd_row' %}">
+      <td style="text-align:center;">{{ match1.tournament_name }}</td>
+      <td>{{ match1.game_name }}</td>
+      <td>{{ match1.date }}</td>
+      <td>{{ match1.power }}</td>
+      <td style="text-align:center;{% if match1.position < match2.position %}background-color:LightGreen;{% endif %}">{{ match1.position }}</td>
+      <td style="text-align:right;{% if match1.score > match2.score %}background-color:LightGreen;{% endif %}">{{ match1.score|default_if_none:""|floatformat:2 }}</td>
+      <td style="text-align:center;{% if match1.final_sc_count > match2.final_sc_count %}background-color:LightGreen;{% endif %}">{{ match1.final_sc_count|default_if_none:"" }}</td>
+      <td>{{ match2.power }}</td>
+      <td style="text-align:center;{% if match2.position < match1.position %}background-color:LightGreen;{% endif %}">{{ match2.position }}</td>
+      <td style="text-align:right;{% if match2.score > match1.score %}background-color:LightGreen;{% endif %}">{{ match2.score|default_if_none:""|floatformat:2 }}</td>
+      <td style="text-align:center;{% if match2.final_sc_count > match1.final_sc_count %}background-color:LightGreen;{% endif %}">{{ match2.final_sc_count|default_if_none:"" }}</td>
+    </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>{% trans "No records of any games with both these players" %}</p>
+{% endif %}
+{% endblock %}

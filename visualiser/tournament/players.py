@@ -871,6 +871,12 @@ class PlayerGameResult(models.Model):
                                     name='unique_names_player_power'),
         ]
 
+    def for_same_game(self, pgr):
+        """Returns True if the two PlayerGameResults are for the same game"""
+        return ((self.tournament_name == pgr.tournament_name) and
+                (self.game_name == pgr.game_name) and
+                (self.date == pgr.date))
+
     def __str__(self):
         return _(u'%(player)s played %(power)s in %(game)s at %(tourney)s') % {'player': self.player,
                                                                                'power': self.power,

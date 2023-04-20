@@ -31,7 +31,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
-from tournament.players import Player, add_player_bg, validate_wdd_player_id
+from tournament.players import Player, PlayerGameResult
+from tournament.players import add_player_bg, validate_wdd_player_id
 
 # Player views
 
@@ -57,6 +58,32 @@ def player_detail(request, pk):
     return render(request,
                   'players/detail.html',
                   {'player': player})
+
+
+def player_versus(request, pk1, pk2):
+    """History between two players"""
+    p1 = get_object_or_404(Player, pk=pk1)
+    p2 = get_object_or_404(Player, pk=pk2)
+
+    # Find all the common games
+    matches = []
+    r1 = None
+    for r in PlayerGameResult.objects.filter(player__in=[p1, p2]).order_by('-date',
+                                                                           'tournament_name',
+                                                                           'game_name'):
+        if r1:
+            if r1.for_same_game(r):
+                if r.player == p1:
+                    matches.append((r, r1))
+                else:
+                    matches.append((r1, r))
+        r1 = r
+
+    return render(request,
+                  'players/versus.html',
+                  {'player1': p1,
+                   'player2': p2,
+                   'matches': matches})
 
 
 def wpe(request, pk, years=7, count=7):

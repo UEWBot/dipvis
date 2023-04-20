@@ -19,10 +19,13 @@ from urllib.parse import urlencode
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
-from tournament.players import Player
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.players import Player, PlayerGameResult
 
 class PlayerViewTests(TestCase):
+    fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
@@ -71,6 +74,58 @@ class PlayerViewTests(TestCase):
         # It should redirect back to the same URL
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, player_url)
+
+    def test_versus_invalid_player1(self):
+        response = self.client.get(reverse('player_versus',
+                                           args=(self.INVALID_P_PK, self.p1.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_versus_invalid_player2(self):
+        response = self.client.get(reverse('player_versus',
+                                           args=(self.p1.pk, self.INVALID_P_PK)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_versus_no_prev(self):
+        p2 = Player.objects.create(first_name='Bernard',
+                                   last_name='Belligerent')
+        response = self.client.get(reverse('player_versus',
+                                           args=(self.p1.pk, p2.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        p2.delete()
+
+    def test_versus_prev(self):
+        england = GreatPower.objects.get(abbreviation='E')
+        germany = GreatPower.objects.get(abbreviation='G')
+        p2 = Player.objects.create(first_name='Bernard',
+                                   last_name='Belligerent')
+        # Add a shared game
+        # One with lots of blanks
+        pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
+                                               game_name='Top Boards',
+                                               date=timezone.now(),
+                                               player=self.p1,
+                                               power=england,
+                                               position=3)
+        # One with lots of detail
+        pgr2 = PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+                                               game_name=pgr1.game_name,
+                                               date=pgr1.date,
+                                               player=p2,
+                                               power=germany,
+                                               position=6,
+                                               position_equals=2,
+                                               score=3.4,
+                                               final_sc_count=1,
+                                               result='D7')
+        response = self.client.get(reverse('player_versus',
+                                           args=(self.p1.pk, p2.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        pgr1.delete()
+        p2.delete()
 
     def test_wpe(self):
         # Test WPE page
