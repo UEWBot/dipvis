@@ -508,6 +508,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_enter_scores_regular_user(self):
         # A regular user can't enter scores for any old tournament
@@ -516,6 +517,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_enter_scores_manager_wrong_tournament(self):
         # A manager can't enter scores for a tournament that isn't theirs
@@ -604,6 +606,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_news(self):
         response = self.client.get(reverse('tournament_news',
@@ -646,6 +649,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_enter_prefs_manager(self):
         # A manager can enter preferences for players in their Tournament
@@ -692,6 +696,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_prefs_csv(self):
         response = self.client.get(reverse('prefs_csv',
@@ -704,6 +709,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_seeder_bias_missing_perm(self):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -711,6 +717,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
 
     def test_seeder_bias(self):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
