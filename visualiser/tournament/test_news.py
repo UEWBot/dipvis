@@ -16,7 +16,7 @@
 
 from datetime import timedelta
 
-from django.test import TestCase, override_settings
+from django.test import TestCase
 from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet

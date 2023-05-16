@@ -574,17 +574,17 @@ class TournamentScoringTests(TestCase):
                                   dias=False,
                                   start=t.start_date + HOURS_24)
         # One finished Game per round
-        g1 = Game.objects.create(name='g1',
+        Game.objects.create(name='g1',
                                  started_at=r1.start,
                                  the_round=r1,
                                  is_finished=True,
                                  the_set=self.set1)
-        g2 = Game.objects.create(name='g2',
+        Game.objects.create(name='g2',
                                  started_at=r2.start,
                                  the_round=r2,
                                  is_finished=True,
                                  the_set=self.set1)
-        g3 = Game.objects.create(name='g3',
+        Game.objects.create(name='g3',
                                  started_at=r3.start,
                                  the_round=r3,
                                  is_finished=True,
@@ -1786,7 +1786,7 @@ class TournamentPlayerTests(TestCase):
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.COUNTS)
-        t4 = Tournament.objects.create(name='t4',
+        Tournament.objects.create(name='t4',
                                        start_date=timezone.now(),
                                        end_date=timezone.now(),
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
@@ -1802,7 +1802,7 @@ class TournamentPlayerTests(TestCase):
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1,
+        Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_16)
@@ -2361,11 +2361,11 @@ class RoundTests(TestCase):
                              dias=True,
                              start=t1.start_date + HOURS_24)
         # Add Rounds to t2
-        r21 = Round.objects.create(tournament=t2,
+        Round.objects.create(tournament=t2,
                                    scoring_system=s1,
                                    dias=False,
                                    start=t2.start_date)
-        r22 = Round.objects.create(tournament=t2,
+        Round.objects.create(tournament=t2,
                                    scoring_system=s1,
                                    dias=False,
                                    start=t2.start_date + HOURS_8)
@@ -2383,21 +2383,21 @@ class RoundTests(TestCase):
                                        latest_end_time=t3.start_date + HOURS_9)
 
         # Add Games to r11
-        g11 = Game.objects.create(name='g11',
+        Game.objects.create(name='g11',
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
-        g12 = Game.objects.create(name='g12',
+        Game.objects.create(name='g12',
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
         # Add Games to r12
-        g13 = Game.objects.create(name='g13',
+        Game.objects.create(name='g13',
                                   started_at=r12.start,
                                   the_round=r12,
                                   is_finished=True,
                                   the_set=cls.set1)
-        g14 = Game.objects.create(name='g14',
+        Game.objects.create(name='g14',
                                   started_at=r12.start,
                                   the_round=r12,
                                   the_set=cls.set1)
@@ -2853,7 +2853,7 @@ class GameTests(TestCase):
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1,
+        Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_16)
@@ -4147,7 +4147,7 @@ class SupplyCentreOwnershipTests(TestCase):
                                    start=t1.start_date)
 
         # Add Games to r11
-        g11 = Game.objects.create(name='g11',
+        Game.objects.create(name='g11',
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
@@ -4195,7 +4195,7 @@ class DrawProposalTests(TestCase):
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1,
+        Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_16)
@@ -5260,7 +5260,7 @@ class GamePlayerTests(TestCase):
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
-        g12 = Game.objects.create(name='g12',
+        Game.objects.create(name='g12',
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
@@ -5270,7 +5270,7 @@ class GamePlayerTests(TestCase):
                                   the_round=r12,
                                   is_finished=True,
                                   the_set=cls.set1)
-        g14 = Game.objects.create(name='g14',
+        Game.objects.create(name='g14',
                                   started_at=r12.start,
                                   the_round=r12,
                                   the_set=cls.set1)
@@ -5634,11 +5634,11 @@ class GameImageTests(TestCase):
                                    start=t1.start_date)
 
         # Add Games to r11
-        g11 = Game.objects.create(name='g11',
+        Game.objects.create(name='g11',
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
-        g12 = Game.objects.create(name='g12',
+        Game.objects.create(name='g12',
                                   started_at=r11.start,
                                   the_round=r11,
                                   the_set=cls.set1)
@@ -5708,15 +5708,15 @@ class CentreCountTests(TestCase):
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1,
+        Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1,
+        Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1,
+        Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
                                    start=t1.start_date + HOURS_16)

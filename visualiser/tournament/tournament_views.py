@@ -23,13 +23,11 @@ from io import StringIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
-from django.utils.translation import ngettext
 
 from tournament.email import send_roll_call_emails
 
@@ -41,7 +39,7 @@ from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
 
 from tournament.diplomacy.models.game_set import GameSet
-from tournament.models import Tournament, Game, SeederBias
+from tournament.models import Tournament, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList
 from tournament.news import news

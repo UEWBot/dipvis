@@ -110,7 +110,7 @@ class PlayerViewTests(TestCase):
                                                power=england,
                                                position=3)
         # One with lots of detail
-        pgr2 = PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+        PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
                                                game_name=pgr1.game_name,
                                                date=pgr1.date,
                                                player=p2,

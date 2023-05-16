@@ -370,7 +370,6 @@ class TScoringSumGames(TournamentScoringSystem):
                     t_scores[p] += gp.score
                     # This game counts towards the round score
                     # (and this round counts towards the tournament score)
-                    r = gp.game.the_round
                     rp = gp.roundplayer()
                     rp.score += gp.score
                     rp.score_dropped = False
@@ -386,7 +385,6 @@ class TScoringSumGames(TournamentScoringSystem):
                     gp.save()
                     # This game counts towards the round score
                     # (and this round counts towards the tournament score)
-                    r = gp.game.the_round
                     rp = gp.roundplayer()
                     rp.score += gp.score
                     rp.score_dropped = False

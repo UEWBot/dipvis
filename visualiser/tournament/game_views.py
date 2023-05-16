@@ -49,7 +49,7 @@ from tournament.tournament_views import get_visible_tournament_or_404
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, WINNING_SCS, FIRST_YEAR
+from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
 from tournament.models import Game, GamePlayer, DrawProposal
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import Seasons
@@ -444,7 +444,7 @@ def sc_counts(request, tournament_id, game_name):
                         death_form.add_error(name, e)
                         raise e
                     i.save()
-        except ValidationError as e:
+        except ValidationError:
             return render(request,
                           'games/sc_counts_form.html',
                           {'formset': formset,
@@ -545,7 +545,8 @@ def draw_vote(request, tournament_id, game_name, concession):
         else:
             # For a concession, countries will be the power being conceded to,
             # whereas for a draw it will be a QuerySet of included powers
-            if type(countries) is not QuerySet: countries = [ countries ]
+            if type(countries) is not QuerySet:
+                countries = [ countries ]
 
         passed = form.cleaned_data.get('passed')
         votes_in_favour = form.cleaned_data.get('votes_in_favour')

@@ -30,7 +30,7 @@ from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
 from tournament.models import Game, GameImage, SeederBias
 from tournament.models import DrawSecrecy, Seasons
-from tournament.models import Tournament, TournamentPlayer
+from tournament.models import TournamentPlayer
 from tournament.models import validate_game_name
 from tournament.players import Player
 

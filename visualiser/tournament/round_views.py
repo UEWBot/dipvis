@@ -47,7 +47,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call_email
 from tournament.game_seeder import GameSeeder
 from tournament.models import PowerAssignMethods
-from tournament.models import Tournament, Round, Game
+from tournament.models import Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 
 # Round views
@@ -109,7 +109,6 @@ def roll_call(request, tournament_id, round_num):
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
     r = get_round_or_404(t, round_num)
-    round_set = t.round_set.filter(pk=r.pk)
     player_data = []
     # Go through each player in the Tournament
     for tp in t.tournamentplayer_set.all():

@@ -23,6 +23,7 @@ import random
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
+from tournament.models import DrawSecrecy
 from tournament.models import Tournament, Round, Game, CentreCount
 from tournament.players import position_str
 
@@ -367,8 +368,8 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     # How many non-neutrals were captured?
     if (last_year > 1900) and ((mask & MASK_SC_CHANGE_COUNTS) != 0):
         count = 0
-        for l in sc_losses.values():
-            count += len(l)
+        for loss in sc_losses.values():
+            count += len(loss)
         results.append(ngettext('One non-neutral centre changed hands%(game)s.',
                                 '%(count)d non-neutral centres changed hands%(game)s.',
                                 count)

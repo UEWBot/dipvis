@@ -24,7 +24,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call_email, send_prefs_email
 from tournament.email import send_roll_call_emails
-from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
+from tournament.models import DrawSecrecy, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer
 from tournament.models import Game, GamePlayer

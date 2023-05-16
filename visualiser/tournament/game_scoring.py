@@ -552,7 +552,6 @@ class GScoringOpenTribute(GameScoringSystem):
 
     def scores(self, state):
         retval = {}
-        num_survivors = len(state.survivors())
         leader_scs = state.highest_dot_count()
         num_leaders = state.num_powers_with(leader_scs)
         soloer = state.soloer()
@@ -980,7 +979,6 @@ class GScoringManorCon(GameScoringSystem):
 
     def scores(self, state):
         retval = {}
-        leader_scs = state.highest_dot_count()
         soloer = state.soloer()
         soloed = soloer is not None
         if soloed:

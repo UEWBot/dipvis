@@ -319,7 +319,7 @@ def fix_round_players(the_round, dry_run=False):
     game_set = the_round.game_set.all()
     if not game_set.exists():
         print("No games in round - exiting.\n")
-        return;
+        return
     # Check for spurious RoundPlayers
     # game_count gets reset back to 1 by the roll call page,
     # so this could delete a player who sat out the round
@@ -337,7 +337,7 @@ def fix_round_players(the_round, dry_run=False):
                     RoundPlayer.objects.create(player=gp.player,
                                                the_round=the_round)
         # Trigger a score recalculation
-        print("Saving game %s to trigger score recalculation\n" % g);
+        print("Saving game %s to trigger score recalculation\n" % g)
         if not dry_run:
             g.save()
 
