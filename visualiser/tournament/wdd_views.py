@@ -42,6 +42,13 @@ def _centrecount_year_to_wdd(year):
     return 'CT_%02d' % (year % (FIRST_YEAR-1))
 
 
+def _game_to_wdd_id(game):
+    """Return the game number for the specified game"""
+    # We identify boards as names, not numbers
+    # g.id is globally-unique. What we really want is number within the round
+    return game.id
+
+
 def view_classification_csv(request, tournament_id):
     """Return a WDD-compatible "classification" CSV file for the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -123,9 +130,7 @@ def view_classification_csv(request, tournament_id):
                     row_dict['PT_%s' % wdd_pwr] = gp.score
                     row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=power).last().count
                     row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
-                    # We store boards as names, not numbers
-                    # g.id is globally-unique. What we really want is number within the round
-                    row_dict['BOARD_%s' % wdd_pwr] = gp.game.id
+                    row_dict['BOARD_%s' % wdd_pwr] = _game_to_wdd_id(gp.game)
                     break
         # Add top board fields if applicable
         if top_board:
@@ -133,7 +138,7 @@ def view_classification_csv(request, tournament_id):
                 gp = top_board.gameplayer_set.get(player=p)
                 row_dict['NAME_TOPBOARD'] = 'A'  # This seems to be arbitrary
                 row_dict['HEAT_TOPBOARD'] = top_board.the_round.number()
-                row_dict['BOARD_TOPBOARD'] = top_board.id
+                row_dict['BOARD_TOPBOARD'] = _game_to_wdd_id(top_board)
                 row_dict['RK_TOPBOARD'] = tb_positions[gp.power]
                 row_dict['CT_TOPBOARD'] = tb_dots.filter(power=gp.power).last().count
                 # TODO Not certain that this is the correct value
@@ -182,9 +187,7 @@ def view_boards_csv(request, tournament_id):
         r_row_dict['ROUND'] = r.number()
         g_row_dict = r_row_dict.copy()
         for g in r.game_set.all():
-            # We store boards as names, not numbers
-            # g.id is globally-unique. What we really want is number within the round
-            g_row_dict['BOARD'] = g.id
+            g_row_dict['BOARD'] = _game_to_wdd_id(g)
             positions = g.positions()
             draw = g.passed_draw()
             soloer = g.soloer()
