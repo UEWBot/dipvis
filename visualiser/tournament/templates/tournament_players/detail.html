@@ -57,5 +57,12 @@
   {% endfor %}
 </ul>
 
+<h2>{% trans "Previous Matchups" %}</h2>
+<form method="post" action={% url 'tournament_player_detail' tournament.id player.id %}>
+  {% csrf_token %}
+  {{ form }}
+  <input type="submit" value="{% trans "Submit" %}" />
+</form>
+
 <p><a href="{{player.player.get_absolute_url }}">{% trans "Player Background" %}</a></p>
 {% endblock %}

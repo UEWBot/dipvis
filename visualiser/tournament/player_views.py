@@ -31,6 +31,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
 
+from tournament.forms import PlayerForm
 from tournament.players import Player, PlayerGameResult
 from tournament.players import add_player_bg, validate_wdd_player_id
 
@@ -48,16 +49,23 @@ class PlayerIndexView(generic.ListView):
 def player_detail(request, pk):
     """Details of a single player"""
     player = get_object_or_404(Player, pk=pk)
+    form = PlayerForm(request.POST or None)
     if request.method == 'POST':
-        # Technically, we should check permissions here,
-        # but the impact of not doing so is minor
-        add_player_bg(player, include_wpe=True)
-        # Redirect back here to flush the POST data
-        return HttpResponseRedirect(reverse('player_detail',
-                                            args=(pk,)))
+        if form.is_valid() and 'versus' in request.POST.keys():
+            opponent = form.cleaned_data['player']
+            return HttpResponseRedirect(reverse('player_versus',
+                                                args=(pk, opponent.pk)))
+        else:
+            # Technically, we should check permissions here,
+            # but the impact of not doing so is minor
+            add_player_bg(player, include_wpe=True)
+            # Redirect back here to flush the POST data
+            return HttpResponseRedirect(reverse('player_detail',
+                                                args=(pk,)))
     return render(request,
                   'players/detail.html',
-                  {'player': player})
+                  {'player': player,
+                   'form': form})
 
 
 def player_versus(request, pk1, pk2):

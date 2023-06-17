@@ -132,8 +132,8 @@ class TournamentPlayerViewTests(TestCase):
         cls.tp11 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t1,
                                                    uuid_str=str(uuid.uuid4()))
-        tp = TournamentPlayer.objects.create(player=p3,
-                                             tournament=cls.t1)
+        cls.tp12 = TournamentPlayer.objects.create(player=p3,
+                                                   tournament=cls.t1)
         cls.tp11.awards.add(a1)
         cls.tp11.awards.add(a2)
 
@@ -583,6 +583,19 @@ class TournamentPlayerViewTests(TestCase):
                                            args=(self.t1.pk, self.tp11.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_details_versus(self):
+        # Test the "Versus" button
+        data = urlencode({'player': str(self.tp12.player.pk)})
+        response = self.client.post(reverse('tournament_player_detail',
+                                            args=(self.t1.pk, self.tp11.pk)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the versus page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('player_versus',
+                                               args=(self.tp11.player.pk, self.tp12.player.pk)))
 
     def test_player_prefs(self):
         response = self.client.get(reverse('player_prefs',

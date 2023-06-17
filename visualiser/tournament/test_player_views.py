@@ -67,13 +67,32 @@ class PlayerViewTests(TestCase):
         # Test the "Refresh From WDD" button
         self.client.login(username=self.USERNAME, password=self.PWORD)
         player_url = reverse('player_detail', args=(self.p1.pk,))
+        data = urlencode({'update_bg': 'Update background'})
         response = self.client.post(player_url,
-                                    urlencode({}),
+                                    data,
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same URL
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, player_url)
+
+    def test_detail_versus(self):
+        # Test the "Versus" button
+        p = Player.objects.create(first_name='Barry',
+                                  last_name='Bandersnatch')
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        player_url = reverse('player_detail', args=(self.p1.pk,))
+        data = urlencode({'versus': 'Submit',
+                          'player': str(p.pk)})
+        response = self.client.post(player_url,
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the versus page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('player_versus', args=(self.p1.pk, p.pk)))
+        # Cleanup
+        p.delete()
 
     def test_versus_invalid_player1(self):
         response = self.client.get(reverse('player_versus',

@@ -98,7 +98,12 @@ def detail(request, tournament_id, tp_id):
         tp = t.tournamentplayer_set.get(id=tp_id)
     except TournamentPlayer.DoesNotExist as e:
         raise Http404 from e
-    context = {'tournament': t, 'player': tp}
+    form = PlayerForm(request.POST or None, tournament=t)
+    if form.is_valid():
+        opponent = form.cleaned_data['player']
+        return HttpResponseRedirect(reverse('player_versus',
+                                            args=(tp.player.pk, opponent.pk)))
+    context = {'tournament': t, 'player': tp, 'form': form}
     return render(request, 'tournament_players/detail.html', context)
 
 
