@@ -12,7 +12,7 @@
 {% else %}
   <h2>{% trans "Awards" %}</h2>
   <ul>
-    {% for a in player.awards.all %}
+    {% for award in player.awards.all %}
       <li>{{ award.name }}</li>
     {% empty %}
       <li>{% trans "None" %}</li>
