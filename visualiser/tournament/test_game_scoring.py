@@ -503,188 +503,6 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
 
-    # GScoringCarnage (with dead equal)
-    def test_g_scoring_carnage1_simple(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1901)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.filter(power=p).last()
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sc.count == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
-            else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
-        # 2 SCs are still neutral
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-
-    def test_g_scoring_carnage1_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1907)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.filter(power=p).last()
-            if sc.count == 18:
-                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-
-    def test_g_scoring_carnage1_eliminations(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1906)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('Carnage with dead equal')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        for p,s in scores.items():
-            sc = scs.filter(power=p).last()
-            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
-            if sc.count == 17:
-                self.assertEqual(s, 7000 + sc.count)
-            elif sc.count == 7:
-                self.assertEqual(s, 6000 + sc.count)
-            elif sc.count == 5:
-                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
-            else:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-
-    # Carnage with elimination order
-    def test_g_scoring_carnage2_simple(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1901)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('Carnage with elimination order')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.filter(power=p).last()
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sc.count == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
-            else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-
-    def test_g_scoring_carnage2_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1907)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('Carnage with elimination order')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.filter(power=p).last()
-            if sc.count == 18:
-                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-
-    def test_g_scoring_carnage2_eliminations(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1906)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('Carnage with elimination order')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            sc = scs.filter(power=p).last()
-            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
-            if sc.count == 17:
-                self.assertEqual(s, 7000 + sc.count)
-            elif sc.count == 7:
-                self.assertEqual(s, 6000 + sc.count)
-            elif sc.count == 5:
-                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
-            else:
-                # Austria died in 1905, France and Italy in 1906
-                if p in [self.france, self.italy]:
-                    self.assertEqual(s, (3000 + 2000) / 2 + sc.count)
-                else:
-                    self.assertEqual(s, 1000 + sc.count)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-
-    # GScoringCentreCarnage
-    def test_g_scoring_centrecarnage_1(self):
-        # There used to be an "example 1" and "example 2" in the doc, but no more :-(
-        example_1 = SimpleGameState(sc_counts={self.austria: 11,
-                                               self.england: 10,
-                                               self.france: 8,
-                                               self.germany: 2,
-                                               self.italy: 2,
-                                               self.russia: 1,
-                                               self.turkey: 0},
-                                    final_year=1908,
-                                    elimination_years={self.turkey: 1904},
-                                    draw=None)
-        system = find_game_scoring_system('Center-count Carnage')
-        scores = system.scores(example_1)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, 11 * 500 + 7007)
-            elif p == self.england:
-                self.assertEqual(s, 10 * 500 + 6006)
-            elif p == self.france:
-                self.assertEqual(s, 8 * 500 + 5005)
-            elif p == self.germany:
-                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
-            elif p == self.italy:
-                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
-            elif p == self.russia:
-                self.assertEqual(s, 1 * 500 + 2002)
-            else:
-                # Turkey:
-                self.assertEqual(s, 1001)
-
-    def test_g_scoring_centrecarnage_2(self):
-        # There used to be an "example 1" and "example 2" in the doc, but no more :-(
-        example_2 = SimpleGameState(sc_counts={self.austria: 13,
-                                               self.england: 7,
-                                               self.france: 5,
-                                               self.germany: 5,
-                                               self.italy: 4,
-                                               self.russia: 0,
-                                               self.turkey: 0},
-                                    final_year=1908,
-                                    elimination_years={self.russia: 1905,
-                                                       self.turkey: 1904},
-                                    draw=None)
-        system = find_game_scoring_system('Center-count Carnage')
-        scores = system.scores(example_2)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, 13 * 500 + 7007)
-            elif p == self.england:
-                self.assertEqual(s, 7 * 500 + 6006)
-            elif p == self.france:
-                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
-            elif p == self.germany:
-                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
-            elif p == self.italy:
-                self.assertEqual(s, 4 * 500 + 3003)
-            elif p == self.russia:
-                self.assertEqual(s, 2002)
-            else:
-                # Turkey:
-                self.assertEqual(s, 1001)
-
     # GScoringTribute
     def test_g_scoring_tribute_no_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1576,6 +1394,305 @@ class GameScoringTests(TestCase):
             else:
                 # Turkey
                 self.assertEqual(s, (80 + 15))
+
+
+class CarnageGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
+    # GScoringCarnage (with dead equal)
+    def test_g_scoring_carnage1_simple(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage with dead equal')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+            if sc.count == 4:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+            else:
+                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
+        # 2 SCs are still neutral
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
+
+    def test_g_scoring_carnage1_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage with dead equal')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            if sc.count == 18:
+                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+            else:
+                self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    def test_g_scoring_carnage1_eliminations(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage with dead equal')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
+            if sc.count == 17:
+                self.assertEqual(s, 7000 + sc.count)
+            elif sc.count == 7:
+                self.assertEqual(s, 6000 + sc.count)
+            elif sc.count == 5:
+                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
+            else:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    # Carnage with elimination order
+    def test_g_scoring_carnage2_simple(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage with elimination order')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+            if sc.count == 4:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+            else:
+                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
+
+    def test_g_scoring_carnage2_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage with elimination order')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            if sc.count == 18:
+                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+            else:
+                self.assertEqual(s, 0)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    def test_g_scoring_carnage2_eliminations(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage with elimination order')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
+            if sc.count == 17:
+                self.assertEqual(s, 7000 + sc.count)
+            elif sc.count == 7:
+                self.assertEqual(s, 6000 + sc.count)
+            elif sc.count == 5:
+                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
+            else:
+                # Austria died in 1905, France and Italy in 1906
+                if p in [self.france, self.italy]:
+                    self.assertEqual(s, (3000 + 2000) / 2 + sc.count)
+                else:
+                    self.assertEqual(s, 1000 + sc.count)
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    # GScoringCentreCarnage
+    def test_g_scoring_centrecarnage_1(self):
+        # There used to be an "example 1" and "example 2" in the doc, but no more :-(
+        example_1 = SimpleGameState(sc_counts={self.austria: 11,
+                                               self.england: 10,
+                                               self.france: 8,
+                                               self.germany: 2,
+                                               self.italy: 2,
+                                               self.russia: 1,
+                                               self.turkey: 0},
+                                    final_year=1908,
+                                    elimination_years={self.turkey: 1904},
+                                    draw=None)
+        system = find_game_scoring_system('Center-count Carnage')
+        scores = system.scores(example_1)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            if p == self.austria:
+                self.assertEqual(s, 11 * 500 + 7007)
+            elif p == self.england:
+                self.assertEqual(s, 10 * 500 + 6006)
+            elif p == self.france:
+                self.assertEqual(s, 8 * 500 + 5005)
+            elif p == self.germany:
+                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
+            elif p == self.italy:
+                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
+            elif p == self.russia:
+                self.assertEqual(s, 1 * 500 + 2002)
+            else:
+                # Turkey:
+                self.assertEqual(s, 1001)
+
+    def test_g_scoring_centrecarnage_2(self):
+        # There used to be an "example 1" and "example 2" in the doc, but no more :-(
+        example_2 = SimpleGameState(sc_counts={self.austria: 13,
+                                               self.england: 7,
+                                               self.france: 5,
+                                               self.germany: 5,
+                                               self.italy: 4,
+                                               self.russia: 0,
+                                               self.turkey: 0},
+                                    final_year=1908,
+                                    elimination_years={self.russia: 1905,
+                                                       self.turkey: 1904},
+                                    draw=None)
+        system = find_game_scoring_system('Center-count Carnage')
+        scores = system.scores(example_2)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            if p == self.austria:
+                self.assertEqual(s, 13 * 500 + 7007)
+            elif p == self.england:
+                self.assertEqual(s, 7 * 500 + 6006)
+            elif p == self.france:
+                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
+            elif p == self.germany:
+                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
+            elif p == self.italy:
+                self.assertEqual(s, 4 * 500 + 3003)
+            elif p == self.russia:
+                self.assertEqual(s, 2002)
+            else:
+                # Turkey:
+                self.assertEqual(s, 1001)
 
 # GScoringDetour09
 class Detour09GameScoringTests(TestCase):
