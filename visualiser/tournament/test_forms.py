@@ -1843,8 +1843,17 @@ class PlayerFormTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=timezone.now(),
+                                          end_date=timezone.now(),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+
         cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+
+        cls.tp = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p2)
 
     def test_player_labels(self):
         # Check the player names
@@ -1857,6 +1866,17 @@ class PlayerFormTest(TestCase):
         # and the values should be the Player names, in alphabetical order
         self.assertEqual(the_choices[1][1], self.p1.sortable_str())
         self.assertEqual(the_choices[2][1], self.p2.sortable_str())
+
+    def test_player_tournament(self):
+        # Check narrower QuerySet
+        form = PlayerForm(tournament=self.t)
+        the_choices = list(form.fields['player'].choices)
+        # We should have one per TournamentPlayer, plus the initial empty choice
+        self.assertEqual(len(the_choices), self.t.tournamentplayer_set.count() + 1)
+        # The keys should be the Player pks
+        self.assertEqual(the_choices[1][0], self.p2.pk)
+        # and the values should be the Player names
+        self.assertEqual(the_choices[1][1], self.p2.sortable_str())
 
 
 class PlayerRoundFormTest(TestCase):

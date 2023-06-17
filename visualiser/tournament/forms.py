@@ -745,6 +745,17 @@ class PlayerForm(forms.Form):
     """Form to pick a Player"""
     player = PlayerChoiceField(queryset=Player.objects.all())
 
+    def __init__(self, *args, **kwargs):
+        # Optional Tournament parameter
+        t = None
+        try:
+            t = kwargs.pop('tournament')
+        except KeyError:
+            pass
+        super().__init__(*args, **kwargs)
+        if t is not None:
+            self.fields['player'].queryset = Player.objects.filter(tournamentplayer__in=t.tournamentplayer_set.all()).distinct()
+
 
 class PlayerRoundForm(forms.Form):
     """Form to specify whether a player is available to play a specific round"""
