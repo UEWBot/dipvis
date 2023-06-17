@@ -1628,6 +1628,68 @@ class CarnageGameScoringTests(TestCase):
                     self.assertEqual(s, 1000 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
 
+    # Carnage 2023 (elimination order and leader gap bonus)
+    def test_g_scoring_carnage2023_simple(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1901)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage 2023')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
+            if sc.count == 4:
+                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
+            else:
+                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
+        # With tied lead, we know the total score
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
+
+    def test_g_scoring_carnage2023_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage 2023')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            if sc.count == 18:
+                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+            else:
+                self.assertEqual(s, 0)
+        # With a solo, we know the total score
+        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
+
+    def test_g_scoring_carnage2023_eliminations(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Carnage 2023')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            sc = scs.filter(power=p).last()
+            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
+            if sc.count == 17:
+                # Bonus 300 points per dot ahead of second place
+                self.assertEqual(s, 7000 + sc.count + (17 - 7) * 300)
+            elif sc.count == 7:
+                self.assertEqual(s, 6000 + sc.count)
+            elif sc.count == 5:
+                self.assertEqual(s, (5000 + 4000) / 2 + sc.count)
+            else:
+                # Austria died in 1905, France and Italy in 1906
+                if p in [self.france, self.italy]:
+                    self.assertEqual(s, (3000 + 2000) / 2 + sc.count)
+                else:
+                    self.assertEqual(s, 1000 + sc.count)
+        # Total score now varies depending on the lead the leader has
+
     # GScoringCentreCarnage
     def test_g_scoring_centrecarnage_1(self):
         # There used to be an "example 1" and "example 2" in the doc, but no more :-(

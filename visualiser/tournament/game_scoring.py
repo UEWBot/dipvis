@@ -377,10 +377,11 @@ class GScoringCarnage(GameScoringSystem):
     eliminated or all split position points.
     In the centre-based version, losers to a solo also get some points.
     """
-    def __init__(self, name, centre_based, dead_equal):
+    def __init__(self, name, centre_based, dead_equal, pts_per_dot_lead):
         self.name = name
         self.dead_score_can_change = True
         self.dead_equal = dead_equal
+        self.pts_per_dot_lead = pts_per_dot_lead
         if centre_based:
             self.points_per_dot = 500
             self.position_pts = [7007, 6006, 5005, 4004, 3003, 2002, 1001]
@@ -394,10 +395,14 @@ class GScoringCarnage(GameScoringSystem):
 
     @property
     def description(self):
+        if self.pts_per_dot_lead != 0:
+            lead_str = _(' Leader gets an additional %d points per centre ahead of second place power.')
+        else:
+            lead_str = ''
         base = _("""
                  If any power soloed, they get %(solo_pts)d points and all others get %(loss_pts)d.
                  Otherwise, all powers score %(dot_pts)d point per centre owned at the end plus
-                 points for their final position.
+                 points for their final position.%(lead_str)s
                  Position points are %(pos_1)d, %(pos_2)d, %(pos_3)d, %(pos_4)d, %(pos_5)d,
                  %(pos_6)d, or %(pos_7)d, with ties splitting those points.
                  """) % {'solo_pts': self.solo_pts,
@@ -410,11 +415,12 @@ class GScoringCarnage(GameScoringSystem):
                          'pos_5': self.position_pts[4],
                          'pos_6': self.position_pts[5],
                          'pos_7': self.position_pts[6],
+                         'lead_str': lead_str,
                          }
         if self.dead_equal:
-            return base + 'Eliminated powers all split position points.'
+            return base + _('Eliminated powers all split position points.')
         else:
-            return base + 'Eliminated powers get position points based on when they were eliminated.'
+            return base + _('Eliminated powers get position points based on when they were eliminated.')
 
 
     def scores(self, state):
@@ -448,6 +454,13 @@ class GScoringCarnage(GameScoringSystem):
         rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
         for i, (p, c) in enumerate(live_scs):
             retval[p] = self.points_per_dot * c + rank_pts[i]
+ 
+        # Give the leader additional points per centre ahead
+        dots_1 = live_scs[0][1]
+        dots_2 = live_scs[1][1]
+        lead = dots_1 - dots_2
+        if lead:
+            retval[live_scs[0][0]] += lead * self.pts_per_dot_lead
 
         # If nobody was eliminated, we're done
         if len(self.position_pts) == len(pos_pts_1):
@@ -1026,9 +1039,22 @@ class GScoringManorCon(GameScoringSystem):
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringBangkok(),
-    GScoringCarnage(_('Carnage with dead equal'), centre_based=False, dead_equal=True),
-    GScoringCarnage(_('Carnage with elimination order'), centre_based=False, dead_equal=False),
-    GScoringCarnage(_('Center-count Carnage'), centre_based=True, dead_equal=False),
+    GScoringCarnage(_('Carnage with dead equal'),
+                    centre_based=False,
+                    dead_equal=True,
+                    pts_per_dot_lead=0),
+    GScoringCarnage(_('Carnage with elimination order'),
+                    centre_based=False,
+                    dead_equal=False,
+                    pts_per_dot_lead=0),
+    GScoringCarnage(_('Center-count Carnage'),
+                    centre_based=True,
+                    dead_equal=False,
+                    pts_per_dot_lead=0),
+    GScoringCarnage(_('Carnage 2023'),
+                    centre_based=False,
+                    dead_equal=False,
+                    pts_per_dot_lead=300),
     GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
     GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringDetour09(),
