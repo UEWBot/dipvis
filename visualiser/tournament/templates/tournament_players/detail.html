@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load humanize %}
 
 {% block title %}{% blocktrans with tp=player %}DipTV - {{ tp }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
-
-<p>{% blocktrans with pos=player.position %}Position: {{ pos }}{% endblocktrans %}</p>
+<p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
 {% if player.unranked %}
   <p>{% trans "Ineligible for awards." %}</p>
 {% else %}

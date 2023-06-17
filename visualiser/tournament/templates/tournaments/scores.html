@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
+{% load humanize %}
 
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Scores{% endblocktrans %}{% endblock %}
 
@@ -22,7 +23,7 @@
   <tbody>
     {% for p_data in scores %}
       <tr class="{% cycle 'odd_row' 'even_row' %}">
-        <td style="text-align:right">{{ p_data.rank }}</td>
+        <td style="text-align:right">{{ p_data.rank|ordinal }}</td>
         <td style="text-align:right"><a href="{{ p_data.player.get_absolute_url }}">{{ p_data.player.player }}</a></td>
         {% for rp in p_data.rounds %}
           <td style="text-align:right">

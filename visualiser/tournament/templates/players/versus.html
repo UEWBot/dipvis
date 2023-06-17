@@ -31,11 +31,11 @@
       <td>{{ match1.game_name }}</td>
       <td>{{ match1.date }}</td>
       <td>{{ match1.power }}</td>
-      <td style="text-align:center;{% if match1.position < match2.position %}background-color:LightGreen;{% endif %}">{{ match1.position }}</td>
+      <td style="text-align:center;{% if match1.position < match2.position %}background-color:LightGreen;{% endif %}">{{ match1.position|ordinal }}</td>
       <td style="text-align:right;{% if match1.score > match2.score %}background-color:LightGreen;{% endif %}">{{ match1.score|default_if_none:""|floatformat:2 }}</td>
       <td style="text-align:center;{% if match1.final_sc_count > match2.final_sc_count %}background-color:LightGreen;{% endif %}">{{ match1.final_sc_count|default_if_none:"" }}</td>
       <td>{{ match2.power }}</td>
-      <td style="text-align:center;{% if match2.position < match1.position %}background-color:LightGreen;{% endif %}">{{ match2.position }}</td>
+      <td style="text-align:center;{% if match2.position < match1.position %}background-color:LightGreen;{% endif %}">{{ match2.position|ordinal }}</td>
       <td style="text-align:right;{% if match2.score > match1.score %}background-color:LightGreen;{% endif %}">{{ match2.score|default_if_none:""|floatformat:2 }}</td>
       <td style="text-align:center;{% if match2.final_sc_count > match1.final_sc_count %}background-color:LightGreen;{% endif %}">{{ match2.final_sc_count|default_if_none:"" }}</td>
     </tr>
