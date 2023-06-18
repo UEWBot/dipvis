@@ -396,7 +396,7 @@ class GScoringCarnage(GameScoringSystem):
     @property
     def description(self):
         if self.pts_per_dot_lead != 0:
-            lead_str = _(' Leader gets an additional %d points per centre ahead of second place power.')
+            lead_str = _(' Leader gets an additional %(points)d points per centre ahead of second place power.') % {'points': self.pts_per_dot_lead}
         else:
             lead_str = ''
         base = _("""
