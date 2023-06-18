@@ -979,8 +979,9 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
         # Check error(s)
-        self.assertIn('Game names cannot contain spaces',
-                      response.context['formset'].errors[0]['name'])
+        self.assertEqual(len(response.context['formset'].errors[0]['name']), 1)
+        self.assertIn('Game names cannot contain ',
+                      response.context['formset'].errors[0]['name'][0])
         # Clean up
         g.delete()
 

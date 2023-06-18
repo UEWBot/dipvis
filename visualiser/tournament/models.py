@@ -23,6 +23,7 @@ import inspect
 from operator import itemgetter
 import os
 import random
+import string
 import uuid
 
 from django.conf import settings
@@ -470,10 +471,10 @@ def validate_game_name(value):
     """
     Game names cannot contain spaces or '/' because they are used in URLs.
     """
-    if ' ' in value:
-        raise ValidationError(_(u'Game names cannot contain spaces'))
-    if '/' in value:
-        raise ValidationError(_(u'Game names cannot contain / characters'))
+    VALID_CHARS = set(string.ascii_letters + string.digits + "-._~:[]@!$'()*,;%=")
+    if not set(value) <= VALID_CHARS:
+        raise ValidationError(_(u'Game names cannot contain "%(chars)s"'),
+                              params={'chars': ''.join(set(value) - VALID_CHARS)})
 
 
 def validate_vote_count(value):

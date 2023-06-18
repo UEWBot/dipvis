@@ -528,7 +528,7 @@ class GamePlayersFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain spaces', form.errors['name'][0])
+        self.assertIn('Game names cannot contain ', form.errors['name'][0])
 
     def test_name_error2(self):
         data = {'name': 'R1/G1',
@@ -544,7 +544,7 @@ class GamePlayersFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain / characters', form.errors['name'][0])
+        self.assertIn('Game names cannot contain ', form.errors['name'][0])
 
     def test_field_error(self):
         data = {'name': 'R1G1',
@@ -861,7 +861,7 @@ class PowerAssignFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain spaces', form.errors['name'][0])
+        self.assertIn('Game names cannot contain ', form.errors['name'][0])
 
     def test_name_error2(self):
         data = {'name': 'R1/G1',
@@ -878,7 +878,7 @@ class PowerAssignFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain / characters', form.errors['name'][0])
+        self.assertIn('Game names cannot contain ', form.errors['name'][0])
 
     def test_field_error(self):
         data = {'name': 'R1G1',
