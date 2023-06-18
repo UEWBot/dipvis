@@ -153,6 +153,15 @@ class GameScoringSystem(ABC):
         return reverse('game_scoring_detail', args=(self.slug,))
 
 
+def _sorted_scores(scores, state):
+    """
+    Sorts a dict of scores so that they will be iterated in
+    GreatPower order.
+    Returns the sorted dict.
+    """
+    return {k: scores[k] for k in state.all_powers()}
+
+
 def _normalise_scores(scores, total=100.0):
     """
     Adjusts all the scores to sum to total while keeping the same ratios.
@@ -311,7 +320,7 @@ class GScoringCDiplo(GameScoringSystem):
                     retval[p] = self.soloer_pts
             else:
                 retval[p] = self.played_pts + c + rank_pts[i]
-        return retval
+        return _sorted_scores(retval, state)
 
 
 class GScoringWhipping(GameScoringSystem):
@@ -365,7 +374,7 @@ class GScoringWhipping(GameScoringSystem):
                     if c == topper_scs:
                         if state.num_powers_with(topper_scs) == 1:
                             retval[p] += topper_scs * 2
-        return retval
+        return _sorted_scores(retval, state)
 
 
 class GScoringCarnage(GameScoringSystem):
@@ -445,7 +454,7 @@ class GScoringCarnage(GameScoringSystem):
             rank_pts = _adjust_rank_score(dots, self.position_pts)
             for i, (p, c) in enumerate(dots):
                 retval[p] = c + rank_pts[i]
-            return retval
+            return _sorted_scores(retval, state)
 
         # Split out the eliminated powers
         live_scs = [(p, c) for (p, c) in dots if c > 0]
@@ -464,7 +473,7 @@ class GScoringCarnage(GameScoringSystem):
 
         # If nobody was eliminated, we're done
         if len(self.position_pts) == len(pos_pts_1):
-            return retval
+            return _sorted_scores(retval, state)
 
         dead_scs = [(p, c) for (p, c) in dots if c == 0]
         pos_pts_2 = self.position_pts[len(pos_pts_1) - len(self.position_pts):]
@@ -478,7 +487,7 @@ class GScoringCarnage(GameScoringSystem):
         rank_pts = _adjust_rank_score(dummys, pos_pts_2)
         for i, (p, c) in enumerate(dummys):
             retval[p] = rank_pts[i]
-        return retval
+        return _sorted_scores(retval, state)
 
 
 class GScoringSumOfSquares(GameScoringSystem):
@@ -644,7 +653,7 @@ class GScoringOMG(GameScoringSystem):
                 tribute += x
         # Tribute goes to the leader
         retval[dots[0][0]] += tribute
-        return retval
+        return _sorted_scores(retval, state)
 
 
 
@@ -961,7 +970,7 @@ class GScoringMaxonian(GameScoringSystem):
                     d = min(d, WINNING_SCS)
                     retval[p] += d - self.bonus_threshold
 
-        return retval
+        return _sorted_scores(retval, state)
 
 
 class GScoringManorCon(GameScoringSystem):
