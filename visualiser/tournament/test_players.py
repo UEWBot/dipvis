@@ -293,6 +293,15 @@ class PlayerTests(TestCase):
     # TODO Player.get_absolute_url()
 
     # PlayerTournamentRanking
+    # PlayerTournamentRanking.wdd_url()
+    @tag('slow', 'wdd')
+    def test_playertournamentranking_wdd_url(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        ptr = PlayerTournamentRanking.objects.first()
+        url = ptr.wdd_url()
+        # TODO verify result
+
     # PlayerTournamentRanking.__str__()
     @tag('slow', 'wdd')
     def test_playertournamentranking_str(self):
@@ -379,6 +388,15 @@ class PlayerTests(TestCase):
                                 position=4)
         self.assertFalse(pgr1.for_same_game(pgr2))
 
+    # PlayerGameResult.wdd_url()
+    @tag('slow', 'wdd')
+    def test_playergameresult_wdd_url(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pgr = PlayerGameResult.objects.first()
+        url = pgr.wdd_url()
+        # TODO verify result
+
     # PlayerGameResult.__str__()
     @tag('slow', 'wdd')
     def test_playergameresult_str(self):
@@ -392,6 +410,15 @@ class PlayerTests(TestCase):
         self.assertIn(pgr.power.name, p_str)
 
     # PlayerAward
+    # PlayerAward.wdd_url()
+    @tag('slow', 'wdd')
+    def test_playeraward_wdd_url(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pa = PlayerAward.objects.first()
+        url = pa.wdd_url()
+        # TODO verify result
+
     # PlayerAward.__str__()
     @tag('slow', 'wdd')
     def test_playeraward_str(self):
@@ -406,6 +433,15 @@ class PlayerTests(TestCase):
         self.assertIn(pa.tournament, p_str)
 
     # PlayerRanking
+
+    # PlayerRanking.wdd_url()
+    @tag('slow', 'wdd')
+    def test_playerranking_wdd_url(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pr = PlayerRanking.objects.first()
+        url = pr.wdd_url()
+        # TODO Validate results
 
     # PlayerRanking.national_str()
     @tag('slow', 'wdd')

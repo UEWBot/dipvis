@@ -104,7 +104,7 @@ class PlayerViewTests(TestCase):
         # Add a shared game
         # One with lots of blanks
         pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
-                                               game_name='Top Boards',
+                                               game_name='R 3 B 2',
                                                date=timezone.now(),
                                                player=self.p1,
                                                power=england,

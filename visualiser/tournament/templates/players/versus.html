@@ -28,7 +28,7 @@
   {% for match1, match2 in matches %}
     <tr class="{% cycle 'even_row' 'odd_row' %}">
       <td style="text-align:center;">{{ match1.tournament_name }}</td>
-      <td>{{ match1.game_name }}</td>
+      <td><a href="{{ match1.wdd_url }}">{{ match1.game_name }}</a></td>
       <td>{{ match1.date }}</td>
       <td>{{ match1.power }}</td>
       <td style="text-align:center;{% if match1.position < match2.position %}background-color:LightGreen;{% endif %}">{{ match1.position|ordinal }}</td>

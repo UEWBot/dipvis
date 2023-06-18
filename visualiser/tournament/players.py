@@ -30,6 +30,7 @@ import datetime
 import re
 import traceback
 import requests
+from urllib.parse import urlunparse, urlencode
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -40,6 +41,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_RESULTS_URL
+from tournament.background import WDD_NETLOC, WDD_BASE_RESULTS_PATH, WDD_BASE_RANKING_PATH
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
@@ -810,6 +812,18 @@ class PlayerTournamentRanking(models.Model):
                                     name='unique_player_tournament_year'),
         ]
 
+    def wdd_url(self):
+        """WDD URL where this ranking can be seen"""
+        query = {'id_tournament': self.wdd_tournament_id,
+                 'id_player': self.player.wdd_player_id}
+        url = urlunparse(('https',
+                          WDD_NETLOC,
+                          WDD_BASE_RESULTS_PATH + 'tournament_player.php',
+                          '',
+                          urlencode(query),
+                          ''))
+        return url
+
     def __str__(self):
         pos = position_str(self.position)
         s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
@@ -877,6 +891,31 @@ class PlayerGameResult(models.Model):
                 (self.game_name == pgr.game_name) and
                 (self.date == pgr.date))
 
+    def round(self):
+        """Which round of the tournament was the game played?"""
+        # Parse the game name
+        parts = self.game_name.split()
+        return parts[1]
+
+    def board(self):
+        """Which board of the round was the game?"""
+        # Parse the game name
+        parts = self.game_name.split()
+        return parts[3]
+
+    def wdd_url(self):
+        """WDD URL where this result can be seen"""
+        query = {'id_tournament': self.wdd_tournament_id,
+                 'id_round': self.round(),
+                 'id_board': self.board()}
+        url = urlunparse(('https',
+                          WDD_NETLOC,
+                          WDD_BASE_RESULTS_PATH + 'tournament_board.php',
+                          '',
+                          urlencode(query),
+                          ''))
+        return url
+
     def __str__(self):
         return _(u'%(player)s played %(power)s in %(game)s at %(tourney)s') % {'player': self.player,
                                                                                'power': self.power,
@@ -913,6 +952,21 @@ class PlayerAward(models.Model):
                                     name='unique_player_tournament_date_name'),
         ]
 
+    def wdd_url(self):
+        """WDD URL where this award can be seen"""
+        if self.power is None:
+            path = 'tournament_award.php'
+        else:
+            path = 'tournament_best_countries.php'
+        query = {'id_tournament': self.wdd_tournament_id}
+        url = urlunparse(('https',
+                          WDD_NETLOC,
+                          WDD_BASE_RESULTS_PATH + path,
+                          '',
+                          urlencode(query),
+                          ''))
+        return url
+
     def __str__(self):
         return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
                                                                'award': self.name,
@@ -935,6 +989,26 @@ class PlayerRanking(models.Model):
             models.UniqueConstraint(fields=['player', 'system'],
                                     name='unique_player_system'),
         ]
+
+    def wdd_url(self):
+        """WDD URL where this ranking can be seen"""
+        if self.system == 'World Performance Evaluation':
+            wdd_system_id = 2
+        elif self.system == 'Dip Pouch Tournament Rating':
+            wdd_system_id = 3
+        elif self.system == 'SDR Marathon':
+            wdd_system_id = 16
+        else:
+            return ''
+        query = {'id_ranking': wdd_system_id,
+                 'id_player': self.player.wdd_player_id}
+        url = urlunparse(('https',
+                          WDD_NETLOC,
+                          WDD_BASE_RANKING_PATH + 'ranking_player.php',
+                          '',
+                          urlencode(query),
+                          ''))
+        return url
 
     def national_str(self):
         """Returns a string describing the national_rank"""
