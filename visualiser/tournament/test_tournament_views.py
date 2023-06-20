@@ -862,7 +862,7 @@ class TournamentViewTests(TestCase):
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, a in enumerate(self.t1.awards.all()):
             data['form-%d-award' % i] = str(a.id)
-            data['form-%d-player' % i] = [str(self.t1.tournamentplayer_set.first().id)]
+            data['form-%d-players' % i] = [str(self.t1.tournamentplayer_set.first().id)]
         i += 1
         data['form-TOTAL_FORMS'] = '%d' % i
         data['form-INITIAL_FORMS'] = '%d' % i
