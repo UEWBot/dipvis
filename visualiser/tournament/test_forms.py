@@ -28,7 +28,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy
-from tournament.models import Award, Tournament, Round, Game
+from tournament.models import Award, Tournament, Round, Game, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
@@ -43,6 +43,7 @@ from tournament.forms import PlayerForm
 from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
 from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
 from tournament.forms import SeederBiasForm
+from tournament.forms import TeamForm, BaseTeamsFormset
 
 
 class AwardsFormTest(TestCase):
@@ -405,6 +406,98 @@ class HandicapsFormsetTest(TestCase):
         self.assertEqual(len(formset), len(initial))
 
 
+class TeamFormTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        cls.p2 = Player.objects.create(first_name='Catherine', last_name='Dirigible')
+        p3 = Player.objects.create(first_name='Ethel', last_name='Felony')
+        today = date.today()
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=today,
+                                          end_date=today + timedelta(hours=24),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET,
+                                          team_size=3)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p3, tournament=cls.t)
+        # Single team with a single player
+        cls.tm = Team.objects.create(tournament=cls.t, name='The Team')
+        cls.tm.players.add(cls.p2)
+
+    def test_team_form_player_fields_required(self):
+        """One player should be required, others optional"""
+        form = TeamForm(tournament=self.t)
+        self.assertTrue(form.fields['player_0'].required)
+        for i in range(1,self.t.team_size):
+            self.assertFalse(form.fields[f'player_{i}'].required)
+
+    def test_team_form_players_optional(self):
+        """One player should be required, others optional"""
+        form = TeamForm(tournament=self.t, data={'name': 'Sausages',
+                                                 'player_0': str(self.p1.pk)})
+        print(form.errors)
+        print(form.non_field_errors())
+        self.assertTrue(form.is_valid())
+
+    def test_team_form_existing_team(self):
+        """team kwarg should be supported"""
+        form = TeamForm(tournament=self.t, team=self.tm)
+
+    def test_team_repeated_player(self):
+        """same player can't appear more than once in a team"""
+        form = TeamForm(tournament=self.t, data={'name': 'Sausages',
+                                                 'player_0': str(self.p2.pk),
+                                                 'player_1': str(self.p1.pk),
+                                                 'player_2': str(self.p1.pk)})
+        self.assertFalse(form.is_valid())
+
+
+class TeamsFormsetTest(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        cls.p2 = Player.objects.create(first_name='Catherine', last_name='Dirigible')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Felony')
+        today = date.today()
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=today,
+                                          end_date=today + timedelta(hours=24),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET,
+                                          team_size=2)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t)
+        TournamentPlayer.objects.create(player=cls.p3, tournament=cls.t)
+        # Single team with a single player
+        cls.tm = Team.objects.create(tournament=cls.t, name='The Team')
+        cls.tm.players.add(cls.p2)
+
+        cls.TeamsFormset = formset_factory(TeamForm, extra=2, formset=BaseTeamsFormset)
+
+    def test_teams_duplicate_player(self):
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.p1.pk),
+                'form-0-player_1': str(self.p2.pk),
+                'form-1-name': 'Team 1',
+                'form-1-player_0': str(self.p3.pk),
+                'form-1-player_1': str(self.p1.pk),
+               }
+        formset = self.TeamsFormset(data, tournament=self.t)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertIn('Player Arthur Bottom appears in multiple teams', formset.non_form_errors()[0])
+
+
 class DrawFormTest(TestCase):
 
     # Common validation method
@@ -557,20 +650,20 @@ class GamePlayersFormTest(TestCase):
         # We'll also create some extra TournamentPlayers and Players
         # to ensure that the form doesn't pick them up
         today = date.today()
-        t = Tournament.objects.create(name='t1',
-                                      start_date=today,
-                                      end_date=today + timedelta(hours=24),
-                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                      draw_secrecy=DrawSecrecy.SECRET)
-        cls.r1 = Round.objects.create(tournament=t,
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=today,
+                                          end_date=today + timedelta(hours=24),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.r1 = Round.objects.create(tournament=cls.t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
-        r2 = Round.objects.create(tournament=t,
+                                      start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r2 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=datetime.combine(t.start_date, time(hour=17, tzinfo=timezone.utc)))
+                                  start=datetime.combine(cls.t.start_date, time(hour=17, tzinfo=timezone.utc)))
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
@@ -582,15 +675,15 @@ class GamePlayersFormTest(TestCase):
         # Deliberately create these two out of alphabetical order
         p5 = Player.objects.create(first_name='Edwina', last_name='Eggplant')
         p6 = Player.objects.create(first_name='Frank', last_name='Furious')
-        TournamentPlayer.objects.create(player=p1, tournament=t)
-        TournamentPlayer.objects.create(player=p2, tournament=t)
-        TournamentPlayer.objects.create(player=p3, tournament=t)
-        TournamentPlayer.objects.create(player=p4, tournament=t)
-        TournamentPlayer.objects.create(player=p5, tournament=t)
-        TournamentPlayer.objects.create(player=p6, tournament=t)
-        TournamentPlayer.objects.create(player=p7, tournament=t)
-        TournamentPlayer.objects.create(player=p8, tournament=t)
-        TournamentPlayer.objects.create(player=p9, tournament=t)
+        TournamentPlayer.objects.create(player=p1, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p2, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p3, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p4, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p5, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p6, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p7, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p8, tournament=cls.t)
+        TournamentPlayer.objects.create(player=p9, tournament=cls.t)
         cls.rp1 = RoundPlayer.objects.create(player=p1, the_round=cls.r1)
         cls.rp2 = RoundPlayer.objects.create(player=p2, the_round=cls.r1)
         cls.rp3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1, sandboxer=True)
@@ -760,6 +853,95 @@ class GamePlayersFormTest(TestCase):
         self.assertIn('appears more than once', form.errors['__all__'][0])
         # We should see the Player, not the RoundPlayer, in any error
         self.assertNotIn(str(self.rp1), form.errors['__all__'][0])
+
+    def test_teammates_in_team_round(self):
+        """Players from the same team in the same game in a team round"""
+        self.t.team_size = 2
+        self.t.save()
+        self.r1.is_team_round = True
+        self.r1.save()
+        tm = Team.objects.create(tournament=self.t,
+                                 name="The test team")
+        tm.players.add(self.rp2.player)
+        tm.players.add(self.rp4.player)
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 1)
+        # Non-field errors still count as errors
+        self.assertEqual(len(form.errors), 1)
+        self.assertIn('Multiple players from team', form.errors['__all__'][0])
+        # We should see the Player, not the RoundPlayer, in any error
+        self.assertNotIn(str(self.rp2), form.errors['__all__'][0])
+        # Cleanup
+        tm.delete()
+        self.t.team_size = None
+        self.t.save()
+        self.r1.is_team_round = False
+        self.r1.save()
+
+    def test_non_teammates_in_team_round(self):
+        """No players from the same team in the same game in a team round"""
+        self.t.team_size = 2
+        self.t.save()
+        self.r1.is_team_round = True
+        self.r1.save()
+        tm1 = Team.objects.create(tournament=self.t,
+                                 name="The test team")
+        tm1.players.add(self.rp2.player)
+        tm2 = Team.objects.create(tournament=self.t,
+                                 name="Another test team")
+        tm2.players.add(self.rp4.player)
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertTrue(form.is_valid())
+        # Cleanup
+        tm1.delete()
+        tm2.delete()
+        self.t.team_size = None
+        self.t.save()
+        self.r1.is_team_round = False
+        self.r1.save()
+
+    def test_teammates_in_non_team_round(self):
+        """Players from the same team in the same game in a non-team round"""
+        self.t.team_size = 2
+        self.t.save()
+        tm = Team.objects.create(tournament=self.t,
+                                 name="The test team")
+        tm.players.add(self.rp2.player)
+        tm.players.add(self.rp4.player)
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data, the_round=self.r1)
+        self.assertTrue(form.is_valid())
+        # Cleanup
+        tm.delete()
+        self.t.team_size = None
+        self.t.save()
 
 
 class BaseGamePlayersFormsetTest(TestCase):

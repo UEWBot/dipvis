@@ -20,6 +20,7 @@ Round Views for the Diplomacy Tournament Visualiser.
 
 import csv
 import requests
+from itertools import combinations
 
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
@@ -308,6 +309,13 @@ def _create_game_seeder(tournament, the_round):
         # because we only look at their player1
         for sb in tp.seederbias_set.all():
             seeder.add_bias(sb.player1, sb.player2)
+    # If this is a team round, add biases to separate team members
+    if (tournament.team_size is not None) and the_round.is_team_round:
+        for t in tournament.team_set.all():
+            for p1, p2 in combinations(list(t.players.all()), 2):
+                tp1 = p1.tournamentplayer_set.get(tournament=tournament)
+                tp2 = p2.tournamentplayer_set.get(tournament=tournament)
+                seeder.add_bias(tp1, tp2)
     return seeder
 
 

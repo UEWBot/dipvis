@@ -21,6 +21,7 @@
   {% for gp in game.gameplayer_set.all %}
     <dt>{% if gp.power %}{{ gp.power }}{% else %}{% trans "Power not yet assigned" %}{% endif %}</dt>
     <dd><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %} ( {% if gp.player.backstabbr_profile_url %}<a href="{{ gp.player.backstabbr_profile_url }}">{{ gp.player.backstabbr_username }}</a>{% else %}{{ gp.player.backstabbr_username }}{% endif %} ){% endif %}</dd>
+    {% if game.the_round.is_team_round %}<dd>{{ gp.team.name }}</dd>{% endif %}
     <dd>{{ gp.result_str }}</dd>
     {% if game.is_finished and game.the_round.show_scores %}
       <dd>{{ gp.score|floatformat:2 }} {% trans "points" %}</dd>

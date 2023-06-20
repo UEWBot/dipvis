@@ -18,7 +18,7 @@
         </tr></thead>
         <tbody><tr>
           {% for gp in g.gameplayer_set.all %}
-            <td><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %}<br>({{ gp.player.backstabbr_username }}){% endif %}</td>
+            <td><a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a>{% if tournament.is_virtual %}<br>({{ gp.player.backstabbr_username }}){% endif %}{% if round.is_team_round %}<br>({{ gp.team.name }}){% endif %}</td>
           {% endfor %}
         </tr></tbody>
       </table>

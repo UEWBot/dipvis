@@ -17,7 +17,7 @@
   </tr>
   <tr>
     {% for gameplayer in players %}
-      <th><a href="{{ gameplayer.tournamentplayer.get_absolute_url }}">{{ gameplayer.player }}</a></th>
+      <th><a href="{{ gameplayer.tournamentplayer.get_absolute_url }}">{{ gameplayer.player }}</a>{% if game.the_round.is_team_round %}<br/>{{ gameplayer.team.name }}{% endif %}</th>
     {% endfor %}
   </tr></thead>
   <tbody>

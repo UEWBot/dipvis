@@ -26,7 +26,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
-from tournament.models import Round, RoundPlayer
+from tournament.models import Round, RoundPlayer, Team
 from tournament.models import Game, GamePlayer, SeederBias
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player
@@ -914,9 +914,69 @@ class RoundViewTests(TestCase):
         for g in g_qs.all():
             self.assertEqual(g.gameplayer_set.count(), 7)
         # Clean up
-        g.delete()
+        g_qs.all().delete()
         self.rp112.game_count = 0
         self.rp112.save(update_fields=['game_count'])
+
+    def test_seed_games_with_teams(self):
+        # 14 players, AUTO power assignment
+        self.assertEqual(self.r11.game_set.count(), 0)
+        tp = TournamentPlayer.objects.create(player=self.p14,
+                                             tournament=self.t1)
+        rp = RoundPlayer.objects.create(player=self.p14,
+                                        the_round=self.r11)
+        self.assertEqual(self.rp112.game_count, 0)
+        self.rp112.game_count = 1
+        self.rp112.save(update_fields=['game_count'])
+        self.assertEqual(self.rp113.game_count, 2)
+        self.rp113.game_count = 1
+        self.rp113.save(update_fields=['game_count'])
+        # Create two teams
+        self.t1.team_size = 2
+        self.t1.save(update_fields=['team_size'])
+        self.r11.is_team_round = True
+        self.r11.save(update_fields=['is_team_round'])
+        tm1 = Team.objects.create(tournament=self.t1,
+                                  name="Test team 1")
+        tm1.players.add(self.p2)
+        tm1.players.add(self.p4)
+        tm2 = Team.objects.create(tournament=self.t1,
+                                  name="Test team 2")
+        tm2.players.add(self.p3)
+        tm2.players.add(self.p14)
+        # Tweak initial data for this test
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Two Games should have been created
+        g_qs = self.t1.round_numbered(1).game_set
+        self.assertEqual(g_qs.count(), 2)
+        # with seven GamePlayers
+        for g in g_qs.all():
+            self.assertEqual(g.gameplayer_set.count(), 7)
+        # Team members should not be playing each other
+        for tm in [tm1, tm2]:
+            games = set()
+            gps = tm.gameplayers()
+            for gp in gps:
+                games.add(gp.game)
+            self.assertEqual(len(games), len(gps))
+        # Clean up
+        tm1.delete()
+        tm2.delete()
+        g_qs.all().delete()
+        rp.delete()
+        self.rp112.game_count = 0
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 2
+        self.rp113.save(update_fields=['game_count'])
+        tp.delete()
+        self.r11.is_team_round = False
+        self.r11.save(update_fields=['is_team_round'])
+        self.t1.team_size = None
+        self.t1.save(update_fields=['team_size'])
 
     def test_seed_games_post_success(self):
         # Eight players, one sitting out, AUTO power assignment

@@ -33,6 +33,11 @@
 {% if tournament.draw_secrecy == "C" %}
   <p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p>
 {% endif %}
+{% if tournament.team_size %}
+  <p>{% blocktrans count count=tournament.team_rounds.count %}Team round: {% plural %}Team rounds: {% endblocktrans %}{% for r in tournament.team_rounds.all %}{{ r.number }} {% endfor %}</p>
+  <p>{% blocktrans with number=tournament.team_size %}Teams of {{ number}} players{% endblocktrans %}</p>
+  <p><a href="{% url 'teams' tournament.id %}">Teams</a></p>
+{% endif %}
 {% if tournament.location %}<p>{% trans "Location: " %}{{ tournament.location }}</p>{% endif %}
 
 <p>{% blocktrans count count=tournament.round_set.count %}1 Round{% plural %}{{ count }} Rounds{% endblocktrans %}:</p>
@@ -61,6 +66,9 @@
   {% else %}
     <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
+  {% endif %}
+  {% if tournament.team_size %}
+    <li><a href="{% url 'team_scores' tournament.id %}">{% trans "Team Scores" %}</a></li>
   {% endif %}
   <li><a href="{% url 'tournament_awards' tournament.id %}">{% trans "Awards" %}</a></li>
   <li><a href="{% url 'tournament_best_countries' tournament.id %}">{% trans "Best Countries" %}</a></li>
@@ -95,6 +103,9 @@
     {% endif %}
     {% if perms.tournament.add_seederbias %}
       <li><a href="{% url 'seeder_bias' tournament.id %}">{% trans "Add bias to the game seeder" %}</a> - {% trans "Use this if you have people playing in the tournament you want to keep apart (e.g. family members)." %}</li>
+    {% endif %}
+    {% if perms.tournament.add_team %}
+      <li><a href="{% url 'enter_teams' tournament.id %}">{% trans "Add/edit teams" %}</a></li>
     {% endif %}
     {% if perms.tournament.add_preference %}
       {% if tournament.powers_assigned_from_prefs %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Team Scores{% endblocktrans %}{% endblock %}
+
+{% block content %}
+{% if tournament.team_rounds_finished %}
+  <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Final Team Scores" %}</h1>
+{% else %}
+  <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Current Team Scores" %}</h1>
+{% endif %}
+
+<table class="form">
+  <thead><tr>
+    <th>{% trans "Position" %}</th>
+    <th>{% trans "Team" %}</th>
+    <th colspan="{{ tournament.team_size }}">{% trans "Players" %}</th>
+    <th>{% trans "Total" %}</th>
+  </tr></thead>
+  <tbody>
+    {% for p_data in scores %}
+      <tr class="{% cycle 'odd_row' 'even_row' %}">
+        <td style="text-align:right">{{ p_data.rank|ordinal }}</td>
+        <td style="text-align:right">{{ p_data.team.name }}</td>
+        {% for result in p_data.team.results %}
+          <td style="text-align:right">
+            {{ result.player|default_if_none:"" }}<br>
+            {% for gp in result.gameplayers %}
+              {% if gp.game.the_round.show_scores %}
+                {% if not forloop.first %} + {% endif %}
+                {% if not gp.score_is_final %}
+                  <i>
+                {% endif %}
+                {{ gp.score|floatformat:2 }}
+                {% if not gp.score_is_final %}
+                  </i>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </td>
+        {% endfor %}
+        <td style="text-align:right">
+          {% if not p_data.team.score_is_final %}
+            <i>
+          {% endif %}
+          {{ p_data.score|floatformat:2 }}
+          {% if not p_data.team.score_is_final %}
+            </i>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p>0.0 - {% trans "final score" %}<br>
+<i>0.0</i> - {% trans "score if all games ended now" %}<br>
+<del>0.0</del> - {% trans "score dropped" %}<br>
+* - {% trans "did not play" %}</p>
+{% endblock %}

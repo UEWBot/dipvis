@@ -25,7 +25,7 @@ from tournament.models import Award, CentreCount, DrawProposal
 from tournament.models import Game, GameImage, GamePlayer
 from tournament.models import Round, RoundPlayer, DBNCoverage
 from tournament.models import SeederBias, Series, SupplyCentreOwnership
-from tournament.models import Tournament, TournamentPlayer
+from tournament.models import Team, Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
 from tournament.players import PlayerGameResult, PlayerRanking
 from tournament.players import PlayerTournamentRanking
@@ -145,7 +145,7 @@ class RoundInline(admin.StackedInline):
     extra = 4
     fieldsets = [
         (None, {
-            'fields': ['start', 'scoring_system', 'dias']
+            'fields': ['start', 'scoring_system', 'dias', 'is_team_round']
         }),
         ('Round end options', {
             'classes': ['collapse'],
@@ -153,11 +153,15 @@ class RoundInline(admin.StackedInline):
         }),
     ]
 
+@admin.register(Team)
+class TeamAdmin(admin.ModelAdmin):
+    list_filter = ['tournament']
+
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
     """Include Round as part of Tournament"""
     inlines = [RoundInline]
-    fields = (('name', 'format', 'location'),
+    fields = (('name', 'format', 'location', 'team_size'),
               ('start_date', 'end_date'),
               ('seed_games', 'power_assignment'),
               ('tournament_scoring_system', 'handicaps', 'round_scoring_system',

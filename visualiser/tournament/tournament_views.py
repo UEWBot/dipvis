@@ -40,13 +40,15 @@ from tournament.forms import BaseAwardsFormset
 from tournament.forms import BaseHandicapsFormset
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
+from tournament.forms import BaseTeamsFormset
 from tournament.forms import EnableCheckInForm
 from tournament.forms import HandicapForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
+from tournament.forms import TeamForm
 
-from tournament.models import Tournament, SeederBias
+from tournament.models import Tournament, SeederBias, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList
 
@@ -181,6 +183,58 @@ def tournament_scores(request,
     else:
         template = 'tournaments/scores_no_round_scores.html'
     return render(request, template, context)
+
+
+def team_scores(request,
+                tournament_id,
+                refresh=False,
+                redirect_url_name='team_scores_refresh'):
+    """Display team scores of a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    refresh_time = REFRESH_TIME
+    # If we're showing this as part of the tournament overview,
+    # skip it if either there's no team round or the first team round
+    # hasn't started
+    if refresh and redirect_url_name != 'team_scores_refresh':
+        show_page = False
+        rds = t.team_rounds()
+        if rds.filter(is_finished=True).exists():
+            show_page = True
+        else:
+            for r in rds:
+                if r.in_progress():
+                    show_page = True
+                    break
+        if not show_page:
+            refresh_time = 0
+    elif not t.team_size:
+        raise Http404
+    scores = []
+    if refresh_time:
+        if t.show_current_scores:
+            # Grab the team scores and positions, all "if it ended now"
+            team_scores = t.team_scores()
+        else:
+            # Get the scores after the last finished Round, if any
+            r = t.round_set.filter(is_finished=True).last()
+            if r:
+                team_scores = t.team_scores(after_round_num=r.number())
+            else:
+                # After Round 0, all teams had a score of zero
+                team_scores = t.team_scores(after_round_num=0)
+        for team, (rank, score) in team_scores.items():
+            row = {'rank': rank,
+                   'team': team,
+                   'score': score}
+            scores.append(row)
+    elif refresh:
+        return HttpResponseRedirect(reverse(redirect_url_name, args=(tournament_id,)))
+    context = {'tournament': t, 'scores': scores}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = refresh_time
+        context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
+    return render(request, 'tournaments/team_scores.html', context)
 
 
 def tournament_game_results(request,
@@ -590,6 +644,61 @@ def enter_handicaps(request, tournament_id):
                                             args=(tournament_id,)))
     return render(request,
                   'tournaments/enter_handicaps.html',
+                  {'tournament': t,
+                   'formset': formset})
+
+
+def teams(request, tournament_id):
+    """Show the registered teams"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    if not t.team_size:
+        raise Http404
+    context = {'tournament': t}
+    return render(request, 'tournaments/teams.html', context)
+
+
+@permission_required('tournament.add_team')
+def enter_teams(request, tournament_id):
+    """Form to create or edit teams"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    # Only valid for Tournaments with teams
+    if not t.team_size:
+        raise Http404
+    # Calculate a sensible number of teams
+    expected_teams = t.tournamentplayer_set.count() // t.team_size
+    TeamsFormset = formset_factory(TeamForm,
+                                   extra=max(1, expected_teams - t.team_set.count()),
+                                   formset=BaseTeamsFormset)
+    formset = TeamsFormset(request.POST or None, tournament=t)
+    if formset.is_valid():
+        for form in formset:
+            if form.has_changed():
+                tm = form.team
+                if tm:
+                    tm.name = form.cleaned_data['name']
+                    tm.save()
+                else:
+                    tm = Team.objects.create(tournament=t,
+                                             name=form.cleaned_data['name'])
+                # Put together a list of players that should be on the team
+                players = []
+                for r_name, value in form.cleaned_data.items():
+                    if r_name.startswith('player_'):
+                        players.append(value)
+                # Compare against the players currently on the team
+                for p in tm.players.all():
+                    if p in players:
+                        players.remove(p)
+                    else:
+                        tm.players.remove(p)
+                # Add any missing players
+                for p in players:
+                    tm.players.add(p)
+        # Redirect to the teams page
+        return HttpResponseRedirect(reverse('teams',
+                                            args=(tournament_id,)))
+    return render(request,
+                  'tournaments/enter_teams.html',
                   {'tournament': t,
                    'formset': formset})
 

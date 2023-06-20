@@ -25,7 +25,7 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import Award, DrawSecrecy, PowerAssignMethods
-from tournament.models import Tournament, TournamentPlayer, SeederBias
+from tournament.models import Tournament, TournamentPlayer, SeederBias, Team
 from tournament.models import Preference, Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -75,6 +75,8 @@ class TournamentViewTests(TestCase):
         perm = Permission.objects.get(name='Can add tournament player')
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can change tournament player')
+        cls.u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can add team')
         cls.u3.user_permissions.add(perm)
         cls.u3.save()
 
@@ -227,8 +229,10 @@ class TournamentViewTests(TestCase):
                                            is_published=True,
                                            editable=False)
         cls.r41 = Round.objects.create(tournament=cls.t4,
-                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=timezone.utc)),
+                                       start=datetime.combine(cls.t4.start_date,
+                                                              time(hour=16, tzinfo=timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
+                                       is_finished=True,
                                        dias=False)
         g41 = Game.objects.create(name='Game1',
                                   the_round=cls.r41,
@@ -627,6 +631,169 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
 
+    def test_team_scores(self):
+        """No refresh, team tournament, showing current scores"""
+        self.t4.team_size = 2
+        self.t4.save()
+        self.r41.is_team_round = True
+        self.r41.is_finished = False
+        self.r41.save()
+        for g in self.r41.game_set.all():
+            self.assertTrue(g.is_finished)
+            g.is_finished = False
+            g.save()
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('team_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # TODO Check result
+        self.assertContains(response, TEAM_NAME)
+        # Clean up
+        tm.delete()
+        for g in self.r41.game_set.all():
+            g.is_finished = True
+            g.save()
+        self.r41.is_finished = True
+        self.r41.is_team_round = False
+        self.r41.save()
+        self.t4.team_size = None
+        self.t4.save()
+
+    def test_team_scores_old(self):
+        """Refresh, team tournament, showing scores after last finished round"""
+        self.t4.team_size = 2
+        self.t4.show_current_scores = False
+        self.t4.save()
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('team_scores_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # TODO Check result
+        self.assertContains(response, TEAM_NAME)
+        # Clean up
+        tm.delete()
+        self.t4.team_size = None
+        self.t4.show_current_scores = True
+        self.t4.save()
+
+    def test_team_scores_refresh_first_team_round(self):
+        """Refresh, currently playing the first team round, non-current scores"""
+        self.t4.team_size = 2
+        self.t4.is_finished = False
+        self.t4.show_current_scores = False
+        self.t4.save()
+        self.r41.is_team_round = True
+        self.r41.is_finished = False
+        self.r41.save()
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('tournament_overview_4',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # TODO Check result
+        self.assertContains(response, TEAM_NAME)
+        self.assertNotContains(response, '123.4')
+        # Clean up
+        tm.delete()
+        self.r41.is_finished = True
+        self.r41.is_team_round = False
+        self.r41.save()
+        self.t4.team_size = None
+        self.t4.show_current_scores = True
+        self.t4.is_finished = True
+        self.t4.save()
+
+    def test_team_score_no_teams(self):
+        """No refresh, non-team tournament should return 404"""
+        self.assertIsNone(self.t4.team_size)
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('team_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_team_score_refresh(self):
+        """Refresh to a different page, after team round, should not skip quickly"""
+        self.t4.team_size = 2
+        self.t4.save()
+        self.r41.is_team_round = True
+        self.r41.save()
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('tournament_overview_4',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # TODO Check result
+        self.assertContains(response, TEAM_NAME)
+        # Clean up
+        tm.delete()
+        self.r41.is_team_round = False
+        self.r41.save()
+        self.t4.team_size = None
+        self.t4.save()
+
+    def test_team_score_refresh_early(self):
+        """Refresh to a different page, prior to team round, should skip quickly"""
+        self.t4.team_size = 2
+        self.t4.save()
+        # Add a second round that is a team round
+        r42 = Round.objects.create(tournament=self.t4,
+                                   start=datetime.combine(self.t4.start_date,
+                                                          time(hour=8,
+                                                               tzinfo=timezone.utc)),
+                                   scoring_system=G_SCORING_SYSTEMS[0].name,
+                                   is_team_round=True,
+                                   dias=False)
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('tournament_overview_4',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        # Clean up
+        tm.delete()
+        r42.delete()
+        self.t4.team_size = None
+        self.t4.save()
+
+    def test_team_score_refresh_no_team_round(self):
+        """Refresh to a different page, team-free tournament, should redirect"""
+        self.assertIsNone(self.t4.team_size)
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('tournament_overview_4',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        # Clean up
+        tm.delete()
+        self.t4.team_size = None
+        self.t4.save()
+
     def test_game_results(self):
         response = self.client.get(reverse('tournament_game_results',
                                            args=(self.t4.pk,)),
@@ -894,6 +1061,233 @@ class TournamentViewTests(TestCase):
             tp.handicap = 0.0
             tp.save()
         self.t2.handicaps = False
+        self.t2.save()
+
+    def test_teams(self):
+        self.t1.team_size = 3
+        self.t1.save()
+        tm = Team.objects.create(name="The test team",
+                                 tournament=self.t1)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('teams',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        tm.delete()
+        self.t1.team_size = None
+        self.t1.save()
+
+    def test_teams_invalid(self):
+        """Teams view should give 404 if there's no team round"""
+        response = self.client.get(reverse('teams',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enter_teams_not_logged_in(self):
+        self.assertIsNone(self.t1.team_size)
+        self.t1.team_size = 3
+        self.t1.save()
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+        # Cleanup
+        self.t1.team_size = None
+        self.t1.save()
+
+    def test_enter_teams_regular_user(self):
+        # A regular user can't enter teams for any old tournament
+        self.assertIsNone(self.t1.team_size)
+        self.t1.team_size = 3
+        self.t1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+        # Cleanup
+        self.t1.team_size = None
+        self.t1.save()
+
+    def test_enter_teams_manager_wrong_tournament(self):
+        # A manager can't enter teams for a tournament that isn't theirs
+        self.assertIsNone(self.t3.team_size)
+        self.t3.team_size = 3
+        self.t3.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t3.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Cleanup
+        self.t3.team_size = None
+        self.t3.save()
+
+    def test_enter_teams_archived(self):
+        # Nobody can enter teams for an archived tournament
+        self.assertIsNone(self.t4.team_size)
+        self.t4.team_size = 3
+        self.t4.save()
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Cleanup
+        self.t4.team_size = None
+        self.t4.save()
+
+    def test_enter_teams_superuser(self):
+        # A superuser can enter teams for any tournament
+        self.assertIsNone(self.t1.team_size)
+        self.t1.team_size = 3
+        self.t1.save()
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t1.team_size = None
+        self.t1.save()
+
+    def test_enter_teams_manager(self):
+        # A manager can enter teams for their tournament
+        self.assertIsNone(self.t2.team_size)
+        self.t2.team_size = 3
+        self.t2.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t2.team_size = None
+        self.t2.save()
+
+    def test_enter_teams_not_applicable(self):
+        # Nobody can enter teams if the tournament doesn't use them
+        self.assertIsNone(self.t2.team_size)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_teams',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enter_teams_create(self):
+        # A manager can enter teams for their tournament
+        self.assertEqual(0, self.t2.team_set.count())
+        self.assertIsNone(self.t2.team_size)
+        self.t2.team_size = 3
+        self.t2.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        # Create a number of teams
+        tps = list(self.t2.tournamentplayer_set.all())
+        teams = []
+        while len(tps) > 3:
+            members = []
+            members.append(tps.pop().player)
+            members.append(tps.pop().player)
+            members.append(tps.pop().player)
+            teams.append(members.copy())
+        for i in range(len(teams)):
+            data[f'form-{i}-name'] = f'Team {i}'
+            for n, p in enumerate(teams[i]):
+                data[f'form-{i}-player_{n}'] = str(p.pk)
+        i += 1
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
+        data = urlencode(data)
+        response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the tournament teams page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('teams', args=(self.t2.pk,)))
+        # And the teams entered should be created
+        team_set = list(self.t2.team_set.all())
+        self.assertEqual(len(teams), len(team_set))
+        for tm in team_set:
+            self.assertEqual(tm.players.count(), 3)
+        # Clean up
+        self.t2.team_set.all().delete()
+        self.t2.team_size = None
+        self.t2.save()
+
+    def test_enter_teams_change(self):
+        # A manager can modify teams for their tournament
+        self.assertIsNone(self.t2.team_size)
+        self.t2.team_size = 3
+        self.t2.save()
+        self.assertEqual(0, self.t2.team_set.count())
+        # Create two teams
+        tps = list(self.t2.tournamentplayer_set.all())
+        tm1 = Team.objects.create(tournament=self.t2,
+                                 name='Existing Team 1')
+        tm1.players.add(tps.pop().player)
+        tm1.players.add(tps.pop().player)
+        tm1.players.add(tps.pop().player)
+        tm2 = Team.objects.create(tournament=self.t2,
+                                 name='Existing Team 2')
+        tm2.players.add(tps.pop().player)
+        tm2.players.add(tps.pop().player)
+        tm2.players.add(tps.pop().player)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        # Leave one team unchanged, modify another, and create a new one
+        i = 0
+        data[f'form-{i}-name'] = tm1.name
+        for n, p in enumerate(tm1.players.all()):
+            data[f'form-{i}-player_{n}'] = str(p.pk)
+        i += 1
+        data[f'form-{i}-name'] = tm2.name
+        for n, p in enumerate(tm2.players.all()):
+            if n == 2:
+                # Swap the second player into Team #3
+                data[f'form-{i+1}-player_{n}'] = str(p.pk)
+                player_swapped_to_3 = p
+            else:
+                data[f'form-{i}-player_{n}'] = str(p.pk)
+        i += 1
+        data[f'form-{i}-name'] = f'Team {i}'
+        members = []
+        members.append(tps.pop().player)
+        members.append(tps.pop().player)
+        members.append(tps.pop().player)
+        for n, p in enumerate(members):
+            if n == 2:
+                # Swap the second player into Team #3
+                data[f'form-{i-1}-player_{n}'] = str(p.pk)
+                player_swapped_to_2 = p
+            else:
+                data[f'form-{i}-player_{n}'] = str(p.pk)
+        i += 1
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
+        data = urlencode(data)
+        response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the tournament teams page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('teams', args=(self.t2.pk,)))
+        # And the teams should be modified/created
+        team_set = list(self.t2.team_set.all())
+        self.assertEqual(3, len(team_set))
+        for tm in team_set:
+            self.assertEqual(tm.players.count(), 3)
+        self.assertIn(player_swapped_to_2, tm2.players.all())
+        self.assertIn(player_swapped_to_3, team_set[2].players.all())
+        # Clean up
+        self.t2.team_set.all().delete()
+        self.t2.team_size = None
         self.t2.save()
 
     def test_current_round(self):

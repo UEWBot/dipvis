@@ -30,7 +30,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
-from tournament.models import Award, SeederBias, Series, DBNCoverage
+from tournament.models import Award, SeederBias, Series, DBNCoverage, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import TScoringSumRounds, TScoringSumGames
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -1512,6 +1512,313 @@ class SeriesTests(TestCase):
         str(s)
 
 
+class TeamTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        today = date.today()
+
+        cls.TEST_TEAM_NAME = 'Test team'
+
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=today,
+                                          end_date=today + HOURS_24,
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          team_size=2,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.tm = Team.objects.create(tournament=cls.t,
+                                     name=cls.TEST_TEAM_NAME)
+        # Add Rounds to t1
+        # One team round
+        r11 = Round.objects.create(tournament=cls.t,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   is_team_round=True,
+                                   start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        # and one non-team round
+        r12 = Round.objects.create(tournament=cls.t,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=r11.start + HOURS_8)
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r11.start,
+                                  the_round=r11,
+                                  the_set=cls.set1)
+        # Add Games to r12
+        g13 = Game.objects.create(name='g13',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+        g14 = Game.objects.create(name='g14',
+                                  started_at=r12.start,
+                                  the_round=r12,
+                                  the_set=cls.set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
+        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
+        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
+        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
+        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
+        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
+        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        # These two are deliberately not in any tournaments
+        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
+        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+
+        # And TournamentPlayers
+        TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t, score=1.0)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t, score=2.0, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=cls.t, score=3.0)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=cls.t, score=4.0)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=cls.t, score=5.0, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=cls.t, score=6.0)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=cls.t, score=7.0, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=cls.t, score=8.0)
+
+        # And the corresponding RoundPlayers
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=111.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=112.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11, score=113.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11, score=114.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11, score=115.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11, score=116.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11, score=117.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11, score=118.0)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12, score=121.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12, score=122.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12, score=123.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12, score=124.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12, score=125.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12, score=126.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12, score=127.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12, score=128.0)
+
+        # And GamePlayers
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g11,
+                                  power=cls.austria,
+                                  score=1.0)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england,
+                                  score=1.1)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france,
+                                  score=1.2)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany,
+                                  score=1.3)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy,
+                                  score=1.4)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia,
+                                  score=1.6)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey,
+                                  score=1.5)
+        # Add GamePlayers to g12
+        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria,
+                                  score=2.5)
+        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england,
+                                  score=2.4)
+        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france,
+                                  score=2.2)
+        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany,
+                                  score=2.3)
+        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy,
+                                  score=2.1)
+        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia,
+                                  score=2.0)
+        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey,
+                                  score=2.6)
+        # Add GamePlayers to g13
+        GamePlayer.objects.create(player=cls.p1,
+                                  game=g13,
+                                  power=cls.austria,
+                                  score=3.2)
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england,
+                                  score=3.5)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france,
+                                  score=3.1)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany,
+                                  score=3.6)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy,
+                                  score=3.3)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia,
+                                  score=3.0)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey,
+                                  score=3.4)
+        # Add GamePlayers to g14
+        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria,
+                                  score=4.4)
+        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england,
+                                  score=4.1)
+        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france,
+                                  score=4.0)
+        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany,
+                                  score=4.2)
+        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy,
+                                  score=4.6)
+        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia,
+                                  score=4.3)
+        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey,
+                                  score=4.5)
+
+    def test_two_teams_same_name(self):
+        """Two teams of the same name in the same tournament"""
+        self.assertRaises(IntegrityError,
+                          Team.objects.create,
+                          tournament=self.t,
+                          name=self.TEST_TEAM_NAME)
+
+    # Team.gameplayers()
+    def test_gameplayers(self):
+        self.tm.players.add(self.p3)
+        self.tm.players.add(self.p4)
+        gps = self.tm.gameplayers()
+        self.assertEqual(len(gps), 4)
+        for gp in gps:
+            self.assertIn(gp.player, [self.p3, self.p4])
+            self.assertTrue(gp.game.the_round.is_team_round)
+        # Cleanup
+        self.tm.players.remove(self.p3)
+        self.tm.players.remove(self.p4)
+
+    # Team.results()
+    def test_results(self):
+        """Results for Team with space for more players"""
+        self.tm.players.add(self.p4)
+        res = self.tm.results()
+        self.assertEqual(len(res), self.t.team_size)
+        for entry in res:
+            p = entry['player']
+            if p:
+                self.assertIn(p, self.tm.players.all())
+                for gp in entry['gameplayers']:
+                    self.assertEqual(gp.player, p)
+
+    # Team.score_is_final()
+    def test_score_is_final_unfinished_game(self):
+        """Team game still in progress"""
+        self.tm.players.add(self.p3)
+        self.tm.players.add(self.p4)
+        r = self.t.round_set.first()
+        self.assertTrue(r.is_team_round)
+        g = r.game_set.first()
+        g.is_finished = True
+        g.save()
+        self.assertFalse(self.tm.score_is_final())
+        # Cleanup
+        g.is_finished = False
+        g.save()
+        self.tm.players.remove(self.p3)
+        self.tm.players.remove(self.p4)
+
+    def test_score_is_final_round_not_started(self):
+        """Before team round has started"""
+        self.tm.players.add(self.p3)
+        self.tm.players.add(self.p4)
+        r1 = self.t.round_set.first()
+        r1.is_team_round = False
+        r1.save()
+        r2 = self.t.round_set.last()
+        r3 = Round.objects.create(tournament=self.t,
+                                  scoring_system=r2.scoring_system,
+                                  dias=True,
+                                  is_team_round=True,
+                                  start=r2.start + HOURS_8)
+        r3.save()
+        self.assertFalse(self.tm.score_is_final())
+        # Cleanup
+        r1.is_team_round = True
+        r1.save()
+        r3.delete()
+        self.tm.players.remove(self.p3)
+        self.tm.players.remove(self.p4)
+
+    def test_score_is_final_between_team_rounds(self):
+        """Between team rounds"""
+        self.tm.players.add(self.p3)
+        self.tm.players.add(self.p4)
+        r1 = self.t.round_set.first()
+        for g in r1.game_set.all():
+            g.is_finished = True
+            g.save()
+        r2 = self.t.round_set.last()
+        r3 = Round.objects.create(tournament=self.t,
+                                  scoring_system=r2.scoring_system,
+                                  dias=True,
+                                  is_team_round=True,
+                                  start=r2.start + HOURS_8)
+        self.assertFalse(self.tm.score_is_final())
+        # Cleanup
+        for g in r1.game_set.all():
+            g.is_finished = False
+            g.save()
+        r3.delete()
+        self.tm.players.remove(self.p3)
+        self.tm.players.remove(self.p4)
+
+    def test_score_is_final_all_team_rounds_over(self):
+        """All team games complete"""
+        self.tm.players.add(self.p3)
+        self.tm.players.add(self.p4)
+        r = self.t.round_set.first()
+        self.assertTrue(r.is_team_round)
+        for g in r.game_set.all():
+            g.is_finished = True
+            g.save()
+        self.assertTrue(self.tm.score_is_final())
+        # Cleanup
+        for g in r.game_set.all():
+            g.is_finished = False
+            g.save()
+        self.tm.players.remove(self.p3)
+        self.tm.players.remove(self.p4)
+
+    # Team.clean()
+    def test_clean_no_teams(self):
+        """non-team tournament"""
+        r = self.t.round_set.get(is_team_round=True)
+        r.is_team_round = False
+        r.save()
+        self.t.team_size = None
+        self.t.save()
+        self.assertRaises(ValidationError, self.tm.clean)
+        # Cleanup
+        self.t.team_size = 2
+        self.t.save()
+        r.is_team_round = True
+        r.save()
+
+    def test_clean_ok(self):
+        self.tm.players.add(self.p2)
+        self.tm.players.add(self.p4)
+        self.tm.clean()
+        # Cleanup
+        self.tm.players.remove(self.p2)
+        self.tm.players.remove(self.p4)
+
+    # Team.__str__()
+    def test_team_str(self):
+        s = str(self.tm)
+
+
 class DBNCoverageTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -2130,6 +2437,163 @@ class TournamentTests(TestCase):
             rp.score = r_scores[tp]
             rp.save()
 
+    # Tournament.team_scores()
+    def test_tournament_team_scores_current(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        tm1 = Team.objects.create(tournament=t,
+                                  score=10.0,
+                                  name='Test team 1')
+        tm1.players.add(self.p3)
+        tm1.players.add(self.p5)
+        tm2 = Team.objects.create(tournament=t,
+                                  score=5.0,
+                                  name='Test team 2')
+        tm2.players.add(self.p1)
+        tm2.players.add(self.p6)
+        scores = t.team_scores()
+        # This should return the score from the Team objects
+        self.assertEqual(len(scores), 2)
+        for tm, (rank, score) in scores.items():
+            if tm == tm1:
+                self.assertEqual(rank, 1)
+                self.assertEqual(score, 10.0)
+            elif tm == tm2:
+                self.assertEqual(rank, 2)
+                self.assertEqual(score, 5.0)
+            else:
+                self.assertTrue(False)
+        # Cleanup
+        tm1.delete()
+        tm2.delete()
+        r1.is_team_round = False
+        r1.save(update_fields=['is_team_round'])
+        t.team_size = None
+        t.save(update_fields=['team_size'])
+
+    def test_tournament_team_scores_before_team_rounds(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r2 = t.round_numbered(2)
+        r2.is_team_round = True
+        r2.save(update_fields=['is_team_round'])
+        tm1 = Team.objects.create(tournament=t,
+                                  score=10.0,
+                                  name='Test team 1')
+        tm1.players.add(self.p3)
+        tm1.players.add(self.p5)
+        tm2 = Team.objects.create(tournament=t,
+                                  score=5.0,
+                                  name='Test team 2')
+        tm2.players.add(self.p1)
+        tm2.players.add(self.p6)
+        scores = t.team_scores(after_round_num=1)
+        # All teams should score zero
+        self.assertEqual(len(scores), 2)
+        for tm, (rank, score) in scores.items():
+            if tm == tm1:
+                self.assertEqual(rank, 1)
+                self.assertAlmostEqual(score, 0.0)
+            elif tm == tm2:
+                self.assertEqual(rank, 1)
+                self.assertAlmostEqual(score, 0.0)
+            else:
+                self.assertTrue(False)
+        # Cleanup
+        tm1.delete()
+        tm2.delete()
+        r2.is_team_round = False
+        r2.save(update_fields=['is_team_round'])
+        t.team_size = None
+        t.save(update_fields=['team_size'])
+
+    def test_tournament_team_scores_between_team_rounds(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        r2 = t.round_numbered(2)
+        r2.is_team_round = True
+        r2.save(update_fields=['is_team_round'])
+        tm1 = Team.objects.create(tournament=t,
+                                  score=10.0,
+                                  name='Test team 1')
+        tm1.players.add(self.p3)
+        tm1.players.add(self.p5)
+        tm2 = Team.objects.create(tournament=t,
+                                  score=5.0,
+                                  name='Test team 2')
+        tm2.players.add(self.p1)
+        tm2.players.add(self.p6)
+        scores = t.team_scores(after_round_num=1)
+        self.assertEqual(len(scores), 2)
+        for tm, (rank, score) in scores.items():
+            if tm == tm1:
+                self.assertEqual(rank, 2)
+                self.assertAlmostEqual(score, 1.1 + 2.1 + 1.3 + 2.2)
+            elif tm == tm2:
+                self.assertEqual(rank, 1)
+                self.assertAlmostEqual(score, 1.0 + 2.6 + 1.4 + 2.4)
+            else:
+                self.assertTrue(False)
+        # Cleanup
+        tm1.delete()
+        tm2.delete()
+        r1.is_team_round = False
+        r1.save(update_fields=['is_team_round'])
+        r2.is_team_round = False
+        r2.save(update_fields=['is_team_round'])
+        t.team_size = None
+        t.save(update_fields=['team_size'])
+
+    def test_tournament_team_scores_after_team_rounds(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        r2 = t.round_numbered(2)
+        r2.is_team_round = True
+        r2.save(update_fields=['is_team_round'])
+        tm1 = Team.objects.create(tournament=t,
+                                  score=10.0,
+                                  name='Test team 1')
+        tm1.players.add(self.p3)
+        tm1.players.add(self.p5)
+        tm2 = Team.objects.create(tournament=t,
+                                  score=5.0,
+                                  name='Test team 2')
+        tm2.players.add(self.p1)
+        tm2.players.add(self.p6)
+        scores = t.team_scores(after_round_num=2)
+        self.assertEqual(len(scores), 2)
+        for tm, (rank, score) in scores.items():
+            if tm == tm1:
+                self.assertEqual(rank, 2)
+                self.assertAlmostEqual(score, 1.1 + 2.1 + 1.3 + 2.2 + 3.5 + 4.6 + 3.6 + 4.0)
+            elif tm == tm2:
+                self.assertEqual(rank, 1)
+                self.assertAlmostEqual(score, 1.0 + 2.6 + 1.4 + 2.4 + 3.2 + 4.5 + 3.3 + 4.1)
+            else:
+                self.assertTrue(False)
+        # Cleanup
+        tm1.delete()
+        tm2.delete()
+        r1.is_team_round = False
+        r1.save(update_fields=['is_team_round'])
+        r2.is_team_round = False
+        r2.save(update_fields=['is_team_round'])
+        t.team_size = None
+        t.save(update_fields=['team_size'])
+
     # Tournament.winner()
     def test_tournament_winner_not_finished(self):
         t = Tournament.objects.get(name='t1')
@@ -2462,6 +2926,77 @@ class TournamentTests(TestCase):
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
+    # Tournament.update_team_scores()
+    def test_tournament_update_team_scores_no_list(self):
+        """no player list"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        tm = Team.objects.create(tournament=t,
+                                 score=10.0,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        tm.players.add(self.p4)
+        t.update_team_scores()
+        tm.refresh_from_db()
+        self.assertAlmostEqual(tm.score, 1.1 + 1.2 + 2.3 + 2.1)
+        # Cleanup
+        tm.delete()
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+
+    def test_tournament_update_team_scores_some_team_members(self):
+        """with player list including only some team members"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        tm = Team.objects.create(tournament=t,
+                                 score=10.0,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        tm.players.add(self.p4)
+        t.update_team_scores(for_players=[self.p3, self.p6])
+        tm.refresh_from_db()
+        self.assertAlmostEqual(tm.score, 1.1 + 1.2 + 2.3 + 2.1)
+        # Cleanup
+        tm.delete()
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+
+    def test_tournament_update_team_scores_no_team_members(self):
+        """no team gameplayers"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        tm = Team.objects.create(tournament=t,
+                                 score=10.0,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        tm.players.add(self.p4)
+        t.update_team_scores(for_players=[self.p1, self.p6])
+        tm.refresh_from_db()
+        # Score should be unchanged
+        self.assertAlmostEqual(tm.score, 10.0)
+        # Cleanup
+        tm.delete()
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+
     # Tournament.round_numbered()
     def test_tournament_round_numbered_negative(self):
         t = Tournament.objects.get(name='t1')
@@ -2470,6 +3005,110 @@ class TournamentTests(TestCase):
     def test_tournament_round_numbered_3(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.round_numbered(3).number(), 3)
+
+    # Tournament.team_rounds()
+    def test_tournament_team_rounds(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save()
+        r3 = t.round_numbered(3)
+        r3.is_team_round = True
+        r3.save()
+        rds = t.team_rounds()
+        self.assertEqual(len(rds), 2)
+        for r in rds:
+            self.assertTrue(r.is_team_round)
+        # Cleanup
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+        r3.is_team_round = False
+        r3.save()
+
+    def test_tournament_team_rounds_none(self):
+        t = Tournament.objects.get(name='t1')
+        rds = t.team_rounds()
+        self.assertEqual(len(rds), 0)
+
+    # Tournament.team_rounds_finished()
+    def test_tournament_team_rounds_finished_all_done(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        r1 = t.round_numbered(1)
+        self.assertFalse(r1.is_finished)
+        r1.is_finished = True
+        r1.is_team_round = True
+        r1.save()
+        r3 = t.round_numbered(3)
+        self.assertTrue(r3.is_finished)
+        r3.is_team_round = True
+        r3.save()
+        rds = t.team_rounds()
+        self.assertTrue(t.team_rounds_finished())
+        # Cleanup
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.is_finished = False
+        r1.save()
+        r3.is_team_round = False
+        r3.save()
+
+    def test_tournament_team_rounds_finished_some_done(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        r1 = t.round_numbered(1)
+        self.assertFalse(r1.is_finished)
+        r1.is_team_round = True
+        r1.save()
+        r3 = t.round_numbered(3)
+        self.assertTrue(r3.is_finished)
+        r3.is_team_round = True
+        r3.save()
+        rds = t.team_rounds()
+        self.assertFalse(t.team_rounds_finished())
+        # Cleanup
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+        r3.is_team_round = False
+        r3.save()
+
+    def test_tournament_team_rounds_finished_none_done(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        r1 = t.round_numbered(1)
+        self.assertFalse(r1.is_finished)
+        r1.is_team_round = True
+        r1.save()
+        r3 = t.round_numbered(3)
+        self.assertTrue(r3.is_finished)
+        r3.is_finished = False
+        r3.is_team_round = True
+        r3.save()
+        rds = t.team_rounds()
+        self.assertFalse(t.team_rounds_finished())
+        # Cleanup
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+        r3.is_team_round = False
+        r3.is_finished = True
+        r3.save()
+
+    def test_tournament_team_rounds_finished_none(self):
+        """team_round_finished() in non-team tournament"""
+        t = Tournament.objects.get(name='t1')
+        self.assertTrue(t.team_rounds_finished())
 
     # Tournament.best_countries()
     def validate_best_countries_by_score(self, value):
@@ -4128,6 +4767,25 @@ class RoundTests(TestCase):
                 # TODO Validate results
                 r.background(mask=mask)
             mask *= 2
+
+    # Round.clean()
+    def test_round_clean_team_round_wrong_tournament(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertIsNone(t.team_size)
+        r = t.round_set.first()
+        r.is_team_round = True
+        self.assertRaises(ValidationError, r.clean)
+
+    def test_round_clean_team_round_ok(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        r = t.round_set.first()
+        r.is_team_round = True
+        r.clean()
+        # Cleanup
+        t.team_size = None
+        t.save()
 
     # Round constraints (full_clean())
     def test_round_clean_missing_earliest_end(self):
@@ -6852,6 +7510,61 @@ class GamePlayerTests(TestCase):
         # Set some scores to work with
         for g in Game.objects.filter(the_round__tournament=t1):
             g.update_scores()
+
+    # GamePlayer.team()
+    def test_gameplayer_team(self):
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        gp = self.p3.gameplayer_set.filter(game__the_round__tournament=t).first()
+        r = gp.game.the_round
+        r.is_team_round = True
+        r.save()
+        tm = Team.objects.create(tournament=t,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        self.assertEqual(gp.team(), tm)
+        # Cleanup
+        tm.delete()
+        r.is_team_round = False
+        r.save()
+        t.team_size = None
+        t.save()
+
+    def test_gameplayer_team_non_team_round(self):
+        """GamePlayer in non-team round has no team"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        tm = Team.objects.create(tournament=t,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        gp = self.p3.gameplayer_set.filter(game__the_round__tournament=t).first()
+        self.assertEqual(gp.team(), None)
+        # Cleanup
+        tm.delete()
+        t.team_size = None
+        t.save()
+
+    def test_gameplayer_team_no_team(self):
+        """GamePlayer on no team"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save()
+        gp = self.p4.gameplayer_set.filter(game__the_round__tournament=t).first()
+        r = gp.game.the_round
+        r.is_team_round = True
+        r.save()
+        tm = Team.objects.create(tournament=t,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        self.assertEqual(gp.team(), None)
+        # Cleanup
+        tm.delete()
+        r.is_team_round = False
+        r.save()
+        t.team_size = None
+        t.save()
 
     # GamePlayer.score_is_final()
     def test_gameplayer_score_is_final_game_over(self):

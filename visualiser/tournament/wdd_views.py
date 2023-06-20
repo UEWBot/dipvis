@@ -145,7 +145,6 @@ def view_classification_csv(request, tournament_id):
     for n in range(1, WDD_MAX_AWARDS + 1):
         headers.append(f'RK_AWA_{n}')
     # Top Board stuff
-    # Only add these headers if there was a top board
     if top_board:
         headers.append('NAME_TOPBOARD')
         headers.append('HEAT_TOPBOARD')
@@ -153,6 +152,12 @@ def view_classification_csv(request, tournament_id):
         headers.append('RK_TOPBOARD')
         headers.append('CT_TOPBOARD')
         headers.append('COUNTRY_TOPBOARD')
+    # Team stuff
+    if t.team_size:
+        headers.append('TEAM')
+        headers.append('TEAM_SCORE')
+        headers.append('TEAM_RANK')
+        team_scores = t.team_scores()
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{t.name}{t.start_date.year}classification.csv"'
@@ -214,16 +219,22 @@ def view_classification_csv(request, tournament_id):
         if top_board:
             try:
                 gp = top_board.gameplayer_set.get(player=p)
+            except GamePlayer.DoesNotExist:
+                # This player did not make the top board
+                pass
+            else:
                 row_dict['NAME_TOPBOARD'] = 'A'  # This seems to be arbitrary
                 row_dict['HEAT_TOPBOARD'] = top_board.the_round.number()
                 row_dict['BOARD_TOPBOARD'] = _game_to_wdd_id(top_board)
                 row_dict['RK_TOPBOARD'] = tb_positions[gp.power]
                 row_dict['CT_TOPBOARD'] = tb_dots.filter(power=gp.power).last().count
-                # TODO Not certain that this is the correct value
                 row_dict['COUNTRY_TOPBOARD'] = power_name_to_wdd(gp.power.name)
-            except GamePlayer.DoesNotExist:
-                # This player did not make the top board
-                pass
+        # Add team fields if applicable
+        team = tp.team()
+        if team is not None:
+            row_dict['TEAM'] = team.name
+            row_dict['TEAM_SCORE'] = team_scores[team][1]
+            row_dict['TEAM_RANK'] = team_scores[team][0]
         # Write this player's row out
         writer.writerow(row_dict)
 

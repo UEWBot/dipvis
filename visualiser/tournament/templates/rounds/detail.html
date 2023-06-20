@@ -6,6 +6,10 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Views{% endblocktrans %}</h1>
 
+{% if round.is_team_round %}
+  <p>{% trans "Team Round" %}</p>
+{% endif %}
+
 <p>{% trans "Start time:" %} {{ round.start }}</p>
 
 <p>{% trans "Scoring system:" %} <a href="{{ round.game_scoring_system_obj.get_absolute_url }}">{{ round.scoring_system }}</a></p>

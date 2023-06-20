@@ -24,7 +24,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy
-from tournament.models import Tournament, Round, Game
+from tournament.models import Tournament, Round, Game, Team
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import CentreCount, DrawProposal, Seasons
@@ -491,6 +491,37 @@ class WddViewTests(TestCase):
         # Clean up
         for tp in a.tournamentplayer_set.exclude(pk__in=[tp.pk for tp in orig_tps]).all():
             a.tournamentplayer_set.remove(tp)
+
+    def test_classification_with_teams(self):
+        """classification for tournament with teams"""
+        self.t.team_size = 2
+        self.t.save()
+        r = self.t.round_set.first()
+        r.is_team_round = True
+        r.save()
+        tm1 = Team.objects.create(tournament=self.t,
+                                  name="Team 1")
+        tm2 = Team.objects.create(tournament=self.t,
+                                  name="Team 2")
+        # add players to teams
+        for rp in r.roundplayer_set.all():
+            if tm1.players.count() < 2:
+                tm1.players.add(rp.player)
+            elif tm2.players.count() < 2:
+                tm2.players.add(rp.player)
+            else:
+                break
+        response = self.client.get(reverse('csv_classification',
+                                           args=(self.t.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # TODO Check CSV file content
+        # Clean up
+        r.is_team_round = False
+        r.save()
+        self.t.team_set.all().delete()
+        self.t.team_size = None
+        self.t.save()
 
     def test_boards(self):
         response = self.client.get(reverse('csv_boards',

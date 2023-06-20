@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load admin_urls %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Teams{% endblocktrans %}{% endblock title %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Teams" %}</h1>
+
+<form method="post" action="{% url 'enter_teams' tournament.id %}">
+  {% include "formset_table.html" %}
+</form>
+{% endblock content %}

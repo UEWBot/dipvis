@@ -29,7 +29,8 @@ import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum, Max, F, Q
 from django.urls import reverse
@@ -684,6 +685,10 @@ class Tournament(models.Model):
     discord_url = models.URLField(verbose_name=_('Discord webhook URL'),
                                   blank=True,
                                   help_text=_('Board calls will be posted here'))
+    team_size = models.PositiveSmallIntegerField(blank=True,
+                                                 null=True,
+                                                 validators=[MinValueValidator(2)],
+                                                 help_text=_('If there are teams, number of players per team'))
 
     class Meta:
         ordering = ['-start_date']
@@ -832,6 +837,37 @@ class Tournament(models.Model):
             result[k] = (place, v)
         return result
 
+    def team_scores(self, after_round_num=None):
+        """
+        Returns the positions and scores of all teams.
+
+        If no round number is specified, it returns the "if all games ended now" results.
+        If the specified round is still in progress, it returns the "if all games in the round
+        ended now" results.
+        Return a dict, keyed by Team, of 2-tuples containing integer rankings
+        (1 for first place, etc) and float team scores.
+        """
+        t_scores = {}
+        if (after_round_num is not None) and (after_round_num < self.round_set.count()):
+            # Calculate the team scores after the specified round
+            for team in self.team_set.all():
+                t_scores[team] = 0.0
+                for r in self.team_rounds().reverse():
+                    if r.number() <= after_round_num:
+                        t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
+        else:
+            for team in self.team_set.all():
+                t_scores[team] = team.score
+        retval = {}
+        rank = 0
+        last_score = None
+        for team, score in sorted(t_scores.items(), key=lambda item: item[1], reverse=True):
+            if score != last_score:
+                rank += 1
+            last_score = score
+            retval[team] = (rank, score)
+        return retval
+
     def _store_score(self, tp, scores, add_handicap):
         """
         Update tp.score in the database
@@ -880,6 +916,24 @@ class Tournament(models.Model):
                         # TODO What if this gets called more than once?
                         gp.tournamentplayer().awards.add(award)
 
+    def update_team_scores(self, for_players=None):
+        """
+        Recalculate the scores for Teams and store them in the Teams
+
+        for_players is an optional QuerySet or list of Players that have changed.
+        """
+        # All teams containing any of the specified players should be updated
+        teams = self.team_set.all()
+        if for_players:
+            teams = teams.filter(players__in=for_players)
+        for team in teams:
+            gps = team.gameplayers()
+            if not gps.count():
+                team.score = 0.0
+            else:
+                team.score = gps.aggregate(Sum('score'))['score__sum']
+            team.save(update_fields=['score'])
+
     def winner(self):
         """
         Return the player who won, or None if the tournament isn't yet finished
@@ -900,6 +954,18 @@ class Tournament(models.Model):
                 return r
         # This allows this function to be used like QuerySet.get()
         raise Round.DoesNotExist
+
+    def team_rounds(self):
+        """
+        Return a QuerySet with the Team Rounds (if any).
+        """
+        return self.round_set.filter(is_team_round=True)
+
+    def team_rounds_finished(self):
+        """
+        Returns True if all Team Rounds have finished.
+        """
+        return not self.team_rounds().exclude(is_finished=True).exists()
 
     def _sort_best_country_list(self, gp_list):
         """
@@ -1192,6 +1258,87 @@ class TPUnrankedField(models.BooleanField):
         return val
 
 
+class Team(models.Model):
+    """
+    A team of Players within a Tournament
+    """
+    MAX_NAME_LENGTH=20
+
+    tournament = models.ForeignKey(Tournament,
+                                   on_delete=models.CASCADE)
+    name = models.CharField(max_length=MAX_NAME_LENGTH,
+                            help_text=_(u'Must be unique within the tournament'))
+    score = models.FloatField(default=0.0)
+    players = models.ManyToManyField(Player)
+
+    class Meta:
+        ordering = ['name']
+        constraints = [
+            # Team name must be unique within the Tournament
+            models.UniqueConstraint(fields=['tournament', 'name'],
+                                    name='unique_tournament_name'),
+        ]
+
+    def gameplayers(self):
+        """
+        Returns a QuerySet of the Team's GamePlayers for the team round(s).
+        """
+        return GamePlayer.objects.filter(game__the_round__tournament=self.tournament).filter(game__the_round__is_team_round=True).filter(player__in=self.players.all())
+
+    def results(self):
+        """
+        Returns a list of Game results for the Team
+
+        Returns a list with self.tournament.team_size entries.
+        Each entry is a dict with keys player (the Player) and gameplayers (list of Gamplayers).
+        """
+        retval = []
+        for p in self.players.all():
+            entry = {'player': p}
+            gps = p.gameplayer_set.filter(game__the_round__tournament=self.tournament).filter(game__the_round__is_team_round=True)
+            entry['gameplayers'] = list(gps)
+            retval.append(entry)
+        # Add empty entries if the team isn't full
+        for i in range(self.tournament.team_size - self.players.count()):
+            retval.append({'player': None, 'gameplayers': []})
+        return retval
+
+    def score_is_final(self):
+        """
+        Can the score for this team still change?
+
+        Returns True if the score attribute represents the final score for the Team,
+        False if it is the "if all games ended now" score.
+        """
+        # If any of this team's players Game scores aren't final, the team score isn't final
+        for gp in self.gameplayers():
+            if not gp.score_is_final():
+                return False
+        # If any team round has not yet started, scores could change
+        for r in self.tournament.team_rounds().filter(is_finished=False):
+            if not r.in_progress():
+                return False
+        return True
+
+    def clean(self):
+        """
+        Validate the object.
+
+        Tournament uses teams.
+
+        Note that it doesn't check for any of the following:
+        - Too many players in the Team.
+        - Players are registered in the Tournament.
+        - One player in multiple Teams
+        """
+        if not self.tournament.team_size:
+            raise ValidationError(_("Tournament doesn't use teams"))
+
+    def __str__(self):
+        return _("%(team)s at %(tourney)s") % {'team': self.name,
+                                               'tourney': self.tournament}
+
+
 class TournamentPlayer(models.Model):
     """
     One player in a tournament
@@ -1222,6 +1369,15 @@ class TournamentPlayer(models.Model):
             models.UniqueConstraint(fields=['player', 'tournament'],
                                     name='unique_player_tournament'),
         ]
+
+    def team(self):
+        """
+        Returns the Team the Player was on in the Tournament, if any, or None.
+        """
+        try:
+            return self.player.team_set.get(tournament=self.tournament)
+        except Team.DoesNotExist:
+            return None
 
     def score_is_final(self):
         """
@@ -1473,6 +1629,7 @@ class Round(models.Model):
                                           verbose_name=_(u'Enable self-check-ins'))
     email_sent = models.BooleanField(default=False)
     is_finished = models.BooleanField(default=False)
+    is_team_round = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['start']
@@ -1573,6 +1730,8 @@ class Round(models.Model):
             rp.save(update_fields=['score'])
         # That could change the Tournament scoring for those Players
         self.tournament.update_scores(for_players)
+        if self.is_team_round:
+            self.tournament.update_team_scores(for_players)
         # Cache the players' tournament scores
         # Most of the time, this is called for the current round,
         # but we need to be careful if a later round has started
@@ -1673,6 +1832,15 @@ class Round(models.Model):
         random.shuffle(results)
         return results
 
+    def clean(self):
+        """
+        Validate the object.
+
+        Can't be a team round in a tournament without teams.
+        """
+        if self.is_team_round and not self.tournament.team_size:
+            raise ValidationError(_('Team rounds can only happen in tournaments with teams'))
+
     def save(self, *args, **kwargs):
         """
         Save the object to the database.
@@ -1693,6 +1861,9 @@ class Round(models.Model):
                 # Re-score all Games. This will call self.update_scores()
                 for g in self.game_set.all():
                     g.update_scores()
+
+        if ('update_fields' not in kwargs) or ('is_team_round' in kwargs['update_fields']) :
+            self.tournament.update_team_scores()
 
         # Some change may affect the is_finished attribute of the Tournament
         if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
@@ -2415,6 +2586,18 @@ class GamePlayer(models.Model):
             models.UniqueConstraint(fields=['power', 'game'],
                                     name='unique_power_game'),
         ]
+
+    def team(self):
+        """
+        Returns the Team the player is playing for in this Game, or None.
+        """
+        if not self.game.the_round.is_team_round:
+            return None
+        try:
+            return self.player.team_set.get(tournament=self.game.the_round.tournament)
+        except Team.DoesNotExist:
+            pass
+        return None
 
     def score_is_final(self):
         """
