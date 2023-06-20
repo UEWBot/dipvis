@@ -60,7 +60,7 @@ def _power_award_to_gameplayers(tournament, award):
     for tp in award.tournamentplayer_set.filter(tournament=tournament):
         # Find the corresponding GamePlayer
         for rp in tp.roundplayers().all():
-            for gp in rp.gameplayers.filter(power=award.power):
+            for gp in rp.gameplayers().filter(power=award.power):
                 ret.append(gp)
     return ret
 
@@ -155,7 +155,7 @@ def view_classification_csv(request, tournament_id):
                         wdd_pwr = _power_name_to_wdd(award.power.name)
                         row_dict['RK_%s' % wdd_pwr] = 1
                         row_dict['PT_%s' % wdd_pwr] = gp.score
-                        row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=power).last().count
+                        row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=award.power).last().count
                         row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
                         row_dict['BOARD_%s' % wdd_pwr] = _game_to_wdd_id(gp.game)
             else:

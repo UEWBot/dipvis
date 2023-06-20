@@ -59,8 +59,11 @@ class WddViewTests(TestCase):
                                  description='Who was mean')
         cls.t.awards.create(name='Nicest Player',
                             description='Who bought the most drinks')
-        cls.t.awards.create(name='Best England',
-                            description='England is the only country we care about',
+        a2 = cls.t.awards.create(name='Best Russia',
+                                 description='Russia is the only country we care about',
+                                 power=russia)
+        cls.t.awards.create(name='Best Germany',
+                            description='Germany is another country we care about',
                             power=england)
         # Two Rounds
         r1 = Round.objects.create(tournament=cls.t,
@@ -179,8 +182,8 @@ class WddViewTests(TestCase):
         GamePlayer.objects.create(player=p7,
                                   game=g1,
                                   power=france)
-        TournamentPlayer.objects.create(player=p8,
-                                        tournament=cls.t)
+        tp8 = TournamentPlayer.objects.create(player=p8,
+                                              tournament=cls.t)
         RoundPlayer.objects.create(player=p8,
                                    the_round=r1)
         RoundPlayer.objects.create(player=p8,
@@ -251,6 +254,12 @@ class WddViewTests(TestCase):
                                   power=england)
         # Hand out one non-best-country award
         tp10.awards.add(a1)
+        # and one best-country award
+        # for a power that they actually played
+        played = [gp.power for gp in GamePlayer.objects.filter(player=tp8.player)]
+        if a2.power not in played:
+            raise AssertionError("%s didn't play %s" % (str(tp8.player), str(a2.power)))
+        tp8.awards.add(a2)
         # CentreCounts and DrawProposals
         # One game ends in a solo
         CentreCount.objects.create(power=austria,
