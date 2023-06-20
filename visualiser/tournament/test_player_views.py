@@ -121,8 +121,15 @@ class PlayerViewTests(TestCase):
         p2 = Player.objects.create(first_name='Bernard',
                                    last_name='Belligerent')
         # Add a shared game
-        # One with lots of blanks
+        # Add in another result for a non-shared game
         pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
+                                               game_name='R 2 B 1',
+                                               date=timezone.now(),
+                                               player=self.p1,
+                                               power=germany,
+                                               position=2)
+        # One with lots of blanks
+        pgr2 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
                                                game_name='R 3 B 2',
                                                date=timezone.now(),
                                                player=self.p1,
@@ -130,20 +137,21 @@ class PlayerViewTests(TestCase):
                                                position=3)
         # One with lots of detail
         PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
-                                               game_name=pgr1.game_name,
-                                               date=pgr1.date,
-                                               player=p2,
-                                               power=germany,
-                                               position=6,
-                                               position_equals=2,
-                                               score=3.4,
-                                               final_sc_count=1,
-                                               result='D7')
+                                        game_name=pgr1.game_name,
+                                        date=pgr1.date,
+                                        player=p2,
+                                        power=germany,
+                                        position=6,
+                                        position_equals=2,
+                                        score=3.4,
+                                        final_sc_count=1,
+                                        result='D7')
         response = self.client.get(reverse('player_versus',
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         pgr1.delete()
+        pgr2.delete()
         p2.delete()
 
     def test_wpe(self):

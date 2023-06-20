@@ -412,10 +412,18 @@ class PlayerTests(TestCase):
     # PlayerAward
     # PlayerAward.wdd_url()
     @tag('slow', 'wdd')
-    def test_playeraward_wdd_url(self):
+    def test_playeraward_wdd_url_power(self):
         p = Player.objects.first()
         add_player_bg(p)
-        pa = PlayerAward.objects.first()
+        pa = PlayerAward.objects.exclude(power=None).first()
+        url = pa.wdd_url()
+        # TODO verify result
+
+    @tag('slow', 'wdd')
+    def test_playeraward_wdd_url_no_power(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pa = PlayerAward.objects.filter(power=None).first()
         url = pa.wdd_url()
         # TODO verify result
 
@@ -436,10 +444,29 @@ class PlayerTests(TestCase):
 
     # PlayerRanking.wdd_url()
     @tag('slow', 'wdd')
-    def test_playerranking_wdd_url(self):
+    def test_playerranking_wdd_url_wpe(self):
         p = Player.objects.first()
         add_player_bg(p)
-        pr = PlayerRanking.objects.first()
+        pr = PlayerRanking.objects.filter(system__contains='World').first()
+        url = pr.wdd_url()
+        # TODO Validate results
+
+    @tag('slow', 'wdd')
+    def test_playerranking_wdd_url_dip_pouch(self):
+        p = Player.objects.first()
+        add_player_bg(p)
+        pr = PlayerRanking.objects.filter(system__contains='Pouch').first()
+        url = pr.wdd_url()
+        # TODO Validate results
+
+    @tag('slow', 'wdd')
+    def test_playerranking_wdd_url_sdr(self):
+        # Not many players have SDR ratings
+        p = Player.objects.create(first_name='Per',
+                                  last_name='Norman',
+                                  wdd_player_id=2199)
+        add_player_bg(p)
+        pr = PlayerRanking.objects.filter(system__contains='SDR').first()
         url = pr.wdd_url()
         # TODO Validate results
 

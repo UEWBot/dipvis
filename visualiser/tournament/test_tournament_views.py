@@ -858,11 +858,15 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_enter_awards_post(self):
+        # Give some awards to players beforehand
+        self.t1.tournamentplayer_set.last().awards.add(self.t1.awards.first())
+        self.t1.tournamentplayer_set.first().awards.add(self.t1.awards.last())
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        tp = self.t1.tournamentplayer_set.first()
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, a in enumerate(self.t1.awards.all()):
             data['form-%d-award' % i] = str(a.id)
-            data['form-%d-players' % i] = [str(self.t1.tournamentplayer_set.first().id)]
+            data['form-%d-players' % i] = [str(tp.id)]
         i += 1
         data['form-TOTAL_FORMS'] = '%d' % i
         data['form-INITIAL_FORMS'] = '%d' % i
@@ -873,3 +877,9 @@ class TournamentViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_awards', args=(self.t1.pk,)))
+        # Check what awards the players now have
+        for a in self.t1.awards.all():
+            self.assertIn(a, tp.awards.all())
+            self.assertEqual(a.tournamentplayer_set.count(), 1)
+        # Cleanup
+        tp.awards.clear()
