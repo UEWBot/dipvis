@@ -6,10 +6,11 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
-<p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
 {% if player.unranked %}
+  <p>{% blocktrans %}Position: Unranked{% endblocktrans %}</p>
   <p>{% trans "Ineligible for awards." %}</p>
 {% else %}
+  <p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
   <h2>{% trans "Awards" %}</h2>
   <ul>
     {% for award in player.awards.all %}
