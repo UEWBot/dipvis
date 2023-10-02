@@ -999,7 +999,7 @@ class TournamentPlayer(models.Model):
                                            blank=True,
                                            help_text=_('Username on the backstabbr website'))
     location = models.CharField(max_length=60, blank=True)
-    awards = models.ManyToManyField(Award)
+    awards = models.ManyToManyField(Award, blank=True)
 
     class Meta:
         ordering = ['player']
