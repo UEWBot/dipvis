@@ -28,24 +28,25 @@ class WikipediaBackgroundTests(TestCase):
         bg = WikipediaBackground(name)
         titles = bg.titles()
         for t in titles:
-            if t['Year'] == 1997:
-                if t['Tournament'] == 'EuroDipCon':
-                    self.assertEqual(t['European Champion'], name)
-                else:
+            with self.subTest(title=t):
+                if t['Year'] == 1997:
+                    if t['Tournament'] == 'EuroDipCon':
+                        self.assertEqual(t['European Champion'], name)
+                    else:
+                        self.assertEqual(t['World Champion'], name)
+                elif t['Year'] == 2001:
                     self.assertEqual(t['World Champion'], name)
-            elif t['Year'] == 2001:
-                self.assertEqual(t['World Champion'], name)
-            elif t['Year'] == 2004:
-                self.assertEqual(t['Third'], name)
-            elif t['Year'] == 2006:
-                self.assertEqual(t['Second'], name)
-            elif t['Year'] == 2008:
-                self.assertEqual(t['Second'], name)
-            elif t['Year'] == 2013:
-                self.assertEqual(t['World Champion'], name)
-            else:
-                # 2015
-                self.assertEqual(t['European Champion'], name)
+                elif t['Year'] == 2004:
+                    self.assertEqual(t['Third'], name)
+                elif t['Year'] == 2006:
+                    self.assertEqual(t['Second'], name)
+                elif t['Year'] == 2008:
+                    self.assertEqual(t['Second'], name)
+                elif t['Year'] == 2013:
+                    self.assertEqual(t['World Champion'], name)
+                else:
+                    # 2015
+                    self.assertEqual(t['European Champion'], name)
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
@@ -74,8 +75,9 @@ class WDDBackgroundTests(TestCase):
                  7189: ('A Dash', 'GREENTREE'),
                 }
         for id in cases.keys():
-            b = WDDBackground(id)
-            self.assertEqual(b.wdd_firstname_lastname(), cases[id])
+            with self.subTest(wdd_id=id):
+                b = WDDBackground(id)
+                self.assertEqual(b.wdd_firstname_lastname(), cases[id])
 
     # WDDBackground.finishes()
     @tag('wdd')
