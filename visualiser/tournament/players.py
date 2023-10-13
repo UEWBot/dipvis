@@ -515,6 +515,33 @@ class Player(models.Model):
         self.playertournamentranking_set.all().delete()
         self.playergameresult_set.all().delete()
 
+    def background_updated(self):
+        """
+        Returns the datetime at which the background info was most recently updated.
+        If no date is available (or there's no background), None will be returned.
+        """
+        result = self.playerranking_set.all().aggregate(Max('updated'))['updated__max']
+
+        latest = self.playeraward_set.all().aggregate(Max('updated'))['updated__max']
+        if result is None:
+            result = latest
+        else:
+            result = max(result, latest)
+
+        latest = self.playertournamentranking_set.all().aggregate(Max('updated'))['updated__max']
+        if result is None:
+            result = latest
+        else:
+            result = max(result, latest)
+
+        latest = self.playergameresult_set.all().aggregate(Max('updated'))['updated__max']
+        if result is None:
+            result = latest
+        else:
+            result = max(result, latest)
+
+        return result
+
     def save(self, *args, **kwargs):
         # Clear cached WDD Name if WDD id has changed
         if (not self.wdd_player_id) or (self._old_wdd_id != self.wdd_player_id):
@@ -808,6 +835,7 @@ class PlayerTournamentRanking(models.Model):
     wpe_score = models.FloatField(blank=True,
                                   null=True,
                                   help_text=_('World Performance Evaluation score'))
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -875,6 +903,7 @@ class PlayerGameResult(models.Model):
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -946,6 +975,7 @@ class PlayerAward(models.Model):
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
@@ -986,6 +1016,7 @@ class PlayerRanking(models.Model):
     score = models.FloatField(blank=True, null=True)
     international_rank = models.CharField(max_length=20)
     national_rank = models.CharField(max_length=20)
+    updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [

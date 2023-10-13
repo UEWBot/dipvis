@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime, timezone
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django.utils import timezone
@@ -287,6 +289,21 @@ class PlayerTests(TestCase):
         self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
         pgr.delete()
         p.delete()
+
+    # Player.background_updated()
+    @tag('slow', 'wdd')
+    def test_player_background_updated(self):
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        start = datetime.now(timezone.utc)
+        add_player_bg(p)
+        end = datetime.now(timezone.utc)
+        updated = p.background_updated()
+        self.assertLess(start, updated)
+        self.assertLess(updated, end)
+
+    def test_player_background_updated_none(self):
+        p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
+        self.assertEqual(None, p.background_updated())
 
     # TODO Player.save()
 

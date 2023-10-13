@@ -25,6 +25,7 @@
 </ul>
 <h2>{% trans "Background" %}</h2>
 <p>{% trans "From the" %} <a href="http://www.world-diplomacy-database.com/">World Diplomacy Database</a></p>
+<p>{% blocktrans with datetime=player.background_updated %}Last retrieved {{datetime}}{% endblocktrans %}</p>
 <ul>
   {% for b in player.background %}
     <li>{{ b }}</li>
