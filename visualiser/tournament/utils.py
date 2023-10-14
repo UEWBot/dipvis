@@ -348,9 +348,7 @@ def find_missing_wdd_ids():
     """
     Report all Players with no wdd_player_id that should have one.
     """
-    for p in Player.objects.all():
-        if p.wdd_player_id:
-            continue
+    for p in Player.objects.filter(wdd_player_id=None):
         if p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).exists():
             print(p)
 
@@ -359,9 +357,7 @@ def add_missing_wdd_ids(dry_run=False):
     """
     Find Players with no wdd_player_id that should have one and add it.
     """
-    for p in Player.objects.all():
-        if p.wdd_player_id:
-            continue
+    for p in Player.objects.filter(wdd_player_id=None):
         tp = p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).first()
         if not tp:
             continue
