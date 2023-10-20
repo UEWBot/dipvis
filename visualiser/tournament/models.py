@@ -21,7 +21,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import inspect
 from operator import itemgetter
-import os
+from pathlib import Path
 import random
 import string
 import uuid
@@ -530,8 +530,7 @@ def game_image_location(instance, filename):
     # We expect instance to be a GameImage
     game = instance.game
     tournament = game.the_round.tournament
-    directory = os.path.join(tournament.name, str(tournament.start_date), game.name)
-    return os.path.join('games', directory, filename)
+    directory = Path('games', tournament.name, str(tournament.start_date), game.name, filename)
 
 
 class Award(models.Model):
