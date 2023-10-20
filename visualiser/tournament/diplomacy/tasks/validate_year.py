@@ -14,15 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext as _
+from django.core.validators import MinValueValidator
 
 from ..values.diplomacy_values import FIRST_YEAR
 
-def validate_year(value):
-    """
-    Checks for a valid game year
-    """
-    if value < FIRST_YEAR:
-        raise ValidationError(_(u'%(value)d is not a valid game year'),
-                              params={'value': value})
+"""
+Checks for a valid game year
+"""
+validate_year = MinValueValidator(FIRST_YEAR)
