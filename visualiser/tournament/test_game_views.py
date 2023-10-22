@@ -1659,7 +1659,6 @@ class GameViewTests(TestCase):
 
     def test_graph_end_year_fixed_end(self):
         self.assertIsNone(self.g1.the_round.final_year)
-        g = self.g1
         # Flag the Round as having a fixed game endpoint
         self.g1.the_round.final_year = 1905
         self.g1.the_round.save()
