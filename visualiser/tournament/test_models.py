@@ -5424,9 +5424,7 @@ class GamePlayerTests(TestCase):
         # which will need a player for every country
         # TODO These should really error out with no corresponding RoundPlayer. I guess clean() is not called ?
         # Add GamePlayers to g11
-        GamePlayer.objects.create(player=cls.p1,
-                                  game=g11,
-                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p1, game=g11, power=cls.austria)
         GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
         GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
@@ -5434,9 +5432,7 @@ class GamePlayerTests(TestCase):
         GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
         GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
         # Add GamePlayers to g13
-        GamePlayer.objects.create(player=cls.p1,
-                                  game=g13,
-                                  power=cls.austria)
+        GamePlayer.objects.create(player=cls.p1, game=g13, power=cls.austria)
         GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
         GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
         GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
@@ -5501,14 +5497,12 @@ class GamePlayerTests(TestCase):
         bc = t.best_countries(True)
         gp = bc[self.germany][0]
         # Check test setup
-        tp = TournamentPlayer.objects.filter(player=gp.player,
-                                             tournament=gp.game.the_round.tournament).get()
+        tp = gp.tournamentplayer()
         self.assertTrue(tp.unranked)
         self.assertTrue(gp.is_best_country())
         gp = bc[self.germany][-1]
         # Check test setup
-        tp = TournamentPlayer.objects.filter(player=gp.player,
-                                             tournament=gp.game.the_round.tournament).get()
+        tp = gp.tournamentplayer()
         self.assertTrue(tp.unranked)
         self.assertFalse(gp.is_best_country())
 
