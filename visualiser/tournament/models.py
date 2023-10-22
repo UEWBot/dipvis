@@ -530,7 +530,7 @@ def game_image_location(instance, filename):
     # We expect instance to be a GameImage
     game = instance.game
     tournament = game.the_round.tournament
-    directory = Path('games', tournament.name, str(tournament.start_date), game.name, filename)
+    return Path('games', tournament.name, str(tournament.start_date), game.name, filename)
 
 
 class Award(models.Model):
