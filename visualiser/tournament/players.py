@@ -27,6 +27,7 @@ about a player and retrieving it as needed.
 """
 
 import datetime
+from pathlib import Path
 import re
 import traceback
 import requests
@@ -119,7 +120,7 @@ def player_picture_location(instance, filename):
     Function that determines where to store the file.
     """
     # Stuff them all into one directory
-    return 'player_pictures/%s' % filename
+    return Path('player_pictures', filename)
 
 
 def wdd_url_to_id(url):
