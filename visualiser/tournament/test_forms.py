@@ -49,7 +49,8 @@ class AwardsFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
-        p2 = Player.objects.create(first_name='Charlotte', last_name='Dotty')
+        # One Player who didn't participate
+        Player.objects.create(first_name='Charlotte', last_name='Dotty')
         p3 = Player.objects.create(first_name='Edward', last_name='Foxtrot')
         p4 = Player.objects.create(first_name='Georgette', last_name='Halitosis')
         cls.t = Tournament.objects.create(name='t1',
