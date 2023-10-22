@@ -2176,7 +2176,10 @@ class TournamentPlayerTests(TestCase):
 
     # TODO TournamentPlayer.send_prefs_email()
 
-    # TODO TournamentPlayer.get_absolute_url()
+    # TournamentPlayer.get_absolute_url()
+    def test_tournamentplayer_get_absolute_url(self):
+        tp = TournamentPlayer.objects.first()
+        tp.get_absolute_url()
 
     # TournamentPlayer.__str__()
     def test_tournamentplayer_str(self):
@@ -3431,49 +3434,6 @@ class GameTests(TestCase):
         g.supplycentreownership_set.filter(year=YEAR).delete()
         ccs.delete()
 
-    # Game.compare_sc_counts_and_ownerships()
-    def test_game_compare_sc_counts_and_ownerships(self):
-        # Arbitrary game
-        g = Game.objects.first()
-        YEAR = 1920
-        self.assertFalse(g.supplycentreownership_set.filter(year=YEAR).exists())
-        self.assertFalse(g.centrecount_set.filter(year=YEAR).exists())
-        test_data = {
-                        SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
-                        SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
-                        SupplyCentre.objects.get(abbreviation='Edi'): self.france,
-                        SupplyCentre.objects.get(abbreviation='Par'): self.germany,
-                        SupplyCentre.objects.get(abbreviation='Mun'): self.germany,
-                        SupplyCentre.objects.get(abbreviation='Tun'): self.germany,
-                        SupplyCentre.objects.get(abbreviation='Spa'): self.germany,
-                        SupplyCentre.objects.get(abbreviation='Por'): self.italy,
-                        SupplyCentre.objects.get(abbreviation='Bud'): self.italy,
-                        SupplyCentre.objects.get(abbreviation='Bul'): self.austria,
-                    }
-        # Add some SC ownerships for a far off year
-        for k,v in test_data.items():
-            sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
-            sco.save()
-        g.create_or_update_sc_counts_from_ownerships(YEAR)
-        ccs = g.centrecount_set.filter(year=YEAR)
-        # Hopefully everything matches!
-        self.assertEqual([], g.compare_sc_counts_and_ownerships(YEAR))
-        # Now modify one SupplyCentreOwnership to create a mismatch
-        sco.owner = self.england
-        sco.save()
-        # That should give us two mismatches (the old and new owners)
-        self.assertEqual(2, len(g.compare_sc_counts_and_ownerships(YEAR)))
-        # Remove everything we added to the database
-        g.supplycentreownership_set.filter(year=YEAR).delete()
-        ccs.delete()
-
-    # TODO Game.compare_sc_counts_and_ownerships() raises SCOwnershipsNotFound
-
-    # TODO Game.compare_sc_counts_and_ownerships() with missing CentreCount
-
-    # TODO Game._calc_scores()
-
-    # Game.scores
     def test_update_sc_count(self):
         # Arbitrary game
         g = Game.objects.first()
@@ -3524,7 +3484,67 @@ class GameTests(TestCase):
         g.supplycentreownership_set.filter(year=YEAR).delete()
         ccs.delete()
 
-    # Game.scores
+    # Game.compare_sc_counts_and_ownerships()
+    def test_game_compare_sc_counts_and_ownerships(self):
+        # Arbitrary game
+        g = Game.objects.first()
+        YEAR = 1920
+        self.assertFalse(g.supplycentreownership_set.filter(year=YEAR).exists())
+        self.assertFalse(g.centrecount_set.filter(year=YEAR).exists())
+        test_data = {
+                        SupplyCentre.objects.get(abbreviation='Sev'): self.austria,
+                        SupplyCentre.objects.get(abbreviation='Mos'): self.austria,
+                        SupplyCentre.objects.get(abbreviation='Edi'): self.france,
+                        SupplyCentre.objects.get(abbreviation='Par'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Mun'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Tun'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Spa'): self.germany,
+                        SupplyCentre.objects.get(abbreviation='Por'): self.italy,
+                        SupplyCentre.objects.get(abbreviation='Bud'): self.italy,
+                        SupplyCentre.objects.get(abbreviation='Bul'): self.austria,
+                    }
+        # Add some SC ownerships for a far off year
+        for k,v in test_data.items():
+            sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
+            sco.save()
+        g.create_or_update_sc_counts_from_ownerships(YEAR)
+        ccs = g.centrecount_set.filter(year=YEAR)
+        # Hopefully everything matches!
+        self.assertEqual([], g.compare_sc_counts_and_ownerships(YEAR))
+        # Now modify one SupplyCentreOwnership to create a mismatch
+        sco.owner = self.england
+        sco.save()
+        # That should give us two mismatches (the old and new owners)
+        self.assertEqual(2, len(g.compare_sc_counts_and_ownerships(YEAR)))
+        # Remove everything we added to the database
+        g.supplycentreownership_set.filter(year=YEAR).delete()
+        ccs.delete()
+
+    # TODO Game.compare_sc_counts_and_ownerships() raises SCOwnershipsNotFound
+
+    # TODO Game.compare_sc_counts_and_ownerships() with missing CentreCount
+
+    # TODO Game._calc_scores()
+
+    # Game.scores()
+    def test_scores_no_powers_assigned(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gps = g.gameplayer_set.all()
+        self.assertGreater(len(gps), 0)
+        power_map = {}
+        for gp in gps:
+            power_map[gp] = gp.power
+            gp.power = None
+            gp.save()
+        scores = g.scores()
+        # TODO validate results
+        # Cleanup
+        for gp in gps:
+            gp.power = power_map[gp]
+            gp.save()
+
+    # Game.update_scores()
     def test_game_update_scores_invalid(self):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=timezone.now(),
@@ -3538,7 +3558,20 @@ class GameTests(TestCase):
         g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
         self.assertRaises(InvalidScoringSystem, g.update_scores)
 
-    # TODO Game.update_scores()
+    def test_update_scores_no_powers_assigned(self):
+        # Test Game.update_scores() with no powers assigned
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        power_map = {}
+        for gp in g.gameplayer_set.all():
+            power_map[gp] = gp.power
+            gp.power = None
+            gp.save()
+        g.update_scores()
+        # Cleanup
+        for gp in g.gameplayer_set.all():
+            gp.power = power_map[gp]
+            gp.save()
 
     # Game.positions()
     def test_game_positions(self):
@@ -5186,6 +5219,9 @@ class RoundPlayerTests(TestCase):
         self.assertEqual(rp.gameplayers().count(), 2)
         self.assertFalse(rp.score_is_final())
 
+    # TODO RoundPlayer.score_is_final() for player playing two games,
+    #      both of which are finished, in a round that is still going
+
     def test_roundplayer_score_is_final_sum_games(self):
         # TODO Tournament using TScoringSumGames scoring system
         pass
@@ -5506,6 +5542,9 @@ class GamePlayerTests(TestCase):
         self.assertTrue(tp.unranked)
         self.assertFalse(gp.is_best_country())
 
+    # TODO GamePlayer.is_best_country() for unranked player when they scored
+    #      best but a ranked player played the same power
+
     def test_gameplayer_is_best_country_score(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
@@ -5514,6 +5553,9 @@ class GamePlayerTests(TestCase):
         self.assertTrue(gp.is_best_country())
         gp = bc[self.austria][-1]
         self.assertFalse(gp.is_best_country())
+
+    # TODO GamePlayer.is_best_country() with criteria SCORE where two players
+    #      have equal scores and dots are used to tie break
 
     def test_gameplayer_is_best_country_dots(self):
         t = Tournament.objects.get(name='t1')
@@ -5528,6 +5570,9 @@ class GamePlayerTests(TestCase):
         # Cleanup
         t.best_country_criterion = BestCountryCriteria.SCORE
         t.save()
+
+    # TODO GamePlayer.is_best_country() with criteria DOTS where two players
+    #      have equal dots and scores are used to tie break
 
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):

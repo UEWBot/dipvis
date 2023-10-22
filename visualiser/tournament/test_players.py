@@ -27,7 +27,7 @@ from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player, PlayerRanking, PlayerAward
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
 from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
-from tournament.players import add_player_bg
+from tournament.players import add_player_bg, position_str, wdd_url_to_id
 from tournament.players import MASK_ALL_BG
 
 CHRIS_BRAND_WDD_ID = 4173
@@ -79,11 +79,42 @@ class PlayerTests(TestCase):
 
     # TODO player_picture_location()
 
-    # TODO wdd_url_to_id()
+    # wdd_url_to_id()
+    def test_wdd_url_to_id_valid(self):
+        self.assertEqual(wdd_url_to_id('https://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1766'), 1766)
+
+    def test_wdd_url_to_id_invalid(self):
+        self.assertEqual(wdd_url_to_id('https://world-diplomacy-database.com/php/results/tournament_list.php'), 0)
 
     # TODO add_player_bg()
 
-    # TODO position_str()
+    # position_str()
+    def test_position_str_first(self):
+        tests = {1: '1st',
+                 2: '2nd',
+                 3: '3rd',
+                 4: '4th',
+                 5: '5th',
+                 6: '6th',
+                 7: '7th',
+                 8: '8th',
+                 9: '9th',
+                 10: '10th',
+                 11: '11th',
+                 12: '12th',
+                 13: '13th',
+                 14: '14th',
+                 21: '21st',
+                 22: '22nd',
+                 23: '23rd',
+                 24: '24th',
+                 99: '99th',
+                 100: '100th',
+                 101: '101st',
+                }
+        for k,v in tests.items():
+            with self.subTest(k):
+                self.assertEqual(position_str(k), v)
 
     # Player.wdd_name()
     @tag('slow', 'wdd')
@@ -307,7 +338,10 @@ class PlayerTests(TestCase):
 
     # TODO Player.save()
 
-    # TODO Player.get_absolute_url()
+    # Player.get_absolute_url()
+    def test_player_get_absolute_url(self):
+        p = Player.objects.first()
+        p.get_absolute_url()
 
     # PlayerTournamentRanking
     # PlayerTournamentRanking.wdd_url()
@@ -332,7 +366,7 @@ class PlayerTests(TestCase):
         self.assertIn(ptr.tournament, p_str)
 
     # PlayerGameResult
-    # TODO PlayerGameResult.for_same_game()
+    # PlayerGameResult.for_same_game()
     def test_playergameresult_same(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()

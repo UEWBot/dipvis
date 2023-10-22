@@ -27,6 +27,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_views import _graph_end_year
 from tournament.models import Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -819,6 +820,24 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_sc_owners_redirect(self):
+        # TODO assert that overview 2 is SC owners
+        self.assertEqual(self.g1.final_year(), 1900)
+        # Add centrecounts for a later year
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.austria, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.england, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.france, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.germany, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.italy, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.russia, count=5)
+        CentreCount.objects.create(game=self.g1, year=1902, power=self.turkey, count=4)
+        response = self.client.get(reverse('game_overview_2',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.g1.centrecount_set.filter(year=1902).delete()
 
     def test_sc_owners_with_gap_year(self):
         self.assertEqual(self.g1.centrecount_set.filter(year=1902).count(), 0)
@@ -1617,6 +1636,50 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    # test game_views._graph_end_year()
+    def test_graph_end_year_finished(self):
+        self.assertEqual(self.g1.centrecount_set.filter(year=1905).count(), 0)
+        self.assertFalse(self.g1.is_finished)
+        # Flag the game as finished in 1905
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.austria, count=0)
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.england, count=0)
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.france, count=10)
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.germany, count=6)
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.italy, count=18)
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.russia, count=0)
+        CentreCount.objects.create(game=self.g1, year=1905, power=self.turkey, count=0)
+        self.g1.is_finished = True
+        self.g1.save()
+        self.assertEqual(_graph_end_year(self.g1), 1905)
+        # Cleanup
+        self.g1.centrecount_set.filter(year=1905).delete()
+        self.g1.is_finished = False
+        self.g1.save()
+
+    def test_graph_end_year_fixed_end(self):
+        self.assertIsNone(self.g1.the_round.final_year)
+        g = self.g1
+        # Flag the Round as having a fixed game endpoint
+        self.g1.the_round.final_year = 1905
+        self.g1.the_round.save()
+        self.assertEqual(_graph_end_year(self.g1), 1905)
+        # Cleanup
+        self.g1.the_round.final_year = None
+        self.g1.the_round.save()
+
+    def test_graph_end_year_long_game(self):
+        self.assertEqual(self.g1.centrecount_set.filter(year=1915).count(), 0)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.austria, count=0)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.england, count=0)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.france, count=11)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.germany, count=6)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.italy, count=17)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.russia, count=0)
+        CentreCount.objects.create(game=self.g1, year=1915, power=self.turkey, count=0)
+        self.assertEqual(_graph_end_year(self.g1), 1915)
+        # Cleanup
+        self.g1.centrecount_set.filter(year=1915).delete()
 
     def test_sc_graph(self):
         # Test the page that holds the graph image
