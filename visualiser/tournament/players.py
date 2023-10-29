@@ -152,12 +152,11 @@ def _update_or_create_playertournamentranking_wiki(player, title):
             pass
     if pos:
         try:
-            defaults = {}
+            defaults = {'position': pos}
             if the_title:
                 defaults['title'] = the_title
             PlayerTournamentRanking.objects.update_or_create(player=player,
                                                              tournament=title['Tournament'],
-                                                             position=pos,
                                                              year=title['Year'],
                                                              defaults=defaults)
         except Exception:
@@ -180,7 +179,7 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
     """
     d = finish['Date']
     try:
-        defaults = {}
+        defaults = {'position': finish['Position']}
         try:
             # WDD contains some invalid dates (e.g. '2017-09-0')
             datetime.datetime.strptime(d, '%Y-%m-%d')
@@ -200,7 +199,6 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
                 pass
         PlayerTournamentRanking.objects.update_or_create(player=player,
                                                          tournament=finish['Tournament'],
-                                                         position=finish['Position'],
                                                          year=d[:4],
                                                          defaults=defaults)
     except Exception:
@@ -222,7 +220,7 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
     """
     d = t['Date']
     try:
-        defaults = {}
+        defaults = {'position': t['Rank']}
         try:
             # WDD contains some invalid dates (e.g. '2017-09-0')
             datetime.datetime.strptime(d, '%Y-%m-%d')
@@ -237,7 +235,6 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
             pass
         PlayerTournamentRanking.objects.update_or_create(player=player,
                                                          tournament=t['Name of the tournament'],
-                                                         position=t['Rank'],
                                                          year=d[:4],
                                                          defaults=defaults)
     except KeyError:
@@ -272,7 +269,7 @@ def _update_or_create_playergameresult(player, b):
                                                                   str(player)))
         return
     try:
-        defaults = {}
+        defaults = {'position': b['Position']}
         # If there's no 'Position sharing', they were alone at that position
         try:
             defaults['position_equals'] = b['Position sharing']
@@ -306,7 +303,6 @@ def _update_or_create_playergameresult(player, b):
                                                   game_name=b['Round / Board'],
                                                   player=player,
                                                   power=p,
-                                                  position=b['Position'],
                                                   defaults=defaults)
     except Exception:
         # Handle all exceptions
