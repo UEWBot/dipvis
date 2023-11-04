@@ -439,3 +439,11 @@ def set_nationalities(dry_run=False):
         if not dry_run:
             p.nationalities = c
             p.save()
+
+def list_tournaments_missing_wdd_ids():
+    """List completed tournaments withour WDD ids (they should probably have one)"""
+    for t in Tournament.objects.filter(wdd_tournament_id=None):
+        if not t.is_finished():
+            continue
+        print(t)
+
