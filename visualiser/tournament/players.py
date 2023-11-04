@@ -522,19 +522,19 @@ class Player(models.Model):
         latest = self.playeraward_set.all().aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
-        else:
+        elif latest is not None:
             result = max(result, latest)
 
         latest = self.playertournamentranking_set.all().aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
-        else:
+        elif latest is not None:
             result = max(result, latest)
 
         latest = self.playergameresult_set.all().aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
-        else:
+        elif latest is not None:
             result = max(result, latest)
 
         return result
