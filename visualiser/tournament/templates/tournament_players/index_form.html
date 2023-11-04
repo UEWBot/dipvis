@@ -33,7 +33,7 @@
           <td>{{ forloop.counter }}</td>
           <td><a href="{% if tournament.current_round.gameset.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a></td>
           <td>{% if tp.location %} ({{ tp.location }}){% endif %}</td>
-          <td>{% for country in tp.player.nationalities %}<img src="{{ country.flag }}" alt="{{ country.name }}">{% endfor %}</td>
+          <td>{% for country in tp.player.nationalities %}<img src="{{ country.flag }}" alt="{{ country.name }}"> {% endfor %}</td>
           {% if tournament.is_virtual %}
             <td>{{tp.backstabbr_username }}</td>
           {% endif %}
