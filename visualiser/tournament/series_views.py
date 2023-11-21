@@ -18,10 +18,12 @@
 Series Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.shortcuts import get_object_or_404, render
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
-from tournament.models import Series
+from tournament.models import Formats, Series, TournamentPlayer
+from tournament.players import Player
 
 # Series views
 
@@ -35,3 +37,19 @@ class SeriesDetailView(DetailView):
     """Series detail"""
     model = Series
     template_name = 'series/detail.html'
+
+
+def series_players(request, slug, include_ftf=True, include_vftf=True):
+    """Show all the registered players of all the tournaments in the series"""
+    s = get_object_or_404(Series, slug=slug)
+    qs = s.tournaments.all()
+    if not include_ftf:
+        qs = qs.exclude(format=FORMATS.FTF)
+    if not include_vftf:
+        qs = qs.exclude(format=FORMATS.VFTF)
+    # TODO consider tournament visibility
+    t_list = qs.order_by('start_date')
+    tp_list = TournamentPlayer.objects.filter(tournament__in=t_list)
+    p_list = Player.objects.filter(tournamentplayer__in=tp_list).distinct()
+    context = {'series': s, 'tournaments': t_list, 'players': p_list, 'tplayers': tp_list}
+    return render(request, 'series/players.html', context)

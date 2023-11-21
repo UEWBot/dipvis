@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with series=series %}DipTV - Tournament Series {{ series }}{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1>{% blocktrans with series=series %}Tournament Series {{ series }}{% endblocktrans %}</h1>
+{% if tournaments %}
+  <table class="form">
+    <thead><tr>
+      <th>{% trans "Player" %}</th>
+      {% for t in tournaments %}
+        <th>{{ t }}</th>
+      {% endfor %}
+    </tr></thead>
+    <tbody>
+      {% for p in players %}
+        <tr>
+          <th>{{ p }}</th>
+          {% for t in tournaments %}
+            <td>
+              {% for tp in tplayers %}
+	        {% if tp.player == p %}
+	          {% if tp.tournament == t %}
+                    {% trans "Y" %}
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            </td>
+          {% endfor %}
+	</tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+    <p>{% trans "No tournaments in the series." %}</p>
+{% endif %}
+{% endblock %}

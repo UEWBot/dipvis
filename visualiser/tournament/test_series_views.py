@@ -59,3 +59,11 @@ class SeriesViewTests(TestCase):
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    # TODO Improve testing (like actully add TournamentPlayers)
+    def test_players(self):
+        # Don't have to be logged in to see a series
+        response = self.client.get(reverse('series_players',
+                                           args=(self.s1.slug,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
