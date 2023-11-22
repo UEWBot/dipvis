@@ -44,9 +44,9 @@ def series_players(request, slug, include_ftf=True, include_vftf=True):
     s = get_object_or_404(Series, slug=slug)
     qs = s.tournaments.all()
     if not include_ftf:
-        qs = qs.exclude(format=FORMATS.FTF)
+        qs = qs.exclude(format=Formats.FTF)
     if not include_vftf:
-        qs = qs.exclude(format=FORMATS.VFTF)
+        qs = qs.exclude(format=Formats.VFTF)
     # TODO consider tournament visibility
     t_list = qs.order_by('start_date')
     tp_list = TournamentPlayer.objects.filter(tournament__in=t_list)
