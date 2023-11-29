@@ -418,6 +418,12 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_frameset_3_games(self):
+        response = self.client.get(reverse('frameset_3_games',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
     def test_frameset_top_board(self):
         response = self.client.get(reverse('frameset_top_board',
                                            args=(self.t1.pk,)),
@@ -736,11 +742,18 @@ class TournamentViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_seeder_bias(self):
+        self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t1).count(), 0)
+        # Add a SeederBias for t1
+        tp1 = self.t1.tournamentplayer_set.first()
+        tp2 = self.t1.tournamentplayer_set.last()
+        SeederBias.objects.create(player1=tp1, player2=tp2)
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('seeder_bias',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        # Clean up
+        SeederBias.objects.filter(player1__tournament=self.t1).delete()
 
     def test_seeder_bias_add(self):
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)

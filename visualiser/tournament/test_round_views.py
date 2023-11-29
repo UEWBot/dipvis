@@ -1343,7 +1343,7 @@ class RoundViewTests(TestCase):
 
     def test_game_index(self):
         response = self.client.get(reverse('game_index',
-                                           args=(self.t1.pk, 1)),
+                                           args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 

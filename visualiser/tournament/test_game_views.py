@@ -283,17 +283,22 @@ class GameViewTests(TestCase):
         self.t1.save()
 
     def test_detail_no_aar_link(self):
+        self.assertEqual(self.g1.is_finished, False)
+        self.g1.is_finished = True
+        self.g1.save()
         # Add a GamePlayer without an AAR
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
         RoundPlayer.objects.create(the_round=self.r1, player=p)
-        GamePlayer.objects.create(game=self.g1, player=p, power=self.italy)
+        GamePlayer.objects.create(game=self.g1, player=p, power=self.italy, score=10.0)
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertNotContains(response, 'After Action Report')
         # Clean up
         p.delete()
+        self.g1.is_finished = False
+        self.g1.save()
 
     def test_detail_aar_link(self):
         # Add a GamePlayer with an AAR
