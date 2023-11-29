@@ -10,13 +10,13 @@
     <thead><tr>
       <th>{% trans "Player" %}</th>
       {% for t in tournaments %}
-        <th>{{ t }}</th>
+        <th><a href="{{t.get_absolute_url}}">{{ t }}</a></th>
       {% endfor %}
     </tr></thead>
     <tbody>
       {% for p in players %}
         <tr>
-          <th>{{ p }}</th>
+          <th><a href="{{p.get_absolute_url}}">{{ p }}</a></th>
           {% for t in tournaments %}
             <td>
               {% for tp in tplayers %}
