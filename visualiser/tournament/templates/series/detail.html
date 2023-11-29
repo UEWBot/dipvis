@@ -14,4 +14,5 @@
     <li>{% trans "No tournaments in the database" %}</li>
   {% endfor %}
 </ul>
+<p><a href="{% url 'series_players' object.slug %}">{% trans "Series Players" %}</a></p>
 {% endblock %}

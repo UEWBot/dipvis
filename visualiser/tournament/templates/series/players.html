@@ -4,7 +4,7 @@
 {% block title %}{% blocktrans with series=series %}DipTV - Tournament Series {{ series }}{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with series=series %}Tournament Series {{ series }}{% endblocktrans %}</h1>
+<h1><a href="{{ series.get_absolute_url }}">{{ series }}</a></h1>
 {% if show_filter %}
   {% if not include_ftf %}
     <p>{% trans "Showing only virtual events" %}</p>
