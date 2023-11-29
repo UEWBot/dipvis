@@ -41,8 +41,12 @@ class SeriesDetailView(DetailView):
 
 def series_players(request, slug, include_ftf=True, include_vftf=True):
     """Show all the registered players of all the tournaments in the series"""
+    assert include_vftf or include_ftf
     s = get_object_or_404(Series, slug=slug)
     qs = s.tournaments.all()
+    # If the series contains both FTF and vFTF events,
+    # let the user pick a subset of interest
+    show_filter = qs.filter(format=Formats.FTF).count() and qs.filter(format=Formats.VFTF).count()
     if not include_ftf:
         qs = qs.exclude(format=Formats.FTF)
     if not include_vftf:
@@ -51,5 +55,11 @@ def series_players(request, slug, include_ftf=True, include_vftf=True):
     t_list = qs.order_by('start_date')
     tp_list = TournamentPlayer.objects.filter(tournament__in=t_list)
     p_list = Player.objects.filter(tournamentplayer__in=tp_list).distinct()
-    context = {'series': s, 'tournaments': t_list, 'players': p_list, 'tplayers': tp_list}
+    context = {'series': s,
+               'show_filter': show_filter,
+               'include_ftf': include_ftf,
+               'include_vftf': include_vftf,
+               'tournaments': t_list,
+               'players': p_list,
+               'tplayers': tp_list}
     return render(request, 'series/players.html', context)

@@ -5,6 +5,27 @@
 
 {% block content %}
 <h1>{% blocktrans with series=series %}Tournament Series {{ series }}{% endblocktrans %}</h1>
+{% if show_filter %}
+  {% if not include_ftf %}
+    <p>{% trans "Showing only virtual events" %}</p>
+  {% elif not include_vftf %}
+    <p>{% trans "Showing only face-to-face events" %}</p>
+  {% else %}
+    <p>{% trans "Showing all events" %}</p>
+  {% endif %}
+  <ul>
+    {% if not include_ftf %}
+      <li><a href="{% url 'series_players' series.slug %}">{% trans "Show all events" %}</a></li>
+      <li><a href="{% url 'series_players_ftf' series.slug %}">{% trans "Show only face-to-face events" %}</a></li>
+    {% elif not include_vftf %}
+      <li><a href="{% url 'series_players' series.slug %}">{% trans "Show all events" %}</a></li>
+      <li><a href="{% url 'series_players_vftf' series.slug %}">{% trans "Show only virtual events" %}</a></li>
+    {% else %}
+      <li><a href="{% url 'series_players_ftf' series.slug %}">{% trans "Show only face-to-face events" %}</a></li>
+      <li><a href="{% url 'series_players_vftf' series.slug %}">{% trans "Show only virtual events" %}</a></li>
+    {% endif %}
+  </ul>
+{% endif %}
 {% if tournaments %}
   <table class="form">
     <thead><tr>
@@ -39,6 +60,6 @@
     </tbody>
   </table>
 {% else %}
-    <p>{% trans "No tournaments in the series." %}</p>
+  <p>{% trans "No tournaments in the series." %}</p>
 {% endif %}
 {% endblock %}
