@@ -30,6 +30,12 @@
           {% endfor %}
 	</tr>
       {% endfor %}
+      <tr>
+        <th>{% trans "Total" %}</th>
+        {% for t in tournaments %}
+          <td>{{ t.tournamentplayer_set.count }}</td>
+        {% endfor %}
+      </tr>
     </tbody>
   </table>
 {% else %}
