@@ -1,5 +1,6 @@
 [run]
 branch = True
+plugins = django_coverage_plugin
 
 source =
     tournament/
@@ -7,6 +8,7 @@ source =
 
 omit =
     tournament/migrations/*.py
+    tournament/diplomacy/README.txt
 
 [report]
 exclude_lines =
