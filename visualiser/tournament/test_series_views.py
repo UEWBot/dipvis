@@ -19,7 +19,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy
+from tournament.models import DrawSecrecy, Formats
 from tournament.models import Series, Tournament, TournamentPlayer
 from tournament.players import Player
 
@@ -40,7 +40,8 @@ class SeriesViewTests(TestCase):
                                        end_date=now,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=DrawSecrecy.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET,
+                                       format=Formats.VFTF)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
                                        end_date=now,
@@ -98,6 +99,20 @@ class SeriesViewTests(TestCase):
     def test_players(self):
         # Don't have to be logged in to see a series
         response = self.client.get(reverse('series_players',
+                                           args=(self.s1.slug,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_players_ftf(self):
+        # Don't have to be logged in to see a series
+        response = self.client.get(reverse('series_players_ftf',
+                                           args=(self.s1.slug,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_players_vftf(self):
+        # Don't have to be logged in to see a series
+        response = self.client.get(reverse('series_players_vftf',
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
