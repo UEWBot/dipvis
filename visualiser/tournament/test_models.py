@@ -1739,7 +1739,16 @@ class TournamentTests(TestCase):
                 t.background(mask=mask)
             mask *= 2
 
-    # TODO test Tournament.background() for a Tournament in a series
+    def test_tournament_background_series(self):
+        s = Series(name="Test Series", description="Text")
+        s.save()
+        t1 = Tournament.objects.get(name='t1')
+        t3 = Tournament.objects.get(name='t3')
+        s.tournaments.add(t1)
+        s.tournaments.add(t3)
+        t1.background()
+        # Clean up
+        s.delete()
 
     # Tournament.game_set()
     def test_tourney_game_set(self):
