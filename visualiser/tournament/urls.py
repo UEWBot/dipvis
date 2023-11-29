@@ -151,9 +151,12 @@ series_patterns = [
     path('', series_views.SeriesIndexView.as_view(), name='series_index'),
     path('<slug:slug>/', series_views.SeriesDetailView.as_view(),
          name='series_detail'),
-    # TODO Support optional keyword args
     path('<slug:slug>/players/', series_views.series_players,
          name='series_players'),
+    path('<slug:slug>/players_vftf/', series_views.series_players,
+         {'include_ftf': False}, name='series_players_vftf'),
+    path('<slug:slug>/players_ftf/', series_views.series_players,
+         {'include_vftf': False}, name='series_players_ftf'),
 ]
 
 tournament_patterns = [
