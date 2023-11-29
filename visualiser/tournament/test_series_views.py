@@ -125,3 +125,5 @@ class SeriesViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     # TODO: Test series_players filter link visibility
+
+    # TODO" Test series_players tournament visibility checks

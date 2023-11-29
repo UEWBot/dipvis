@@ -24,6 +24,7 @@ from django.views.generic.list import ListView
 
 from tournament.models import Formats, Series, TournamentPlayer
 from tournament.players import Player
+from tournament.tournament_views import tournament_is_visible
 
 # Series views
 
@@ -51,8 +52,9 @@ def series_players(request, slug, include_ftf=True, include_vftf=True):
         qs = qs.exclude(format=Formats.FTF)
     if not include_vftf:
         qs = qs.exclude(format=Formats.VFTF)
-    # TODO consider tournament visibility
-    t_list = qs.order_by('start_date')
+    # Only show tournaments the user should be able to see
+    t_list = list(filter(lambda t: tournament_is_visible(t, request.user),
+                         qs.order_by('start_date')))
     tp_list = TournamentPlayer.objects.filter(tournament__in=t_list)
     p_list = Player.objects.filter(tournamentplayer__in=tp_list).distinct()
     context = {'series': s,

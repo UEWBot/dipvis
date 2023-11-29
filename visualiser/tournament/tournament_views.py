@@ -72,6 +72,23 @@ def tournament_index(request):
 # Tournament views
 
 
+def tournament_is_visible(t, user):
+    """
+    Determine whether the specified user should be allowed to view the tournament
+    """
+    # Visible to all if published
+    if t.is_published:
+        return True
+    # Also visible if the user is a manager for the tournament
+    if user.is_active and t in user.tournament_set.all():
+        return True
+    # Superusers see all
+    if user.is_superuser:
+        return True
+    # Default to not visible
+    return False
+
+
 def get_visible_tournament_or_404(pk, user):
     """
     Get the specified Tournament object, if it exists,
@@ -79,16 +96,8 @@ def get_visible_tournament_or_404(pk, user):
     If it doesn't exist or isn't visible, raise Http404.
     """
     t = get_object_or_404(Tournament, pk=pk)
-    # Visible to all if published
-    if t.is_published:
+    if tournament_is_visible(t, user):
         return t
-    # Also visible if the user is a manager for the tournament
-    if user.is_active and t in user.tournament_set.all():
-        return t
-    # Superusers see all
-    if user.is_superuser:
-        return t
-    # Default to not visible
     raise Http404
 
 
