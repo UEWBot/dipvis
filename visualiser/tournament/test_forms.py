@@ -1131,7 +1131,7 @@ class GetSevenPlayersFormTest(TestCase):
     def setUpTestData(cls):
         # We need a Tournament, with 4 Rounds, one with an exact multiple of 7 (round 2),
         # one that needs all standby players plus some to play two boards (round 1),
-        # one that needs all the stadby players to play (round 4),
+        # one that needs all the standby players to play (round 4),
         # and one that needs a subset of the standby players to play (round 3)
         t = Tournament.objects.create(name='t1',
                                       start_date=timezone.now(),
@@ -1904,10 +1904,12 @@ class PlayerRoundFormTest(TestCase):
         # Do everything right
         data = {'player': str(self.p1.pk),
                 'present': 'on',
-                'standby': 'on'}
+                'standby': 'on',
+                'sandboxer': 'on'}
         initial = {'player': self.p1,
                    'present': False,
                    'standby': False,
+                   'sandboxer': False,
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
                                initial=initial,
@@ -1920,6 +1922,7 @@ class PlayerRoundFormTest(TestCase):
         initial = {'player': self.p1,
                    'present': False,
                    'standby': False,
+                   'sandboxer': False,
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
                                initial=initial,
@@ -1929,8 +1932,8 @@ class PlayerRoundFormTest(TestCase):
     def test_round_fields(self):
         # Check that the correct round fields are created
         form = PlayerRoundForm(round_num=2)
-        # We should have four fields - player, present, standby, and rounds_played
-        self.assertEqual(len(form.fields), 4)
+        # We should have five fields - player, present, standby, sandboxer, and rounds_played
+        self.assertEqual(len(form.fields), 5)
 
     def test_player_labels(self):
         # Check the player names
@@ -2029,9 +2032,9 @@ class BasePlayerRoundFormsetTest(TestCase):
                 for field in form.fields:
                     if field == 'player':
                         continue
-                    # There should be checkboxes for present and standby
+                    # There should be checkboxes for present, standby, and sandboxer
                     # and an integer rounds_played
-                    self.assertIn(field, ['present', 'standby', 'rounds_played'])
+                    self.assertIn(field, ['present', 'standby', 'sandboxer', 'rounds_played'])
 
     def test_no_players(self):
         # Should be fine for a Tournament with no TournamentPlayers

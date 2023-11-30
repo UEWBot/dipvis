@@ -1979,6 +1979,8 @@ class RoundPlayer(models.Model):
                                         help_text=_('Set if this score does not contribute towards the tournament score'))
     game_count = models.PositiveIntegerField(default=1,
                                              help_text=_('number of games to play this round'))
+    sandboxer = models.BooleanField(default=False,
+                                    help_text=_('set if the player is willing to record a game this round'))
 
     class Meta:
         ordering = ['player', 'the_round__start']

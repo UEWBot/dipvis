@@ -234,7 +234,11 @@ class GameScoreForm(forms.Form):
 class RoundPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a RoundPlayer"""
     def label_from_instance(self, obj):
-        return obj.player.sortable_str()
+        # flag if they are willing to sandbox
+        suffix = ''
+        if obj.sandboxer:
+            suffix = '*'
+        return obj.player.sortable_str() + suffix
 
 
 class GamePlayersForm(forms.Form):
@@ -349,11 +353,17 @@ class PowerAssignForm(forms.Form):
         # Create the right player fields
         for gp in self.game.gameplayer_set.all().order_by('power__abbreviation'):
             c = gp.id
-            self.fields[c] = forms.ModelChoiceField(label=str(gp.player),
+            # flag if they are able to sandbox
+            suffix = ''
+            if gp.roundplayer().sandboxer:
+                suffix = '*'
+            label = str(gp.player) + suffix
+            self.fields[c] = forms.ModelChoiceField(label=label,
                                                     queryset=queryset)
             field_order.append(c)
 
         # And add the Issues (read-only) field last
+        # TODO Can we do this in the declaration instead?
         self.fields['issues'] = forms.CharField(label=_('Issues'),
                                                 required=False)
         self.fields['issues'].disabled = True
@@ -764,6 +774,7 @@ class PlayerRoundForm(forms.Form):
     player = PlayerChoiceField(queryset=Player.objects.all())
     present = forms.BooleanField(required=False, initial=False)
     standby = forms.BooleanField(required=False, initial=False)
+    sandboxer = forms.BooleanField(required=False, initial=False)
     rounds_played = forms.IntegerField(required=False,
                                        disabled=True,
                                        max_value=10,

@@ -121,10 +121,12 @@ def roll_call(request, tournament_id, round_num):
         except RoundPlayer.DoesNotExist:
             current['present'] = False
             current['standby'] = False
+            current['sandboxer'] = False
             current['rounds_played'] = tp.rounds_played()
         else:
             current['present'] = True
             current['standby'] = rp.standby
+            current['sandboxer'] = rp.sandboxer
             if rp.gameplayers().exists():
                 # This is one of the Rounds they played
                 current['rounds_played'] = tp.rounds_played() - 1
@@ -149,11 +151,13 @@ def roll_call(request, tournament_id, round_num):
             if form.cleaned_data['present'] is True:
                 # Ensure that we have a corresponding RoundPlayer
                 is_standby = form.cleaned_data['standby']
+                sandboxer = form.cleaned_data['sandboxer']
                 RoundPlayer.objects.update_or_create(player=p,
                                                      the_round=r,
                                                      # Reset game_count in case we've been here before
                                                      defaults={'game_count': 0 if is_standby else 1,
-                                                               'standby': is_standby})
+                                                               'standby': is_standby,
+                                                               'sandboxer': sandboxer})
             elif r.game_set.filter(gameplayer__player=p).exists():
                 # Refuse to delete this one
                 form.add_error(None, _('%(player)s did play this round') % {'player': p})
