@@ -4,17 +4,24 @@
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Awards{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Awards{% endblocktrans %}</h1>
+<h1>{% blocktrans with tournament=tournament %}<a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Awards{% endblocktrans %}</h1>
 <dl>
-  {% for tp in tournament.tournamentplayer_set.all %}
-    {% if tp.awards.count %}
-      <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
-        {% for a in tp.awards.all %}
-          <dd>{{ a }}</dd>
-        {% endfor %}
-      {% endif %}
-  {% empty %}
-    {% trans "No players" %}
-  {% endfor %}
+  {% if tournament.is_finished %}
+    {% for tp in tournament.tournamentplayer_set.all %}
+      {% if tp.awards.count %}
+        <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
+          {% for a in tp.awards.all %}
+            <dd>{{ a }}</dd>
+          {% endfor %}
+        {% endif %}
+    {% empty %}
+      {% trans "No players" %}
+    {% endfor %}
+  {% else %}
+    {% for a in tournament.awards.all %}
+      <dt>{{ a }}</dt>
+      <dd>{{ a.description }}</dd>
+    {% endfor %}
+  {% endif %}
 </dl>
 {% endblock %}
