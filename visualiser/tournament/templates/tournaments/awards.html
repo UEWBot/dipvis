@@ -4,7 +4,7 @@
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Awards{% endblocktrans %}{% endblock %}
 
 {% block content %}
-<h1>{% blocktrans with tournament=tournament %}<a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> Awards{% endblocktrans %}</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Awards" %}</h1>
 <dl>
   {% if tournament.is_finished %}
     {% for tp in tournament.tournamentplayer_set.all %}
