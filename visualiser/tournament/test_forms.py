@@ -431,7 +431,7 @@ class GamePlayersFormTest(TestCase):
         TournamentPlayer.objects.create(player=p9, tournament=t)
         cls.rp1 = RoundPlayer.objects.create(player=p1, the_round=cls.r1)
         cls.rp2 = RoundPlayer.objects.create(player=p2, the_round=cls.r1)
-        cls.rp3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1)
+        cls.rp3 = RoundPlayer.objects.create(player=p3, the_round=cls.r1, sandboxer=True)
         cls.rp5 = RoundPlayer.objects.create(player=p5, the_round=cls.r1)
         cls.rp6 = RoundPlayer.objects.create(player=p6, the_round=cls.r1)
         cls.rp7 = RoundPlayer.objects.create(player=p7, the_round=cls.r1)
@@ -481,7 +481,8 @@ class GamePlayersFormTest(TestCase):
         # and the values should be the Player names, in alphabetical order
         self.assertEqual(the_choices[1][1], self.rp1.player.sortable_str())
         self.assertEqual(the_choices[2][1], self.rp2.player.sortable_str())
-        self.assertEqual(the_choices[3][1], self.rp3.player.sortable_str())
+        # Sandboxers should be flagged
+        self.assertEqual(the_choices[3][1], self.rp3.player.sortable_str()+'*')
         self.assertEqual(the_choices[4][1], self.rp4.player.sortable_str())
         self.assertEqual(the_choices[5][1], self.rp5.player.sortable_str())
         self.assertEqual(the_choices[6][1], self.rp6.player.sortable_str())
@@ -768,7 +769,7 @@ class PowerAssignFormTest(TestCase):
         TournamentPlayer.objects.create(player=p8, tournament=t)
         RoundPlayer.objects.create(player=cls.p1, the_round=r)
         RoundPlayer.objects.create(player=cls.p2, the_round=r)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r, sandboxer=True)
         RoundPlayer.objects.create(player=cls.p4, the_round=r)
         RoundPlayer.objects.create(player=cls.p5, the_round=r)
         RoundPlayer.objects.create(player=cls.p6, the_round=r)
@@ -831,7 +832,11 @@ class PowerAssignFormTest(TestCase):
         form = PowerAssignForm(game=self.g)
         for gp in self.g.gameplayer_set.all():
             with self.subTest(gp=str(gp)):
-                self.assertEqual(form.fields[gp.pk].label, str(gp.player))
+                # Sandboxers should be flagged
+                if gp.roundplayer().sandboxer:
+                    self.assertEqual(form.fields[gp.pk].label, str(gp.player)+'*')
+                else:
+                    self.assertEqual(form.fields[gp.pk].label, str(gp.player))
 
     def test_success(self):
         data = {'name': 'R1G1',
