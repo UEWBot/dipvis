@@ -28,7 +28,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.game_views import _graph_end_year
-from tournament.models import Tournament, Round, Game
+from tournament.models import DrawProposal, Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Seasons
@@ -211,6 +211,33 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, 'Game42')),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_detail_draws(self):
+        self.assertEqual(self.g3.drawproposal_set.count(), 0)
+        # Concession to Germany
+        dp = DrawProposal.objects.create(game=self.g3,
+                                         year=1901,
+                                         season=Seasons.SPRING,
+                                         proposer=self.germany,
+                                         votes_in_favour=1)
+        dp.drawing_powers.add(self.germany)
+        # 7-way draw
+        dp = DrawProposal.objects.create(game=self.g3,
+                                         year=1901,
+                                         season=Seasons.SPRING)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.italy)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        response = self.client.get(reverse('game_detail',
+                                           args=(self.t2.pk, self.g3.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.g3.drawproposal_set.all().delete()
 
     def test_detail_no_scrape_link(self):
         self.assertEqual(self.g1.external_url, '')

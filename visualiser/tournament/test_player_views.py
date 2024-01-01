@@ -16,6 +16,8 @@
 
 from urllib.parse import urlencode
 
+from django_countries import countries
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
@@ -62,6 +64,18 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_detail_nationalities(self):
+        self.assertEqual(len(self.p1.nationalities), 0)
+        self.p1.nationalities = countries[0]
+        self.p1.save()
+        # Don't have to be logged in to see a player
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.p1.nationalities.clear()
 
     def test_detail_refresh_wdd(self):
         # Test the "Refresh From WDD" button
