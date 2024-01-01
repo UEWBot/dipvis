@@ -425,8 +425,8 @@ def set_nationalities(dry_run=False):
             print('Setting multiple nationalities is not supported')
         n = nats[0]
         # WDD uses 3-letter abbreviations of the French names for countries
-        # django_countires uses 2-letter ISO codes, but also supports
-        # 3-letter ISO codes, which is many cases match the codes used by WDD
+        # django_countries uses 2-letter ISO codes, but also supports
+        # 3-letter ISO codes, which in many cases match the codes used by WDD
         try:
             n = wdd_country_to_code[n]
         except KeyError:
