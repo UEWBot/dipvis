@@ -151,12 +151,12 @@ def game_sc_owners(request,
                 row.append({'color': power_to_colour[sco.owner],
                             'text': _(sco.owner.abbreviation)})
         rows.append(row)
-        try:
-            # Check for any problems, and add them to the list
-            issues += g.compare_sc_counts_and_ownerships(year)
-        except SCOwnershipsNotFound:
-            # We have no ownership data for this year, which is fine
-            pass
+        #try:
+        #    # Check for any problems, and add them to the list
+        #    issues += g.compare_sc_counts_and_ownerships(year)
+        #except SCOwnershipsNotFound:
+        #    # We have no ownership data for this year, which is fine
+        #    pass
     context['rows'] = rows
     context['issues'] = issues
     if refresh:
