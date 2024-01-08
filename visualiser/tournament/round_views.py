@@ -282,7 +282,7 @@ def _sitters_and_two_gamers(tournament, the_round):
     return sitters, two_gamers
 
 
-def _create_game_seeder(tournament, round_number):
+def _create_game_seeder(tournament, the_round):
     """Return a GameSeeder that knows about the tournament so far"""
     tourney_players = tournament.tournamentplayer_set.all().prefetch_related('seederbias_set')
     # Create the game seeder
@@ -294,8 +294,7 @@ def _create_game_seeder(tournament, round_number):
     for tp in tourney_players:
         seeder.add_player(tp)
     # Provide details of games already played this tournament
-    for n in range(1, round_number):
-        rnd = tournament.round_numbered(n)
+    for rnd in tournament.round_set.filter(start__lt=the_round.start):
         for g in rnd.game_set.all().prefetch_related('gameplayer_set'):
             game = set()
             for gp in g.gameplayer_set.all().prefetch_related('power', 'player', 'game__the_round'):
@@ -313,7 +312,7 @@ def _create_game_seeder(tournament, round_number):
 
 def _seed_games(tournament, the_round):
     """Wrapper round GameSeeder to do the actual seeding for a round"""
-    seeder = _create_game_seeder(tournament, the_round.number())
+    seeder = _create_game_seeder(tournament, the_round)
     sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
     # Generate the games
     return seeder.seed_games(omitting_players=sitters,
@@ -322,7 +321,7 @@ def _seed_games(tournament, the_round):
 
 def _seed_games_and_powers(tournament, the_round):
     """Wrapper round GameSeeder to do the actual seeding for a round"""
-    seeder = _create_game_seeder(tournament, the_round.number())
+    seeder = _create_game_seeder(tournament, the_round)
     sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
     # Generate the games
     return seeder.seed_games_and_powers(omitting_players=sitters,
