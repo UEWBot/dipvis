@@ -107,7 +107,7 @@ def game_sc_owners(request,
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     scs = SupplyCentre.objects.all()
-    scos = g.supplycentreownership_set.all()
+    scos = g.supplycentreownership_set.all().prefetch_related('owner')
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
@@ -126,7 +126,7 @@ def game_sc_owners(request,
         return render(request, 'games/sc_owners.html', context)
     set_powers = g.the_set.setpower_set.all()
     power_to_colour = {}
-    for o in set_powers:
+    for o in set_powers.prefetch_related('power'):
         power_to_colour[o.power] = o.colour
     # Create a list of rows, each with a year and each supply centre's owner
     rows = []
@@ -177,7 +177,7 @@ def game_sc_chart(request,
     g = get_game_or_404(t, game_name)
     # Template relies on set_powers and ps having the same ordering
     # TODO Sort alphabetically by translated power.name
-    set_powers = g.the_set.setpower_set.order_by('power__name')
+    set_powers = g.the_set.setpower_set.order_by('power__name').prefetch_related('power')
     ps = g.gameplayer_set.order_by('power__name')
     # We might have GamePlayers but without powers assigned
     if ps.first() and not ps.first().power:

@@ -588,9 +588,10 @@ class Player(models.Model):
 
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""
+        tps = self.tournamentplayer_set.all().prefetch_related('tournament')
         if including_unpublished:
-            return self.tournamentplayer_set.all()
-        return self.tournamentplayer_set.filter(tournament__is_published=True)
+            return tps
+        return tps.filter(tournament__is_published=True)
 
     def _rankings(self, mask=MASK_ALL_BG):
         """List of all rankings"""

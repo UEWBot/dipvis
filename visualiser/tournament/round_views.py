@@ -110,14 +110,14 @@ def roll_call(request, tournament_id, round_num):
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
     r = get_round_or_404(t, round_num)
+    rps = r.roundplayer_set.all()
     player_data = []
     # Go through each player in the Tournament
-    for tp in t.tournamentplayer_set.all():
+    for tp in t.tournamentplayer_set.all().prefetch_related('player'):
         current = {'player': tp.player}
-        rps = tp.roundplayers()
         # Is this player listed as playing this round ?
         try:
-            rp = rps.get(the_round=r)
+            rp = rps.get(player=tp.player)
         except RoundPlayer.DoesNotExist:
             current['present'] = False
             current['standby'] = False
@@ -248,8 +248,8 @@ def get_seven(request, tournament_id, round_num):
 
 def _sitters_and_two_gamers(tournament, the_round):
     """ Return a (sitters, two_gamers) 2-tuple"""
-    tourney_players = tournament.tournamentplayer_set.all()
-    round_players = the_round.roundplayer_set.all()
+    tourney_players = tournament.tournamentplayer_set.all().prefetch_related('player')
+    round_players = the_round.roundplayer_set.all().prefetch_related('player')
     # Get the set of players that haven't already been assigned to games for this round
     rps = []
     sitters = set()
@@ -284,7 +284,7 @@ def _sitters_and_two_gamers(tournament, the_round):
 
 def _create_game_seeder(tournament, round_number):
     """Return a GameSeeder that knows about the tournament so far"""
-    tourney_players = tournament.tournamentplayer_set.all()
+    tourney_players = tournament.tournamentplayer_set.all().prefetch_related('seederbias_set')
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
                         starts=100,
@@ -296,9 +296,9 @@ def _create_game_seeder(tournament, round_number):
     # Provide details of games already played this tournament
     for n in range(1, round_number):
         rnd = tournament.round_numbered(n)
-        for g in rnd.game_set.all():
+        for g in rnd.game_set.all().prefetch_related('gameplayer_set'):
             game = set()
-            for gp in g.gameplayer_set.all():
+            for gp in g.gameplayer_set.all().prefetch_related('power', 'player', 'game__the_round'):
                 game.add((gp.tournamentplayer(), gp.power))
             assert len(game) == 7
             seeder.add_played_game(game)
