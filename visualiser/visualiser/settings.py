@@ -52,6 +52,13 @@ TEMPLATES = [
 
 # Application definition
 
+COUNTRIES_OVERRIDE = {
+    # ISO 3166-2 GB countries
+    'GB-ENG': 'England',
+    'GB-SCT': 'Scotland',
+    'GB-WLS': 'Wales',
+}
+
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
