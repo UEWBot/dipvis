@@ -118,7 +118,11 @@ def populate_missed_years(game, dry_run=False):
             print("Reading results for %d" % year)
             if dry_run:
                 continue
-            parsed_turn = bg.turn_details(backstabbr.SPRING, year+1)
+            try:
+                parsed_turn = bg.turn_details(backstabbr.SPRING, year+1)
+            except backstabbr.InvalidGameUrl:
+                print("Failed to read that year from backstabbr")
+                continue
             sc_counts = parsed_turn[0]
             sc_ownership = parsed_turn[2]
             # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
