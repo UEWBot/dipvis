@@ -447,3 +447,8 @@ def list_tournaments_missing_wdd_ids():
             continue
         print(t)
 
+def player_emails(for_tournament):
+    """Return a list of emails for players registered for the Tournament"""
+    return [tp.player.email for tp in for_tournament.tournamentplayer_set.all()]
+
+
