@@ -264,7 +264,7 @@ class GamePlayersForm(forms.Form):
         attrs = self.fields['name'].widget.attrs
         attrs['size'] = attrs['maxlength']
 
-        queryset = self.the_round.roundplayer_set.all()
+        queryset = self.the_round.roundplayer_set.all().prefetch_related('player')
 
         field_order = ['name', 'the_set', 'external_url']
 
@@ -435,7 +435,7 @@ class GetSevenPlayersForm(forms.Form):
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
 
-        present = self.the_round.roundplayer_set.all()
+        present = self.the_round.roundplayer_set.all().prefetch_related('player')
         playing = present.filter(standby=False)
         standbys = present.filter(standby=True)
 
@@ -837,7 +837,7 @@ class PlayerRoundScoreForm(forms.Form):
         self.last_round_num = kwargs.pop('last_round_num')
         super().__init__(*args, **kwargs)
 
-        self.fields['tp'].queryset = self.tournament.tournamentplayer_set.all()
+        self.fields['tp'].queryset = self.tournament.tournamentplayer_set.all().prefetch_related('player')
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.last_round_num):
@@ -888,8 +888,8 @@ class SeederBiasForm(ModelForm):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
-        self.fields['player1'].queryset = self.tournament.tournamentplayer_set.all()
-        self.fields['player2'].queryset = self.tournament.tournamentplayer_set.all()
+        self.fields['player1'].queryset = self.tournament.tournamentplayer_set.all().prefetch_related('player')
+        self.fields['player2'].queryset = self.tournament.tournamentplayer_set.all().prefetch_related('player')
 
 
 class GameImageForm(ModelForm):
