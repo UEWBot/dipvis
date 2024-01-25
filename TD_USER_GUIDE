@@ -18,6 +18,10 @@ A Player is a person who plays Diplomacy.
 A Tournament is an event where people play Diplomacy competitively.
 A Tournament consists of a number of Rounds, each of which has a number of Games.
 Each Game is played with a GameSet (e.g. the Avalon Hill edition).
+Tournaments may be part of a Series, for example an annual tournament or an
+event like DipCon that is hosted by different tournaments in different years.
+A Tournament hands out Awards to deserving Players based on various criteria.
+By default, these are just seven "Best Country" awards.
 
 When Players register to play in a Tournament, this is represented by a
 TournamentPlayer. When Players are present at roll call for a particular Round,
@@ -28,36 +32,40 @@ replacement players - each Great Power in a Game has exactly one GamePlayer).
 Games are scored using some GameScoringSystem (the system has support for all
 the systems commonly used in North America). Scores for Games in a Round are
 combined using a RoundScoringSystem. This only matters if you have players
-playing multiple Games in a Round. The only option here is currently "best
-game counts", meaning that each player gets the score for their best Game
-in that Round. Similarly, Round scores get combined using a TournamentScoringSystem.
+playing multiple Games in a Round - you may want all games played by a player to
+contribute to their score or just the best result. You may also want to give points
+to players who volunteer to sit out a round to make the numbers work.
+Similarly, Round scores get combined using a TournamentScoringSystem.
 The system currently support "best 2 rounds", "best 3 rounds", and "best 4 rounds".
 This allows you to have a "drop round" or to include all round scores.
+The option "Sum best 4 games in any rounds" is also an option, in which case
+the actual rounds are ignored and all game scores are considered.
 
 The system also knows about SupplyCentres, CentreCounts, and DrawProposals, all
 of which should be fairly self-explanatory.
 
+The final concept is a SeederBias. This is used to guide the game seeding algorithm.
+Essentially it tells the system to do its best not to have those players play a
+game against each other. It is intended for use when you have family members
+that you would prefer not to end up at the same board.
+
 Finally, it reads background information from the World Diplomacy Database and
 stores it as PlayerAwards, PlayerGameResults, PlayerRankings, and PlayerTournamentRankings,
 but you shouldn't need to worry about those at all.
-
-The final concept is a SeederBias. This is used to guide the game seeding algorithm.
-Essentially it tells the system to pretend that two TournamentPlayers have already
-played a certain number of Games against each other this Tournament. Because the
-game seeding algorithm tries to minimise the number of times each pair of Players
-play each other within a Tournament, this will tend to keep those players apart.
-It is intended for use when you have family members that you would prefer not to
-end up at the same board.
 
 Creating Your Tournament
 ------------------------
 
 Start out at https://example.com/admin/tournament/tournament/add.
 Give the tournament a name (the year will automatically be appended), format (FTF
-or vFTF), dates, and pick a TournamentScoringSystem and RoundScoringSystem.
+or vFTF), location, dates, and pick a TournamentScoringSystem and RoundScoringSystem.
 Decide whether you want the system to seed the games or not, how Great Powers
 will be assigned, what you're going to tell players about failed DrawProposals,
 and whether best countries are determined by score or centre count.
+
+If there's a Discord channel for the tournament, you can create a webhook to that
+channel on Discord and add it to the tournament. This will allow the system to
+post board calls directly to that Discord channel.
 
 Next come some items to control how the site will treat the Tournament. Make
 yourself a Manager (you can add others too if you like), and decide whether to
@@ -65,9 +73,16 @@ publish the Tournament on the site. Unpublished Tournaments will only be visible
 to users with accounts on the site, so it's a good idea to keep it unpublished
 while you're getting everything set up. You might not want to publish it at all,
 or only to publish it after the Tournament is over. Keep the Tournament Editable
-until it's over and all the data has been entered. Finally, check the "no email"
+until it's over and all the data has been entered. Check the "no email"
 checkbox if you're going to be doing any experimenting (e.g. tying out game
 seeding) or if you don't want the system to send email to the players at all.
+You may also want to check "Delay publishing game URL" if you are going to have
+games taking place on Backstabbr or recorded in Backstabbr sandboxes. By default
+in these case, the system will link to Backstabbr.
+
+There is also a field to enter the Tournament's id in the World Diplomacy Database,
+but you won't be able to enter this until after the results have been uploaded to
+the WDD.
 
 Next you can add Rounds. For each one, you need to specify the start and end times and dates,
 and the scoring system used for games in that Round (most Tournaments will use the
@@ -101,11 +116,13 @@ up to 4 players at a time, and you'll end up back at the same page.
 If the Player you want to add doesn't appear in the dropdown list, follow the link to
 https://example.com/admin/tournament/player/add/ where you can add them. Please
 do check before adding them - de-duplicating players who are in the system twice has
-to be done by hand and it quite tricky! Note that email address, if provided, will
+to be done by hand and is quite tricky! Note that email address, if provided, will
 be used to send board calls to, and also to send a link to enter country preferences
 if that's how Great Powers are assigned in your Tournament. The "WDD id" is used to
 provide background information about the Player. The "picture" is for future use.
 Any "Backstabbr username" will be displayed in board calls for vFTF Tournaments.
+"Backstabbr profile URL" is still a work-in-progress.
+"Location" and "Nationalities" are displayed in the list of registered players.
 The "User" field is to match-up Players who are also TDs who use the system (by
 default, Players who play in a Tournament that they help manage will be "Unranked"
 - they won't be eligible for Best Country awards and their score will be noted
@@ -113,7 +130,7 @@ separately to everyone else.
 
 This is also a good time to add any SeederBias that you might need. Your Tournament
 page has a link to https://example.com/admin/tournament/seederbias/add/ where you
-can specify the two TournamentPlayers and the weight.
+can specify the pairs of TournamentPlayers to keep apart.
 
 Great Power Preferences
 -----------------------
@@ -142,18 +159,24 @@ don't know for sure who's going to show up until then anyway).
 Shortly before the Round starts, go to the round page, which should be
 https://example.com/tournaments/42/current_round/
 There you will find a "Roll Call" link to https://example.com/tournaments/42/rounds/1/roll_call/
-Here you simply check the box by each player who is present to play the round.
+Here you simply check the "Present" box by each player who is present to play the round.
+You can also flag players as "Standby" if they would prefer not to actually play
+but are willing to play if needed, and as "Sandboxer" if they are willing to record their
+game in Backstabbr as it progresses. "Rounds played" is for TD information, in case
+you want to enforce that players don't play every round.
 Once you have everyone entered, press "Submit".
 This will take you to the "get seven" page. If you have an exact multiple of seven
-players, you can just seed the games from here. Otherwise, the system will prompt you to
-either have players sit out the round or to have players play multiple games. Just
-select them from the dropdown lists and hit "Seed Games".
-The system will go ahead and seed the boards. Note that you can refresh this page
-to re-do the seeding if needed. You can also make changes manually. For a vFTF tournament
-with games on Backstabbr, you can enter links to the games on backstabbr on this page (under
-"notes") to make it easier to import centre-count information. Once you're happy,
-press "Submit" and the Games will be created, including sending out emails to the players
-(unless your Tournament has the "no email" option selected).
+players (possibly including standby players), you can just seed the games from here.
+Otherwise, the system will prompt you to either have players sit out the round or to
+have players play multiple games. Just select them from the dropdown lists and hit "Seed Games".
+The system will go ahead and seed the boards. This page annotates players willing to
+record their game with an asterisk so that you can ensure that every board has somebody
+recording it if needed. Note that you can refresh this page to re-do the seeding if needed.
+You can also make changes manually. For a vFTF tournament with games on Backstabbr, you
+can enter links to the games on backstabbr on this page to make it easier to import
+centre-count information. Once you're happy, press "Submit" and the Games will be created,
+including sending out emails to the players (unless your Tournament has the "no email"
+option selected) and posting to the Discord webhook (if any).
 
 Game Tracking
 -------------
@@ -165,8 +188,8 @@ Your options are:
 Upload images for games as they progress. Ideally every season, but gaps are ok.
 Enter SupplyCentre ownership data after each game year (in this case the system will
 calculate CentreCounts).
-Enter CentreCounts after each game year. (For a vFTF game, if the Game's "notes" has a
-backstabbr URL for the game, you can grab the current CentreCounts from Backstabbr by
+Enter CentreCounts after each game year. (For a vFTF game, if the Game has a
+backstabbr URL, you can grab the current CentreCounts from Backstabbr by
 just clicking the "Import SC Counts from Backstabbr" link on the Game page).
 For DrawProposals, you can enter all of them or just the ones that pass.
 
@@ -175,11 +198,12 @@ needed to calculate scores. For some scoring systems, you'll also need to enter 
 years if you don't enter SC Counts for those years.
 
 If you were to enter all the above data, people would be able to see timelapse-style
-displays of the board state, charts of SC ownership and centre counts, and textual
-highlights like "Austria dropped from 5 to 2, losing Trieste to Italy, Greece to Turkey,
-and Budapest to Russia", as well as up-to-date "if all games ended now" scores.
+displays of the board state, charts of SC ownership and centre counts, graphs of
+centre-counts over time, and textual highlights like "Austria dropped from 5 to 2, losing
+Trieste to Italy, Greece to Turkey, and Budapest to Russia", as well as up-to-date "if all
+games ended now" scores.
 
-Note that if you want people to be able to follow the Tournament, or even just see the
+Remember that if you want people to be able to follow the Tournament, or even just see the
 standings, you'll need to set it to "Published".
 
 Results
@@ -190,6 +214,10 @@ on an "if all games ended now" basis), and will provide charts for best countrie
 as well as a leaderboard.
 
 If necessary, you can override the calculated scores.
+
+The system will automatically determine every player's placement in the tournament as well
+as who earned each "Best Country" award. You can record who earned any other awards and/or
+change the "Best Country" recipients if needed on the "Awards" page for the Tournament.
 
 Once the Tournament is over and all the data has been entered, please uncheck the "Editable"
 checkbox for the Tournament (and Save it). This will help prevent inadvertant changes.
