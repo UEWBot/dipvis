@@ -53,6 +53,7 @@ from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 
 # Round views
 
+REFRESH_TIME = 60
 
 def get_round_or_404(tournament, round_num):
     """
@@ -596,3 +597,41 @@ def game_index(request, tournament_id, round_num):
     the_list = r.game_set.all()
     context = {'round': r, 'game_list': the_list}
     return render(request, 'games/index.html', context)
+
+
+def game_cycle(request, tournament_id, round_num, template, game_name=None):
+    """Cycle through SC graphs for all games in the Round"""
+    # TODO We should also be able to support cycling through SC charts here,
+    #      except that the template needs more parameters. Ideally, we'd
+    #      probably pass the game view function rather than the template
+    #      and just call it from here, but it's tricky to figure out what
+    #      redirect_url to pass to it.
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    games = r.game_set.all()
+    if (len(games)) == 0:
+        raise Http404
+    if game_name:
+        # Find the game in the list
+        g = None
+        for n, g1 in enumerate(games):
+            if g1.name == game_name:
+                # Found it
+                g = g1
+                break
+        if not g:
+            raise Http404
+    else:
+        g = games.first()
+        n = 0
+    try:
+        next_game_name = games[n+1].name
+    except IndexError:
+        # Go back to the first game
+        next_game_name = games[0].name
+    context = {'game': g,
+               'refresh': True,
+               'redirect_time': REFRESH_TIME,
+               'redirect_url': reverse(game_cycle,
+                                       args=(tournament_id, r.number(), next_game_name))}
+    return render(request, template, context)

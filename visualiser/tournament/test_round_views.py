@@ -371,6 +371,34 @@ class RoundViewTests(TestCase):
             gp.power = power
             gp.save()
 
+    def test_game_cycle_no_games(self):
+        response = self.client.get(reverse('round_sc_graphs',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_game_cycle_one_game(self):
+        response = self.client.get(reverse('round_sc_graphs',
+                                           args=(self.t3.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Should redirect to itself
+        self.assertIn('sc_graphs/T3R1G1/'.encode('utf-8'), response.content)
+
+    def test_game_cycle_two_games(self):
+        response = self.client.get(reverse('round_sc_graphs',
+                                           args=(self.t4.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Should redirect to game 2
+        self.assertIn('sc_graphs/T4R1G2/'.encode('utf-8'), response.content)
+        response = self.client.get(reverse('round_sc_graphs_from_game',
+                                           args=(self.t4.pk, 1, 'T4R1G2')),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Should redirect back to game 1
+        self.assertIn('sc_graphs/T4R1G1/'.encode('utf-8'), response.content)
+
     def test_roll_call_not_logged_in(self):
         response = self.client.get(reverse('round_roll_call',
                                            args=(self.t1.pk, 1)),

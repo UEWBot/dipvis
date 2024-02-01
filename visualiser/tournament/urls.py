@@ -71,6 +71,10 @@ round_patterns = [
     path('board_call_csv/', round_views.board_call_csv, name='board_call_csv'),
     path('board_call/', round_views.round_simple,
          {'template': 'board_call'}, name='board_call'),
+    path('sc_graphs/', round_views.game_cycle,
+         {'template': 'games/sc_graph.html'}, name='round_sc_graphs'),
+    path('sc_graphs/<str:game_name>/', round_views.game_cycle,
+         {'template': 'games/sc_graph.html'}, name='round_sc_graphs_from_game'),
 ]
 
 game_patterns = [
