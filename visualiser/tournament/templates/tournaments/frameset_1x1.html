@@ -1,5 +1,11 @@
-<html>
+{% load i18n %}
+{% load static %}
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type=image/png href="{% static 'diptv.png' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% trans "DipTV - Diplomacy Tournament Visualiser" %}{% endblock %}</title>
 </head>
   <frameset rows="*, 5%">
     <frame src="{% url 'tournament_views' tournament.id %}">
