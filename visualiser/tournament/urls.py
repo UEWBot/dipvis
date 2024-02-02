@@ -174,6 +174,8 @@ tournament_patterns = [
          {'template': 'frameset_top_board'}, name='frameset_top_board'),
     path('frameset_3_games/', tournament_views.tournament_simple,
          {'template': 'frameset_3_games'}, name='frameset_3_games'),
+    path('frameset_2_games/', tournament_views.tournament_simple,
+         {'template': 'frameset_2_games'}, name='frameset_2_games'),
     path('frameset_2x2/', tournament_views.tournament_simple,
          {'template': 'frameset_2x2'}, name='frameset_2x2'),
     path('frameset_1x1/', tournament_views.tournament_simple,
