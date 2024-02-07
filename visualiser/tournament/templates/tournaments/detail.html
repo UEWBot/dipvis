@@ -39,19 +39,22 @@
 </dl>
 
 <p>{% blocktrans count count=tournament.game_set.count %}1 Game in total{% plural %}{{ count }} Games in total{% endblocktrans %}</p>
+<p>{% trans "Diplomacy Broadcast Network coverage:" %}</p>
 <ul>
   {% for dbn in tournament.dbncoverage_set.all %}
     <li><a href="{{ dbn.dbn_url }}">{% trans dbn.description %}</a></li>
+  {% empty %}
+    <li>{% trans "None" %}</li>
   {% endfor %}
 </ul>
 
 <br>
 <p>{% trans "Views:" %}</p>
 <ul>
-  <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
   {% if tournament.is_finished %}
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Final Standings" %}</a></li>
   {% else %}
+    <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
   {% endif %}
   <li><a href="{% url 'tournament_awards' tournament.id %}">{% trans "Awards" %}</a></li>
