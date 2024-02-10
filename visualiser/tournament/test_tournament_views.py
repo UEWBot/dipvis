@@ -224,10 +224,6 @@ class TournamentViewTests(TestCase):
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            editable=False)
-        cls.t4.awards.add(cls.a1)
-        cls.t4.awards.add(cls.a2)
-        cls.t4.awards.add(cls.a3)
-        cls.t4.save()
         cls.r41 = Round.objects.create(tournament=cls.t4,
                                        start=cls.t4.start_date,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -249,13 +245,8 @@ class TournamentViewTests(TestCase):
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p4,
                                              tournament=cls.t4)
-        tp.awards.add(cls.a2)
-        tp.save()
         tp = TournamentPlayer.objects.create(player=p5,
                                              tournament=cls.t4)
-        tp.awards.add(cls.a1)
-        tp.awards.add(cls.a2)
-        tp.save()
         tp = TournamentPlayer.objects.create(player=p6,
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p7,
@@ -869,16 +860,6 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
-    def test_tournament_awards_afterwards(self):
-        # Finished Tournament - who won what?
-        response = self.client.get(reverse('tournament_awards',
-                                           args=(self.t4.pk,)),
-                                   secure=True)
-        self.assertEqual(response.status_code, 200)
-        # Check that shared awards are flagged as such
-        self.assertIn('(shared)'.encode('utf-8'), response.content)
-
-
     def test_enter_awards_post_not_logged_in(self):
         response = self.client.get(reverse('enter_awards',
                                            args=(self.t1.pk,)),
@@ -925,6 +906,6 @@ class TournamentViewTests(TestCase):
         # Check what awards the players now have
         for a in self.t1.awards.all():
             self.assertIn(a, tp.awards.all())
-            self.assertEqual(a.tournamentplayer_set.filter(tournament=self.t1).count(), 1)
+            self.assertEqual(a.tournamentplayer_set.count(), 1)
         # Cleanup
         tp.awards.clear()
