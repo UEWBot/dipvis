@@ -764,18 +764,18 @@ class Tournament(models.Model):
                 return i
         raise AssertionError(f'award {award} not found in {tournament}')
 
-    def _calculated_scores(self):
+    def _calculated_scores(self, for_players=None):
         """
-        Calculates the scores for everyone registered for the tournament.
+        Calculates the tournament scores for players who have attended
 
+        for_players is an optional QuerySet of RoundPlayers that have changed.
         Return a dict, keyed by player, of floats.
         """
         system = self.tournament_scoring_system_obj()
-        t_scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
-        # Now add in anyone who has yet to attend a round
-        for tp in self.tournamentplayer_set.all():
-            if tp.player not in t_scores:
-                t_scores[tp.player] = 0.0
+        if for_players is None:
+            t_scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
+        else:
+            t_scores = system.scores(for_players)
         return t_scores
 
     def scores_detail(self):
@@ -826,23 +826,47 @@ class Tournament(models.Model):
             return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
         return None
 
-    def update_scores(self):
+    def _store_score(self, tp, scores, add_handicap):
+        """
+        Update tp.score in the database
+
+        tp is a TournamentPlayer
+        scores is a dict, keyed by Player, of tournament scores for players who have played
+        add_handicap is a bool that controls whether tp.handicap is added or not
+
+        Sets score to 0 if the player is not in scores
+        If add_handicap is True, adds tp.handicap
+        Saves the resulting score to the database
+        """
+        if tp.player not in scores:
+            scores[tp.player] = 0.0
+        elif add_handicap:
+            scores[tp.player] += tp.handicap
+        tp.score = scores[tp.player]
+        tp.save(update_fields=['score'])
+
+    def update_scores(self, for_players=None):
         """
         Recalculate the scores for the Tournament and store them in the TournamentPlayers.
 
         If the Tournament has now ended, add Best Country awards to
         the appropriate TournamentPlayers.
+        for_players is an optional QuerySet or list of Players that have changed.
         """
-        scores = self._calculated_scores()
+        rps = RoundPlayer.objects.filter(the_round__tournament=self).distinct()
+        if for_players is not None:
+            rps = rps.filter(player__in=for_players)
+        scores = self._calculated_scores(rps)
         finished = self.is_finished()
         add_handicap = finished and self.handicaps
-        for tp in self.tournamentplayer_set.prefetch_related('player'):
-            tp.score = scores[tp.player]
-            # Handicaps, if any, get added after the tournament is complete
-            # but only if the player actually played
-            if add_handicap and tp.roundplayers().exists():
-                tp.score += tp.handicap
-            tp.save(update_fields=['score'])
+        # Save scores, including for anyone who has yet to attend a round
+        if for_players is not None:
+            for p in for_players:
+                tp = self.tournamentplayer_set.get(player=p)
+                self._store_score(tp, scores, add_handicap)
+        else:
+            for tp in self.tournamentplayer_set.all():
+                self._store_score(tp, scores, add_handicap)
         if finished:
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
@@ -1455,8 +1479,8 @@ class Round(models.Model):
             for rp in non_players:
                 rp.score = scores[rp.player]
                 rp.save(update_fields=['score'])
-        # That could change the Tournament scoring
-        self.tournament.update_scores()
+        # That could change the Tournament scoring for those Players
+        self.tournament.update_scores(for_players)
 
     def is_finished(self):
         """
@@ -2220,7 +2244,7 @@ class RoundPlayer(models.Model):
         ret = super().delete(*args, **kwargs)
         # Force a recalculation of scores, if necessary
         if self.score != 0.0:
-            self.the_round.update_scores()
+            self.the_round.tournament.update_scores([self.player])
         return ret
 
     def __str__(self):

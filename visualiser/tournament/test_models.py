@@ -1615,19 +1615,6 @@ class TournamentTests(TestCase):
                 total = rps.aggregate(Sum('score'))['score__sum']
                 self.assertEqual(scores[tp.player], total)
 
-    def test_tournament_calculated_scores_before_start(self):
-        t = Tournament.objects.get(name='t2')
-        self.assertEqual(t.tournamentplayer_set.count(), 0)
-        for r in t.round_set.all():
-            self.assertEqual(r.roundplayer_set.count(), 0)
-        tp = TournamentPlayer.objects.create(player=self.p5, tournament=t, score=17.3)
-        # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
-        scores = t._calculated_scores()
-        self.assertEqual(len(scores), 1)
-        self.assertAlmostEqual(scores[tp.player], 0.0)
-        # Cleanup
-        tp.delete()
-
     def test_tournament_calculated_scores_recalculate(self):
         t = Tournament.objects.get(name='t3')
         scores = t._calculated_scores()
@@ -1639,17 +1626,18 @@ class TournamentTests(TestCase):
                 total = rps.aggregate(Sum('score'))['score__sum']
                 self.assertEqual(scores[tp.player], total)
 
-    def test_tournament_calculated_scores_with_non_player(self):
-        # Only interesting for unfinished tournaments
+    def test_tournament_calculated_scores_for_players(self):
         t = Tournament.objects.get(name='t1')
-        # Add an extra player, who didn't actually play
-        tp = TournamentPlayer(tournament=t, player=self.p10)
-        tp.save()
-        scores = t._calculated_scores()
-        # Players who didn't play should get a score of zero
-        self.assertEqual(scores[tp.player], 0.0)
-        # Cleanup
-        tp.delete()
+        player_list = [self.p2, self.p3, self.p6, self.p8]
+        rps = RoundPlayer.objects.filter(the_round__tournament=t).filter(player__in=player_list)
+        scores = t._calculated_scores(for_players=rps)
+        self.assertEqual(len(scores), len(player_list))
+        # This should be recalculated from the round scores
+        for tp in t.tournamentplayer_set.filter(player__in=player_list):
+            with self.subTest(player=tp.player):
+                rps = tp.player.roundplayer_set.filter(the_round__tournament=t)
+                total = rps.aggregate(Sum('score'))['score__sum']
+                self.assertEqual(scores[tp.player], total)
 
     # Tournament.scores_detail()
     def test_tournament_scores_detail_finished(self):
@@ -1755,6 +1743,31 @@ class TournamentTests(TestCase):
         self.assertEqual(t.winner(), self.p5)
 
     # Tournament.update_scores()
+    def test_tournament_update_scores_before_start(self):
+        t = Tournament.objects.get(name='t2')
+        self.assertEqual(t.tournamentplayer_set.count(), 0)
+        self.assertEqual(RoundPlayer.objects.filter(the_round__tournament=t).count(), 0)
+        # Add some TournamentPlayers with non-zero scores
+        TournamentPlayer.objects.create(player=self.p5, tournament=t, score=147.3)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t, score=47.3)
+        t.update_scores()
+        # Verify that all TournamentPlayers' scores are updated. although there are no RoundPlayers
+        for tp in t.tournamentplayer_set.all():
+            self.assertEqual(tp.score, 0.0)
+        # Clean up
+        t.tournamentplayer_set.all().delete()
+
+    def test_tournament_update_scores_with_non_player(self):
+        t = Tournament.objects.get(name='t1')
+        # Add an extra player, who didn't actually play, with a non-zero score
+        tp = TournamentPlayer(tournament=t, player=self.p10, score=76.3)
+        tp.save()
+        t.update_scores()
+        # Players who didn't play should get a score of zero
+        tp.refresh_from_db()
+        self.assertEqual(tp.score, 0.0)
+        tp.delete()
+
     def test_tournament_update_scores(self):
         today = date.today()
         t = Tournament(name='t5',
@@ -1819,6 +1832,84 @@ class TournamentTests(TestCase):
                 except RoundPlayer.DoesNotExist:
                     self.assertEqual(tp.score, 0.0)
         # Note that this will also delete all other objects for the Tournament
+        t.delete()
+
+    def test_tournament_update_scores_for_players(self):
+        today = date.today()
+        t = Tournament(name='t5',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=DrawSecrecy.SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p2, score=2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p3, score=3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p4, score=4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p5, score=5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p6, score=6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p7, score=7)
+        tp.save()
+        # Include two players who didn't play any games
+        tp = TournamentPlayer(tournament=t, player=self.p8, score=8)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p9, score=9)
+        tp.save()
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1, score=7)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2, score=6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3, score=5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4, score=4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5, score=3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6, score=2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7, score=1)
+        rp.save()
+        # Which players to update - include some but not all who
+        # played and some but not all who didn't
+        player_list = [self.p2, self.p3, self.p9]
+        # Remember the scores we set
+        initial_scores = {}
+        for tp in t.tournamentplayer_set.all():
+            initial_scores[tp] = tp.score
+        # We need a finished Game in the Round so the Round is finished
+        g = Game(name='newgame2',
+                 started_at=r.start,
+                 the_round=r,
+                 is_finished=True,
+                 the_set=self.set1)
+        g.save()
+        t.update_scores(player_list)
+        # Score for specified TournamentPlayers should be updated
+        # from the RoundPlayer scores
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                if tp.player in player_list:
+                    try:
+                        rp = RoundPlayer.objects.filter(player=tp.player,
+                                                        the_round__tournament=t).get()
+                        self.assertEqual(tp.score, rp.score)
+                    except RoundPlayer.DoesNotExist:
+                        self.assertEqual(tp.score, 0.0)
+                else:
+                        self.assertEqual(initial_scores[tp], tp.score)
+        # Clean up
         t.delete()
 
     def test_tournament_update_scores_handicap(self):
@@ -3501,7 +3592,7 @@ class RoundTests(TestCase):
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
                 # Did this player play the newly-saved Round?
-                if RoundPlayer.objects.filter(player=tp.player, the_round=r).exists():
+                if GamePlayer.objects.filter(player=tp.player, game__the_round=r).exists():
                     self.assertNotAlmostEqual(tp.score, scores[tp])
                     tp.score = scores[tp]
                     tp.save()
@@ -5967,6 +6058,9 @@ class RoundPlayerTests(TestCase):
 
         # Calculate the scores
         g.update_scores()
+
+        # Now we have Games, we can give sitters their score
+        r.update_scores()
 
         # Check that we have the scores we expect
         tp1 = t.tournamentplayer_set.get(player=self.p2)
