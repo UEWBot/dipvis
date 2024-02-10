@@ -424,6 +424,12 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_frameset_2_games(self):
+        response = self.client.get(reverse('frameset_2_games',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
     def test_frameset_top_board(self):
         response = self.client.get(reverse('frameset_top_board',
                                            args=(self.t1.pk,)),
