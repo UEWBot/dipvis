@@ -387,6 +387,10 @@ def seed_games(request, tournament_id, round_num):
                         gp.save(update_fields=['power'])
                     # Generate initial scores
                     g.update_scores()
+            # We may need to update scores for non-players, too
+            gps = GamePlayer.objects.filter(game__the_round=r).distinct().prefetch_related('player')
+            rps = r.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
+            r.update_scores([rp.player for rp in rps.all()])
             # Notify the players
             send_board_call_email(r)
             _send_board_call_to_discord(r)
@@ -534,6 +538,10 @@ def create_games(request, tournament_id, round_num):
                                                   player=field.player)
                 # Generate initial scores
                 g.update_scores()
+        # We may need to update scores for non-players, too
+        gps = GamePlayer.objects.filter(game__the_round=r).distinct().prefetch_related('player')
+        rps = r.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
+        r.update_scores([rp.player for rp in rps.all()])
         # Notify the players
         send_board_call_email(r)
         _send_board_call_to_discord(r)

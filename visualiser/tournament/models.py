@@ -1426,19 +1426,33 @@ class Round(models.Model):
             retval[p.player] = p.score
         return retval
 
-    def update_scores(self):
+    def update_scores(self, for_players=None):
         """
         Updates every RoundPlayer's score attribute.
 
         If the Round is ongoing, this will be the "if all games ended now" score.
+        If for_players is provided, it should be a list or QuerySet of Players
+        whose scores should change.
+        Just the scores of the RoundPlayers corresponding to those Players will be updated.
+        If for_players is not provided, every RoundPlayer's score will be updated.
+        This method also calls to update the corresponding TournamentPlayers' scores.
         """
         system = self.tournament.round_scoring_system_obj()
         if system:
+            rps = self.roundplayer_set.all()
+            gps = GamePlayer.objects.filter(game__the_round=self).distinct()
             # Identify any players who were checked in but didn't play
-            gps = GamePlayer.objects.filter(game__the_round=self).distinct().prefetch_related('player')
-            non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
+            gps2 = gps.prefetch_related('player')
+            non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps2])
+            if for_players is not None:
+                rps = rps.filter(player__in=for_players)
+                gps = gps.filter(player__in=for_players)
+                non_players = non_players.filter(player__in=for_players)
             scores = system.scores(gps, non_players)
-            for rp in self.roundplayer_set.prefetch_related('player'):
+            for rp in rps:
+                rp.score = scores[rp.player]
+                rp.save(update_fields=['score'])
+            for rp in non_players:
                 rp.score = scores[rp.player]
                 rp.save(update_fields=['score'])
         # That could change the Tournament scoring
@@ -1516,7 +1530,7 @@ class Round(models.Model):
         Save the object to the database.
 
         If scoring_system attribute may have changed, updates score attributes of any
-        GamePlayers, RoundPlayers and TournamentPlayers.
+        GamePlayers and corresponding RoundPlayers and TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
@@ -1731,7 +1745,9 @@ class Game(models.Model):
             if gp.power:
                 gp.score = scores[gp.power]
                 gp.save(update_fields=['score'])
-        self.the_round.update_scores()
+        # Only the scores for this Game's players can have changed
+        players = [gp.player for gp in self.gameplayer_set.all()]
+        self.the_round.update_scores(players)
 
     def positions(self):
         """

@@ -3188,6 +3188,111 @@ class RoundTests(TestCase):
         # Clean up
         t.delete()
 
+    def test_round_update_scores_for_players(self):
+        today = date.today()
+        t = Tournament(name='t5',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       draw_secrecy=DrawSecrecy.SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p1)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p2)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p3)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p4)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p5)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p6)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p7)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p8)
+        tp.save()
+        tp = TournamentPlayer(tournament=t,
+                              player=self.p9)
+        tp.save()
+        # We need a round with a finished game
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1, score=40.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2, score=35.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3, score=30.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4, score=25.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5, score=20.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6, score=15.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7, score=10.0)
+        rp.save()
+        # Two RoundPlayers who didn't play
+        rp = RoundPlayer(the_round=r, player=self.p8, score=5.0)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p9, score=45.0)
+        rp.save()
+        # Which players to update - include some but not all who
+        # played and some but not all who didn't
+        player_list = [self.p2, self.p3, self.p9]
+        # Remember the scores we set
+        initial_scores = {}
+        for rp in r.roundplayer_set.all():
+            initial_scores[rp] = rp.score
+        g = Game(name='newgame1',
+                 started_at=r.start,
+                 the_round=r,
+                 is_finished=True,
+                 the_set=self.set1)
+        g.save()
+        gp = GamePlayer(game=g, player=self.p1, power=self.austria, score=1)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p2, power=self.england, score=2)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p3, power=self.france, score=3)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p4, power=self.germany, score=4)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p5, power=self.italy, score=5)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p6, power=self.russia, score=6)
+        gp.save()
+        gp = GamePlayer(game=g, player=self.p7, power=self.turkey, score=7)
+        gp.save()
+        r.update_scores(player_list)
+        for rp in r.roundplayer_set.all():
+            with self.subTest(player=rp.player):
+                if rp.player in player_list:
+                    # Score should have been updated
+                    try:
+                        gp = GamePlayer.objects.filter(game=g, player=rp.player).get()
+                    except GamePlayer.DoesNotExist:
+                        self.assertEqual(rp.score, 0.0)
+                    else:
+                        self.assertEqual(rp.score, gp.score)
+                else:
+                    # Score should have been left as-is
+                    self.assertEqual(initial_scores[rp], rp.score)
+        # Clean up
+        t.delete()
+
     # Round.is_finished()
     def test_round_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')
@@ -3406,10 +3511,14 @@ class RoundTests(TestCase):
                 for rp in tp.roundplayers():
                     with self.subTest(player=rp.player, round_num=rp.the_round.number()):
                         if rp.the_round == r:
-                            # All scores in this round should have changed
-                            self.assertNotAlmostEqual(rp.score, scores[rp])
-                            rp.score = scores[rp]
-                            rp.save()
+                            # Scores for everyone who played in this round should have changed
+                            # No Round attribute can affect the score of someone who didn't play that round
+                            if rp.gameplayers().exists():
+                                self.assertNotAlmostEqual(rp.score, scores[rp])
+                                rp.score = scores[rp]
+                                rp.save()
+                            else:
+                                self.assertEqual(rp.score, scores[rp])
                             for gp in rp.gameplayers():
                                 with self.subTest(player=gp.player, game_name=gp.game.name):
                                     self.assertNotAlmostEqual(gp.score, scores[gp])
@@ -5844,6 +5953,9 @@ class RoundPlayerTests(TestCase):
         GamePlayer.objects.create(player=self.p6, game=g, power=self.italy)
         GamePlayer.objects.create(player=self.p7, game=g, power=self.russia)
         GamePlayer.objects.create(player=self.p8, game=g, power=self.turkey)
+
+        # Initialise scores
+        r.update_scores()
 
         CentreCount.objects.create(power=self.austria, game=g, year=1903, count=5)
         CentreCount.objects.create(power=self.england, game=g, year=1903, count=5)
