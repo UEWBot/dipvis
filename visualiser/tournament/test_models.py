@@ -4312,6 +4312,29 @@ class GameTests(TestCase):
                 else:
                     self.assertEqual(rp.score, 0.0)
 
+    def test_game_update_scores_no_propagate(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        for gp in g.gameplayer_set.all():
+            self.assertEqual(gp.score, 0.0)
+        for rp in g.the_round.roundplayer_set.all():
+            self.assertEqual(rp.score, 0.0)
+        g.update_scores(update_round=False)
+        # GamePlayer but not RoundPlayer.score should be updated
+        # p5 should get 100, others zero
+        # Cleanup at the same time
+        for gp in g.gameplayer_set.all():
+            with self.subTest(player=gp.player):
+                if gp.player == self.p5:
+                    self.assertEqual(gp.score, 100.0)
+                    gp.score = 0.0
+                    gp.save()
+                else:
+                    self.assertEqual(gp.score, 0.0)
+        for rp in g.the_round.roundplayer_set.all():
+            with self.subTest(player=rp.player):
+                self.assertEqual(rp.score, 0.0)
+
     # Game.positions()
     def test_game_positions(self):
         g = Game.objects.first()

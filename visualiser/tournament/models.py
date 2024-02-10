@@ -1756,22 +1756,23 @@ class Game(models.Model):
             return retval
         return self._calc_scores()
 
-    def update_scores(self):
+    def update_scores(self, update_round=True):
         """
         Calculate Game scores and set the GamePlayer's score attributes
 
         Calculates the scores for the game using the specified ScoringSystem,
         and stores them in the GamePlayers.
-        Then calls the equivalent function for the Round this Game is in.
+        Then calls the equivalent function for the Round this Game is in, unless update_round is False.
         """
         scores = self._calc_scores()
         for gp in self.gameplayer_set.prefetch_related('power'):
             if gp.power:
                 gp.score = scores[gp.power]
                 gp.save(update_fields=['score'])
-        # Only the scores for this Game's players can have changed
-        players = [gp.player for gp in self.gameplayer_set.all()]
-        self.the_round.update_scores(players)
+        if update_round:
+            # Only the scores for this Game's players can have changed
+            players = [gp.player for gp in self.gameplayer_set.all()]
+            self.the_round.update_scores(players)
 
     def positions(self):
         """
