@@ -155,6 +155,12 @@ GAME_2 = {'sc_counts': [2, 3, 3, 3, 17, 3, 3],
 GAME_3 = {'sc_counts': [6, 5, 5, 4, 4, 5, 5],
           'final_year': 1919,
           'elimination_years': []}
+GAME_4 = {'sc_counts': [11, 1, 0, 11, 11, 0, 0],
+          'final_year': 1909,
+          'elimination_years': [1905, 1906, 1909]}
+GAME_5 = {'sc_counts': [11, 0, 0, 12, 11, 0, 0],
+          'final_year': 1910,
+          'elimination_years': [1910, 1905, 1906, 1909]}
 
 def _create_state(params):
     """Create a GameState object from the params dict."""
@@ -208,9 +214,21 @@ def game_scoring_detail(request, slug):
         scores3 = sys.scores(state3)
     except DotCountUnknown:
         scores3 = None
+    state4 = _create_state(GAME_4)
+    try:
+        scores4 = sys.scores(state4)
+    except DotCountUnknown:
+        scores4 = None
+    state5 = _create_state(GAME_5)
+    try:
+        scores5 = sys.scores(state5)
+    except DotCountUnknown:
+        scores5 = None
     return render(request,
                   'game_scoring_systems/detail.html',
                   {'system': sys,
                    'examples': [(state1, scores1),
                                 (state2, scores2),
-                                (state3, scores3)]})
+                                (state3, scores3),
+                                (state4, scores4),
+                                (state5, scores5)]})
