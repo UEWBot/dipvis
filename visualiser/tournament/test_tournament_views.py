@@ -860,6 +860,31 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
 
+    def test_tournament_awards_afterwards(self):
+        # For a finished Tournament, it should show who received the awards
+        self.assertEqual(self.t4.awards.count(), 0)
+        for tp in self.t4.tournamentplayer_set.all():
+            self.assertEqual(tp.awards.count(), 0)
+        # Give some awards out
+        self.t4.awards.add(self.a1)
+        self.t4.awards.add(self.a2)
+        self.t4.save()
+        self.tp41.awards.add(self.a1)
+        self.tp41.awards.add(self.a2)
+        self.tp41.save()
+        tp = self.t4.tournamentplayer_set.get(player__first_name='Derek')
+        tp.awards.add(self.a2)
+        tp.save()
+        response = self.client.get(reverse('tournament_awards',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        self.t4.awards.clear()
+        self.tp41.awards.clear()
+        tp.awards.clear()
+
+
     def test_enter_awards_post_not_logged_in(self):
         response = self.client.get(reverse('enter_awards',
                                            args=(self.t1.pk,)),
