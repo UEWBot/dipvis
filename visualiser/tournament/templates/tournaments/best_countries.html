@@ -14,25 +14,28 @@
   <tbody>
   {% for row in rows %}
     <tr class="{% cycle 'odd_row' 'even_row' %}">
-      {% for gp in row %}
+      {% for gps in row %}
         <td style="text-align:right;">
-          <a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a><br>
-          <a href="{{ gp.game.get_absolute_url }}">{{ gp.game.name }}</a><br>
-          {% if not gp.score_is_final %}
-            <i>
-          {% endif %}
-            {{ gp.score|floatformat:2 }}{% if gp.tournamentplayer.unranked %}*{% endif %}
-          {% if not gp.score_is_final %}
-            </i>
-          {% endif %}
-          <br>
-          {% if not gp.game.is_finished %}
-            <i>
-          {% endif %}
-            {% blocktrans count dots=gp.final_sc_count %}1 centre{% plural %}{{ dots }} centres{% endblocktrans %}
-          {% if not gp.game.is_finished %}
-            </i>
-          {% endif %}
+          {% for gp in gps %}
+            <a href="{{ gp.tournamentplayer.get_absolute_url }}">{{ gp.player }}</a><br>
+            <a href="{{ gp.game.get_absolute_url }}">{{ gp.game.name }}</a><br>
+            {% if not gp.score_is_final %}
+              <i>
+            {% endif %}
+              {{ gp.score|floatformat:2 }}{% if gp.tournamentplayer.unranked %}*{% endif %}
+            {% if not gp.score_is_final %}
+              </i>
+            {% endif %}
+            <br>
+            {% if not gp.game.is_finished %}
+              <i>
+            {% endif %}
+              {% blocktrans count dots=gp.final_sc_count %}1 centre{% plural %}{{ dots }} centres{% endblocktrans %}
+            {% if not gp.game.is_finished %}
+              </i>
+            {% endif %}
+            {% if not forloop.last %}<br>{% endif %}
+          {% endfor %}
         </td>
       {% endfor %}
     </tr>

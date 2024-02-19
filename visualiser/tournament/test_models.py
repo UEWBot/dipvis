@@ -1638,6 +1638,13 @@ class TournamentTests(TestCase):
             with self.subTest(power=gp.power):
                 self.assertFalse(gp.player == self.p5)
 
+    def _rank_of(self, gp, in_lists):
+        """Find the list in in_lists that contains the gp and return its index"""
+        for n, l in enumerate(in_lists):
+            if gp in l:
+                return n
+        raise IndexError
+
     def test_tournament_best_countries_by_dots(self):
         t = Tournament.objects.get(name='t1')
         g12 = Game.objects.get(name='g12')
@@ -1685,9 +1692,9 @@ class TournamentTests(TestCase):
                 gp1 = g12.gameplayer_set.get(power=power)
                 gp2 = g14.gameplayer_set.get(power=power)
                 if gp1.score > gp2.score:
-                    self.assertTrue(bc[power].index(gp1) < bc[power].index(gp2))
+                    self.assertTrue(self._rank_of(gp1, bc[power]) < self._rank_of(gp2, bc[power]))
                 if gp1.score < gp2.score:
-                    self.assertTrue(bc[power].index(gp1) > bc[power].index(gp2))
+                    self.assertTrue(self._rank_of(gp1, bc[power]) > self._rank_of(gp2, bc[power]))
         # Change the Tournament to rank best countries by dot count
         t.best_country_criterion = BestCountryCriteria.DOTS
         t.save()
@@ -1698,9 +1705,9 @@ class TournamentTests(TestCase):
                 gp1 = g12.gameplayer_set.get(power=power)
                 gp2 = g14.gameplayer_set.get(power=power)
                 if gp1.final_sc_count() > gp2.final_sc_count():
-                    self.assertTrue(bc[power].index(gp1) < bc[power].index(gp2))
+                    self.assertTrue(self._rank_of(gp1, bc[power]) < self._rank_of(gp2, bc[power]))
                 if gp1.final_sc_count() < gp2.final_sc_count():
-                    self.assertTrue(bc[power].index(gp1) > bc[power].index(gp2))
+                    self.assertTrue(self._rank_of(gp1, bc[power]) > self._rank_of(gp2, bc[power]))
         # Clean up
         t.best_country_criterion = BestCountryCriteria.SCORE
         t.save()
@@ -5540,16 +5547,18 @@ class GamePlayerTests(TestCase):
     def test_gameplayer_is_best_country_unranked(self):
         t = Tournament.objects.get(name='t1')
         bc = t.best_countries(True)
-        gp = bc[self.germany][0]
+        gps = bc[self.germany][0]
         # Check test setup
-        tp = gp.tournamentplayer()
-        self.assertTrue(tp.unranked)
-        self.assertTrue(gp.is_best_country())
-        gp = bc[self.germany][-1]
+        for gp in gps:
+            tp = gp.tournamentplayer()
+            self.assertTrue(tp.unranked)
+            self.assertTrue(gp.is_best_country())
+        gps = bc[self.germany][-1]
         # Check test setup
-        tp = gp.tournamentplayer()
-        self.assertTrue(tp.unranked)
-        self.assertFalse(gp.is_best_country())
+        for gp in gps:
+            tp = gp.tournamentplayer()
+            self.assertTrue(tp.unranked)
+            self.assertFalse(gp.is_best_country())
 
     # TODO GamePlayer.is_best_country() for unranked player when they scored
     #      best but a ranked player played the same power
@@ -5558,10 +5567,12 @@ class GamePlayerTests(TestCase):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
         bc = t.best_countries(True)
-        gp = bc[self.austria][0]
-        self.assertTrue(gp.is_best_country())
-        gp = bc[self.austria][-1]
-        self.assertFalse(gp.is_best_country())
+        gps = bc[self.austria][0]
+        for gp in gps:
+            self.assertTrue(gp.is_best_country())
+        gps = bc[self.austria][-1]
+        for gp in gps:
+            self.assertFalse(gp.is_best_country())
 
     # TODO GamePlayer.is_best_country() with criteria SCORE where two players
     #      have equal scores and dots are used to tie break
@@ -5572,10 +5583,12 @@ class GamePlayerTests(TestCase):
         t.best_country_criterion = BestCountryCriteria.DOTS
         t.save()
         bc = t.best_countries(True)
-        gp = bc[self.austria][0]
-        self.assertTrue(gp.is_best_country())
-        gp = bc[self.austria][-1]
-        self.assertFalse(gp.is_best_country())
+        gps = bc[self.austria][0]
+        for gp in gps:
+            self.assertTrue(gp.is_best_country())
+        gps = bc[self.austria][-1]
+        for gp in gps:
+            self.assertFalse(gp.is_best_country())
         # Cleanup
         t.best_country_criterion = BestCountryCriteria.SCORE
         t.save()

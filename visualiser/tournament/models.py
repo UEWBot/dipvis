@@ -790,10 +790,14 @@ class Tournament(models.Model):
 
     def best_countries(self, whole_list=False):
         """
-        Returns a dict, indexed by GreatPower,
-          of lists of the GamePlayers doing best with each GreatPower.
-        If whole_list is True, returns every player of each power, in order.
-        If whole_list is False, returns just the winners (still a list, though).
+        Returns a dict, indexed by GreatPower.
+        If whole_list is False, each dict is a list of the GamePlayers doing
+        best with each GreatPower.
+        If whole_list is True, each dict is a list of lists of the GreatPowers
+        in order. Usually each list will contain a single GreatPower, but tied
+        GamePlayers will be in the same list. For example, three GamePlayers
+        A, B, and C with scores of 2.0, 5.0, and 2.0 respectively would be
+        returned as [[B], [A, C]].
         """
         tuples = {}
         # We're going to need to "if all games ended now" score for every GamePlayer
@@ -813,10 +817,21 @@ class Tournament(models.Model):
         for power in tuples:
             self._sort_best_country_list(tuples[power])
         retval = {}
-        # If the caller wants the whole list, that's easy
         if whole_list:
             for power in tuples:
-                retval[power] = [gp for gp, _, _, _ in tuples[power]]
+                retval[power] = []
+                # Store the score, dot count, and unranked for the last tuple accessed
+                last = (None, None, None)
+                while len(tuples[power]):
+                    tup = tuples[power].pop(0)
+                    nxt = tup[1:]
+                    if nxt == last:
+                        # Tie - append to current list
+                        retval[power][-1].append(tup[0])
+                    else:
+                        # No tie - start a new list
+                        retval[power].append([tup[0]])
+                    last = nxt
             return retval
         # Filter out all except the best for each country
         for power in tuples:

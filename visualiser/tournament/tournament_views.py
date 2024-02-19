@@ -27,8 +27,11 @@ from django.db import transaction
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.urls import reverse
+
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
 
 from tournament.email import send_roll_call_emails
 
@@ -41,10 +44,10 @@ from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
 
-from tournament.diplomacy.models.game_set import GameSet
 from tournament.models import Tournament, SeederBias
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import InvalidPreferenceList
+
 from tournament.news import news
 
 # Redirect times are specified in seconds
@@ -203,22 +206,23 @@ def tournament_best_countries(request,
                               redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    # gps is a dict, keyed by power, of lists of all gameplayers,
+    # gps is a dict, keyed by power, of lists of lists of gameplayers,
     # sorted by best country criterion
     gps = t.best_countries(whole_list=True)
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').prefetch_related('power')
+    # How many rows do we need?
+    row_count = max((len(l) for l in (gps[power] for power in GreatPower.objects.all())))
     # TODO Sort set_powers alphabetically by translated power.name
     rows = []
-    # Add a row at a time, containing the best remaining result for each power
-    # The list for each power should be the same length
-    while gps[set_powers[0].power]:
+    # Add a row at a time, containing the best remaining results for each power
+    for i in range(row_count):
         row = []
         for p in set_powers:
             try:
                 gp = gps[p.power].pop(0)
             except IndexError:
-                gp = None
+                gp = []
             row.append(gp)
         rows.append(row)
     context = {'tournament': t, 'powers': set_powers, 'rows': rows}
