@@ -50,6 +50,7 @@ from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
+from tournament.wdd import wdd_nation_to_country, UnrecognisedCountry
 
 # Mask values to choose which background strings to include
 MASK_TITLES = 1 << 0
@@ -401,6 +402,7 @@ def add_player_bg(player, include_wpe=False):
     include_wpe=True will set PlayerTournamentRanking.wpe_score,
     which involves parsing an additional WDD page
     """
+    save_player = False
     # First check wikipedia
     bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
     # Titles won
@@ -441,6 +443,34 @@ def add_player_bg(player, include_wpe=False):
     rankings = bg.rankings()
     for r in rankings:
         _update_or_create_playerranking(player, r)
+    # Nationalities
+    # Assume that if we know nationalities they either came from the WDD or are more accurate
+    if not player.nationalities:
+        nats = bg.nationalities()
+        try:
+            player.nationalities = wdd_nation_to_country(nats[0])
+        except IndexError:
+            # WDD doesn't have nationality info
+            pass
+        except UnrecognisedCountry:
+            # WDD does have a country, but it doesn't map to a real-world country
+            pass
+        else:
+            save_player = True
+    # Location
+    # Assume that if we know a location it either came from the WDD or is more accurate
+    if not player.location:
+        loc = bg.location()
+        if loc:
+            try:
+                player.location = wdd_nation_to_country(loc).name
+            except UnrecognisedCountry:
+                # WDD does have a country, but it doesn't map to a real-world country
+                pass
+            else:
+                save_player = True
+    if save_player:
+        player.save()
 
 
 def position_str(position):

@@ -206,6 +206,14 @@ class WDDBackground():
             return [img_to_country(td.img['src'])]
         return []
 
+    def location(self):
+        """
+        Returns a country 2- or 3-letter code or empty string if unknown.
+        Currently always returns an empty string.
+        """
+        # TODO WDD shows location on the player index/search page, but I don't see it elsewhere
+        return ''
+
     def finishes(self):
         """
         Returns a list of tournament placings.
