@@ -35,6 +35,7 @@ from tournament.models import GamePlayer, Preference, Round, RoundPlayer, Seeder
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 from tournament.players import wdd_url_to_id, Player
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
+from tournament.wdd import wdd_nation_to_country, UnrecognisedCountry
 
 
 def add_wep_scores(player, dry_run=False):
@@ -405,17 +406,6 @@ def add_best_country_awards(dry_run=False):
                     tp.awards.add(a)
 
 
-# Map the country codes used by WDD to ISO 366 alpha-2 codes
-wdd_country_to_code = {
-        'ALL': 'DE',
-        'ANG': 'GB',
-        'HOL': 'NL',
-        'NZE': 'NZ',
-        'POR': 'PT',
-        'SUE': 'SE',
-        'SUI': 'CH',
-}
-
 def set_nationalities(dry_run=False):
     """
     Set Player.nationalities as specified in the WDD, unless already set.
@@ -424,19 +414,16 @@ def set_nationalities(dry_run=False):
         bg = WDDBackground(p.wdd_player_id)
         nats = bg.nationalities()
         if not nats:
+            # No nationality information in the WDD
+            print(f'WDD has no nationality for {p}')
             continue
-        if len(nats) > 1:
+        elif len(nats) > 1:
+            # This is currently impossible
             print('Setting multiple nationalities is not supported')
         n = nats[0]
-        # WDD uses 3-letter abbreviations of the French names for countries
-        # django_countries uses 2-letter ISO codes, but also supports
-        # 3-letter ISO codes, which in many cases match the codes used by WDD
         try:
-            n = wdd_country_to_code[n]
-        except KeyError:
-            pass
-        c = Country(code=n)
-        if c.name == '':
+            c = wdd_nation_to_country(n)
+        except UnrecognisedCountry:
             print(f'Skipping unrecognised country "{n}" for WDD player {p.wdd_player_id}')
             continue
         print(f'Setting nationality of {p} to {c.name}')

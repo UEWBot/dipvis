@@ -27,14 +27,8 @@ from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import Game, Tournament
 from tournament.models import GamePlayer
 from tournament.tournament_views import get_visible_tournament_or_404
-
-# CSV export for WDD
-
-
-def _power_name_to_wdd(name):
-    """Map a power name to a WDD country code"""
-    # 0 for variant (standard), plus first two letters of the country name (in English)
-    return '0%s' % name[0:2].upper()
+from tournament.wdd import WDD_MAX_ROUNDS, WDD_MAX_AWARDS, WDD_MAX_YEAR
+from tournament.wdd import power_name_to_wdd, country_name_to_wdd, country_to_wdd
 
 
 def _centrecount_year_to_wdd(year):
@@ -100,18 +94,18 @@ def view_classification_csv(request, tournament_id):
                'SCORE',
               ]
     # Score for each round (extras don't matter)
-    for i in range(1, 9):
+    for i in range(1, WDD_MAX_ROUNDS + 1):
         headers.append('R%d' % i)
     # Best country stuff
     for p in GreatPower.objects.all():
-        wdd_pwr = _power_name_to_wdd(p.name)
+        wdd_pwr = power_name_to_wdd(p.name)
         headers.append('RK_%s' % wdd_pwr)
         headers.append('PT_%s' % wdd_pwr)
         headers.append('CT_%s' % wdd_pwr)
         headers.append('HEAT_%s' % wdd_pwr)
         headers.append('BOARD_%s' % wdd_pwr)
     # Other awards
-    for n in range(1, 13):
+    for n in range(1, WDD_MAX_AWARDS + 1):
         headers.append('RK_AWA_%d' % n)
     # Top Board stuff
     # Only add these headers if there was a top board
@@ -154,7 +148,9 @@ def view_classification_csv(request, tournament_id):
             if award.power is not None:
                 for gp in _power_award_to_gameplayers(t, award):
                     if gp.player == p:
-                        wdd_pwr = _power_name_to_wdd(award.power.name)
+                        wdd_pwr = power_name_to_wdd(award.power.name)
+                        # TODO WDD actually supports a full ranking for these fields,
+                        #      so ideally we'd also set row_dict['RK_0AU'] = 2 for second-best Austria, etc
                         row_dict['RK_%s' % wdd_pwr] = 1
                         row_dict['PT_%s' % wdd_pwr] = gp.score
                         row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=award.power).last().count
@@ -172,7 +168,7 @@ def view_classification_csv(request, tournament_id):
                 row_dict['RK_TOPBOARD'] = tb_positions[gp.power]
                 row_dict['CT_TOPBOARD'] = tb_dots.filter(power=gp.power).last().count
                 # TODO Not certain that this is the correct value
-                row_dict['COUNTRY_TOPBOARD'] = _power_name_to_wdd(gp.power.name)
+                row_dict['COUNTRY_TOPBOARD'] = power_name_to_wdd(gp.power.name)
             except GamePlayer.DoesNotExist:
                 # This player did not make the top board
                 pass
@@ -200,7 +196,7 @@ def view_boards_csv(request, tournament_id):
                'DRAW',
               ]
     # Centre count for each year (extras don't matter)
-    for i in range(1, 21):
+    for i in range(1, WDD_MAX_YEAR + 1):
         headers.append('CT_%02d' % i)
 
     response = HttpResponse(content_type='text/csv')
@@ -227,7 +223,7 @@ def view_boards_csv(request, tournament_id):
                 row_dict = g_row_dict.copy()
                 row_dict['FIRST NAME'] = names[0]
                 row_dict['NAME'] = names[1]
-                row_dict['COUNTRY'] = _power_name_to_wdd(gp.power.name)
+                row_dict['COUNTRY'] = power_name_to_wdd(gp.power.name)
                 row_dict['SCORE'] = gp.score
                 rank = positions[gp.power]
                 row_dict['RANK'] = rank
