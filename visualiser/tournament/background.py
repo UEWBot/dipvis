@@ -182,7 +182,7 @@ class WDDBackground():
 
     def nationalities(self):
         """
-        Returns a list of country 3-letter codes.
+        Returns a list of country 2- or 3-letter codes.
         WDD doesn't currently support multiple citizenships,
         but does have players without nationalities,
         so the list will currently always be empty or have a single entry.

@@ -106,7 +106,7 @@ class PowerAssignMethods(models.TextChoices):
 
 
 class InvalidScoringSystem(Exception):
-    """The specified scoring systm name is not recognised"""
+    """The specified scoring system name is not recognised"""
     pass
 
 

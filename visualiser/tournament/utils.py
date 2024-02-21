@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2019 Chris Brand
+# Copyright (C) 2019-2024 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -444,15 +444,15 @@ def set_nationalities(dry_run=False):
             p.nationalities = c
             p.save()
 
+
 def list_tournaments_missing_wdd_ids():
-    """List completed tournaments withour WDD ids (they should probably have one)"""
+    """List completed tournaments without WDD ids (they should probably have one)"""
     for t in Tournament.objects.filter(wdd_tournament_id=None):
         if not t.is_finished():
             continue
         print(t)
 
+
 def player_emails(for_tournament):
     """Return a list of emails for players registered for the Tournament"""
     return [tp.player.email for tp in for_tournament.tournamentplayer_set.all()]
-
-
