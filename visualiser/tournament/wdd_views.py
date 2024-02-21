@@ -71,6 +71,34 @@ def _award_number(tournament, award):
     raise AssertionError(f'award {award} not found in {tournament}')
 
 
+# Map common name of countries to name used by the WDD
+SPECIAL_CASE_COUNTRIES = {
+    'USA': 'United States',
+    'UK': 'United Kingdon',
+}
+
+
+def _location_country(location):
+    """
+    Tries to extract the country name from the specified location string.
+    """
+    # If there's a comma, we only want what comes after it
+    try:
+        comma = location.rindex(',')
+    except ValueError:
+        pass
+    else:
+        location = location[comma+1:]
+        location.lstrip()
+    # Handle special cases (commonly-abbreviated country names)
+    try:
+        return SPECIAL_CASE_COUNTRIES[location]
+    except KeyError:
+        pass
+    # Hope we're left with a country name
+    return location
+
+
 def view_classification_csv(request, tournament_id):
     """Return a WDD-compatible "classification" CSV file for the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -91,6 +119,8 @@ def view_classification_csv(request, tournament_id):
                'HOMONYME',
                'RANK',
                'EXAEQUO',  # Last of the mandatory ones
+               'LOCATION',
+               'NATIONALITY',
                'SCORE',
               ]
     # Score for each round (extras don't matter)
@@ -140,6 +170,10 @@ def view_classification_csv(request, tournament_id):
                     'EXAEQUO': len([s for _, s in t_positions_and_scores.values() if s == p_score]),
                     'SCORE': p_score,
                    }
+        if len(p.nationalities) == 1:
+            row_dict['NATIONALITY'] = country_to_wdd(p.nationalities[0])
+        if tp.location:
+            row_dict['LOCATION'] = country_name_to_wdd(_location_country(tp.location))
         # Add in round score for each round played
         for rp in tp.roundplayers():
             row_dict['R%d' % rp.the_round.number()] = rp.score

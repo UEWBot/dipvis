@@ -16,6 +16,7 @@
 
 from datetime import timedelta
 
+from django_countries.fields import Country
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -105,15 +106,18 @@ class WddViewTests(TestCase):
         p7 = Player.objects.create(first_name='Georgette',
                                    last_name='Grape')
         p8 = Player.objects.create(first_name='Harry',
-                                   last_name='Heffalump')
+                                   last_name='Heffalump',
+                                   nationalities=Country('GB'))
         p9 = Player.objects.create(first_name='Iris',
                                    last_name='Ignoramus')
         p10 = Player.objects.create(first_name='Jake',
-                                    last_name='Jalopy')
+                                    last_name='Jalopy',
+                                    nationalities=[Country('US'), Country('KR')])
         p11 = Player.objects.create(first_name='Katrina',
                                     last_name='Kingpin')
         p12 = Player.objects.create(first_name='Lucas',
-                                    last_name='Lemon')
+                                    last_name='Lemon',
+                                    nationalities=Country('ES'))
         p13 = Player.objects.create(first_name='Margaret',
                                     last_name='Maleficent')
         p14 = Player.objects.create(first_name='Nigel',
@@ -157,7 +161,8 @@ class WddViewTests(TestCase):
                                   game=g3,
                                   power=turkey)
         TournamentPlayer.objects.create(player=p5,
-                                        tournament=cls.t)
+                                        tournament=cls.t,
+                                        location='Spain')
         RoundPlayer.objects.create(player=p5,
                                    the_round=r1)
         GamePlayer.objects.create(player=p5,
@@ -183,7 +188,8 @@ class WddViewTests(TestCase):
                                   game=g1,
                                   power=france)
         tp8 = TournamentPlayer.objects.create(player=p8,
-                                              tournament=cls.t)
+                                              tournament=cls.t,
+                                              location='California, USA')
         RoundPlayer.objects.create(player=p8,
                                    the_round=r1)
         RoundPlayer.objects.create(player=p8,
@@ -203,7 +209,8 @@ class WddViewTests(TestCase):
                                   game=g2,
                                   power=germany)
         tp10 = TournamentPlayer.objects.create(player=p10,
-                                               tournament=cls.t)
+                                               tournament=cls.t,
+                                               location='London, England')
         RoundPlayer.objects.create(player=p10,
                                    the_round=r1)
         RoundPlayer.objects.create(player=p10,
