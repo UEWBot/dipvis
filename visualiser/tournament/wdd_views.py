@@ -66,10 +66,12 @@ def _power_award_to_gameplayers(tournament, award):
 
 
 def _award_number(tournament, award):
-    """Returns the number (1..12) for the specified award at the tournament"""
+    """
+    Returns the number (1..12) for the specified (non-best country) award at the tournament
+    """
     # We don't actually check that we return <= 12. WDD will ignore any extras
     assert award.power is None
-    for i, a in enumerate(tournament.awards.order_by('name'), 1):
+    for i, a in enumerate(tournament.awards.filter(power=None).order_by('name'), 1):
         if a == award:
             return i
     raise AssertionError(f'award {award} not found in {tournament}')
