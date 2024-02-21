@@ -111,7 +111,7 @@ def _location_country(location):
 def view_classification_csv(request, tournament_id):
     """Return a WDD-compatible "classification" CSV file for the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    tps = t.tournamentplayer_set.order_by('-score')
+    tps = t.tournamentplayer_set.order_by('-score').prefetch_related('awards')
     # Grab the tournament scores and positions, "if it ended now"
     t_positions_and_scores = t.positions_and_scores()[0]
     # Grab the top board, if any
@@ -259,13 +259,16 @@ def view_boards_csv(request, tournament_id):
     # One row per game, per player
     r_row_dict = {}
     r_row_dict['HOMONYME'] = '1'  # User Guide says "Set to 1"
-    for r in t.round_set.all():
-        r_row_dict['ROUND'] = r.number()
+    for n, r in enumerate(t.round_set.prefetch_related('game_set'), 1):
+        r_row_dict['ROUND'] = n
         g_row_dict = r_row_dict.copy()
-        for g in r.game_set.all():
+        for g in r.game_set.prefetch_related('gameplayer_set'):
             g_row_dict['BOARD'] = _game_to_wdd_id(g)
             positions = g.positions()
+            centrecount_set = g.centrecount_set.filter(year__gt=1900)
             draw = g.passed_draw()
+            if draw is not None:
+                draw_powers = draw.drawing_powers.all()
             soloer = g.soloer()
             # TODO This is broken with replacement players
             for gp in g.gameplayer_set.all():
@@ -278,7 +281,6 @@ def view_boards_csv(request, tournament_id):
                 rank = positions[gp.power]
                 row_dict['RANK'] = rank
                 row_dict['EXAEQUO'] = len([r for r in positions.values() if r == rank])
-                dots = g.centrecount_set.filter(power=gp.power).filter(year__gt=1900)
                 # How did the game end?
                 if soloer is not None:
                     if soloer == gp:
@@ -288,17 +290,17 @@ def view_boards_csv(request, tournament_id):
                         # Another player won
                         row_dict['DRAW'] = 0
                 if draw is not None:
-                    if draw.power_is_part(gp.power):
-                        row_dict['DRAW'] = draw.draw_size()
+                    if gp.power in draw_powers:
+                        row_dict['DRAW'] = draw_powers.count()
                     else:
                         row_dict['DRAW'] = 0
-                row_dict['NB_CENTRE'] = dots.last().count
-                elim = gp.elimination_year()
-                if elim is not None:
-                    row_dict['YEAR_ELIMINATION'] = elim % (FIRST_YEAR-1)
                 # Add in centre counts
+                dots = centrecount_set.filter(power=gp.power)
                 for cc in dots:
                     row_dict[_centrecount_year_to_wdd(cc.year)] = cc.count
+                    if cc.count == 0 and not 'YEAR_ELIMINATION' in row_dict:
+                        row_dict['YEAR_ELIMINATION'] = cc.year % (FIRST_YEAR-1)
+                row_dict['NB_CENTRE'] = cc.count
                 # Write a row for this player in this game
                 writer.writerow(row_dict)
 
