@@ -28,7 +28,8 @@ from tournament.models import Game, Tournament
 from tournament.models import GamePlayer
 from tournament.tournament_views import get_visible_tournament_or_404
 from tournament.wdd import WDD_MAX_ROUNDS, WDD_MAX_AWARDS, WDD_MAX_YEAR
-from tournament.wdd import power_name_to_wdd, country_name_to_wdd, country_to_wdd
+from tournament.wdd import country_name_to_wdd, country_to_wdd
+from tournament.wdd import power_name_to_wdd, WDD_UNKNOWN_COUNTRY
 
 
 class TooManyAwards(Exception):
@@ -82,7 +83,7 @@ def _award_number(tournament, award):
 # Map common name of countries to name used by the WDD
 SPECIAL_CASE_COUNTRIES = {
     'USA': 'United States',
-    'UK': 'United Kingdon',
+    'UK': 'United Kingdom',
 }
 
 
@@ -97,7 +98,7 @@ def _location_country(location):
         pass
     else:
         location = location[comma+1:]
-        location.lstrip()
+        location = location.lstrip()
     # Handle special cases (commonly-abbreviated country names)
     try:
         return SPECIAL_CASE_COUNTRIES[location]
@@ -181,7 +182,10 @@ def view_classification_csv(request, tournament_id):
         if len(p.nationalities) == 1:
             row_dict['NATIONALITY'] = country_to_wdd(p.nationalities[0])
         if tp.location:
-            row_dict['LOCATION'] = country_name_to_wdd(_location_country(tp.location))
+            wdd_country = country_name_to_wdd(_location_country(tp.location))
+            # Only set it if we have a reasonable value - location parsing is hit-or-miss
+            if wdd_country != WDD_UNKNOWN_COUNTRY:
+                row_dict['LOCATION'] = wdd_country
         # Add in round score for each round played
         for rp in tp.roundplayers():
             row_dict['R%d' % rp.the_round.number()] = rp.score
