@@ -160,9 +160,10 @@ class WDDBackground():
 
     def wdd_firstname_lastname(self):
         """
-        Returns a 2-tuple containsin the name of the player, as read from the WDD
+        Returns a 2-tuple containing the name of the player, as read from the WDD
         Can raise WDDNotAccessible, InvalidWDDId, or UnableToSplitName
         """
+        # TODO Should be able to avoid manually splitting if we read the right part of the WDD
         name = self.wdd_name()
         name_parts = name.split()
         if len(name_parts) < 2:

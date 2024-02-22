@@ -513,7 +513,8 @@ class Player(models.Model):
     location = models.CharField(max_length=60, blank=True)
     nationalities = CountryField(multiple=True, blank=True)
     # Cache of the player's name in the WDD
-    _wdd_name = models.CharField(max_length=60, blank=True)
+    _wdd_firstname = models.CharField(max_length=30, blank=True)
+    _wdd_lastname = models.CharField(max_length=30, blank=True)
     user = models.OneToOneField(User,
                                 blank=True,
                                 null=True,
@@ -572,29 +573,27 @@ class Player(models.Model):
     def save(self, *args, **kwargs):
         # Clear cached WDD Name if WDD id has changed
         if (not self.wdd_player_id) or (self._old_wdd_id != self.wdd_player_id):
-            self._wdd_name = ''
+            self._wdd_firstname = ''
+            self._wdd_lastname = ''
             self._clear_background()
         self._old_wdd_id = self.wdd_player_id
         super(Player, self).save(*args, **kwargs)
 
     def wdd_name(self):
-        """Name for this player in the World Diplomacy Database."""
+        """
+        Name for this player, preferably as in the World Diplomacy Database.
+        Falls back to using the local first_name and last_name.
+        """
         if not self.wdd_player_id:
-            return u''
+            return self.first_name + ' ' + self.last_name
         # Read from the WDD if we haven't cached it
-        if not self._wdd_name:
-            bg = WDDBackground(self.wdd_player_id)
-            try:
-                self._wdd_name = bg.wdd_name()
-                super(Player, self).save(update_fields=['_wdd_name'])
-            except WDDNotAccessible:
-                # Not much we can do in this case
-                return u''
-            except InvalidWDDId as e:
-                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
-                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                      params={'wdd_id': self.wdd_player_id}) from e
-        return self._wdd_name
+        if not self._wdd_firstname and not self._wdd_lastname:
+            first, last = self.wdd_firstname_lastname()
+            if not first and not last:
+                # Failed to read it from the WDD
+                return self.first_name + ' ' + self.last_name
+            return first + ' ' + last
+        return self._wdd_firstname + ' ' + self._wdd_lastname
 
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
@@ -603,18 +602,27 @@ class Player(models.Model):
         return u''
 
     def wdd_firstname_lastname(self):
-        """Name for this player as a 2-tuple, as in the WDD in preference."""
+        """
+        Name for this player as a 2-tuple, as in the WDD.
+        If the player has no WDD id, returns the name used locally.
+        If the name in the WDD cannot be determined, returns ('', '').
+        """
         if not self.wdd_player_id:
             return (self.first_name, self.last_name)
-        bg = WDDBackground(self.wdd_player_id)
-        try:
-            return bg.wdd_firstname_lastname()
-        except InvalidWDDId as e:
-            # This can only happen if we couldn't get to the WDD when the Player was created
-            raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                  params={'wdd_id': self.wdd_player_id}) from e
-        except Exception:
-            return (self.first_name, self.last_name)
+        # Read from the WDD if we haven't cached it
+        if not self._wdd_firstname and not self._wdd_lastname:
+            bg = WDDBackground(self.wdd_player_id)
+            try:
+                self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
+                super(Player, self).save(update_fields=['_wdd_firstname', '_wdd_lastname'])
+            except WDDNotAccessible:
+                # Nothing we can do
+                pass
+            except InvalidWDDId as e:
+                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
+                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
+                                      params={'wdd_id': self.wdd_player_id}) from e
+        return (self._wdd_firstname, self._wdd_lastname)
 
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""

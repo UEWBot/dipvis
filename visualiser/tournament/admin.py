@@ -89,7 +89,7 @@ class GameSetAdmin(admin.ModelAdmin):
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    exclude = ['_wdd_name']
+    exclude = ['_wdd_firstname', '_wdd_lastname']
     list_filter = ['first_name', 'last_name']
 
 @admin.register(PlayerAward)
