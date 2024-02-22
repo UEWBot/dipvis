@@ -265,6 +265,8 @@ def _update_or_create_playergameresult(player, b):
         # Apparently not a Standard game
         return
     if 'Position' not in b:
+        # We can't make assumptions about how players are ranked within a game
+        # without knowing the scoring system, DIAS, etc.
         print('Ignoring game %s in %s for %s with no position' % (b['Round / Board'],
                                                                   b['Name of the tournament'],
                                                                   str(player)))
@@ -336,6 +338,8 @@ def _update_or_create_playeraward(player, k, a):
         award_name = 'Best %s' % p
     # Some of the WDD pages are badly-structured with nested tables
     # Ignore any messed-up results
+    # TODO "bad date" is often just a year - could pick 31 Dec for those
+    #      "no date" often have a year, which could also be used as above
     try:
         date_str = a['Date']
         if len(date_str) != 10:
