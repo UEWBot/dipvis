@@ -31,6 +31,11 @@ from tournament.wdd import WDD_MAX_ROUNDS, WDD_MAX_AWARDS, WDD_MAX_YEAR
 from tournament.wdd import power_name_to_wdd, country_name_to_wdd, country_to_wdd
 
 
+class TooManyAwards(Exception):
+    """WDD Only supports a limited number of awards"""
+    pass
+
+
 def _centrecount_year_to_wdd(year):
     """Map a year to a WDD centrecount column name"""
     return 'CT_%02d' % (year % (FIRST_YEAR-1))
@@ -67,7 +72,10 @@ def _award_number(tournament, award):
     assert award.power is None
     for i, a in enumerate(tournament.awards.filter(power=None).order_by('name'), 1):
         if a == award:
-            return i
+            if i <= WDD_MAX_AWARDS:
+                return i
+            else:
+                raise TooManyAwards(i)
     raise AssertionError(f'award {award} not found in {tournament}')
 
 
@@ -191,7 +199,11 @@ def view_classification_csv(request, tournament_id):
                         row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
                         row_dict['BOARD_%s' % wdd_pwr] = _game_to_wdd_id(gp.game)
             else:
-                row_dict['RK_AWA_%d' % _award_number(t, award)] = 1
+                try:
+                    row_dict['RK_AWA_%d' % _award_number(t, award)] = 1
+                except TooManyAwards:
+                    # Cannot tell WDD about this one
+                    pass
         # Add top board fields if applicable
         if top_board:
             try:
