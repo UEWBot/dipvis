@@ -69,7 +69,6 @@ def _award_number(tournament, award):
     """
     Returns the number (1..12) for the specified (non-best country) award at the tournament
     """
-    # We don't actually check that we return <= 12. WDD will ignore any extras
     assert award.power is None
     for i, a in enumerate(tournament.awards.filter(power=None).order_by('name'), 1):
         if a == award:
