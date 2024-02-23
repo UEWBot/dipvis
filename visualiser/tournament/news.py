@@ -118,7 +118,7 @@ def _tournament_news(t):
             # Include who is leading the tournament
             include_leader = True
     if include_leader:
-        the_scores = t.scores_detail()[0]
+        the_scores = t.scores_detail()
         if the_scores:
             max_score = max(the_scores.values())
             winners = [str(k) for k, v in the_scores.items() if v == max_score]

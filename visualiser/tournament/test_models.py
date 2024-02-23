@@ -634,7 +634,7 @@ class TournamentScoringTests(TestCase):
                 RoundPlayer.objects.create(player=p, the_round=r, score=s)
 
         t.update_scores()
-        t_scores, r_scores = t.scores_detail()
+        t_scores = t.scores_detail()
 
         self.assertEqual(t_scores[self.p1], 706)
         self.assertEqual(t_scores[self.p2], 57)
@@ -653,7 +653,6 @@ class TournamentScoringTests(TestCase):
             with self.subTest(round_num=r.number()):
                 for p, (s, drop) in round_scores[r].items():
                     with self.subTest(player=p):
-                        self.assertEqual(r_scores[r][p], s)
                         # check score_dropped
                         rp = RoundPlayer.objects.get(player=p, the_round=r)
                         self.assertEqual(rp.score_dropped, drop)
@@ -851,7 +850,7 @@ class TournamentScoringTests(TestCase):
                 GamePlayer.objects.create(player=p, game=g, power=the_power, score=s)
 
         t.update_scores()
-        t_scores, r_scores = t.scores_detail()
+        t_scores = t.scores_detail()
 
         # Check tournament scores
         self.assertEqual(t_scores[self.p1], 97320)
@@ -888,7 +887,6 @@ class TournamentScoringTests(TestCase):
                             # Round score should equal game score
                             # Round dropped if game score is dropped (i.e. < 10)
                             score = game_scores[gp_list[0].game][rp.player]
-                            self.assertEqual(r_scores[r][rp.player], score)
                             self.assertEqual(rp.score_dropped, score < 10)
                         else:
                             score1 = game_scores[gp_list[0].game][rp.player]
@@ -896,17 +894,14 @@ class TournamentScoringTests(TestCase):
                             if (score1 < 10) and (score2 < 10):
                                 # Neither score counts.
                                 # Round score should be the sum, and round is dropped
-                                self.assertEqual(r_scores[r][rp.player], score1 + score2)
                                 self.assertTrue(rp.score_dropped)
                             elif (score1 > 9) and (score2 > 9):
                                 # Both scores count.
                                 # Round score should be the sum, round not dropped
-                                self.assertEqual(r_scores[r][rp.player], score1 + score2)
                                 self.assertFalse(rp.score_dropped)
                             else:
                                 # One score counts.
                                 # Round score should be the higher, round not dropped
-                                self.assertEqual(r_scores[r][rp.player], max(score1, score2))
                                 self.assertFalse(rp.score_dropped)
 
 
@@ -1380,7 +1375,7 @@ class TournamentTests(TestCase):
         self.assertEqual(tp1.score, 147.3)
         tp2 = t.tournamentplayer_set.get(player=self.p7)
         self.assertEqual(tp2.score, 47.3)
-        scores = t.scores_detail()[0]
+        scores = t.scores_detail()
         self.assertEqual(len(scores), 2)
         # This should just be retrieved from the TournamentPlayer
         self.assertEqual(scores[tp1.player], 147.3)
@@ -1394,7 +1389,7 @@ class TournamentTests(TestCase):
     def test_tournament_scores_detail_before_start(self):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
-        # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
+        # Ensure that all TournamentPlayers are included, although there are no RoundPlayers
         scores = t.scores_detail()
 
     def test_tournament_scores_detail_with_non_player(self):
@@ -1405,7 +1400,7 @@ class TournamentTests(TestCase):
         tp.save()
         scores = t.scores_detail()
         # Players who didn't play should get a score of zero
-        self.assertEqual(scores[0][self.p10], 0.0)
+        self.assertEqual(scores[self.p10], 0.0)
         tp.delete()
 
     # Tournament.positions_and_scores()

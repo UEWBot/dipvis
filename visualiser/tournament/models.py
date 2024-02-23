@@ -694,18 +694,12 @@ class Tournament(models.Model):
         If the tournament is over, this will be the stored scores.
         If the tournament is ongoing, it will be the "if all games
             ended now" scores.
-        Return a 2-tuple:
-        - Dict, keyed by player, of float tournament scores.
-        - Dict, keyed by round, of dicts, keyed by player,
-          of float round scores
+        Returns a dict, keyed by player, of float tournament scores.
         """
         t_scores = {}
         for p in self.tournamentplayer_set.all().prefetch_related('player'):
             t_scores[p.player] = p.score
-        r_scores = {}
-        for r in self.round_set.all():
-            r_scores[r] = r.scores()
-        return t_scores, r_scores
+        return t_scores
 
     def positions_and_scores(self):
         """
@@ -716,7 +710,7 @@ class Tournament(models.Model):
           place UNRANKED.
         """
         result = {}
-        t_scores, _ = self.scores_detail()
+        t_scores = self.scores_detail()
         # First, deal with any unranked players
         for tp in self.tournamentplayer_set.filter(unranked=True).prefetch_related('player'):
             # Take it out of scores and add it to result
