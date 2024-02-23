@@ -73,7 +73,7 @@ def _tournament_news(t):
         results += _round_news(current_round)
     # If the tournament is over, just report the top three players, plus best countries
     elif t.is_finished():
-        for player, (rank, score) in t.positions_and_scores()[0].items():
+        for player, (rank, score) in t.positions_and_scores().items():
             if rank in [1, 2, 3]:
                 results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
                                % {'player': str(player),

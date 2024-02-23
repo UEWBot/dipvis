@@ -710,15 +710,13 @@ class Tournament(models.Model):
     def positions_and_scores(self):
         """
         Returns the positions and scores of everyone registered.
-        Return a 2-tuple:
-        - Dict, keyed by player, of 2-tuples containing integer rankings
+        Returns a dict, keyed by player, of 2-tuples containing integer rankings
           (1 for first place, etc) and float tournament scores.
           Players who are flagged as unranked in the tournament get the special
           place UNRANKED.
-        - Dict, keyed by round, of dicts, keyed by player, of float round scores
         """
         result = {}
-        t_scores, r_scores = self.scores_detail()
+        t_scores, _ = self.scores_detail()
         # First, deal with any unranked players
         for tp in self.tournamentplayer_set.filter(unranked=True).prefetch_related('player'):
             # Take it out of scores and add it to result
@@ -731,7 +729,7 @@ class Tournament(models.Model):
             if v != last_score:
                 place, last_score = i, v
             result[k] = (place, v)
-        return result, r_scores
+        return result
 
     def winner(self):
         """
@@ -1058,7 +1056,7 @@ class TournamentPlayer(models.Model):
         Where is the player (currently) ranked overall in the tournament?
         Returns Tournament.UNRANKED if self.unranked is True.
         """
-        return self.tournament.positions_and_scores()[0][self.player][0]
+        return self.tournament.positions_and_scores()[self.player][0]
 
     def roundplayers(self):
         """
@@ -1454,7 +1452,7 @@ class Game(models.Model):
         position_to_gps = {}
         gps = self.gameplayer_set.all().prefetch_related('player', 'power')
         # Find current tournament positions (and scores)
-        ranks = self.the_round.tournament.positions_and_scores()[0]
+        ranks = self.the_round.tournament.positions_and_scores()
         # Check for any GamePlayer that already has a power assigned
         # and find the interesting player positions
         for gp in gps:

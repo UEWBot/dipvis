@@ -1424,8 +1424,7 @@ class TournamentTests(TestCase):
         for r in t.round_set.all():
             # Solo or bust gives everyone the same score (0)
             self.assertEqual(r.scoring_system, 'Solo or bust')
-        # Discard the round scores
-        p_and_s = t.positions_and_scores()[0]
+        p_and_s = t.positions_and_scores()
         # The unranked player should have a special position
         self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
         # As everyone else has the same score, they should all be ranked (joint) first

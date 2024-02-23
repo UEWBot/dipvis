@@ -112,7 +112,7 @@ def view_classification_csv(request, tournament_id):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('-score').prefetch_related('awards')
     # Grab the tournament scores and positions, "if it ended now"
-    t_positions_and_scores = t.positions_and_scores()[0]
+    t_positions_and_scores = t.positions_and_scores()
     # Grab the top board, if any
     try:
         top_board = Game.objects.get(is_top_board=True,
