@@ -180,6 +180,14 @@ def _validate_wdd_id(url, param, value):
                                       'status': r.status_code})
 
 
+def validate_wdd_circuit_id(value):
+    """
+    Checks a WDD circuit id
+    """
+    url = WDD_BASE_RESULTS_URL + 'circuit_class.php'
+    _validate_wdd_id(url, 'id_circuit', value)
+
+
 def validate_wdd_player_id(value):
     """
     Checks a WDD player id

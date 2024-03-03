@@ -17,6 +17,7 @@
 from django.contrib import admin
 from django.db.models import Q
 
+from tournament.circuits import Circuit, CircuitPlayer, CircuitSeries
 from tournament.diplomacy import GameSet, GreatPower, SetPower, SupplyCentre
 from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
                                Game, GameImage, GamePlayer, Pool, Round,
@@ -109,6 +110,18 @@ class CentreCountAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'year']
     tournament_attr = 'game.the_round.tournament'
     ordering = ['game', 'year']
+
+
+@admin.register(CircuitPlayer)
+class CircuitPlayerAdmin(admin.ModelAdmin):
+    list_filter = ['circuit', 'player']
+    ordering = ['circuit', 'player']
+
+
+@admin.register(CircuitSeries)
+class CircuitSeriesAdmin(admin.ModelAdmin):
+    prepopulated_fields = {"slug": ["name"]}
+    ordering = ['name']
 
 
 @admin.register(DBNCoverage)
@@ -265,6 +278,7 @@ class RoundPlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     tournament_attr = 'the_round.tournament'
     ordering = ['player', 'the_round__start']
 
+
 @admin.register(SupplyCentreOwnership)
 class SCOwnershipAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'game', 'owner', 'year']
@@ -359,5 +373,6 @@ class WDDPlayerAdmin(admin.ModelAdmin):
 
 
 # Register models
+admin.site.register(Circuit)
 admin.site.register(GreatPower)
 admin.site.register(SupplyCentre)

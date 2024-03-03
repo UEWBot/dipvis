@@ -25,21 +25,34 @@ from django.test import TestCase, tag
 from tournament.diplomacy import GreatPower
 from tournament.wdd import (WDD_UNKNOWN_COUNTRY, UnrecognisedCountry,
                             country_name_to_wdd, country_to_wdd,
-                            power_name_to_wdd, validate_wdd_player_id,
-                            validate_wdd_tournament_id, wdd_img_to_country,
-                            wdd_nation_to_country, wdd_url_to_tournament_id)
+                            power_name_to_wdd, validate_wdd_circuit_id,
+                            validate_wdd_player_id, validate_wdd_tournament_id,
+                            wdd_img_to_country, wdd_nation_to_country,
+                            wdd_url_to_tournament_id)
 
 
 class WDDTests(TestCase):
     fixtures = ['game_sets.json']
 
+    # validate_wdd_circuit_id()
+    @tag('wdd')
+    def test_validate_wdd_circuit_id_cascadia(self):
+        self.assertIsNone(validate_wdd_circuit_id(38))
+
+    @tag('wdd')
+    def test_validate_wdd_circuit_id_0(self):
+        # 0 is known to be unused
+        # Note that this test will fail if the WDD can't be reached
+        # (in that case, we assume the id is valid)
+        self.assertRaises(ValidationError, validate_wdd_circuit_id, 0)
+
+    # validate_wdd_player_id()
     def test_validate_wdd_player_id_timeout_assumed_valid(self):
         """Timeout when contacting WDD should not block validation."""
         with patch('tournament.wdd.requests.head',
                    side_effect=requests.exceptions.Timeout):
             self.assertIsNone(validate_wdd_player_id(1))
 
-    # validate_wdd_player_id()
     @tag('wdd')
     def test_validate_wdd_player_id_me(self):
         self.assertIsNone(validate_wdd_player_id(4173))

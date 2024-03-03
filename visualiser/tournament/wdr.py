@@ -51,6 +51,13 @@ def _validate_wdr_id(path, param, value):
                                       'status': r.status_code})
 
 
+def validate_wdr_circuit_id(value):
+    """
+    Checks a WDR circuit id
+    """
+    _validate_wdr_id('tournaments', 'tournament', value)
+
+
 def validate_wdr_player_id(value):
     """
     Checks a WDR player id

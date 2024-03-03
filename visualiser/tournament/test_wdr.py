@@ -20,8 +20,8 @@ from unittest.mock import patch
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
-from tournament.wdr import (validate_wdr_player_id, validate_wdr_tournament_id,
-                            wdr_tournament_as_json)
+from tournament.wdr import (validate_wdr_circuit_id, validate_wdr_player_id,
+                            validate_wdr_tournament_id, wdr_tournament_as_json)
 
 
 class WDRTests(TestCase):
@@ -32,6 +32,18 @@ class WDRTests(TestCase):
         with patch('tournament.wdr.requests.head',
                    side_effect=requests.exceptions.Timeout):
             self.assertIsNone(validate_wdr_player_id(0))
+
+    # validate_wdr_circuit_id()
+    @tag('wdr')
+    def test_validate_wdr_circuit_id_buz_cup(self):
+        self.assertIsNone(validate_wdr_circuit_id(1890))
+
+    @tag('wdr')
+    def test_validate_wdr_circuit_id_0(self):
+        # 0 is known to be unused
+        # Note that this test will fail if the WDR can't be reached
+        # (in that case, we assume the id is valid)
+        self.assertRaises(ValidationError, validate_wdr_circuit_id, 0)
 
     # validate_wdr_player_id()
     @tag('wdr')
