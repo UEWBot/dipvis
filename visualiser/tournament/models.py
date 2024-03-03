@@ -412,8 +412,8 @@ T_SCORING_SYSTEMS = [
     TScoringSum(_('Sum best 2 rounds'), 2),
     TScoringSum(_('Sum best 3 rounds'), 3),
     TScoringSum(_('Sum best 4 rounds'), 4),
-    TScoringSumGames(_('Best single game result'), 1),
     TScoringSumGames(_('Sum best 4 games in any rounds'), 4),
+    TScoringSumGames(_('Best single game result'), 1),
 ]
 
 
