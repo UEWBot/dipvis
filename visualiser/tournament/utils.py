@@ -33,9 +33,9 @@ from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import Award, CentreCount, DrawProposal, Game, GameImage
 from tournament.models import GamePlayer, Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
-from tournament.players import wdd_url_to_id, Player
+from tournament.players import Player
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
-from tournament.wdd import wdd_nation_to_country, UnrecognisedCountry
+from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 
 
 def add_wep_scores(player, dry_run=False):
@@ -46,7 +46,7 @@ def add_wep_scores(player, dry_run=False):
     # Now update their rankings
     ptr_s = player.playertournamentranking_set.all()
     for score in scores:
-        wdd_id = wdd_url_to_id(score['WDD WPE URL'])
+        wdd_id = wdd_url_to_tournament_id(score['WDD WPE URL'])
         for ptr in ptr_s.filter(wdd_tournament_id=wdd_id):
             print("Setting wpe_score for %s to %.2f" % (score['Tournament'], float(score['Score'])))
             if not dry_run:

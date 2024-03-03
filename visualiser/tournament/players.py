@@ -28,9 +28,7 @@ about a player and retrieving it as needed.
 
 import datetime
 from pathlib import Path
-import re
 import traceback
-import requests
 from urllib.parse import urlunparse, urlencode
 
 from django.contrib.auth.models import User
@@ -43,14 +41,17 @@ from django.utils.translation import ngettext
 
 from django_countries.fields import CountryField
 
-from tournament.background import WikipediaBackground, WDDBackground, WDD_BASE_RESULTS_URL
-from tournament.background import WDD_NETLOC, WDD_BASE_RESULTS_PATH, WDD_BASE_RANKING_PATH
+from tournament.background import WikipediaBackground, WDDBackground
 from tournament.background import InvalidWDDId, WDDNotAccessible
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
-from tournament.wdd import wdd_nation_to_country, UnrecognisedCountry
+from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
+from tournament.wdd import validate_wdd_player_id, validate_wdd_tournament_id
+from tournament.wdd import WDD_NETLOC, WDD_BASE_RESULTS_PATH, WDD_BASE_RANKING_PATH
+from tournament.wdd import WDD_BASE_RESULTS_URL
+
 
 # Mask values to choose which background strings to include
 MASK_TITLES = 1 << 0
@@ -80,59 +81,12 @@ TITLE_MAP = {
 }
 
 
-def validate_wdd_player_id(value):
-    """
-    Checks a WDD player id
-    """
-    url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
-    try:
-        r = requests.head(url,
-                          params={'id_player': value},
-                          allow_redirects=False,
-                          timeout=1.0)
-    except requests.exceptions.Timeout:
-        # Assume the id is ok
-        return
-    if r.status_code != requests.codes.ok:
-        raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
-                              params={'value': value})
-
-
-def validate_wdd_tournament_id(value):
-    """
-    Checks a WDD tournament id
-    """
-    url = WDD_BASE_RESULTS_URL + 'tournament_class.php'
-    try:
-        r = requests.head(url,
-                          params={'id_tournament': value},
-                          allow_redirects=False,
-                          timeout=1.0)
-    except requests.exceptions.Timeout:
-        # Assume the id is ok
-        return
-    if r.status_code != requests.codes.ok:
-        raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
-                              params={'value': value})
-
-
 def player_picture_location(instance, filename):
     """
     Function that determines where to store the file.
     """
     # Stuff them all into one directory
     return Path('player_pictures', filename)
-
-
-def wdd_url_to_id(url):
-    """
-    Extracts the tournament id from a WDD tournament URL
-    """
-    # The numbers at the end of the string
-    m = re.search(r'(\d+)$', url)
-    if m:
-        return int(m.group(1))
-    return 0
 
 
 def _update_or_create_playertournamentranking_wiki(player, title):
@@ -190,7 +144,7 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
             defaults['date'] = d
         # Ignore if not present
         try:
-            defaults['wdd_tournament_id'] = wdd_url_to_id(finish['WDD URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(finish['WDD URL'])
         except KeyError:
             pass
         else:
@@ -231,7 +185,7 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
             defaults['date'] = d
         # Ignore if not present
         try:
-            defaults['wdd_tournament_id'] = wdd_url_to_id(t['WDD URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(t['WDD URL'])
         except KeyError:
             pass
         PlayerTournamentRanking.objects.update_or_create(player=player,
@@ -296,7 +250,7 @@ def _update_or_create_playergameresult(player, b):
         except KeyError:
             pass
         try:
-            defaults['wdd_tournament_id'] = wdd_url_to_id(b['WDD Tournament URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(b['WDD Tournament URL'])
         except KeyError:
             pass
         # WDD has been known to change the date
@@ -362,7 +316,7 @@ def _update_or_create_playeraward(player, k, a):
         except KeyError:
             pass
         try:
-            defaults['wdd_tournament_id'] = wdd_url_to_id(a['WDD URL'])
+            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(a['WDD URL'])
         except KeyError:
             pass
         PlayerAward.objects.update_or_create(player=player,
@@ -422,7 +376,7 @@ def add_player_bg(player, include_wpe=False):
     if include_wpe:
         # Construct a dict, keyed by WDD Id, of WPE scores
         for score in bg.wpe_scores():
-            key = wdd_url_to_id(score['WDD WPE URL'])
+            key = wdd_url_to_tournament_id(score['WDD WPE URL'])
             if key:
                 wpe_scores[key] = score['Score']
     # Podium finishes

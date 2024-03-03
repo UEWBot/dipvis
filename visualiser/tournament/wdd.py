@@ -18,8 +18,19 @@
 WDD primitives for the Diplomacy Tournament Visualiser.
 """
 
+import re
+import requests
+
 from django_countries.fields import Country
 
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext as _
+
+WDD_NETLOC = 'world-diplomacy-database.com'
+WDD_BASE_RESULTS_PATH = 'php/results/'
+WDD_BASE_RANKING_PATH = 'php/ranking/'
+WDD_BASE_RESULTS_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RESULTS_PATH
+WDD_BASE_RANKING_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RANKING_PATH
 
 WDD_MAX_ROUNDS = 8
 WDD_MAX_AWARDS = 12
@@ -147,9 +158,62 @@ WDD_COUNTRY_TO_ISO_CODE = {
 }
 
 
+def validate_wdd_player_id(value):
+    """
+    Checks a WDD player id
+    """
+    url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
+    try:
+        r = requests.head(url,
+                          params={'id_player': value},
+                          allow_redirects=False,
+                          timeout=1.0)
+    except requests.exceptions.Timeout:
+        # Assume the id is ok
+        return
+    if r.status_code != requests.codes.ok:
+        raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
+                              params={'value': value})
+
+def validate_wdd_tournament_id(value):
+    """
+    Checks a WDD tournament id
+    """
+    url = WDD_BASE_RESULTS_URL + 'tournament_class.php'
+    try:
+        r = requests.head(url,
+                          params={'id_tournament': value},
+                          allow_redirects=False,
+                          timeout=1.0)
+    except requests.exceptions.Timeout:
+        # Assume the id is ok
+        return
+    if r.status_code != requests.codes.ok:
+        raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
+                              params={'value': value})
+
+def wdd_url_to_tournament_id(url):
+    """
+    Extracts the tournament id from a WDD tournament URL
+    """
+    # The numbers at the end of the string
+    m = re.search(r'(\d+)$', url)
+    if m:
+        return int(m.group(1))
+    return 0
+
+
 class UnrecognisedCountry(Exception):
     """The specified country is not recognised"""
     pass
+
+
+def wdd_img_to_country(img):
+    """
+    Convert a WDD flag image name to a country name.
+    """
+    filename = img.rpartition('/')[2]
+    return filename[:-4]
 
 
 def power_name_to_wdd(name):

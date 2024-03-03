@@ -29,11 +29,9 @@ Database for everything else.
 import requests
 from bs4 import BeautifulSoup
 
-WDD_NETLOC = 'world-diplomacy-database.com'
-WDD_BASE_RESULTS_PATH = 'php/results/'
-WDD_BASE_RANKING_PATH = 'php/ranking/'
-WDD_BASE_RESULTS_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RESULTS_PATH
-WDD_BASE_RANKING_URL = 'https://' + WDD_NETLOC + '/' + WDD_BASE_RANKING_PATH
+from tournament.wdd import wdd_img_to_country, WDD_BASE_RANKING_URL, WDD_BASE_RESULTS_URL
+
+
 WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
 
 MAP = {'Name of the tournament': 'Tournament',
@@ -124,14 +122,6 @@ class WikipediaBackground():
         return [item for item in results if self._relevant(item)]
 
 
-def img_to_country(img):
-    """
-    Convert a WDD flag image name to a country name.
-    """
-    filename = img.rpartition('/')[2]
-    return filename[:-4]
-
-
 class WDDBackground():
     """
     Get background on a player from the World Diplomacy Database.
@@ -204,7 +194,7 @@ class WDDBackground():
             return []
         td = table.tr.th.table.tr.td
         if td.img:
-            return [img_to_country(td.img['src'])]
+            return [wdd_img_to_country(td.img['src'])]
         return []
 
     def location(self):
@@ -264,7 +254,7 @@ class WDDBackground():
                         if td.string:
                             result[key] = str(td.string)
                         else:
-                            result[key] = img_to_country(td.img['src'])
+                            result[key] = wdd_img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Tournament':
                         result[u'WDD URL'] = WDD_BASE_RESULTS_URL + td.a['href']
@@ -330,7 +320,7 @@ class WDDBackground():
                     elif td.string:
                         result[key] = str(td.string)
                     elif td.img:
-                        result[key] = img_to_country(td.img['src'])
+                        result[key] = wdd_img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Name of the tournament':
                         result[u'WDD URL'] = WDD_BASE_RESULTS_URL + td.a['href']
@@ -430,7 +420,7 @@ class WDDBackground():
                         except ValueError:
                             result[key] = str(td.string)
                     elif td.img:
-                        result[key] = img_to_country(td.img['src'])
+                        result[key] = wdd_img_to_country(td.img['src'])
                     # Add URLs to the results dict
                     if key == u'Name of the tournament':
                         result[u'WDD Tournament URL'] = WDD_BASE_RESULTS_URL + td.a['href']
@@ -486,7 +476,7 @@ class WDDBackground():
                         if td.string:
                             result[key] = str(td.string)
                         elif td.img:
-                            result[key] = img_to_country(td.img['src'])
+                            result[key] = wdd_img_to_country(td.img['src'])
                         else:
                             # Sometimes multiple awards were won at one tournament,
                             # encoded as a nested table
@@ -581,7 +571,7 @@ class WDDBackground():
                     if td.string:
                         result[key] = str(td.string)
                     else:
-                        result[key] = img_to_country(td.img['src'])
+                        result[key] = wdd_img_to_country(td.img['src'])
                 if key == 'Tournament':
                     result['WDD WPE URL'] = WDD_BASE_RANKING_URL + td.a['href']
             results.append(result)

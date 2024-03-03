@@ -33,7 +33,8 @@ from django.views import generic
 
 from tournament.forms import PlayerForm
 from tournament.players import Player, PlayerGameResult
-from tournament.players import add_player_bg, validate_wdd_player_id
+from tournament.players import add_player_bg
+from tournament.wdd import validate_wdd_player_id
 
 # Player views
 

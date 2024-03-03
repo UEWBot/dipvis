@@ -26,8 +26,7 @@ from tournament.models import Tournament, TournamentPlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player, PlayerRanking, PlayerAward
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
-from tournament.players import validate_wdd_player_id, validate_wdd_tournament_id
-from tournament.players import add_player_bg, position_str, wdd_url_to_id
+from tournament.players import add_player_bg, position_str
 from tournament.players import MASK_ALL_BG
 
 CHRIS_BRAND_WDD_ID = 4173
@@ -53,38 +52,7 @@ class PlayerTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
-    # validate_wdd_player_id()
-    @tag('wdd')
-    def test_validate_wdd_player_id_me(self):
-        self.assertIsNone(validate_wdd_player_id(CHRIS_BRAND_WDD_ID))
-
-    @tag('wdd')
-    def test_validate_wdd_player_id_1(self):
-        # 1 is known to be unused
-        # Note that this test will fail if the WDD can't be reached
-        # (in that case, we assume the id is valid)
-        self.assertRaises(ValidationError, validate_wdd_player_id, 1)
-
-    # validate_wdd_tournament_id()
-    @tag('wdd')
-    def test_validate_wdd_tournament_id_cascadia(self):
-        self.assertIsNone(validate_wdd_tournament_id(1545))
-
-    @tag('wdd')
-    def test_validate_wdd_tournament_id_0(self):
-        # 0 is known to be unused
-        # Note that this test will fail if the WDD can't be reached
-        # (in that case, we assume the id is valid)
-        self.assertRaises(ValidationError, validate_wdd_tournament_id, 0)
-
     # TODO player_picture_location()
-
-    # wdd_url_to_id()
-    def test_wdd_url_to_id_valid(self):
-        self.assertEqual(wdd_url_to_id('https://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1766'), 1766)
-
-    def test_wdd_url_to_id_invalid(self):
-        self.assertEqual(wdd_url_to_id('https://world-diplomacy-database.com/php/results/tournament_list.php'), 0)
 
     # TODO add_player_bg()
 
