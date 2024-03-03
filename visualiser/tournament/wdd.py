@@ -210,7 +210,7 @@ class UnrecognisedCountry(Exception):
 
 def wdd_img_to_country(img):
     """
-    Convert a WDD flag image name to a country name.
+    Convert a WDD flag image name to a WDD country code (key to WDD_COUNTRY_NAME)
     """
     filename = img.rpartition('/')[2]
     return filename[:-4]
@@ -227,9 +227,11 @@ def wdd_nation_to_country(country_code):
     Map a (real world) country code from the WDD to a django_countries.Country.
     Can raise UnrecognisedCountry.
     """
-    c = Country(WDD_COUNTRY_TO_ISO_CODE[country_code])
-    if len(c) == 0:
+    try:
+        c = Country(WDD_COUNTRY_TO_ISO_CODE[country_code])
+    except KeyError:
         raise UnrecognisedCountry(country_code)
+    assert len(c) > 0
     return c
 
 
@@ -237,7 +239,6 @@ def country_name_to_wdd(name):
     """
     Map a country name to a WDD (real world) country code.
     Returns WDD_UNKNOWN_COUNTRY is the country is not recognised by the WDD.
-    Returns an empty string if it cannot do the mapping.
     """
     try:
         key = next(key for key, value in WDD_COUNTRY_NAME.items() if value == name)
@@ -252,10 +253,9 @@ def country_to_wdd(country):
     """
     Map a Country to a WDD (real world) country code.
     Returns WDD_UNKNOWN_COUNTRY is the country is not recognised by the WDD.
-    Returns an empty string if it cannot do the mapping.
     """
     try:
-        key = next(key for key, value in WDD_COUNTRY_TO_ISO_CODE.items() if value == country.code)
+        key = next(key for key, value in WDD_COUNTRY_TO_ISO_CODE.items() if country.code.startswith(value))
     except StopIteration:
         # Not a country recognised by the WDD
         return WDD_UNKNOWN_COUNTRY
