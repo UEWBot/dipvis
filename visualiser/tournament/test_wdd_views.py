@@ -56,10 +56,10 @@ class WddViewTests(TestCase):
                                           draw_secrecy=DrawSecrecy.SECRET,
                                           is_published=True)
         # Awards
-        a1 = cls.t.awards.create(name='Meanest Player',
-                                 description='Who was mean')
-        cls.t.awards.create(name='Nicest Player',
-                            description='Who bought the most drinks')
+        cls.t.awards.create(name='Meanest Player',
+                            description='Who was mean')
+        a1 = cls.t.awards.create(name='Nicest Player',
+                                 description='Who bought the most drinks')
         a2 = cls.t.awards.create(name='Best Russia',
                                  description='Russia is the only country we care about',
                                  power=russia)
@@ -187,9 +187,9 @@ class WddViewTests(TestCase):
         GamePlayer.objects.create(player=p7,
                                   game=g1,
                                   power=france)
-        tp8 = TournamentPlayer.objects.create(player=p8,
-                                              tournament=cls.t,
-                                              location='California, USA')
+        cls.tp8 = TournamentPlayer.objects.create(player=p8,
+                                                  tournament=cls.t,
+                                                  location='California, USA')
         RoundPlayer.objects.create(player=p8,
                                    the_round=r1)
         RoundPlayer.objects.create(player=p8,
@@ -263,10 +263,10 @@ class WddViewTests(TestCase):
         tp10.awards.add(a1)
         # and one best-country award
         # for a power that they actually played
-        played = [gp.power for gp in GamePlayer.objects.filter(player=tp8.player)]
+        played = [gp.power for gp in GamePlayer.objects.filter(player=cls.tp8.player)]
         if a2.power not in played:
-            raise AssertionError("%s didn't play %s" % (str(tp8.player), str(a2.power)))
-        tp8.awards.add(a2)
+            raise AssertionError("%s didn't play %s" % (str(cls.tp8.player), str(a2.power)))
+        cls.tp8.awards.add(a2)
         # CentreCounts and DrawProposals
         # One game ends in a solo
         CentreCount.objects.create(power=austria,
@@ -450,6 +450,24 @@ class WddViewTests(TestCase):
         # Clean up
         g.is_top_board=True
         g.save()
+
+    def test_classification_many_awards(self):
+        # Tournament with more than the 12 (non-best country) awards supported by the WDD
+        awards = self.t.awards.all()
+        orig_awards = list(awards)
+        for n in range(13 - awards.filter(power=None).count()):
+            # Add awards that will get a lower number (later in the alphabet)
+            self.t.awards.create(name=f'AAA Award {n}',
+                                 description='Everyone gets an award!')
+        # Check that the last award has been given to a player
+        self.assertEqual(self.t.awards.order_by('name').last().tournamentplayer_set.exists(), True)
+        response = self.client.get(reverse('csv_classification',
+                                           args=(self.t.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        self.t.awards.exclude(pk__in=[a.pk for a in orig_awards]).delete()
+
 
     def test_boards(self):
         response = self.client.get(reverse('csv_boards',
