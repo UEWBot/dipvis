@@ -117,7 +117,7 @@ If the Player you want to add doesn't appear in the dropdown list, follow the li
 https://example.com/admin/tournament/player/add/ where you can add them. Please
 do check before adding them - de-duplicating players who are in the system twice has
 to be done by hand and is quite tricky! Note that email address, if provided, will
-be used to send board calls to, and also to send a link to enter country preferences
+be used to send board calls to, and also to send a link to enter power preferences
 if that's how Great Powers are assigned in your Tournament. The "WDD id" is used to
 provide background information about the Player. The "picture" is for future use.
 Any "Backstabbr username" will be displayed in board calls for vFTF Tournaments.
