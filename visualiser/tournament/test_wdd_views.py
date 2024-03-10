@@ -468,6 +468,21 @@ class WddViewTests(TestCase):
         # Clean up
         self.t.awards.exclude(pk__in=[a.pk for a in orig_awards]).delete()
 
+    def test_classification_tied_best_country(self):
+        a = self.t.awards.filter(power__isnull=False).first()
+        orig_tps = list(a.tournamentplayer_set.all())
+        for gp in GamePlayer.objects.filter(power=a.power,
+                                            game__the_round__tournament=self.t).all():
+            # Add this player to the list
+            tp = gp.tournamentplayer()
+            tp.awards.add(a)
+        response = self.client.get(reverse('csv_classification',
+                                           args=(self.t.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Clean up
+        for tp in a.tournamentplayer_set.exclude(pk__in=[tp.pk for tp in orig_tps]).all():
+            a.tournamentplayer_set.remove(tp)
 
     def test_boards(self):
         response = self.client.get(reverse('csv_boards',
