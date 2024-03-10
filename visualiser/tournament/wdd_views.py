@@ -160,6 +160,10 @@ def view_classification_csv(request, tournament_id):
     writer.writeheader()
     # One row per player (row order and field order don't matter)
     for tp in tps:
+        rps = tp.roundplayers()
+        if not rps:
+            # Player was registered but didn't actually play, so omit them
+            continue
         p = tp.player
         p_score = t_positions_and_scores[p][1]
         rank = t_positions_and_scores[p][0]
@@ -183,7 +187,7 @@ def view_classification_csv(request, tournament_id):
             if wdd_country != WDD_UNKNOWN_COUNTRY:
                 row_dict['LOCATION'] = wdd_country
         # Add in round score for each round played
-        for rp in tp.roundplayers():
+        for rp in rps:
             row_dict['R%d' % rp.the_round.number()] = rp.score
         # Add awards
         for award in tp.awards.all():
