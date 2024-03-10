@@ -355,8 +355,11 @@ def find_missing_wdd_ids():
     Report all Players with no wdd_player_id that should have one.
     """
     for p in Player.objects.filter(wdd_player_id=None):
-        if p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).exists():
-            print(p)
+        for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
+            # It's possible that they were registered but never played
+            if tp.roundplayers():
+                print(p)
+                break
 
 
 def add_missing_wdd_ids(dry_run=False):
