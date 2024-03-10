@@ -455,8 +455,8 @@ class Player(models.Model):
     """
     A person who played Diplomacy
     """
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
+    first_name = models.CharField(max_length=40)
+    last_name = models.CharField(max_length=40)
     email = models.EmailField(blank=True)
     wdd_player_id = models.PositiveIntegerField(unique=True,
                                                 validators=[validate_wdd_player_id],
@@ -471,8 +471,8 @@ class Player(models.Model):
     location = models.CharField(max_length=60, blank=True)
     nationalities = CountryField(multiple=True, blank=True)
     # Cache of the player's name in the WDD
-    _wdd_firstname = models.CharField(max_length=30, blank=True)
-    _wdd_lastname = models.CharField(max_length=30, blank=True)
+    _wdd_firstname = models.CharField(max_length=40, blank=True)
+    _wdd_lastname = models.CharField(max_length=40, blank=True)
     user = models.OneToOneField(User,
                                 blank=True,
                                 null=True,
