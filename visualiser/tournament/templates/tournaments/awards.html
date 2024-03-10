@@ -5,6 +5,13 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Awards" %}</h1>
+{% if numbered_list %}
+  <ol>
+    {% for a in tournament.non_power_awards %}
+      <li>{{ a }}</li>
+    {% endfor %}
+  </ol>
+{% else %}
 <dl>
   {% if tournament.is_finished %}
     {% for tp in tournament.tournamentplayer_set.all %}
@@ -24,4 +31,5 @@
     {% endfor %}
   {% endif %}
 </dl>
+{% endif %}
 {% endblock %}

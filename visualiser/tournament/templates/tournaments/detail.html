@@ -68,10 +68,11 @@
   <li><a href="{% url 'round_index' tournament.id %}">{% trans "Round Index" %}</a></li>
 </ul>
 {% if tournament.is_finished %}
-  <p>{% trans "CSV files for World Diplomacy Database upload:" %}</p>
+  <p>{% trans "Information for adding the tournament to the World Diplomacy Database:" %}</p>
   <ul>
-    <li><a href="{% url 'csv_classification' tournament.id %}">{% trans "Classification" %}</a></li>
-    <li><a href="{% url 'csv_boards' tournament.id %}">{% trans "Boards" %}</a></li>
+    <li><a href="{% url 'csv_classification' tournament.id %}">{% trans "Classification CSV file" %}</a></li>
+    <li><a href="{% url 'csv_boards' tournament.id %}">{% trans "Boards CSV file" %}</a></li>
+    <li><a href="{% url 'tournament_wdd_awards' tournament.id %}">{% trans "Award numbering" %}</a></li>
   </ul>
 {% endif %}
 {% if user.is_active and tournament.editable %}

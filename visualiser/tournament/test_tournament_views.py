@@ -934,3 +934,11 @@ class TournamentViewTests(TestCase):
             self.assertEqual(a.tournamentplayer_set.count(), 1)
         # Cleanup
         tp.awards.clear()
+
+
+    def test_tournament_wdd_awards(self):
+        # Should be viewable without logging in
+        response = self.client.get(reverse('tournament_wdd_awards',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)

@@ -679,6 +679,12 @@ class Tournament(models.Model):
             raise InvalidScoringSystem(self.round_scoring_system)
         return system
 
+    def non_power_awards(self):
+        """
+        Returns a QuerySet of all awards other than "Best Country" awards.
+        """
+        return self.awards.filter(power=None)
+
     def award_number(self, award):
         """
         Returns the number (1..n) for the specified (non-best country) award at the tournament
