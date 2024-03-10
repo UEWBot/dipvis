@@ -116,10 +116,10 @@ def get_modifiable_tournament_or_404(pk, user):
     raise Http404
 
 
-def tournament_simple(request, tournament_id, template):
+def tournament_simple(request, tournament_id, template, context={}):
     """Just render the specified template with the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    context = {'tournament': t}
+    context['tournament'] = t
     return render(request, 'tournaments/%s.html' % template, context)
 
 
