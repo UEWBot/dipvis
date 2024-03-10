@@ -460,7 +460,7 @@ class WddViewTests(TestCase):
             self.t.awards.create(name=f'AAA Award {n}',
                                  description='Everyone gets an award!')
         # Check that the last award has been given to a player
-        self.assertEqual(self.t.awards.order_by('name').last().tournamentplayer_set.exists(), True)
+        self.assertEqual(self.t.awards.last().tournamentplayer_set.exists(), True)
         response = self.client.get(reverse('csv_classification',
                                            args=(self.t.pk,)),
                                    secure=True)

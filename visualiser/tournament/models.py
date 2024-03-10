@@ -546,6 +546,9 @@ class Award(models.Model):
                               on_delete=models.CASCADE,
                               help_text=_(u'Set if this award is associated with a specific power (e.g. "Best Italy")'))
 
+    class Meta:
+        ordering = ['name']
+
     def __str__(self):
         return _(f'{self.name}')
 
@@ -681,7 +684,7 @@ class Tournament(models.Model):
         Returns the number (1..n) for the specified (non-best country) award at the tournament
         """
         assert award.power is None
-        for i, a in enumerate(self.awards.filter(power=None).order_by('name'), 1):
+        for i, a in enumerate(self.awards.filter(power=None), 1):
             if a == award:
                 return i
         raise AssertionError(f'award {award} not found in {tournament}')

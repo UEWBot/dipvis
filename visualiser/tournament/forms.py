@@ -65,7 +65,7 @@ class BaseAwardsFormset(BaseFormSet):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
         # Get the list of Awards
-        self.awards = list(self.tournament.awards.order_by('name').all())
+        self.awards = list(self.tournament.awards.all())
         # Create initial if not provided
         if 'initial' not in kwargs.keys():
             # And construct initial data from it
