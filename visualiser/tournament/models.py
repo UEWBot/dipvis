@@ -676,6 +676,16 @@ class Tournament(models.Model):
             raise InvalidScoringSystem(self.round_scoring_system)
         return system
 
+    def award_number(self, award):
+        """
+        Returns the number (1..n) for the specified (non-best country) award at the tournament
+        """
+        assert award.power is None
+        for i, a in enumerate(self.awards.filter(power=None).order_by('name'), 1):
+            if a == award:
+                return i
+        raise AssertionError(f'award {award} not found in {tournament}')
+
     def _calculated_scores(self):
         """
         Calculates the scores for everyone registered for the tournament.

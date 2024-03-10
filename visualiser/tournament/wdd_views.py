@@ -68,15 +68,12 @@ def _power_award_to_gameplayers(tournament, award):
 def _award_number(tournament, award):
     """
     Returns the number (1..12) for the specified (non-best country) award at the tournament
+    Can raise TooManyAwards.
     """
-    assert award.power is None
-    for i, a in enumerate(tournament.awards.filter(power=None).order_by('name'), 1):
-        if a == award:
-            if i <= WDD_MAX_AWARDS:
-                return i
-            else:
-                raise TooManyAwards(i)
-    raise AssertionError(f'award {award} not found in {tournament}')
+    n = tournament.award_number(award)
+    if n > WDD_MAX_AWARDS:
+        raise TooManyAwards(n)
+    return n
 
 
 # Map common name of countries to name used by the WDD
