@@ -36,6 +36,7 @@ from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlaye
 from tournament.players import Player
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
+from tournament.wdd_views import _power_award_to_gameplayers
 
 
 def add_wep_scores(player, dry_run=False):
@@ -404,6 +405,40 @@ def add_best_country_awards(dry_run=False):
                 print(f'  Adding award "{a}" to {tp}')
                 if not dry_run:
                     tp.awards.add(a)
+
+
+def clean_best_country_awards(dry_run=False):
+    """
+    Check for spurious "Best Country" awards and remove them.
+    """
+    for t in Tournament.objects.all():
+        for a in t.awards.filter(power__isnull=False):
+            best = t.best_countries()[a.power]
+            tps = a.tournamentplayer_set.filter(tournament=t)
+            if len(tps) > 1:
+                # We have a best country award with multple recipients
+                gps = _power_award_to_gameplayers(t, a)
+                for tp in tps:
+                    # Did any recipients not play that power?
+                    tp_gp = None
+                    for gp in gps:
+                        if gp.player == tp.player:
+                            tp_gp = gp
+                            break;
+                    if not tp_gp:
+                        print(f"{tp} didn't play {a.power}")
+                        if not dry_run:
+                            tp.awards.remove(a)
+                    # Was any recipient outplayed as that power?
+                    if tp_gp not in best:
+                        print(f'{tp} was outplayed as {a.power}')
+                        if not dry_run:
+                            tp.awards.remove(a)
+                    # Are any recipients unranked?
+                    if tp.unranked:
+                        print(f'Removing {a} from unranked {tp}')
+                        if not dry_run:
+                            tp.awards.remove(a)
 
 
 def set_nationalities(dry_run=False):
