@@ -1785,10 +1785,10 @@ class Game(models.Model):
         # Auto-create SC Ownership (unless they already exist)
         with transaction.atomic():
             for power in GreatPower.objects.all():
-                CentreCount.objects.get_or_create(power=power,
-                                                  game=self,
-                                                  year=FIRST_YEAR - 1,
-                                                  count=power.starting_centres)
+                CentreCount.objects.update_or_create(power=power,
+                                                     game=self,
+                                                     year=FIRST_YEAR - 1,
+                                                     defaults={'count': power.starting_centres})
                 for sc in SupplyCentre.objects.filter(initial_owner=power):
                     SupplyCentreOwnership.objects.get_or_create(owner=power,
                                                                 game=self,
