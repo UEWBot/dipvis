@@ -364,26 +364,25 @@ def add_missing_wdd_ids(dry_run=False):
     Find Players with no wdd_player_id that should have one and add it.
     """
     for p in Player.objects.filter(wdd_player_id=None):
-        tp = p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None).first()
-        if not tp:
-            continue
-        url = tp.tournament.wdd_url()
-        page = requests.get(url,
-                            timeout=1.0)
-        soup = BeautifulSoup(page.text)
-        for a in soup.find_all('a'):
-            if not a.string:
-                continue
-            url = a['href']
-            if 'id_player' not in url:
-                continue
-            wdd_id = url.split('=')[-1]
-            name = str(a.string)
-            if name.lower() == str(p).lower():
-                print("Giving %s WDD id %s" % (str(p), wdd_id))
-                if not dry_run:
-                    p.wdd_player_id = int(wdd_id)
-                    p.save()
+        for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
+            url = tp.tournament.wdd_url()
+            page = requests.get(url,
+                                timeout=1.0)
+            soup = BeautifulSoup(page.text)
+            for a in soup.find_all('a'):
+                if not a.string:
+                    continue
+                url = a['href']
+                if 'id_player' not in url:
+                    continue
+                wdd_id = url.split('=')[-1]
+                name = str(a.string)
+                if name.lower() == str(p).lower():
+                    print("Giving %s WDD id %s" % (str(p), wdd_id))
+                    if not dry_run:
+                        p.wdd_player_id = int(wdd_id)
+                        p.save()
+                        break
 
 
 def add_best_country_awards(dry_run=False):
