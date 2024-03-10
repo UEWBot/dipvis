@@ -562,7 +562,8 @@ class Tournament(models.Model):
 
     MAX_NAME_LENGTH = 60
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    name = models.CharField(max_length=MAX_NAME_LENGTH,
+                            help_text='Year will be appended based on start date')
     start_date = models.DateField()
     end_date = models.DateField()
     location = models.CharField(max_length=300, blank=True)
