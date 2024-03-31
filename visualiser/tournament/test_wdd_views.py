@@ -385,7 +385,7 @@ class WddViewTests(TestCase):
         CentreCount.objects.create(power=germany,
                                    game=g2,
                                    year=1910,
-                                   count=0)
+                                   count=1)
         CentreCount.objects.create(power=italy,
                                    game=g2,
                                    year=1910,
@@ -393,7 +393,7 @@ class WddViewTests(TestCase):
         CentreCount.objects.create(power=russia,
                                    game=g2,
                                    year=1910,
-                                   count=3)
+                                   count=2)
         CentreCount.objects.create(power=turkey,
                                    game=g2,
                                    year=1910,
@@ -428,14 +428,18 @@ class WddViewTests(TestCase):
                                    game=g3,
                                    year=1907,
                                    count=7)
-        g1.check_whether_finished()
+        g3.check_whether_finished()
 
     def test_classification(self):
         response = self.client.get(reverse('csv_classification',
                                            args=(self.t.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
-        # TODO Check CSV file content
+        # Check CSV file content
+        # first, last, homonym, rank, exaequo, location, nationality
+        self.assertIn(b'Cassandra,Cucumber,1,8,1,', response.content)
+        self.assertIn(b'Harry,Heffalump,1,3,1,USA,ANG,', response.content)
+        self.assertIn(b'Iris,Ignoramus,1,999,1,', response.content)
 
     def test_classification_no_top_board(self):
         # Switch the top board to a regular board

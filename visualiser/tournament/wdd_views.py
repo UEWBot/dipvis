@@ -167,8 +167,6 @@ def view_classification_csv(request, tournament_id):
         p = tp.player
         p_score = t_positions_and_scores[p][1]
         rank = t_positions_and_scores[p][0]
-        if rank == Tournament.UNRANKED:
-            rank = '999'
         # First the stuff that is global to the tournament and applies to all players
         names = p.wdd_firstname_lastname()
         row_dict = {'FIRST NAME': names[0],
@@ -176,9 +174,11 @@ def view_classification_csv(request, tournament_id):
                     'HOMONYME': '1',  # User Guide says "Set to 1"
                     'RANK': rank,
                     # No. of players with the same rank
-                    'EXAEQUO': len([s for _, s in t_positions_and_scores.values() if s == p_score]),
+                    'EXAEQUO': len([r for r, _ in t_positions_and_scores.values() if r == rank]),
                     'SCORE': p_score,
                    }
+        if rank == Tournament.UNRANKED:
+            row_dict['RANK'] = '999'
         if len(p.nationalities) == 1:
             row_dict['NATIONALITY'] = country_to_wdd(p.nationalities[0])
         if tp.location:
