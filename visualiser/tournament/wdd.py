@@ -158,39 +158,39 @@ WDD_COUNTRY_TO_ISO_CODE = {
 }
 
 
-def validate_wdd_player_id(value):
+def _validate_wdd_id(url, param, value):
     """
-    Checks a WDD player id
+    Checks the validity of a WDD id
     """
-    url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
     try:
         r = requests.head(url,
-                          params={'id_player': value},
+                          params={param: value},
                           allow_redirects=False,
                           timeout=1.0)
     except requests.exceptions.Timeout:
         # Assume the id is ok
         return
     if r.status_code != requests.codes.ok:
-        raise ValidationError(_(u'%(value)d is not a valid WDD player Id'),
-                              params={'value': value})
+        raise ValidationError(_(u'%(value)d is not a valid WDD %(param)s'),
+                              params={'value': value,
+                                      'param': param})
+
+
+def validate_wdd_player_id(value):
+    """
+    Checks a WDD player id
+    """
+    url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
+    _validate_wdd_id(url, 'id_player', value)
+
 
 def validate_wdd_tournament_id(value):
     """
     Checks a WDD tournament id
     """
     url = WDD_BASE_RESULTS_URL + 'tournament_class.php'
-    try:
-        r = requests.head(url,
-                          params={'id_tournament': value},
-                          allow_redirects=False,
-                          timeout=1.0)
-    except requests.exceptions.Timeout:
-        # Assume the id is ok
-        return
-    if r.status_code != requests.codes.ok:
-        raise ValidationError(_(u'%(value)d is not a valid WDD tournament Id'),
-                              params={'value': value})
+    _validate_wdd_id(url, 'id_tournament', value)
+
 
 def wdd_url_to_tournament_id(url):
     """
