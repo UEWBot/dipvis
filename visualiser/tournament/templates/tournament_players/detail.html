@@ -10,7 +10,11 @@
   <p>{% blocktrans %}Position: Unranked{% endblocktrans %}</p>
   <p>{% trans "Ineligible for awards." %}</p>
 {% else %}
-  <p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
+  {% if player.score_is_final %}
+    <p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
+  {% else %}
+    <p>{% blocktrans with pos=player.position|ordinal %}Current position: {{ pos }}{% endblocktrans %}</p>
+  {% endif %}
   <h2>{% trans "Awards" %}</h2>
   <ul>
     {% for award in player.awards.all %}

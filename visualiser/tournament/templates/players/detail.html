@@ -18,11 +18,12 @@
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
   {% for t in player.tournamentplayers %}
-  <li><a href="{{ t.tournament.get_absolute_url }}">{{ t.tournament }}</a> {% if t.position == t.tournament.UNRANKED %}{% trans "Unranked" %}{% else %}{{ t.position|ordinal }}{% endif %}</li>
+  <li><a href="{{ t.tournament.get_absolute_url }}">{{ t.tournament }}</a> {% if t.position == t.tournament.UNRANKED %}{% trans "Unranked" %}{% else %}{% if not t.score_is_final %}<i>{% endif %}{{ t.position|ordinal }}{% if not t.score_is_final %}</i>{% endif %}{% endif %}</li>
   {% empty %}
     <li>{% trans "No tournaments in the database" %}</li>
   {% endfor %}
 </ul>
+<p>{% trans "Italics indicate position may change" %}</p>
 <h2>{% trans "Background" %}</h2>
 <p>{% trans "From the" %} <a href="http://www.world-diplomacy-database.com/">World Diplomacy Database</a></p>
 <p>{% blocktrans with datetime=player.background_updated %}Last retrieved {{datetime}}{% endblocktrans %}</p>
