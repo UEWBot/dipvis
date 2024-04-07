@@ -116,7 +116,7 @@ def populate_missed_years(game, dry_run=False):
         print("No Backstabbr URL for %s" % game)
         return
     for year in range(FIRST_YEAR, bg.year):
-        if not game.centrecount_set.filter(year=year).exists():
+        if not game.centrecount_set.filter(year=year).count() == 7:
             print("Reading results for %d" % year)
             if dry_run:
                 continue
