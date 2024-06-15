@@ -450,6 +450,23 @@ def position_str(position):
     return _(result)
 
 
+class WDDPlayerIdField(models.PositiveIntegerField):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._old_val = None
+
+    def pre_save(self, model_instance, add):
+        # Clear cached WDD Name if WDD id has changed
+        model_instance._wdd_firstname = ''
+        model_instance._wdd_lastname = ''
+        val = super().pre_save(model_instance, add)
+        if (val != self._old_val) and not add:
+            # Background data is presumably wrong
+            model_instance._clear_background()
+            self._old_val = val
+        return val
+
+
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -457,11 +474,11 @@ class Player(models.Model):
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
     email = models.EmailField(blank=True)
-    wdd_player_id = models.PositiveIntegerField(unique=True,
-                                                validators=[validate_wdd_player_id],
-                                                verbose_name=_(u'WDD player id'),
-                                                blank=True,
-                                                null=True)
+    wdd_player_id = WDDPlayerIdField(unique=True,
+                                     validators=[validate_wdd_player_id],
+                                     verbose_name=_(u'WDD player id'),
+                                     blank=True,
+                                     null=True)
     backstabbr_username = models.CharField(max_length=40,
                                            blank=True,
                                            help_text=_('Username on the backstabbr website'))
@@ -479,10 +496,6 @@ class Player(models.Model):
                                 help_text=_('If the Player has an account on the site, record it here'))
     class Meta:
         ordering = ['last_name', 'first_name']
-
-    def __init__(self, *args, **kwargs):
-        super(Player, self).__init__(*args, **kwargs)
-        self._old_wdd_id = self.wdd_player_id
 
     def __str__(self):
         return u'%s %s' % (self.first_name, self.last_name)
@@ -527,15 +540,6 @@ class Player(models.Model):
 
         return result
 
-    def save(self, *args, **kwargs):
-        # Clear cached WDD Name if WDD id has changed
-        if (not self.wdd_player_id) or (self._old_wdd_id != self.wdd_player_id):
-            self._wdd_firstname = ''
-            self._wdd_lastname = ''
-            self._clear_background()
-        self._old_wdd_id = self.wdd_player_id
-        super(Player, self).save(*args, **kwargs)
-
     def wdd_name(self):
         """
         Name for this player, preferably as in the World Diplomacy Database.
@@ -571,7 +575,7 @@ class Player(models.Model):
             bg = WDDBackground(self.wdd_player_id)
             try:
                 self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
-                super(Player, self).save(update_fields=['_wdd_firstname', '_wdd_lastname'])
+                self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
             except WDDNotAccessible:
                 # Nothing we can do
                 pass
