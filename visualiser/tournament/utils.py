@@ -52,7 +52,7 @@ def add_wep_scores(player, dry_run=False):
             print("Setting wpe_score for %s to %.2f" % (score['Tournament'], float(score['Score'])))
             if not dry_run:
                 ptr.wpe_score = score['Score']
-                ptr.save()
+                ptr.save(update_fields=['wpe_score'])
 
 
 def map_to_backstabbr_power(gp):
@@ -95,7 +95,7 @@ def populate_bs_profile_urls(dry_run=False):
                 print("Adding URL %s to %s" % (url, str(gp.player)))
                 if not dry_run:
                     gp.player.backstabbr_profile_url = url
-                    gp.player.save()
+                    gp.player.save(update_fields=['backstabbr_profile_url'])
                 players_changed += 1
     print("Checked %d games" % games)
     print("Matched %d profile URLs" % players_left)
@@ -182,21 +182,21 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
         print("Moving %s" % gp)
         if not dry_run:
             gp.player = keep_player
-            gp.save()
+            gp.save(update_fields=['player'])
 
     # Move RoundPlayers
     for rp in del_player.roundplayer_set.all():
         print("Moving %s" % rp)
         if not dry_run:
             rp.player = keep_player
-            rp.save()
+            rp.save(update_fields=['player'])
 
     # Move TournamentPlayers
     for tp in del_player.tournamentplayer_set.all():
         print("Moving %s" % tp)
         if not dry_run:
             tp.player = keep_player
-            tp.save()
+            tp.save(update_fields=['player'])
 
     if dry_run:
         print("No issues found")
@@ -383,7 +383,7 @@ def add_missing_wdd_ids(dry_run=False):
                     print("Giving %s WDD id %s" % (str(p), wdd_id))
                     if not dry_run:
                         p.wdd_player_id = int(wdd_id)
-                        p.save()
+                        p.save(update_fields=['wdd_player_id'])
                         break
 
 
@@ -465,7 +465,7 @@ def set_nationalities(dry_run=False):
         print(f'Setting nationality of {p} to {c.name}')
         if not dry_run:
             p.nationalities = c
-            p.save()
+            p.save(update_fields=['nationalities'])
 
 
 def list_tournaments_missing_wdd_ids():

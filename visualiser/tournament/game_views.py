@@ -458,10 +458,10 @@ def sc_counts(request, tournament_id, game_name):
         # somebody won, or the checkbox was checked
         if end_form.cleaned_data['is_finished']:
             g.is_finished = True
-            g.save()
+            g.save(update_fields=['is_finished'])
         else:
             g.is_finished = False
-            g.save()
+            g.save(update_fields=['is_finished'])
             g.check_whether_finished()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',

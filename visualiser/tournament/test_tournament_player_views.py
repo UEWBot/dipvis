@@ -453,7 +453,7 @@ class TournamentPlayerViewTests(TestCase):
         # A tournament that the user could edit, except that it is finished
         self.assertFalse(self.t4.editable)
         self.t4.editable = True
-        self.t4.save()
+        self.t4.save(update_fields=['editable'])
         # Use an existing TournamentPlayer
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
@@ -472,7 +472,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
         # Clean-up
         self.t4.editable = False
-        self.t4.save()
+        self.t4.save(update_fields=['editable'])
 
     def test_index_register_player(self):
         # Use the form to register a Player

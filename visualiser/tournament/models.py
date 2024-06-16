@@ -201,13 +201,13 @@ class RScoringBest(RoundScoringSystem):
                     best = gp
                 elif gp.score > best.score:
                     best.score_dropped = True
-                    best.save()
+                    best.save(update_fields=['score_dropped'])
                     best = gp
                 else:
                     gp.score_dropped = True
-                    gp.save()
+                    gp.save(update_fields=['score_dropped'])
             best.score_dropped = False
-            best.save()
+            best.save(update_fields=['score_dropped'])
             retval[p] = best.score
         # Give the appropriate points to anyone who agreed to sit out
         for rp in non_players:
@@ -326,10 +326,10 @@ class TScoringSum(TournamentScoringSystem):
                 if n < self.scored_rounds:
                     t_scores[p] += rp.score
                     rp.score_dropped = False
-                    rp.save()
+                    rp.save(update_fields=['score_dropped'])
                 else:
                     rp.score_dropped = True
-                    rp.save()
+                    rp.save(update_fields=['score_dropped'])
         return t_scores
 
 
@@ -360,7 +360,7 @@ class TScoringSumGames(TournamentScoringSystem):
             for rp in player_rounds:
                 rp.score = 0.0
                 rp.score_dropped = True
-                rp.save()
+                rp.save(update_fields=['score', 'score_dropped'])
                 rounds.append(rp.the_round)
             player_scores = GamePlayer.objects.filter(player=p,
                                                       game__the_round__in=rounds).order_by('score')
@@ -374,7 +374,7 @@ class TScoringSumGames(TournamentScoringSystem):
                     rp = gp.roundplayer()
                     rp.score += gp.score
                     rp.score_dropped = False
-                    rp.save()
+                    rp.save(update_fields=['score', 'score_dropped'])
             else:
                 # Add up the best N, flag the rest as dropped
                 player_scores = list(player_scores)
@@ -383,22 +383,22 @@ class TScoringSumGames(TournamentScoringSystem):
                     t_scores[p] += gp.score
                     # It's possible that a player's current score has dropped below an earlier score
                     gp.score_dropped = False
-                    gp.save()
+                    gp.save(update_fields=['score_dropped'])
                     # This game counts towards the round score
                     # (and this round counts towards the tournament score)
                     rp = gp.roundplayer()
                     rp.score += gp.score
                     rp.score_dropped = False
-                    rp.save()
+                    rp.save(update_fields=['score', 'score_dropped'])
                 for gp in player_scores:
                     gp.score_dropped = True
-                    gp.save()
+                    gp.save(update_fields=['score_dropped'])
                     # If every Game in this Round is dropped, score the Round as the sum,
                     # and dropped, to keep us consistent with other socring systems
                     rp = gp.roundplayer()
                     if rp.score_dropped:
                         rp.score += gp.score
-                        rp.save()
+                        rp.save(update_fields=['score'])
         # The problem is that we go up from Game, to Round, to Tournament,
         # but now we want to go back to set the Round scores.
         # I guess we need to set them here and have a NOP RoundScoringSystem.
@@ -765,7 +765,7 @@ class Tournament(models.Model):
         scores = self._calculated_scores()
         for tp in self.tournamentplayer_set.all().prefetch_related('player'):
             tp.score = scores[tp.player]
-            tp.save()
+            tp.save(update_fields=['score'])
         if self.is_finished():
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
@@ -1172,7 +1172,7 @@ class TournamentPlayer(models.Model):
         Populates the uuid_str attribute.
         """
         self.uuid_str = str(uuid.uuid4())
-        self.save()
+        self.save(update_fields=['uuid_str'])
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -1191,7 +1191,7 @@ class TournamentPlayer(models.Model):
             (self.backstabbr_username != self.player.backstabbr_username)):
             self.player.location = self.location
             self.player.backstabbr_username = self.backstabbr_username
-            self.player.save()
+            self.player.save(update_fields=['location', 'backstabbr_username'])
         # Update background info when a player is added to the Tournament (only)
         if is_new:
             send_prefs_email(self)
@@ -1325,7 +1325,7 @@ class Round(models.Model):
         scores = system.scores(gps, non_players)
         for rp in self.roundplayer_set.all().prefetch_related('player'):
             rp.score = scores[rp.player]
-            rp.save()
+            rp.save(update_fields=['score'])
         # That could change the Tournament scoring
         self.tournament.update_scores()
 
@@ -1514,7 +1514,7 @@ class Game(models.Model):
             year = self.final_year()
         if (self.soloer() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
-            self.save()
+            self.save(update_fields=['is_finished'])
         # CentreCounts may have changed, so re-calculate scores
         self.update_scores()
 
@@ -1608,7 +1608,7 @@ class Game(models.Model):
         for gp in self.gameplayer_set.all().prefetch_related('power'):
             if gp.power:
                 gp.score = scores[gp.power]
-                gp.save()
+                gp.save(update_fields=['score'])
         self.the_round.update_scores()
 
     def positions(self):
@@ -2008,7 +2008,7 @@ class DrawProposal(models.Model):
         # Does this complete the game ?
         if self.passed:
             self.game.is_finished = True
-            self.game.save()
+            self.game.save(update_fields=['is_finished'])
 
     def __str__(self):
         return '%(game)s %(year)d%(season)s' % {'game': self.game,
@@ -2219,7 +2219,7 @@ class GamePlayer(models.Model):
             random.shuffle(free_powers)
             self.power = free_powers[0]
         assert self.power is not None
-        self.save()
+        self.save(update_fields=['power'])
 
     def result_str_long(self):
         """

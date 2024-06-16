@@ -361,7 +361,7 @@ class RoundViewTests(TestCase):
         for gp in g.gameplayer_set.all():
             powers[gp] = gp.power
             gp.power = None
-            gp.save()
+            gp.save(update_fields=['power'])
         response = self.client.get(reverse('board_call_csv',
                                            args=(self.t4.pk, 1)),
                                    secure=True)
@@ -369,7 +369,7 @@ class RoundViewTests(TestCase):
         # Clean up
         for gp, power in powers.items():
             gp.power = power
-            gp.save()
+            gp.save(update_fields=['power'])
 
     def test_game_cycle_no_games(self):
         response = self.client.get(reverse('round_sc_graphs',
@@ -707,7 +707,7 @@ class RoundViewTests(TestCase):
         # Clean up
         for rp in self.r11.roundplayer_set.all():
             rp.game_count = initial_values[rp]
-            rp.save()
+            rp.save(update_fields=['game_count'])
 
     def test_get_seven_doublers(self):
         # get_seven where we specify people playing two games
@@ -753,28 +753,28 @@ class RoundViewTests(TestCase):
         # Clean up
         for rp in self.r11.roundplayer_set.all():
             rp.game_count = initial_values[rp]
-            rp.save()
+            rp.save(update_fields=['game_count'])
 
     def test_get_seven_standbys(self):
         # Check that we can fill a game with standby players
         self.assertEqual(RoundPlayer.objects.filter(the_round=self.r11, standby=True).count(), 0)
         # Set it up so we have 5 players and 8 standbys
         self.rp11.standby = True
-        self.rp11.save()
+        self.rp11.save(update_fields=['standby'])
         self.rp12.standby = True
-        self.rp12.save()
+        self.rp12.save(update_fields=['standby'])
         self.rp14.standby = True
-        self.rp14.save()
+        self.rp14.save(update_fields=['standby'])
         self.rp15.standby = True
-        self.rp15.save()
+        self.rp15.save(update_fields=['standby'])
         self.rp18.standby = True
-        self.rp18.save()
+        self.rp18.save(update_fields=['standby'])
         self.rp110.standby = True
-        self.rp110.save()
+        self.rp110.save(update_fields=['standby'])
         self.rp111.standby = True
-        self.rp111.save()
+        self.rp111.save(update_fields=['standby'])
         self.rp112.standby = True
-        self.rp112.save()
+        self.rp112.save(update_fields=['standby'])
         # Remember the game_counts
         initial_values = {}
         for rp in self.r11.roundplayer_set.all():
@@ -820,7 +820,7 @@ class RoundViewTests(TestCase):
         for rp in self.r11.roundplayer_set.all():
             rp.game_count = initial_values[rp]
             rp.standby = False
-            rp.save()
+            rp.save(update_fields=['standby'])
 
     def test_seed_games_not_logged_in(self):
         response = self.client.get(reverse('seed_games',
@@ -861,7 +861,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
         self.assertEqual(self.t2.power_assignment, PowerAssignMethods.PREFERENCES)
         self.t2.power_assignment = PowerAssignMethods.MANUAL
-        self.t2.save()
+        self.t2.save(update_fields=['power_assignment'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t2.pk, 3)),
@@ -876,7 +876,7 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
         self.t2.power_assignment = PowerAssignMethods.PREFERENCES
-        self.t2.save()
+        self.t2.save(update_fields=['power_assignment'])
 
     def test_seed_games_auto_good_number_with_sitters(self):
         # Eight players, one sitting out, AUTO power assignment
@@ -900,7 +900,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(self.r11.game_set.count(), 0)
         # Tweak initial data for this test
         self.rp112.game_count = 1
-        self.rp112.save()
+        self.rp112.save(update_fields=['game_count'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -915,7 +915,7 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
         self.rp112.game_count = 0
-        self.rp112.save()
+        self.rp112.save(update_fields=['game_count'])
 
     def test_seed_games_post_success(self):
         # Eight players, one sitting out, AUTO power assignment
@@ -1137,7 +1137,7 @@ class RoundViewTests(TestCase):
         for gp in g.gameplayer_set.all():
             powers[gp] = gp.power
             gp.power = None
-            gp.save()
+            gp.save(update_fields=['power'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('create_games',
                                            args=(self.t3.pk, 1)),
@@ -1146,7 +1146,7 @@ class RoundViewTests(TestCase):
         # Clean-up
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp]
-            gp.save()
+            gp.save(update_fields=['power'])
 
     def test_create_games_post(self):
         # Simple case - no pre-existing Games. Create one.

@@ -1295,12 +1295,12 @@ class TournamentTests(TestCase):
         # Move the end date of the Tournament and flag as delaying game URL display
         t.delay_game_url_publication = True
         t.end_date = datetime.now()
-        t.save()
+        t.save(update_fields=['delay_game_url_publication', 'end_date'])
         self.assertFalse(t.show_game_urls())
         # Clean up
         t.delay_game_url_publication = False
         t.end_date = end
-        t.save()
+        t.save(update_fields=['delay_game_url_publication', 'end_date'])
 
     def test_tournament_show_game_urls_later(self):
         t = Tournament.objects.first()
@@ -1309,12 +1309,12 @@ class TournamentTests(TestCase):
         # Move the end date of the Tournament and flag as delaying game URL display
         t.delay_game_url_publication = True
         t.end_date = datetime.now() - HOURS_24
-        t.save()
+        t.save(update_fields=['delay_game_url_publication', 'end_date'])
         self.assertTrue(t.show_game_urls())
         # Clean up
         t.delay_game_url_publication = False
         t.end_date = end
-        t.save()
+        t.save(update_fields=['delay_game_url_publication', 'end_date'])
 
     # Tournament._calculated_scores()
     def test_tournament_scores_invalid(self):
@@ -1608,7 +1608,7 @@ class TournamentTests(TestCase):
         for gp in g.gameplayer_set.all():
             powers[gp.player] = gp.power
             gp.power = None
-            gp.save()
+            gp.save(update_fields=['power'])
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
         bc = t.best_countries()
@@ -1622,7 +1622,7 @@ class TournamentTests(TestCase):
         # Restore power assignments
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp.player]
-            gp.save()
+            gp.save(update_fields=['power'])
 
     def test_tournament_best_countries_with_unranked(self):
         t = Tournament.objects.get(name='t1')
@@ -1649,15 +1649,15 @@ class TournamentTests(TestCase):
         # Switch game scoring system to sum of squares for both games
         round_scoring1 = g12.the_round.scoring_system
         g12.the_round.scoring_system = 'Sum of Squares'
-        g12.the_round.save()
+        g12.the_round.save(update_fields=['scoring_system'])
         round_scoring2 = g14.the_round.scoring_system
         g14.the_round.scoring_system = 'Sum of Squares'
-        g14.the_round.save()
+        g14.the_round.save(update_fields=['scoring_system'])
         # Ensure all players are ranked
         gp_list = list(t.tournamentplayer_set.filter(unranked=True))
         for gp in gp_list:
             gp.unranked = False
-            gp.save()
+            gp.save(update_fields=['unranked'])
         # Add some CentreCounts to two Games
         # to give higher score with lower dot count and vice versa
         CentreCount.objects.create(power=self.austria, game=g12, year=1905, count=9)
@@ -1676,9 +1676,9 @@ class TournamentTests(TestCase):
         CentreCount.objects.create(power=self.turkey, game=g14, year=1905, count=5)
         # flag both games as finished to calculate scores
         g12.is_finished = True
-        g12.save()
+        g12.save(update_fields=['is_finished'])
         g14.is_finished = True
-        g14.save()
+        g14.save(update_fields=['is_finished'])
         # Check best countries with criterion of score
         bc = t.best_countries(True)
         for power in GreatPower.objects.all():
@@ -1691,7 +1691,7 @@ class TournamentTests(TestCase):
                     self.assertTrue(self._rank_of(gp1, bc[power]) > self._rank_of(gp2, bc[power]))
         # Change the Tournament to rank best countries by dot count
         t.best_country_criterion = BestCountryCriteria.DOTS
-        t.save()
+        t.save(update_fields=['best_country_criterion'])
         # Now best countries should be different
         bc = t.best_countries(True)
         for power in GreatPower.objects.all():
@@ -1704,20 +1704,20 @@ class TournamentTests(TestCase):
                     self.assertTrue(self._rank_of(gp1, bc[power]) > self._rank_of(gp2, bc[power]))
         # Clean up
         t.best_country_criterion = BestCountryCriteria.SCORE
-        t.save()
+        t.save(update_fields=['best_country_criterion'])
         for gp in gp_list:
             gp.unranked = True
-            gp.save()
+            gp.save(update_fields=['unranked'])
         g12.the_round.scoring_system = round_scoring1
-        g12.the_round.save()
+        g12.the_round.save(update_fields=['scoring_system'])
         g14.the_round.scoring_system = round_scoring2
-        g14.the_round.save()
+        g14.the_round.save(update_fields=['scoring_system'])
         g12.centrecount_set.filter(year=1905).delete()
         g14.centrecount_set.filter(year=1905).delete()
         g12.is_finished = False
-        g12.save()
+        g12.save(update_fields=['is_finished'])
         g14.is_finished = False
-        g14.save()
+        g14.save(update_fields=['is_finished'])
 
     # Tournament.background()
     def test_tournament_background_without_players(self):
@@ -2158,12 +2158,12 @@ class TournamentPlayerTests(TestCase):
         t = tp.tournament
         old_pa = t.power_assignment
         t.power_assignment = PowerAssignMethods.PREFERENCES
-        t.save()
+        t.save(update_fields=['power_assignment'])
         tp._generate_uuid()
         self.assertIn('https://', tp.get_prefs_url())
         # Clean up
         t.power_assignment = old_pa
-        t.save()
+        t.save(update_fields=['power_assignment'])
 
     def test_tp_get_prefs_url_no_uuid(self):
         # A TournamentPlayer without a uuid_str
@@ -2171,11 +2171,11 @@ class TournamentPlayerTests(TestCase):
         t = tp.tournament
         old_pa = t.power_assignment
         t.power_assignment = PowerAssignMethods.PREFERENCES
-        t.save()
+        t.save(update_fields=['power_assignment'])
         self.assertIn('https://', tp.get_prefs_url())
         # Clean up
         t.power_assignment = old_pa
-        t.save()
+        t.save(update_fields=['power_assignment'])
 
     def test_tp_get_prefs_url_wrong_tournament(self):
         # A Tournament where powers are not assigned by preferences
@@ -2202,7 +2202,7 @@ class TournamentPlayerTests(TestCase):
         # New TournamentPlayer for Player with email in Tournament with prefs should get uuid_str set
         self.assertEqual(len(self.p1.email), 0)
         self.p1.email = 'example@example.com'
-        self.p1.save()
+        self.p1.save(update_fields=['email'])
         t = Tournament.objects.get(name='t4')
         self.assertEqual(t.powers_assigned_from_prefs(), True)
         tp = TournamentPlayer(tournament=t,
@@ -2212,14 +2212,14 @@ class TournamentPlayerTests(TestCase):
         # Clean up
         tp.delete()
         self.p1.email = ''
-        self.p1.save()
+        self.p1.save(update_fields=['email'])
 
     def test_new_tp_no_set_uuid(self):
         # New TournamentPlayer in Tournament without prefs should not get uuid_str,
         # even for Player with email
         self.assertEqual(len(self.p1.email), 0)
         self.p1.email = 'example@example.com'
-        self.p1.save()
+        self.p1.save(update_fields=['email'])
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.powers_assigned_from_prefs(), False)
         tp = TournamentPlayer(tournament=t,
@@ -2229,14 +2229,14 @@ class TournamentPlayerTests(TestCase):
         # Clean up
         tp.delete()
         self.p1.email = ''
-        self.p1.save()
+        self.p1.save(update_fields=['email'])
 
     def test_new_tp_copy_bs_username(self):
         # New TournamentPlayer should get backstabbr_username copied over from Player
         t = Tournament.objects.get(name='t3')
         self.assertEqual(len(self.p1.backstabbr_username), 0)
         self.p1.backstabbr_username = 'My_username'
-        self.p1.save()
+        self.p1.save(update_fields=['backstabbr_username'])
         tp = TournamentPlayer(tournament=t,
                               player=self.p1)
         tp.save()
@@ -2244,7 +2244,7 @@ class TournamentPlayerTests(TestCase):
         # Clean up
         tp.delete()
         self.p1.backstabbr_username = ''
-        self.p1.save()
+        self.p1.save(update_fields=['backstabbr_username'])
 
     def test_new_tp_override_bs_username(self):
         # Can specify different backstabbr_username for new TP
@@ -2252,7 +2252,7 @@ class TournamentPlayerTests(TestCase):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(len(self.p1.backstabbr_username), 0)
         self.p1.backstabbr_username = 'My_username'
-        self.p1.save()
+        self.p1.save(update_fields=['backstabbr_username'])
         new_username = 'Different'
         tp = TournamentPlayer(tournament=t,
                               player=self.p1,
@@ -2264,7 +2264,7 @@ class TournamentPlayerTests(TestCase):
         # Clean up
         tp.delete()
         self.p1.backstabbr_username = ''
-        self.p1.save()
+        self.p1.save(update_fields=['backstabbr_username'])
 
     def test_save_tp_leave_bs_username(self):
         # Existing TournamentPlayer should not get backstabbr_username changed
@@ -2274,14 +2274,14 @@ class TournamentPlayerTests(TestCase):
         self.assertEqual(len(tp.backstabbr_username), 0)
         # Add a backstabbr_username to the Player
         self.p3.backstabbr_username = 'My_username'
-        self.p3.save()
+        self.p3.save(update_fields=['backstabbr_username'])
         # Save the TournamentPlayer
         tp.save()
         # TournamentPlayer backstabbr_username should remain the same
         self.assertEqual(len(tp.backstabbr_username), 0)
         # Clean up
         self.p3.backstabbr_username = ''
-        self.p3.save()
+        self.p3.save(update_fields=['backstabbr_username'])
 
     # TODO New TournamentPlayer should be unranked if they're a manager
     # TODO New TournamentPlayer should not be unranked if they're not a manager
@@ -3351,7 +3351,7 @@ class GameTests(TestCase):
         self.assertTrue(g.is_finished)
         # Cleanup
         g.is_finished = False
-        g.save()
+        g.save(update_fields=['is_finished'])
 
     def test_check_whether_finished_reached(self):
         # Game is finished because it reached the final year
@@ -3361,7 +3361,7 @@ class GameTests(TestCase):
         g = r.game_set.get(name='g31')
         self.assertTrue(g.is_finished)
         g.is_finished = False
-        g.save()
+        g.save(update_fields=['is_finished'])
         g.check_whether_finished(y)
         self.assertTrue(g.is_finished)
         # No cleanup needed
@@ -3374,12 +3374,12 @@ class GameTests(TestCase):
         g = r.game_set.get(name='g31')
         self.assertTrue(g.is_finished)
         g.is_finished = False
-        g.save()
+        g.save(update_fields=['is_finished'])
         g.check_whether_finished(y - 1)
         self.assertFalse(g.is_finished)
         # Cleanup
         g.is_finished = True
-        g.save()
+        g.save(update_fields=['is_finished'])
 
     def test_check_whether_finished_unlimited(self):
         # Game not finished because there is no final year
@@ -3523,7 +3523,7 @@ class GameTests(TestCase):
         self.assertEqual([], g.compare_sc_counts_and_ownerships(YEAR))
         # Now modify one SupplyCentreOwnership to create a mismatch
         sco.owner = self.england
-        sco.save()
+        sco.save(update_fields=['owner'])
         # That should give us two mismatches (the old and new owners)
         self.assertEqual(2, len(g.compare_sc_counts_and_ownerships(YEAR)))
         # Remove everything we added to the database
@@ -3546,13 +3546,13 @@ class GameTests(TestCase):
         for gp in gps:
             power_map[gp] = gp.power
             gp.power = None
-            gp.save()
+            gp.save(update_fields=['power'])
         scores = g.scores()
         # TODO validate results
         # Cleanup
         for gp in gps:
             gp.power = power_map[gp]
-            gp.save()
+            gp.save(update_fields=['power'])
 
     # Game.update_scores()
     def test_game_update_scores_invalid(self):
@@ -3576,12 +3576,12 @@ class GameTests(TestCase):
         for gp in g.gameplayer_set.all():
             power_map[gp] = gp.power
             gp.power = None
-            gp.save()
+            gp.save(update_fields=['power'])
         g.update_scores()
         # Cleanup
         for gp in g.gameplayer_set.all():
             gp.power = power_map[gp]
-            gp.save()
+            gp.save(update_fields=['power'])
 
     # Game.positions()
     def test_game_positions(self):
@@ -3837,12 +3837,12 @@ class GameTests(TestCase):
         self.assertEqual(len(g.external_url), 0)
         URL = 'www.example.com/nonsense'
         g.external_url = URL
-        g.save()
+        g.save(update_fields=['external_url'])
         msg = g.board_call_msg()
         self.assertIn(URL, msg)
         # Cleanup
         g.external_url = ''
-        g.save()
+        g.save(update_fields=['external_url'])
 
     def test_game_board_call_msg_notes(self):
         t = Tournament.objects.get(name='t1')
@@ -3850,19 +3850,19 @@ class GameTests(TestCase):
         self.assertEqual(len(g.notes), 0)
         NOTES = 'Actual notes go here'
         g.notes = NOTES
-        g.save()
+        g.save(update_fields=['notes'])
         msg = g.board_call_msg()
         self.assertIn(NOTES, msg)
         # Cleanup
         g.notes = ''
-        g.save()
+        g.save(update_fields=['notes'])
 
     def test_game_board_call_msg_virtual(self):
         # Ensure some, but not all, players have backstabbr usernames
         t = Tournament.objects.get(name='t1')
         self.assertFalse(t.is_virtual())
         t.format = Formats.VFTF
-        t.save()
+        t.save(update_fields=['format'])
         g = t.round_numbered(1).game_set.get(name='g11')
         msg = g.board_call_msg()
         self.assertNotIn('  ', msg)
@@ -3871,7 +3871,7 @@ class GameTests(TestCase):
         self.assertIn('(AbbeyBrown)', msg)
         # Cleanup
         t.format = Formats.FTF
-        t.save()
+        t.save(update_fields=['format'])
 
     def test_game_board_call_msg_no_powers(self):
         t = Tournament.objects.get(name='t1')
@@ -3882,13 +3882,13 @@ class GameTests(TestCase):
             self.assertIsNotNone(gp.power)
             powers[gp] = gp.power
             gp.power = None
-            gp.save()
+            gp.save(update_fields=['power'])
         msg = g.board_call_msg()
         self.assertIn('Power TBD', msg)
         # Cleanup
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp]
-            gp.save()
+            gp.save(update_fields=['power'])
 
     # Game.result_str()
     def test_game_result_str_soloed(self):
@@ -3988,7 +3988,7 @@ class GameTests(TestCase):
         g1 = Game.objects.first()
         self.assertEqual(g1.the_set, self.set1)
         g1.the_set = self.set2
-        g1.save()
+        g1.save(update_fields=['the_set'])
         # TODO Verify that the initial image has been updated
 
     @tag('slow')
@@ -4062,7 +4062,7 @@ class GameTests(TestCase):
                   the_set=self.set1)
         g2.save()
         g1.is_finished = True
-        g1.save()
+        g1.save(update_fields=['is_finished'])
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
             with self.subTest(player=gp.player):
@@ -4145,7 +4145,7 @@ class GameTests(TestCase):
         gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
         gp.save()
         g1.is_finished = True
-        g1.save()
+        g1.save(update_fields=['is_finished'])
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
             with self.subTest(player=gp.player):
@@ -4244,7 +4244,7 @@ class GameTests(TestCase):
                   the_set=self.set1)
         g2.save()
         g1.is_finished = True
-        g1.save()
+        g1.save(update_fields=['is_finished'])
         # Scores should be recorded for the game
         for gp in g1.gameplayer_set.all():
             with self.subTest(player=gp.player):
@@ -4718,7 +4718,7 @@ class DrawProposalTests(TestCase):
         # Clean up
         dp1.delete()
         g.is_finished = done
-        g.save()
+        g.save(update_fields=['is_finished'])
 
     def test_draw_proposal_clean_passed_not_set(self):
         t = Tournament.objects.get(name='t1')
@@ -4956,7 +4956,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         # Modify the game to not yet be finished
         g.is_finished = False
-        g.save()
+        g.save(update_fields=['is_finished'])
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
                                          season=Seasons.FALL,
@@ -4979,7 +4979,7 @@ class DrawProposalTests(TestCase):
         g = t.round_numbered(1).game_set.get(name='g31')
         # Modify the game to not yet be finished
         g.is_finished = False
-        g.save()
+        g.save(update_fields=['is_finished'])
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
                                          season=Seasons.FALL,
@@ -4997,14 +4997,14 @@ class DrawProposalTests(TestCase):
         # Cleanup
         dp.delete()
         g.is_finished = True
-        g.save()
+        g.save(update_fields=['is_finished'])
 
     def test_draw_proposal_two_successful(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
         # Modify the game to not yet be finished
         g.is_finished = False
-        g.save()
+        g.save(update_fields=['is_finished'])
         dp = DrawProposal.objects.create(game=g,
                                          year=1905,
                                          season=Seasons.SPRING,
@@ -5340,7 +5340,7 @@ class RoundPlayerTests(TestCase):
 
         # Finish the game, so scores get calculated and stored
         g.is_finished = True
-        g.save()
+        g.save(update_fields=['is_finished'])
 
         # Check that we have the scores we expect
         tp1 = t.tournamentplayer_set.get(player=self.p2)
@@ -5576,7 +5576,7 @@ class GamePlayerTests(TestCase):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
         t.best_country_criterion = BestCountryCriteria.DOTS
-        t.save()
+        t.save(update_fields=['best_country_criterion'])
         bc = t.best_countries(True)
         gps = bc[self.austria][0]
         for gp in gps:
@@ -5586,7 +5586,7 @@ class GamePlayerTests(TestCase):
             self.assertFalse(gp.is_best_country())
         # Cleanup
         t.best_country_criterion = BestCountryCriteria.SCORE
-        t.save()
+        t.save(update_fields=['best_country_criterion'])
 
     # TODO GamePlayer.is_best_country() with criteria DOTS where two players
     #      have equal dots and scores are used to tie break

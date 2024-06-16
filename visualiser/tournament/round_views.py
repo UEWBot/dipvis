@@ -223,21 +223,21 @@ def get_seven(request, tournament_id, round_num):
                 rp.game_count = 0
             else:
                 rp.game_count = 1
-            rp.save()
+            rp.save(update_fields=['game_count'])
         for i in range(form.standbys):
             rp = form.cleaned_data['standby_%d' % i]
             rp.game_count = 1
-            rp.save()
+            rp.save(update_fields=['game_count'])
         for i in range(form.sitters):
             rp = form.cleaned_data['sitter_%d' % i]
             if rp:
                 rp.game_count = 0
-                rp.save()
+                rp.save(update_fields=['game_count'])
         for i in range(form.doubles):
             rp = form.cleaned_data['double_%d' % i]
             if rp:
                 rp.game_count = 2
-                rp.save()
+                rp.save(update_fields=['game_count'])
         return HttpResponseRedirect(reverse('seed_games',
                                             args=(tournament_id,
                                                   round_num)))
@@ -383,7 +383,7 @@ def seed_games(request, tournament_id, round_num):
                         continue
                     gp = GamePlayer.objects.get(id=gp_id)
                     gp.power = field
-                    gp.save()
+                    gp.save(update_fields=['power'])
                 # Generate initial scores
                 g.update_scores()
             # Notify the players

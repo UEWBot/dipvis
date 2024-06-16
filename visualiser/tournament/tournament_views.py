@@ -312,7 +312,7 @@ def round_scores(request, tournament_id):
                 elif r_name == 'overall_score':
                     # Store the player's tournament score
                     tp.score = value
-                    tp.save()
+                    tp.save(update_fields=['score'])
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_scores',
                                             args=(tournament_id,)))
@@ -340,13 +340,15 @@ def self_check_in_control(request, tournament_id):
             i = int(r_name[6:])
             # Find that Round
             rd = t.round_numbered(i)
+            fields=['enable_check_in']
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
                 if not rd.email_sent:
                     send_roll_call_emails(i, list(t.tournamentplayer_set.all()))
                     rd.email_sent = True
+                    fields.append('email_sent')
             rd.enable_check_in = value
-            rd.save()
+            rd.save(update_fields=fields)
         # Redirect to the roll call page
         return HttpResponseRedirect(reverse('round_roll_call',
                                             args=(tournament_id, t.current_round().number())))

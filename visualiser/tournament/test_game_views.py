@@ -250,7 +250,7 @@ class GameViewTests(TestCase):
     def test_detail_scrape_bs_link(self):
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
@@ -258,12 +258,12 @@ class GameViewTests(TestCase):
         self.assertContains(response, 'from Backstabbr')
         # Clean up
         self.g1.external_url = ''
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
 
     def test_detail_scrape_wd_link(self):
         # Give g1 a webdip URL
         self.g1.external_url = VALID_WD_URL
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
@@ -271,14 +271,14 @@ class GameViewTests(TestCase):
         self.assertContains(response, 'from Backstabbr')
         # Clean up
         self.g1.external_url = ''
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
 
     def test_detail_show_url(self):
         self.assertFalse(self.t1.delay_game_url_publication)
         self.assertEqual(self.g1.external_url, '')
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
@@ -287,17 +287,17 @@ class GameViewTests(TestCase):
         self.assertIn(VALID_BS_URL.encode('utf-8'), response.content)
         # Clean up
         self.g1.external_url = ''
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
 
     def test_detail_dont_show_url(self):
         self.assertFalse(self.t1.delay_game_url_publication)
         self.assertEqual(self.g1.external_url, '')
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         # Delay publication for t1
         self.t1.delay_game_url_publication = True
-        self.t1.save()
+        self.t1.save(update_fields=['delay_game_url_publication'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
@@ -305,14 +305,14 @@ class GameViewTests(TestCase):
         self.assertNotContains(response, VALID_BS_URL.encode('utf-8'))
         # Clean up
         self.g1.external_url = ''
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.t1.delay_game_url_publication = False
-        self.t1.save()
+        self.t1.save(update_fields=['delay_game_url_publication'])
 
     def test_detail_no_aar_link(self):
         self.assertEqual(self.g1.is_finished, False)
         self.g1.is_finished = True
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
         # Add a GamePlayer without an AAR
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
@@ -325,7 +325,7 @@ class GameViewTests(TestCase):
         # Clean up
         p.delete()
         self.g1.is_finished = False
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
 
     def test_detail_aar_link(self):
         # Add a GamePlayer with an AAR
@@ -553,12 +553,12 @@ class GameViewTests(TestCase):
             ccs.delete()
         cc.delete()
         self.g1.is_finished = False
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
 
     def test_post_un_end(self):
         self.assertFalse(self.g1.is_finished)
         self.g1.is_finished = True
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
         counts = {1912: {self.austria: 9,
                          self.england: 9,
                          self.france: 3,
@@ -916,7 +916,7 @@ class GameViewTests(TestCase):
         r = self.g1.the_round
         self.assertFalse(r.final_year)
         r.final_year = 1905
-        r.save()
+        r.save(update_fields=['final_year'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('enter_sc_owners',
                                            args=(self.t1.pk, self.g1.name)),
@@ -927,7 +927,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.content.count(b'</tr>'), 1 + 1 + 5)
         # Clean up
         r.final_year = None
-        r.save()
+        r.save(update_fields=['final_year'])
 
     def test_post_enter_sc_owners(self):
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
@@ -1302,7 +1302,7 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
         self.g1.is_finished = False
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
         self.g1.refresh_from_db()
 
     def test_post_secret_non_dias_draw_vote_passed(self):
@@ -1344,7 +1344,7 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
         self.g2.is_finished = False
-        self.g2.save()
+        self.g2.save(update_fields=['is_finished'])
         self.g2.refresh_from_db()
 
     def test_post_counts_dias_draw_vote(self):
@@ -1454,7 +1454,7 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
         self.g3.is_finished = False
-        self.g3.save()
+        self.g3.save(update_fields=['is_finished'])
         self.g3.refresh_from_db()
 
     def test_post_counts_non_dias_draw_vote_passed(self):
@@ -1496,7 +1496,7 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
         self.g4.is_finished = False
-        self.g4.save()
+        self.g4.save(update_fields=['is_finished'])
         self.g4.refresh_from_db()
 
     def test_draw_vote(self):
@@ -1581,7 +1581,7 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
         self.g2.is_finished = False
-        self.g2.save()
+        self.g2.save(update_fields=['is_finished'])
         self.g2.refresh_from_db()
 
     def test_post_counts_concession(self):
@@ -1659,7 +1659,7 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
         self.g4.is_finished = False
-        self.g4.save()
+        self.g4.save(update_fields=['is_finished'])
         self.g4.refresh_from_db()
 
     def test_concession(self):
@@ -1682,22 +1682,22 @@ class GameViewTests(TestCase):
         CentreCount.objects.create(game=self.g1, year=1905, power=self.russia, count=0)
         CentreCount.objects.create(game=self.g1, year=1905, power=self.turkey, count=0)
         self.g1.is_finished = True
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
         self.assertEqual(_graph_end_year(self.g1), 1905)
         # Cleanup
         self.g1.centrecount_set.filter(year=1905).delete()
         self.g1.is_finished = False
-        self.g1.save()
+        self.g1.save(update_fields=['is_finished'])
 
     def test_graph_end_year_fixed_end(self):
         self.assertIsNone(self.g1.the_round.final_year)
         # Flag the Round as having a fixed game endpoint
         self.g1.the_round.final_year = 1905
-        self.g1.the_round.save()
+        self.g1.the_round.save(update_fields=['final_year'])
         self.assertEqual(_graph_end_year(self.g1), 1905)
         # Cleanup
         self.g1.the_round.final_year = None
-        self.g1.the_round.save()
+        self.g1.the_round.save(update_fields=['final_year'])
 
     def test_graph_end_year_long_game(self):
         self.assertEqual(self.g1.centrecount_set.filter(year=1915).count(), 0)
@@ -1788,7 +1788,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g1.centrecount_set.count(), 7)
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('scrape_external_site',
                                            args=(self.t1.pk, self.g1.name)),
@@ -1804,7 +1804,7 @@ class GameViewTests(TestCase):
         self.g1.external_url = ''
         ccs.delete()
         scos.delete()
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()
 
     @skip('WebDip parsing is broken')
@@ -1813,7 +1813,7 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g1.centrecount_set.count(), 7)
         # Give g1 a webdip URL
         self.g1.external_url = VALID_WD_URL
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('scrape_external_site',
                                            args=(self.t1.pk, self.g1.name)),
@@ -1826,5 +1826,5 @@ class GameViewTests(TestCase):
         # Clean up
         self.g1.external_url = ''
         ccs.delete()
-        self.g1.save()
+        self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()

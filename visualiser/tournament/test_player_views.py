@@ -68,7 +68,7 @@ class PlayerViewTests(TestCase):
     def test_detail_nationalities(self):
         self.assertEqual(len(self.p1.nationalities), 0)
         self.p1.nationalities = countries[0]
-        self.p1.save()
+        self.p1.save(update_fields=['nationalities'])
         # Don't have to be logged in to see a player
         response = self.client.get(reverse('player_detail',
                                            args=(self.p1.pk,)),

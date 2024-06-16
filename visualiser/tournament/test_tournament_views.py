@@ -619,9 +619,9 @@ class TournamentViewTests(TestCase):
         self.assertEqual(tp.score, 142.8)
         # Clean up
         tp.score = tp_score
-        tp.save()
+        tp.save(update_fields=['score'])
         rp.score = rp_score
-        rp.save()
+        rp.save(update_fields=['score'])
 
     def test_current_round(self):
         response = self.client.get(reverse('tournament_round',

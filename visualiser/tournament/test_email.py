@@ -330,13 +330,13 @@ class EmailTests(TestCase):
         self.assertEqual(t.is_virtual(), False)
         self.assertEqual(t.no_email, False)
         t.no_email = True
-        t.save()
+        t.save(update_fields=['no_email'])
         send_board_call_email(r)
         # 3 Games, but no managers, so we expect no emails
         self.assertEqual(len(mail.outbox), 0)
         # Clean up
         t.no_email = False
-        t.save()
+        t.save(update_fields=['no_email'])
 
     # TournamentPlayer.save() calls send_prefs_email()
     def test_send_prefs_email_no_prefs_new(self):
@@ -396,9 +396,9 @@ class EmailTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         # Clean things up back as they were
         tp.uuid_str = ''
-        tp.save()
+        tp.save(update_fields=['uuid_str'])
         tp.player.email = ''
-        tp.player.save()
+        tp.player.save(update_fields=['email'])
 
     def test_send_prefs_no_email(self):
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
@@ -407,13 +407,13 @@ class EmailTests(TestCase):
         self.assertEqual(t.is_virtual(), False)
         self.assertEqual(t.no_email, False)
         t.no_email = True
-        t.save()
+        t.save(update_fields=['no_email'])
         send_prefs_email(tp)
         # We expect no email
         self.assertEqual(len(mail.outbox), 0)
         # Clean up
         t.no_email = False
-        t.save()
+        t.save(update_fields=['no_email'])
 
     # send_prefs_email(force=True)
     def test_send_prefs_email_no_prefs_force(self):
@@ -444,12 +444,12 @@ class EmailTests(TestCase):
         t = tp.tournament
         old_pa = t.power_assignment
         t.power_assignment = PowerAssignMethods.PREFERENCES
-        t.save()
+        t.save(update_fields=['power_assignment'])
         send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 1)
         # Clean up
         t.power_assignment = old_pa
-        t.save()
+        t.save(update_fields=['power_assignment'])
 
     def test_send_roll_call_no_email(self):
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
@@ -460,10 +460,10 @@ class EmailTests(TestCase):
         t.no_email = True
         old_pa = t.power_assignment
         t.power_assignment = PowerAssignMethods.PREFERENCES
-        t.save()
+        t.save(update_fields=['no_email', 'power_assignment'])
         send_roll_call_emails(1, [tp])
         self.assertEqual(len(mail.outbox), 0)
         # Clean up
         t.no_email = False
         t.power_assignment = old_pa
-        t.save()
+        t.save(update_fields=['no_email', 'power_assignment'])

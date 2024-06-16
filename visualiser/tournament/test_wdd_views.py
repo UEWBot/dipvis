@@ -445,7 +445,7 @@ class WddViewTests(TestCase):
         # Switch the top board to a regular board
         g = Game.objects.get(is_top_board=True)
         g.is_top_board=False
-        g.save()
+        g.save(update_fields=['is_top_board'])
         response = self.client.get(reverse('csv_classification',
                                            args=(self.t.pk,)),
                                    secure=True)
@@ -453,7 +453,7 @@ class WddViewTests(TestCase):
         # TODO Check CSV file content
         # Clean up
         g.is_top_board=True
-        g.save()
+        g.save(update_fields=['is_top_board'])
 
     def test_classification_many_awards(self):
         # Tournament with more than the 12 (non-best country) awards supported by the WDD

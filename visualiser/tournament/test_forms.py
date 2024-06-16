@@ -1305,34 +1305,34 @@ class GetSevenPlayersFormTest(TestCase):
     def test_existing_sitters(self):
         # Already two people flagged as sitting out the round
         self.rp1_3.game_count = 0
-        self.rp1_3.save()
+        self.rp1_3.save(update_fields=['game_count'])
         self.rp1_4.game_count = 0
-        self.rp1_4.save()
+        self.rp1_4.save(update_fields=['game_count'])
         form = GetSevenPlayersForm(the_round=self.r1)
         # They should be listed as a sitter
         self.assertEqual(form['sitter_0'].initial, self.rp1_3)
         self.assertEqual(form['sitter_1'].initial, self.rp1_4)
         # Clean up changes made
         self.rp1_3.game_count = 1
-        self.rp1_3.save()
+        self.rp1_3.save(update_fields=['game_count'])
         self.rp1_4.game_count = 1
-        self.rp1_4.save()
+        self.rp1_4.save(update_fields=['game_count'])
 
     def test_existing_doublers(self):
         # Already two people flagged as playing two games
         self.rp1_3.game_count = 2
-        self.rp1_3.save()
+        self.rp1_3.save(update_fields=['game_count'])
         self.rp1_4.game_count = 2
-        self.rp1_4.save()
+        self.rp1_4.save(update_fields=['game_count'])
         form = GetSevenPlayersForm(the_round=self.r1)
         # They should be listed as a doubler
         self.assertEqual(form['double_0'].initial, self.rp1_3)
         self.assertEqual(form['double_1'].initial, self.rp1_4)
         # Clean up changes made
         self.rp1_3.game_count = 1
-        self.rp1_3.save()
+        self.rp1_3.save(update_fields=['game_count'])
         self.rp1_4.game_count = 1
-        self.rp1_4.save()
+        self.rp1_4.save(update_fields=['game_count'])
 
     def test_sitting_twice(self):
         # One person listed twice as sitting out

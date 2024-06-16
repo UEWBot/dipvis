@@ -312,12 +312,12 @@ class PlayerTests(TestCase):
         add_player_bg(p)
         self.assertEqual(53, p.playertournamentranking_set.count())
         p.wdd_player_id = MELINDA_HOLLEY_WDD_ID
-        p.save()
+        p.save(update_fields=['wdd_player_id'])
         # Change in wdd_player_id should trigger clearing of background
         self.assertEqual(0, p.playertournamentranking_set.count())
         # Clean up
         p.wdd_player_id = wdd_id
-        p.save()
+        p.save(update_fields=['wdd_player_id'])
 
     # Player.get_absolute_url()
     def test_player_get_absolute_url(self):

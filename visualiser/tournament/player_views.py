@@ -206,6 +206,7 @@ def upload_players(request):
             else:
                 # Add missing info and flag mismatches
                 new_info = []
+                fields = []
                 if len(email) > 0:
                     if len(p.email) > 0:
                         if p.email != email:
@@ -214,6 +215,7 @@ def upload_players(request):
                         # Add the email address
                         p.email = email
                         new_info.append('email address')
+                        fields.append('email')
                 if bs_un is not None and len(bs_un) > 0:
                     if len(p.backstabbr_username) > 0:
                         if p.backstabbr_username != bs_un:
@@ -222,6 +224,7 @@ def upload_players(request):
                         # Add the username
                         p.backstabbr_username = bs_un
                         new_info.append('Backstabbr username')
+                        fields.append('backstabbr_username')
                 if wdd_id is not None:
                     if p.wdd_player_id:
                         if p.wdd_player_id != wdd_id:
@@ -230,8 +233,9 @@ def upload_players(request):
                         # Add the WDD id
                         p.wdd_player_id = wdd_id
                         new_info.append('WDD id')
+                        fields.append('wdd_player_id')
                 if len(new_info):
-                    p.save()
+                    p.save(update_fields=fields)
                     messages.info(request, 'Player %s %s already exists - added %s' % (first_name, last_name, ', '.join(new_info)))
                 else:
                     messages.info(request, 'Player %s %s already exists - skipped' % (first_name, last_name))
