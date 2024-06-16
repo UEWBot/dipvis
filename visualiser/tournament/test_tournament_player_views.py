@@ -160,8 +160,8 @@ class TournamentPlayerViewTests(TestCase):
                                   is_top_board=True)
         tp = TournamentPlayer.objects.create(player=cls.p1,
                                              tournament=cls.t2)
-        # Explicitly call save() to generate a UUID
-        tp.save()
+        # Explicitly call get_prefs_url() to generate a UUID
+        tp.get_prefs_url()
         tp = TournamentPlayer.objects.create(player=p3,
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p4,

@@ -271,8 +271,8 @@ class EmailTests(TestCase):
                                     last_name='Turkey',
                                     email='s.turkey@example.com')
         tp = TournamentPlayer.objects.create(player=p23, tournament=cls.t2)
-        # Explicitly call save() to generate UUID
-        tp.save()
+        # Explicitly call get_prefs_url() to generate UUID
+        tp.get_prefs_url()
 
         # One unused Player
         cls.p24 = Player.objects.create(first_name='Ulysses',
