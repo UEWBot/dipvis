@@ -239,7 +239,6 @@ def clone_tournament(t):
         if tp.uuid_str:
             # Create a different UUID for the new TP
             new_tp._generate_uuid()
-            new_tp.save()
         for p in tp.preference_set.all():
             Preference.objects.create(player=new_tp,
                                       power=p.power,
