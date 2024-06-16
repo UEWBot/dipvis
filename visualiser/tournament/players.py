@@ -360,7 +360,7 @@ def add_player_bg(player, include_wpe=False):
     include_wpe=True will set PlayerTournamentRanking.wpe_score,
     which involves parsing an additional WDD page
     """
-    save_player = False
+    fields = []
     # First check wikipedia
     bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
     # Titles won
@@ -414,7 +414,7 @@ def add_player_bg(player, include_wpe=False):
             # WDD does have a country, but it doesn't map to a real-world country
             pass
         else:
-            save_player = True
+            fields.append('nationalities')
     # Location
     # Assume that if we know a location it either came from the WDD or is more accurate
     if not player.location:
@@ -426,9 +426,8 @@ def add_player_bg(player, include_wpe=False):
                 # WDD does have a country, but it doesn't map to a real-world country
                 pass
             else:
-                save_player = True
-    if save_player:
-        player.save()
+                fields.append('location')
+    player.save(update_fields=fields)
 
 
 def position_str(position):
