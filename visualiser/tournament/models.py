@@ -980,6 +980,16 @@ class DBNCoverage(models.Model):
         return '%s %s' % (self.tournament, self.description)
 
 
+class SeriesSlugField(models.SlugField):
+    """ Auto-generate a slug from the model's name field """
+    def pre_save(self, model_instance, add):
+        slug = super().pre_save(model_instance, add)
+        if not slug:
+            slug = slugify(model_instance.name)
+            setattr(model_instance, self.attname, slug)
+        return slug
+
+
 class Series(models.Model):
     """
     A series of Diplomacy tournaments, related in some way.
@@ -990,7 +1000,7 @@ class Series(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
     description = models.CharField(max_length=MAX_DESC_LENGTH, null=True)
     tournaments = models.ManyToManyField(Tournament)
-    slug = models.SlugField(null=False, unique=True)
+    slug = SeriesSlugField(null=False, unique=True)
 
     class Meta:
         ordering = ['name']
@@ -1003,10 +1013,29 @@ class Series(models.Model):
     def __str__(self):
         return '%s' % (self.name)
 
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        return super().save(*args, **kwargs)
+
+class TPPlayerField(models.CharField):
+    """ Default to match the Player if not provided """
+    def pre_save(self, model_instance, add):
+        val = super().pre_save(model_instance, add)
+        # For new objects with no value set...
+        if add and not val:
+            # ... use the field of the same name from the Player
+            val = getattr(model_instance.player, self.attname)
+            setattr(model_instance, self.attname, val)
+        return val
+
+
+class TPUnrankedField(models.BooleanField):
+    """ Default from the Player and Tournament """
+    def pre_save(self, model_instance, add):
+        val = super().pre_save(model_instance, add)
+        # For new objects with no value set...
+        if add and not val:
+            user = model_instance.player.user
+            val = (user is not None) and user.tournament_set.filter(pk=model_instance.tournament.pk).exists()
+            setattr(model_instance, self.attname, val)
+        return val
 
 
 class TournamentPlayer(models.Model):
@@ -1018,14 +1047,14 @@ class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
-    unranked = models.BooleanField(default=False,
-                                   verbose_name=_('Ineligible for awards'),
-                                   help_text=_('Set this to ignore this player when determining rankings'))
+    unranked = TPUnrankedField(default=False,
+                               verbose_name=_('Ineligible for awards'),
+                               help_text=_('Set this to ignore this player when determining rankings'))
     uuid_str = models.CharField(max_length=36, blank=True)
-    backstabbr_username = models.CharField(max_length=MAX_BACKSTABBR_USERNAME_LENGTH,
-                                           blank=True,
-                                           help_text=_('Username on the backstabbr website'))
-    location = models.CharField(max_length=60, blank=True)
+    backstabbr_username = TPPlayerField(max_length=MAX_BACKSTABBR_USERNAME_LENGTH,
+                                        blank=True,
+                                        help_text=_('Username on the backstabbr website'))
+    location = TPPlayerField(max_length=60, blank=True)
     awards = models.ManyToManyField(Award, blank=True)
 
     class Meta:
@@ -1156,15 +1185,6 @@ class TournamentPlayer(models.Model):
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
-        # Default some attributes
-        if is_new:
-            # Only override if they haven't been provided
-            if not self.backstabbr_username:
-                self.backstabbr_username = self.player.backstabbr_username
-            if not self.location:
-                self.location = self.player.location
-            if not self.unranked:
-                self.unranked = (self.player.user is not None) and self.player.user.tournament_set.filter(pk=self.tournament.pk).exists()
         super().save(*args, **kwargs)
         # Update Player if things have changed
         if ((self.location != self.player.location) or
@@ -1846,6 +1866,19 @@ class SupplyCentreOwnership(models.Model):
                                                                                          'year': self.year}
 
 
+class DPPassedField(models.BooleanField):
+    """ If counts are recorded, derive passed from votes_in_favour and survivor count """
+    def pre_save(self, model_instance, add):
+        val = super().pre_save(model_instance, add)
+        if model_instance.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
+            survivors = len(model_instance.game.survivors(model_instance.year))
+            if model_instance.votes_in_favour:
+                # Votes must be unanimous
+                val = (model_instance.votes_in_favour == survivors)
+                setattr(model_instance, self.attname, val)
+        return val
+
+
 class DrawProposal(models.Model):
     """
     A single draw or concession proposal in a game
@@ -1853,7 +1886,7 @@ class DrawProposal(models.Model):
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year])
     season = models.CharField(max_length=1, choices=Seasons.choices)
-    passed = models.BooleanField(blank=True, null=True)
+    passed = DPPassedField(blank=True, null=True)
     proposer = models.ForeignKey(GreatPower,
                                  blank=True,
                                  null=True,
@@ -1971,16 +2004,6 @@ class DrawProposal(models.Model):
             raise AssertionError('Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy)
 
     def save(self, *args, **kwargs):
-        if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
-            # Derive passed from votes_in_favour and survivor count
-            survivors = len(self.game.survivors(self.year))
-            if self.votes_in_favour:
-                # Votes must be unanimous
-                self.passed = (self.votes_in_favour == survivors)
-        # Ensure that we never save a second successful DrawProposal for a single Game
-        # (ideally, we'd do this with database constraints, but we're not there yet)
-        if self.passed and DrawProposal.objects.filter(game=self.game, passed=True).exclude(pk=self.pk).exists():
-            raise ValidationError(_('Successful DrawProposal already exists for the Game'))
         super().save(*args, **kwargs)
         # Does this complete the game ?
         if self.passed:

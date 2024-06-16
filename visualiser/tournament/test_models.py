@@ -4999,7 +4999,7 @@ class DrawProposalTests(TestCase):
         g.is_finished = True
         g.save()
 
-    def test_draw_proposal_save_two_successful(self):
+    def test_draw_proposal_two_successful(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
         # Modify the game to not yet be finished
@@ -5022,7 +5022,8 @@ class DrawProposalTests(TestCase):
                            season=Seasons.FALL,
                            votes_in_favour=7,
                            proposer=self.austria)
-        self.assertRaises(ValidationError, dp2.save)
+        # Full clean should object to two passed draws for the same Game
+        self.assertRaises(ValidationError, dp2.full_clean)
         # Cleanup
         dp.delete()
 
