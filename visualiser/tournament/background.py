@@ -58,6 +58,9 @@ class WikipediaBackground():
     Get background on a player from wikipedia.
     """
 
+    # Timeout for retrieving wikipedia pages
+    TIMEOUT = 1.5
+
     def __init__(self, name):
         self.name = name
 
@@ -75,7 +78,7 @@ class WikipediaBackground():
         """
         url = WIKIPEDIA_URL
         try:
-            page = requests.get(url, timeout=1.5)
+            page = requests.get(url, timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return []
         soup = BeautifulSoup(page.text)
@@ -127,6 +130,9 @@ class WDDBackground():
     Get background on a player from the World Diplomacy Database.
     """
 
+    # timeout in seconds for read requests to WDD
+    TIMEOUT=3.0
+
     def __init__(self, wdd_id):
         self.wdd_id = wdd_id
 
@@ -140,7 +146,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -183,7 +189,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -218,7 +224,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -275,7 +281,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -345,7 +351,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -441,7 +447,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -513,7 +519,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
@@ -545,7 +551,7 @@ class WDDBackground():
                                 params={'id_ranking': 2,
                                         'id_player': self.wdd_id},
                                 allow_redirects=False,
-                                timeout=2.5)
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
