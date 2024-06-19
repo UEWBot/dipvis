@@ -850,91 +850,6 @@ class GameScoringTests(TestCase):
         self.check_score_order(scores)
 
 
-    # GScoringWorldClassic
-    def test_g_scoring_world_classic_no_solo1(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1904)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('World Classic')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
-                if sc.count == 0:
-                    self.assertEqual(s, 3)
-                elif sc.count == 8:
-                    self.assertEqual(s, 30 + 10 * sc.count + 48/2)
-                else:
-                    self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
-
-    def test_g_scoring_world_classic_no_solo2(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1905)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('World Classic')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
-                if sc.count == 0:
-                    self.assertEqual(s, 3)
-                elif sc.count == 13:
-                    self.assertEqual(s, 30 + 10 * sc.count + 48)
-                else:
-                    self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
-
-    def test_g_scoring_world_classic_no_solo3(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1906)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('World Classic')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
-                if sc.count == 0:
-                    if sc.power == self.austria:
-                        self.assertEqual(s, 3)
-                    else:
-                        self.assertEqual(s, 5)
-                elif sc.count == 17:
-                    self.assertEqual(s, 30 + 10 * sc.count + 48)
-                else:
-                    self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
-
-    def test_g_scoring_world_classic_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1907)
-        tgs = TournamentGameState(scs)
-        system = find_game_scoring_system('World Classic')
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
-                if sc.count == 18:
-                    self.assertEqual(s, 420)
-                else:
-                    if sc.power == self.austria:
-                        self.assertEqual(s, 3)
-                    elif sc.power == self.france:
-                        self.assertEqual(s, 5)
-                    elif sc.power == self.italy:
-                        self.assertEqual(s, 5)
-                    else:
-                        self.assertEqual(s, 6)
-        self.check_score_order(scores)
-
     # GScoringBangkok
     def test_g_Scoring_bangkok_no_solo1(self):
         t = Tournament.objects.get(name='t1')
@@ -1452,6 +1367,247 @@ class GameScoringTests(TestCase):
             else:
                 # Turkey
                 self.assertEqual(s, (80 + 15))
+        self.check_score_order(scores)
+
+
+class WorldClassicGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        now = timezone.now()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=now,
+                                       end_date=now,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
+        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
+        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
+        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
+    def check_score_order(self, scores):
+        """Check that the scores appear in GreatPower order when iterated through"""
+        EXPECT = [p for p in GreatPower.objects.all()]
+        order = [k for k in scores.keys()]
+        self.assertEqual(EXPECT, order)
+
+    def test_g_scoring_world_classic_no_solo1(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1904)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 0:
+                    self.assertEqual(s, 3)
+                elif sc.count == 8:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48/2)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+        self.check_score_order(scores)
+
+    def test_g_scoring_world_classic_no_solo2(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1905)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 0:
+                    self.assertEqual(s, 3)
+                elif sc.count == 13:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+        self.check_score_order(scores)
+
+    def test_g_scoring_world_classic_no_solo3(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1906)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 0:
+                    if sc.power == self.austria:
+                        self.assertEqual(s, 3)
+                    else:
+                        self.assertEqual(s, 5)
+                elif sc.count == 17:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+        self.check_score_order(scores)
+
+    def test_g_scoring_world_classic_3way(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1902)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 6:
+                    self.assertEqual(s, 30 + 10 * sc.count + 48/3)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+        self.check_score_order(scores)
+
+    def test_g_scoring_summer_classic_3way(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1902)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('Summer Classic')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 6:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+                else:
+                    self.assertEqual(s, 30 + 10 * sc.count)
+        self.check_score_order(scores)
+
+    def test_g_scoring_world_classic_solo(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        scs = g.centrecount_set.filter(year__lte=1907)
+        tgs = TournamentGameState(scs)
+        system = find_game_scoring_system('World Classic')
+        scores = system.scores(tgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                sc = scs.filter(power=p).last()
+                if sc.count == 18:
+                    self.assertEqual(s, 420)
+                else:
+                    if sc.power == self.austria:
+                        self.assertEqual(s, 3)
+                    elif sc.power == self.france:
+                        self.assertEqual(s, 5)
+                    elif sc.power == self.italy:
+                        self.assertEqual(s, 5)
+                    else:
+                        self.assertEqual(s, 6)
         self.check_score_order(scores)
 
 

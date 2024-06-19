@@ -660,11 +660,26 @@ class GScoringOMG(GameScoringSystem):
 class GScoringWorldClassic(GameScoringSystem):
     """
     Solo gets 420. Others get 0.
-    Otherwise 10 points per SC, 30 for surviving to the end/draw, 48 pool for board topping.
+    Otherwise 10 points per SC, 30 for surviving to the end/draw.
+    48 pool for board topping, optionally only if 1 or 2 people top.
     1 point for year survived if eliminated by a non-solo.
     """
-    def __init__(self):
-        self.name = _('World Classic')
+    def __init__(self, name, no_3ways=False):
+        self.no_3ways = no_3ways
+        self.name = name
+
+    @property
+    def description(self):
+        if self.no_3ways:
+            topping_str = '48 extra points for a solo board topper, 24 each if 2 people top.'
+        else:
+            topping_str = '48 pool for board topping, split between all toppers.'
+        return _("""
+                 Solo gets 420. Others get 0.
+                 Otherwise 10 points per SC, 30 for surviving to the end/draw.
+                 %(topping_str)s
+                 1 point for year survived if eliminated by a non-solo.
+                 """) % {'topping_str': topping_str}
 
     def scores(self, state):
         retval = {}
@@ -694,7 +709,13 @@ class GScoringWorldClassic(GameScoringSystem):
             retval[p] += 30
             # 48 split between board toppers
             if dots == leader_scs:
-                retval[p] += 48 / num_leaders
+                if self.no_3ways:
+                    # Topper bonus is void if 3 or more people share the top
+                    if num_leaders < 3:
+                        retval[p] += 48 / num_leaders
+                else:
+                    # Split the topper bonus between all toppers
+                    retval[p] += 48 / num_leaders
         return retval
 
 
@@ -1079,5 +1100,6 @@ G_SCORING_SYSTEMS = [
     GScoringTribute(),
     GScoringOpenTribute(),
     GScoringWhipping(_('Whipping'), 468),
-    GScoringWorldClassic(),
+    GScoringWorldClassic('World Classic'),
+    GScoringWorldClassic('Summer Classic', no_3ways=True),
 ]
