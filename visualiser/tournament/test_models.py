@@ -657,6 +657,7 @@ class TournamentScoringTests(TestCase):
                         rp = RoundPlayer.objects.get(player=p, the_round=r)
                         self.assertEqual(rp.score_dropped, drop)
 
+    # TScoringSumGames
     def test_tscoringsumgames_scores(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
@@ -665,7 +666,7 @@ class TournamentScoringTests(TestCase):
                                       start_date=now,
                                       end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[3].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[4].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn('4 games in any rounds', t.tournament_scoring_system)
