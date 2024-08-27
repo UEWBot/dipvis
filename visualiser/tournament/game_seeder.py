@@ -397,8 +397,7 @@ class GameSeeder:
         # The more iterations, the better the result, but the longer it takes
         for _ in range(self.iterations):
             # Try swapping a random player between two random games
-            g1 = random.choice(games)
-            g2 = random.choice(games)
+            g1, g2 = random.sample(games,2)
             p1 = g1.pop()
             p2 = g2.pop()
             if (p1 in g2) or (p2 in g1):
