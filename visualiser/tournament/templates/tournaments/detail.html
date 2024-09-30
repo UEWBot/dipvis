@@ -66,6 +66,7 @@
       <li><a href="{% url 'tournament_round' tournament.id %}">{% trans "Current Round" %}</a> ({% if tournament.current_round.game_set.exists %}{% blocktrans count count=tournament.current_round.game_set.count %}One game{% plural %}{{ count }} games{% endblocktrans %}{% else %}{% trans "No games" %}{% endif %})</li>
   {% endif %}
   <li><a href="{% url 'round_index' tournament.id %}">{% trans "Round Index" %}</a></li>
+  <li><a href="{% url 'tournament_game_links' tournament.id %}">{% trans "Links to all game sandboxes on Backstabbr" %}</a></li>
 </ul>
 {% if tournament.is_finished %}
   <p>{% trans "Information for adding the tournament to the World Diplomacy Database:" %}</p>

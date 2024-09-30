@@ -679,6 +679,25 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_game_links(self):
+        # Add an external URL to one game
+        r = self.t4.round_set.first()
+        for g in r.game_set.all():
+            self.assertEqual(g.external_url, '')
+        url = 'http://example.com/game'
+        g.external_url = url
+        g.save()
+        response = self.client.get(reverse('tournament_game_links',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # One game has a sandbox link, the other doesn't
+        self.assertContains(response, url)
+        self.assertContains(response, 'No sandbox link')
+        # Clean up
+        g.external_url = ''
+        g.save()
+
     def test_enter_prefs_not_logged_in(self):
         response = self.client.get(reverse('enter_prefs',
                                            args=(self.t1.pk,)),

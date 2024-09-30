@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Game Sandox Links{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<ul>
+  {% for r in tournament.round_set.all %}
+    <li>{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</li>
+    <li><ul>
+      {% for g in r.game_set.all %}
+        {% if g.external_url %}
+          <li><a href={{ g.external_url }}>{{ g.name }}</a></li>
+        {% else %}
+          <li>{{ g.name }} - {% trans "No sandbox link" %}</li>
+        {% endif %}
+      {% endfor %}
+    </ul></li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

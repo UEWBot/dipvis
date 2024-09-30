@@ -203,6 +203,8 @@ tournament_patterns = [
          name='tournament_best_countries'),
     path('best_countries_refresh/', tournament_views.tournament_best_countries,
          {'refresh': True}, name='tournament_best_countries_refresh'),
+    path('game_links/', tournament_views.tournament_simple,
+         {'template': 'game_links'}, name='tournament_game_links'),
     path('enter_scores/', tournament_views.round_scores, name='enter_scores'),
     path('self_check_in/', tournament_views.self_check_in_control,
          name='self_check_in_control'),
