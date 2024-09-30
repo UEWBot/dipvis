@@ -262,6 +262,47 @@ class GScoringDrawSize(GameScoringSystem):
         return retval
 
 
+class GScoringCDiploNamur(GameScoringSystem):
+    """
+    If there is a solo:
+    - Soloers score 85 points
+    - Everyone else scores zero
+    Otherwise:
+    - Participants gets one point
+    - Everyone who owns centre(s) gets some points:
+      1 SC = 5pts, 2 SCs = 9 pts, 3 SCs = 12 pts, 4 SCs = 14 pts, 5 SCs = 16 pts,
+      6 SCs = 18 pts, _1 pt per additional SC
+    - Power with the most points gets 38 points
+    - Power in second place gets 14 points
+    - Power in third place gets 7 points
+    - if powers are tied for rank, they split the total points for their ranks.
+    """
+    def __init__(self):
+        self.name = _(u'C-Diplo Namur')
+        # Losers to a solo don't get their participation point
+        self.dead_score_can_change = True
+        self.position_pts = [38, 14, 7]
+        self.sc_pts = [0, 5, 9, 12, 14, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
+
+    def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
+        retval = {}
+        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
+        dots.sort(key = itemgetter(1), reverse=True)
+        # Tweak the ranking points to allow for ties
+        rank_pts = _adjust_rank_score(dots, self.position_pts)
+        for i, (p, c) in enumerate(dots):
+            if dots[0][1] >= WINNING_SCS:
+                retval[p] = 0
+                if c >= WINNING_SCS:
+                    retval[p] = 85
+            else:
+                retval[p] = 1 + self.sc_pts[c] + rank_pts[i]
+        return _sorted_scores(retval, state)
+
+
 class GScoringCDiplo(GameScoringSystem):
     """
     If there is a solo:
@@ -1087,6 +1128,7 @@ G_SCORING_SYSTEMS = [
                     pts_per_dot_lead=300),
     GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
     GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
+    GScoringCDiploNamur(),
     GScoringDetour09(),
     GScoringDrawSize(),
     GScoringManorCon(_('ManorCon'), 75, True),
