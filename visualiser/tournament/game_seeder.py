@@ -394,26 +394,28 @@ class GameSeeder:
         """
         best_set = copy.deepcopy(games)
         best_fitness = self._set_fitness(games, include_these_games)
-        # The more iterations, the better the result, but the longer it takes
-        for _ in range(self.iterations):
-            # Try swapping a random player between two random games
-            g1 = random.choice(games)
-            g2 = random.choice(games)
-            p1 = g1.pop()
-            p2 = g2.pop()
-            if (p1 in g2) or (p2 in g1):
-                # Don't try to create games with players playing themselves
-                g1.add(p1)
-                g2.add(p2)
-                continue
-            g1.add(p2)
-            g2.add(p1)
-            fitness = self._set_fitness(games, include_these_games)
-            if fitness < best_fitness:
-                #print("Improving fitness from %d to %d" % (best_fitness, fitness))
-                #print(games)
-                best_fitness = fitness
-                best_set = copy.deepcopy(games)
+        # There's nothing to do if we only have one game
+        if len(games) >= 2:
+            # The more iterations, the better the result, but the longer it takes
+            for _ in range(self.iterations):
+                # Try swapping a random player between two random games
+                g1 = random.choice(games)
+                g2 = random.choice(games)
+                p1 = g1.pop()
+                p2 = g2.pop()
+                if (p1 in g2) or (p2 in g1):
+                    # Don't try to create games with players playing themselves
+                    g1.add(p1)
+                    g2.add(p2)
+                    continue
+                g1.add(p2)
+                g2.add(p1)
+                fitness = self._set_fitness(games, include_these_games)
+                if fitness < best_fitness:
+                    #print("Improving fitness from %d to %d" % (best_fitness, fitness))
+                    #print(games)
+                    best_fitness = fitness
+                    best_set = copy.deepcopy(games)
         return best_set, best_fitness
 
     def _assign_players_wrapper(self, players):
