@@ -132,7 +132,7 @@ def tournament_scores(request,
     tps = t.tournamentplayer_set.order_by('-score',
                                           'player__last_name',
                                           'player__first_name').prefetch_related('player')
-    rds = t.round_set.all().prefetch_related('roundplayer_set')
+    rds = t.round_set.prefetch_related('roundplayer_set')
     # Grab the tournament scores and positions and round scores, all "if it ended now"
     t_positions_and_scores = t.positions_and_scores()
     # Construct a list of dicts with [rank, tournament player, round 1 player, ..., round n player, tournament score]
@@ -172,7 +172,7 @@ def tournament_game_results(request,
     """Display the results of all the games of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name').prefetch_related('player__gameplayer_set')
-    rds = t.round_set.all().prefetch_related('game_set')
+    rds = t.round_set.prefetch_related('game_set')
     rounds = [r.number() for r in rds]
     # Grab the games for each round
     round_games = {}
@@ -182,7 +182,7 @@ def tournament_game_results(request,
     results = []
     for tp in tps:
         # All the games (in every tournament) this player has played in
-        gps = tp.player.gameplayer_set.all().prefetch_related('game__the_round', 'power')
+        gps = tp.player.gameplayer_set.prefetch_related('game__the_round', 'power')
         # Create a list of GamePlayers, indexed by Round
         rs = []
         for r in rds:

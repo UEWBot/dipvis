@@ -107,7 +107,7 @@ def game_sc_owners(request,
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     scs = SupplyCentre.objects.all()
-    scos = g.supplycentreownership_set.all().prefetch_related('owner')
+    scos = g.supplycentreownership_set.prefetch_related('owner')
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()

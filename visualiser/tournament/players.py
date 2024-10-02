@@ -518,21 +518,21 @@ class Player(models.Model):
         Returns the datetime at which the background info was most recently updated.
         If no date is available (or there's no background), None will be returned.
         """
-        result = self.playerranking_set.all().aggregate(Max('updated'))['updated__max']
+        result = self.playerranking_set.aggregate(Max('updated'))['updated__max']
 
-        latest = self.playeraward_set.all().aggregate(Max('updated'))['updated__max']
+        latest = self.playeraward_set.aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
         elif latest is not None:
             result = max(result, latest)
 
-        latest = self.playertournamentranking_set.all().aggregate(Max('updated'))['updated__max']
+        latest = self.playertournamentranking_set.aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
         elif latest is not None:
             result = max(result, latest)
 
-        latest = self.playergameresult_set.all().aggregate(Max('updated'))['updated__max']
+        latest = self.playergameresult_set.aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
         elif latest is not None:
@@ -587,7 +587,7 @@ class Player(models.Model):
 
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""
-        tps = self.tournamentplayer_set.all().prefetch_related('tournament')
+        tps = self.tournamentplayer_set.prefetch_related('tournament')
         if including_unpublished:
             return tps
         return tps.filter(tournament__is_published=True)

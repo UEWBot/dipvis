@@ -719,7 +719,7 @@ class Tournament(models.Model):
         Returns a dict, keyed by player, of float tournament scores.
         """
         t_scores = {}
-        for p in self.tournamentplayer_set.all().prefetch_related('player'):
+        for p in self.tournamentplayer_set.prefetch_related('player'):
             t_scores[p.player] = p.score
         return t_scores
 
@@ -764,7 +764,7 @@ class Tournament(models.Model):
         the appropriate TournamentPlayers.
         """
         scores = self._calculated_scores()
-        for tp in self.tournamentplayer_set.all().prefetch_related('player'):
+        for tp in self.tournamentplayer_set.prefetch_related('player'):
             tp.score = scores[tp.player]
             tp.save(update_fields=['score'])
         if self.is_finished():
@@ -863,7 +863,7 @@ class Tournament(models.Model):
         Returns a list of background strings for the tournament
         """
         results = []
-        for tp in self.tournamentplayer_set.all().prefetch_related('player'):
+        for tp in self.tournamentplayer_set.prefetch_related('player'):
             results += tp.player.background(mask=mask)
         if (mask & MASK_SERIES_WINS) != 0:
             # Add in background for any series this Tournament is in
@@ -907,7 +907,7 @@ class Tournament(models.Model):
         Returns True if the tournament has rounds, and they are all finished.
         Returns False otherwise.
         """
-        rds = self.round_set.all().prefetch_related('game_set')
+        rds = self.round_set.prefetch_related('game_set')
         # If there are no rounds, the tournament can't have started
         if not rds:
             return False
@@ -1310,7 +1310,7 @@ class Round(models.Model):
         Returns a dict, keyed by Player, of floats.
         """
         retval = {}
-        for p in self.roundplayer_set.all().prefetch_related('player'):
+        for p in self.roundplayer_set.prefetch_related('player'):
             retval[p.player] = p.score
         return retval
 
@@ -1324,7 +1324,7 @@ class Round(models.Model):
         gps = GamePlayer.objects.filter(game__the_round=self).distinct().prefetch_related('player')
         non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
         scores = system.scores(gps, non_players)
-        for rp in self.roundplayer_set.all().prefetch_related('player'):
+        for rp in self.roundplayer_set.prefetch_related('player'):
             rp.score = scores[rp.player]
             rp.save(update_fields=['score'])
         # That could change the Tournament scoring
@@ -1486,7 +1486,7 @@ class Game(models.Model):
         powers.
         """
         position_to_gps = {}
-        gps = self.gameplayer_set.all().prefetch_related('player', 'power')
+        gps = self.gameplayer_set.prefetch_related('player', 'power')
         # Find current tournament positions (and scores)
         ranks = self.the_round.tournament.positions_and_scores()
         # Check for any GamePlayer that already has a power assigned
@@ -1589,7 +1589,7 @@ class Game(models.Model):
         """
         # If we have GamePlayers, and they have assigned powers,
         # we can just retrieve the scores from them
-        gps = self.gameplayer_set.all().prefetch_related('power')
+        gps = self.gameplayer_set.prefetch_related('power')
         # Assume that if any GamePlayer has a power assigned, they all do
         if gps and gps.first().power:
             retval = {}
@@ -1606,7 +1606,7 @@ class Game(models.Model):
         Then calls the equivalent function for the Round this Game is in.
         """
         scores = self._calc_scores()
-        for gp in self.gameplayer_set.all().prefetch_related('power'):
+        for gp in self.gameplayer_set.prefetch_related('power'):
             if gp.power:
                 gp.score = scores[gp.power]
                 gp.save(update_fields=['score'])
@@ -1646,7 +1646,7 @@ class Game(models.Model):
         """
         Returns a list of strings that give background for the game
         """
-        gps = self.gameplayer_set.all().prefetch_related('power')
+        gps = self.gameplayer_set.prefetch_related('power')
         results = []
         for gp in gps:
             results += gp.player.background(gp.power, mask=mask)
@@ -1687,7 +1687,7 @@ class Game(models.Model):
         Returns the last complete year of the game, whether the game is
         completed or ongoing
         """
-        return self.centrecount_set.all().aggregate(Max('year'))['year__max']
+        return self.centrecount_set.aggregate(Max('year'))['year__max']
 
     def soloer(self):
         """
