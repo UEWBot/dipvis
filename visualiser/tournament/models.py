@@ -281,7 +281,7 @@ class TournamentScoringSystem(ABC):
     A scoring system for a Tournament.
     Provides a method to calculate a score for each player of tournament.
     """
-    MAX_NAME_LENGTH=40
+    MAX_NAME_LENGTH=50
     name = u''
 
     @abstractmethod
@@ -334,26 +334,30 @@ class TScoringSum(TournamentScoringSystem):
 class TScoringSumGames(TournamentScoringSystem):
     """
     Just add up the best N Game scores regardless of the round(s) in which they were played.
+    Optionally if a player played more than that number of Games, add the average of the scores
+    of the remaining Games, multiplied by some factor.
     """
-    def __init__(self, name, scored_games):
+    def __init__(self, name, scored_games, residual_multiplier=0.0):
         self.name = name
         self.scored_games = scored_games
+        self.residual_multiplier = residual_multiplier
 
-    def _flag_included_score(self, gp):
+    def _flag_included_score(self, gp, fraction=1.0):
         """
         Update the RoundPlayer to note that the specified Game
         score contributes towards the overall score (and therefore
         to the Round score, which itself contributes)
         """
         rp = gp.roundplayer()
-        rp.score += gp.score
+        rp.score += gp.score * fraction
         rp.score_dropped = False
         rp.save(update_fields=['score', 'score_dropped'])
 
     def scores(self, round_players):
         """
-        If a player played more than N games, sum the best N game scores.
-        Otherwise, sum all their game scores.
+        If a player played fewer than N or exactly N games, sum all their game scores.
+        Otherwise, sum their best N game scores and add the average of the remainder
+        multiplied by self.residual_multiplier.
         Also updates all Round scores to reflect which games count towards the tournament score.
         Returns a dict, indexed by player key, of tournament scores
         """
@@ -378,26 +382,36 @@ class TScoringSumGames(TournamentScoringSystem):
                     t_scores[p] += gp.score
                     self._flag_included_score(gp)
             else:
-                # Add up the best N, flag the rest as dropped
                 player_scores = list(player_scores)
+                # Add up the best N Game scores and flag those scores as not dropped
                 for _ in range(self.scored_games):
                     gp = player_scores.pop()
                     t_scores[p] += gp.score
                     self._flag_included_score(gp)
-                    # It's possible that a player's score for a Game in-progress
-                    # has dropped below an earlier score that was previously dropped
-                    # so we have to explicitly flag this score as not dropped
-                    gp.score_dropped = False
-                    gp.save(update_fields=['score_dropped'])
+                    if self.residual_multiplier == 0.0:
+                        # It's possible that a player's score for a Game in-progress
+                        # has dropped below an earlier score that was previously dropped
+                        # so we have to explicitly flag this score as not dropped
+                        gp.score_dropped = False
+                        gp.save(update_fields=['score_dropped'])
+                if (self.residual_multiplier != 0.0) and len(player_scores):
+                    # How much does each additional score contribute ?
+                    bonus_factor = self.residual_multiplier / len(player_scores)
+                # Then go through any remaining Game scores
                 for gp in player_scores:
-                    gp.score_dropped = True
-                    gp.save(update_fields=['score_dropped'])
-                    # If every Game in this Round is dropped, score the Round as the sum,
-                    # and dropped, to keep us consistent with other socring systems
-                    rp = gp.roundplayer()
-                    if rp.score_dropped:
-                        rp.score += gp.score
-                        rp.save(update_fields=['score'])
+                    if self.residual_multiplier == 0.0:
+                        # This score doesn't contribute
+                        gp.score_dropped = True
+                        gp.save(update_fields=['score_dropped'])
+                        # If every Game in this Round is dropped, score the Round as the sum,
+                        # and dropped, to keep us consistent with other scoring systems
+                        rp = gp.roundplayer()
+                        if rp.score_dropped:
+                            rp.score += gp.score
+                            rp.save(update_fields=['score'])
+                    else:
+                        t_scores[p] += gp.score * bonus_factor
+                        self._flag_included_score(gp, fraction=bonus_factor)
         # The problem is that we go up from Game, to Round, to Tournament,
         # but now we want to go back to set the Round scores.
         # I guess we need to set them here and have a NOP RoundScoringSystem.
@@ -414,6 +428,7 @@ T_SCORING_SYSTEMS = [
     TScoringSumGames(_('Sum best 3 games in any rounds'), 3),
     TScoringSumGames(_('Sum best 4 games in any rounds'), 4),
     TScoringSumGames(_('Best single game result'), 1),
+    TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, 0.5),
 ]
 
 
