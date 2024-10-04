@@ -333,11 +333,22 @@ class TScoringSum(TournamentScoringSystem):
 
 class TScoringSumGames(TournamentScoringSystem):
     """
-    Just add up the best N Game scores.
+    Just add up the best N Game scores regardless of the round(s) in which they were played.
     """
     def __init__(self, name, scored_games):
         self.name = name
         self.scored_games = scored_games
+
+    def _flag_included_score(self, gp):
+        """
+        Update the RoundPlayer to note that the specified Game
+        score contributes towards the overall score (and therefore
+        to the Round score, which itself contributes)
+        """
+        rp = gp.roundplayer()
+        rp.score += gp.score
+        rp.score_dropped = False
+        rp.save(update_fields=['score', 'score_dropped'])
 
     def scores(self, round_players):
         """
@@ -365,27 +376,19 @@ class TScoringSumGames(TournamentScoringSystem):
                 # All games count for this player
                 for gp in player_scores:
                     t_scores[p] += gp.score
-                    # This game counts towards the round score
-                    # (and this round counts towards the tournament score)
-                    rp = gp.roundplayer()
-                    rp.score += gp.score
-                    rp.score_dropped = False
-                    rp.save(update_fields=['score', 'score_dropped'])
+                    self._flag_included_score(gp)
             else:
                 # Add up the best N, flag the rest as dropped
                 player_scores = list(player_scores)
                 for _ in range(self.scored_games):
                     gp = player_scores.pop()
                     t_scores[p] += gp.score
-                    # It's possible that a player's current score has dropped below an earlier score
+                    self._flag_included_score(gp)
+                    # It's possible that a player's score for a Game in-progress
+                    # has dropped below an earlier score that was previously dropped
+                    # so we have to explicitly flag this score as not dropped
                     gp.score_dropped = False
                     gp.save(update_fields=['score_dropped'])
-                    # This game counts towards the round score
-                    # (and this round counts towards the tournament score)
-                    rp = gp.roundplayer()
-                    rp.score += gp.score
-                    rp.score_dropped = False
-                    rp.save(update_fields=['score', 'score_dropped'])
                 for gp in player_scores:
                     gp.score_dropped = True
                     gp.save(update_fields=['score_dropped'])
