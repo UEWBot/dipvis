@@ -303,8 +303,6 @@ class TScoringSum(TournamentScoringSystem):
     """
     Just add up the best N round scores.
     """
-    scored_rounds = 0
-
     def __init__(self, name, scored_rounds):
         self.name = name
         self.scored_rounds = scored_rounds
@@ -337,8 +335,6 @@ class TScoringSumGames(TournamentScoringSystem):
     """
     Just add up the best N Game scores.
     """
-    scored_games = 0
-
     def __init__(self, name, scored_games):
         self.name = name
         self.scored_games = scored_games
@@ -347,7 +343,7 @@ class TScoringSumGames(TournamentScoringSystem):
         """
         If a player played more than N games, sum the best N game scores.
         Otherwise, sum all their game scores.
-        Also updates all Round scores to relfect which games count towards the tournament score.
+        Also updates all Round scores to reflect which games count towards the tournament score.
         Returns a dict, indexed by player key, of tournament scores
         """
         t_scores = {}
