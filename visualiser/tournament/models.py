@@ -968,7 +968,7 @@ class DBNCoverage(models.Model):
     """
     A Diplomacy Broadcast Network broadcast for a Tournament.
     """
-    MAX_DESC_LENGTH = 30
+    MAX_DESC_LENGTH = 80
 
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     dbn_url = models.URLField(verbose_name=_('DBN URL on YouTube'))
