@@ -1179,13 +1179,13 @@ class ModelTests(TestCase):
     # find_scoring_system()
     # Mostly tested implicitly, but we do want to check the error case
     def test_find_g_scoring_system_invalid(self):
-        self.assertEqual(None, find_game_scoring_system('Invalid System'))
+        self.assertRaises(InvalidScoringSystem, find_game_scoring_system, 'Invalid System')
 
     def test_find_r_scoring_system_invalid(self):
-        self.assertEqual(None, find_round_scoring_system('Invalid System'))
+        self.assertRaises(InvalidScoringSystem, find_round_scoring_system, 'Invalid System')
 
     def test_find_t_scoring_system_invalid(self):
-        self.assertEqual(None, find_tournament_scoring_system('Invalid System'))
+        self.assertRaises(InvalidScoringSystem, find_tournament_scoring_system, 'Invalid System')
 
     # validate_game_name()
     def test_validate_game_name_spaces(self):

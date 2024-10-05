@@ -435,19 +435,21 @@ T_SCORING_SYSTEMS = [
 def find_scoring_system(name, the_list):
     """
     Searches through the_list for a scoring system with the specified name.
-    Returns either the ScoringSystem object or None.
+    Returns the ScoringSystem object.
+    Can raise InvalidScoringSystem.
     """
     for s in the_list:
         # There shouldn't be any abstract systems in here, but just in case...
         if (s.name == name) and not inspect.isabstract(s):
             return s
-    return None
+    raise InvalidScoringSystem(name)
 
 
 def find_game_scoring_system(name):
     """
     Searches for a scoring system with the given name.
-    Returns either the GameScoringSystem object or None.
+    Returns the GameScoringSystem object.
+    Can raise InvalidScoringSystem.
     """
     return find_scoring_system(name, G_SCORING_SYSTEMS)
 
@@ -455,7 +457,8 @@ def find_game_scoring_system(name):
 def find_round_scoring_system(name):
     """
     Searches for a scoring system with the given name.
-    Returns either the RoundScoringSystem object or None.
+    Returns the RoundScoringSystem object.
+    Can raise InvalidScoringSystem.
     """
     return find_scoring_system(name, R_SCORING_SYSTEMS)
 
@@ -463,7 +466,8 @@ def find_round_scoring_system(name):
 def find_tournament_scoring_system(name):
     """
     Searches for a scoring system with the given name.
-    Returns either the TournamentScoringSystem object or None.
+    Returns the TournamentScoringSystem object.
+    Can raise InvalidScoringSystem.
     """
     return find_scoring_system(name, T_SCORING_SYSTEMS)
 
@@ -513,8 +517,9 @@ def validate_tournament_scoring_system(value):
     """
     Validator for Tournament.tournament_scoring_system
     """
-    system = find_tournament_scoring_system(value)
-    if not system:
+    try:
+        system = find_tournament_scoring_system(value)
+    except InvalidScoringSystem:
         raise ValidationError(_("%{value} is not a valid tournament scoring system"),
                               params={'value': value})
 
@@ -523,8 +528,9 @@ def validate_round_scoring_system(value):
     """
     Validator for Tournament.round_scoring_system
     """
-    system = find_round_scoring_system(value)
-    if not system:
+    try:
+        system = find_round_scoring_system(value)
+    except InvalidScoringSystem:
         raise ValidationError(_("%{value} is not a valid round scoring system"),
                               params={'value': value})
 
@@ -533,8 +539,9 @@ def validate_game_scoring_system(value):
     """
     Validator for Round.scoring_system.
     """
-    system = find_game_scoring_system(value)
-    if not system:
+    try:
+        system = find_game_scoring_system(value)
+    except InvalidScoringSystem:
         raise ValidationError(_("%{value} is not a valid game scoring system"),
                               params={'value': value})
 
@@ -679,10 +686,7 @@ class Tournament(models.Model):
         Can raise InvalidScoringSystem.
         """
         # Find the scoring system to combine round scores into a tournament score
-        system = find_tournament_scoring_system(self.tournament_scoring_system)
-        if not system:
-            raise InvalidScoringSystem(self.tournament_scoring_system)
-        return system
+        return find_tournament_scoring_system(self.tournament_scoring_system)
 
     def round_scoring_system_obj(self):
         """
@@ -690,10 +694,7 @@ class Tournament(models.Model):
         Can raise InvalidScoringSystem.
         """
         # Find the scoring system to combine game scores into a round score
-        system = find_round_scoring_system(self.round_scoring_system)
-        if not system:
-            raise InvalidScoringSystem(self.round_scoring_system)
-        return system
+        return find_round_scoring_system(self.round_scoring_system)
 
     def non_power_awards(self):
         """
@@ -1313,10 +1314,7 @@ class Round(models.Model):
         Can raise InvalidScoringSystem.
         """
         # Find the scoring system to score games in this Round
-        system = find_game_scoring_system(self.scoring_system)
-        if not system:
-            raise InvalidScoringSystem(self.scoring_system)
-        return system
+        return find_game_scoring_system(self.scoring_system)
 
     def scores(self):
         """
