@@ -34,6 +34,7 @@ from tournament.models import Award, CentreCount, DrawProposal, Game, GameImage
 from tournament.models import GamePlayer, Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 from tournament.players import Player
+from tournament.round_views import _create_game_seeder
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 from tournament.wdd_views import _power_award_to_gameplayers
@@ -479,3 +480,26 @@ def list_tournaments_missing_wdd_ids():
 def player_emails(for_tournament):
     """Return a list of emails for players registered for the Tournament"""
     return [tp.player.email for tp in for_tournament.tournamentplayer_set.all()]
+
+
+def recreate_seeder(for_tournament, round_number):
+    """
+    Prepare to seed games for the specified Round
+    Returns a GameSeeder, set of players sitting out,
+    and set of players playing two games.
+    """
+    r = for_tournament.round_numbered(round_number)
+    seeder = _create_game_seeder(for_tournament, r)
+    sitters = set()
+    two_boarders = set()
+    for tp in for_tournament.tournamentplayer_set.all():
+        try:
+            rp = r.roundplayer_set.get(player=tp.player)
+        except DoesNotExist:
+            sitters.add(tp)
+        else:
+            if rp.game_count == 0:
+                sitters.add(tp)
+            elif rp.game_count == 2:
+                two_boarders.add(tp)
+    return seeder, sitters, two_boarders
