@@ -32,6 +32,7 @@ from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import Award, SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import NO_SCORING_SYSTEM_STR
 from tournament.models import BestCountryCriteria, DrawSecrecy, Formats, Phases
 from tournament.models import PowerAssignMethods, Seasons
 from tournament.models import find_game_scoring_system
@@ -665,7 +666,7 @@ class TournamentScoringTests(TestCase):
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=now,
                                       end_date=now,
-                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[4].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
@@ -913,7 +914,7 @@ class TournamentScoringTests(TestCase):
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=now,
                                       end_date=now,
-                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[6].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system

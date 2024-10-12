@@ -29,7 +29,7 @@ from tournament.models import Tournament, TournamentPlayer, SeederBias
 from tournament.models import Preference, Round, RoundPlayer, Game, GamePlayer
 from tournament.models import CentreCount, DrawProposal
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import G_SCORING_SYSTEMS
+from tournament.models import G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR
 from tournament.models import Seasons
 from tournament.players import Player
 
@@ -145,7 +145,7 @@ class TournamentViewTests(TestCase):
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=now,
                                            end_date=now,
-                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                           round_scoring_system=NO_SCORING_SYSTEM_STR,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            power_assignment=PowerAssignMethods.PREFERENCES,

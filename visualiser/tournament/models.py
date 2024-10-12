@@ -431,6 +431,9 @@ T_SCORING_SYSTEMS = [
     TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, 0.5),
 ]
 
+# Special "name" used to not calculate scores
+# Used for Round scoring when rounds are irrelevant
+NO_SCORING_SYSTEM_STR = _("None")
 
 def find_scoring_system(name, the_list):
     """
@@ -438,6 +441,8 @@ def find_scoring_system(name, the_list):
     Returns the ScoringSystem object.
     Can raise InvalidScoringSystem.
     """
+    if name == NO_SCORING_SYSTEM_STR:
+        return None
     for s in the_list:
         # There shouldn't be any abstract systems in here, but just in case...
         if (s.name == name) and not inspect.isabstract(s):
@@ -472,12 +477,16 @@ def find_tournament_scoring_system(name):
     return find_scoring_system(name, T_SCORING_SYSTEMS)
 
 
-def get_scoring_systems(systems):
+def get_scoring_systems(systems, include_none=False):
     """
     Returns a list of two-tuples, suitable for use in a
     Django CharField.choices parameter.
     """
-    return sorted([(s.name, s.name) for s in systems if not inspect.isabstract(s)])
+    sys_list = []
+    if include_none:
+        sys_list.append((NO_SCORING_SYSTEM_STR, NO_SCORING_SYSTEM_STR))
+    sys_list += sorted([(s.name, s.name) for s in systems if not inspect.isabstract(s)])
+    return sys_list
 
 
 def validate_weight(value):
@@ -599,7 +608,7 @@ class Tournament(models.Model):
     # This is the name of a RoundScoringSystem object
     round_scoring_system = models.CharField(validators=[validate_round_scoring_system],
                                             max_length=RoundScoringSystem.MAX_NAME_LENGTH,
-                                            choices=get_scoring_systems(R_SCORING_SYSTEMS),
+                                            choices=get_scoring_systems(R_SCORING_SYSTEMS, include_none=True),
                                             help_text=_(u'How to combine game scores into a round score'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=_(u'What players are told about failed draw votes'),
@@ -1333,13 +1342,14 @@ class Round(models.Model):
         If the Round is ongoing, this will be the "if all games ended now" score.
         """
         system = self.tournament.round_scoring_system_obj()
-        # Identify any players who were checked in but didn't play
-        gps = GamePlayer.objects.filter(game__the_round=self).distinct().prefetch_related('player')
-        non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
-        scores = system.scores(gps, non_players)
-        for rp in self.roundplayer_set.prefetch_related('player'):
-            rp.score = scores[rp.player]
-            rp.save(update_fields=['score'])
+        if system:
+            # Identify any players who were checked in but didn't play
+            gps = GamePlayer.objects.filter(game__the_round=self).distinct().prefetch_related('player')
+            non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
+            scores = system.scores(gps, non_players)
+            for rp in self.roundplayer_set.prefetch_related('player'):
+                rp.score = scores[rp.player]
+                rp.save(update_fields=['score'])
         # That could change the Tournament scoring
         self.tournament.update_scores()
 

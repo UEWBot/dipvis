@@ -24,7 +24,9 @@
 <p><a href="{% url 'tournament_players' tournament.id %}">{{ tournament.tournamentplayer_set.count }}{% trans " players registered." %}</a></p>
 <p>{% trans "Format: " %}{% if tournament.is_virtual %}{% trans "Virtual Face-to-face" %}{% else %}{% trans "Face-to-face" %}{% endif %}</p>
 <p>{% trans "Tournament scoring: " %}{{ tournament.tournament_scoring_system_obj }}</p>
-<p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
+{% if tournament.round_scoring_system_obj %}
+  <p>{% trans "Round scoring: " %}{{ tournament.round_scoring_system_obj }}</p>
+{% endif %}
 {% if tournament.draw_secrecy == "C" %}
   <p>{% trans "Counts of votes in favour of and against draws are revealed." %}</p>
 {% endif %}

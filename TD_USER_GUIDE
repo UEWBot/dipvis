@@ -39,7 +39,8 @@ Similarly, Round scores get combined using a TournamentScoringSystem.
 The system currently support "best 2 rounds", "best 3 rounds", and "best 4 rounds".
 This allows you to have a "drop round" or to include all round scores.
 The option "Sum best 4 games in any rounds" is also an option, in which case
-the actual rounds are ignored and all game scores are considered.
+the actual rounds are ignored and all game scores are considered. For this case, you
+can specify "None" as the RoundScoringSystem.
 
 The system also knows about SupplyCentres, CentreCounts, and DrawProposals, all
 of which should be fairly self-explanatory.
