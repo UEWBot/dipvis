@@ -1089,7 +1089,8 @@ class TournamentPlayer(models.Model):
         t = self.tournament
         if t.is_finished():
             return True
-        if not isinstance(t.tournament_scoring_system_obj(), TScoringSumGames):
+        system = t.tournament_scoring_system_obj()
+        if not isinstance(system, TScoringSumGames):
             # If any round score for this player isn't final, this score also could change
             for rp in self.roundplayers():
                 if not rp.score_is_final():
@@ -1098,7 +1099,7 @@ class TournamentPlayer(models.Model):
         if not final_round.in_progress():
             # There are more rounds to go, so more opportunities to score
             return False
-        if isinstance(t.tournament_scoring_system_obj(), TScoringSumGames):
+        if isinstance(system, TScoringSumGames):
             # If the final Round is in progress, just check all their Games
             for gp in GamePlayer.objects.filter(player=self.player,
                                                 game__the_round__tournament=t):
