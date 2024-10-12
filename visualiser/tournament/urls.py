@@ -237,6 +237,7 @@ tournament_patterns = [
          {'template': 'awards', 'context': {'numbered_list': True}},
          name='tournament_wdd_awards'),
     path('enter_awards/', tournament_views.enter_awards, name='enter_awards'),
+    path('handicaps/', tournament_views.enter_handicaps, name='enter_handicaps'),
     path('players/', include(tp_patterns)),
     path('rounds/<int:round_num>/', include(round_patterns)),
     path('games/<str:game_name>/', include(game_patterns)),

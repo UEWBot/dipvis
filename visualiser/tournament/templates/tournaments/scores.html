@@ -18,6 +18,9 @@
     {% for r in rounds %}
       <th><a href="{% url 'round_detail' tournament.id r.number %}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a></th>
     {% endfor %}
+    {% if tournament.handicaps %}
+      <th>{% trans "Handicap" %}</th>
+    {% endif %}
     <th>{% trans "Tournament" %}</th>
   </tr></thead>
   <tbody>
@@ -42,6 +45,15 @@
             {% endif %}
           </td>
         {% endfor %}
+        {% if tournament.handicaps %}
+          <td style="text-align:right">
+            {% if tournament.is_finished %}
+              {{ p_data.player.handicap|floatformat:2 }}
+            {% else %}
+              ?
+            {% endif %}
+          </td>
+        {% endif %}
         <td style="text-align:right">
           {% if not p_data.player.score_is_final %}
             <i>

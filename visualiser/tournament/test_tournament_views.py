@@ -75,6 +75,8 @@ class TournamentViewTests(TestCase):
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add tournament player')
         cls.u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can change tournament player')
+        cls.u3.user_permissions.add(perm)
         cls.u3.save()
 
         # Some Players
@@ -407,6 +409,26 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_detail_handicap(self):
+        # Check for link to handicaps page
+        self.assertFalse(self.t2.handicaps)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'andicap')
+        self.t2.handicaps = True
+        self.t2.save()
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'andicap')
+        # Cleanup
+        self.t2.handicaps = False
+        self.t2.save()
+
     def test_framesets(self):
         response = self.client.get(reverse('framesets',
                                            args=(self.t1.pk,)),
@@ -482,17 +504,21 @@ class TournamentViewTests(TestCase):
 
     def test_scores(self):
         # Scores page for an in-progress Tournament
+        self.assertFalse(self.t1.handicaps)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, 'Current Scores')
+        self.assertNotContains(response, 'Handicap')
 
     def test_scores_completed(self):
         # Scores page for a completed Tournament
+        self.assertFalse(self.t4.handicaps)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertContains(response, 'Final Scores')
+        self.assertNotContains(response, 'Handicap')
 
     def test_scores_with_sitter(self):
         # Scores page for a Tournament where somebody sat out a round
@@ -506,6 +532,46 @@ class TournamentViewTests(TestCase):
         self.assertContains(response, 'Final Scores')
         rp.delete()
         tp.delete()
+
+    def test_scores_handicap(self):
+        # Scores page for an in-progress Tournament with handicaps
+        self.assertFalse(self.t1.handicaps)
+        self.t1.handicaps = True
+        self.t1.save()
+        tp = self.t1.tournamentplayer_set.first()
+        self.assertEqual(tp.handicap, 0.0)
+        tp.handicap = 123.0
+        tp.save()
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertContains(response, 'Handicap')
+        self.assertNotContains(response, '123.0')
+        # Clean up
+        self.t1.handicaps = False
+        self.t1.save()
+        tp.handicap = 0.0
+        tp.save()
+
+    def test_scores_completed_handicap(self):
+        # Scores page for a completed Tournament with handicaps
+        self.assertFalse(self.t4.handicaps)
+        self.t4.handicaps = True
+        self.t4.save()
+        tp = self.t4.tournamentplayer_set.first()
+        self.assertEqual(tp.handicap, 0.0)
+        tp.handicap = 123.0
+        tp.save()
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertContains(response, 'Handicap')
+        self.assertContains(response, '123.0')
+        # Clean up
+        self.t4.handicaps = False
+        self.t4.save()
+        tp.handicap = 0.0
+        tp.save()
 
     def test_scores_refresh(self):
         response = self.client.get(reverse('tournament_scores_refresh',
@@ -624,6 +690,139 @@ class TournamentViewTests(TestCase):
         tp.save(update_fields=['score'])
         rp.score = rp_score
         rp.save(update_fields=['score'])
+
+    def test_enter_handicaps_not_logged_in(self):
+        self.assertFalse(self.t1.handicaps)
+        self.t1.handicaps = True
+        self.t1.save()
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+        # Cleanup
+        self.t1.handicaps = False
+        self.t1.save()
+
+    def test_enter_handicaps_regular_user(self):
+        # A regular user can't enter handicaps for any old tournament
+        self.assertFalse(self.t1.handicaps)
+        self.t1.handicaps = True
+        self.t1.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+        # Cleanup
+        self.t1.handicaps = False
+        self.t1.save()
+
+    def test_enter_handicaps_manager_wrong_tournament(self):
+        # A manager can't enter handicaps for a tournament that isn't theirs
+        self.assertFalse(self.t3.handicaps)
+        self.t3.handicaps = True
+        self.t3.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t3.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Cleanup
+        self.t3.handicaps = False
+        self.t3.save()
+
+    def test_enter_handicaps_archived(self):
+        # Nobody can enter handicaps for an archived tournament
+        self.assertFalse(self.t4.handicaps)
+        self.t4.handicaps = True
+        self.t4.save()
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Cleanup
+        self.t4.handicaps = False
+        self.t4.save()
+
+    def test_enter_handicaps_superuser(self):
+        # A superuser can enter handicaps for any tournament
+        self.assertFalse(self.t1.handicaps)
+        self.t1.handicaps = True
+        self.t1.save()
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t1.handicaps = False
+        self.t1.save()
+
+    def test_enter_handicaps_manager(self):
+        # A manager can enter handicaps for their tournament
+        self.assertFalse(self.t2.handicaps)
+        self.t2.handicaps = True
+        self.t2.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t2.handicaps = False
+        self.t2.save()
+
+    def test_enter_handicaps_not_applicable(self):
+        # Nobody can enter handicaps if the tournament doesn't use them
+        self.assertFalse(self.t2.handicaps)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_handicaps',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enter_handicaps_post(self):
+        # A manager can enter handicaps for their tournament
+        for tp in self.t2.tournamentplayer_set.all():
+            self.assertEqual(tp.handicap, 0.0)
+        self.assertFalse(self.t2.handicaps)
+        self.t2.handicaps = True
+        self.t2.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        # Update most handicaps to a different value
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            if i == 1:
+                data['form-%d-handicap' % i] = '0.0'
+            else:
+                data['form-%d-handicap' % i] = '%f' % float(i)
+        i += 1
+        data['form-TOTAL_FORMS'] = '%d' % i
+        data['form-INITIAL_FORMS'] = '%d' % i
+        data = urlencode(data)
+        response = self.client.post(reverse('enter_handicaps', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the tournament player index page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_players', args=(self.t2.pk,)))
+        # And the handicaps entered should be saved
+        tp.refresh_from_db()
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            if i == 1:
+                self.assertAlmostEqual(tp.handicap, 0.0)
+            else:
+                self.assertAlmostEqual(tp.handicap, float(i))
+        # Clean up
+        for tp in self.t2.tournamentplayer_set.all():
+            tp.handicap = 0.0
+            tp.save()
+        self.t2.handicaps = False
+        self.t2.save()
 
     def test_current_round(self):
         response = self.client.get(reverse('tournament_round',
@@ -910,6 +1109,9 @@ class TournamentViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_enter_awards_post_missing_perms(self):
+        perm = Permission.objects.get(name='Can change tournament player')
+        self.u3.user_permissions.remove(perm)
+        self.u3.save()
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_awards',
                                            args=(self.t1.pk,)),
@@ -917,6 +1119,10 @@ class TournamentViewTests(TestCase):
         # TODO This isn't right given that they are logged in...
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
+        # Cleanup
+        perm = Permission.objects.get(name='Can change tournament player')
+        self.u3.user_permissions.add(perm)
+        self.u3.save()
 
     def test_enter_awards_get(self):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)

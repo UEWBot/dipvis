@@ -37,9 +37,11 @@ from tournament.email import send_roll_call_emails
 
 from tournament.forms import AwardsForm
 from tournament.forms import BaseAwardsFormset
+from tournament.forms import BaseHandicapsFormset
 from tournament.forms import BasePlayerRoundScoreFormset
 from tournament.forms import BasePrefsFormset
 from tournament.forms import EnableCheckInForm
+from tournament.forms import HandicapForm
 from tournament.forms import PlayerRoundScoreForm
 from tournament.forms import PrefsForm
 from tournament.forms import SeederBiasForm
@@ -535,6 +537,32 @@ def enter_awards(request, tournament_id):
     context = {'tournament': t,
                'formset': formset}
     return render(request, 'tournaments/awards_form.html', context)
+
+
+@permission_required('tournament.change_tournamentplayer')
+def enter_handicaps(request, tournament_id):
+    """Enter handicaps for the Tournament"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    # Only valid for Tournaments with handicaps
+    if not t.handicaps:
+        raise Http404
+    HandicapsFormset = formset_factory(HandicapForm,
+                                       extra=0,
+                                       formset=BaseHandicapsFormset)
+    formset = HandicapsFormset(request.POST or None, tournament=t)
+    if formset.is_valid():
+        for form in formset:
+            if form.has_changed():
+                tp = form.tp
+                tp.handicap = form.cleaned_data['handicap']
+                tp.save(update_fields=['handicap'])
+        # Redirect to the TP index page
+        return HttpResponseRedirect(reverse('tournament_players',
+                                            args=(tournament_id,)))
+    return render(request,
+                  'tournaments/enter_handicaps.html',
+                  {'tournament': t,
+                   'formset': formset})
 
 
 def round_index(request, tournament_id):

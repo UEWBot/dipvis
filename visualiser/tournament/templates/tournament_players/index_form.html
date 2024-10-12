@@ -12,6 +12,9 @@
     <thead><tr>
       <th></th>
       <th>{% trans "Player" %}</th>
+      {% if tournament.handicaps %}
+        <th>{% trans "Handicap" %}</th>
+      {% endif %}
       <th>{% trans "Location" %}</th>
       <th>{% trans "Nationalities" %}</th>
       {% if tournament.is_virtual %}
@@ -32,6 +35,9 @@
         <tr class="{% cycle 'odd_row' 'even_row' %}">
           <td>{{ forloop.counter }}</td>
           <td><a href="{% if tournament.current_round.game_set.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a></td>
+          {% if tournament.handicaps %}
+            <td>{{ tp.handicap|floatformat:2 }}</td>
+          {% endif %}
           <td>{% if tp.location %} {{ tp.location }}{% endif %}</td>
           <td>{% for country in tp.player.nationalities %}<img src="{{ country.flag }}" alt="{{ country.name }}"> {% endfor %}</td>
           {% if tournament.is_virtual %}

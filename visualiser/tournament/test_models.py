@@ -1781,6 +1781,87 @@ class TournamentTests(TestCase):
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
+    def test_tourney_update_scores_handicap(self):
+        now = timezone.now()
+        t = Tournament(name='t5',
+                       start_date=now,
+                       end_date=now + HOURS_24,
+                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       handicaps=True,
+                       draw_secrecy=DrawSecrecy.SECRET)
+        t.save()
+        tp = TournamentPlayer(tournament=t, player=self.p1, score=1, handicap=10)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p2, score=2, handicap=10)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p3, score=3, handicap=10)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p4, score=4, handicap=20)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p5, score=5, handicap=20)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p6, score=6, handicap=20)
+        tp.save()
+        tp = TournamentPlayer(tournament=t, player=self.p7, score=7, handicap=10)
+        tp.save()
+        # Include a player who didn't play any games
+        tp = TournamentPlayer(tournament=t, player=self.p8, score=8, handicap=30)
+        tp.save()
+        r = Round(tournament=t,
+                  scoring_system='Sum of Squares',
+                  dias=True,
+                  start=t.start_date)
+        r.save()
+        rp = RoundPlayer(the_round=r, player=self.p1, score=7)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p2, score=6)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p3, score=5)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p4, score=4)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p5, score=3)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p6, score=2)
+        rp.save()
+        rp = RoundPlayer(the_round=r, player=self.p7, score=1)
+        rp.save()
+        # We need a finished Game in the Round so the Round is finished
+        g = Game(name='newgame2',
+                 started_at=r.start,
+                 the_round=r,
+                 is_finished=False,
+                 the_set=self.set1)
+        g.save()
+        t.update_scores()
+        # Score for all TournamentPlayers should be updated
+        # from the RoundPlayer scores but not handicaps
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                try:
+                    rp = RoundPlayer.objects.filter(player=tp.player,
+                                                    the_round__tournament=t).get()
+                    self.assertEqual(tp.score, rp.score)
+                except RoundPlayer.DoesNotExist:
+                    self.assertEqual(tp.score, 0.0)
+        # Now finish that Game and call update_scores() again
+        g.is_finished = True
+        g.save()
+        t.update_scores()
+        # Score for all TournamentPlayers should be updated
+        # from the RoundPlayer scores and handicaps
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                try:
+                    rp = RoundPlayer.objects.filter(player=tp.player,
+                                                    the_round__tournament=t).get()
+                    self.assertEqual(tp.score, rp.score + tp.handicap)
+                except RoundPlayer.DoesNotExist:
+                    self.assertEqual(tp.score, 0.0)
+        # Note that this will also delete all other objects for the Tournament
+        t.delete()
+
     def test_tourney_update_scores_awards(self):
         # Verify that best country awards get set
         now = timezone.now()
@@ -2283,6 +2364,11 @@ class TournamentPlayerTests(TestCase):
 
     def test_tournamentplayer_score_is_final_playing_last_round(self):
         # TODO Final round in progress, and this person is playing in it
+        pass
+
+    def test_tournamentplayer_score_is_final_handicap_not_finished(self):
+        # TODO Check that a TP whose score would otherwise be final is not
+        # if there's a handicap and any game is still ongoing
         pass
 
     def test_tournamentplayer_score_is_final_sum_games(self):

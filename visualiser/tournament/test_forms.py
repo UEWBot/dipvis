@@ -33,7 +33,7 @@ from tournament.models import Award, Tournament, Round, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
-from tournament.forms import AwardsForm, BaseAwardsFormset
+from tournament.forms import AwardsForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
@@ -196,7 +196,7 @@ class PrefsFormTest(TestCase):
         self.tp.preference_set.all().delete()
 
     def test_prefs_form_prefs_delete(self):
-        # Add preferences for the TournamentPlayer
+        # Remove preferences for the TournamentPlayer
         self.tp.create_preferences_from_string('AEF')
         form = PrefsForm(tp=self.tp, data={'prefs': ''})
         self.assertTrue(form.is_valid())
@@ -245,6 +245,95 @@ class PrefsFormsetTest(TestCase):
         # Explicit initial should override implicit
         for form in formset:
             self.assertEqual(form['prefs'].initial, 'EF')
+        self.assertEqual(len(formset), len(initial))
+
+
+class HandicapFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        p = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        now = timezone.now()
+        t = Tournament.objects.create(name='t1',
+                                      start_date=now,
+                                      end_date=now + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        cls.tp = TournamentPlayer.objects.create(player=p, tournament=t, handicap = 0.0)
+
+    def test_handicap_form_handicap_field_label(self):
+        form = HandicapForm(tp=self.tp)
+        self.assertEqual(form.fields['handicap'].label, 'Arthur Bottom')
+
+    def test_handicap_form_handicap_help_text(self):
+        form = HandicapForm(tp=self.tp)
+        self.assertEqual(form.fields['handicap'].help_text, '')
+
+    def test_handicap_form_handicap_initial(self):
+        form = HandicapForm(tp=self.tp, initial={'handicap': 17.5})
+        # Explicit initial should override implicit
+        self.assertAlmostEqual(form['handicap'].initial, 17.5)
+
+    def test_handicap_form_handicap_exists(self):
+        # Add handicap for the TournamentPlayer
+        self.tp.handicap = 72.0
+        self.tp.save()
+        form = HandicapForm(tp=self.tp)
+        self.assertAlmostEqual(form['handicap'].initial, 72.0)
+        # Cleanup
+        self.tp.handicap = 0.0
+        self.tp.save()
+
+    def test_handicap_form_handicap_change(self):
+        # Change handicap for the TournamentPlayer
+        self.tp.handicap = 72.0
+        self.tp.save()
+        form = HandicapForm(tp=self.tp, data={'handicap': '5.0'})
+        self.assertTrue(form.is_valid())
+        self.assertAlmostEqual(form.cleaned_data['handicap'], 5.0)
+        # Cleanup
+        self.tp.handicap = 0.0
+        self.tp.save()
+
+
+class HandicapsFormsetTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        now = timezone.now()
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=now,
+                                          end_date=now + timedelta(hours=24),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
+        cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t, handicap=50.0)
+        cls.tp2 = TournamentPlayer.objects.create(player=p2, tournament=cls.t, handicap=5.0)
+
+        cls.HandicapsFormset = formset_factory(HandicapForm, extra=0, formset=BaseHandicapsFormset)
+
+    def test_handicaps_formset_creation(self):
+        formset = self.HandicapsFormset(tournament=self.t)
+        tps = set()
+        for form in formset:
+            self.assertAlmostEqual(form['handicap'].initial, form.tp.handicap)
+            tps.add(form.tp)
+        # Both TournamentPlayers should be present
+        self.assertEqual(len(formset), 2)
+        self.assertIn(self.tp1, tps)
+        self.assertIn(self.tp2, tps)
+
+    def test_handicaps_formset_initial(self):
+        initial = []
+        initial.append({'handicap': '10.0'})
+        formset = self.HandicapsFormset(tournament=self.t, initial=initial)
+        # Explicit initial should override implicit
+        for form in formset:
+            self.assertEqual(form['handicap'].initial, '10.0')
         self.assertEqual(len(formset), len(initial))
 
 

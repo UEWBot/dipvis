@@ -393,6 +393,46 @@ class TournamentPlayerViewTests(TestCase):
         self.assertContains(response, 'Register Players')
         self.assertNotContains(response, 'prefs_')
 
+    def test_index_editable_handicaps(self):
+        # A tournament that can be edited, that uses handicaps
+        self.assertFalse(self.t2.handicaps)
+        self.t2.handicaps = True
+        self.t2.save()
+        tp = self.t2.tournamentplayer_set.first()
+        self.assertEqual(tp.handicap, 0.0)
+        tp.handicap = 100.0
+        tp.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        # Verify that the page includes a populated Handicap column
+        self.assertContains(response, 'Handicap')
+        self.assertContains(response, '100.0')
+        # Clean up
+        self.t2.handicaps = False
+        self.t2.save()
+        tp.handicap = 0.0
+        tp.save()
+
+    def test_index_editable_no_handicaps(self):
+        # A tournament that can be edited, that doesn't use handicaps
+        self.assertFalse(self.t2.handicaps)
+        tp = self.t2.tournamentplayer_set.first()
+        self.assertEqual(tp.handicap, 0.0)
+        tp.handicap = 100.0
+        tp.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        # Verify that the page doesn't include a Handicap column
+        self.assertNotContains(response, 'Handicap')
+        self.assertNotContains(response, '100.0')
+        # Clean up
+        tp.handicap = 0.0
+        tp.save()
+
     def test_index_archived(self):
         # A tournament that the user could edit, except that it's been set to not editable
         self.client.login(username=self.USERNAME2, password=self.PWORD2)

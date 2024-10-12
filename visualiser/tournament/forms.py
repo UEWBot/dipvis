@@ -130,6 +130,44 @@ class BaseCheckInFormset(BaseFormSet):
         return super()._construct_form(index, **kwargs)
 
 
+class HandicapForm(forms.Form):
+    """Form to set one TournamentPlayer's handicap"""
+    handicap = forms.FloatField()
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwargs from the list
+        self.tp = kwargs.pop('tp')
+        # Overridable default initial value, like ModelForm
+        if 'initial' not in kwargs.keys():
+            kwargs['initial'] = {'handicap': self.tp.handicap}
+        super().__init__(*args, **kwargs)
+        # Set the label to the player's name
+        self.fields['handicap'].label = str(self.tp.player)
+
+
+class BaseHandicapsFormset(BaseFormSet):
+    """Formset for setting handicaps for TournamentPlayers"""
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament')
+        # Get the list of TournamentPlayers
+        self.tps = list(self.tournament.tournamentplayer_set.all())
+        # Create initial if not provided
+        if 'initial' not in kwargs.keys():
+            # And construct initial data from it
+            # __init__() uses len(initial) to decide how many forms to create
+            initial = []
+            for tp in self.tps:
+                initial.append({'handicap': tp.handicap})
+            kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special arg down to the form itself
+        kwargs['tp'] = self.tps[index]
+        return super()._construct_form(index, **kwargs)
+
+
 class PrefsForm(forms.Form):
     """Form for one TournamentPlayer's Preferences"""
     prefs = forms.CharField(max_length=7,
@@ -139,7 +177,7 @@ class PrefsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
-        # TODO Why is this an attribute rather than a local variable ?
+        # Store the TournamentPlayer so the view can set the right one
         self.tp = kwargs.pop('tp')
         # Overridable default initial value, like ModelForm
         if 'initial' not in kwargs.keys():

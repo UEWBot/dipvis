@@ -604,6 +604,8 @@ class Tournament(models.Model):
                                                  max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
                                                  help_text=_(u'How to combine round scores into a tournament score'))
+    handicaps = models.BooleanField(default=False,
+                                    help_text=_('Check to give each TournamentPlayer a predetermined score bonus'))
     # How do we combine game scores to get an overall player score for a round ?
     # This is the name of a RoundScoringSystem object
     round_scoring_system = models.CharField(validators=[validate_round_scoring_system],
@@ -790,10 +792,15 @@ class Tournament(models.Model):
         the appropriate TournamentPlayers.
         """
         scores = self._calculated_scores()
+        finished = self.is_finished()
         for tp in self.tournamentplayer_set.prefetch_related('player'):
             tp.score = scores[tp.player]
+            # Handicaps, if any, get added after the tournament is complete
+            # but only if the player actually played
+            if finished and self.handicaps and tp.roundplayers().exists():
+                tp.score += tp.handicap
             tp.save(update_fields=['score'])
-        if self.is_finished():
+        if finished:
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
                 for award in self.awards.filter(power=power).all():
@@ -1074,6 +1081,8 @@ class TournamentPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
+    handicap = models.FloatField(default=0.0,
+                                 help_text=_('Secret bonus score added after all games end. Only used if enabled for the Tournament'))
     unranked = TPUnrankedField(default=False,
                                verbose_name=_('Ineligible for awards'),
                                help_text=_('Set this to ignore this player when determining rankings'))
@@ -1100,6 +1109,9 @@ class TournamentPlayer(models.Model):
         t = self.tournament
         if t.is_finished():
             return True
+        if t.handicaps:
+            # Handicaps are added after all games end
+            return False
         system = t.tournament_scoring_system_obj()
         if not isinstance(system, TScoringSumGames):
             # If any round score for this player isn't final, this score also could change

@@ -155,7 +155,7 @@ class TournamentAdmin(admin.ModelAdmin):
     fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
               ('seed_games', 'power_assignment'),
-              ('tournament_scoring_system', 'round_scoring_system'),
+              ('tournament_scoring_system', 'handicaps', 'round_scoring_system'),
               ('draw_secrecy', 'best_country_criterion'),
               ('discord_url', 'is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
