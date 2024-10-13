@@ -1434,10 +1434,7 @@ class Round(models.Model):
         if not gs:
             # Rounds with no games can't have started
             return False
-        for g in gs:
-            if not g.is_finished:
-                return False
-        return True
+        return not gs.filter(is_finished=False).exists()
 
     def in_progress(self):
         """
