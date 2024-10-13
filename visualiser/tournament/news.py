@@ -201,7 +201,7 @@ def _round_news(r):
     # Note if the round has finished
     if r.is_finished():
         results.append(_(u'Round %(r_num)d has ended.') % {'r_num': r.number()})
-    elif not r.in_progress:
+    elif not r.in_progress():
         results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': r.number()})
     else:
         # Otherwise, add a count of completed games
