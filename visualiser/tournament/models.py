@@ -652,6 +652,7 @@ class Tournament(models.Model):
                                     verbose_name=_(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
                                     default=DrawSecrecy.SECRET)
+    is_finished = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False,
                                        help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
@@ -821,7 +822,7 @@ class Tournament(models.Model):
         """
         Return the player who won, or None if the tournament isn't yet finished
         """
-        if self.is_finished():
+        if self.is_finished:
             # TODO This assumes no tie
             return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
         return None
@@ -857,8 +858,7 @@ class Tournament(models.Model):
         if for_players is not None:
             rps = rps.filter(player__in=for_players)
         scores = self._calculated_scores(rps)
-        finished = self.is_finished()
-        add_handicap = finished and self.handicaps
+        add_handicap = self.is_finished and self.handicaps
         # Save scores, including for anyone who has yet to attend a round
         if for_players is not None:
             for p in for_players:
@@ -867,7 +867,7 @@ class Tournament(models.Model):
         else:
             for tp in self.tournamentplayer_set.all():
                 self._store_score(tp, scores, add_handicap)
-        if finished:
+        if self.is_finished:
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
                 for award in self.awards.filter(power=power).all():
@@ -1006,19 +1006,17 @@ class Tournament(models.Model):
                 return r
         return None
 
-    def is_finished(self):
+    def set_is_finished(self):
         """
-        Determines whether the Tournament is complete.
-
-        Returns True if the tournament has rounds, and they are all finished.
-        Returns False otherwise.
+        Sets is_finished to True if the tournament has rounds, and they are all finished.
         """
         rds = self.round_set.all()
         # If there are no rounds, the tournament can't have started
         if not rds:
-            return False
+            return
         # Look for any unfinished round
-        return not rds.filter(is_finished=False).exists()
+        self.is_finished = not rds.filter(is_finished=False).exists()
+        self.save(update_fields=['is_finished'])
 
     def in_progress(self):
         """
@@ -1195,7 +1193,7 @@ class TournamentPlayer(models.Model):
         False if it is the "if all games ended now" score.
         """
         t = self.tournament
-        if t.is_finished():
+        if t.is_finished:
             return True
         if t.handicaps:
             # Handicaps are added after all games end
@@ -1483,6 +1481,7 @@ class Round(models.Model):
     def set_is_finished(self):
         """
         Sets self.is_finished to True if the Round has games, and they have all finished.
+        Calls self.tournament.set_is_finished() if the round has finished.
         """
         gs = self.game_set.all()
         if not gs:
@@ -1551,6 +1550,7 @@ class Round(models.Model):
 
         If scoring_system attribute may have changed, updates score attributes of any
         GamePlayers and corresponding RoundPlayers and TournamentPlayers.
+        If is_finished may have changed, calls Tournament.set_is_finished().
         """
         super().save(*args, **kwargs)
 
@@ -1564,6 +1564,10 @@ class Round(models.Model):
                 # Re-score all Games. This will call self.update_scores()
                 for g in self.game_set.all():
                     g.update_scores()
+
+        # Some change may affect the is_finished attribute of the Tournament
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+            self.tournament.set_is_finished()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""

@@ -49,7 +49,7 @@ def index(request, tournament_id):
                                     extra=4)
     formset = PlayerFormset(request.POST or None)
     if request.method == 'POST':
-        if t.is_finished() or not t.editable:
+        if t.is_finished or not t.editable:
             raise Http404
         for k in request.POST.keys():
             # Send preferences email to the specified TournamentPlayer

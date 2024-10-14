@@ -49,7 +49,7 @@ def _tournament_news(t):
     include_leader = False
     current_round = t.current_round()
     # Always include the number of players
-    if t.is_finished():
+    if t.is_finished:
         tense_str = _('were')
     else:
         tense_str = _('are')
@@ -72,7 +72,7 @@ def _tournament_news(t):
         # Get the news for the current round
         results += _round_news(current_round)
     # If the tournament is over, just report the top three players, plus best countries
-    elif t.is_finished():
+    elif t.is_finished:
         for player, (rank, score) in t.positions_and_scores().items():
             if rank in [1, 2, 3]:
                 results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
