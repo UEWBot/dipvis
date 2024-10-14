@@ -1002,7 +1002,7 @@ class Tournament(models.Model):
         # If no round is in progress, return the first unfinished round
         rds = rds.reverse()
         for r in rds:
-            if not r.is_finished():
+            if not r.is_finished:
                 return r
         return None
 
@@ -1013,15 +1013,12 @@ class Tournament(models.Model):
         Returns True if the tournament has rounds, and they are all finished.
         Returns False otherwise.
         """
-        rds = self.round_set.prefetch_related('game_set')
+        rds = self.round_set.all()
         # If there are no rounds, the tournament can't have started
         if not rds:
             return False
         # Look for any unfinished round
-        for r in rds:
-            if not r.is_finished():
-                return False
-        return True
+        return not rds.filter(is_finished=False).exists()
 
     def in_progress(self):
         """
@@ -1417,6 +1414,7 @@ class Round(models.Model):
     enable_check_in = models.BooleanField(default=False,
                                           verbose_name=_(u'Enable self-check-ins'))
     email_sent = models.BooleanField(default=False)
+    is_finished = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['start']
@@ -1482,18 +1480,16 @@ class Round(models.Model):
         # That could change the Tournament scoring for those Players
         self.tournament.update_scores(for_players)
 
-    def is_finished(self):
+    def set_is_finished(self):
         """
-        Is the Round complete?
-
-        Returns True if the Round has games, and they have all finished.
-        Returns False otherwise.
+        Sets self.is_finished to True if the Round has games, and they have all finished.
         """
         gs = self.game_set.all()
         if not gs:
             # Rounds with no games can't have started
-            return False
-        return not gs.filter(is_finished=False).exists()
+            return
+        self.is_finished = not gs.filter(is_finished=False).exists()
+        self.save(update_fields=['is_finished'])
 
     def in_progress(self):
         """
@@ -1506,7 +1502,7 @@ class Round(models.Model):
             # Not yet started
             return False
         # Started, so in_progress unless already finished
-        return not self.is_finished()
+        return not self.is_finished
 
     def number(self):
         """
@@ -1964,6 +1960,7 @@ class Game(models.Model):
 
         Ensures that 1901 SC counts and ownership info exists.
         Ensures that S1901M image exists.
+        If is_finished attribute may be changed, called Round.set_is_finished().
         """
         super().save(*args, **kwargs)
 
@@ -1987,6 +1984,10 @@ class Game(models.Model):
                                            season=Seasons.SPRING,
                                            phase=Phases.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
+
+        # Some change may affect the is_finished attribute of the Round
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+            self.the_round.set_is_finished()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -2212,7 +2213,7 @@ class RoundPlayer(models.Model):
         if (self.score > 0.0) and not self.the_round.tournament.tournament_scoring_system_obj().uses_round_scores:
             # Any later rounds may change the score for this round
             return self.tournamentplayer().score_is_final()
-        if self.the_round.is_finished():
+        if self.the_round.is_finished:
             return True
         # If any of this player's game scores aren't final, the round score isn't final
         for gp in self.gameplayers():

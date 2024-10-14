@@ -1390,6 +1390,7 @@ class TournamentTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
+        r13.set_is_finished()
         # Add Games to r21
         Game.objects.create(name='g21',
                             started_at=r21.start,
@@ -1406,12 +1407,14 @@ class TournamentTests(TestCase):
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
+        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=cls.r32.start,
                             the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
+        cls.r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -2043,6 +2046,7 @@ class TournamentTests(TestCase):
         GamePlayer.objects.create(game=g, player=self.p5, power=self.france, score=3)
         GamePlayer.objects.create(game=g, player=self.p6, power=self.austria, score=2)
         GamePlayer.objects.create(game=g, player=self.p7, power=self.germany, score=1)
+        r.set_is_finished()
 
         t.update_scores()
 
@@ -2258,14 +2262,14 @@ class TournamentTests(TestCase):
         # All earlier rounds should be finished or in progress
         for i in range(1, r.number()):
             with self.subTest(round_number=i):
-                self.assertTrue(t.round_numbered(i).is_finished() or t.round_numbered(i).in_progress(),
+                self.assertTrue(t.round_numbered(i).is_finished or t.round_numbered(i).in_progress(),
                                 'round %d' % i)
         # All later rounds should be not in progress
         for i in range(r.number() + 1, rounds + 1):
             with self.subTest(round_number=i):
                 self.assertFalse(t.round_numbered(i).in_progress(), 'round %d' % i)
         # This round should be unfinished
-        self.assertFalse(r.is_finished())
+        self.assertFalse(r.is_finished)
 
     # Tournament.is_finished()
     def test_tourney_is_finished_some_rounds_over(self):
@@ -2438,12 +2442,14 @@ class TournamentPlayerTests(TestCase):
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
+        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=cls.r32.start,
                             the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
+        cls.r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -2505,8 +2511,8 @@ class TournamentPlayerTests(TestCase):
     # TournamentPlayer.score_is_final()
     def test_tournamentplayer_score_is_final_afterwards(self):
         t = Tournament.objects.get(name='t3')
-        tp = t.tournamentplayer_set.first()
         self.assertTrue(t.is_finished())
+        tp = t.tournamentplayer_set.first()
         self.assertTrue(tp.score_is_final())
 
     def test_tournamentplayer_score_is_final_before_last_round(self):
@@ -3016,18 +3022,21 @@ class RoundTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
+        r13.set_is_finished()
         # Add Games to r31
         Game.objects.create(name='g31',
                             started_at=r31.start,
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
+        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=cls.r32.start,
                             the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
+        cls.r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -3384,21 +3393,24 @@ class RoundTests(TestCase):
         # Clean up
         t.delete()
 
-    # Round.is_finished()
+    # Round.set_is_finished()
     def test_round_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')
         r1 = t.round_numbered(1)
-        self.assertFalse(r1.is_finished())
+        r1.set_is_finished()
+        self.assertFalse(r1.is_finished)
 
     def test_round_is_finished_some_games_over(self):
         t = Tournament.objects.get(name='t1')
         r2 = t.round_numbered(2)
-        self.assertFalse(r2.is_finished())
+        r2.set_is_finished()
+        self.assertFalse(r2.is_finished)
 
     def test_round_is_finished_all_games_over(self):
         t = Tournament.objects.get(name='t1')
         r3 = t.round_numbered(3)
-        self.assertTrue(r3.is_finished())
+        r3.set_is_finished()
+        self.assertTrue(r3.is_finished)
 
     def test_round_is_finished_no_games(self):
         """
@@ -3406,7 +3418,8 @@ class RoundTests(TestCase):
         """
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
-        self.assertFalse(r4.is_finished())
+        r4.set_is_finished()
+        self.assertFalse(r4.is_finished)
 
     # Round.in_progress()
     def test_round_in_progress_no_games_over(self):
@@ -4817,11 +4830,11 @@ class GameTests(TestCase):
                   is_finished=False,
                   the_set=self.set1)
         g2.save()
-        self.assertFalse(r.is_finished())
+        self.assertFalse(r.is_finished)
         self.assertFalse(t.is_finished())
         g1.is_finished = True
         g1.save(update_fields=['is_finished'])
-        self.assertFalse(r.is_finished())
+        self.assertFalse(r.is_finished)
         self.assertFalse(t.is_finished())
         # Note that this will also delete all associated objects
         t.delete()
@@ -4904,12 +4917,12 @@ class GameTests(TestCase):
                   is_finished=False,
                   the_set=self.set1)
         g2.save()
-        self.assertFalse(r1.is_finished())
+        self.assertFalse(r1.is_finished)
         self.assertFalse(t.is_finished())
         g2.is_finished = True
         g2.save(update_fields=['is_finished'])
         # Round but not Tournament should now be flagged as finished
-        self.assertTrue(r1.is_finished())
+        self.assertTrue(r1.is_finished)
         self.assertFalse(t.is_finished())
         # Note that this will also delete all associated objects
         t.delete()
@@ -4977,12 +4990,12 @@ class GameTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
         gp.save()
-        self.assertFalse(r.is_finished())
+        self.assertFalse(r.is_finished)
         self.assertFalse(t.is_finished())
         g1.is_finished = True
         g1.save(update_fields=['is_finished'])
         # Round and Tournament should now be flagged as finished
-        self.assertTrue(r.is_finished())
+        self.assertTrue(r.is_finished)
         self.assertTrue(t.is_finished())
         # Note that this will also delete all associated objects
         t.delete()
@@ -5836,6 +5849,7 @@ class RoundPlayerTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
+        r13.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -5932,7 +5946,7 @@ class RoundPlayerTests(TestCase):
     def test_roundplayer_score_is_final_round_finished(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(3)
-        self.assertTrue(r.is_finished())
+        self.assertTrue(r.is_finished)
         rp = RoundPlayer(the_round=r,
                          player=self.p1,
                          score=7)
@@ -5941,7 +5955,7 @@ class RoundPlayerTests(TestCase):
     def test_roundplayer_score_is_final_round_not_started(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
-        self.assertFalse(r.is_finished(), False)
+        self.assertFalse(r.is_finished)
         rp = r.roundplayer_set.first()
         self.assertFalse(rp.score_is_final())
 
@@ -5949,7 +5963,7 @@ class RoundPlayerTests(TestCase):
         # Player playing two games, one of which is done
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(2)
-        self.assertFalse(r.is_finished())
+        self.assertFalse(r.is_finished)
         rp = r.roundplayer_set.first()
         self.assertEqual(rp.gameplayers().count(), 2)
         self.assertFalse(rp.score_is_final())

@@ -106,7 +106,7 @@ def _tournament_news(t):
         # which rounds have been played ?
         played_rounds = 0
         for r in t.round_set.all():
-            if r.is_finished():
+            if r.is_finished:
                 played_rounds += 1
         if played_rounds == 0:
             results.append(_(u'Tournament has yet to start.'))
@@ -133,7 +133,7 @@ def _tournament_news(t):
                                     contenders) % {'count': contenders})
         # Include the top score from each previous round (if any)
         for r in t.round_set.all():
-            if r.is_finished():
+            if r.is_finished:
                 results.append(_round_leader_str(r))
     # Shuffle the resulting list
     random.shuffle(results)
@@ -149,7 +149,7 @@ def _round_leader_str(r):
         return None
     max_score = max(the_scores.values())
     winners = [k for k, v in the_scores.items() if v == max_score]
-    if r.is_finished():
+    if r.is_finished:
         done_str = _(u'Final')
     else:
         done_str = _(u'Current')
@@ -172,7 +172,7 @@ def _round_news(r):
     if ls:
         results.append(ls)
     # Always include the number of players
-    if r.is_finished():
+    if r.is_finished:
         plural_tense_str = _('were')
         singular_tense_str = _('was')
     else:
@@ -199,7 +199,7 @@ def _round_news(r):
                                                                                                         'dots': max_centres,
                                                                                                         'players': toppers_str})
     # Note if the round has finished
-    if r.is_finished():
+    if r.is_finished:
         results.append(_(u'Round %(r_num)d has ended.') % {'r_num': r.number()})
     elif not r.in_progress():
         results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': r.number()})
