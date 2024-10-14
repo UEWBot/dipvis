@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta
+
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -40,7 +42,7 @@ class ViewIndexTests(TestCase):
         now = timezone.now()
         t = Tournament.objects.create(name='A Tournament',
                                       start_date=now,
-                                      end_date=now,
+                                      end_date=now + timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -54,7 +56,7 @@ class ViewIndexTests(TestCase):
         now = timezone.now()
         t = Tournament.objects.create(name='A Tournament',
                                       start_date=now,
-                                      end_date=now,
+                                      end_date=now + timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -68,7 +70,7 @@ class ViewIndexTests(TestCase):
         now = timezone.now()
         t = Tournament.objects.create(name='A Tournament',
                                       start_date=now,
-                                      end_date=now,
+                                      end_date=now + timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,

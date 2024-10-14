@@ -54,13 +54,13 @@ class NewsTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.COUNTS)

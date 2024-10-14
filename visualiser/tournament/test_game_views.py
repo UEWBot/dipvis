@@ -36,6 +36,7 @@ from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
 HOURS_8 = timedelta(hours=8)
+HOURS_24 = timedelta(hours=24)
 VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
 VALID_WD_URL = 'https://webdiplomacy.net/board.php?gameID=340030'
 NOTE = 'Played on the wooden board'
@@ -67,7 +68,7 @@ class GameViewTests(TestCase):
         # This one has Secret draw votes
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + HOURS_24,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -95,7 +96,7 @@ class GameViewTests(TestCase):
         # This one has Count draw votes
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + HOURS_24,
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.COUNTS,

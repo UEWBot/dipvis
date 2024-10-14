@@ -49,7 +49,7 @@ class GameScoringTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
@@ -1383,7 +1383,7 @@ class CDiploNamurGameScoringTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
@@ -1615,7 +1615,7 @@ class WorldClassicGameScoringTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
@@ -1856,7 +1856,7 @@ class CarnageGameScoringTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
@@ -2234,7 +2234,7 @@ class Detour09GameScoringTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
@@ -2555,7 +2555,7 @@ class MaxonianGameScoringTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=now,
-                                       end_date=now,
+                                       end_date=now + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)

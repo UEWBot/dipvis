@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import timedelta
 import uuid
 from urllib.parse import urlencode
 
@@ -112,7 +113,7 @@ class TournamentPlayerViewTests(TestCase):
         # Ongoing, one round
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -141,7 +142,7 @@ class TournamentPlayerViewTests(TestCase):
         # Unpublished Tournament, with a manager (u3)
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -207,7 +208,7 @@ class TournamentPlayerViewTests(TestCase):
         # Unpublished Tournament, without a manager
         cls.t3 = Tournament.objects.create(name='t3',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -217,7 +218,7 @@ class TournamentPlayerViewTests(TestCase):
         # One round, tournament complete
         cls.t4 = Tournament.objects.create(name='t4',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -338,7 +339,7 @@ class TournamentPlayerViewTests(TestCase):
         # Ongoing, one round that has started
         cls.t5 = Tournament.objects.create(name='t5',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,

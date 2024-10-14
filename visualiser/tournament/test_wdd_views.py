@@ -50,7 +50,7 @@ class WddViewTests(TestCase):
         # Published Tournament so it's visible to all
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=now,
-                                          end_date=now,
+                                          end_date=now + timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET,

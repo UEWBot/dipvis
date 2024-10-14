@@ -661,6 +661,8 @@ class Tournament(models.Model):
                                    name='%(class)s_best_country_criterion_valid'),
             models.CheckConstraint(check=Q(format__in=Formats.values),
                                    name='%(class)s_format_valid'),
+            models.CheckConstraint(check=Q(end_date__gte=F('start_date')),
+                                   name='%(class)s_starts_before_end'),
             models.UniqueConstraint(fields=['name', 'start_date'],
                                     name='unique_name_date'),
         ]

@@ -59,7 +59,7 @@ class EmailTests(TestCase):
 
         cls.t1 = Tournament.objects.create(name='t1',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET)
@@ -260,7 +260,7 @@ class EmailTests(TestCase):
         # Tournament with preferences
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=now,
-                                           end_date=now,
+                                           end_date=now + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
