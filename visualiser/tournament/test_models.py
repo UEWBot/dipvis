@@ -3728,19 +3728,19 @@ class GameTests(TestCase):
         self.assertTrue(g.gameplayer_set.filter(power__isnull=False).exists())
         self.assertRaises(PowerAlreadyAssigned, g.assign_powers_from_prefs)
 
-    # Game.check_whether_finished()
-    def test_check_whether_finished_solo(self):
+    # Game.set_is_finished()
+    def test_set_is_finished_solo(self):
         # Game is finished because somebody won
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertFalse(g.is_finished)
-        g.check_whether_finished()
+        g.set_is_finished()
         self.assertTrue(g.is_finished)
         # Cleanup
         g.is_finished = False
         g.save(update_fields=['is_finished'])
 
-    def test_check_whether_finished_reached(self):
+    def test_set_is_finished_reached(self):
         # Game is finished because it reached the final year
         t = Tournament.objects.get(name='t3')
         r = t.round_numbered(1)
@@ -3749,11 +3749,11 @@ class GameTests(TestCase):
         self.assertTrue(g.is_finished)
         g.is_finished = False
         g.save(update_fields=['is_finished'])
-        g.check_whether_finished(y)
+        g.set_is_finished(y)
         self.assertTrue(g.is_finished)
         # No cleanup needed
 
-    def test_check_whether_finished_not_reached(self):
+    def test_set_is_finished_not_reached(self):
         # Game is not finished because it didn't yet reach the final year
         t = Tournament.objects.get(name='t3')
         r = t.round_numbered(1)
@@ -3762,18 +3762,18 @@ class GameTests(TestCase):
         self.assertTrue(g.is_finished)
         g.is_finished = False
         g.save(update_fields=['is_finished'])
-        g.check_whether_finished(y - 1)
+        g.set_is_finished(y - 1)
         self.assertFalse(g.is_finished)
         # Cleanup
         g.is_finished = True
         g.save(update_fields=['is_finished'])
 
-    def test_check_whether_finished_unlimited(self):
+    def test_set_is_finished_unlimited(self):
         # Game not finished because there is no final year
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
         self.assertFalse(g.is_finished)
-        g.check_whether_finished(1999)
+        g.set_is_finished(1999)
         self.assertFalse(g.is_finished)
         # No cleanup needed
 

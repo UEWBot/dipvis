@@ -462,7 +462,8 @@ def sc_counts(request, tournament_id, game_name):
         else:
             g.is_finished = False
             g.save(update_fields=['is_finished'])
-            g.check_whether_finished()
+            # Game could still be finished for other reasons
+            g.set_is_finished()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',
                                             args=(tournament_id, game_name)))
@@ -722,7 +723,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
         game.create_or_update_sc_counts_from_ownerships(year)
     else:
         _sc_counts_to_cc(game, year, bg.sc_counts)
-        game.check_whether_finished(year)
+        game.set_is_finished(year)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
@@ -746,7 +747,7 @@ def _scrape_webdip(request, tournament, game, webdip_game):
         raise Http404
     # Add the appropriate CentreCounts
     _sc_counts_to_cc(game, year, wg.sc_counts)
-    game.check_whether_finished(year)
+    game.set_is_finished(year)
     # TODO There's more information in wg - like whether the game is over...
     # Report what was done
     return render(request,

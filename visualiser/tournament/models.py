@@ -1602,8 +1602,7 @@ class Game(models.Model):
             for gp in position_to_gps[pos]:
                 gp.set_power_from_prefs()
 
-    # TODO: Rename this method?
-    def check_whether_finished(self, year=None):
+    def set_is_finished(self, year=None):
         """
         Set self.is_finished as appropriate
 
@@ -1640,7 +1639,7 @@ class Game(models.Model):
                                                      game=self,
                                                      year=year,
                                                      defaults={'count': all_scos.filter(owner=p).count()})
-        self.check_whether_finished(year)
+        self.set_is_finished(year)
 
     def compare_sc_counts_and_ownerships(self, year):
         """

@@ -202,7 +202,7 @@ class TournamentPlayerViewTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g21, year=1901, count=6)
         CentreCount.objects.create(power=cls.russia, game=g21, year=1901, count=7)
         CentreCount.objects.create(power=cls.turkey, game=g21, year=1901, count=5)
-        g21.check_whether_finished()
+        g21.set_is_finished()
         cls.t2.managers.add(cls.u3)
 
         # Unpublished Tournament, without a manager
@@ -305,7 +305,7 @@ class TournamentPlayerViewTests(TestCase):
         dp.drawing_powers.add(cls.italy)
         dp.drawing_powers.add(cls.russia)
         dp.drawing_powers.add(cls.turkey)
-        g41.check_whether_finished()
+        g41.set_is_finished()
         # Add CentreCounts for g42 - solo for Russia. Austria eliminated
         CentreCount.objects.create(power=cls.austria, game=g42, year=1901, count=4)
         CentreCount.objects.create(power=cls.england, game=g42, year=1901, count=4)
@@ -328,7 +328,7 @@ class TournamentPlayerViewTests(TestCase):
         CentreCount.objects.create(power=cls.italy, game=g42, year=1903, count=4)
         CentreCount.objects.create(power=cls.russia, game=g42, year=1903, count=19)
         CentreCount.objects.create(power=cls.turkey, game=g42, year=1903, count=1)
-        g42.check_whether_finished()
+        g42.set_is_finished()
 
         # Hopefully this isn't the pk for any Tournament
         cls.INVALID_T_PK = 99999
