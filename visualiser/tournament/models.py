@@ -30,7 +30,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
-from django.db.models import Sum, Max, Q
+from django.db.models import Sum, Max, F, Q
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.text import slugify
@@ -1314,6 +1314,9 @@ class Round(models.Model):
         constraints = [
             models.CheckConstraint(check=Q(final_year__gte=FIRST_YEAR) | Q(final_year__isnull=True),
                                    name='%(class)s_final_year_valid'),
+            models.CheckConstraint(check=(Q(earliest_end_time__isnull=True) & Q(latest_end_time__isnull=True))
+                                          | Q(latest_end_time__gte=F('earliest_end_time')),
+                                   name='%(class)s_end_times_valid'),
             models.UniqueConstraint(fields=['tournament', 'start'],
                                     name='unique_tournament_start'),
         ]
