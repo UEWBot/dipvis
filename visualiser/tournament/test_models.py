@@ -1543,9 +1543,10 @@ class TournamentTests(TestCase):
         self.assertFalse(t.powers_assigned_from_prefs())
 
     def test_tournament_powers_assigned_from_prefs_true(self):
+        now = timezone.now()
         t = Tournament(name='Test Tournament',
-                       start_date=timezone.now(),
-                       end_date=timezone.now(),
+                       start_date=now,
+                       end_date=now,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        power_assignment=PowerAssignMethods.PREFERENCES)
@@ -1587,9 +1588,10 @@ class TournamentTests(TestCase):
 
     # Tournament._calculated_scores()
     def test_tournament_scores_invalid(self):
+        now = timezone.now()
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
-                                                      start_date=timezone.now(),
-                                                      end_date=timezone.now(),
+                                                      start_date=now,
+                                                      end_date=now,
                                                       tournament_scoring_system='Invalid System',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
         self.assertRaises(InvalidScoringSystem, t._calculated_scores)
@@ -1631,9 +1633,10 @@ class TournamentTests(TestCase):
 
     # Tournament.scores_detail()
     def test_tournament_calculated_scores_invalid(self):
+        now = timezone.now()
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
-                                                      start_date=timezone.now(),
-                                                      end_date=timezone.now(),
+                                                      start_date=now,
+                                                      end_date=now,
                                                       tournament_scoring_system='Invalid System',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
         self.assertRaises(InvalidScoringSystem, t._calculated_scores)
@@ -2061,9 +2064,10 @@ class TournamentTests(TestCase):
         self.assertTrue(t.is_finished())
 
     def test_tourney_is_finished_no_rounds(self):
+        now = timezone.now()
         t = Tournament.objects.create(name='Roundless',
-                                      start_date=timezone.now(),
-                                      end_date=timezone.now(),
+                                      start_date=now,
+                                      end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
         self.assertFalse(t.is_finished())
@@ -2082,17 +2086,19 @@ class TournamentTests(TestCase):
         self.assertFalse(t.in_progress())
 
     def test_tourney_in_progress_no_rounds(self):
+        now = timezone.now()
         t = Tournament.objects.create(name='Roundless',
-                                      start_date=timezone.now(),
-                                      end_date=timezone.now(),
+                                      start_date=now,
+                                      end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
         self.assertFalse(t.in_progress())
 
     def test_tourney_in_progress_rounds_not_started(self):
+        now = timezone.now()
         t = Tournament.objects.create(name='Preparing',
-                                      start_date=timezone.now(),
-                                      end_date=timezone.now(),
+                                      start_date=now,
+                                      end_date=now,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
         t.save()
@@ -2144,8 +2150,8 @@ class TournamentPlayerTests(TestCase):
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.COUNTS)
         Tournament.objects.create(name='t4',
-                                       start_date=timezone.now(),
-                                       end_date=timezone.now(),
+                                       start_date=now,
+                                       end_date=now,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        power_assignment=PowerAssignMethods.PREFERENCES)
@@ -2877,9 +2883,10 @@ class RoundTests(TestCase):
 
     # Round.scores()
     def test_round_update_scores_invalid(self):
+        now = timezone.now()
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
-                                                      start_date=timezone.now(),
-                                                      end_date=timezone.now(),
+                                                      start_date=now,
+                                                      end_date=now,
                                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                                       round_scoring_system='Invalid System')
         r = Round.objects.create(tournament=t,
@@ -3825,9 +3832,10 @@ class GameTests(TestCase):
 
     # Game.update_scores()
     def test_game_update_scores_invalid(self):
+        now = timezone.now()
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
-                                                      start_date=timezone.now(),
-                                                      end_date=timezone.now(),
+                                                      start_date=now,
+                                                      end_date=now,
                                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
         r = Round.objects.create(tournament=t,

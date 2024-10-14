@@ -136,16 +136,17 @@ class PlayerViewTests(TestCase):
                                    last_name='Belligerent')
         # Add a shared game
         # Add in another result for a non-shared game
+        now = timezone.now()
         pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
                                                game_name='R 2 B 1',
-                                               date=timezone.now(),
+                                               date=now,
                                                player=self.p1,
                                                power=germany,
                                                position=2)
         # One with lots of blanks
         pgr2 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
                                                game_name='R 3 B 2',
-                                               date=timezone.now(),
+                                               date=now,
                                                player=self.p1,
                                                power=england,
                                                position=3)
