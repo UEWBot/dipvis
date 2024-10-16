@@ -22,19 +22,24 @@
 This module provides utility functions for DipVis.
 """
 
+import csv
 import requests
 from bs4 import BeautifulSoup
+from datetime import timedelta
 
 from django_countries.fields import Country
 
 from tournament import backstabbr
 from tournament.background import WDDBackground
+from tournament.diplomacy.models.game_set import GameSet
+from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.models import Award, CentreCount, DrawProposal, Game, GameImage
 from tournament.models import GamePlayer, Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
+from tournament.models import NO_SCORING_SYSTEM_STR
 from tournament.players import Player
-from tournament.round_views import _create_game_seeder
+from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 from tournament.wdd_views import _power_award_to_gameplayers
@@ -503,3 +508,69 @@ def recreate_seeder(for_tournament, round_number):
             elif rp.game_count == 2:
                 two_boarders.add(tp)
     return seeder, sitters, two_boarders
+
+
+def _import_dixie_round(r_num, player, tournament, row):
+    """
+    Utility function for import_dixie_csv()
+    """
+    if row['round%d' % r_num] == '%d' % r_num:
+        # Create a RoundPlayer
+        r = tournament.round_numbered(r_num)
+        rp = RoundPlayer.objects.create(player=player,
+                                        the_round=r,
+                                        score=float(row['score%d' % r_num]))
+        # And a GamePlayer
+        gp = GamePlayer.objects.create(player=player,
+                                       game=Game.objects.get(the_round=r,
+                                                             name='R%dG%c' % (r_num, row['game%d' % r_num])),
+                                       power=GreatPower.objects.get(abbreviation=row['power%d' % r_num]),
+                                       score=float(row['score%d' % r_num]))
+
+
+def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
+    """
+    Given the name of a CSV file containing DixeCon results,
+    create the Tournament with all the data provided.
+    Probably loads of assumptions...
+    """
+    with open(csvfilename) as csvfile:
+        cols = ['first', 'last', 'round1', 'game1', 'power1', 'score1', 'round2', 'game2', 'power2', 'score2', 'round3', 'game3', 'power3', 'score3', 'blank', 'total']
+        reader = csv.DictReader(csvfile, fieldnames=cols)
+        # Create the tournament
+        a_set = GameSet.objects.first()
+        t = Tournament.objects.create(name=name,
+                                      start_date=start_date,
+                                      end_date=end_date,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                      tournament_scoring_system='Sum best 2 rounds')
+        # Create 3 rounds
+        for r_num in range(1, 4):
+            r = Round.objects.create(tournament=t,
+                                     scoring_system='Dixie',
+                                     dias=False,
+                                     start=t.start_date + timedelta(hours=r_num))
+            # Create 4 Games
+            for g_num in range(1,5):
+                g = Game.objects.create(name=_generate_game_name(r_num, g_num),
+                                        the_round=r,
+                                        the_set=a_set,
+                                        is_finished=True)
+        for row in reader:
+            # Skip rows with no player name
+            if not row['first'].lstrip() or not row['first'].isprintable():
+                continue
+            try:
+                p = Player.objects.get(first_name=row['first'], last_name=row['last'])
+            except Player.DoesNotExist:
+                first=row['first']
+                last=row['last']
+                print(f'Unable to find player "{first} {last}"')
+                continue
+            # Create a TournamentPlayer
+            tp = TournamentPlayer.objects.create(player=p,
+                                                 tournament=t,
+                                                 score=float(row['total']))
+            # Create RoundPlayer and GamePlayer for each applicable Round
+            for r_num in range(1, 4):
+                _import_dixie_round(r_num, p, t, row)
