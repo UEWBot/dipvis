@@ -165,7 +165,6 @@ def view_classification_csv(request, tournament_id):
             # Player was registered but didn't actually play, so omit them
             continue
         p = tp.player
-        p_score = t_positions_and_scores[p][1]
         rank = t_positions_and_scores[p][0]
         # First the stuff that is global to the tournament and applies to all players
         names = p.wdd_firstname_lastname()
@@ -175,7 +174,7 @@ def view_classification_csv(request, tournament_id):
                     'RANK': rank,
                     # No. of players with the same rank
                     'EXAEQUO': len([r for r, _ in t_positions_and_scores.values() if r == rank]),
-                    'SCORE': p_score,
+                    'SCORE': tp.score,
                    }
         if rank == Tournament.UNRANKED:
             row_dict['RANK'] = '999'

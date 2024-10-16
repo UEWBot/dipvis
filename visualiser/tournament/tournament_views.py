@@ -137,20 +137,19 @@ def tournament_scores(request,
     t_positions_and_scores = t.positions_and_scores()
     # Construct a list of dicts with [rank, tournament player, round 1 player, ..., round n player, tournament score]
     scores = []
-    for p in tps:
+    for tp in tps:
         rs = []
         for r in rds:
             try:
-                rp = r.roundplayer_set.get(player=p.player)
+                rp = r.roundplayer_set.get(player=tp.player)
             except RoundPlayer.DoesNotExist:
                 # This player didn't play this round
                 rs.append(None)
             else:
                 rs.append(rp)
-        row = {'rank': '%d' % t_positions_and_scores[p.player][0],
-               'player': p,
-               'rounds': rs,
-               'score': t_positions_and_scores[p.player][1]}
+        row = {'rank': '%d' % t_positions_and_scores[tp.player][0],
+               'player': tp,
+               'rounds': rs}
         scores.append(row)
     # sort rows by position (they'll retain the alphabetic sorting if equal)
     scores.sort(key=lambda row: float(row['rank']))
