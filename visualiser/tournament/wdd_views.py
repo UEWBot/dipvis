@@ -299,11 +299,13 @@ def view_boards_csv(request, tournament_id):
                         row_dict['DRAW'] = 0
                 # Add in centre counts
                 dots = centrecount_set.filter(power=gp.power)
+                cc = None
                 for cc in dots:
                     row_dict[_centrecount_year_to_wdd(cc.year)] = cc.count
                     if cc.count == 0 and not 'YEAR_ELIMINATION' in row_dict:
                         row_dict['YEAR_ELIMINATION'] = cc.year % (FIRST_YEAR-1)
-                row_dict['NB_CENTRE'] = cc.count
+                if cc:
+                    row_dict['NB_CENTRE'] = cc.count
                 # Write a row for this player in this game
                 writer.writerow(row_dict)
 
