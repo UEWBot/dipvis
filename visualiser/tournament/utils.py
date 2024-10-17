@@ -393,6 +393,25 @@ def add_missing_wdd_ids(dry_run=False):
                         break
 
 
+def add_best_country_awards_to_tournament(tournament, dry_run=False):
+    """
+    Add "Best Country" awards to a Tournament.
+    Assumes that the seven "Best Country" awards have been created.
+    """
+    for power, gp_list in tournament.best_countries().items():
+        a = Award.objects.filter(power=power).first()
+        # First, add the Award to the Tournament
+        print(f'Adding award "{a}" to {tournament}')
+        if not dry_run:
+            tournament.awards.add(a)
+        # Then give to the appropriate TournamentPlayers
+        for gp in gp_list:
+            tp = gp.tournamentplayer()
+            print(f'  Adding award "{a}" to {tp}')
+            if not dry_run:
+                tp.awards.add(a)
+
+
 def add_best_country_awards(dry_run=False):
     """
     Add "Best Country" awards to existing Tournaments.
@@ -400,18 +419,7 @@ def add_best_country_awards(dry_run=False):
     Assumes that the seven "Best Country" awards have been created.
     """
     for t in Tournament.objects.all():
-        for power, gp_list in t.best_countries().items():
-            a = Award.objects.filter(power=power).first()
-            # First, add the Award to the Tournament
-            print(f'Adding award "{a}" to {t}')
-            if not dry_run:
-                t.awards.add(a)
-            # Then give to the appropriate TournamentPlayers
-            for gp in gp_list:
-                tp = gp.tournamentplayer()
-                print(f'  Adding award "{a}" to {tp}')
-                if not dry_run:
-                    tp.awards.add(a)
+        add_best_country_awards_for_tournament(t, dry_run)
 
 
 def clean_best_country_awards(dry_run=False):
@@ -574,3 +582,4 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
             # Create RoundPlayer and GamePlayer for each applicable Round
             for r_num in range(1, 4):
                 _import_dixie_round(r_num, p, t, row)
+    add_best_country_awards_for_tournament(t, False)
