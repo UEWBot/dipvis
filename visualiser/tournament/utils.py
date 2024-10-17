@@ -495,7 +495,7 @@ def recreate_seeder(for_tournament, round_number):
     for tp in for_tournament.tournamentplayer_set.all():
         try:
             rp = r.roundplayer_set.get(player=tp.player)
-        except DoesNotExist:
+        except RoundPlayer.DoesNotExist:
             sitters.add(tp)
         else:
             if rp.game_count == 0:
