@@ -151,6 +151,8 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
+        if not len(page.text):
+            raise WDDNotAccessible("Got a response with no content")
         soup = BeautifulSoup(page.text)
         return soup.title.string[6:]
 

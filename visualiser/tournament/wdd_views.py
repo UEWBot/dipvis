@@ -168,6 +168,8 @@ def view_classification_csv(request, tournament_id):
         rank = t_positions_and_scores[p][0]
         # First the stuff that is global to the tournament and applies to all players
         names = p.wdd_firstname_lastname()
+        if not names[0] and not names[1]:
+            names = (p.first_name, p.last_name)
         row_dict = {'FIRST NAME': names[0],
                     'NAME': names[1],
                     'HOMONYME': '1',  # User Guide says "Set to 1"
@@ -272,6 +274,8 @@ def view_boards_csv(request, tournament_id):
             # TODO This is broken with replacement players
             for gp in g.gameplayer_set.all():
                 names = gp.player.wdd_firstname_lastname()
+                if not names[0] and not names[1]:
+                    names = (gp.player.first_name, gp.player.last_name)
                 row_dict = g_row_dict.copy()
                 row_dict['FIRST NAME'] = names[0]
                 row_dict['NAME'] = names[1]
