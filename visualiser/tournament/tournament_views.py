@@ -293,25 +293,26 @@ def round_scores(request, tournament_id):
                                       initial=data)
     if formset.is_valid():
         for form in formset:
-            tp = form.cleaned_data['tp']
-            for r_name, value in form.cleaned_data.items():
-                # Skip if no score was entered
-                if not value:
-                    continue
-                # We're only interested in the round score fields
-                if r_name.startswith('round_'):
-                    # Extract the round number from the field name
-                    i = int(r_name[6:])
-                    # Find that Round
-                    r = t.round_numbered(i)
-                    # Update the score
-                    RoundPlayer.objects.update_or_create(player=tp.player,
-                                                         the_round=r,
-                                                         defaults={'score': value})
-                elif r_name == 'overall_score':
-                    # Store the player's tournament score
-                    tp.score = value
-                    tp.save(update_fields=['score'])
+            if form.has_changed():
+                tp = form.cleaned_data['tp']
+                for r_name, value in form.cleaned_data.items():
+                    # Skip if no score was entered
+                    if not value:
+                        continue
+                    # We're only interested in the round score fields
+                    if r_name.startswith('round_'):
+                        # Extract the round number from the field name
+                        i = int(r_name[6:])
+                        # Find that Round
+                        r = t.round_numbered(i)
+                        # Update the score
+                        RoundPlayer.objects.update_or_create(player=tp.player,
+                                                             the_round=r,
+                                                             defaults={'score': value})
+                    elif r_name == 'overall_score':
+                        # Store the player's tournament score
+                        tp.score = value
+                        tp.save(update_fields=['score'])
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_scores',
                                             args=(tournament_id,)))
