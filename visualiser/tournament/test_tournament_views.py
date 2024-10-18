@@ -400,7 +400,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_detail_manager(self):
-        # A manager see their unpublished tournament
+        # A manager can see their unpublished tournament
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t2.pk,)),
@@ -595,14 +595,15 @@ class TournamentViewTests(TestCase):
         rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
         rp_score = rp.score
         data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
-            data['form-%d-tp' % i] = str(tp.pk)
+        for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
+            data['form-%d-tp' % i] = str(tp2.pk)
             data['form-%d-game_scores_1' % i] = '0.0'
-            data['form-%d-round_1' % i] = '73.5'
-            data['form-%d-overall_score' % i] = '142.8'
+            data['form-%d-round_1' % i] = '37.5'
+            data['form-%d-overall_score' % i] = '124.8'
         i += 1
         data['form-TOTAL_FORMS'] = '%d' % i
         data['form-INITIAL_FORMS'] = '%d' % i
+        # Give a unique value to the first TournamentPlayer
         data['form-0-round_1'] = '73.5'
         data['form-0-overall_score'] = '142.8'
         data = urlencode(data)
@@ -719,20 +720,16 @@ class TournamentViewTests(TestCase):
         self.assertFalse(Preference.objects.filter(player__tournament=self.t2).exists())
         # Add a Preference for one Player
         tp = self.t2.tournamentplayer_set.last()
-        tp.create_preferences_from_string('FART')
+        tp.create_preferences_from_string('ART')
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        data = urlencode({'form-TOTAL_FORMS': '9',
-                          'form-MAX_NUM_FORMS': '1000',
-                          'form-INITIAL_FORMS': 9,
-                          'form-0-prefs': 'FART',
-                          'form-1-prefs': 'FART',
-                          'form-2-prefs': 'FART',
-                          'form-3-prefs': 'FART',
-                          'form-4-prefs': 'FART',
-                          'form-5-prefs': 'FART',
-                          'form-6-prefs': 'FART',
-                          'form-7-prefs': 'FART',
-                          'form-8-prefs': 'FART'})
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
+            data['form-%d-prefs' % i] = 'FART'
+        i += 1
+        data['form-TOTAL_FORMS'] = '%d' % i
+        data['form-INITIAL_FORMS'] = '%d' % i
+        data = urlencode(data)
+
         response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
                                     data,
                                     secure=True,
