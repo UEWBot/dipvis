@@ -914,6 +914,20 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_enter_prefs_no_prefs(self):
+        # Even a manager can't enter preferences for a tournament that uses another power assignment method
+        self.assertEqual(self.t2.power_assignment, PowerAssignMethods.PREFERENCES)
+        self.t2.power_assignment = PowerAssignMethods.AUTO
+        self.t2.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('enter_prefs',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Clean up
+        self.t2.power_assignment = PowerAssignMethods.PREFERENCES
+        self.t2.save()
+
     def test_enter_prefs(self):
         # A manager can enter preferences for players in their Tournament
         self.assertFalse(Preference.objects.filter(player__tournament=self.t2).exists())

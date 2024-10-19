@@ -366,6 +366,8 @@ def self_check_in_control(request, tournament_id):
 def enter_prefs(request, tournament_id):
     """Provide a form to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    if not t.powers_assigned_from_prefs():
+        raise Http404
     PrefsFormset = formset_factory(PrefsForm,
                                    extra=0,
                                    formset=BasePrefsFormset)
@@ -390,6 +392,8 @@ def enter_prefs(request, tournament_id):
 def upload_prefs(request, tournament_id):
     """Upload a CSV file to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    if not t.powers_assigned_from_prefs():
+        raise Http404
     if request.method == 'GET':
         return render(request,
                       'tournaments/upload_prefs.html',
