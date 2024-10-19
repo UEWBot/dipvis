@@ -71,19 +71,20 @@ def index(request, tournament_id):
         # Create a TournamentPlayer for each player to register
         if formset.is_valid():
             for form in formset:
-                try:
-                    player = form.cleaned_data['player']
-                except KeyError:
-                    # Empty form - nothing to do
-                    continue
-                tp, created = TournamentPlayer.objects.get_or_create(player=player,
-                                                                     tournament=t)
-                if not created:
-                    # TODO Because we don't pass the modified formset to render(),
-                    # this error is never seen.
-                    # In practice, though, the player *is* (already) registered...
-                    form.add_error('player',
-                                   _("Player already registered"))
+                if form.has_changed():
+                    try:
+                        player = form.cleaned_data['player']
+                    except KeyError:
+                        # Empty form - nothing to do
+                        continue
+                    tp, created = TournamentPlayer.objects.get_or_create(player=player,
+                                                                         tournament=t)
+                    if not created:
+                        # TODO Because we don't pass the modified formset to render(),
+                        # this error is never seen.
+                        # In practice, though, the player *is* (already) registered...
+                        form.add_error('player',
+                                       _("Player already registered"))
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))

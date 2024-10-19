@@ -140,36 +140,37 @@ def roll_call(request, tournament_id, round_num):
     if formset.is_valid():
         errors_added = False
         for form in formset:
-            try:
-                p = form.cleaned_data['player']
-            except KeyError:
-                # This must be one of the extra forms, still empty
-                continue
-            # Ensure that this Player is in the Tournament
-            TournamentPlayer.objects.get_or_create(player=p,
-                                                   tournament=t)
-            if form.cleaned_data['present'] is True:
-                # Ensure that we have a corresponding RoundPlayer
-                is_standby = form.cleaned_data['standby']
-                sandboxer = form.cleaned_data['sandboxer']
-                RoundPlayer.objects.update_or_create(player=p,
-                                                     the_round=r,
-                                                     # Reset game_count in case we've been here before
-                                                     defaults={'game_count': 0 if is_standby else 1,
-                                                               'standby': is_standby,
-                                                               'sandboxer': sandboxer})
-            elif r.game_set.filter(gameplayer__player=p).exists():
-                # Refuse to delete this one
-                form.add_error(None, _('%(player)s did play this round') % {'player': p})
-                errors_added = True
-            else:
-                # delete any corresponding RoundPlayer
-                # This could be a player who was previously checked-off in error
+            if form.has_changed():
                 try:
-                    RoundPlayer.objects.get(player=p,
-                                            the_round=r).delete()
-                except RoundPlayer.DoesNotExist:
-                    pass
+                    p = form.cleaned_data['player']
+                except KeyError:
+                    # This must be one of the extra forms, still empty
+                    continue
+                # Ensure that this Player is in the Tournament
+                TournamentPlayer.objects.get_or_create(player=p,
+                                                       tournament=t)
+                if form.cleaned_data['present'] is True:
+                    # Ensure that we have a corresponding RoundPlayer
+                    is_standby = form.cleaned_data['standby']
+                    sandboxer = form.cleaned_data['sandboxer']
+                    RoundPlayer.objects.update_or_create(player=p,
+                                                         the_round=r,
+                                                         # Reset game_count in case we've been here before
+                                                         defaults={'game_count': 0 if is_standby else 1,
+                                                                   'standby': is_standby,
+                                                                   'sandboxer': sandboxer})
+                elif r.game_set.filter(gameplayer__player=p).exists():
+                    # Refuse to delete this one
+                    form.add_error(None, _('%(player)s did play this round') % {'player': p})
+                    errors_added = True
+                else:
+                    # delete any corresponding RoundPlayer
+                    # This could be a player who was previously checked-off in error
+                    try:
+                        RoundPlayer.objects.get(player=p,
+                                                the_round=r).delete()
+                    except RoundPlayer.DoesNotExist:
+                        pass
         if not errors_added:
             if t.seed_games:
                 # Ensure that we have the right number of players
@@ -357,34 +358,35 @@ def seed_games(request, tournament_id, round_num):
         formset = PowerAssignFormset(request.POST, the_round=r)
         if formset.is_valid():
             for f in formset:
-                # Update the game
-                g = f.game
-                g.name = f.cleaned_data['name']
-                g.the_set = f.cleaned_data['the_set']
-                g.external_url = f.cleaned_data['external_url']
-                g.notes = f.cleaned_data['notes']
-                try:
-                    g.full_clean()
-                except ValidationError as e:
-                    f.add_error(None, e)
-                    return render(request,
-                                  'rounds/seeded_games.html',
-                                  {'tournament': t,
-                                   'round': r,
-                                   'formset': formset})
-                g.save()
-                # Unassign all GreatPowers first,
-                # so we never have two players for one power
-                g.gameplayer_set.update(power=None)
-                # Assign the powers to the players
-                for gp_id, field in f.cleaned_data.items():
-                    if gp_id in ['the_set', 'name', 'external_url', 'notes', 'issues']:
-                        continue
-                    gp = GamePlayer.objects.get(id=gp_id)
-                    gp.power = field
-                    gp.save(update_fields=['power'])
-                # Generate initial scores
-                g.update_scores()
+                if f.has_changed():
+                    # Update the game
+                    g = f.game
+                    g.name = f.cleaned_data['name']
+                    g.the_set = f.cleaned_data['the_set']
+                    g.external_url = f.cleaned_data['external_url']
+                    g.notes = f.cleaned_data['notes']
+                    try:
+                        g.full_clean()
+                    except ValidationError as e:
+                        f.add_error(None, e)
+                        return render(request,
+                                      'rounds/seeded_games.html',
+                                      {'tournament': t,
+                                       'round': r,
+                                       'formset': formset})
+                    g.save()
+                    # Unassign all GreatPowers first,
+                    # so we never have two players for one power
+                    g.gameplayer_set.update(power=None)
+                    # Assign the powers to the players
+                    for gp_id, field in f.cleaned_data.items():
+                        if gp_id in ['the_set', 'name', 'external_url', 'notes', 'issues']:
+                            continue
+                        gp = GamePlayer.objects.get(id=gp_id)
+                        gp.power = field
+                        gp.save(update_fields=['power'])
+                    # Generate initial scores
+                    g.update_scores()
             # Notify the players
             send_board_call_email(r)
             _send_board_call_to_discord(r)
@@ -488,49 +490,50 @@ def create_games(request, tournament_id, round_num):
                                  initial=data)
     if formset.is_valid():
         for f in formset:
-            try:
-                if f.cleaned_data['game_id'] is not None:
-                    # Game should exist
-                    g = Game.objects.get(pk=f.cleaned_data['game_id'])
-                    g.name = f.cleaned_data['name']
-                    g.the_set = f.cleaned_data['the_set']
-                    g.external_url = f.cleaned_data['external_url']
-                    g.notes = f.cleaned_data['notes']
-                else:
-                    g = Game(name=f.cleaned_data['name'],
-                             the_round=r,
-                             the_set=f.cleaned_data['the_set'],
-                             external_url=f.cleaned_data['external_url'],
-                             notes=f.cleaned_data['notes'])
-            except KeyError:
-                # This must be an extra, unused formset
-                continue
-            try:
-                g.full_clean()
-            except ValidationError as e:
-                f.add_error(None, e)
-                return render(request,
-                              'rounds/create_games.html',
-                              {'tournament': t,
-                               'round': r,
-                               'formset': formset})
-            g.save()
-            # Assign the players to the game
-            with transaction.atomic():
-                # We may already have a set of GamePlayers, and changing
-                # them may (temporarily) violate uniqueness constraints,
-                # so delete any that already exist and then create new ones
-                g.gameplayer_set.all().delete()
-                for power, field in f.cleaned_data.items():
-                    try:
-                        p = GreatPower.objects.get(name=power)
-                    except GreatPower.DoesNotExist:
-                        continue
-                    GamePlayer.objects.create(game=g,
-                                              power=p,
-                                              player=field.player)
-            # Generate initial scores
-            g.update_scores()
+            if f.has_changed():
+                try:
+                    if f.cleaned_data['game_id'] is not None:
+                        # Game should exist
+                        g = Game.objects.get(pk=f.cleaned_data['game_id'])
+                        g.name = f.cleaned_data['name']
+                        g.the_set = f.cleaned_data['the_set']
+                        g.external_url = f.cleaned_data['external_url']
+                        g.notes = f.cleaned_data['notes']
+                    else:
+                        g = Game(name=f.cleaned_data['name'],
+                                 the_round=r,
+                                 the_set=f.cleaned_data['the_set'],
+                                 external_url=f.cleaned_data['external_url'],
+                                 notes=f.cleaned_data['notes'])
+                except KeyError:
+                    # This must be an extra, unused formset
+                    continue
+                try:
+                    g.full_clean()
+                except ValidationError as e:
+                    f.add_error(None, e)
+                    return render(request,
+                                  'rounds/create_games.html',
+                                  {'tournament': t,
+                                   'round': r,
+                                   'formset': formset})
+                g.save()
+                # Assign the players to the game
+                with transaction.atomic():
+                    # We may already have a set of GamePlayers, and changing
+                    # them may (temporarily) violate uniqueness constraints,
+                    # so delete any that already exist and then create new ones
+                    g.gameplayer_set.all().delete()
+                    for power, field in f.cleaned_data.items():
+                        try:
+                            p = GreatPower.objects.get(name=power)
+                        except GreatPower.DoesNotExist:
+                            continue
+                        GamePlayer.objects.create(game=g,
+                                                  power=p,
+                                                  player=field.player)
+                # Generate initial scores
+                g.update_scores()
         # Notify the players
         send_board_call_email(r)
         _send_board_call_to_discord(r)
@@ -563,19 +566,20 @@ def game_scores(request, tournament_id, round_num):
     formset = GameScoreFormset(request.POST or None, initial=data)
     if formset.is_valid():
         for f in formset:
-            # Find the game
-            g = Game.objects.get(name=f.cleaned_data['name'],
-                                 the_round=r)
-            # Set the score for each player
-            for power, field in f.cleaned_data.items():
-                # Ignore non-GreatPower fields (name)
-                try:
-                    p = GreatPower.objects.get(name=power)
-                except GreatPower.DoesNotExist:
-                    continue
-                # Find the matching GamePlayer
-                GamePlayer.objects.filter(game=g,
-                                          power=p).update(score=field)
+            if f.has_changed():
+                # Find the game
+                g = Game.objects.get(name=f.cleaned_data['name'],
+                                     the_round=r)
+                # Set the score for each player
+                for power, field in f.cleaned_data.items():
+                    try:
+                        p = GreatPower.objects.get(name=power)
+                    except GreatPower.DoesNotExist:
+                        # Ignore non-GreatPower fields (name)
+                        continue
+                    # Find the matching GamePlayer
+                    GamePlayer.objects.filter(game=g,
+                                              power=p).update(score=field)
         # Update the Round and Tournament scores to reflect the changes
         r.update_scores()
         # Redirect to the round index

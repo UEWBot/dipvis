@@ -312,35 +312,36 @@ def sc_owners(request, tournament_id, game_name):
     formset = SCOwnerFormset(request.POST or None, initial=data)
     if formset.is_valid():
         for form in formset:
-            try:
-                year = form.cleaned_data['year']
-            except KeyError:
-                # Must be one of the extra forms, still blank
-                continue
-            if year is None:
-                continue
-            with transaction.atomic():
-                for name, value in form.cleaned_data.items():
-                    try:
-                        dot = SupplyCentre.objects.get(name=name)
-                    except SupplyCentre.DoesNotExist:
-                        continue
-                    if value is None:
-                        # Dot is (now) neutral
-                        SupplyCentreOwnership.objects.filter(sc=dot,
-                                                             game=g,
-                                                             year=year).delete()
-                    else:
-                        SupplyCentreOwnership.objects.update_or_create(sc=dot,
-                                                                       game=g,
-                                                                       year=year,
-                                                                       defaults={'owner': value})
-                # Ensure that CentreCounts for this year match
+            if form.has_changed():
                 try:
-                    g.create_or_update_sc_counts_from_ownerships(year)
-                except SCOwnershipsNotFound:
-                    # We have a row with just the year but no actual ownerships
+                    year = form.cleaned_data['year']
+                except KeyError:
+                    # Must be one of the extra forms, still blank
                     continue
+                if year is None:
+                    continue
+                with transaction.atomic():
+                    for name, value in form.cleaned_data.items():
+                        try:
+                            dot = SupplyCentre.objects.get(name=name)
+                        except SupplyCentre.DoesNotExist:
+                            continue
+                        if value is None:
+                            # Dot is (now) neutral
+                            SupplyCentreOwnership.objects.filter(sc=dot,
+                                                                 game=g,
+                                                                 year=year).delete()
+                        else:
+                            SupplyCentreOwnership.objects.update_or_create(sc=dot,
+                                                                           game=g,
+                                                                           year=year,
+                                                                           defaults={'owner': value})
+                    # Ensure that CentreCounts for this year match
+                    try:
+                        g.create_or_update_sc_counts_from_ownerships(year)
+                    except SCOwnershipsNotFound:
+                        # We have a row with just the year but no actual ownerships
+                        continue
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_owners',
                                             args=(tournament_id, game_name)))
@@ -384,66 +385,68 @@ def sc_counts(request, tournament_id, game_name):
         try:
             with transaction.atomic():
                 for form in formset:
-                    try:
-                        year = form.cleaned_data['year']
-                    except KeyError:
-                        # Must be one of the extra forms, still blank
-                        continue
-                    with transaction.atomic():
-                        for name, value in form.cleaned_data.items():
-                            try:
-                                power = GreatPower.objects.get(name=name)
-                            except GreatPower.DoesNotExist:
-                                continue
-                            # Can't use update_or_create() because we need to call full_clean()
-                            try:
-                                i = CentreCount.objects.get(power=power,
-                                                            game=g,
-                                                            year=year)
-                                # Ensure the count has the value we want
-                                i.count = value
-                            except CentreCount.DoesNotExist:
-                                i = CentreCount(power=power,
-                                                game=g,
-                                                year=year,
-                                                count=value)
-                            try:
-                                i.full_clean()
-                            except ValidationError as e:
-                                #form.add_error(name, e)
-                                form.add_error(None, e)
-                                raise e
-                            i.save()
+                    if form.has_changed():
+                        try:
+                            year = form.cleaned_data['year']
+                        except KeyError:
+                            # Must be one of the extra forms, still blank
+                            continue
+                        with transaction.atomic():
+                            for name, value in form.cleaned_data.items():
+                                try:
+                                    power = GreatPower.objects.get(name=name)
+                                except GreatPower.DoesNotExist:
+                                    continue
+                                # Can't use update_or_create() because we need to call full_clean()
+                                try:
+                                    i = CentreCount.objects.get(power=power,
+                                                                game=g,
+                                                                year=year)
+                                    # Ensure the count has the value we want
+                                    i.count = value
+                                except CentreCount.DoesNotExist:
+                                    i = CentreCount(power=power,
+                                                    game=g,
+                                                    year=year,
+                                                    count=value)
+                                try:
+                                    i.full_clean()
+                                except ValidationError as e:
+                                    #form.add_error(name, e)
+                                    form.add_error(None, e)
+                                    raise e
+                                i.save()
 
                 # Add eliminations for any eliminated powers, if needed
-                for name, value in death_form.cleaned_data.items():
-                    if value is None:
-                        continue
-                    try:
-                        power = GreatPower.objects.get(name=name)
-                    except GreatPower.DoesNotExist:
-                        continue
-                    try:
-                        i = CentreCount.objects.get(power=power,
-                                                    game=g,
-                                                    year=value)
-                    except CentreCount.DoesNotExist:
-                        # Create a zero-SC count
-                        i = CentreCount(power=power,
-                                        game=g,
-                                        year=value,
-                                        count=0)
-                    try:
-                        if i.count != 0:
-                            raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
-                                                  % {'power': power,
-                                                     'count': i.count,
-                                                     'year': value})
-                        i.full_clean()
-                    except ValidationError as e:
-                        death_form.add_error(name, e)
-                        raise e
-                    i.save()
+                if death_form.has_changed():
+                    for name, value in death_form.cleaned_data.items():
+                        if value is None:
+                            continue
+                        try:
+                            power = GreatPower.objects.get(name=name)
+                        except GreatPower.DoesNotExist:
+                            continue
+                        try:
+                            i = CentreCount.objects.get(power=power,
+                                                        game=g,
+                                                        year=value)
+                        except CentreCount.DoesNotExist:
+                            # Create a zero-SC count
+                            i = CentreCount(power=power,
+                                            game=g,
+                                            year=value,
+                                            count=0)
+                        try:
+                            if i.count != 0:
+                                raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
+                                                      % {'power': power,
+                                                         'count': i.count,
+                                                         'year': value})
+                            i.full_clean()
+                        except ValidationError as e:
+                            death_form.add_error(name, e)
+                            raise e
+                        i.save()
         except ValidationError:
             return render(request,
                           'games/sc_counts_form.html',
