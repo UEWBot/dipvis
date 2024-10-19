@@ -824,11 +824,12 @@ class Tournament(models.Model):
         """
         scores = self._calculated_scores()
         finished = self.is_finished()
+        add_handicap = finished and self.handicaps
         for tp in self.tournamentplayer_set.prefetch_related('player'):
             tp.score = scores[tp.player]
             # Handicaps, if any, get added after the tournament is complete
             # but only if the player actually played
-            if finished and self.handicaps and tp.roundplayers().exists():
+            if add_handicap and tp.roundplayers().exists():
                 tp.score += tp.handicap
             tp.save(update_fields=['score'])
         if finished:
