@@ -366,12 +366,13 @@ class TScoringSumGames(TournamentScoringSystem):
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
             # Find just the rounds they played
             player_rounds = round_players.filter(player=p)
-            # Assume all round scores are dropped unless we find out otherwise
             rounds = []
             for rp in player_rounds:
                 rp.score = 0.0
-                rp.score_dropped = True
-                rp.save(update_fields=['score', 'score_dropped'])
+                if self.residual_multiplier == 0.0:
+                    # Assume the round scores is dropped unless we find out otherwise
+                    rp.score_dropped = True
+                    rp.save(update_fields=['score', 'score_dropped'])
                 rounds.append(rp.the_round)
             player_scores = GamePlayer.objects.filter(player=p,
                                                       game__the_round__in=rounds).order_by('score')
