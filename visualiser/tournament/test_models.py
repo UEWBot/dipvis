@@ -1883,6 +1883,17 @@ class TournamentTests(TestCase):
                 total = rps.aggregate(Sum('score'))['score__sum']
                 self.assertEqual(scores[tp.player], total)
 
+    def test_tournament_calculated_scores_first_round(self):
+        # Pass in a QuerySet to limit the RoundPlayers
+        t = Tournament.objects.get(name='t3')
+        # Just the first round
+        rps = t.round_numbered(1).roundplayer_set.all()
+        scores = t._calculated_scores(for_players=rps)
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                rp = rps.get(player=tp.player)
+                self.assertAlmostEqual(scores[tp.player], rp.score)
+
     # Tournament.scores_detail()
     def test_tournament_scores_detail_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -1976,6 +1987,81 @@ class TournamentTests(TestCase):
         for tp in t.tournamentplayer_set.all():
             tp.score = scores[tp]
             tp.save()
+
+    def test_tournament_positions_and_scores_round_zero(self):
+        t = Tournament.objects.get(name='t3')
+        p_and_s = t.positions_and_scores(after_round_num=0)
+        # All scores should be zero before the first round
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertAlmostEqual(p_and_s[tp.player][1], 0.0)
+                # Everyone should be joint first
+                self.assertEqual(p_and_s[tp.player][0], 1)
+
+    def test_tournament_positions_and_scores_round(self):
+        t = Tournament.objects.get(name='t3')
+        p_and_s = t.positions_and_scores(after_round_num=1)
+        # Just the first round should count
+        rps = t.round_numbered(1).roundplayer_set.all()
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                rp = rps.get(player=tp.player)
+                self.assertAlmostEqual(p_and_s[tp.player][1], rp.score)
+
+    def test_tournament_positions_and_scores_last_round(self):
+        t = Tournament.objects.get(name='t3')
+        p_and_s = t.positions_and_scores(after_round_num=t.round_set.count())
+        # This should just report the scores stored in the database
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertAlmostEqual(p_and_s[tp.player][1], tp.score)
+
+    def test_tournament_positions_and_scores_tscoringsumgames(self):
+        # Check that positions_and_scores() with round specified
+        # doesn't break TScoringSumGames
+        t = Tournament.objects.get(name='t3')
+        # Store current scores
+        t_scores = {}
+        r_scores = {}
+        r = t.round_numbered(1)
+        rps = r.roundplayer_set.all()
+        for tp in t.tournamentplayer_set.all():
+            t_scores[tp] = tp.score
+            rp = rps.get(player=tp.player)
+            r_scores[tp] = rp.score
+        t_sys = t.tournament_scoring_system
+        r_sys = t.round_scoring_system
+        tss = _find_t_scoring_system(TScoringSumGames, 3)
+        t.tournament_scoring_system = tss.name
+        t.round_scoring_system = 'None'
+        t.save()
+        # Changing scoring system will re-calculate scores, so we need to restore them
+        for tp in t.tournamentplayer_set.all():
+            tp.score = t_scores[tp]
+            tp.save()
+            rp = rps.get(player=tp.player)
+            rp.score = r_scores[tp]
+            rp.save()
+        p_and_s = t.positions_and_scores(after_round_num=1)
+        # TournamentPlayer and RoundPlayer scores should be unchanged
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                tp.refresh_from_db()
+                self.assertEqual(tp.score, t_scores[tp])
+                rp = rps.get(player=tp.player)
+                rp.refresh_from_db()
+                self.assertEqual(rp.score, r_scores[tp])
+        # Cleanup
+        t.tournament_scoring_system = t_sys
+        t.round_scoring_system = r_sys
+        t.save()
+        # Changing scoring system will re-calculate scores, so we need to restore them
+        for tp in t.tournamentplayer_set.all():
+            tp.score = t_scores[tp]
+            tp.save()
+            rp = rps.get(player=tp.player)
+            rp.score = r_scores[tp]
+            rp.save()
 
     # Tournament.winner()
     def test_tournament_winner_not_finished(self):

@@ -757,8 +757,8 @@ class Tournament(models.Model):
         """
         Calculates the tournament scores for players who have attended
 
-        for_players is an optional QuerySet of RoundPlayers that have changed.
-        Return a dict, keyed by player, of floats.
+        for_players is an optional QuerySet of RoundPlayers to consider.
+        Returns a dict, keyed by player, of float tournament scores.
         """
         system = self.tournament_scoring_system_obj()
         if for_players is None:
@@ -781,21 +781,39 @@ class Tournament(models.Model):
             t_scores[tp.player] = tp.score
         return t_scores
 
-    def positions_and_scores(self):
+    def positions_and_scores(self, after_round_num=None):
         """
-        Returns the positions and scores of everyone registered.
+        Returns the positions and scores of everyone registered, after a specified round ended.
 
+        If no round number is specified, it returns the "if all games ended now" results.
+        If the specified round is still in progress, it returns the "if all games in the round
+        ended now" results.
         Returns a dict, keyed by player, of 2-tuples containing integer rankings
           (1 for first place, etc) and float tournament scores.
           Players who are flagged as unranked in the tournament get the special
           place UNRANKED.
         """
+        # Populate t_scores with a dict keyed by player of scores
+        if (after_round_num is not None) and (after_round_num < self.round_set.count()):
+            # Construct a QuerySet with the appropriate RoundPlayers
+            rps = RoundPlayer.objects.none()
+            for r in self.round_set.all():
+                if r.number() <= after_round_num:
+                    rps |= r.roundplayer_set.all()
+            # Calculate the scores for that set of RoundPlayers
+            t_scores = self._calculated_scores(rps)
+            # Anyone who hadn't yet played scores zero
+            for tp in self.tournamentplayer_set.all():
+                if tp.player not in t_scores:
+                    t_scores[tp.player] = 0.0
+        else:
+            t_scores = self.scores_detail()
         result = {}
-        t_scores = self.scores_detail()
         # First, deal with any unranked players
         for tp in self.tournamentplayer_set.filter(unranked=True).prefetch_related('player'):
             # Take it out of scores and add it to result
             result[tp.player] = (Tournament.UNRANKED, t_scores.pop(tp.player))
+        # Figure out everyone's ranking
         last_score = None
         for i, (k, v) in enumerate(sorted([(k, v) for k, v in t_scores.items()],
                                           key=itemgetter(1),
