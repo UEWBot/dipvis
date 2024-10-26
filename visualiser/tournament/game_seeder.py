@@ -66,8 +66,7 @@ class ImpossibleToSeed(Exception):
 
 class _AssignmentFailed(Exception):
     """
-    Internal exception used when we end up with an invalid assignment of
-    players to games.
+    Internal exception used when we end up with an invalid assignment of players to games.
     """
     pass
 
@@ -75,6 +74,7 @@ class _AssignmentFailed(Exception):
 class SeedMethod(Enum):
     """
     Method to use to seed games
+
     RANDOM - try a number of random seedings plus modifications
              and pick the best
     EXHAUSTIVE - try every possible seeding and pick the best (slow)
@@ -87,8 +87,8 @@ class SeedMethod(Enum):
 
 class GameSeeder:
     """
-    Assigns Diplomacy players to games to minimise the number of people they
-    play again.
+    Assigns Diplomacy players to games to minimise the number of people they play again.
+
     Two algorithms are supported:
     EXHAUSTIVE
         Try every possible seeding. This will take a long time with many
@@ -109,6 +109,8 @@ class GameSeeder:
                  iterations=1000,
                  seed_method=SeedMethod.RANDOM):
         """
+        Create a GameSeeder object
+
         powers is a list of powers that can be played. Anything unique can be
         used to identify a power.
         seed_method specifies the algorithm used to find a candidate seeding:
@@ -138,6 +140,7 @@ class GameSeeder:
     def add_player(self, player):
         """
         Add a player to take into account.
+
         Player is assumed to have played no games.
         Can raise InvalidPlayer if the player is already present.
         """
@@ -152,6 +155,7 @@ class GameSeeder:
     def _add_played_game(self, game, matrix):
         """
         Add a previously-played game to take into account.
+
         game is either a set of (player, power) 2-tuples, or a set of players
         (player can be any type as long as it's the same in all calls to this object).
         Can raise InvalidPlayer if any player is unknown.
@@ -185,6 +189,7 @@ class GameSeeder:
     def add_played_game(self, game):
         """
         Add a previously-played game to take into account.
+
         game is a set of (player, power) 2-tuples (player can be any type as
         long as it's the same in all calls to this object).
         Can raise InvalidPlayer if any player is unknown.
@@ -201,6 +206,7 @@ class GameSeeder:
     def _add_bias(self, player1, player2, weight):
         """
         Add a bias to take into account.
+
         This effectively says "treat player1 and player2 as if they have
         already played weight games together". If called again with the
         same pair of players, the weights will be added.
@@ -241,6 +247,7 @@ class GameSeeder:
     def add_bias(self, player1, player2):
         """
         Add a bias to take into account.
+
         This effectively says "treat player1 and player2 as if they have
         already played several games together".
         It is intended to be used to keep pairs of players apart, e.g. family
@@ -253,6 +260,7 @@ class GameSeeder:
     def _power_fitness(self, game):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
+
         In this case, a game is a set of (player, power) 2-tuples.
         The value returned is the sum of the number of times each player has
         previously played the specified power.
@@ -265,6 +273,7 @@ class GameSeeder:
     def _assign_some_powers(self, players, powers):
         """
         Returns a list of sets of (player, power) 2- tuples.
+
         This is the set of all possible games with that player and power list.
         """
         assert len(players) == len(powers)
@@ -289,8 +298,8 @@ class GameSeeder:
 
     def _assign_powers(self, game):
         """
-        Returns a 2-tuple containing a set of (player, power) 2-tuples and
-        a list of "issues".
+        Returns a 2-tuple containing a set of (player, power) 2-tuples and a list of "issues".
+
         game is a set of players.
         """
         # Try every combination of power assignments in a random order,
@@ -313,6 +322,7 @@ class GameSeeder:
     def _fitness_score(self, game, games_played_matrix=None):
         """
         Returns a fitness score (0-??) for a game. Lower is better.
+
         In this case, a game is just a set of seven players.
         The value returned is twice the square of the number of times each pair
         of players has played together already.
@@ -335,8 +345,8 @@ class GameSeeder:
 
     def _assign_players_to_games_randomly(self, players):
         """
-        Assign all the players provided to games completely at random, with no
-        weighting.
+        Assign all the players provided to games completely at random, with no weighting.
+
         Returns a list of sets of players.
         len(players) must be a multiple of the number of powers.
         Raises _AssignmentFailed if the algorithm messes up.
@@ -364,6 +374,7 @@ class GameSeeder:
     def _set_fitness(self, games, include_these_games=False):
         """
         Calculate a total fitness score for this set of games.
+
         Range is 0-(42 * len(games)). Lower is better.
         If include_these_games is True, add in a fitness score
         for the games in this set. This helps keeps players
@@ -384,7 +395,9 @@ class GameSeeder:
 
     def _improve_fitness(self, games, include_these_games=False):
         """
-        Try swapping random players between games to see if we can improve the
+        Try to modify a list of games to find a better set.
+
+        Swaps random players between games in an attempt to improve the
         overall fitness score.
         Returns the best set of games it finds and the fitness score
         for that set.
@@ -419,8 +432,7 @@ class GameSeeder:
 
     def _assign_players_wrapper(self, players):
         """
-        Wrapper that just keeps calling _assign_players_to_games_randomly()
-        until it succeeds.
+        Wrapper that just keeps calling _assign_players_to_games_randomly() until it succeeds.
         """
         while True:
             # _assign_players_to_game() will empty the set of players we pass it
@@ -434,8 +446,8 @@ class GameSeeder:
 
     def _all_possible_seedings(self, players):
         """
-        Returns a list of all possible seedings (each being a list of sets of
-        players).
+        Returns a list of all possible seedings (each being a list of sets of players).
+
         It will also include seedings with the same games in different orders.
         Note that this will take a long time for large numbers of players.
         Raises _AssignmentFailed if no valid games can be formed from the
@@ -474,6 +486,8 @@ class GameSeeder:
 
     def _player_pool(self, omitting_players, players_doubling_up):
         """
+        Create a pool of players to seed into games
+
         Returns a list of players containing every known player and every
         player doubling up, but excluding any players in omitting_players.
         """
@@ -494,6 +508,8 @@ class GameSeeder:
 
     def _seed_games(self, omitting_players, players_doubling_up):
         """
+        Seed players into games
+
         Returns a list of games, where each game is a set of players, and the
         fitness score for the set.
         omitting_players is a set of previously-added players not to assign
@@ -532,6 +548,8 @@ class GameSeeder:
 
     def seed_games_and_powers(self, omitting_players=(), players_doubling_up=()):
         """
+        Seed players into games and assign powers
+
         Returns a list of games, where each game is a 2-tuple containing a set of
         (player, power) 2-tuples and a list of issues.
         Parameters and exceptions are the same as seed_games()
@@ -544,6 +562,8 @@ class GameSeeder:
 
     def _add_bias_for_doublers(self, players_doubling_up, add):
         """
+        Keep players playing two games in a round apart by adding bias
+
         Adds or removes bias for every possible pair of players in the list.
         add is a boolean = True to add bias, False to add negative bias,
         undoing an earlier call with add=True.
@@ -557,6 +577,8 @@ class GameSeeder:
 
     def seed_games(self, omitting_players=(), players_doubling_up=()):
         """
+        Seed players into games
+
         Returns a list of games, where each game is a set of players.
         omitting_players is an optional set of previously-added players not to
         assign to games.

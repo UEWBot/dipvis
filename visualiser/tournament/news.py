@@ -142,8 +142,7 @@ def _tournament_news(t):
 
 def _round_leader_str(r):
     """
-    Returns a news string detailing the person with the best score
-    for the round.
+    Returns a news string detailing the person with the best score for the round.
     """
     the_scores = r.scores()
     if not the_scores:
@@ -164,6 +163,7 @@ def _round_leader_str(r):
 def _round_news(r):
     """
     Returns a list of news strings for the round.
+
     This is the latest news for every game in the round.
     """
     results = []
@@ -218,6 +218,8 @@ def _round_news(r):
 
 def _sc_gains_and_losses(prev_scos, current_scos):
     """
+    Find interesting changes in SC ownership
+
     Returns two dicts (gains then losses), indexed by GreatPower, of
       2-tuples containing SupplyCentre and other Power (previous owner
       (None if neutral) or new owner).
@@ -426,6 +428,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     return results
 
 def news(obj, for_year=None):
+    """Return a list of events in obj"""
     if isinstance(obj, Tournament):
         return _tournament_news(obj)
     if isinstance(obj, Round):

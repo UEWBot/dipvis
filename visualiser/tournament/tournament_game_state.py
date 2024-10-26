@@ -15,8 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-This module contains the interface between the game scoring code and the
-tournament database.
+This module contains the interface between the game scoring code and the tournament database.
 """
 
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, WINNING_SCS
@@ -77,6 +76,7 @@ class TournamentGameState(GameState):
     def powers_in_draw(self):
         """
         Returns an iterable of all the powers that are included in a draw.
+
         For a concession, return an iterable containing just the power conceded to.
         If there is no passed draw vote or concession, returns survivors().
         """

@@ -130,6 +130,7 @@ class Game():
     def _parse_invariants_from_soup(self, soup):
         """
         Read the fixed properties of the game from the soup.
+
         Sets self.name, self.ongoing, self.season, self.year,
         self.players, self.sc_counts (for uneliminated powers), and self.soloing_power
         """

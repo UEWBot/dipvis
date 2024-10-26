@@ -96,8 +96,8 @@ def tournament_is_visible(t, user):
 
 def get_visible_tournament_or_404(pk, user):
     """
-    Get the specified Tournament object, if it exists,
-    and check that it is visible to the user.
+    Get the specified Tournament object, if it exists and is visible to the user.
+
     If it doesn't exist or isn't visible, raise Http404.
     """
     t = get_object_or_404(Tournament, pk=pk)
@@ -108,8 +108,8 @@ def get_visible_tournament_or_404(pk, user):
 
 def get_modifiable_tournament_or_404(pk, user):
     """
-    Get the specified Tournament object, if it exists,
-    and check that it is visible to the user and editable.
+    Get the specified Tournament object, if it exists, is visible to the user and editable.
+
     If it doesn't exist or isn't editable, raise Http404.
     """
     t = get_visible_tournament_or_404(pk, user)

@@ -71,8 +71,7 @@ def map_to_backstabbr_power(gp):
 
 def populate_bs_profile_urls(dry_run=False):
     """
-    Finds as many Backstabbr profile URLs as possible
-    and adds them to the appropriate Players.
+    Finds as many Backstabbr profile URLs as possible and adds them to the appropriate Players.
     """
     games = 0
     players_left = 0
@@ -143,8 +142,8 @@ def populate_missed_years(game, dry_run=False):
 
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
-    Moves any TournamentPlayers, RoundPlayers, and GamePlayers
-    from del_player to keep_player.
+    Moves any TournamentPlayers, RoundPlayers, and GamePlayers from del_player to keep_player.
+
     If dry_run is True, just report what changes would be made.
     """
     # First check that what we're doing makes sense
@@ -212,6 +211,8 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
 
 def clone_tournament(t):
     """
+    Clone a Tournament
+
     Creates a copy of Tournament t, with the same players,
     rounds, results, etc.
     Returns the new Tournament, which can then safely be
@@ -319,6 +320,7 @@ def clone_tournament(t):
 def fix_round_players(the_round, dry_run=False):
     """
     Utility to clean up RoundPlayers.
+
     Checks for any RoundPlayers without Games in the Round.
     If they don't have a game_count of zero, delete them.
     Then checks for any Games in the Round where there is no
@@ -396,6 +398,7 @@ def add_missing_wdd_ids(dry_run=False):
 def add_best_country_awards_to_tournament(tournament, dry_run=False):
     """
     Add "Best Country" awards to a Tournament.
+
     Assumes that the seven "Best Country" awards have been created.
     """
     for power, gp_list in tournament.best_countries().items():
@@ -414,7 +417,8 @@ def add_best_country_awards_to_tournament(tournament, dry_run=False):
 
 def add_best_country_awards(dry_run=False):
     """
-    Add "Best Country" awards to existing Tournaments.
+    Add "Best Country" awards to all existing Tournaments.
+
     Useful after the new Award class is added and Tournaments already exist.
     Assumes that the seven "Best Country" awards have been created.
     """
@@ -498,6 +502,7 @@ def player_emails(for_tournament):
 def recreate_seeder(for_tournament, round_number):
     """
     Prepare to seed games for the specified Round
+
     Returns a GameSeeder, set of players sitting out,
     and set of players playing two games.
     """
@@ -538,6 +543,8 @@ def _import_dixie_round(r_num, player, tournament, row):
 
 def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
     """
+    Import a CSV file containing results from Dixie
+
     Given the name of a CSV file containing DixeCon results,
     create the Tournament with all the data provided.
     Probably loads of assumptions...

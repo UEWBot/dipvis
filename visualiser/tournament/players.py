@@ -91,6 +91,8 @@ def player_picture_location(instance, filename):
 
 def _update_or_create_playertournamentranking_wiki(player, title):
     """
+    Creats or updates a PlayerTournamentRanking for the player
+
     Given a Player and a dict with 'Tournament' and 'Year' keys,
     and optional 'Champion' key, representing the Wikipedia page,
     create or update a PlayerTournamentRanking
@@ -127,6 +129,8 @@ def _update_or_create_playertournamentranking_wiki(player, title):
 
 def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
     """
+    Creates or updates a PlayerTournamentRanking for the player
+
     Given a Player and a dict with 'Tournament' 'Date' and 'Position' keys,
     and optional 'WDD URL' key, representing the World Diplomacy Database data,
     plus a dict keyed by WDD tournament id of WPE scores for the player,
@@ -169,6 +173,8 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
 
 def _update_or_create_playertournamentranking_wdd2(player, t):
     """
+    Creates or updates a PlayerTournamentRanking for the player
+
     Given a Player and a dict with 'Name of the Tournament' 'Date' and 'Rank' keys,
     and optional 'WDD URL' key, representing the World Diplomacy Database data,
     create or update a PlayerTournamentRanking
@@ -208,6 +214,8 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
 
 def _update_or_create_playergameresult(player, b):
     """
+    Creates or updates a PlayerGameResult for the player
+
     Given a Player and a dict with 'Country', 'Name of the Tournament' 'Date' 'Round / Board' and 'Position' keys,
     and optional 'Position sharing' 'Score' 'Final SCs' 'Game end' 'Elimination year' and 'WDD Tournament URL' keys,
     representing the World Diplomacy Database data, create or update a PlayerGameResult
@@ -277,6 +285,8 @@ def _update_or_create_playergameresult(player, b):
 
 def _update_or_create_playeraward(player, k, a):
     """
+    Creates or updates a PlayerAward for the player
+
     Given a Player and key ('Awards' or a GreatPower name) and a dict with 'Tournament' and 'Date' keys,
     and optional 'Score' 'SCs' and 'WDD URL' keys,
     representing the World Diplomacy Database data, create or update a PlayerAward
@@ -337,6 +347,8 @@ def _update_or_create_playeraward(player, k, a):
 
 def _update_or_create_playerranking(player, r):
     """
+    Creates or updates a PlayerRanking for the player
+
     Given a Player and a dict with 'Name' 'Score' 'International rank' and 'National rank' keys,
     representing the World Diplomacy Database data, create or update a PlayerRanking
     """
@@ -357,6 +369,7 @@ def _update_or_create_playerranking(player, r):
 def add_player_bg(player, include_wpe=False):
     """
     Cache background data for the player
+
     include_wpe=True will set PlayerTournamentRanking.wpe_score,
     which involves parsing an additional WDD page
     """
@@ -451,6 +464,7 @@ def position_str(position):
 
 
 class WDDPlayerIdField(models.PositiveIntegerField):
+    """A field that represents the unique id for a player in the WDD"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._old_val = None
@@ -506,6 +520,7 @@ class Player(models.Model):
     def _clear_background(self):
         """
         Remove all background info on the Player from the database.
+
         This undoes add_player_bg()
         """
         self.playerranking_set.all().delete()
@@ -516,6 +531,7 @@ class Player(models.Model):
     def background_updated(self):
         """
         Returns the datetime at which the background info was most recently updated.
+
         If no date is available (or there's no background), None will be returned.
         """
         result = self.playerranking_set.aggregate(Max('updated'))['updated__max']
@@ -543,6 +559,7 @@ class Player(models.Model):
     def wdd_name(self):
         """
         Name for this player, preferably as in the World Diplomacy Database.
+
         Falls back to using the local first_name and last_name.
         """
         if not self.wdd_player_id:
@@ -565,6 +582,7 @@ class Player(models.Model):
     def wdd_firstname_lastname(self):
         """
         Name for this player as a 2-tuple, as in the WDD.
+
         If the player has no WDD id, returns the name used locally.
         If the name in the WDD cannot be determined, returns ('', '').
         """
@@ -655,7 +673,7 @@ class Player(models.Model):
         return results
 
     def _tourney_rankings(self, mask=MASK_ALL_BG):
-        """ List of titles won and tournament rankings"""
+        """List of titles won and tournament rankings"""
         results = []
         ranking_set = self.playertournamentranking_set.order_by('year')
         plays = ranking_set.count()
@@ -802,8 +820,7 @@ class Player(models.Model):
 
     def background(self, power=None, mask=MASK_ALL_BG):
         """
-        List of background strings about the player,
-        optionally as a specific Great Power
+        List of background strings about the player, optionally as a specific Great Power
         """
         if power is None:
             return self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
@@ -817,6 +834,7 @@ class Player(models.Model):
 class PlayerTournamentRanking(models.Model):
     """
     A tournament ranking for a player.
+
     Used to import background information from the WDD.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -878,6 +896,7 @@ class GameResults(models.TextChoices):
 class PlayerGameResult(models.Model):
     """
     One player's result for a tournament game.
+
     Used to import background information from the WDD.
     """
 
@@ -955,6 +974,7 @@ class PlayerGameResult(models.Model):
 class PlayerAward(models.Model):
     """
     An award won by a player.
+
     Used to import background information.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -1006,6 +1026,7 @@ class PlayerAward(models.Model):
 class PlayerRanking(models.Model):
     """
     WDD Ranking of a player.
+
     Used to import background information.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)

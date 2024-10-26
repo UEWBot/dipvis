@@ -26,6 +26,7 @@ from django.core.mail import send_mail, EmailMessage
 def _filtered_recipients(recipients, tournament):
     """
     Remove any recipients we don't want to send email to from the list.
+
     If tournament.no_email is set, this will remove anyone not in tournament.managers.
     """
     if tournament.no_email:
@@ -91,6 +92,7 @@ PREFS_SUBJECT = 'Specify power preferences for %s'
 def send_prefs_email(tournamentplayer, force=False):
     """
     Email the URL to enter preferences to the TournamentPlayer.
+
     Won't send an email unless the Tournament.power_assignment is PREFERENCES.
     Unless force is True, will only send the email if one hasn't already been sent.
     Note that if force is True, any previous URL will no longer be valid.

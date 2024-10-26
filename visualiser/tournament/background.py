@@ -73,8 +73,10 @@ class WikipediaBackground():
 
     def titles(self):
         """
+        Titles won by this player
+
         Returns a list of dicts.
-        Keys are Tournament and position.
+        Keys are 'Tournament' and position.
         """
         url = WIKIPEDIA_URL
         try:
@@ -139,6 +141,7 @@ class WDDBackground():
     def wdd_name(self):
         """
         Returns the name of the player, as read from the WDD
+
         Can raise WDDNotAccessible or InvalidWDDId
         """
         url = WDD_BASE_RESULTS_URL + 'player_fiche.php'
@@ -159,6 +162,7 @@ class WDDBackground():
     def wdd_firstname_lastname(self):
         """
         Returns a 2-tuple containing the name of the player, as read from the WDD
+
         Can raise WDDNotAccessible, InvalidWDDId, or UnableToSplitName
         """
         # TODO Should be able to avoid manually splitting if we read the right part of the WDD
@@ -182,6 +186,7 @@ class WDDBackground():
     def nationalities(self):
         """
         Returns a list of country 2- or 3-letter codes.
+
         WDD doesn't currently support multiple citizenships,
         but does have players without nationalities,
         so the list will currently always be empty or have a single entry.
@@ -208,6 +213,7 @@ class WDDBackground():
     def location(self):
         """
         Returns a country 2- or 3-letter code or empty string if unknown.
+
         Currently always returns an empty string.
         """
         # TODO WDD shows location on the player index/search page, but I don't see it elsewhere
@@ -216,6 +222,7 @@ class WDDBackground():
     def finishes(self):
         """
         Returns a list of tournament placings.
+
         Each entry is a dict.
         Keys are Position, Date, Country, Tournament, WDD URL, and Type.
         Can raise InvalidWDDId
@@ -272,6 +279,7 @@ class WDDBackground():
     def tournaments(self):
         """
         Returns a list of dicts, one per tournament competed in.
+
         Dict is keyed by column name, except for "Step of the following circuits", which
         is omitted, and an additional "WDD URL" giving the URL for the tournament in the WDD.
         The content of the "Rank" column is split into "Rank" and "Total Players".
@@ -339,6 +347,7 @@ class WDDBackground():
     def boards(self):
         """
         Returns a list of boards played.
+
         Each board is a dict, keyed by column name. The "Rank" column is replaced by three
         keys - "Position", "Position sharing" (number of people sharing the position),
         and "Game end" ("L", "W", or "Dn"). The "SCs" column is replaced by "Final SCs"
@@ -440,6 +449,7 @@ class WDDBackground():
     def awards(self):
         """
         Returns a dict, keyed by power name or 'Awards' of arrays of dicts.
+
         Keys for the inner dict are always 'Date', 'Country', 'Tournament', WDD URL, and 'Type'
         plus either 'SCs' and 'Score' (for best country awards) or 'Name' (for other awards)
         Can raise InvalidWDDId
@@ -513,6 +523,7 @@ class WDDBackground():
     def rankings(self):
         """
         Returns a list of dicts.
+
         Keys for the dict are 'Name', 'Score', 'International rank', and 'National rank'.
         Can raise InvalidWDDId
         """

@@ -41,6 +41,7 @@ class DotCountUnknown(Exception):
 class GameState(ABC):
     """
     The state of a Game to be scored.
+
     Encapsulates all the information needed to calculate a score for each power.
     """
 
@@ -65,6 +66,7 @@ class GameState(ABC):
     def powers_in_draw(self):
         """
         Returns an iterable of all the powers that are included in a draw.
+
         For a concession, return an iterable containing just the power conceded to.
         If there is no passed draw vote or concession, returns survivors().
         """
@@ -89,6 +91,7 @@ class GameState(ABC):
     def dot_count(self, power, year=None):
         """
         Returns the number of supply centres owned by the specified power.
+
         If year is specified, returns the numer of centres owned at the end
         of that year. Otherwise, returns the latest number.
         May raise InvaidYear or DotCountUnknown if year is provided.
@@ -104,6 +107,7 @@ class GameState(ABC):
     def last_full_year(self):
         """
         Returns the year that the SC counts are for.
+
         As SC ownerships change after Fall retreats, this will be the previous year
         if currently playing spring or fall, and the current year if currently doing
         adjustments.
@@ -115,12 +119,13 @@ class GameScoringSystem(ABC):
     # TODO This doesn't deal with multiple players playing one power
     """
     A scoring system for a Game.
+
     Provides a method to calculate a score for each player of one game.
     """
     MAX_NAME_LENGTH = 40
     name = u''
     """
-    Returns False if a power's score is fixed at elimination,
+    False if a power's score is fixed at elimination,
     True if their score may still change.
     """
     dead_score_can_change = False
@@ -129,6 +134,7 @@ class GameScoringSystem(ABC):
     def scores(self, state):
         """
         Takes a GameState object.
+
         Returns a dict, indexed by power id, of scores.
         """
         raise NotImplementedError
@@ -155,8 +161,8 @@ class GameScoringSystem(ABC):
 
 def _sorted_scores(scores, state):
     """
-    Sorts a dict of scores so that they will be iterated in
-    GreatPower order.
+    Sorts a dict of scores so that they will be iterated in GreatPower order.
+
     Returns the sorted dict.
     """
     return {k: scores[k] for k in state.all_powers()}
@@ -165,6 +171,7 @@ def _sorted_scores(scores, state):
 def _normalise_scores(scores, total=100.0):
     """
     Adjusts all the scores to sum to total while keeping the same ratios.
+
     scores should be a dict, indexed by power, of raw scores.
     """
     old_total = sum(scores.values())
@@ -174,6 +181,8 @@ def _normalise_scores(scores, total=100.0):
 
 def _adjust_rank_score(centre_counts, rank_points):
     """
+    Allocate points for rank
+
     Takes a list of (power, centre count) 2-tuples for one year of one game,
     ordered highest-to-lowest, and a list of ranking points for positions,
     ordered from first place to last.
@@ -210,6 +219,8 @@ def _adjust_rank_score(centre_counts, rank_points):
 
 class GScoringSolos(GameScoringSystem):
     """
+    Only solo victories get points.
+
     Solos score 100 points.
     Other results score 0.
     """
@@ -232,6 +243,8 @@ class GScoringSolos(GameScoringSystem):
 
 class GScoringDrawSize(GameScoringSystem):
     """
+    Draw Size scoring system
+
     Solos score 100 points.
     Draw sharers split 100 points between them.
     """
@@ -240,11 +253,12 @@ class GScoringDrawSize(GameScoringSystem):
 
     def scores(self, state):
         """
+        Return a dict, indexed by power id, of scores.
+
         If any power soloed, they get 100 points.
         Otherwise, if a draw passed, all powers in the draw equally shared 100
         points between them.
         Otherwise, all surviving powers equally share 100 points between them.
-        Return a dict, indexed by power id, of scores.
         """
         retval = {}
         survivors = state.powers_in_draw()
@@ -264,6 +278,8 @@ class GScoringDrawSize(GameScoringSystem):
 
 class GScoringCDiploNamur(GameScoringSystem):
     """
+    C-Diplo Namur scoring system
+
     If there is a solo:
     - Soloers score 85 points
     - Everyone else scores zero
@@ -305,6 +321,8 @@ class GScoringCDiploNamur(GameScoringSystem):
 
 class GScoringCDiplo(GameScoringSystem):
     """
+    C-Diplo scoring system
+
     If there is a solo:
     - Soloers score a set number of points (soloer_pts).
     - Losers to a solo may optionally also score some set number of
@@ -349,6 +367,9 @@ class GScoringCDiplo(GameScoringSystem):
                         'loss_pts': self.loss_pts}
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
         dots.sort(key = itemgetter(1), reverse=True)
@@ -366,6 +387,8 @@ class GScoringCDiplo(GameScoringSystem):
 
 class GScoringWhipping(GameScoringSystem):
     """
+    Whipping scoring system
+
     If there is a solo:
     - Soloers score a set number of points (soloer_pts).
     - Survivors who lose to a solo score as if they were eliminated when the solo occurred.
@@ -395,6 +418,9 @@ class GScoringWhipping(GameScoringSystem):
                  """) % {'soloer_pts': self.soloer_pts}
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
         dots.sort(key = itemgetter(1), reverse=True)
@@ -420,6 +446,8 @@ class GScoringWhipping(GameScoringSystem):
 
 class GScoringCarnage(GameScoringSystem):
     """
+    Carnage scoring system
+
     Position grants a set number of points, with ties splitting those points.
     Each power gets some set points per centre owned at the end, unless there's
     a solo, in which case the soloer gets all the SC points.
@@ -474,6 +502,9 @@ class GScoringCarnage(GameScoringSystem):
 
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
 
         # Solos are special
@@ -533,6 +564,8 @@ class GScoringCarnage(GameScoringSystem):
 
 class GScoringSumOfSquares(GameScoringSystem):
     """
+    Sum of Squares scoring system
+
     Soloer gets 100 points, everyone else gets zero.
     If there is no solo, square each power's final centre-count
     and normalize those numbers to sum to 100 points.
@@ -541,6 +574,9 @@ class GScoringSumOfSquares(GameScoringSystem):
         self.name = _(u'Sum of Squares')
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         retval_solo = {}
         soloer = state.soloer()
@@ -559,6 +595,8 @@ class GScoringSumOfSquares(GameScoringSystem):
 
 class GScoringTribute(GameScoringSystem):
     """
+    Tribute scoring system
+
     1 point per dot, survivors split 66 points
     equally between them.
     Each player pays the board leader(s) 1 point for each dot
@@ -569,6 +607,9 @@ class GScoringTribute(GameScoringSystem):
         self.name = _('Tribute')
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         num_survivors = len(state.survivors())
         survival_points = 66 / num_survivors
@@ -603,6 +644,8 @@ class GScoringTribute(GameScoringSystem):
 
 class GScoringOpenTribute(GameScoringSystem):
     """
+    OpenTribute scoring system
+
     Base score of 34 plus 3 points per dot.
     Each player pays the board leader(s) 1 point for each dot
     the leader has more than them.
@@ -614,6 +657,9 @@ class GScoringOpenTribute(GameScoringSystem):
         self.name = _('OpenTribute')
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         leader_scs = state.highest_dot_count()
         num_leaders = state.num_powers_with(leader_scs)
@@ -651,6 +697,8 @@ class GScoringOpenTribute(GameScoringSystem):
 
 class GScoringOMG(GameScoringSystem):
     """
+    Open Mind the Gap (OMG) Scoring system
+
     a) Each supply center (SC) is worth 1.5 points (total = 51 points)
     b) Surviving in a draw is worth 9 points (average = 40.5 points per game)
     c) Bonuses for the Top 3: 4.5 points for 1st, 3 points for 2nd, 1.5 points for 3rd.
@@ -664,6 +712,9 @@ class GScoringOMG(GameScoringSystem):
         self.name = _('OMG')
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
         dots.sort(key = itemgetter(1), reverse=True)
@@ -700,6 +751,8 @@ class GScoringOMG(GameScoringSystem):
 
 class GScoringWorldClassic(GameScoringSystem):
     """
+    World Classic scoring system
+
     Solo gets 420. Others get 0.
     Otherwise 10 points per SC, 30 for surviving to the end/draw.
     48 pool for board topping, optionally only if 1 or 2 people top.
@@ -723,6 +776,9 @@ class GScoringWorldClassic(GameScoringSystem):
                  """) % {'topping_str': topping_str}
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         leader_scs = state.highest_dot_count()
         num_leaders = state.num_powers_with(leader_scs)
@@ -762,6 +818,8 @@ class GScoringWorldClassic(GameScoringSystem):
 
 class GScoringDetour09(GameScoringSystem):
     """
+    Detour 09 scoring system
+
     Soloer gets 110.
     Otherwise, players get 1 per centre held, plus 2 points if they hold any centres,
     If there's a single board topper, that player get points equal to the difference between their
@@ -777,6 +835,9 @@ class GScoringDetour09(GameScoringSystem):
         self.name = _('Detour09')
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         soloer = state.soloer()
         soloed = soloer is not None
@@ -869,6 +930,8 @@ class GScoringDetour09(GameScoringSystem):
 
 class GScoringBangkok(GameScoringSystem):
     """
+    Bengkok scoring system
+
     In a draw,
       Everyone gets 1 point per centre.
       12 points is divided between dominating players:
@@ -887,6 +950,9 @@ class GScoringBangkok(GameScoringSystem):
         self.dead_score_can_change = True
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         all_powers = state.all_powers()
         soloer = state.soloer()
@@ -927,6 +993,8 @@ class GScoringBangkok(GameScoringSystem):
 
 class GScoringMaxonian(GameScoringSystem):
     """
+    Maxonian scoring system
+
     Players are ranked by supply centre count.
     Top-ranked player gets 7 points, second gets 6, third gets 5,
     fourth gets 4, fifth gets 3, sixth gets 2, and last gets 1.
@@ -973,6 +1041,7 @@ class GScoringMaxonian(GameScoringSystem):
     def _scores_for_powers(self, state, year, power_list, points_list):
         """
         Recursive function to calculate position points.
+
         points_list must be ordered highest to lowest
         """
         retval = {}
@@ -1016,6 +1085,9 @@ class GScoringMaxonian(GameScoringSystem):
         return retval
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         # Get position points for each power
         retval = self._scores_for_powers(state,
                                          state.last_full_year(),
@@ -1037,6 +1109,8 @@ class GScoringMaxonian(GameScoringSystem):
 
 class GScoringManorCon(GameScoringSystem):
     """
+    ManorCon scoring system
+
     Solo gets a set number of points. Others get 0.1 per year they survived.
     Otherwise calculate N = S^2 + 4*S + 16 for each power, where S is their centre-count (optionally including N=16 for dead powers).
     Then each surviving power scored 100 * N/(sum of all Ns), and each dead power still scores 0.1 per year they survived.
@@ -1062,6 +1136,9 @@ class GScoringManorCon(GameScoringSystem):
                          'dead_sum_str': dead_sum_str}
 
     def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
         retval = {}
         soloer = state.soloer()
         soloed = soloer is not None

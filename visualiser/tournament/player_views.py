@@ -98,6 +98,7 @@ def player_versus(request, pk1, pk2):
 def wpe(request, pk, years=7, count=7):
     """
     World Performance Evaluation details for a single player.
+
     Displays the best <count> WPE numbers from the previous <years> years.
     """
     player = get_object_or_404(Player, pk=pk)

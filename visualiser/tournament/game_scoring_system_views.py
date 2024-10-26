@@ -43,6 +43,8 @@ class SimpleGameState(GameState):
 
     def __init__(self, sc_counts, final_year, elimination_years, draw=None):
         """
+        Create a SimpleGameState from minimal info about a Game
+
         sc_counts should be a dict, keyed by power, of ints
         final_year should be the year of the last fall turn that was adjudicated
         elimination_years should be a dict, keyed by power, of ints
@@ -93,6 +95,7 @@ class SimpleGameState(GameState):
     def powers_in_draw(self):
         """
         Returns an iterable of all the powers that are included in a draw.
+
         For a concession, return an iterable containing just the power conceded to.
         If there is no passed draw vote or concession, returns survivors().
         """
@@ -130,6 +133,7 @@ class SimpleGameState(GameState):
     def elimination_year_list(self):
         """
         Returns a list with the elimination year for each power in all_powers() order.
+
         Entry is None is the power is still alive.
         """
         retval = []
@@ -194,7 +198,7 @@ def game_scoring_index(request):
 
 
 def game_scoring_detail(request, slug):
-    """ Details of a single GameScoringSystem"""
+    """Details of a single GameScoringSystem"""
     sys = next((s for s in G_SCORING_SYSTEMS if s.slug == slug), None)
     if sys is None:
         raise Http404

@@ -677,8 +677,7 @@ def add_game_image(request, tournament_id, game_name=''):
 
 def _bs_ownerships_to_sco(game, year, sc_ownership):
     """
-    Update or create SupplyCentreOwnership objects from a backstabbr.Game
-    sc_ownership dict.
+    Update or create SupplyCentreOwnership objects from a backstabbr.Game sc_ownership dict.
     """
     for k, v in sc_ownership.items():
         # Map k to SupplyCentre (assuming backstabbr.DOTS match SupplyCentre abbreviations)
@@ -693,8 +692,7 @@ def _bs_ownerships_to_sco(game, year, sc_ownership):
 
 def _sc_counts_to_cc(game, year, sc_counts):
     """
-    Update or create CentreCount objects from a backstabbr.Game or webdip.Game
-    sc_counts dict.
+    Update or create CentreCount objects from a backstabbr.Game or webdip.Game sc_counts dict.
     """
     with transaction.atomic():
         for k, v in sc_counts.items():

@@ -140,6 +140,7 @@ class InvalidPowerAssignmentMethod(Exception):
 class RoundScoringSystem(ABC):
     """
     A scoring system for a Round.
+
     Provides a method to calculate a score for each player of one round.
     """
     MAX_NAME_LENGTH=40
@@ -148,10 +149,11 @@ class RoundScoringSystem(ABC):
     @abstractmethod
     def scores(self, game_players, non_players):
         """
+        Returns a dict, indexed by player key, of scores.
+
         game_players is a QuerySet of GamePlayers.
         non_players is a QuerySet of RoundPlayers who were present but agreed
             not to play.
-        Returns a dict, indexed by player key, of scores.
         """
         raise NotImplementedError
 
@@ -182,12 +184,13 @@ class RScoringBest(RoundScoringSystem):
 
     def scores(self, game_players, non_players):
         """
+        Returns a dict, indexed by player key, of scores.
+
         If any player played multiple games, take the best game score and flag the rest as dropped.
         Otherwise, just take their game score.
         game_players is a QuerySet of GamePlayers.
         non_players is a QuerySet of RoundPlayers who were present but agreed
             not to play.
-        Return a dict, indexed by player key, of scores.
         """
         retval = {}
         # for each player who played any of the specified games
@@ -247,12 +250,13 @@ class RScoringAll(RoundScoringSystem):
 
     def scores(self, game_players, non_players):
         """
+        Returns a dict, indexed by player key, of scores.
+
         If any player played multiple games, sum all game scores.
         Otherwise, just take their game score.
         game_players is a QuerySet of GamePlayers.
         non_players is a QuerySet of RoundPlayers who were present but agreed
             not to play.
-        Returns a dict, indexed by player key, of scores.
         """
         retval = {}
         # for each player who played any of the specified games
@@ -279,6 +283,7 @@ R_SCORING_SYSTEMS = [
 class TournamentScoringSystem(ABC):
     """
     A scoring system for a Tournament.
+
     Provides a method to calculate a score for each player of tournament.
     """
     MAX_NAME_LENGTH=50
@@ -287,10 +292,11 @@ class TournamentScoringSystem(ABC):
     @abstractmethod
     def scores(self, round_players):
         """
+        Returns a dict, indexed by player key, of tournament scores
+
         Returns the tournament scores. Where Games and Rounds are complete,
         this is the final score. Where Games and Rounds are still in progress,
         this is the "if all games finished now" scores.
-        Returns a dict, indexed by player key, of tournament scores
         """
         raise NotImplementedError
 
@@ -309,9 +315,10 @@ class TScoringSum(TournamentScoringSystem):
 
     def scores(self, round_players):
         """
+        Returns a dict, indexed by player key, of tournament scores
+
         If a player played more than N rounds, sum the best N round scores and flag the rest as dropped.
         Otherwise, sum all their round scores.
-        Returns a dict, indexed by player key, of tournament scores
         """
         t_scores = {}
         # for each player who played any of the specified rounds
@@ -334,6 +341,7 @@ class TScoringSum(TournamentScoringSystem):
 class TScoringSumGames(TournamentScoringSystem):
     """
     Just add up the best N Game scores regardless of the round(s) in which they were played.
+
     Optionally if a player played more than that number of Games, add the average of the scores
     of the remaining Games, multiplied by some factor.
     """
@@ -344,6 +352,8 @@ class TScoringSumGames(TournamentScoringSystem):
 
     def _flag_included_score(self, gp, fraction=1.0):
         """
+        Store that this Game score counts toward the Round score.
+
         Update the RoundPlayer to note that the specified Game
         score contributes towards the overall score (and therefore
         to the Round score, which itself contributes)
@@ -355,11 +365,12 @@ class TScoringSumGames(TournamentScoringSystem):
 
     def scores(self, round_players):
         """
+        Returns a dict, indexed by player key, of tournament scores
+
         If a player played fewer than N or exactly N games, sum all their game scores.
         Otherwise, sum their best N game scores and add the average of the remainder
         multiplied by self.residual_multiplier.
         Also updates all Round scores to reflect which games count towards the tournament score.
-        Returns a dict, indexed by player key, of tournament scores
         """
         t_scores = {}
         # for each player who played any of the specified rounds
@@ -439,6 +450,7 @@ NO_SCORING_SYSTEM_STR = _("None")
 def find_scoring_system(name, the_list):
     """
     Searches through the_list for a scoring system with the specified name.
+
     Returns the ScoringSystem object.
     Can raise InvalidScoringSystem.
     """
@@ -454,6 +466,7 @@ def find_scoring_system(name, the_list):
 def find_game_scoring_system(name):
     """
     Searches for a scoring system with the given name.
+
     Returns the GameScoringSystem object.
     Can raise InvalidScoringSystem.
     """
@@ -463,6 +476,7 @@ def find_game_scoring_system(name):
 def find_round_scoring_system(name):
     """
     Searches for a scoring system with the given name.
+
     Returns the RoundScoringSystem object.
     Can raise InvalidScoringSystem.
     """
@@ -472,6 +486,7 @@ def find_round_scoring_system(name):
 def find_tournament_scoring_system(name):
     """
     Searches for a scoring system with the given name.
+
     Returns the TournamentScoringSystem object.
     Can raise InvalidScoringSystem.
     """
@@ -480,6 +495,8 @@ def find_tournament_scoring_system(name):
 
 def get_scoring_systems(systems, include_none=False):
     """
+    Convert a list of scoring systems to a list of choices.
+
     Returns a list of two-tuples, suitable for use in a
     Django CharField.choices parameter.
     """
@@ -499,6 +516,8 @@ def validate_weight(value):
 
 def validate_game_name(value):
     """
+    Checks for a valid Game name
+
     Game names cannot contain spaces or '/' because they are used in URLs.
     """
     VALID_CHARS = set(string.ascii_letters + string.digits + "-._~:[]@!$'()*,;%=")
@@ -567,6 +586,10 @@ def game_image_location(instance, filename):
 
 
 class Award(models.Model):
+    """
+    An award for some notable achievement at a Tournament
+    """
+
     MAX_NAME_LENGTH = 40
     MAX_DESCRIPTION_LENGTH = 200
 
@@ -672,7 +695,8 @@ class Tournament(models.Model):
 
     def powers_assigned_from_prefs(self):
         """
-        Returns True is power_assignment is PREFERENCES.
+        Returns True if power_assignment is PREFERENCES.
+
         Intended for use in template code.
         """
         return self.power_assignment == PowerAssignMethods.PREFERENCES
@@ -680,6 +704,7 @@ class Tournament(models.Model):
     def is_virtual(self):
         """
         Returns True if the Tournament is online,
+
         False if it is truly face-to-face.
         """
         return self.format == Formats.VFTF
@@ -697,6 +722,7 @@ class Tournament(models.Model):
     def tournament_scoring_system_obj(self):
         """
         Return the TournamentScoringSystem object for the Tournament.
+
         Can raise InvalidScoringSystem.
         """
         # Find the scoring system to combine round scores into a tournament score
@@ -705,6 +731,7 @@ class Tournament(models.Model):
     def round_scoring_system_obj(self):
         """
         Return the RoundScoringSystem object for the Tournament.
+
         Can raise InvalidScoringSystem.
         """
         # Find the scoring system to combine game scores into a round score
@@ -729,6 +756,7 @@ class Tournament(models.Model):
     def _calculated_scores(self):
         """
         Calculates the scores for everyone registered for the tournament.
+
         Return a dict, keyed by player, of floats.
         """
         system = self.tournament_scoring_system_obj()
@@ -742,6 +770,7 @@ class Tournament(models.Model):
     def scores_detail(self):
         """
         Returns the scores for everyone registered for the tournament.
+
         If the tournament is over, this will be the stored scores.
         If the tournament is ongoing, it will be the "if all games
             ended now" scores.
@@ -755,6 +784,7 @@ class Tournament(models.Model):
     def positions_and_scores(self):
         """
         Returns the positions and scores of everyone registered.
+
         Returns a dict, keyed by player, of 2-tuples containing integer rankings
           (1 for first place, etc) and float tournament scores.
           Players who are flagged as unranked in the tournament get the special
@@ -787,8 +817,8 @@ class Tournament(models.Model):
 
     def update_scores(self):
         """
-        Recalculate the scores for the Tournament,
-        and store them in the TournamentPlayers.
+        Recalculate the scores for the Tournament and store them in the TournamentPlayers.
+
         If the Tournament has now ended, add Best Country awards to
         the appropriate TournamentPlayers.
         """
@@ -812,6 +842,7 @@ class Tournament(models.Model):
     def round_numbered(self, number):
         """
         Return the Round (if any) of the tournament with the specified number.
+
         Can raise Round.DoesNotExist.
         """
         for r in self.round_set.all():
@@ -822,6 +853,8 @@ class Tournament(models.Model):
 
     def _sort_best_country_list(self, gp_list):
         """
+        Order a list of results with one power by rank
+
         Take the list of (GamePlayer, score, dots, unranked) 4-tuples
         for one country, and sort it into best country ordering
         (highest to lowest).
@@ -839,6 +872,8 @@ class Tournament(models.Model):
 
     def best_countries(self, whole_list=False):
         """
+        Find the best result for every power
+
         Returns a dict, indexed by GreatPower.
         If whole_list is False, each dict is a list of the GamePlayers doing
         best with each GreatPower.
@@ -939,6 +974,8 @@ class Tournament(models.Model):
 
     def is_finished(self):
         """
+        Determines whether the Tournament is complete.
+
         Returns True if the tournament has rounds, and they are all finished.
         Returns False otherwise.
         """
@@ -954,6 +991,8 @@ class Tournament(models.Model):
 
     def in_progress(self):
         """
+        Determines whether the Tournament has started but not yet finished.
+
         Returns True if the tournament has rounds, any is in progress,
         and not all have finished.
         Returns False otherwise.
@@ -969,9 +1008,7 @@ class Tournament(models.Model):
         return r.in_progress()
 
     def wdd_url(self):
-        """
-        URL for this tournament in the World Diplomacy Database, if known.
-        """
+        """URL for this tournament in the World Diplomacy Database, if known."""
         if self.wdd_tournament_id:
             return WDD_BASE_RESULTS_URL + 'tournament_class.php?id_tournament=%d' % self.wdd_tournament_id
         return u''
@@ -983,6 +1020,7 @@ class Tournament(models.Model):
     def save(self, *args, **kwargs):
         """
         Save the object to the database.
+
         Updates score attributes of any TournamentPlayers.
         """
         super().save(*args, **kwargs)
@@ -1017,7 +1055,7 @@ class DBNCoverage(models.Model):
 
 
 class SeriesSlugField(models.SlugField):
-    """ Auto-generate a slug from the model's name field """
+    """Auto-generate a slug from the model's name field """
     def pre_save(self, model_instance, add):
         slug = super().pre_save(model_instance, add)
         if not slug:
@@ -1029,6 +1067,8 @@ class SeriesSlugField(models.SlugField):
 class Series(models.Model):
     """
     A series of Diplomacy tournaments, related in some way.
+
+    For example each year's occurrance of an annual Tournament.
     """
     MAX_NAME_LENGTH = 60
     MAX_DESC_LENGTH = 2000
@@ -1051,7 +1091,7 @@ class Series(models.Model):
 
 
 class TPPlayerField(models.CharField):
-    """ Default to match the Player if not provided """
+    """Default to match the Player if not provided """
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         # For new objects with no value set...
@@ -1063,7 +1103,7 @@ class TPPlayerField(models.CharField):
 
 
 class TPUnrankedField(models.BooleanField):
-    """ Default from the Player and Tournament """
+    """Default from the Player and Tournament """
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         # For new objects with no value set...
@@ -1105,6 +1145,8 @@ class TournamentPlayer(models.Model):
 
     def score_is_final(self):
         """
+        Returns True if the score attribute cannot now change
+
         Returns True if the score attribute represents the final score for the TournamentPlayer,
         False if it is the "if all games ended now" score.
         """
@@ -1140,6 +1182,7 @@ class TournamentPlayer(models.Model):
     def position(self):
         """
         Where is the player (currently) ranked overall in the tournament?
+
         Returns Tournament.UNRANKED if self.unranked is True.
         """
         return self.tournament.positions_and_scores()[self.player][0]
@@ -1159,6 +1202,8 @@ class TournamentPlayer(models.Model):
 
     def create_preferences_from_string(self, the_string):
         """
+        Create Preferences for the player as specified in the_string
+
         Given a string like "AEGFIRT", creates the corresponding Preferences
         in the database.
         Powers will be assigned a ranking from 1 for the first.
@@ -1185,7 +1230,8 @@ class TournamentPlayer(models.Model):
 
     def prefs_string(self):
         """
-        Returns the preferences for this TournamentPlayer as a string.
+        Returns the Preferences for this TournamentPlayer as a string.
+
         More-or-less the inverse of create_preferences_from_string().
         """
         # TODO This returns the preference string in English
@@ -1196,8 +1242,7 @@ class TournamentPlayer(models.Model):
 
     def get_prefs_url(self):
         """
-        Returns the absolute URL to update the preferences for this
-        TournamentPlayer.
+        Returns the absolute URL to update the preferences for this TournamentPlayer.
         """
         if not self.uuid_str:
             self._generate_uuid()
@@ -1226,6 +1271,7 @@ class TournamentPlayer(models.Model):
                                                  'player': self.player}
 
     def save(self, *args, **kwargs):
+        """Store the TournamentPlayer in the database"""
         is_new = self.pk is None
         super().save(*args, **kwargs)
         # Update Player if things have changed
@@ -1261,6 +1307,7 @@ class SeederBias(models.Model):
     def clean(self):
         """
         Validate the object.
+
         player1 != player2.
         All players are from the same Tournament.
         """
@@ -1340,6 +1387,7 @@ class Round(models.Model):
     def game_scoring_system_obj(self):
         """
         Return the GameScoringSystem for the Round.
+
         Can raise InvalidScoringSystem.
         """
         # Find the scoring system to score games in this Round
@@ -1348,6 +1396,7 @@ class Round(models.Model):
     def scores(self):
         """
         Returns the scores for everyone who played in the round.
+
         Returns a dict, keyed by Player, of floats.
         """
         retval = {}
@@ -1358,6 +1407,7 @@ class Round(models.Model):
     def update_scores(self):
         """
         Updates every RoundPlayer's score attribute.
+
         If the Round is ongoing, this will be the "if all games ended now" score.
         """
         system = self.tournament.round_scoring_system_obj()
@@ -1374,6 +1424,8 @@ class Round(models.Model):
 
     def is_finished(self):
         """
+        Is the Round complete?
+
         Returns True if the Round has games, and they have all finished.
         Returns False otherwise.
         """
@@ -1388,6 +1440,8 @@ class Round(models.Model):
 
     def in_progress(self):
         """
+        Has the Round started but not yet finished?
+
         Returns True if the Round has RoundPlayers (i.e. roll call has happened)
         or Games, and it hasn't finished.
         """
@@ -1409,6 +1463,8 @@ class Round(models.Model):
 
     def board_call_msg(self):
         """
+        The Games in this Round, formatted as a message
+
         Returns a message listing the boards, players, and powers for the Round,
         suitable for sending by email or posting to discord.
         """
@@ -1439,6 +1495,7 @@ class Round(models.Model):
     def clean(self):
         """
         Validate the object.
+
         Must have either both end times, or neither.
         """
         if self.earliest_end_time and not self.latest_end_time:
@@ -1449,6 +1506,7 @@ class Round(models.Model):
     def save(self, *args, **kwargs):
         """
         Save the object to the database.
+
         Updates score attributes of any RoundPlayers and TournamentPlayers.
         """
         super().save(*args, **kwargs)
@@ -1521,6 +1579,7 @@ class Game(models.Model):
     def assign_powers_from_prefs(self):
         """
         Assigns powers to the GamePlayers.
+
         The player with the lowest tournament score gets first choice,
         the player with the highest score gets whatever power nobody else wants.
         If players have the same score, they are ordered randomly.
@@ -1548,6 +1607,8 @@ class Game(models.Model):
     # TODO: Rename this method?
     def check_whether_finished(self, year=None):
         """
+        Set self.is_finished as appropriate
+
         Checks whether the Game has been soloed or drawn or the final_year has been reached.
         If so, sets is_finished to True.
         Should be called whenever CentreCounts for a year have been added.
@@ -1563,6 +1624,8 @@ class Game(models.Model):
 
     def create_or_update_sc_counts_from_ownerships(self, year):
         """
+        Call this after adding SupplyCentreOwnerships to create/update CentreCounts
+
         Ensures that there is one CentreCount for each power for the
         specified year, and that the values match those determined by
         looking at the SupplyCentreOwnerships for that year.
@@ -1583,6 +1646,8 @@ class Game(models.Model):
 
     def compare_sc_counts_and_ownerships(self, year):
         """
+        Check SupplyCentreOwnerships against CentreCounts
+
         Compares the SupplyCentreOwnerships and CentreCounts for the given
         game year.
         Returns a list of strings describing any issues.
@@ -1618,6 +1683,7 @@ class Game(models.Model):
     def _calc_scores(self):
         """
         Calculate the scores for the Game.
+
         Return value is a dict, indexed by power id, of scores.
         """
         system = self.the_round.game_scoring_system_obj()
@@ -1627,6 +1693,7 @@ class Game(models.Model):
     def scores(self):
         """
         Returns the Game scores.
+
         Return value is a dict, indexed by power id, of scores.
         """
         # If we have GamePlayers, and they have assigned powers,
@@ -1643,6 +1710,8 @@ class Game(models.Model):
 
     def update_scores(self):
         """
+        Calculate Game scores and set the GamePlayer's score attributes
+
         Calculates the scores for the game using the specified ScoringSystem,
         and stores them in the GamePlayers.
         Then calls the equivalent function for the Round this Game is in.
@@ -1656,7 +1725,8 @@ class Game(models.Model):
 
     def positions(self):
         """
-        Returns the positions of all the powers.
+        Returns the positions (ranks) of all the powers.
+
         Dict, keyed by power id, of integer rankings (1 for first place,
         2 for second place, etc)
         """
@@ -1673,7 +1743,7 @@ class Game(models.Model):
 
     def is_dias(self):
         """
-        Returns whether the game is Draws Include All Survivors
+        Returns whether the game Draws must Include All Survivors
         """
         return self.the_round.dias
 
@@ -1726,8 +1796,7 @@ class Game(models.Model):
 
     def final_year(self):
         """
-        Returns the last complete year of the game, whether the game is
-        completed or ongoing
+        Returns the last complete year of the game, whether the game is completed or ongoing
         """
         return self.centrecount_set.aggregate(Max('year'))['year__max']
 
@@ -1744,6 +1813,7 @@ class Game(models.Model):
     def survivors(self, year=None):
         """
         Returns a list of the CentreCounts for the surviving powers.
+
         If a year is provided, it returns a list of the powers that survived
         that whole year.
         If a year is provided that is after the most recent year for which we have CentreCounts,
@@ -1761,6 +1831,8 @@ class Game(models.Model):
 
     def board_call_msg(self):
         """
+        The Game name, players, and powers as a message
+
         Returns a message listing the game name, players, and powers,
         suitable for sending by email or posting to discord.
         """
@@ -1828,6 +1900,7 @@ class Game(models.Model):
     def clean(self):
         """
         Validate the object.
+
         Game names must be unique within the tournament.
         """
         games = Game.objects.filter(the_round__tournament=self.the_round.tournament).distinct()
@@ -1838,6 +1911,7 @@ class Game(models.Model):
     def save(self, *args, **kwargs):
         """
         Save the object to the database.
+
         Ensures that 1901 SC counts and ownership info exists.
         Ensures that S1901M image exists.
         Updates score attributes of any associated GamePlayers, RoundPlayers, and TournamentPlayers.
@@ -1885,6 +1959,8 @@ class Game(models.Model):
 
 class SupplyCentreOwnership(models.Model):
     """
+    Used to track ownership of SupplyCentres through a Game
+
     Record of which GreatPower owned a given SupplyCentre
     at the end of a particular game year in a Game.
     """
@@ -1910,7 +1986,7 @@ class SupplyCentreOwnership(models.Model):
 
 
 class DPPassedField(models.BooleanField):
-    """ If counts are recorded, derive passed from votes_in_favour and survivor count """
+    """If counts are recorded, derive passed from votes_in_favour and survivor count """
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         if model_instance.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
@@ -1984,6 +2060,7 @@ class DrawProposal(models.Model):
     def clean(self):
         """
         Validate the object.
+
         Game must not yet have been won.
         Only living powers get to vote.
         Only one DrawProposal for a given Game can be successful.
@@ -2084,6 +2161,8 @@ class RoundPlayer(models.Model):
 
     def score_is_final(self):
         """
+        Can self.score change?
+
         Returns True if the score attribute represents the final score for the RoundPlayer,
         False if it is the "if all games ended now" score.
         """
@@ -2114,6 +2193,7 @@ class RoundPlayer(models.Model):
     def clean(self):
         """
         Validate the object.
+
         There must already be a corresponding TournamentPlayer.
         """
         t = self.the_round.tournament
@@ -2160,6 +2240,8 @@ class GamePlayer(models.Model):
 
     def score_is_final(self):
         """
+        Can self.score change?
+
         Returns True if the score attribute represents the final score for the GamePlayer,
         False if it is the "if the game ended now" score.
         """
@@ -2216,8 +2298,7 @@ class GamePlayer(models.Model):
 
     def preferences(self):
         """
-        Returns the current Preferences for this player, if any,
-        ordered highest-to-lowest.
+        Returns the current Preferences for this player, if any, ordered highest-to-lowest.
         """
         return self.tournamentplayer().preference_set.all()
 
@@ -2241,6 +2322,8 @@ class GamePlayer(models.Model):
 
     def set_power_from_prefs(self):
         """
+        Set self.power to the preferred GreatPower still available
+
         Set the power attribute from the highest-ranked unassigned power
         in the player's priority list for the tournament.
         """
@@ -2266,8 +2349,8 @@ class GamePlayer(models.Model):
 
     def result_str_long(self):
         """
-        Wrapper for result_str with both parameters set to True,
-        for use by template code.
+        Wrapper for result_str with both parameters set to True, for use by template code.
+
         Returned string includes an HTML <a> link to the game details page,
         so use the safe filter.
         """
@@ -2276,6 +2359,7 @@ class GamePlayer(models.Model):
     def result_str(self, include_power=False, include_game_name=False):
         """
         Return the result of the Game from this GamePlayer's perspective.
+
         If the Game is ongoing, this will be the result if the game ended now.
         Returned string includes an HTML <a> link to the game details page,
         if include_game_name=True.
@@ -2393,6 +2477,7 @@ class GamePlayer(models.Model):
     def clean(self):
         """
         Validate the object.
+
         There must already be a corresponding TournamentPlayer.
         """
         # Player should already be in the tournament
@@ -2418,6 +2503,7 @@ class GamePlayer(models.Model):
 class GameImage(models.Model):
     """
     An image depicting a Game at a certain point.
+
     The year, season, and phase together indicate the phase that is about to
     be played.
     """
@@ -2443,6 +2529,7 @@ class GameImage(models.Model):
     def turn_str(self):
         """
         Short string version of season/year/phase
+
         e.g. 'S1901M'
         """
         return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
@@ -2450,6 +2537,7 @@ class GameImage(models.Model):
     def clean(self):
         """
         Validate the object.
+
         The phase attribute can only be set to ADJUSTMENTS when the season
         attribute is set to FALL.
         """
@@ -2490,6 +2578,7 @@ class CentreCount(models.Model):
     def clean(self):
         """
         Validate the object.
+
         The year attribute must pre-date the Round's final_year attribute,
         if any.
         The count attribute cannot be more than double that for the same power

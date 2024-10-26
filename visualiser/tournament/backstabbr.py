@@ -182,6 +182,7 @@ class Game():
     def turn_details(self, season, year):
         """
         Read the state of the game for the specified turn.
+
         Year should be an int that is a valid game year.
         Season should be 'spring', 'fall', or 'winter'.
         Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
@@ -199,6 +200,7 @@ class Game():
     def _parse_turn_page(self, url):
         """
         Read the game page on backstabbr and extract the interesting details.
+
         Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
         """
         soup = self._url_to_soup(url)
@@ -207,6 +209,7 @@ class Game():
     def _parse_invariants_from_soup(self, soup):
         """
         Read the fixed properties of the game from the soup.
+
         Sets self.name, self.season, self.year, self.players, self.gm, and self.ongoing
         """
         # Extract the game name
@@ -251,6 +254,7 @@ class Game():
     def _parse_turn_from_soup(self, soup):
         """
         Read the per-turn properties of the game from the soup.
+
         Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
         """
         sc_counts = {}

@@ -225,6 +225,7 @@ def power_name_to_wdd(name):
 def wdd_nation_to_country(country_code):
     """
     Map a (real world) country code from the WDD to a django_countries.Country.
+
     Can raise UnrecognisedCountry.
     """
     try:
@@ -238,6 +239,7 @@ def wdd_nation_to_country(country_code):
 def country_name_to_wdd(name):
     """
     Map a country name to a WDD (real world) country code.
+
     Returns WDD_UNKNOWN_COUNTRY is the country is not recognised by the WDD.
     """
     try:
@@ -252,6 +254,7 @@ def country_name_to_wdd(name):
 def country_to_wdd(country):
     """
     Map a Country to a WDD (real world) country code.
+
     Returns WDD_UNKNOWN_COUNTRY is the country is not recognised by the WDD.
     """
     try:

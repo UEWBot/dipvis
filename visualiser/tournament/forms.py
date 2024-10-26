@@ -550,6 +550,8 @@ class GetSevenPlayersForm(forms.Form):
 
     def clean(self):
         """
+        Validate the form
+
         Checks that no player is entered more than once,
         that we have either sitters or (standbys or doubles), but not both,
         and that we have the right number of either sitters or (standbys and doubles).
@@ -724,8 +726,7 @@ class BaseSCCountFormset(BaseFormSet):
     """Form to specify SC counts for a Game"""
     def clean(self):
         """
-        Checks that no year appears more than once,
-        and that neutrals always decrease
+        Checks that no year appears more than once, and that neutrals don't increase
         """
         if any(self.errors):
             return

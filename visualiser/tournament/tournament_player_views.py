@@ -111,8 +111,8 @@ def detail(request, tournament_id, tp_id):
 # because this one should be available to any who have the URL
 def player_prefs(request, tournament_id, uuid):
     """
-    Display the current preferences for a single TournamentPlayer,
-    and give them the ability to change them.
+    Display the current preferences for a single TournamentPlayer, and give them the ability to change them.
+
     TournamentPlayer is (indirectly) identified by the uuid string.
     """
     # Allow access regardless of published state

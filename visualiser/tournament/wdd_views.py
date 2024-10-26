@@ -52,6 +52,7 @@ def _game_to_wdd_id(game):
 def _power_award_to_gameplayers(tournament, award):
     """
     Map a "best country" award to the corresponding GamePlayers in the Tournament.
+
     Returns a list of GamePlayers.
     """
     assert award.power is not None
@@ -68,6 +69,7 @@ def _power_award_to_gameplayers(tournament, award):
 def _award_number(tournament, award):
     """
     Returns the number (1..12) for the specified (non-best country) award at the tournament
+
     Can raise TooManyAwards.
     """
     n = tournament.award_number(award)

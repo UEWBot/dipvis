@@ -57,8 +57,7 @@ REFRESH_TIME = 60
 
 def get_round_or_404(tournament, round_num):
     """
-    Return the specified numbered round of the specified tournament or
-    raise Http404.
+    Return the specified round of the specified tournament or raise Http404.
     """
     try:
         return tournament.round_numbered(round_num)
@@ -248,7 +247,7 @@ def get_seven(request, tournament_id, round_num):
 
 
 def _sitters_and_two_gamers(tournament, the_round):
-    """ Return a (sitters, two_gamers) 2-tuple"""
+    """Return a (sitters, two_gamers) 2-tuple"""
     tourney_players = tournament.tournamentplayer_set.prefetch_related('player')
     round_players = the_round.roundplayer_set.prefetch_related('player')
     # Get the set of players that haven't already been assigned to games for this round
