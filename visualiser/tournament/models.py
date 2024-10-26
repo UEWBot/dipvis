@@ -748,8 +748,8 @@ class Tournament(models.Model):
         Returns a dict, keyed by player, of float tournament scores.
         """
         t_scores = {}
-        for p in self.tournamentplayer_set.prefetch_related('player'):
-            t_scores[p.player] = p.score
+        for tp in self.tournamentplayer_set.prefetch_related('player'):
+            t_scores[tp.player] = tp.score
         return t_scores
 
     def positions_and_scores(self):
