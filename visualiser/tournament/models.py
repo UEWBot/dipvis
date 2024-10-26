@@ -812,6 +812,7 @@ class Tournament(models.Model):
     def round_numbered(self, number):
         """
         Return the Round (if any) of the tournament with the specified number.
+        Can raise Round.DoesNotExist.
         """
         for r in self.round_set.all():
             if r.number() == int(number):
