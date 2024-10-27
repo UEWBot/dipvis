@@ -1532,11 +1532,11 @@ class TournamentTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
         TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
         # Add RoundPlayers to r31
-        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.1)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=5.0)
         # Add RoundPlayers to r32
         RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
-        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=57.3)
 
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
@@ -1592,51 +1592,6 @@ class TournamentTests(TestCase):
         t.save(update_fields=['delay_game_url_publication', 'start_date', 'end_date'])
 
     # Tournament._calculated_scores()
-    def test_tournament_scores_invalid(self):
-        now = timezone.now()
-        t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
-                                                      start_date=now,
-                                                      end_date=now + HOURS_24,
-                                                      tournament_scoring_system='Invalid System',
-                                                      round_scoring_system=R_SCORING_SYSTEMS[0].name)
-        self.assertRaises(InvalidScoringSystem, t._calculated_scores)
-
-    def test_tournament_scores_unfinished(self):
-        t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        scores = t._calculated_scores()
-
-    def test_tournament_scores_before_start(self):
-        t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
-        scores = t._calculated_scores()
-
-    def test_tournament_scores_recalculate(self):
-        t = Tournament.objects.get(name='t3')
-        tp1 = t.tournamentplayer_set.get(player=self.p5)
-        self.assertEqual(tp1.score, 147.3)
-        tp2 = t.tournamentplayer_set.get(player=self.p7)
-        self.assertEqual(tp2.score, 47.3)
-        scores = t._calculated_scores()
-        self.assertEqual(len(scores), 2)
-        # This should be recalculated from the round scores
-        for tp in t.tournamentplayer_set.all():
-            with self.subTest(player=tp.player):
-                self.assertEqual(scores[tp.player], 47.3)
-
-    def test_tournament_scores_with_non_player(self):
-        # Only interesting for unfinished tournaments
-        t = Tournament.objects.get(name='t1')
-        # Add an extra player, who didn't actually play
-        tp = TournamentPlayer(tournament=t, player=self.p10)
-        tp.save()
-        scores = t._calculated_scores()
-        # Players who didn't play should get a score of zero
-        self.assertEqual(scores[self.p10], 0.0)
-        tp.delete()
-
-    # Tournament.scores_detail()
     def test_tournament_calculated_scores_invalid(self):
         now = timezone.now()
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
@@ -1646,17 +1601,59 @@ class TournamentTests(TestCase):
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
         self.assertRaises(InvalidScoringSystem, t._calculated_scores)
 
+    def test_tournament_calculated_scores_unfinished(self):
+        t = Tournament.objects.get(name='t1')
+        # TODO Validate results
+        scores = t._calculated_scores()
+
+    def test_tournament_calculated_scores_before_start(self):
+        t = Tournament.objects.get(name='t2')
+        self.assertEqual(t.tournamentplayer_set.count(), 0)
+        for r in t.round_set.all():
+            self.assertEqual(r.roundplayer_set.count(), 0)
+        tp = TournamentPlayer.objects.create(player=self.p5, tournament=t, score=17.3)
+        # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
+        scores = t._calculated_scores()
+        self.assertEqual(len(scores), 1)
+        self.assertAlmostEqual(scores[tp.player], 0.0)
+        # Cleanup
+        tp.delete()
+
+    def test_tournament_calculated_scores_recalculate(self):
+        t = Tournament.objects.get(name='t3')
+        scores = t._calculated_scores()
+        self.assertEqual(len(scores), 2)
+        # This should be recalculated from the round scores
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                rps = tp.player.roundplayer_set.filter(the_round__tournament=t)
+                total = rps.aggregate(Sum('score'))['score__sum']
+                self.assertEqual(scores[tp.player], total)
+
+    def test_tournament_calculated_scores_with_non_player(self):
+        # Only interesting for unfinished tournaments
+        t = Tournament.objects.get(name='t1')
+        # Add an extra player, who didn't actually play
+        tp = TournamentPlayer(tournament=t, player=self.p10)
+        tp.save()
+        scores = t._calculated_scores()
+        # Players who didn't play should get a score of zero
+        self.assertEqual(scores[tp.player], 0.0)
+        # Cleanup
+        tp.delete()
+
+    # Tournament.scores_detail()
     def test_tournament_scores_detail_finished(self):
         t = Tournament.objects.get(name='t3')
-        tp1 = t.tournamentplayer_set.get(player=self.p5)
-        self.assertEqual(tp1.score, 147.3)
-        tp2 = t.tournamentplayer_set.get(player=self.p7)
-        self.assertEqual(tp2.score, 47.3)
+        # Record expected results
+        exp = {}
+        for tp in t.tournamentplayer_set.all():
+            exp[tp] = tp.score
         scores = t.scores_detail()
         self.assertEqual(len(scores), 2)
-        # This should just be retrieved from the TournamentPlayer
-        self.assertEqual(scores[tp1.player], 147.3)
-        self.assertEqual(scores[tp2.player], 47.3)
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertAlmostEqual(scores[tp.player], exp[tp])
 
     def test_tournament_scores_detail_unfinished(self):
         t = Tournament.objects.get(name='t1')
@@ -1664,10 +1661,18 @@ class TournamentTests(TestCase):
         scores = t.scores_detail()
 
     def test_tournament_scores_detail_before_start(self):
-        t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        # Ensure that all TournamentPlayers are included, although there are no RoundPlayers
+        t = Tournament.objects.get(name='t2')
+        self.assertEqual(t.tournamentplayer_set.count(), 0)
+        for r in t.round_set.all():
+            self.assertEqual(r.roundplayer_set.count(), 0)
+        the_score = 17.3
+        tp = TournamentPlayer.objects.create(player=self.p5, tournament=t, score=the_score)
+        # Ensure that all TournamentPlayers are included. although there are no RoundPlayers
         scores = t.scores_detail()
+        self.assertEqual(len(scores), 1)
+        self.assertAlmostEqual(scores[tp.player], the_score)
+        # Cleanup
+        tp.delete()
 
     def test_tournament_scores_detail_with_non_player(self):
         # Only interesting for unfinished tournaments
@@ -1677,19 +1682,34 @@ class TournamentTests(TestCase):
         tp.save()
         scores = t.scores_detail()
         # Players who didn't play should get a score of zero
-        self.assertEqual(scores[self.p10], 0.0)
+        self.assertEqual(scores[tp.player], 0.0)
+        # Cleanup
         tp.delete()
 
     # Tournament.positions_and_scores()
     def test_tournament_positions_and_scores_finished(self):
         t = Tournament.objects.get(name='t3')
-        # TODO Validate results
-        t.positions_and_scores()
+        # Record expected results
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            scores[tp] = tp.score
+        p_and_s = t.positions_and_scores()
+        # This should just read the TournamentPlayer attributes
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertAlmostEqual(p_and_s[tp.player][1], scores[tp])
 
     def test_tournament_positions_and_scores_unfinished(self):
         t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        t.positions_and_scores()
+        # Record expected results
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            scores[tp] = tp.score
+        p_and_s = t.positions_and_scores()
+        # This should just read the TournamentPlayer attributes
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertAlmostEqual(p_and_s[tp.player][1], scores[tp])
 
     def test_tournament_positions_and_scores_with_unranked(self):
         t = Tournament.objects.get(name='t1')
