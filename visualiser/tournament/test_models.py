@@ -1743,16 +1743,16 @@ class TournamentTests(TestCase):
             tp.save()
 
     # Tournament.winner()
-    def test_tourney_winner_not_finished(self):
+    def test_tournament_winner_not_finished(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.winner(), None)
 
-    def test_tourney_winner_finished(self):
+    def test_tournament_winner_finished(self):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.winner(), self.p5)
 
     # Tournament.update_scores()
-    def test_tourney_update_scores(self):
+    def test_tournament_update_scores(self):
         now = timezone.now()
         t = Tournament(name='t5',
                        start_date=now,
@@ -1818,7 +1818,7 @@ class TournamentTests(TestCase):
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
-    def test_tourney_update_scores_handicap(self):
+    def test_tournament_update_scores_handicap(self):
         now = timezone.now()
         t = Tournament(name='t5',
                        start_date=now,
@@ -1899,7 +1899,7 @@ class TournamentTests(TestCase):
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
-    def test_tourney_update_scores_awards(self):
+    def test_tournament_update_scores_awards(self):
         # Verify that best country awards get set
         now = timezone.now()
         t = Tournament(name='t5',
@@ -1970,11 +1970,11 @@ class TournamentTests(TestCase):
         t.delete()
 
     # Tournament.round_numbered()
-    def test_tourney_round_numbered_negative(self):
+    def test_tournament_round_numbered_negative(self):
         t = Tournament.objects.get(name='t1')
         self.assertRaises(Round.DoesNotExist, t.round_numbered, -1)
 
-    def test_tourney_round_numbered_3(self):
+    def test_tournament_round_numbered_3(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.round_numbered(3).number(), 3)
 
@@ -2147,17 +2147,17 @@ class TournamentTests(TestCase):
         s.delete()
 
     # Tournament.game_set()
-    def test_tourney_game_set(self):
+    def test_tournament_game_set(self):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.game_set().count(), 2)
 
     # Tournament.current_round()
-    def test_tourney_current_round_none(self):
+    def test_tournament_current_round_none(self):
         # All games in t3 are finished
         t = Tournament.objects.get(name='t3')
         self.assertIsNone(t.current_round())
 
-    def test_tourney_current_round(self):
+    def test_tournament_current_round(self):
         t = Tournament.objects.get(name='t1')
         r = t.current_round()
         rounds = t.round_set.count()
