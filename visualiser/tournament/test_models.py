@@ -3971,7 +3971,7 @@ class GameTests(TestCase):
         g = Game.objects.create(name='gamey', started_at=r.start, the_round=r, the_set=self.set1)
         self.assertRaises(InvalidScoringSystem, g.update_scores)
 
-    def test_update_scores_no_powers_assigned(self):
+    def test_game_update_scores_no_powers_assigned(self):
         # Test Game.update_scores() with no powers assigned
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -3985,6 +3985,34 @@ class GameTests(TestCase):
         for gp in g.gameplayer_set.all():
             gp.power = power_map[gp]
             gp.save(update_fields=['power'])
+
+    def test_game_update_scores(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        for gp in g.gameplayer_set.all():
+            self.assertEqual(gp.score, 0.0)
+        for rp in g.the_round.roundplayer_set.all():
+            self.assertEqual(rp.score, 0.0)
+        g.update_scores()
+        # GamePlayer.score and RoundPlayer.score should be updated
+        # p5 should get 100, others zero
+        # Cleanup at the same time
+        for gp in g.gameplayer_set.all():
+            with self.subTest(player=gp.player):
+                if gp.player == self.p5:
+                    self.assertEqual(gp.score, 100.0)
+                    gp.score = 0.0
+                    gp.save()
+                else:
+                    self.assertEqual(gp.score, 0.0)
+        for rp in g.the_round.roundplayer_set.all():
+            with self.subTest(player=rp.player):
+                if rp.player == self.p5:
+                    self.assertEqual(rp.score, 100.0)
+                    rp.score = 0.0
+                    rp.save()
+                else:
+                    self.assertEqual(rp.score, 0.0)
 
     # Game.positions()
     def test_game_positions(self):
