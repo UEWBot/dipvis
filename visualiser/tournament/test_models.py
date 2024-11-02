@@ -38,6 +38,7 @@ from tournament.models import PowerAssignMethods, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.models import find_round_scoring_system
 from tournament.models import find_tournament_scoring_system
+from tournament.models import scoring_systems_are_compatible
 from tournament.models import validate_game_name, validate_vote_count
 from tournament.models import validate_game_scoring_system
 from tournament.models import validate_round_scoring_system
@@ -1237,6 +1238,23 @@ class ModelTests(TestCase):
         self.assertRaises(ValidationError, validate_game_scoring_system, "Chris Wins")
 
     # TODO game_image_location()
+
+    # scoring_systems_are_compatible()
+    def test_scoring_systems_compatible_sum_1(self):
+        self.assertFalse(scoring_systems_are_compatible("None", "Sum best 2 rounds"))
+
+    def test_scoring_systems_compatible_sum_2(self):
+        for rss in R_SCORING_SYSTEMS:
+            with self.subTest(system=rss.name):
+                self.assertTrue(scoring_systems_are_compatible(rss.name, "Sum best 2 rounds"))
+
+    def test_scoring_systems_compatible_sum_games_1(self):
+        self.assertTrue(scoring_systems_are_compatible("None", "Best single game result"))
+
+    def test_scoring_systems_compatible_sum_games_2(self):
+        for rss in R_SCORING_SYSTEMS:
+            with self.subTest(system=rss.name):
+                self.assertFalse(scoring_systems_are_compatible(rss.name, "Best single game result"))
 
 
 class AwardTests(TestCase):

@@ -519,6 +519,21 @@ def get_scoring_systems(systems, include_none=False):
     return sys_list
 
 
+def scoring_systems_are_compatible(round_scoring_system_name, tournament_scoring_system_name):
+    """
+    Are the specified systems compatible?
+
+    Finds the corresponding scoring system objects.
+    TScoringSumGames is only compatible with a Round scoring system of None, and vice-versa.
+    Other Tournament scoring systems are not compatible with a Round scoring system of None.
+    """
+    tss = find_tournament_scoring_system(tournament_scoring_system_name)
+    rss = find_round_scoring_system(round_scoring_system_name)
+    if tss.uses_round_scores:
+        return rss != None
+    return rss == None
+
+
 def validate_weight(value):
     """
     No longer used. Retained for migrations.
