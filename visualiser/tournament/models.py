@@ -1022,17 +1022,20 @@ class Tournament(models.Model):
         """
         Save the object to the database.
 
-        Updates score attributes of any TournamentPlayers.
+        Updates score attributes of any RoundPlayers and TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
         # Change may affect the scoring
         try:
+            validate_round_scoring_system(self.round_scoring_system)
             validate_tournament_scoring_system(self.tournament_scoring_system)
         except ValidationError:
             pass
         else:
-            self.update_scores()
+            # Update all round scores. This will also call self.update_scores()
+            for r in self.round_set.all():
+                r.update_scores()
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)

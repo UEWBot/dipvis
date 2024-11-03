@@ -2249,6 +2249,28 @@ class TournamentTests(TestCase):
         t = Tournament.objects.get(name='t3')
         t.get_absolute_url()
 
+    # Tournament.save()
+    # On save(), all round scores and the tournament score should be recalculated
+    def test_tournament_save(self):
+        t = Tournament.objects.get(name='t1')
+        # Remember the current scores
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            for rp in tp.roundplayers():
+                scores[rp] = rp.score
+            scores[tp] = tp.score
+        # save() should recalculate all RoundPlayer and TournamentPlayer scores
+        t.save()
+        # Verify and cleanup
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                self.assertNotAlmostEqual(tp.score, scores[tp])
+                tp.score = scores[tp]
+                for rp in tp.roundplayers():
+                    with self.subTest(player=rp.player, round_num=rp.the_round.number()):
+                        self.assertNotAlmostEqual(rp.score, scores[rp])
+                        rp.score = scores[rp]
+
 
 @override_settings(HOSTNAME='example.com')
 class TournamentPlayerTests(TestCase):
