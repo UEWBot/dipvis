@@ -635,6 +635,220 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 100)
         self.check_score_order(scores)
 
+    # GScoringHaight
+    def test_g_scoring_haight_no_solo1(self):
+        example_a = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 10,
+                                               self.france: 9,
+                                               self.germany: 8,
+                                               self.italy: 5,
+                                               self.russia: 0,
+                                               self.turkey: 2},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Haight v1.0')
+        scores = system.scores(example_a)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 4)
+                elif p == self.england:
+                    self.assertEqual(s, 171)
+                elif p == self.france:
+                    self.assertEqual(s, 145)
+                elif p == self.germany:
+                    self.assertEqual(s, 124)
+                elif p == self.italy:
+                    self.assertEqual(s, 83)
+                elif p == self.russia:
+                    self.assertEqual(s, (8 + 11))
+                else:
+                    # Turkey
+                    self.assertEqual(s, 42)
+        self.check_score_order(scores)
+
+    def test_g_scoring_haight_no_solo2(self):
+        example_b = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 17,
+                                               self.france: 0,
+                                               self.germany: 10,
+                                               self.italy: 4,
+                                               self.russia: 0,
+                                               self.turkey: 3},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Haight v1.0')
+        scores = system.scores(example_b)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 4)
+                elif p == self.england:
+                    self.assertEqual(s, 271)
+                elif p == self.france:
+                    self.assertEqual(s, (8 + 11))
+                elif p == self.germany:
+                    self.assertEqual(s, 155)
+                elif p == self.italy:
+                    self.assertEqual(s, 84)
+                elif p == self.russia:
+                    self.assertEqual(s, (8 + 11))
+                else:
+                    # Turkey
+                    self.assertEqual(s, 63)
+        self.check_score_order(scores)
+
+    def test_g_scoring_haight_no_solo3(self):
+        example_c = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 11,
+                                               self.france: 0,
+                                               self.germany: 11,
+                                               self.italy: 11,
+                                               self.russia: 0,
+                                               self.turkey: 1},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Haight v1.0')
+        scores = system.scores(example_c)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 4)
+                elif p == self.england:
+                    self.assertEqual(s, 154)
+                elif p == self.france:
+                    self.assertEqual(s, (8 + 11))
+                elif p == self.germany:
+                    self.assertEqual(s, 154)
+                elif p == self.italy:
+                    self.assertEqual(s, 154)
+                elif p == self.russia:
+                    self.assertEqual(s, (8 + 11))
+                else:
+                    # Turkey
+                    self.assertEqual(s, 43)
+        self.check_score_order(scores)
+
+    def test_g_scoring_haight_no_solo4(self):
+        example_d = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 12,
+                                               self.france: 0,
+                                               self.germany: 11,
+                                               self.italy: 11,
+                                               self.russia: 0,
+                                               self.turkey: 0},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1907,
+                                                       self.turkey: 1907},
+                                    draw=None)
+        system = find_game_scoring_system('Haight v1.0')
+        scores = system.scores(example_d)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 4)
+                elif p == self.england:
+                    self.assertEqual(s, 191)
+                elif p == self.france:
+                    self.assertEqual(s, (8 + 33))
+                elif p == self.germany:
+                    self.assertEqual(s, 154)
+                elif p == self.italy:
+                    self.assertEqual(s, 154)
+                elif p == self.russia:
+                    self.assertEqual(s, (7 + 11))
+                else:
+                    # Turkey
+                    self.assertEqual(s, (7 + 11))
+        self.check_score_order(scores)
+
+    def test_g_scoring_haight_no_solo5(self):
+        example_e = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 12,
+                                               self.france: 0,
+                                               self.germany: 10,
+                                               self.italy: 10,
+                                               self.russia: 0,
+                                               self.turkey: 2},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Haight v1.0')
+        scores = system.scores(example_e)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 4)
+                elif p == self.england:
+                    self.assertEqual(s, 196)
+                elif p == self.france:
+                    self.assertEqual(s, (8 + 11))
+                elif p == self.germany:
+                    self.assertEqual(s, 144)
+                elif p == self.italy:
+                    self.assertEqual(s, 144)
+                elif p == self.russia:
+                    self.assertEqual(s, (8 + 11))
+                else:
+                    # Turkey
+                    self.assertEqual(s, 53)
+        self.check_score_order(scores)
+
+    def test_g_scoring_haight_solo(self):
+        example_f = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 18,
+                                               self.france: 0,
+                                               self.germany: 10,
+                                               self.italy: 4,
+                                               self.russia: 0,
+                                               self.turkey: 2},
+                                    final_year=1911,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Haight v1.0')
+        scores = system.scores(example_f)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 4)
+                elif p == self.england:
+                    self.assertEqual(s, 451)
+                elif p == self.france:
+                    self.assertEqual(s, 8)
+                elif p == self.germany:
+                    self.assertEqual(s, 50)
+                elif p == self.italy:
+                    self.assertEqual(s, 20)
+                elif p == self.russia:
+                    self.assertEqual(s, 8)
+                else:
+                    # Turkey
+                    # Note that this differs from the document because the document
+                    # assumes the game end in 1910 or earlier but I want to test the
+                    # "or number of years played, if greater" part
+                    self.assertEqual(s, 11)
+        self.check_score_order(scores)
+
     # GScoringOpenTribute
     def test_g_scoring_opentribute_no_solo(self):
         t = Tournament.objects.get(name='t1')
