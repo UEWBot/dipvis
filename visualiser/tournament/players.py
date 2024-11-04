@@ -91,7 +91,7 @@ def player_picture_location(instance, filename):
 
 def _update_or_create_playertournamentranking_wiki(player, title):
     """
-    Creats or updates a PlayerTournamentRanking for the player
+    Creates or updates a PlayerTournamentRanking for the player
 
     Given a Player and a dict with 'Tournament' and 'Year' keys,
     and optional 'Champion' key, representing the Wikipedia page,
