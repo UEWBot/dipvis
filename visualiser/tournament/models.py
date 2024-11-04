@@ -300,6 +300,14 @@ class TournamentScoringSystem(ABC):
         """
         raise NotImplementedError
 
+    @property
+    @abstractmethod
+    def uses_round_scores(self):
+        """
+        True if the scoring system combines Round scores, False if it uses Game scores directly.
+        """
+        raise NotImplementedError
+
     def __str__(self):
         ret = self.name
         return ret
@@ -312,6 +320,8 @@ class TScoringSum(TournamentScoringSystem):
     def __init__(self, name, scored_rounds):
         self.name = name
         self.scored_rounds = scored_rounds
+
+    uses_round_scores = True
 
     def scores(self, round_players):
         """
@@ -349,6 +359,8 @@ class TScoringSumGames(TournamentScoringSystem):
         self.name = name
         self.scored_games = scored_games
         self.residual_multiplier = residual_multiplier
+
+    uses_round_scores = False
 
     def _flag_included_score(self, gp, fraction=1.0):
         """
@@ -1161,7 +1173,7 @@ class TournamentPlayer(models.Model):
             # Handicaps are added after all games end
             return False
         system = t.tournament_scoring_system_obj()
-        if not isinstance(system, TScoringSumGames):
+        if system.uses_round_scores:
             # If any round score for this player isn't final, this score also could change
             for rp in self.roundplayers():
                 if not rp.score_is_final():
@@ -1170,7 +1182,7 @@ class TournamentPlayer(models.Model):
         if not final_round.in_progress():
             # There are more rounds to go, so more opportunities to score
             return False
-        if isinstance(system, TScoringSumGames):
+        if not system.uses_round_scores:
             # If the final Round is in progress, just check all their Games
             for gp in GamePlayer.objects.filter(player=self.player,
                                                 game__the_round__tournament=t):
@@ -2166,8 +2178,7 @@ class RoundPlayer(models.Model):
         Returns True if the score attribute represents the final score for the RoundPlayer,
         False if it is the "if all games ended now" score.
         """
-        if (self.score > 0.0) and isinstance(self.the_round.tournament.tournament_scoring_system_obj(),
-                                             TScoringSumGames):
+        if (self.score > 0.0) and not self.the_round.tournament.tournament_scoring_system_obj().uses_round_scores:
             # Any later rounds may change the score for this round
             return self.the_round.tournament.score_is_final()
         if self.the_round.is_finished():
