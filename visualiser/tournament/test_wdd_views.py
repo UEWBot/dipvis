@@ -122,6 +122,8 @@ class WddViewTests(TestCase):
                                     last_name='Maleficent')
         p14 = Player.objects.create(first_name='Nigel',
                                     last_name='Notorious')
+        p15 = Player.objects.create(first_name='Oscar',
+                                    last_name='Ostentatious')
         TournamentPlayer.objects.create(player=p1,
                                         tournament=cls.t)
         RoundPlayer.objects.create(player=p1,
@@ -259,6 +261,9 @@ class WddViewTests(TestCase):
         GamePlayer.objects.create(player=p14,
                                   game=g3,
                                   power=england)
+        # One TournamentPlayer who didn't actually play
+        TournamentPlayer.objects.create(player=p15,
+                                        tournament=cls.t)
         # Hand out one non-best-country award
         tp10.awards.add(a1)
         # and one best-country award
