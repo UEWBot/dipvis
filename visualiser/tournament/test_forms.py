@@ -36,6 +36,7 @@ from tournament.players import Player
 from tournament.forms import AwardsForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
+from tournament.forms import PaidForm, BasePaidFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
 from tournament.forms import SCCountForm, BaseSCCountFormset, GameEndedForm
@@ -153,6 +154,74 @@ class AwardsFormsetTest(TestCase):
         # Explicit initial should override implicit
         for form in formset:
             self.assertEqual(form['players'].initial, [self.tp2.id])
+        self.assertEqual(len(formset), len(initial))
+
+
+class PaidFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        p = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        now = timezone.now()
+        t = Tournament.objects.create(name='t1',
+                                      start_date=now,
+                                      end_date=now + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        cls.tp = TournamentPlayer.objects.create(player=p, tournament=t, paid=False)
+
+    def test_paid_form_paid_field_label(self):
+        form = PaidForm(tp=self.tp)
+        self.assertEqual(form.fields['paid'].label, 'Arthur Bottom')
+
+    def test_paid_form_none(self):
+        form = PaidForm(tp=self.tp)
+        self.assertEqual(form['paid'].initial, False)
+
+    def test_paid_form_paid_initial(self):
+        form = PaidForm(tp=self.tp, initial={'paid': True})
+        # Explicit initial should override implicit
+        self.assertEqual(form['paid'].initial, True)
+
+
+class PaidFormsetTest(TestCase):
+
+    @classmethod
+    def setUpTestData(cls):
+        now = timezone.now()
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=now,
+                                          end_date=now + timedelta(hours=24),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
+        p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
+        cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
+        cls.tp2 = TournamentPlayer.objects.create(player=p2, tournament=cls.t)
+
+        cls.PaidFormset = formset_factory(PaidForm, extra=0, formset=BasePaidFormset)
+
+    def test_paid_formset_creation(self):
+        formset = self.PaidFormset(tournament=self.t)
+        tps = set()
+        for form in formset:
+            self.assertEqual(form['paid'].initial, form.tp.paid)
+            tps.add(form.tp)
+        # Both TournamentPlayers should be present
+        self.assertEqual(len(formset), 2)
+        self.assertIn(self.tp1, tps)
+        self.assertIn(self.tp2, tps)
+
+    def test_paid_formset_initial(self):
+        initial = []
+        initial.append({'paid': True})
+        formset = self.PaidFormset(tournament=self.t, initial=initial)
+        # Explicit initial should override implicit
+        for form in formset:
+            self.assertEqual(form['paid'].initial, True)
         self.assertEqual(len(formset), len(initial))
 
 

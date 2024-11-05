@@ -147,6 +147,8 @@ game_patterns = [
 tp_patterns = [
     path('', tournament_player_views.index,
          name='tournament_players'),
+    path('payments/', tournament_player_views.payments,
+         name='tournament_player_payments'),
     path('<int:tp_id>/', tournament_player_views.detail,
          name='tournament_player_detail'),
 ]

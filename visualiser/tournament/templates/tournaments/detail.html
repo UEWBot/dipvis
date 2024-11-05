@@ -88,6 +88,7 @@
         <li><a href="{% url 'enter_handicaps' tournament.id %}">{% trans "Enter Handicaps" %}</a></li>
       {% endif %}
       <li><a href="{% url 'enter_awards' tournament.id %}">{% trans "Enter Awards" %}</a></li>
+      <li><a href="{% url 'tournament_player_payments' tournament.id %}">{% trans "Track Payments" %}</a></li>
     {% endif %}
     {% if perms.tournament.add_seederbias %}
       <li><a href="{% url 'seeder_bias' tournament.id %}">{% trans "Add bias to the game seeder" %}</a> - {% trans "Use this if you have people playing in the tournament you want to keep apart (e.g. family members)." %}</li>

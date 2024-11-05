@@ -15,6 +15,7 @@
       {% if tournament.handicaps %}
         <th>{% trans "Handicap" %}</th>
       {% endif %}
+      <th>{% trans "Paid?" %}</th>
       <th>{% trans "Location" %}</th>
       <th>{% trans "Nationalities" %}</th>
       {% if tournament.is_virtual %}
@@ -38,6 +39,7 @@
           {% if tournament.handicaps %}
             <td>{{ tp.handicap|floatformat:2 }}</td>
           {% endif %}
+          <td>{% if tp.paid %}{% trans "Yes" %}{% endif %}</td>
           <td>{% if tp.location %} {{ tp.location }}{% endif %}</td>
           <td>{% for country in tp.player.nationalities %}<img src="{{ country.flag }}" alt="{{ country.name }}"> {% endfor %}</td>
           {% if tournament.is_virtual %}
@@ -61,6 +63,7 @@
     </tbody>
   </table>
   <p>{% trans "<b>Warning!</b> You will really mess things up if you unregister a player who has played in the tournament" %}</p>
+<p><a href="{% url 'tournament_player_payments' tournament.id %}">{% trans "Track Payments" %}</a></p>
 <h2>{% trans "Register Players" %}</h2>
 <p>{% trans "If a player doesn't appear in the dropdown, you'll first have to add them to the database, which you can do from" %} <a href="{% url 'admin:tournament_player_add' %}">{% trans "this page" %}</a>.</p>
   {% include "formset_table.html" %}

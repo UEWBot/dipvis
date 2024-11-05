@@ -1149,6 +1149,8 @@ class TournamentPlayer(models.Model):
                                         blank=True,
                                         help_text=_('Username on the backstabbr website'))
     location = TPPlayerField(max_length=60, blank=True)
+    paid = models.BooleanField(default=False,
+                               help_text=_('Have they paid any registration fee?'))
     awards = models.ManyToManyField(Award, blank=True)
 
     class Meta:

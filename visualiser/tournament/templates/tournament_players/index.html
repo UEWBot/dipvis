@@ -9,11 +9,12 @@
 <ul>
   {% for tp in tournament.tournamentplayer_set.all %}
     <li>
-      <a href="{% if tournament.current_round.game_set.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a>{% for country in tp.player.nationalities %} <img src="{{ country.flag }}" alt="{{ country.name }}">{% endfor %}{% if tp.location %} ({{ tp.location }}){% endif %}{% if tp.unranked %} {% trans "(Ineligible for awards)" %}{% endif %}
+      <a href="{% if tournament.current_round.game_set.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a>{% if tp.paid %}*{% endif %}{% for country in tp.player.nationalities %} <img src="{{ country.flag }}" alt="{{ country.name }}">{% endfor %}{% if tp.location %} ({{ tp.location }}){% endif %}{% if tp.unranked %} {% trans "(Ineligible for awards)" %}{% endif %}
     </li>
   {% empty %}
     <li>{% trans "No players yet registered" %}</li>
   {% endfor %}
 </ul>
+<p>* = {% trans "paid" %}</p>
 
 {% endblock content %}

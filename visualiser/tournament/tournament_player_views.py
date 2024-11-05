@@ -18,6 +18,7 @@
 Tournament Player Views for the Diplomacy Tournament Visualiser.
 """
 
+from django.contrib.auth.decorators import permission_required
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
@@ -27,8 +28,9 @@ from django.utils.translation import gettext as _
 from tournament.email import send_prefs_email
 from tournament.forms import PlayerForm
 from tournament.forms import PrefsForm
+from tournament.forms import PaidForm, BasePaidFormset
 from tournament.models import Tournament, TournamentPlayer
-from tournament.tournament_views import get_visible_tournament_or_404
+from tournament.tournament_views import get_visible_tournament_or_404, get_modifiable_tournament_or_404
 
 
 # Tournament Player views
@@ -90,6 +92,34 @@ def index(request, tournament_id):
                                             args=(tournament_id,)))
     context = {'tournament': t, 'formset': formset}
     return render(request, 'tournament_players/index_form.html', context)
+
+
+@permission_required('tournament.change_tournamentplayer')
+def payments(request, tournament_id):
+    """Page to track player registration payments"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    PaidFormset = formset_factory(PaidForm,
+                                    extra=0,
+                                    formset=BasePaidFormset)
+    data = []
+    for tp in t.tournamentplayer_set.all():
+        current = {'tp': tp, 'paid': tp.paid}
+        data.append(current)
+    formset = PaidFormset(request.POST or None, tournament=t, initial=data)
+    if formset.is_valid():
+        for form in formset:
+            if form.has_changed:
+                tp = form.tp
+                if form.cleaned_data['paid'] is True:
+                    tp.paid = True
+                else:
+                    tp.paid = False
+                tp.save(update_fields=['paid'])
+        # Redirect to the index page
+        return HttpResponseRedirect(reverse('tournament_players',
+                                            args=(tournament_id,)))
+    context = {'tournament': t, 'formset': formset}
+    return render(request, 'tournament_players/payments.html', context)
 
 
 def detail(request, tournament_id, tp_id):

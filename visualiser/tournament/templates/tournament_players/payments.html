@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Payments{% endblocktrans %}{% endblock %}
+
+{% block content %}
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Payments" %}</h1>
+
+<form method="post" action="{% url 'tournament_player_payments' tournament.id %}">
+  {% csrf_token %}
+  <table class="form">
+    {{ formset }}
+  </table>
+  <input type="submit" value="{% trans "Submit" %}" />
+</form>
+
+{% endblock %}

@@ -87,8 +87,8 @@ class TournamentPlayerViewTests(TestCase):
                                        email='a.ampersand@example.com')
         cls.p2 = Player.objects.create(first_name='Bobby',
                                        last_name='Bandersnatch')
-        p3 = Player.objects.create(first_name='Cassandra',
-                                   last_name='Cucumber')
+        cls.p3 = Player.objects.create(first_name='Cassandra',
+                                       last_name='Cucumber')
         p4 = Player.objects.create(first_name='Derek',
                                    last_name='Dromedary')
         p5 = Player.objects.create(first_name='Ethel',
@@ -132,8 +132,9 @@ class TournamentPlayerViewTests(TestCase):
         # Pre-generate a UUID for player prefs
         cls.tp11 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t1,
-                                                   uuid_str=str(uuid.uuid4()))
-        cls.tp12 = TournamentPlayer.objects.create(player=p3,
+                                                   uuid_str=str(uuid.uuid4()),
+                                                   paid=True)
+        cls.tp12 = TournamentPlayer.objects.create(player=cls.p3,
                                                    tournament=cls.t1,
                                                    backstabbr_username='player_3')
         cls.tp11.awards.add(a1)
@@ -163,7 +164,7 @@ class TournamentPlayerViewTests(TestCase):
                                              tournament=cls.t2)
         # Explicitly call get_prefs_url() to generate a UUID
         tp.get_prefs_url()
-        tp = TournamentPlayer.objects.create(player=p3,
+        tp = TournamentPlayer.objects.create(player=cls.p3,
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p4,
                                              tournament=cls.t2)
@@ -180,7 +181,7 @@ class TournamentPlayerViewTests(TestCase):
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t2)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r21)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r21)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r21)
         RoundPlayer.objects.create(player=p4, the_round=cls.r21)
         RoundPlayer.objects.create(player=p5, the_round=cls.r21)
         RoundPlayer.objects.create(player=p6, the_round=cls.r21)
@@ -189,7 +190,7 @@ class TournamentPlayerViewTests(TestCase):
         RoundPlayer.objects.create(player=p9, the_round=cls.r21)
         RoundPlayer.objects.create(player=p10, the_round=cls.r21)
         GamePlayer.objects.create(player=cls.p1, game=g21, power=cls.austria)
-        GamePlayer.objects.create(player=p3, game=g21, power=cls.england)
+        GamePlayer.objects.create(player=cls.p3, game=g21, power=cls.england)
         GamePlayer.objects.create(player=p4, game=g21, power=cls.france)
         GamePlayer.objects.create(player=p5, game=g21, power=cls.germany)
         GamePlayer.objects.create(player=p6, game=g21, power=cls.italy)
@@ -241,7 +242,7 @@ class TournamentPlayerViewTests(TestCase):
         cls.tp41 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t4,
                                                    uuid_str=str(uuid.uuid4()))
-        tp = TournamentPlayer.objects.create(player=p3,
+        tp = TournamentPlayer.objects.create(player=cls.p3,
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p4,
                                              tournament=cls.t4)
@@ -258,7 +259,7 @@ class TournamentPlayerViewTests(TestCase):
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t4)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r41)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r41)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r41)
         RoundPlayer.objects.create(player=p4, the_round=cls.r41)
         RoundPlayer.objects.create(player=p5, the_round=cls.r41)
         RoundPlayer.objects.create(player=p6, the_round=cls.r41)
@@ -267,7 +268,7 @@ class TournamentPlayerViewTests(TestCase):
         RoundPlayer.objects.create(player=p9, the_round=cls.r41)
         RoundPlayer.objects.create(player=p10, the_round=cls.r41)
         GamePlayer.objects.create(player=cls.p1, game=g41, power=cls.austria)
-        GamePlayer.objects.create(player=p3, game=g41, power=cls.england)
+        GamePlayer.objects.create(player=cls.p3, game=g41, power=cls.england)
         GamePlayer.objects.create(player=p4, game=g41, power=cls.france)
         GamePlayer.objects.create(player=p5, game=g41, power=cls.germany)
         GamePlayer.objects.create(player=p6, game=g41, power=cls.italy)
@@ -352,7 +353,7 @@ class TournamentPlayerViewTests(TestCase):
         cls.tp51 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t5,
                                                    uuid_str=str(uuid.uuid4()))
-        tp = TournamentPlayer.objects.create(player=p3,
+        tp = TournamentPlayer.objects.create(player=cls.p3,
                                              tournament=cls.t5)
         Game.objects.create(name='Game1',
                             the_round=cls.r51,
@@ -372,6 +373,13 @@ class TournamentPlayerViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        # Verify that paid players get asterisks
+        for tp in self.t1.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                if tp.paid:
+                    self.assertContains(response, '%s</a>*' % tp.player.last_name)
+                else:
+                    self.assertNotContains(response, '%s*' % tp.player.last_name)
 
     def test_index_editable_prefs(self):
         # A tournament that can be edited, that uses preferences for power assignment
@@ -600,6 +608,76 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(tp.unranked)
         # Clean up
         tp_qs.delete()
+
+    def test_payments_invalid_tournament(self):
+        self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_player_payments', args=(self.INVALID_T_PK,))
+        response = self.client.get(url,
+                                   secure=True,
+                                   content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_payments_not_editable(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        url = reverse('tournament_player_payments', args=(self.t4.pk,))
+        response = self.client.get(url,
+                                   secure=True,
+                                   content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 404)
+
+    def test_payments_missing_permissions(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_player_payments', args=(self.t2.pk,))
+        response = self.client.get(url,
+                                   secure=True,
+                                   content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
+    def test_payments_form(self):
+        self.assertGreaterEqual(self.t2.tournamentplayer_set.count(), 5)
+        perm = Permission.objects.get(name='Can change tournament player')
+        self.u3.user_permissions.add(perm)
+        self.u3.save()
+        paid = {}
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            paid[tp] = tp.paid
+            if i in [1, 3]:
+                tp.paid = True
+                tp.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_player_payments', args=(self.t2.pk,))
+        data = {'form-TOTAL_FORMS': '%d' % self.t2.tournamentplayer_set.count(),
+                'form-MIN_NUM_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-INITIAL_FORMS': '%d' % self.t2.tournamentplayer_set.count()}
+        # Toggle [1] from paid to unpaid, [2] from unpaid to paid, leave [3] as paid, leave [4] unpaid
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            if i not in [1, 4]:
+                data['form-%d-paid' % i] = 'on'
+        data = urlencode(data)
+        response = self.client.post(url,
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the index page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_players', args=(self.t2.pk,)))
+        # Check that the paid status of the players has been changed
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            with self.subTest(tp.player):
+                if i in [1, 4]:
+                    self.assertFalse(tp.paid)
+                else:
+                    self.assertTrue(tp.paid)
+        # Cleanup
+        for tp in self.t2.tournamentplayer_set.all():
+            tp.paid = paid[tp]
+            tp.save()
+        self.u3.user_permissions.remove(perm)
+        self.u3.save()
 
     def test_details_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())

@@ -649,6 +649,40 @@ class BaseSCOwnerFormset(BaseFormSet):
                                    _('Supply Centres should never change from owned to neutral'))
 
 
+class PaidForm(forms.Form):
+    """Form that just provides a checkbox to indicate that a TournamentPlayer has paid"""
+    paid = forms.BooleanField(label=_('Paid'),
+                              required=False,
+                              initial=False)
+
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tp = kwargs.pop('tp')
+        super().__init__(*args, **kwargs)
+        self.fields['paid'].label = str(self.tp.player)
+
+
+class BasePaidFormset(BaseFormSet):
+    """Form to specify which TournamentPlayers have paid"""
+    def __init__(self, *args, **kwargs):
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament')
+        # Create initial if not provided
+        if 'initial' not in kwargs.keys():
+            initial = []
+            for tp in self.tournament.tournamentplayer_set.all():
+                initial.append({'paid': tp.paid})
+            kwargs['initial'] = initial
+        super().__init__(*args, **kwargs)
+        self.tps = self.tournament.tournamentplayer_set.all()
+
+    def _construct_form(self, index, **kwargs):
+        # Pass the special arg down to the form itself
+        kwargs['tp'] = self.tps[index]
+        return super()._construct_form(index, **kwargs)
+
+
+
 class GameEndedForm(forms.Form):
     """Form that just provides a checkbox to indicate that a Game is over"""
     is_finished = forms.BooleanField(label=_('Game ended'),
