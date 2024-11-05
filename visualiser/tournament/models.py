@@ -334,10 +334,10 @@ class TScoringSum(TournamentScoringSystem):
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
             # Find just their rounds, sort by score, descending
-            player_rounds = round_players.filter(player=p).order_by('-score')
+            rps = round_players.filter(player=p).order_by('-score')
             # Add up the first N
             t_scores[p] = 0.0
-            for n, rp in enumerate(player_rounds):
+            for n, rp in enumerate(rps):
                 if n < self.scored_rounds:
                     t_scores[p] += rp.score
                     rp.score_dropped = False
@@ -388,9 +388,9 @@ class TScoringSumGames(TournamentScoringSystem):
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
             # Find just the rounds they played
-            player_rounds = round_players.filter(player=p)
+            rps = round_players.filter(player=p)
             rounds = []
-            for rp in player_rounds:
+            for rp in rps:
                 rp.score = 0.0
                 if self.residual_multiplier == 0.0:
                     # Assume the round scores is dropped unless we find out otherwise
