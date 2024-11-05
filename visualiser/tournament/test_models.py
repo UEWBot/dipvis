@@ -2861,15 +2861,15 @@ class RoundTests(TestCase):
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
+                                   scoring_system=s2,
                                    dias=True,
                                    start=t1.start_date)
         r12 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
+                                   scoring_system=s2,
                                    dias=True,
                                    start=t1.start_date + HOURS_8)
         r13 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
+                                   scoring_system=s2,
                                    dias=True,
                                    start=t1.start_date + HOURS_16)
         Round.objects.create(tournament=t1,
@@ -2899,24 +2899,24 @@ class RoundTests(TestCase):
                                        latest_end_time=t3.start_date + HOURS_9)
 
         # Add Games to r11
-        Game.objects.create(name='g11',
-                                  started_at=r11.start,
-                                  the_round=r11,
-                                  the_set=cls.set1)
-        Game.objects.create(name='g12',
-                                  started_at=r11.start,
-                                  the_round=r11,
-                                  the_set=cls.set1)
+        cls.g11 = Game.objects.create(name='g11',
+                                      started_at=r11.start,
+                                      the_round=r11,
+                                      the_set=cls.set1)
+        cls.g12 = Game.objects.create(name='g12',
+                                      started_at=r11.start,
+                                      the_round=r11,
+                                      the_set=cls.set1)
         # Add Games to r12
-        Game.objects.create(name='g13',
-                                  started_at=r12.start,
-                                  the_round=r12,
-                                  is_finished=True,
-                                  the_set=cls.set1)
-        Game.objects.create(name='g14',
-                                  started_at=r12.start,
-                                  the_round=r12,
-                                  the_set=cls.set1)
+        cls.g13 = Game.objects.create(name='g13',
+                                      started_at=r12.start,
+                                      the_round=r12,
+                                      is_finished=True,
+                                      the_set=cls.set1)
+        cls.g14 = Game.objects.create(name='g14',
+                                      started_at=r12.start,
+                                      the_round=r12,
+                                      the_set=cls.set1)
         # Add Games to r13
         Game.objects.create(name='g15',
                             started_at=r13.start,
@@ -2966,32 +2966,62 @@ class RoundTests(TestCase):
         # The remainder are not used in this method but are available for use in tests
         cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
 
+        # And some corresponding GamePlayers
+        GamePlayer.objects.create(player=cls.p2, game=cls.g11, score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g11, score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g11, score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g11, score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g11, score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g11, score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g11, score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g12, score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g12, score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g12, score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g12, score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g12, score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g12, score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g12, score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g13, score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g13, score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g13, score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g13, score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g13, score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g13, score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g13, score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g14, score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g14, score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g14, score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g14, score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g14, score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g14, score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g14, score=3.0, power=cls.turkey)
         # And the corresponding RoundPlayers
-        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11, score=30.0)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12, score=30.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r13, score=30.0)
         # And TournamentPlayers
-        TournamentPlayer.objects.create(player=cls.p1, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, backstabbr_username='nobody')
-        TournamentPlayer.objects.create(player=cls.p3, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p4, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, unranked=True)
-        TournamentPlayer.objects.create(player=cls.p6, tournament=t1)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, location='The Moon')
-        TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1, score=300.0)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, score=300.0, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1, score=300.0)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1, score=300.0)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, score=300.0, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1, score=300.0)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, score=300.0, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1, score=300.0)
 
         # Add TournamentPlayers to t3
         TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
@@ -3255,7 +3285,7 @@ class RoundTests(TestCase):
     # Round.board_call_msg()
     def test_round_board_call_msg(self):
         t = Tournament.objects.get(name='t1')
-        r = t.round_set.all()[0]
+        r = t.round_numbered(3)
         for g in r.game_set.all():
             self.assertEqual(g.gameplayer_set.count(), 0)
             GamePlayer.objects.create(game=g,
@@ -3358,6 +3388,48 @@ class RoundTests(TestCase):
         r = Round.objects.first()
         # TODO Validate result
         str(r)
+
+    # Round.save()
+    # On save(), the scores for all Games in the round, the round itself, and the tournament should be updated
+    def test_round_save(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(2)
+        # Remember the current scores
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            for rp in tp.roundplayers():
+                scores[rp] = rp.score
+                for gp in rp.gameplayers():
+                    scores[gp] = gp.score
+            scores[tp] = tp.score
+        # save() should recalculate relevant GamePlayer, RoundPlayer and TournamentPlayer scores
+        r.save()
+        # Verify and cleanup
+        for tp in t.tournamentplayer_set.all():
+            with self.subTest(player=tp.player):
+                # Did this player playe the newly-saved Round?
+                if RoundPlayer.objects.filter(player=tp.player, the_round=r).exists():
+                    self.assertNotAlmostEqual(tp.score, scores[tp])
+                    tp.score = scores[tp]
+                else:
+                    # Tournament score should be unchanged
+                    self.assertEqual(tp.score, scores[tp])
+                for rp in tp.roundplayers():
+                    with self.subTest(player=rp.player, round_num=rp.the_round.number()):
+                        if rp.the_round == r:
+                            # All scores in this round should have changed
+                            self.assertNotAlmostEqual(rp.score, scores[rp])
+                            rp.score = scores[rp]
+                            for gp in rp.gameplayers():
+                                with self.subTest(player=gp.player, game_name=gp.game.name):
+                                    self.assertNotAlmostEqual(gp.score, scores[gp])
+                                    gp.score = scores[gp]
+                        else:
+                            # Other rounds should be unchanged
+                            self.assertEqual(rp.score, scores[rp])
+                            for gp in rp.gameplayers():
+                                with self.subTest(player=gp.player, game_name=gp.game.name):
+                                    self.assertEqual(gp.score, scores[gp])
 
 
 class GameTests(TestCase):

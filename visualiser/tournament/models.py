@@ -1520,7 +1520,7 @@ class Round(models.Model):
         """
         Save the object to the database.
 
-        Updates score attributes of any RoundPlayers and TournamentPlayers.
+        Updates score attributes of any GamePlayers, RoundPlayers and TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
@@ -1530,7 +1530,9 @@ class Round(models.Model):
         except ValidationError:
             pass
         else:
-            self.update_scores()
+            # Re-score all Games. This will call self.update_scores()
+            for g in self.game_set.all():
+                g.update_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
