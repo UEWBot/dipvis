@@ -844,7 +844,8 @@ class TournamentScoringTests(TestCase):
             for p, s in game_scores[g].items():
                 try:
                     with transaction.atomic():
-                        RoundPlayer.objects.create(player=p, the_round=g.the_round)
+                        # Give a dummy score that should get overwritten
+                        RoundPlayer.objects.create(player=p, the_round=g.the_round, score=10.0)
                 except IntegrityError:
                     # This player is playing two games this round
                     pass

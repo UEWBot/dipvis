@@ -395,7 +395,7 @@ class TScoringSumGames(TournamentScoringSystem):
                 if self.residual_multiplier == 0.0:
                     # Assume the round scores is dropped unless we find out otherwise
                     rp.score_dropped = True
-                    rp.save(update_fields=['score', 'score_dropped'])
+                rp.save(update_fields=['score', 'score_dropped'])
                 rounds.append(rp.the_round)
             player_scores = GamePlayer.objects.filter(player=p,
                                                       game__the_round__in=rounds).order_by('score')
