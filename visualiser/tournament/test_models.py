@@ -5761,7 +5761,21 @@ class RoundPlayerTests(TestCase):
 
     def test_roundplayer_score_is_final_sum_games(self):
         # TODO Tournament using TScoringSumGames scoring system
-        pass
+        # Score can change if there are more rounds that haven't started,
+        # or more rounds that the player is playing in that haven't finished
+        # unless they didn't play any games this round
+        # For now, let's make sure it gets called for a TScoringSumGames tournament
+        t = Tournament.objects.get(name='t1')
+        sys = t.tournament_scoring_system
+        t.tournament_scoring_system = T_SCORING_SYSTEMS[6].name
+        t.save()
+        self.assertFalse(t.tournament_scoring_system_obj().uses_round_scores)
+        r = t.round_numbered(1)
+        rp = r.roundplayer_set.get(player=self.p8)
+        self.assertFalse(rp.score_is_final())
+        # Cleanup
+        t.tournament_scoring_system = sys
+        t.save()
 
     # RoundPlayer.tournamentplayer()
     def test_round_player_tournamentplayer(self):

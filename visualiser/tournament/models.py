@@ -2182,7 +2182,7 @@ class RoundPlayer(models.Model):
         """
         if (self.score > 0.0) and not self.the_round.tournament.tournament_scoring_system_obj().uses_round_scores:
             # Any later rounds may change the score for this round
-            return self.the_round.tournament.score_is_final()
+            return self.tournamentplayer().score_is_final()
         if self.the_round.is_finished():
             return True
         # If any of this player's game scores aren't final, the round score isn't final
