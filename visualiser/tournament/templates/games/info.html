@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with game=game subject=subject %}DipTV - Game {{ game }} {{ subject }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with game=game subject=subject %}DipTV - Game {{ game }} {{ subject }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game subject=subject %}Game {{ game }}</a> {{ subject }}{% endblocktrans %}</h1>
@@ -10,4 +10,4 @@
         <li>{{ str }}</li>
     {% endfor %}
 </ul>
-{% endblock %}
+{% endblock content %}

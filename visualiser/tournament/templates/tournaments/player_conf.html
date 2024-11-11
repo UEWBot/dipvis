@@ -2,12 +2,12 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% trans "DipTV" %} - {{ tp.tournament }} {% trans "Player Data Entry Confirmation" %}{% endblock %}
+{% block title %}{% trans "DipTV" %} - {{ tp.tournament }} {% trans "Player Data Entry Confirmation" %}{% endblock title %}
 
 {% block content %}
 <h1>{% blocktrans with tournament=tp.tournament %} {{tournament}} Player Data Entry Confirmation {% endblocktrans %}</h1>
 
 <p>{% trans "Self-Check-In Done." %}</p>
 <p>{% blocktrans with url=tp.get_prefs_url %} If something comes up, you can go back to <a href="{{ url }}">that same page</a> to change whether you are playing or not. {% endblocktrans %}</p>
-{% endblock %}
-{% block footer %}{% endblock %}
+{% endblock content %}
+{% block footer %}{% endblock footer %}

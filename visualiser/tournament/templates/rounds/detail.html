@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Views{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Views{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Views{% endblocktrans %}</h1>
@@ -71,4 +71,4 @@
   {% endif %}
 </ul>
 {% endif %}
-{% endblock %}
+{% endblock content %}

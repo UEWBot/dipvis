@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 
-{% block title %}{% blocktrans with player=player %}DipTV - {{ player }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with player=player %}DipTV - {{ player }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1>{{ player }}</h1>
@@ -46,4 +46,4 @@
 </form>
 <br>
 <a href="{% url 'wep7' player.id %}">{% trans "WPE7 Scores" %}</a>
-{% endblock %}
+{% endblock content %}

@@ -7,7 +7,7 @@
 {% else %}
   {% blocktrans with game=game %}DipTV - Game {{ game }} Draw Vote{% endblocktrans %}
 {% endif %}
-{% endblock %}
+{% endblock title %}
 
 {% block content %}
 {% if concession %}
@@ -28,4 +28,4 @@
   {% endfor %}
   <input type="submit" value="{% trans "Submit" %}" />
 </form>
-{% endblock %}
+{% endblock content %}

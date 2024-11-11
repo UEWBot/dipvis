@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "DipTV - Frame Picker" %}{% endblock %}
+{% block title %}{% trans "DipTV - Frame Picker" %}{% endblock title %}
 
 {% block content %}
 {% trans "Pick a screen layout:" %}
@@ -46,4 +46,4 @@
   </li>
 </ul>
 <p>{% trans "All views also have a news ticker across the bottom. You can choose any URL in each frame. Most will auto-refresh." %}</p>
-{% endblock %}
+{% endblock content %}

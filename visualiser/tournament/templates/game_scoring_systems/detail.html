@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}DipTV - {{ system.name }}{% endblock %}
+{% block title %}DipTV - {{ system.name }}{% endblock title %}
 
 {% block content %}
 <h1>{{ system.name }}</h1>
@@ -38,4 +38,4 @@
   </table>
   </p>
 {%endfor %}
-{% endblock %}
+{% endblock content %}

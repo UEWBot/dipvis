@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "DipTV - Upload Game Position Image" %}{% endblock %}
+{% block title %}{% trans "DipTV - Upload Game Position Image" %}{% endblock title %}
 
 {% block content %}
 <h1>{% trans "Upload Game Position Image" %}</h1>
@@ -11,4 +11,4 @@
   {{ form }}<br>
   <input type="submit" value="{% trans "Submit" %}" />
 </form>
-{% endblock %}
+{% endblock content %}

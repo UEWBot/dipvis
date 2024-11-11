@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament subject=subject %}DipTV - {{ tournament }} {{ subject }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament subject=subject %}DipTV - {{ tournament }} {{ subject }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <marquee behavior="scroll" direction="left">
@@ -9,5 +9,5 @@
         {{ str }}
     {% endfor %}
 </marquee>
-{% endblock %}
-{% block footer %}{% endblock %}
+{% endblock content %}
+{% block footer %}{% endblock footer %}

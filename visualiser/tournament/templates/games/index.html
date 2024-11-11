@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with round=round %}DipTV - {{ round }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with round=round %}DipTV - {{ round }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ round.tournament.get_absolute_url }}">{{ round.tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with n=round.number %}Round {{ n }}{% endblocktrans %}</a></h1>
@@ -18,4 +18,4 @@
 {% else %}
     <p>{% trans "No games exist in the round." %}</p>
 {% endif %}
-{% endblock %}
+{% endblock content %}

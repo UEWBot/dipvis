@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Best Countries{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Best Countries{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Best Countries" %}</h1>
@@ -43,4 +43,4 @@
   </tbody>
 </table>
 <p>* - {% trans "unranked" %}</p>
-{% endblock %}
+{% endblock content %}

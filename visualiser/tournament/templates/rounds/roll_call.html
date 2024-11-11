@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Roll Call {% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Roll Call {% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Roll Call" %}</h1>
@@ -14,4 +14,4 @@
     <p>{% trans "If a player doesn't appear in the dropdown, you'll first have to add them to the database, which you can do from" %} <a href="{% url 'admin:tournament_player_add' %}">{% trans "this page" %}</a>.</p>
     {% include "formset_table.html" %}
 </form>
-{% endblock %}
+{% endblock content %}

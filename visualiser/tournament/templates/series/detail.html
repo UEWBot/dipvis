@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}DipTV - {{ object }}{% endblock %}
+{% block title %}DipTV - {{ object }}{% endblock title %}
 
 {% block content %}
 <h1>{{ object }}</h1>
@@ -15,4 +15,4 @@
   {% endfor %}
 </ul>
 <p><a href="{% url 'series_players' object.slug %}">{% trans "Series Players" %}</a></p>
-{% endblock %}
+{% endblock content %}

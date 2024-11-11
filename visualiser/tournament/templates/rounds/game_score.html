@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Game Scores{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament round=round.number %}DipTV - {{ tournament }} Round {{ round }} Game Scores{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> <a href="{{ round.get_absolute_url }}">{% blocktrans with round=round.number %}Round {{ round }}{% endblocktrans %}</a> {% trans "Games" %}</h1>
 <form method="post" action={% url 'game_scores' tournament.id round %}>
     {% include "formset_table.html" %}
 </form>
-{% endblock %}
+{% endblock content %}

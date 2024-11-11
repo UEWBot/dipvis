@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Self-Check-In Control{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Self-Check-In Control{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Self-Check-In Control" %}</h1>
@@ -17,4 +17,4 @@
   </table>
   <input type="submit" value="{% trans "Submit" %}" />
 </form>
-{% endblock %}
+{% endblock content %}

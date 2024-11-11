@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} import{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} import{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> external site import{% endblocktrans %}</h1>
@@ -17,4 +17,4 @@
     <li>{{ sco.owner.name }}: {{ sco.sc.name }}</li>
   {% endfor %}
 </ul>
-{% endblock %}
+{% endblock content %}

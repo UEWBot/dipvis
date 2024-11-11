@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with series=series %}DipTV - Tournament Series {{ series }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with series=series %}DipTV - Tournament Series {{ series }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ series.get_absolute_url }}">{{ series }}</a></h1>
@@ -62,4 +62,4 @@
 {% else %}
   <p>{% trans "No tournaments in the series." %}</p>
 {% endif %}
-{% endblock %}
+{% endblock content %}

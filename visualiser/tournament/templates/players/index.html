@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "DipTV - Player Index" %}{% endblock %}
+{% block title %}{% trans "DipTV - Player Index" %}{% endblock title %}
 
 {% block content %}
 <h1>{% trans "Player Index" %}</h1>
@@ -42,4 +42,4 @@
   {% endif %}
 {% endif %}
 
-{% endblock %}
+{% endblock content %}

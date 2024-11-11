@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 
-{% block title %}{% blocktrans with player1=player1 player2=player2 %}DipTV - {{ player1 }} versus {{ player2 }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with player1=player1 player2=player2 %}DipTV - {{ player1 }} versus {{ player2 }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1>{% blocktrans with player1=player1 player2=player2 %}{{ player1 }} versus {{ player2 }}{% endblocktrans %}</h1>
@@ -44,4 +44,4 @@
 {% else %}
 <p>{% trans "No records of any games with both these players" %}</p>
 {% endif %}
-{% endblock %}
+{% endblock content %}

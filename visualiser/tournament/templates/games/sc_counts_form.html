@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} Supply Centres{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with game=game %}DipTV - Game {{ game }} Supply Centres{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1>{% blocktrans with game=game %}Game {{ game }} Supply Centres{% endblocktrans %}</h1>
@@ -53,4 +53,4 @@
     </table>
     <input type="submit" value="{% trans "Submit" %}" />
 </form>
-{% endblock %}
+{% endblock content %}

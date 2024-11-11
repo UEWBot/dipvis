@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load admin_urls %}
 
-{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Data Entry" %}{% endblock %}
+{% block title %}{% trans "DipTV" %} - {{ tournament }} {% trans "Player Data Entry" %}{% endblock title %}
 
 {% block content %}
 <h1>{% blocktrans with tournament=tournament %} {{tournament}} Player Data Entry {% endblocktrans %}</h1>
@@ -44,5 +44,5 @@
   </table>
   <input type="submit" value="{% trans "Submit" %}" />
 </form>
-{% endblock %}
-{% block footer %}{% endblock %}
+{% endblock content %}
+{% block footer %}{% endblock footer %}

@@ -2,7 +2,7 @@
 {% load i18n %}
 {% load humanize %}
 
-{% block title %}{% blocktrans with player=player %}DipTV - {{ player }} WPE7{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with player=player %}DipTV - {{ player }} WPE7{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1>{{ player }} WPE7</h1>
@@ -23,4 +23,4 @@
     {% endfor %}
   </tbody>
 </table>
-{% endblock %}
+{% endblock content %}

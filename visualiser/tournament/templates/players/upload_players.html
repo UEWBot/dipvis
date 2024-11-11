@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "DipTV - Upload Players CSV" %}{% endblock %}
+{% block title %}{% trans "DipTV - Upload Players CSV" %}{% endblock title %}
 
 {% block content %}
 <h1>{% trans "Upload Players CSV" %}</h1>
@@ -27,4 +27,4 @@
          <button class="btn btn-primary">{% trans "Upload" %}</button>
     </div>
 </form>
-{% endblock %}
+{% endblock content %}

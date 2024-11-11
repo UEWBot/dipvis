@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Game Sandox Links{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Game Sandox Links{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <ul>
@@ -19,4 +19,4 @@
   {% endfor %}
 </ul>
 
-{% endblock %}
+{% endblock content %}

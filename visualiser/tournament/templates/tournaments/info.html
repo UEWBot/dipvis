@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% blocktrans with tournament=tournament subject=subject %}DipTV - {{ tournament }} {{ subject }}{% endblocktrans %}{% endblock %}
+{% block title %}{% blocktrans with tournament=tournament subject=subject %}DipTV - {{ tournament }} {{ subject }}{% endblocktrans %}{% endblock title %}
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ subject }}</h1>
@@ -10,4 +10,4 @@
         <li>{{ str }}</li>
     {% endfor %}
 </ul>
-{% endblock %}
+{% endblock content %}

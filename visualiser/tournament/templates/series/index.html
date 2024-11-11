@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load i18n %}
 
-{% block title %}{% trans "DipTV - Tournament Series Index" %}{% endblock %}
+{% block title %}{% trans "DipTV - Tournament Series Index" %}{% endblock title %}
 
 {% block content %}
 <h1>{% trans "Tournament Series Index" %}</h1>
@@ -14,4 +14,4 @@
 {% else %}
     <p>{% trans "No series exist in the database." %}</p>
 {% endif %}
-{% endblock %}
+{% endblock content %}

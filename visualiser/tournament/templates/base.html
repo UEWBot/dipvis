@@ -10,10 +10,10 @@
     {% if redirect_url %}
       <meta http-equiv="refresh" content="{{ redirect_time }}; url={{ redirect_url }}"/>
     {% endif %}
-    <title>{% block title %}{% trans "DipTV - Diplomacy Tournament Visualiser" %}{% endblock %}</title>
+    <title>{% block title %}{% trans "DipTV - Diplomacy Tournament Visualiser" %}{% endblock title %}</title>
 </head>
 
-{% block style %}{% endblock %}
+{% block style %}{% endblock style %}
 
 <body>
   {% if messages %}
@@ -24,13 +24,13 @@
     </ul>
   {% endif %}
   <div id="content">
-    {% block content %}{% endblock %}
+    {% block content %}{% endblock content %}
   </div>
   <div id="footer">
-    {% block footer %}<p>{% if not request.user.is_authenticated %}<a href="{% url 'login' %}?next={{ request.get_full_path }}">{% trans "login" %}</a>{% trans " Retrieved at " %}{% else %}{% blocktrans with user=request.user %}Retrieved by {{ user }} at {% endblocktrans %}{% endif %}{% now "SHORT_DATETIME_FORMAT" %}</p>{% endblock %}
+    {% block footer %}<p>{% if not request.user.is_authenticated %}<a href="{% url 'login' %}?next={{ request.get_full_path }}">{% trans "login" %}</a>{% trans " Retrieved at " %}{% else %}{% blocktrans with user=request.user %}Retrieved by {{ user }} at {% endblocktrans %}{% endif %}{% now "SHORT_DATETIME_FORMAT" %}</p>{% endblock footer %}
   </div>
 </body>
 
-{% block script %}{% endblock %}
+{% block script %}{% endblock script %}
 
 </html>
