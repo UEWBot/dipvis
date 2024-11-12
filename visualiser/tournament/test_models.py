@@ -47,7 +47,7 @@ from tournament.models import InvalidPreferenceList, InvalidPowerAssignmentMetho
 from tournament.models import PowerAlreadyAssigned
 from tournament.players import Player, MASK_ALL_BG
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
@@ -55,6 +55,7 @@ HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 HOURS_48 = timedelta(hours=48)
+HOURS_72 = timedelta(hours=72)
 
 s1 = "Solo or bust"
 s2 = "Sum of Squares"
@@ -1566,7 +1567,7 @@ class TournamentTests(TestCase):
         end = t.end_date
         # Move the end date of the Tournament and flag as delaying game URL display
         t.delay_game_url_publication = True
-        t.end_date = datetime.now() + HOURS_24
+        t.end_date = date.today() + HOURS_24
         t.save(update_fields=['delay_game_url_publication', 'end_date'])
         self.assertFalse(t.show_game_urls())
         # Clean up
@@ -1581,9 +1582,9 @@ class TournamentTests(TestCase):
         end = t.end_date
         # Move the end date of the Tournament and flag as delaying game URL display
         t.delay_game_url_publication = True
-        now = datetime.now()
-        t.start_date = now - HOURS_48
-        t.end_date = now - HOURS_24
+        today = date.today()
+        t.start_date = today - HOURS_72
+        t.end_date = today - HOURS_48
         t.save(update_fields=['delay_game_url_publication', 'start_date', 'end_date'])
         self.assertTrue(t.show_game_urls())
         # Clean up

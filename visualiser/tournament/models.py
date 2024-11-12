@@ -18,7 +18,7 @@ Django models file for the Diplomacy Tournament Visualiser.
 """
 
 from abc import ABC, abstractmethod
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 import inspect
 from operator import itemgetter
 from pathlib import Path
@@ -728,7 +728,7 @@ class Tournament(models.Model):
         if self.delay_game_url_publication:
             # Wait until 24 hours after the end of the last Round
             # (we ignore timezone issues - the delay doesn't have to be precise)
-            return (datetime.now() > self.end_date + timedelta(hours=24))
+            return (date.today() > self.end_date + timedelta(hours=24))
         return True
 
     def tournament_scoring_system_obj(self):
