@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
@@ -122,19 +122,19 @@ class PlayerTests(TestCase):
 
     # Player.tournamentplayers()
     def test_player_tournamentplayers(self):
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + timedelta(hours=24),
+                                       start_date=today,
+                                       end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        is_published=True)
         t1.save()
         t2 = Tournament.objects.create(name='t2',
-                                       start_date=now,
-                                       end_date=now + timedelta(hours=24),
+                                       start_date=today,
+                                       end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
@@ -264,7 +264,7 @@ class PlayerTests(TestCase):
                                game_name='Top Board',
                                player=p,
                                power=self.austria,
-                               date=timezone.now(),
+                               date=date.today(),
                                position=2)
         pgr.save()
         # TODO validate results
@@ -281,7 +281,7 @@ class PlayerTests(TestCase):
                                game_name='Top Board',
                                player=p,
                                power=self.austria,
-                               date=timezone.now(),
+                               date=date.today(),
                                position=2)
         pgr.save()
         bg = p.background()
@@ -356,7 +356,7 @@ class PlayerTests(TestCase):
                                 game_name='Top Board',
                                 player=p1,
                                 power=self.austria,
-                                date=timezone.now(),
+                                date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
                                 game_name=pgr1.game_name,
@@ -374,7 +374,7 @@ class PlayerTests(TestCase):
                                 game_name='Top Board',
                                 player=p1,
                                 power=self.austria,
-                                date=timezone.now(),
+                                date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name='Worst Tournament',
                                 game_name=pgr1.game_name,
@@ -392,7 +392,7 @@ class PlayerTests(TestCase):
                                 game_name='Top Board',
                                 player=p1,
                                 power=self.austria,
-                                date=timezone.now(),
+                                date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
                                 game_name='Bottom Board',
@@ -410,13 +410,13 @@ class PlayerTests(TestCase):
                                 game_name='Top Board',
                                 player=p1,
                                 power=self.austria,
-                                date=timezone.now(),
+                                date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
                                 game_name=pgr1.game_name,
                                 player=p2,
                                 power=self.russia,
-                                date=timezone.now(),
+                                date=date.today() + timedelta(hours=24),
                                 position=4)
         self.assertFalse(pgr1.for_same_game(pgr2))
 

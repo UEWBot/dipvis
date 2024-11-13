@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import date
 from urllib.parse import urlencode
 
 from django_countries import countries
@@ -21,7 +22,6 @@ from django_countries import countries
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.players import Player, PlayerGameResult
@@ -136,17 +136,17 @@ class PlayerViewTests(TestCase):
                                    last_name='Belligerent')
         # Add a shared game
         # Add in another result for a non-shared game
-        now = timezone.now()
+        today = date.today()
         pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
                                                game_name='R 2 B 1',
-                                               date=now,
+                                               date=today,
                                                player=self.p1,
                                                power=germany,
                                                position=2)
         # One with lots of blanks
         pgr2 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
                                                game_name='R 3 B 2',
-                                               date=now,
+                                               date=today,
                                                player=self.p1,
                                                power=england,
                                                position=3)

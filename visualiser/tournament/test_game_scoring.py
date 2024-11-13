@@ -14,8 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import date, datetime, time, timedelta, timezone
+from math import floor
+
 from django.test import TestCase
-from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -28,11 +30,6 @@ from tournament.models import DrawSecrecy, Seasons
 from tournament.models import find_game_scoring_system
 from tournament.tournament_game_state import TournamentGameState
 
-from datetime import timedelta
-from math import floor
-
-HOURS_8 = timedelta(hours=8)
-HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
 
 
@@ -45,20 +42,32 @@ class GameScoringTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
-        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
@@ -1593,20 +1602,32 @@ class CDiploNamurGameScoringTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
-        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
@@ -1825,20 +1846,32 @@ class WorldClassicGameScoringTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
-        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
@@ -2066,20 +2099,32 @@ class CarnageGameScoringTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
-        r12 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_8)
-        r13 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_16)
-        Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date + HOURS_24)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
@@ -2444,17 +2489,20 @@ class Detour09GameScoringTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=cls.set1)
@@ -2765,17 +2813,20 @@ class MaxonianGameScoringTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1, scoring_system=s1, dias=True, start=t1.start_date)
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)

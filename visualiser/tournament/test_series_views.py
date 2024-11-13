@@ -14,11 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Formats
@@ -30,23 +29,23 @@ class SeriesViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         # Three Tournaments
-        now = timezone.now()
+        today = date.today()
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + timedelta(hours=24),
+                                       start_date=today,
+                                       end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
         t2 = Tournament.objects.create(name='t2',
-                                       start_date=now,
-                                       end_date=now + timedelta(hours=24),
+                                       start_date=today,
+                                       end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        format=Formats.VFTF)
         t3 = Tournament.objects.create(name='t3',
-                                       start_date=now,
-                                       end_date=now + timedelta(hours=24),
+                                       start_date=today,
+                                       end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)

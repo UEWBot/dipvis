@@ -14,12 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from django_countries.fields import Country
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -45,12 +44,12 @@ class WddViewTests(TestCase):
         russia = GreatPower.objects.get(abbreviation='R')
         turkey = GreatPower.objects.get(abbreviation='T')
 
-        now = timezone.now()
+        today = date.today()
 
         # Published Tournament so it's visible to all
         cls.t = Tournament.objects.create(name='t1',
-                                          start_date=now,
-                                          end_date=now + timedelta(hours=24),
+                                          start_date=today,
+                                          end_date=today + timedelta(hours=24),
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                           draw_secrecy=DrawSecrecy.SECRET,
@@ -70,23 +69,23 @@ class WddViewTests(TestCase):
         r1 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=False,
-                                  start=cls.t.start_date)
+                                  start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
         r2 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=cls.t.start_date + timedelta(hours=24),
+                                  start=r1.start + timedelta(hours=24),
                                   final_year=1907)
         # Two Games in the first Round, top board in the second
         g1 = Game.objects.create(name="R1G1",
-                                 started_at=cls.t.start_date,
+                                 started_at=r1.start,
                                  the_round=r1,
                                  the_set=GameSet.objects.first())
         g2 = Game.objects.create(name="R1G2",
-                                 started_at=cls.t.start_date,
+                                 started_at=r1.start,
                                  the_round=r1,
                                  the_set=GameSet.objects.first())
         g3 = Game.objects.create(name="TopBoard",
-                                 started_at=cls.t.start_date + timedelta(hours=24),
+                                 started_at=r2.start + timedelta(hours=24),
                                  the_round=r2,
                                  the_set=GameSet.objects.first(),
                                  is_top_board=True)

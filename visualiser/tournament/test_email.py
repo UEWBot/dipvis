@@ -14,11 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from django.core import mail
 from django.test import TestCase, override_settings
-from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -55,11 +54,11 @@ class EmailTests(TestCase):
 
         s = GameSet.objects.get(name='Avalon Hill')
 
-        now = timezone.now()
+        today = date.today()
 
         cls.t1 = Tournament.objects.create(name='t1',
-                                           start_date=now,
-                                           end_date=now + timedelta(hours=24),
+                                           start_date=today,
+                                           end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET)
@@ -67,12 +66,12 @@ class EmailTests(TestCase):
         r1 = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=cls.t1.start_date)
+                                 start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)))
 
         r2 = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=cls.t1.start_date + timedelta(hours=8))
+                                 start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=timezone.utc)))
 
         g1 = Game.objects.create(name='g1',
                                  started_at=r1.start,
@@ -259,8 +258,8 @@ class EmailTests(TestCase):
 
         # Tournament with preferences
         cls.t2 = Tournament.objects.create(name='t2',
-                                           start_date=now,
-                                           end_date=now + timedelta(hours=24),
+                                           start_date=today,
+                                           end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,

@@ -25,7 +25,7 @@ This module provides utility functions for DipVis.
 import csv
 import requests
 from bs4 import BeautifulSoup
-from datetime import timedelta
+from datetime import datetime, time, timezone
 
 from django_countries.fields import Country
 
@@ -564,7 +564,7 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
             r = Round.objects.create(tournament=t,
                                      scoring_system='Dixie',
                                      dias=False,
-                                     start=t.start_date + timedelta(hours=r_num))
+                                     start=datetime.combine(t.start_date, time(hour=r_num, tzinfo=timezone.utc)))
             # Create 4 Games
             for g_num in range(1,5):
                 g = Game.objects.create(name=_generate_game_name(r_num, g_num),

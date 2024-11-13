@@ -14,11 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 import tournament
 
@@ -39,10 +38,10 @@ class ViewIndexTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_tournamentplayer_index(self):
-        now = timezone.now()
+        today = date.today()
         t = Tournament.objects.create(name='A Tournament',
-                                      start_date=now,
-                                      end_date=now + timedelta(hours=24),
+                                      start_date=today,
+                                      end_date=today + timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -53,10 +52,10 @@ class ViewIndexTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_round_index(self):
-        now = timezone.now()
+        today = date.today()
         t = Tournament.objects.create(name='A Tournament',
-                                      start_date=now,
-                                      end_date=now + timedelta(hours=24),
+                                      start_date=today,
+                                      end_date=today + timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -67,10 +66,10 @@ class ViewIndexTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_game_index(self):
-        now = timezone.now()
+        today = date.today()
         t = Tournament.objects.create(name='A Tournament',
-                                      start_date=now,
-                                      end_date=now + timedelta(hours=24),
+                                      start_date=today,
+                                      end_date=today + timedelta(hours=24),
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET,
@@ -78,7 +77,7 @@ class ViewIndexTests(TestCase):
         Round.objects.create(tournament=t,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=False,
-                             start=t.start_date)
+                             start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
         response = self.client.get(reverse('game_index',
                                            args=(t.id, 1)),
                                    secure=True)

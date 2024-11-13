@@ -14,13 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta, timezone
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -87,11 +86,11 @@ class RoundViewTests(TestCase):
         cls.p14 = Player.objects.create(first_name='Nigel',
                                         last_name='Notorious')
 
-        now = timezone.now()
+        today = date.today()
         # Published Tournament so it's visible to all
         cls.t1 = Tournament.objects.create(name='t1',
-                                           start_date=now,
-                                           end_date=now + timedelta(hours=24),
+                                           start_date=today,
+                                           end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -101,7 +100,7 @@ class RoundViewTests(TestCase):
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t1.start_date)
+                                       start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)))
         # Add TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t1)
@@ -146,8 +145,8 @@ class RoundViewTests(TestCase):
 
         # Published Tournament so it's visible to all. PREFERENCES power assignment
         cls.t2 = Tournament.objects.create(name='t2',
-                                           start_date=now,
-                                           end_date=now + timedelta(hours=24),
+                                           start_date=today,
+                                           end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -156,15 +155,15 @@ class RoundViewTests(TestCase):
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t2.start_date)
+                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=timezone.utc)))
         cls.r22 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t2.start_date + timedelta(hours=24))
+                                       start=cls.r21.start + timedelta(hours=24))
         cls.r23 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t2.start_date + timedelta(hours=48))
+                                       start=cls.r21.start + timedelta(hours=48))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t2)
         TournamentPlayer.objects.create(player=cls.p2,
@@ -202,8 +201,8 @@ class RoundViewTests(TestCase):
 
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t3 = Tournament.objects.create(name='t3',
-                                           start_date=now,
-                                           end_date=now + timedelta(hours=24),
+                                           start_date=today,
+                                           end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -213,11 +212,11 @@ class RoundViewTests(TestCase):
         cls.r31 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t3.start_date)
+                                       start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=timezone.utc)))
         cls.r32 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t3.start_date + timedelta(hours=24))
+                                       start=cls.r31.start + timedelta(hours=24))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t3)
         cls.tp2 = TournamentPlayer.objects.create(player=cls.p2,
@@ -257,7 +256,7 @@ class RoundViewTests(TestCase):
         RoundPlayer.objects.create(player=cls.p9, the_round=cls.r32)
         # Add a single Game to the first Round
         g = Game.objects.create(name='T3R1G1',
-                                started_at=cls.t3.start_date,
+                                started_at=cls.r31.start,
                                 is_finished=True,
                                 the_round=cls.r31,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
@@ -271,8 +270,8 @@ class RoundViewTests(TestCase):
 
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t4 = Tournament.objects.create(name='t4',
-                                           start_date=now,
-                                           end_date=now + timedelta(hours=24),
+                                           start_date=today,
+                                           end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
@@ -282,7 +281,7 @@ class RoundViewTests(TestCase):
         cls.r41 = Round.objects.create(tournament=cls.t4,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=cls.t4.start_date)
+                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=timezone.utc)))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t4)
         TournamentPlayer.objects.create(player=cls.p2,
@@ -312,7 +311,7 @@ class RoundViewTests(TestCase):
         RoundPlayer.objects.create(player=cls.p9, the_round=cls.r41)
         # Add two finished Games to the Round
         g1 = Game.objects.create(name='T4R1G1',
-                                 started_at=cls.t4.start_date,
+                                 started_at=cls.r41.start,
                                  is_finished=True,
                                  the_round=cls.r41,
                                  the_set=GameSet.objects.get(name='Avalon Hill'))
@@ -324,7 +323,7 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=cls.p7, game=g1, power=cls.england, score=6)
         GamePlayer.objects.create(player=cls.p8, game=g1, power=cls.austria, score=7)
         g2 = Game.objects.create(name='T4R1G2',
-                                 started_at=cls.t4.start_date,
+                                 started_at=cls.r41.start,
                                  is_finished=True,
                                  the_round=cls.r41,
                                  the_set=GameSet.objects.get(name='Avalon Hill'))
@@ -923,7 +922,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
         g = Game.objects.create(name='T3R2G1',
-                                started_at=self.t3.start_date,
+                                started_at=self.r32.start,
                                 is_finished=True,
                                 the_round=self.r32,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
@@ -974,7 +973,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
         g = Game.objects.create(name='T3R2G1',
-                                started_at=self.t3.start_date,
+                                started_at=self.r32.start,
                                 is_finished=True,
                                 the_round=self.r32,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
@@ -1019,7 +1018,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
         g = Game.objects.create(name='T3R2G1',
-                                started_at=self.t3.start_date,
+                                started_at=self.r32.start,
                                 is_finished=True,
                                 the_round=self.r32,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
@@ -1064,7 +1063,7 @@ class RoundViewTests(TestCase):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
         g = Game.objects.create(name='T3R2G1',
-                                started_at=self.t3.start_date,
+                                started_at=self.r32.start,
                                 is_finished=True,
                                 the_round=self.r32,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))

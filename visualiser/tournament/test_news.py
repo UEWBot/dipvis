@@ -14,10 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import timedelta
+from datetime import date, datetime, time, timedelta, timezone
 
 from django.test import TestCase
-from django.utils import timezone
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
@@ -50,17 +49,17 @@ class NewsTests(TestCase):
 
         s1 = G_SCORING_SYSTEMS[0].name
 
-        now = timezone.now()
+        today = date.today()
 
         t1 = Tournament.objects.create(name='t1',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
-                                       start_date=now,
-                                       end_date=now + HOURS_24,
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.COUNTS)
@@ -69,31 +68,31 @@ class NewsTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=t1.start_date)
+                                   start=datetime.combine(t1.start_date, time(hour=9, tzinfo=timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=t1.start_date + HOURS_8)
+                                   start=r11.start + HOURS_8)
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=t1.start_date + HOURS_16)
+                                   start=r11.start + HOURS_16)
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
                              dias=True,
-                             start=t1.start_date + HOURS_24)
+                             start=r11.start + HOURS_24)
         # Add Rounds to t3
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=t3.start_date,
+                                   start=datetime.combine(t3.start_date, time(hour=9, tzinfo=timezone.utc)),
                                    final_year=1907)
         r32 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=t3.start_date + HOURS_8,
-                                   earliest_end_time=t3.start_date + HOURS_8,
-                                   latest_end_time=t3.start_date + HOURS_9)
+                                   start=r31.start + HOURS_8,
+                                   earliest_end_time=r31.start + HOURS_8,
+                                   latest_end_time=r31.start + HOURS_9)
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11',
