@@ -1506,17 +1506,6 @@ class Round(models.Model):
         random.shuffle(results)
         return results
 
-    def clean(self):
-        """
-        Validate the object.
-
-        Must have either both end times, or neither.
-        """
-        if self.earliest_end_time and not self.latest_end_time:
-            raise ValidationError(_(u'Earliest end time specified without latest end time'))
-        if self.latest_end_time and not self.earliest_end_time:
-            raise ValidationError(_(u'Latest end time specified without earliest end time'))
-
     def save(self, *args, **kwargs):
         """
         Save the object to the database.

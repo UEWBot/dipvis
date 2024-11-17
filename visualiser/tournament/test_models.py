@@ -3337,7 +3337,7 @@ class RoundTests(TestCase):
                 r.background(mask=mask)
             mask *= 2
 
-    # Round.clean()
+    # Round constraints (full_clean())
     def test_round_clean_missing_earliest_end(self):
         t = Tournament.objects.get(name='t1')
         s1 = G_SCORING_SYSTEMS[0].name
@@ -3347,7 +3347,7 @@ class RoundTests(TestCase):
                   dias=True,
                   start=start,
                   latest_end_time=start + HOURS_10)
-        self.assertRaises(ValidationError, r.clean)
+        self.assertRaises(ValidationError, r.full_clean)
 
     def test_round_clean_missing_latest_end(self):
         t = Tournament.objects.get(name='t1')
@@ -3358,19 +3358,7 @@ class RoundTests(TestCase):
                   dias=True,
                   start=start,
                   earliest_end_time=start + HOURS_9)
-        self.assertRaises(ValidationError, r.clean)
-
-    def test_round_clean_ok(self):
-        t = Tournament.objects.get(name='t1')
-        s1 = G_SCORING_SYSTEMS[0].name
-        start = datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc))
-        r = Round(tournament=t,
-                  scoring_system=s1,
-                  dias=True,
-                  start=start,
-                  earliest_end_time=start + HOURS_9,
-                  latest_end_time=start + HOURS_10)
-        r.clean()
+        self.assertRaises(ValidationError, r.full_clean)
 
     # Round.get_absolute_url()
     def test_round_get_absolute_url(self):
