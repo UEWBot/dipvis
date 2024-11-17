@@ -6330,7 +6330,7 @@ class GameImageTests(TestCase):
         gi = GameImage.objects.get(game=g)
         self.assertEqual(gi.turn_str(), 'S1901M')
 
-    # GameImage.clean()
+    # GameImage constraints(full_clean())
     def test_gameimage_clean(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
@@ -6340,18 +6340,7 @@ class GameImageTests(TestCase):
                         season=Seasons.SPRING,
                         phase=Phases.ADJUSTMENTS,
                         image=gi1.image)
-        self.assertRaises(ValidationError, gi2.clean)
-
-    def test_gameimage_clean_ok(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g12')
-        gi1 = GameImage.objects.get(game=g)
-        gi2 = GameImage(game=g,
-                        year=1902,
-                        season=Seasons.FALL,
-                        phase=Phases.ADJUSTMENTS,
-                        image=gi1.image)
-        gi2.clean()
+        self.assertRaises(ValidationError, gi2.full_clean)
 
     # GameImage.get_absolute_url()
     def test_game_image_get_absolute_url(self):

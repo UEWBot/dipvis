@@ -2526,6 +2526,8 @@ class GameImage(models.Model):
                                    name='%(class)s_phase_valid'),
             models.UniqueConstraint(fields=['game', 'year', 'season', 'phase'],
                                     name='unique_game_year_season_phase'),
+            models.CheckConstraint(check=~(Q(season=Seasons.SPRING) & Q(phase=Phases.ADJUSTMENTS)),
+                                   name="phase_season_combo_valid"),
         ]
         ordering = ['game', 'year', '-season', 'phase']
 
@@ -2536,16 +2538,6 @@ class GameImage(models.Model):
         e.g. 'S1901M'
         """
         return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
-
-    def clean(self):
-        """
-        Validate the object.
-
-        The phase attribute can only be set to ADJUSTMENTS when the season
-        attribute is set to FALL.
-        """
-        if self.season == Seasons.SPRING and self.phase == Phases.ADJUSTMENTS:
-            raise ValidationError(_(u'No adjustment phase in spring'))
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
