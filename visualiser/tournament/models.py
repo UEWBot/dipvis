@@ -2598,7 +2598,7 @@ class CentreCount(models.Model):
         if any.
         The count attribute cannot be more than double that for the same power
         in the previous year.
-        If the count for this power for any preivous year was zero,
+        If the count for this power for any previous year was zero,
         the count attribute must be zero.
         """
         # Is this for a year that is supposed to be played ?
