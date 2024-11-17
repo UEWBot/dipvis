@@ -1037,7 +1037,7 @@ class TournamentViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # page should contain an error
-        self.assertContains(response, 'players must differ')
+        self.assertContains(response, 'players_must_differ')
         # ... and no SeederBias should be created
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)
 

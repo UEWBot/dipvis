@@ -1320,17 +1320,16 @@ class SeederBias(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['player1', 'player2'],
                                     name='unique_player_pair'),
+            models.CheckConstraint(check=~models.Q(player1=models.F("player2")),
+                                   name='players_must_differ'),
         ]
 
     def clean(self):
         """
         Validate the object.
 
-        player1 != player2.
         All players are from the same Tournament.
         """
-        if self.player1 == self.player2:
-            raise ValidationError(_('The players must differ'))
         if self.player1.tournament != self.player2.tournament:
             raise ValidationError(_('The players must be playing the same tournament'))
 

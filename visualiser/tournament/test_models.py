@@ -2762,14 +2762,6 @@ class SeederBiasTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
 
     # SeederBias.clean()
-    def test_seederbias_clean_clone(self):
-        '''Same player twice'''
-        t = Tournament.objects.get(name='t1')
-        tp1 = t.tournamentplayer_set.first()
-        sb = SeederBias(player1=tp1,
-                        player2=tp1)
-        self.assertRaises(ValidationError, sb.clean)
-
     def test_seederbias_clean_mixup(self):
         '''Two players from different tournaments'''
         t = Tournament.objects.get(name='t1')
