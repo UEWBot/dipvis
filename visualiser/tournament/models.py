@@ -1907,10 +1907,8 @@ class Game(models.Model):
 
         Game names must be unique within the tournament.
         """
-        games = Game.objects.filter(the_round__tournament=self.the_round.tournament).distinct()
-        for g in games:
-            if (self != g) and (self.name == g.name):
-                raise ValidationError(_('Game names must be unique within the tournament'))
+        if Game.objects.filter(the_round__tournament=self.the_round.tournament).exclude(pk=self.pk).filter(name=self.name).exists():
+            raise ValidationError(_('Game names must be unique within the tournament'))
 
     def save(self, *args, **kwargs):
         """

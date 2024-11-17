@@ -4472,6 +4472,10 @@ class GameTests(TestCase):
                   the_set=g1.the_set)
         self.assertRaises(ValidationError, g2.clean)
 
+    def test_game_clean_non_unique_name_2(self):
+        g1 = Game.objects.first()
+        g1.clean()
+
     # Game.save()
     def test_game_save_new_game(self):
         g1 = Game.objects.first()
