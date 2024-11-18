@@ -382,7 +382,7 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         # Should redirect to itself
-        self.assertIn('sc_graphs/T3R1G1/'.encode('utf-8'), response.content)
+        self.assertContains(response, 'sc_graphs/T3R1G1/')
 
     def test_game_cycle_two_games(self):
         response = self.client.get(reverse('round_sc_graphs',
@@ -390,13 +390,13 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         # Should redirect to game 2
-        self.assertIn('sc_graphs/T4R1G2/'.encode('utf-8'), response.content)
+        self.assertContains(response, 'sc_graphs/T4R1G2/')
         response = self.client.get(reverse('round_sc_graphs_from_game',
                                            args=(self.t4.pk, 1, 'T4R1G2')),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         # Should redirect back to game 1
-        self.assertIn('sc_graphs/T4R1G1/'.encode('utf-8'), response.content)
+        self.assertContains(response, 'sc_graphs/T4R1G1/')
 
     def test_roll_call_not_logged_in(self):
         response = self.client.get(reverse('round_roll_call',

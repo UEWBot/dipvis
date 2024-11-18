@@ -441,9 +441,9 @@ class WddViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Check CSV file content
         # first, last, homonym, rank, exaequo, location, nationality
-        self.assertIn(b'Cassandra,Cucumber,1,8,1,', response.content)
-        self.assertIn(b'Harry,Heffalump,1,3,1,USA,ANG,', response.content)
-        self.assertIn(b'Iris,Ignoramus,1,999,1,', response.content)
+        self.assertContains(response, 'Cassandra,Cucumber,1,8,1,')
+        self.assertContains(response, 'Harry,Heffalump,1,3,1,USA,ANG,')
+        self.assertContains(response, 'Iris,Ignoramus,1,999,1,')
 
     def test_classification_no_top_board(self):
         # Switch the top board to a regular board

@@ -161,7 +161,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(NOTE.encode('utf-8'), response.content)
+        self.assertContains(response, NOTE)
 
     def test_detail_no_powers(self):
         # Add some GamePlayers, but don't assign powers
@@ -284,7 +284,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(VALID_BS_URL.encode('utf-8'), response.content)
+        self.assertContains(response, VALID_BS_URL)
         # Clean up
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
