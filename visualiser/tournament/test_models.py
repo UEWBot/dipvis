@@ -3686,6 +3686,15 @@ class GameTests(TestCase):
 
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):
+        scores = {
+            self.p1: 30.0,
+            self.p2: 25.0,
+            self.p3: 20.0,
+            self.p4: 10.0,
+            self.p5: 7.0,
+            self.p6: 7.0,
+            self.p7: 1.0,
+        }
         today = date.today()
         t = Tournament(name='t5',
                        start_date=today,
@@ -3720,19 +3729,19 @@ class GameTests(TestCase):
                   is_finished=True,
                   the_set=self.set1)
         g1.save()
-        rp = RoundPlayer(the_round=r1, player=self.p1, score=30.0)
+        rp = RoundPlayer(the_round=r1, player=self.p1)
         rp.save()
-        rp = RoundPlayer(the_round=r1, player=self.p2, score=25.0)
+        rp = RoundPlayer(the_round=r1, player=self.p2)
         rp.save()
-        rp = RoundPlayer(the_round=r1, player=self.p3, score=20.0)
+        rp = RoundPlayer(the_round=r1, player=self.p3)
         rp.save()
-        rp = RoundPlayer(the_round=r1, player=self.p4, score=10.0)
+        rp = RoundPlayer(the_round=r1, player=self.p4)
         rp.save()
-        rp = RoundPlayer(the_round=r1, player=self.p5, score=7.0)
+        rp = RoundPlayer(the_round=r1, player=self.p5)
         rp.save()
-        rp = RoundPlayer(the_round=r1, player=self.p6, score=7.0)
+        rp = RoundPlayer(the_round=r1, player=self.p6)
         rp.save()
-        rp = RoundPlayer(the_round=r1, player=self.p7, score=1.0)
+        rp = RoundPlayer(the_round=r1, player=self.p7)
         rp.save()
         # Now we can do the round for the game we want to seed
         r2 = Round(tournament=t,
@@ -3774,6 +3783,10 @@ class GameTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g2, player=self.p7)
         gp.save()
+        # Set the TournamentPlayer scores as we need them
+        for tp in t.tournamentplayer_set.all():
+            tp.score = scores[tp.player]
+            tp.save()
         # Now add preferences for some players
         p = Preference(player=tp1, power=self.austria, ranking=1)
         p.save()
@@ -4581,23 +4594,12 @@ class GameTests(TestCase):
                   is_finished=False,
                   the_set=self.set1)
         g2.save()
+        self.assertFalse(r.is_finished())
+        self.assertFalse(t.is_finished())
         g1.is_finished = True
         g1.save(update_fields=['is_finished'])
-        # Scores should be recorded for the game
-        for gp in g1.gameplayer_set.all():
-            with self.subTest(player=gp.player):
-                if gp.power == self.russia:
-                    self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
-        # And propagated to the Round
-        for rp in r.roundplayer_set.all():
-            with self.subTest(player=rp.player):
-                gp = g1.gameplayer_set.get(player=rp.player)
-                if gp.power == self.russia:
-                    self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
+        self.assertFalse(r.is_finished())
+        self.assertFalse(t.is_finished())
         # Note that this will also delete all associated objects
         t.delete()
 
@@ -4625,29 +4627,37 @@ class GameTests(TestCase):
         tp.save()
         tp = TournamentPlayer(tournament=t, player=self.p7)
         tp.save()
-        r = Round(tournament=t,
-                  scoring_system='Sum of Squares',
-                  dias=True,
-                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
-        r.save()
-        rp = RoundPlayer(the_round=r, player=self.p1)
+        # Include a player who didn't play any games
+        tp = TournamentPlayer(tournament=t, player=self.p8)
+        tp.save()
+        r1 = Round(tournament=t,
+                   scoring_system='Sum of Squares',
+                   dias=True,
+                   start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r1.save()
+        rp = RoundPlayer(the_round=r1, player=self.p1)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p2)
+        rp = RoundPlayer(the_round=r1, player=self.p2)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p3)
+        rp = RoundPlayer(the_round=r1, player=self.p3)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p4)
+        rp = RoundPlayer(the_round=r1, player=self.p4)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p5)
+        rp = RoundPlayer(the_round=r1, player=self.p5)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p6)
+        rp = RoundPlayer(the_round=r1, player=self.p6)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p7)
+        rp = RoundPlayer(the_round=r1, player=self.p7)
         rp.save()
+        r2 = Round(tournament=t,
+                   scoring_system='Sum of Squares',
+                   dias=True,
+                   start=datetime.combine(t.start_date, time(hour=16, tzinfo=timezone.utc)))
+        r2.save()
         g1 = Game(name='newgame1',
-                  started_at=r.start,
-                  the_round=r,
-                  is_finished=False,
+                  started_at=r1.start,
+                  the_round=r1,
+                  is_finished=True,
                   the_set=self.set1)
         g1.save()
         gp = GamePlayer(game=g1, player=self.p1, power=self.austria)
@@ -4664,29 +4674,20 @@ class GameTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
         gp.save()
-        g1.is_finished = True
-        g1.save(update_fields=['is_finished'])
-        # Scores should be recorded for the game
-        for gp in g1.gameplayer_set.all():
-            with self.subTest(player=gp.player):
-                if gp.power == self.russia:
-                    self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
-        # And for the Round
-        for rp in r.roundplayer_set.all():
-            with self.subTest(player=rp.player):
-                if rp.player == self.p6:
-                    self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
-        # And for the Tournament
-        for tp in t.tournamentplayer_set.all():
-            with self.subTest(player=tp.player):
-                if tp.player == self.p6:
-                    self.assertAlmostEqual(tp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(tp.score, 100.0 * 9 / 70)
+        # Add a second, ongoing, game
+        g2 = Game(name='newgame2',
+                  started_at=r1.start,
+                  the_round=r1,
+                  is_finished=False,
+                  the_set=self.set1)
+        g2.save()
+        self.assertFalse(r1.is_finished())
+        self.assertFalse(t.is_finished())
+        g2.is_finished = True
+        g2.save(update_fields=['is_finished'])
+        # Round but not Tournament should now be flagged as finished
+        self.assertTrue(r1.is_finished())
+        self.assertFalse(t.is_finished())
         # Note that this will also delete all associated objects
         t.delete()
 
@@ -4714,9 +4715,6 @@ class GameTests(TestCase):
         tp.save()
         tp = TournamentPlayer(tournament=t, player=self.p7)
         tp.save()
-        # Include a player who didn't play any games
-        tp = TournamentPlayer(tournament=t, player=self.p8)
-        tp.save()
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
@@ -4756,30 +4754,13 @@ class GameTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
         gp.save()
-        # Add a second, ongoing, game
-        g2 = Game(name='newgame2',
-                  started_at=r.start,
-                  the_round=r,
-                  is_finished=False,
-                  the_set=self.set1)
-        g2.save()
+        self.assertFalse(r.is_finished())
+        self.assertFalse(t.is_finished())
         g1.is_finished = True
         g1.save(update_fields=['is_finished'])
-        # Scores should be recorded for the game
-        for gp in g1.gameplayer_set.all():
-            with self.subTest(player=gp.player):
-                if gp.power == self.russia:
-                    self.assertAlmostEqual(gp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(gp.score, 100.0 * 9 / 70)
-        # And propagated to the Round
-        for rp in r.roundplayer_set.all():
-            with self.subTest(player=rp.player):
-                gp = g1.gameplayer_set.get(player=rp.player)
-                if gp.power == self.russia:
-                    self.assertAlmostEqual(rp.score, 100.0 * 16 / 70)
-                else:
-                    self.assertAlmostEqual(rp.score, 100.0 * 9 / 70)
+        # Round and Tournament should now be flagged as finished
+        self.assertTrue(r.is_finished())
+        self.assertTrue(t.is_finished())
         # Note that this will also delete all associated objects
         t.delete()
 
@@ -5872,9 +5853,8 @@ class RoundPlayerTests(TestCase):
         CentreCount.objects.create(power=self.russia, game=g, year=1903, count=5)
         CentreCount.objects.create(power=self.turkey, game=g, year=1903, count=4)
 
-        # Finish the game, so scores get calculated and stored
-        g.is_finished = True
-        g.save(update_fields=['is_finished'])
+        # Calculate the scores
+        g.update_scores()
 
         # Check that we have the scores we expect
         tp1 = t.tournamentplayer_set.get(player=self.p2)

@@ -1031,20 +1031,29 @@ class Tournament(models.Model):
         """
         Save the object to the database.
 
-        Updates score attributes of any RoundPlayers and TournamentPlayers.
+        If round_scoring_system may have changed, updates score attributes of any RoundPlayers
+        If tournament_scoring_system or handicap may have changed, updates score attributes of any TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
-        # Change may affect the scoring
-        try:
-            validate_round_scoring_system(self.round_scoring_system)
-            validate_tournament_scoring_system(self.tournament_scoring_system)
-        except ValidationError:
-            pass
-        else:
-            # Update all round scores. This will also call self.update_scores()
-            for r in self.round_set.all():
-                r.update_scores()
+        if ('update_fields' not in kwargs) or ('round_scoring_system' in kwargs['update_fields']) :
+            # Change may affect the scoring
+            try:
+                validate_round_scoring_system(self.round_scoring_system)
+            except ValidationError:
+                pass
+            else:
+                # Update all round scores. This will also call self.update_scores()
+                for r in self.round_set.all():
+                    r.update_scores()
+        if ('update_fields' not in kwargs) or ('tournament_scoring_system' in kwargs['update_fields']) or ('handicap' in kwargs['update_fields']):
+            # Change may affect the scoring
+            try:
+                validate_tournament_scoring_system(self.tournament_scoring_system)
+            except ValidationError:
+                pass
+            else:
+                self.update_scores()
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)
@@ -1506,19 +1515,21 @@ class Round(models.Model):
         """
         Save the object to the database.
 
-        Updates score attributes of any GamePlayers, RoundPlayers and TournamentPlayers.
+        If scoring_system attribute may have changed, updates score attributes of any
+        GamePlayers, RoundPlayers and TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
-        # Change may affect the scoring
-        try:
-            validate_round_scoring_system(self.tournament.round_scoring_system)
-        except ValidationError:
-            pass
-        else:
-            # Re-score all Games. This will call self.update_scores()
-            for g in self.game_set.all():
-                g.update_scores()
+        if ('update_fields' not in kwargs) or ('scoring_system' in kwargs['update_fields']) :
+            # Change may affect the scoring
+            try:
+                validate_game_scoring_system(self.scoring_system)
+            except ValidationError:
+                pass
+            else:
+                # Re-score all Games. This will call self.update_scores()
+                for g in self.game_set.all():
+                    g.update_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -1619,8 +1630,6 @@ class Game(models.Model):
         if (self.soloer() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
             self.save(update_fields=['is_finished'])
-        # CentreCounts may have changed, so re-calculate scores
-        self.update_scores()
 
     def create_or_update_sc_counts_from_ownerships(self, year):
         """
@@ -1629,8 +1638,8 @@ class Game(models.Model):
         Ensures that there is one CentreCount for each power for the
         specified year, and that the values match those determined by
         looking at the SupplyCentreOwnerships for that year.
-        Sets self.is_finished if self.final_year has been reached or
-        if the Game has been soloed.
+        Calls set_is_finished() to set self.is_finished appropriately.
+        Calls update_scores().
         Can raise SCOwnershipsNotFound.
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
@@ -1643,6 +1652,7 @@ class Game(models.Model):
                                                      year=year,
                                                      defaults={'count': all_scos.filter(owner=p).count()})
         self.set_is_finished(year)
+        self.update_scores()
 
     def compare_sc_counts_and_ownerships(self, year):
         """
@@ -1912,7 +1922,6 @@ class Game(models.Model):
 
         Ensures that 1901 SC counts and ownership info exists.
         Ensures that S1901M image exists.
-        Updates score attributes of any associated GamePlayers, RoundPlayers, and TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
@@ -1936,14 +1945,6 @@ class Game(models.Model):
                                            season=Seasons.SPRING,
                                            phase=Phases.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
-
-        # Change may affect the scoring
-        try:
-            validate_game_scoring_system(self.the_round.scoring_system)
-        except ValidationError:
-            pass
-        else:
-            self.update_scores()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -2127,6 +2128,8 @@ class DrawProposal(models.Model):
         if self.passed:
             self.game.is_finished = True
             self.game.save(update_fields=['is_finished'])
+            # That could change the scoring
+            self.game.update_scores()
 
     def __str__(self):
         return '%(game)s %(year)d%(season)s' % {'game': self.game,
