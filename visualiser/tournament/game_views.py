@@ -456,18 +456,19 @@ def sc_counts(request, tournament_id, game_name):
                            'tournament': t,
                            'game': g})
 
-        # Set the "game over" flag as appropriate
-        # Game is over if it reached the final year,
-        # somebody won, or the checkbox was checked
-        if end_form.cleaned_data['is_finished']:
-            g.is_finished = True
-            g.save(update_fields=['is_finished'])
-        else:
-            g.is_finished = False
-            g.save(update_fields=['is_finished'])
-            # Game could still be finished for other reasons
-            g.set_is_finished()
-        # Change is likely to affect the scores
+        if end_form.has_changed():
+            # Set the "game over" flag as appropriate
+            # Game is over if it reached the final year,
+            # somebody won, or the checkbox was checked
+            if end_form.cleaned_data['is_finished']:
+                g.is_finished = True
+                g.save(update_fields=['is_finished'])
+            else:
+                g.is_finished = False
+                g.save(update_fields=['is_finished'])
+                # Game could still be finished for other reasons
+                g.set_is_finished()
+        # Changes are likely to affect the scores
         g.update_scores()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',
