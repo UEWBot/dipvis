@@ -2266,10 +2266,12 @@ class TournamentTests(TestCase):
             with self.subTest(player=tp.player):
                 self.assertNotAlmostEqual(tp.score, scores[tp])
                 tp.score = scores[tp]
+                tp.save()
                 for rp in tp.roundplayers():
                     with self.subTest(player=rp.player, round_num=rp.the_round.number()):
                         self.assertNotAlmostEqual(rp.score, scores[rp])
                         rp.score = scores[rp]
+                        rp.save()
 
 
 @override_settings(HOSTNAME='example.com')
@@ -3390,10 +3392,11 @@ class RoundTests(TestCase):
         # Verify and cleanup
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
-                # Did this player playe the newly-saved Round?
+                # Did this player play the newly-saved Round?
                 if RoundPlayer.objects.filter(player=tp.player, the_round=r).exists():
                     self.assertNotAlmostEqual(tp.score, scores[tp])
                     tp.score = scores[tp]
+                    tp.save()
                 else:
                     # Tournament score should be unchanged
                     self.assertEqual(tp.score, scores[tp])
@@ -3403,10 +3406,12 @@ class RoundTests(TestCase):
                             # All scores in this round should have changed
                             self.assertNotAlmostEqual(rp.score, scores[rp])
                             rp.score = scores[rp]
+                            rp.save()
                             for gp in rp.gameplayers():
                                 with self.subTest(player=gp.player, game_name=gp.game.name):
                                     self.assertNotAlmostEqual(gp.score, scores[gp])
                                     gp.score = scores[gp]
+                                    gp.save()
                         else:
                             # Other rounds should be unchanged
                             self.assertEqual(rp.score, scores[rp])
