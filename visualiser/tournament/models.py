@@ -1661,7 +1661,8 @@ class Game(models.Model):
         Checks whether the Game has been soloed or drawn or the final_year has been reached.
         If so, sets is_finished to True.
         Should be called whenever CentreCounts for a year have been added.
-        If year is not provided, uses the most recent year for the Game.
+        Year should be the most recent year for the Game, if known.
+        If year is not provided, it will be derived.
         """
         if year is None:
             year = self.final_year()
