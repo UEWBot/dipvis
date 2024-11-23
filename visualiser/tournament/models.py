@@ -896,10 +896,8 @@ class Tournament(models.Model):
         returned as [[B], [A, C]].
         """
         tuples = {}
-        # We're going to need to "if all games ended now" score for every GamePlayer
-        all_games = Game.objects.filter(the_round__tournament=self)
         # If no Games exist, return a dict of empty lists
-        if not all_games:
+        if not Game.objects.filter(the_round__tournament=self).exists():
             for power in GreatPower.objects.all():
                 tuples[power] = []
             return tuples
@@ -1264,7 +1262,7 @@ class TournamentPlayer(models.Model):
             self._generate_uuid()
         if self.tournament.power_assignment == PowerAssignMethods.PREFERENCES:
             path = reverse('player_prefs',
-                           args=[str(self.tournament.id), self.uuid_str])
+                           args=[str(self.tournament_id), self.uuid_str])
         else:
             raise InvalidPowerAssignmentMethod(self.tournament.power_assignment)
         return 'https://%(host)s%(path)s' % {'host': settings.HOSTNAME,
@@ -1279,7 +1277,7 @@ class TournamentPlayer(models.Model):
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
-        return reverse('tournament_player_detail', args=[str(self.tournament.id),
+        return reverse('tournament_player_detail', args=[str(self.tournament_id),
                                                          str(self.id)])
 
     def __str__(self):
@@ -1525,7 +1523,7 @@ class Round(models.Model):
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
         return reverse('round_detail',
-                       args=[str(self.tournament.id), str(self.number())])
+                       args=[str(self.tournament_id), str(self.number())])
 
     def __str__(self):
         return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament,
@@ -2496,7 +2494,7 @@ class GamePlayer(models.Model):
         """Returns the canonical URL for the object."""
         return reverse('aar', args=[str(self.game.the_round.tournament.id),
                                         self.game.name,
-                                        self.player.id])
+                                        self.player_id])
 
 
 class GameImage(models.Model):
