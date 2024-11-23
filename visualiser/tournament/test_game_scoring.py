@@ -1747,7 +1747,7 @@ class CDiploNamurGameScoringTests(TestCase):
                 elif sc.count == 8:
                     self.assertEqual(s, 1 + 20 + (38 + 14)/2)
                 else:
-                    raise AssertionError(f'Unexpected SC count {{sc.count}}')
+                    raise AssertionError(f'Unexpected SC count {sc.count}')
         self.check_score_order(scores)
 
     def test_g_scoring_cdiplo_namur_no_solo2(self):
@@ -1774,7 +1774,7 @@ class CDiploNamurGameScoringTests(TestCase):
                 elif sc.count == 13:
                     self.assertEqual(s, 1 + (18 + 7) + 38)
                 else:
-                    raise AssertionError(f'Unexpected SC count {{sc.count}}')
+                    raise AssertionError(f'Unexpected SC count {sc.count}')
         self.check_score_order(scores)
 
     def test_g_scoring_cdiplo_namur_no_solo3(self):
@@ -1797,7 +1797,7 @@ class CDiploNamurGameScoringTests(TestCase):
                 elif sc.count == 17:
                     self.assertEqual(s, 1 + (18 + 11) + 38)
                 else:
-                    raise AssertionError(f'Unexpected SC count {{sc.count}}')
+                    raise AssertionError(f'Unexpected SC count {sc.count}')
         self.check_score_order(scores)
 
     def test_g_scoring_cdiplo_namur_3way(self):
@@ -1816,7 +1816,7 @@ class CDiploNamurGameScoringTests(TestCase):
                 elif sc.count == 6:
                     self.assertEqual(s, 1 + 18 + (38 + 14 + 7)/3)
                 else:
-                    raise AssertionError(f'Unexpected SC count {{sc.count}}')
+                    raise AssertionError(f'Unexpected SC count {sc.count}')
         self.check_score_order(scores)
 
     def test_g_scoring_cdiplo_namur_solo(self):
