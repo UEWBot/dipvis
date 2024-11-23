@@ -294,8 +294,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         # Who's topping the board ?
         max_scs = current_scs.order_by('-count')[0].count
         first = current_scs.order_by('-count').filter(count=max_scs)
-        first_str = ', '.join(['%s (%s)' % (gps.get(power=scs.power).player,
-                                            _(scs.power.abbreviation)) for scs in list(first)])
+        first_str = ', '.join([f'{gps.get(power=scs.power).player} ({_(scs.power.abbreviation)}' for scs in list(first)])
         results.append(_(u'Highest SC count%(game)s is %(dots)d, for %(player)s.')
                        % {'game': gn_str,
                           'dots': max_scs,

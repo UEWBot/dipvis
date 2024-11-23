@@ -70,7 +70,7 @@ def round_simple(request, tournament_id, round_num, template):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     context = {'tournament': t, 'round': r}
-    return render(request, 'rounds/%s.html' % template, context)
+    return render(request, f'rounds/{template}.html', context)
 
 
 def board_call_csv(request, tournament_id, round_num):
@@ -225,16 +225,16 @@ def get_seven(request, tournament_id, round_num):
                 rp.game_count = 1
             rp.save(update_fields=['game_count'])
         for i in range(form.standbys):
-            rp = form.cleaned_data['standby_%d' % i]
+            rp = form.cleaned_data[f'standby_{i}']
             rp.game_count = 1
             rp.save(update_fields=['game_count'])
         for i in range(form.sitters):
-            rp = form.cleaned_data['sitter_%d' % i]
+            rp = form.cleaned_data[f'sitter_{i}']
             if rp:
                 rp.game_count = 0
                 rp.save(update_fields=['game_count'])
         for i in range(form.doubles):
-            rp = form.cleaned_data['double_%d' % i]
+            rp = form.cleaned_data[f'double_{i}']
             if rp:
                 rp.game_count = 2
                 rp.save(update_fields=['game_count'])

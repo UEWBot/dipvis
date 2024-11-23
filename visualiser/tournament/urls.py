@@ -54,7 +54,7 @@ class TurnConverter:
         return value
 
     def to_url(self, value):
-        return '%s' % value
+        return f'{value}'
 
 register_converter(TurnConverter, 'turn')
 

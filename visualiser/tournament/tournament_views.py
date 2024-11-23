@@ -122,7 +122,7 @@ def tournament_simple(request, tournament_id, template, context={}):
     """Just render the specified template with the tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     context['tournament'] = t
-    return render(request, 'tournaments/%s.html' % template, context)
+    return render(request, f'tournaments/{template}.html', context)
 
 
 def tournament_scores(request,
@@ -149,7 +149,7 @@ def tournament_scores(request,
                 rs.append(None)
             else:
                 rs.append(rp)
-        row = {'rank': '%d' % t_positions_and_scores[tp.player][0],
+        row = {'rank': f'{t_positions_and_scores[tp.player][0]}',
                'player': tp,
                'rounds': rs}
         scores.append(row)
@@ -157,7 +157,7 @@ def tournament_scores(request,
     scores.sort(key=lambda row: float(row['rank']))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
-        row['rank'] = row['rank'].replace('%d' % Tournament.UNRANKED, _('Unranked'))
+        row['rank'] = row['rank'].replace(f'{Tournament.UNRANKED}', _('Unranked'))
     context = {'tournament': t, 'scores': scores, 'rounds': rds}
     if refresh:
         context['refresh'] = True
@@ -284,11 +284,11 @@ def round_scores(request, tournament_id):
         for rp in tp.roundplayers():
             r = rp.the_round
             round_num = r.number()
-            current['round_%d' % round_num] = rp.score
+            current[f'round_{round_num}'] = rp.score
             # Scores for any games in the round
             games = GamePlayer.objects.filter(player=tp.player,
                                               game__the_round=r).distinct()
-            current['game_scores_%d' % round_num] = ', '.join([str(g.score) for g in games])
+            current[f'game_scores_{round_num}'] = ', '.join([str(g.score) for g in games])
         data.append(current)
     formset = PlayerRoundScoreFormset(request.POST or None,
                                       tournament=t,

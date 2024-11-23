@@ -155,9 +155,9 @@ class Game():
         if self.soloer is not None:
             self.result = 'Solo'
         elif self.ongoing:
-            self.result = '%d powers still alive' % alive
+            self.result = f'{alive} powers still alive'
         else:
-            self.result = '%d-way draw' % alive
+            self.result = f'{alive}-way draw'
 
     def _url_to_soup(self, url):
         """
@@ -194,7 +194,7 @@ class Game():
         orders is a dict, indexed by power, of dicts, indexed by province, of order dicts.
            The order dict may contain 'from', 'to', 'result', 'result_reason', 'type', 'to', and probably others.
         """
-        url = urljoin(self.url + '/', '%d/%s' % (year, season))
+        url = urljoin(self.url + '/', f'{year}/{season}')
         return self._parse_turn_page(url)
 
     def _parse_turn_page(self, url):

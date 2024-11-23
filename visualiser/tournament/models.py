@@ -1859,7 +1859,7 @@ class Game(models.Model):
         Returns a string representing the game result, if any, or None
         """
         if include_game_name:
-            gn_str = ' %s' % self.name
+            gn_str = f' {self.name}'
         else:
             gn_str = ''
         # Did a draw proposal pass ?

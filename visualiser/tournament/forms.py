@@ -464,9 +464,9 @@ class GetSevenPlayersForm(forms.Form):
     def __create_player_fields(self, queryset, prefix, count):
         """Do the actual field creation"""
         for i in range(count):
-            self.fields['%s_%d' % (prefix, i)] = RoundPlayerChoiceField(queryset,
-                                                                        required=False,
-                                                                        label=self.LABELS[prefix])
+            self.fields[f'{prefix}_{i}'] = RoundPlayerChoiceField(queryset,
+                                                                  required=False,
+                                                                  label=self.LABELS[prefix])
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates the appropriate number of player fields"""
@@ -484,10 +484,10 @@ class GetSevenPlayersForm(forms.Form):
             doublers = 0
             for rp in playing:
                 if rp.game_count == 0:
-                    initial['sitter_%d' % sitters] = rp
+                    initial[f'sitter_{sitters}'] = rp
                     sitters += 1
                 if rp.game_count == 2:
-                    initial['double_%d' % doublers] = rp
+                    initial[f'double_{doublers}'] = rp
                     doublers += 1
             kwargs['initial'] = initial
 
@@ -538,7 +538,7 @@ class GetSevenPlayersForm(forms.Form):
         """Does the check for a player entered multiple times"""
         round_players = []
         for i in range(count):
-            rp = cleaned_data.get('%s_%d' % (prefix, i))
+            rp = cleaned_data.get(f'{prefix}_{i}')
             # If the field is empty, ignore it
             if rp is None:
                 continue
@@ -914,9 +914,9 @@ class PlayerRoundScoreForm(forms.Form):
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.last_round_num):
-            name = 'round_%d' % i
+            name = f'round_{i}'
             # Create an additional field to show the game scores for that round
-            game_scores_name = 'game_scores_%d' % i
+            game_scores_name = f'game_scores_{i}'
             self.fields[game_scores_name] = forms.CharField(max_length=10,
                                                             required=False,
                                                             disabled=True)
