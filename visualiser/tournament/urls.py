@@ -211,8 +211,8 @@ tournament_patterns = [
     path('self_check_in/', tournament_views.self_check_in_control,
          name='self_check_in_control'),
     path('current_round/', tournament_views.tournament_round, name='tournament_round'),
-    # TODO Why does this one calls into game_views ?
-    path('game_image/', game_views.add_game_image, name='add_game_image'),
+    # This uses the default empty game name
+    path('game_image/', game_views.add_game_image, name='add_any_game_image'),
     path('news/', tournament_views.tournament_news, name='tournament_news'),
     path('news_ticker/', tournament_views.tournament_news,
          {'as_ticker': True}, name='tournament_news_ticker'),

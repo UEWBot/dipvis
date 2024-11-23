@@ -837,7 +837,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_game_image_not_logged_in(self):
-        response = self.client.get(reverse('add_game_image',
+        response = self.client.get(reverse('add_any_game_image',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 302)
