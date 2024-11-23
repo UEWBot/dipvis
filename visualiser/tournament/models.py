@@ -685,7 +685,6 @@ class Tournament(models.Model):
                                     help_text=_('Which achievements may be recognised.'))
     discord_url = models.URLField(verbose_name=_('Discord webhook URL'),
                                   blank=True,
-                                  null=True,
                                   help_text=_('Board calls will be posted here'))
 
     class Meta:
@@ -1087,12 +1086,11 @@ class Series(models.Model):
     For example each year's occurrance of an annual Tournament.
     """
     MAX_NAME_LENGTH = 60
-    MAX_DESC_LENGTH = 2000
 
     name = models.CharField(max_length=MAX_NAME_LENGTH)
-    description = models.CharField(max_length=MAX_DESC_LENGTH, null=True)
+    description = models.TextField(blank=True)
     tournaments = models.ManyToManyField(Tournament)
-    slug = SeriesSlugField(null=False, unique=True)
+    slug = SeriesSlugField(unique=True)
 
     class Meta:
         ordering = ['name']
