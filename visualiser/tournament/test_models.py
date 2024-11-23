@@ -3080,7 +3080,7 @@ class RoundTests(TestCase):
         # Add a RoundPlayer who didn't play
         rp = RoundPlayer(player=self.p9, the_round=r)
         rp.save()
-        self.assertTrue(self.p9 in r.scores())
+        self.assertIn(self.p9, r.scores())
         rp.delete()
 
     # Round.update_scores()
