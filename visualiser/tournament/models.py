@@ -1478,7 +1478,7 @@ class Round(models.Model):
         Returns a message listing the boards, players, and powers for the Round,
         suitable for sending by email or posting to discord.
         """
-        text = 'Round %(number)d Board Call\n\n' % {'number': self.number()}
+        text = _('Round %(number)d Board Call\n\n') % {'number': self.number()}
         return text + '\n'.join([g.board_call_msg() for g in self.game_set.all()])
 
     def background(self, mask=MASK_ALL_BG):
@@ -1836,13 +1836,13 @@ class Game(models.Model):
         Returns a message listing the game name, players, and powers,
         suitable for sending by email or posting to discord.
         """
-        game_text = 'Board %(game)s:\n' % {'game': self.name}
+        game_text = _('Board %(game)s:\n') % {'game': self.name}
         if self.external_url:
             game_text += ' ' + self.external_url + '\n'
         if self.notes:
             game_text += ' ' + self.notes + '\n'
         for gp in self.gameplayer_set.order_by('power').prefetch_related('player', 'power'):
-            game_text += ' %(power)s: %(player)s' % {'power': gp.power or 'Power TBD',
+            game_text += ' %(power)s: %(player)s' % {'power': gp.power or _('Power TBD'),
                                                      'player': gp.player}
             if self.the_round.tournament.is_virtual():
                 bs_un = gp.tournamentplayer().backstabbr_username
