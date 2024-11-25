@@ -66,8 +66,10 @@ Creating Your Tournament
 Start out at https://example.com/admin/tournament/tournament/add.
 Give the tournament a name (the year will automatically be appended), format (FTF
 or vFTF), location, dates, and pick a TournamentScoringSystem and RoundScoringSystem.
-You can also specify whether the Tournament uses handicaps, which are additional
-points that are assigned by the TD but kept secret until all Games have finished.
+You can specify any bonus points for sitting out a Round and whether those
+bonus points can be awarded more then once or not. You can also specify whether
+the Tournament uses handicaps, which are additional points that are assigned by
+the TD but kept secret until all Games have finished.
 Decide whether you want the system to seed the games or not, how Great Powers
 will be assigned, what you're going to tell players about failed DrawProposals,
 and whether best countries are determined by score or centre count.

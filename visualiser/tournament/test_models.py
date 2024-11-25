@@ -106,7 +106,7 @@ class RoundScoringTests(TestCase):
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
-        self.assertNotIn("Sitters", t.round_scoring_system)
+        self.assertIn("Best", t.round_scoring_system)
         # One Round
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
@@ -204,12 +204,13 @@ class RoundScoringTests(TestCase):
         t = Tournament.objects.create(name='Round Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
-                                      round_scoring_system=R_SCORING_SYSTEMS[1].name,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      non_player_round_score=4005,
+                                      non_player_round_score_once=False,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
-        self.assertIn("Sitters", t.round_scoring_system)
-        self.assertNotIn("once", t.round_scoring_system)
+        self.assertIn("Best", t.round_scoring_system)
         # One Round
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
@@ -272,11 +273,13 @@ class RoundScoringTests(TestCase):
         t = Tournament.objects.create(name='Round Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
-                                      round_scoring_system=R_SCORING_SYSTEMS[2].name,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      non_player_round_score=4005,
+                                      non_player_round_score_once=True,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
-        self.assertIn("once", t.round_scoring_system)
+        self.assertIn("Best", t.round_scoring_system)
         # Two Rounds
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
@@ -372,11 +375,11 @@ class RoundScoringTests(TestCase):
         t = Tournament.objects.create(name='Round Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
-                                      round_scoring_system=R_SCORING_SYSTEMS[3].name,
+                                      round_scoring_system=R_SCORING_SYSTEMS[1].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
-        self.assertNotIn("Sitters", t.round_scoring_system)
+        self.assertIn("all", t.round_scoring_system)
         # One Round
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
@@ -468,30 +471,12 @@ class RoundScoringTests(TestCase):
         # TODO This depends on the ordering
         r = R_SCORING_SYSTEMS[0]
         r_str = str(r)
-        self.assertIn('est game score', r_str)
-        self.assertNotIn('out', r_str)
-        self.assertNotIn('once', r_str)
-
-    def test_rscoringbest1_str(self):
-        # TODO This depends on the ordering
-        r = R_SCORING_SYSTEMS[1]
-        r_str = str(r)
-        self.assertIn('est game score', r_str)
-        self.assertIn('out', r_str)
-        self.assertNotIn('once', r_str)
-
-    def test_rscoringbest2_str(self):
-        # TODO This depends on the ordering
-        r = R_SCORING_SYSTEMS[2]
-        r_str = str(r)
-        self.assertIn('est game score', r_str)
-        self.assertIn('out', r_str)
-        self.assertIn('once', r_str)
+        self.assertIn('est game counts', r_str)
 
     # RScoringSum.__str__()
     def test_rscoringsum_str(self):
         # TODO This depends on the ordering
-        r = R_SCORING_SYSTEMS[3]
+        r = R_SCORING_SYSTEMS[1]
         r_str = str(r)
         self.assertIn('ll game scores', r_str)
 
@@ -661,6 +646,7 @@ class TournamentScoringTests(TestCase):
 
     # TScoringSumGames
     def test_tscoringsumgames_scores(self):
+        """ TScoringSumGames with no sitting out bonus"""
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
@@ -844,8 +830,7 @@ class TournamentScoringTests(TestCase):
             for p, s in game_scores[g].items():
                 try:
                     with transaction.atomic():
-                        # Give a dummy score that should get overwritten
-                        RoundPlayer.objects.create(player=p, the_round=g.the_round, score=10.0)
+                        RoundPlayer.objects.create(player=p, the_round=g.the_round)
                 except IntegrityError:
                     # This player is playing two games this round
                     pass
@@ -853,7 +838,8 @@ class TournamentScoringTests(TestCase):
                 powers.append(the_power)
                 GamePlayer.objects.create(player=p, game=g, power=the_power, score=s)
 
-        t.update_scores()
+        for r in t.round_set.all():
+            r.update_scores()
         t_scores = t.scores_detail()
 
         # Check tournament scores
@@ -885,10 +871,11 @@ class TournamentScoringTests(TestCase):
             with self.subTest(round_num=r.number()):
                 for rp in r.roundplayer_set.all():
                     with self.subTest(player=rp.player):
+                        # With no sitting-out bonus, round scores should all be zero
+                        self.assertEqual(rp.score, 0.0)
                         gp_set = GamePlayer.objects.filter(game__the_round=r, player=rp.player).distinct()
                         gp_list = list(gp_set)
                         if len(gp_list) == 1:
-                            # Round score should equal game score
                             # Round dropped if game score is dropped (i.e. < 10)
                             score = game_scores[gp_list[0].game][rp.player]
                             self.assertEqual(rp.score_dropped, score < 10)
@@ -897,18 +884,11 @@ class TournamentScoringTests(TestCase):
                             score2 = game_scores[gp_list[1].game][rp.player]
                             if (score1 < 10) and (score2 < 10):
                                 # Neither score counts.
-                                # Round score should be the sum, and round is dropped
-                                self.assertEqual(rp.score, score1 + score2)
+                                # Round is dropped
                                 self.assertTrue(rp.score_dropped)
-                            elif (score1 > 9) and (score2 > 9):
-                                # Both scores count.
-                                # Round score should be the sum, round not dropped
-                                self.assertEqual(rp.score, score1 + score2)
-                                self.assertFalse(rp.score_dropped)
                             else:
-                                # One score counts.
-                                # Round score should be the higher, round not dropped
-                                self.assertEqual(rp.score, max(score1, score2))
+                                # One or both scores count.
+                                # Round not dropped
                                 self.assertFalse(rp.score_dropped)
 
     def test_tscoringsumgames_scores2(self):
@@ -1104,7 +1084,8 @@ class TournamentScoringTests(TestCase):
                 powers.append(the_power)
                 GamePlayer.objects.create(player=p, game=g, power=the_power, score=s)
 
-        t.update_scores()
+        for r in t.round_set.all():
+            r.update_scores()
         t_scores = t.scores_detail()
 
         # Check tournament scores
@@ -1136,47 +1117,266 @@ class TournamentScoringTests(TestCase):
             with self.subTest(round_num=r.number()):
                 for rp in r.roundplayer_set.all():
                     with self.subTest(player=rp.player):
-                        gps = GamePlayer.objects.filter(game__the_round__tournament=t, player=rp.player).distinct()
-                        gp_set = gps.filter(game__the_round=r)
+                        # With no sitting-out bonus, we don't get a round score at all
+                        self.assertEqual(rp.score, 0.0)
+                        self.assertFalse(rp.score_dropped)
+
+    def test_tscoringsumgames_scores3(self):
+        """ TScoringSumGames with sitting out bonus"""
+        # New Tournament just for this test
+        s = G_SCORING_SYSTEMS[0].name
+        today = date.today()
+        t = Tournament.objects.create(name='Tournament Scoring Test',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                      non_player_round_score=100.0,
+                                      non_player_round_score_once=True,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[4].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        # Check that we got the right scoring system
+        self.assertIn('4 games in any rounds', t.tournament_scoring_system)
+
+        # Five Rounds
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_8)
+        r3 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_9)
+        r4 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_10)
+        r5 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_16)
+        # Two finished Games per round
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r1.start,
+                                  the_round=r1,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r1.start,
+                                  the_round=r1,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g21 = Game.objects.create(name='g21',
+                                  started_at=r2.start,
+                                  the_round=r2,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g22 = Game.objects.create(name='g22',
+                                  started_at=r2.start,
+                                  the_round=r2,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g31 = Game.objects.create(name='g31',
+                                  started_at=r3.start,
+                                  the_round=r3,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g32 = Game.objects.create(name='g32',
+                                  started_at=r3.start,
+                                  the_round=r3,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g41 = Game.objects.create(name='g41',
+                                  started_at=r4.start,
+                                  the_round=r4,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g42 = Game.objects.create(name='g42',
+                                  started_at=r4.start,
+                                  the_round=r4,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g51 = Game.objects.create(name='g51',
+                                  started_at=r5.start,
+                                  the_round=r5,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g52 = Game.objects.create(name='g52',
+                                  started_at=r5.start,
+                                  the_round=r5,
+                                  is_finished=True,
+                                  the_set=self.set1)
+
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        TournamentPlayer.objects.create(player=self.p3, tournament=t)
+        TournamentPlayer.objects.create(player=self.p4, tournament=t)
+        # p5 doesn't play at all
+        TournamentPlayer.objects.create(player=self.p5, tournament=t)
+        TournamentPlayer.objects.create(player=self.p6, tournament=t)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t)
+        TournamentPlayer.objects.create(player=self.p8, tournament=t, unranked=True)
+        TournamentPlayer.objects.create(player=self.p9, tournament=t)
+        TournamentPlayer.objects.create(player=self.p10, tournament=t)
+        TournamentPlayer.objects.create(player=self.p11, tournament=t)
+        TournamentPlayer.objects.create(player=self.p12, tournament=t)
+        TournamentPlayer.objects.create(player=self.p13, tournament=t)
+
+        game_scores = {g11: {self.p1: 20,
+                             self.p2: 7000,
+                             self.p3: 30000,
+                             self.p8: 1,
+                             self.p9: 2,
+                             self.p10: 3,
+                             self.p11: 20000},
+                       g12: {self.p2: 10000,
+                             self.p4: 700,
+                             self.p8: 2,
+                             self.p9: 300,
+                             self.p10: 20000,
+                             self.p12: 6000,
+                             self.p13: 2000},
+                       g21: {self.p1: 1,
+                             self.p2: 400,
+                             self.p4: 40000,
+                             self.p9: 1,
+                             self.p11: 8,
+                             self.p12: 6,
+                             self.p13: 3},
+                       g22: {self.p3: 50,
+                             self.p8: 30,
+                             self.p9: 3000,
+                             self.p10: 10,
+                             self.p11: 20,
+                             self.p12: 80000,
+                             self.p13: 40000},
+                       g31: {self.p1: 7000,
+                             self.p3: 400,
+                             self.p8: 200,
+                             self.p9: 10000,
+                             self.p10: 5000,
+                             self.p11: 600,
+                             self.p12: 300},
+                       g32: {self.p2: 50,
+                             self.p4: 7000,
+                             self.p8: 3000,
+                             self.p9: 5,
+                             self.p10: 2,
+                             self.p11: 6,
+                             self.p13: 2},
+                       g41: {self.p1: 90000,
+                             self.p4: 4,
+                             self.p6: 2000,
+                             self.p7: 100,
+                             self.p8: 50000,
+                             self.p10: 1,
+                             self.p11: 3000},
+                       g42: {self.p3: 5000,
+                             self.p6: 70,
+                             self.p8: 5,
+                             self.p9: 10,
+                             self.p10: 7,
+                             self.p12: 6,
+                             self.p13: 40},
+                       g51: {self.p1: 300,
+                             self.p6: 400,
+                             self.p8: 9,
+                             self.p9: 8,
+                             self.p11: 7,
+                             self.p12: 3,
+                             self.p13: 300},
+                       g52: {self.p4: 70,
+                             self.p7: 70,
+                             self.p8: 7,
+                             self.p10: 200,
+                             self.p11: 2,
+                             self.p12: 60,
+                             self.p13: 4}}
+
+        powers = [self.austria,
+                  self.england,
+                  self.france,
+                  self.germany,
+                  self.italy,
+                  self.russia,
+                  self.turkey]
+
+        for g in game_scores.keys():
+            # Everyone except p5 present for every round
+            for p in [self.p1, self.p2, self.p3, self.p4, self.p6, self.p7, self.p8, self.p9, self.p10, self.p11, self.p12, self.p13]:
+                try:
+                    with transaction.atomic():
+                        RoundPlayer.objects.create(player=p, the_round=g.the_round)
+                except IntegrityError:
+                    # Already added this player for this round
+                    pass
+            for p, s in game_scores[g].items():
+                the_power = powers.pop(0)
+                powers.append(the_power)
+                GamePlayer.objects.create(player=p, game=g, power=the_power, score=s)
+
+        for r in t.round_set.all():
+            r.update_scores()
+        t_scores = t.scores_detail()
+
+        # Check tournament scores
+        self.assertEqual(t_scores[self.p1], 97320)
+        self.assertEqual(t_scores[self.p2], 17500) # Sat 2 rounds
+        self.assertEqual(t_scores[self.p3], 35500) # Sat 1 round
+        self.assertEqual(t_scores[self.p4], 47770)
+        self.assertEqual(t_scores[self.p5], 0)
+        self.assertEqual(t_scores[self.p6], 2570) # Sat 3 rounds
+        self.assertEqual(t_scores[self.p7], 270) # Sat 3 rounds
+        self.assertEqual(t_scores[self.p8], 53230)
+        self.assertEqual(t_scores[self.p9], 13310)
+        self.assertEqual(t_scores[self.p10], 25210)
+        self.assertEqual(t_scores[self.p11], 23620)
+        self.assertEqual(t_scores[self.p12], 86360)
+        self.assertEqual(t_scores[self.p13], 42340)
+
+        # Check GamePlayer score_dropped flags
+        for g in game_scores.keys():
+            with self.subTest(game=g):
+                for p, s in game_scores[g].items():
+                    with self.subTest(player=p):
+                        gp = GamePlayer.objects.get(player=p, game=g)
+                        # p2 and p3 use their sitting bonus rather than their score < 100
+                        if p in [self.p2, self.p3]:
+                            self.assertEqual(gp.score_dropped, s < 100)
+                        else:
+                            self.assertEqual(gp.score_dropped, s < 10)
+
+        # Check round scores and score_dropped flags
+        for r in t.round_set.all():
+            with self.subTest(round_num=r.number()):
+                for rp in r.roundplayer_set.all():
+                    with self.subTest(player=rp.player):
+                        gp_set = GamePlayer.objects.filter(game__the_round=r, player=rp.player).distinct()
                         gp_list = list(gp_set)
-                        # Figure out which scores count for this player
-                        gps_count = gps.count()
-                        if gps_count > 3:
-                            # All players with 3 or more games have two scores over 1000
-                            threshold = 1000
-                        elif gps_count > 2:
-                            # This is p6, with 2 scores over 100 and one below
-                            threshold = 100
+                        if len(gp_list) == 0:
+                            # All sitting-out bonuses count towards total score
+                            self.assertEqual(rp.score_dropped, rp.score == 0.0)
+                        elif len(gp_list) == 1:
+                            # Round score should be zero because the player played the round
+                            self.assertEqual(rp.score, 0.0)
+                            # Round dropped if game score is dropped
+                            self.assertEqual(rp.score_dropped, gp_list[0].score_dropped)
                         else:
-                            # All game count fully
-                            threshold = 0
-                        if len(gp_list) == 1:
-                            score = game_scores[gp_list[0].game][rp.player]
-                            if score > threshold:
-                                # Round score should equal game score
-                                self.assertAlmostEqual(rp.score, score)
-                            else:
-                                # Round score should be the contribution of the game score
-                                self.assertAlmostEqual(rp.score, score / (2 * (gps_count - 2)))
-                        else:
+                            # Round score should be zero because the player played the round
+                            self.assertEqual(rp.score, 0.0)
                             score1 = game_scores[gp_list[0].game][rp.player]
                             score2 = game_scores[gp_list[1].game][rp.player]
-                            if (score1 > threshold):
-                               if (score2 > threshold):
-                                   # Both games should contribute fully to the round score
-                                   self.assertAlmostEqual(rp.score, score1 + score2)
-                               else:
-                                   # score1 should contribute fully and score 2 partially
-                                   self.assertAlmostEqual(rp.score, score1 + score2 / (2 * (gps_count - 2)))
+                            if (score1 < 10) and (score2 < 10):
+                                # Neither score counts.
+                                # Round is dropped
+                                self.assertTrue(rp.score_dropped)
                             else:
-                               if (score2 > threshold):
-                                   # score1 should contribute partially and score 2 fully
-                                   self.assertAlmostEqual(rp.score, score2 + score1 / (2 * (gps_count - 2)))
-                               else:
-                                   # Both scores should contribute partially
-                                   self.assertAlmostEqual(rp.score, (score1 + score2) / (2 * (gps_count - 2)))
-                        # All round scores contribute
-                        self.assertFalse(rp.score_dropped)
+                                # One or both scores count.
+                                # Round not dropped
+                                self.assertFalse(rp.score_dropped)
 
 
 class ModelTests(TestCase):
@@ -3205,11 +3405,13 @@ class RoundTests(TestCase):
         t = Tournament.objects.create(name='Round Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
-                                      round_scoring_system=R_SCORING_SYSTEMS[2].name,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      non_player_round_score=4005,
+                                      non_player_round_score_once=True,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
-        self.assertIn("once", t.round_scoring_system)
+        self.assertIn("Best", t.round_scoring_system)
         # Two Rounds
         r = Round.objects.create(tournament=t,
                                  scoring_system=s,
@@ -6104,11 +6306,13 @@ class RoundPlayerTests(TestCase):
         # Chris
         today = date.today()
         # Single Round Tournament, with points for sitting out a round
-        s = 'Best game counts. Sitters get 4005'
+        s = 'Best game counts'
         t = Tournament.objects.create(name='rp_test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=s,
+                                      non_player_round_score=4005,
+                                      non_player_round_score_once=False,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
         r = Round.objects.create(tournament=t,

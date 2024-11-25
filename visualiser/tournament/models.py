@@ -147,13 +147,11 @@ class RoundScoringSystem(ABC):
     name = u''
 
     @abstractmethod
-    def scores(self, game_players, non_players):
+    def scores(self, game_players):
         """
         Returns a dict, indexed by player key, of scores.
 
         game_players is a QuerySet of GamePlayers.
-        non_players is a QuerySet of RoundPlayers who were present but agreed
-            not to play.
         """
         raise NotImplementedError
 
@@ -170,27 +168,18 @@ class RScoringBest(RoundScoringSystem):
     if non_player_score_once is set, non_player_score can only be scored
      once per player, regardless of the number of rounds they sit out.
     """
-    def __init__(self, non_player_score=0.0, non_player_score_once=False):
-        self.non_player_score = non_player_score
-        self.non_player_score_once = non_player_score_once
+    def __init__(self):
         self.name = _(u'Best game counts')
-        if non_player_score > 0.0:
-            if non_player_score_once:
-                once_str = " once"
-            else:
-                once_str = ""
-            self.name = _('Best game counts. Sitters get %(points)d%(once)s') % {'points': non_player_score,
-                                                                                 'once': once_str}
 
-    def scores(self, game_players, non_players):
+    def scores(self, game_players):
         """
         Returns a dict, indexed by player key, of scores.
 
         If any player played multiple games, take the best game score and flag the rest as dropped.
         Otherwise, just take their game score.
         game_players is a QuerySet of GamePlayers.
-        non_players is a QuerySet of RoundPlayers who were present but agreed
-            not to play.
+
+        Also updates score_dropped for all the GamePlayers examined.
         """
         retval = {}
         # for each player who played any of the specified games
@@ -212,33 +201,7 @@ class RScoringBest(RoundScoringSystem):
             best.score_dropped = False
             best.save(update_fields=['score_dropped'])
             retval[p] = best.score
-        # Give the appropriate points to anyone who agreed to sit out
-        for rp in non_players:
-            if self.non_player_score_once:
-                # If the "sitting out" bonus is only allowed once and they've sat out multiple rounds, they get zero
-                bonus_already_given = False
-                for r in rp.the_round.tournament.round_set.all():
-                    if r == rp.the_round:
-                        break
-                    rps = RoundPlayer.objects.filter(the_round=r).filter(player=rp.player)
-                    gps = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=rp.player)
-                    if rps.exists() and not gps.exists():
-                        # Player also didn't play in this earlier round
-                        bonus_already_given = True
-                        break
-                if bonus_already_given:
-                    retval[rp.player] = 0.0
-                    continue
-            retval[rp.player] = self.non_player_score
         return retval
-
-    def __str__(self):
-        ret = 'Best game score in each round counts'
-        if self.non_player_score > 0.0:
-            ret += '. Sitting out scores %.2f' % self.non_player_score
-        if self.non_player_score_once:
-            ret += ' once only'
-        return ret
 
 
 class RScoringAll(RoundScoringSystem):
@@ -248,15 +211,13 @@ class RScoringAll(RoundScoringSystem):
     def __init__(self):
         self.name = _(u'Add all game scores')
 
-    def scores(self, game_players, non_players):
+    def scores(self, game_players):
         """
         Returns a dict, indexed by player key, of scores.
 
         If any player played multiple games, sum all game scores.
         Otherwise, just take their game score.
         game_players is a QuerySet of GamePlayers.
-        non_players is a QuerySet of RoundPlayers who were present but agreed
-            not to play.
         """
         retval = {}
         # for each player who played any of the specified games
@@ -265,17 +226,12 @@ class RScoringAll(RoundScoringSystem):
             player_games = game_players.filter(player=p)
             # Add all game scores
             retval[p] = sum(gp.score for gp in player_games)
-        # Give zero to anyone who didn't play
-        for rp in non_players:
-            retval[rp.player] = 0.0
         return retval
 
 
 # All the round scoring systems we support
 R_SCORING_SYSTEMS = [
     RScoringBest(),
-    RScoringBest(4005.0),
-    RScoringBest(4005.0, True),
     RScoringAll(),
 ]
 
@@ -329,6 +285,8 @@ class TScoringSum(TournamentScoringSystem):
 
         If a player played more than N rounds, sum the best N round scores and flag the rest as dropped.
         Otherwise, sum all their round scores.
+
+        Also updates score_dropped for all the RoundPlayers examined.
         """
         t_scores = {}
         # for each player who played any of the specified rounds
@@ -354,6 +312,8 @@ class TScoringSumGames(TournamentScoringSystem):
 
     Optionally if a player played more than that number of Games, add the average of the scores
     of the remaining Games, multiplied by some factor.
+    In this case, GamePlayer.score is used directly and any (non-zero) RoundPlayer.scores are
+    treated as "pseudo Game scores" due to sitting-out bonuses.
     """
     def __init__(self, name, scored_games, residual_multiplier=0.0):
         self.name = name
@@ -362,18 +322,21 @@ class TScoringSumGames(TournamentScoringSystem):
 
     uses_round_scores = False
 
-    def _flag_included_score(self, gp, fraction=1.0):
+    def _flag_included_score(self, gp):
         """
         Store that this Game score counts toward the Round score.
 
+        gp can be either a GamePlayer or a RoundPlayer object.
         Update the RoundPlayer to note that the specified Game
         score contributes towards the overall score (and therefore
         to the Round score, which itself contributes)
         """
-        rp = gp.roundplayer()
-        rp.score += gp.score * fraction
+        if type(gp) == GamePlayer:
+            rp = gp.roundplayer()
+        else:
+            rp = gp
         rp.score_dropped = False
-        rp.save(update_fields=['score', 'score_dropped'])
+        rp.save(update_fields=['score_dropped'])
 
     def scores(self, round_players):
         """
@@ -382,35 +345,44 @@ class TScoringSumGames(TournamentScoringSystem):
         If a player played fewer than N or exactly N games, sum all their game scores.
         Otherwise, sum their best N game scores and add the average of the remainder
         multiplied by self.residual_multiplier.
-        Also updates all Round scores to reflect which games count towards the tournament score.
+        If they have any non-zero round scores, count those as pseudo-games.
+
+        Also updates score_dropped for all the GamePlayers and RoundPlayers examined.
         """
         t_scores = {}
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
+            # All the scores to consider. Dict, keyed by rp or gp, of scores
+            player_scores = {}
             # Find just the rounds they played
             rps = round_players.filter(player=p)
             rounds = []
             for rp in rps:
-                rp.score = 0.0
                 if self.residual_multiplier == 0.0:
-                    # Assume the round scores is dropped unless we find out otherwise
+                    # Assume the round score is dropped unless we find out otherwise
                     rp.score_dropped = True
-                rp.save(update_fields=['score', 'score_dropped'])
+                    rp.save(update_fields=['score_dropped'])
                 rounds.append(rp.the_round)
-            player_scores = GamePlayer.objects.filter(player=p,
-                                                      game__the_round__in=rounds).order_by('score')
+                # Treat sitting-out bonuses as pseudo-games
+                if rp.score != 0.0:
+                    player_scores[rp] = rp.score
+            for gp in GamePlayer.objects.filter(player=p,
+                                                game__the_round__in=rounds):
+                player_scores[gp] = gp.score
             t_scores[p] = 0
             if len(player_scores) <= self.scored_games:
-                # All games count for this player
-                for gp in player_scores:
+                # All games/pseudo-games count for this player
+                for gp, score in player_scores.items():
                     t_scores[p] += gp.score
                     self._flag_included_score(gp)
             else:
-                player_scores = list(player_scores)
+                # Convert player_scores to a list of (gp, score) tuples, ordered by score
+                player_scores = sorted(player_scores.items(),
+                                       key=itemgetter(1))
                 # Add up the best N Game scores and flag those scores as not dropped
                 for _ in range(self.scored_games):
-                    gp = player_scores.pop()
-                    t_scores[p] += gp.score
+                    gp, score = player_scores.pop()
+                    t_scores[p] += score
                     self._flag_included_score(gp)
                     if self.residual_multiplier == 0.0:
                         # It's possible that a player's score for a Game in-progress
@@ -422,25 +394,14 @@ class TScoringSumGames(TournamentScoringSystem):
                     # How much does each additional score contribute ?
                     bonus_factor = self.residual_multiplier / len(player_scores)
                 # Then go through any remaining Game scores
-                for gp in player_scores:
+                for gp, score in player_scores:
                     if self.residual_multiplier == 0.0:
                         # This score doesn't contribute
                         gp.score_dropped = True
                         gp.save(update_fields=['score_dropped'])
-                        # If every Game in this Round is dropped, score the Round as the sum,
-                        # and dropped, to keep us consistent with other scoring systems
-                        rp = gp.roundplayer()
-                        if rp.score_dropped:
-                            rp.score += gp.score
-                            rp.save(update_fields=['score'])
                     else:
-                        t_scores[p] += gp.score * bonus_factor
-                        self._flag_included_score(gp, fraction=bonus_factor)
-        # The problem is that we go up from Game, to Round, to Tournament,
-        # but now we want to go back to set the Round scores.
-        # I guess we need to set them here and have a NOP RoundScoringSystem.
-        # There's still the issue of what the RoundScoringSystem will report,
-        # but maybe that doesn't matter - the calculation will be done before we ever use the round scores
+                        t_scores[p] += score * bonus_factor
+                        self._flag_included_score(gp)
         return t_scores
 
 
@@ -663,6 +624,11 @@ class Tournament(models.Model):
                                             max_length=RoundScoringSystem.MAX_NAME_LENGTH,
                                             choices=get_scoring_systems(R_SCORING_SYSTEMS, include_none=True),
                                             help_text=_(u'How to combine game scores into a round score'))
+    non_player_round_score = models.FloatField(default=0.0,
+                                               help_text='If a Player volunteers to sit out a round, what score do they get?')
+    # Default of False here becaue it's less work and doesn't matter if non_player_round_score is the default value
+    non_player_round_score_once = models.BooleanField(default=False,
+                                                      help_text='Can a player only get the sitting out score for one round?')
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=_(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
@@ -1080,7 +1046,9 @@ class Tournament(models.Model):
         """
         super().save(*args, **kwargs)
 
-        if ('update_fields' not in kwargs) or ('round_scoring_system' in kwargs['update_fields']) :
+        if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['round_scoring_system',
+                                                                                                 'non_player_round_score',
+                                                                                                 'non_player_round_score_once']):
             # Change may affect the scoring
             try:
                 validate_round_scoring_system(self.round_scoring_system)
@@ -1472,6 +1440,34 @@ class Round(models.Model):
             retval[p.player] = p.score
         return retval
 
+    def _score_non_players(self, non_players):
+        """
+        Returns a dict, indexed by player key, of scores.
+
+        non_players is a QuerySet of RoundPlayers representing players who were
+        present for a Round but voluteered to sit out.
+        """
+        retval = {}
+        # Give the appropriate points to anyone who agreed to sit out
+        for rp in non_players:
+            if self.tournament.non_player_round_score_once:
+                # If the "sitting out" bonus is only allowed once and they've sat out multiple rounds, they get zero
+                bonus_already_given = False
+                for r in rp.the_round.tournament.round_set.all():
+                    if r == rp.the_round:
+                        break
+                    rps = RoundPlayer.objects.filter(the_round=r).filter(player=rp.player)
+                    gps = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=rp.player)
+                    if rps.exists() and not gps.exists():
+                        # Player also didn't play in this earlier round
+                        bonus_already_given = True
+                        break
+                if bonus_already_given:
+                    retval[rp.player] = 0.0
+                    continue
+            retval[rp.player] = self.tournament.non_player_round_score
+        return retval
+
     def update_scores(self, for_players=None):
         """
         Updates every RoundPlayer's score attribute.
@@ -1484,23 +1480,31 @@ class Round(models.Model):
         This method also calls to update the corresponding TournamentPlayers' scores.
         """
         system = self.tournament.round_scoring_system_obj()
+        gps = GamePlayer.objects.filter(game__the_round=self).distinct()
+        if for_players is not None:
+            gps = gps.filter(player__in=for_players)
         if system:
             rps = self.roundplayer_set.all()
-            gps = GamePlayer.objects.filter(game__the_round=self).distinct()
-            # Identify any players who were checked in but didn't play
-            gps2 = gps.prefetch_related('player')
-            non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps2])
             if for_players is not None:
                 rps = rps.filter(player__in=for_players)
-                gps = gps.filter(player__in=for_players)
-                non_players = non_players.filter(player__in=for_players)
-            scores = system.scores(gps, non_players)
+            scores = system.scores(gps)
             for rp in rps:
-                rp.score = scores[rp.player]
-                rp.save(update_fields=['score'])
-            for rp in non_players:
-                rp.score = scores[rp.player]
-                rp.save(update_fields=['score'])
+                try:
+                    rp.score = scores[rp.player]
+                    rp.save(update_fields=['score'])
+                except KeyError:
+                    # This player didn't actually play in the Round
+                    pass
+        # Identify any players who were checked in but didn't play
+        gps2 = gps.prefetch_related('player')
+        non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps2])
+        if for_players is not None:
+            non_players = non_players.filter(player__in=for_players)
+        # Figure out scores for non-players
+        scores = self._score_non_players(non_players)
+        for rp in non_players:
+            rp.score = scores[rp.player]
+            rp.save(update_fields=['score'])
         # That could change the Tournament scoring for those Players
         self.tournament.update_scores(for_players)
 
@@ -2218,6 +2222,10 @@ class RoundPlayer(models.Model):
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     standby = models.BooleanField(default=False,
                                   help_text=_('check if the player would prefer not to play this round'))
+    # This score is only used if either:
+    #  - the tournament scoring system needs round scores or
+    #  - there's a sitting-out bonus
+    # Otherwise it will always be zero and should never be used or seen
     score = models.FloatField(default=0.0)
     score_dropped = models.BooleanField(default=False,
                                         help_text=_('Set if this score does not contribute towards the tournament score'))
