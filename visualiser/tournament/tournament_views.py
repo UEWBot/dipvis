@@ -163,7 +163,12 @@ def tournament_scores(request,
         context['refresh'] = True
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
-    return render(request, 'tournaments/scores.html', context)
+    # Display scores either with round scores or game scores, as appropriate
+    if t.tournament_scoring_system_obj().uses_round_scores:
+        template = 'tournaments/scores.html'
+    else:
+        template = 'tournaments/scores_no_round_scores.html'
+    return render(request, template, context)
 
 
 def tournament_game_results(request,

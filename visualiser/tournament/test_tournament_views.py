@@ -504,11 +504,31 @@ class TournamentViewTests(TestCase):
     def test_scores(self):
         # Scores page for an in-progress Tournament
         self.assertFalse(self.t1.handicaps)
+        self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, 'Current Scores')
         self.assertNotContains(response, 'Handicap')
+        self.assertTemplateUsed(response, 'tournaments/scores.html')
+
+    def test_scores_no_rounds(self):
+        # Scores page for an in-progress Tournament that doesn't use Rounds
+        self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
+        rss = self.t1.round_scoring_system
+        tss = self.t1.tournament_scoring_system
+        self.t1.round_scoring_system = 'None'
+        self.t1.tournament_scoring_system = 'Sum best 3 games in any rounds'
+        self.t1.save()
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertContains(response, 'Current Scores')
+        self.assertTemplateUsed(response, 'tournaments/scores_no_round_scores.html')
+        # Cleanup
+        self.t1.roundscoring_system = rss
+        self.t1.tournament_scoring_system = tss
+        self.t1.save()
 
     def test_scores_completed(self):
         # Scores page for a completed Tournament
