@@ -1065,7 +1065,8 @@ class Tournament(models.Model):
                 # Update all round scores. This will also call self.update_scores()
                 for r in self.round_set.all():
                     r.update_scores()
-        if ('update_fields' not in kwargs) or ('tournament_scoring_system' in kwargs['update_fields']) or ('handicap' in kwargs['update_fields']):
+        if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['tournament_scoring_system',
+                                                                                                 'handicap']):
             # Change may affect the scoring
             try:
                 validate_tournament_scoring_system(self.tournament_scoring_system)
