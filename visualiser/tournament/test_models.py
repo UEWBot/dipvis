@@ -897,14 +897,17 @@ class TournamentScoringTests(TestCase):
                             if (score1 < 10) and (score2 < 10):
                                 # Neither score counts.
                                 # Round score should be the sum, and round is dropped
+                                self.assertEqual(rp.score, score1 + score2)
                                 self.assertTrue(rp.score_dropped)
                             elif (score1 > 9) and (score2 > 9):
                                 # Both scores count.
                                 # Round score should be the sum, round not dropped
+                                self.assertEqual(rp.score, score1 + score2)
                                 self.assertFalse(rp.score_dropped)
                             else:
                                 # One score counts.
                                 # Round score should be the higher, round not dropped
+                                self.assertEqual(rp.score, max(score1, score2))
                                 self.assertFalse(rp.score_dropped)
 
     def test_tscoringsumgames_scores2(self):
