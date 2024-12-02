@@ -2371,6 +2371,47 @@ class TournamentTests(TestCase):
         t = Tournament.objects.get(name='t3')
         t.get_absolute_url()
 
+    # Tournament.clean()
+    def test_tournament_clean_sum_1(self):
+        today = date.today()
+        t = Tournament(name='Test tournament',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system="None",
+                       tournament_scoring_system="Sum best 2 rounds",
+                       draw_secrecy=DrawSecrecy.SECRET)
+        self.assertRaises(ValidationError, t.clean)
+
+    def test_tournament_clean_sum_2(self):
+        today = date.today()
+        t = Tournament(name='Test tournament',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system="Add all game scores",
+                       tournament_scoring_system="Sum best 2 rounds",
+                       draw_secrecy=DrawSecrecy.SECRET)
+        t.clean()
+
+    def test_tournament_clean_sum_games_1(self):
+        today = date.today()
+        t = Tournament(name='Test tournament',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system="None",
+                       tournament_scoring_system="Best single game result",
+                       draw_secrecy=DrawSecrecy.SECRET)
+        t.clean()
+
+    def test_tournament_clean_sum_games_2(self):
+        today = date.today()
+        t = Tournament(name='Test tournament',
+                       start_date=today,
+                       end_date=today + HOURS_24,
+                       round_scoring_system="Best game counts",
+                       tournament_scoring_system="Best single game result",
+                       draw_secrecy=DrawSecrecy.SECRET)
+        self.assertRaises(ValidationError, t.clean)
+
     # Tournament.save()
     # On save(), all round scores and the tournament score should be recalculated
     def test_tournament_save(self):

@@ -1061,6 +1061,16 @@ class Tournament(models.Model):
         """Returns the canonical URL for the object."""
         return reverse('tournament_detail', args=[str(self.id)])
 
+    def clean(self):
+        """
+        Validate the object.
+
+        round_scoring_system and tournament_scoring_system are camptible.
+        """
+        if not scoring_systems_are_compatible(self.round_scoring_system,
+                                              self.tournament_scoring_system):
+            raise ValidationError(_('The scoring systems are not compatible'))
+
     def save(self, *args, **kwargs):
         """
         Save the object to the database.
