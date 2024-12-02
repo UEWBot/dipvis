@@ -30,17 +30,23 @@ represented by a GamePlayer (note that the system doesn't currently support
 replacement players - each Great Power in a Game has exactly one GamePlayer).
 
 Games are scored using some GameScoringSystem (the system has support for all
-the systems commonly used in North America). Scores for Games in a Round are
-combined using a RoundScoringSystem. This only matters if you have players
+the systems commonly used in North America). There are two possible mechanisms
+for combining game scores into tournament scores - a 2-step and a 3-step process.
+In the 3-step process, scores for Games in a Round are combined into scores for
+each Round using a RoundScoringSystem. This only matters if you have players
 playing multiple Games in a Round - you may want all games played by a player to
-contribute to their score or just the best result. You may also want to give points
-to players who volunteer to sit out a round to make the numbers work.
-Similarly, Round scores get combined using a TournamentScoringSystem.
-The system currently support "best 2 rounds", "best 3 rounds", and "best 4 rounds".
-This allows you to have a "drop round" or to include all round scores.
-The option "Sum best 4 games in any rounds" is also an option, in which case
-the actual rounds are ignored and all game scores are considered. For this case, you
-can specify "None" as the RoundScoringSystem.
+contribute to their score or just the best result. Similarly, Round scores get
+combined using a TournamentScoringSystem. The system currently support "best 2
+rounds", "best 3 rounds", and "best 4 rounds". This allows you to have a "drop
+round" or to include all round scores.
+In the 2-step process, the RoundScoringSystem should be set to "None", and the
+TournamentScoringSystem should be set to one of the "Sum best N games" options.
+In this case, the actual rounds are ignored and all game scores are considered.
+In both processes, you can also give points to players who volunteer to sit out
+a round to make the numbers work. In the 3-step process, this simply gives the
+player a score for the round despite having no games in that round. In the 2-step
+process, the score for sitting out a Round is treated like an additional score
+for a Game.
 
 The system also knows about SupplyCentres, CentreCounts, and DrawProposals, all
 of which should be fairly self-explanatory.
@@ -60,6 +66,8 @@ Creating Your Tournament
 Start out at https://example.com/admin/tournament/tournament/add.
 Give the tournament a name (the year will automatically be appended), format (FTF
 or vFTF), location, dates, and pick a TournamentScoringSystem and RoundScoringSystem.
+You can also specify whether the Tournament uses handicaps, which are additional
+points that are assigned by the TD but kept secret until all Games have finished.
 Decide whether you want the system to seed the games or not, how Great Powers
 will be assigned, what you're going to tell players about failed DrawProposals,
 and whether best countries are determined by score or centre count.
@@ -75,7 +83,7 @@ to users with accounts on the site, so it's a good idea to keep it unpublished
 while you're getting everything set up. You might not want to publish it at all,
 or only to publish it after the Tournament is over. Keep the Tournament Editable
 until it's over and all the data has been entered. Check the "no email"
-checkbox if you're going to be doing any experimenting (e.g. tying out game
+checkbox if you're going to be doing any experimenting (e.g. trying out game
 seeding) or if you don't want the system to send email to the players at all.
 You may also want to check "Delay publishing game URL" if you are going to have
 games taking place on Backstabbr or recorded in Backstabbr sandboxes. By default
@@ -128,6 +136,13 @@ The "User" field is to match-up Players who are also TDs who use the system (by
 default, Players who play in a Tournament that they help manage will be "Unranked"
 - they won't be eligible for Best Country awards and their score will be noted
 separately to everyone else.
+
+On this page is a link to a separate page where you can track who has paid to
+attend, if desired.
+
+If your Tournament uses handicaps, there will be a link to a separate page where
+you can enter the handicap for each registered Player. This will be added to their
+score after all Games have ended.
 
 This is also a good time to add any SeederBias that you might need. Your Tournament
 page has a link to https://example.com/admin/tournament/seederbias/add/ where you
@@ -192,7 +207,8 @@ calculate CentreCounts).
 Enter CentreCounts after each game year. (For a vFTF game, if the Game has a
 backstabbr URL, you can grab the current CentreCounts from Backstabbr by
 just clicking the "Import SC Counts from Backstabbr" link on the Game page).
-For DrawProposals, you can enter all of them or just the ones that pass.
+For DrawProposals, you can enter all of them or just the ones that pass, or just flag Games
+as ended if the draw doesn't affect the scoring.
 
 The bare minimum is the final year CentreCounts and any successful DrawProposals. These are
 needed to calculate scores. For some scoring systems, you'll also need to enter elimination
