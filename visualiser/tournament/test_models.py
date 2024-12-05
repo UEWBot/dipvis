@@ -1319,6 +1319,7 @@ class TournamentTests(TestCase):
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       is_finished=True,
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
@@ -1333,6 +1334,7 @@ class TournamentTests(TestCase):
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
+                                   is_finished=True,
                                    start=r11.start + HOURS_16)
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
@@ -1351,11 +1353,13 @@ class TournamentTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
+                                   is_finished=True,
                                    start=datetime.combine(t3.start_date, time(hour=8, tzinfo=timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
                                        dias=True,
+                                       is_finished=True,
                                        start=r31.start + HOURS_8,
                                        earliest_end_time=r31.start + HOURS_8,
                                        latest_end_time=r31.start + HOURS_9)
@@ -1390,7 +1394,6 @@ class TournamentTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
-        r13.set_is_finished()
         # Add Games to r21
         Game.objects.create(name='g21',
                             started_at=r21.start,
@@ -1407,14 +1410,12 @@ class TournamentTests(TestCase):
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
-        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=cls.r32.start,
                             the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
-        cls.r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -2004,6 +2005,7 @@ class TournamentTests(TestCase):
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       is_finished=True,
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         t.awards.create(name='Best Austria', power=self.austria, description='')
@@ -2025,6 +2027,7 @@ class TournamentTests(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',
                                  dias=True,
+                                 is_finished=True,
                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
         RoundPlayer.objects.create(the_round=r, player=self.p1, score=7)
         RoundPlayer.objects.create(the_round=r, player=self.p2, score=6)
@@ -2046,7 +2049,6 @@ class TournamentTests(TestCase):
         GamePlayer.objects.create(game=g, player=self.p5, power=self.france, score=3)
         GamePlayer.objects.create(game=g, player=self.p6, power=self.austria, score=2)
         GamePlayer.objects.create(game=g, player=self.p7, power=self.germany, score=1)
-        r.set_is_finished()
 
         t.update_scores()
 
@@ -2272,22 +2274,22 @@ class TournamentTests(TestCase):
         self.assertFalse(r.is_finished)
 
     # Tournament.set_is_finished()
-    def test_tourney_is_finished_some_rounds_over(self):
+    def test_tourney_set_is_finished_some_rounds_over(self):
         t = Tournament.objects.get(name='t1')
         t.set_is_finished()
         self.assertFalse(t.is_finished)
 
-    def test_tourney_is_finished_no_rounds_over(self):
+    def test_tourney_set_is_finished_no_rounds_over(self):
         t = Tournament.objects.get(name='t2')
         t.set_is_finished()
         self.assertFalse(t.is_finished)
 
-    def test_tourney_is_finished_all_rounds_over(self):
+    def test_tourney_set_is_finished_all_rounds_over(self):
         t = Tournament.objects.get(name='t3')
         t.set_is_finished()
         self.assertTrue(t.is_finished)
 
-    def test_tourney_is_finished_no_rounds(self):
+    def test_tourney_set_is_finished_no_rounds(self):
         today = date.today()
         t = Tournament.objects.create(name='Roundless',
                                       start_date=today,
@@ -2397,6 +2399,7 @@ class TournamentPlayerTests(TestCase):
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       is_finished=True,
                                        draw_secrecy=DrawSecrecy.COUNTS)
         Tournament.objects.create(name='t4',
                                        start_date=today,
@@ -2426,11 +2429,13 @@ class TournamentPlayerTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
+                                   is_finished=True,
                                    start=datetime.combine(t3.start_date, time(hour=8, tzinfo=timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
                                        dias=True,
+                                       is_finished=True,
                                        start=r31.start + HOURS_8,
                                        earliest_end_time=r31.start + HOURS_8,
                                        latest_end_time=r31.start + HOURS_9)
@@ -2446,14 +2451,12 @@ class TournamentPlayerTests(TestCase):
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
-        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=cls.r32.start,
                             the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
-        cls.r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -2955,6 +2958,7 @@ class RoundTests(TestCase):
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       is_finished=True,
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
@@ -2969,6 +2973,7 @@ class RoundTests(TestCase):
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s2,
                                    dias=True,
+                                   is_finished=True,
                                    start=r11.start + HOURS_16)
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
@@ -2987,11 +2992,13 @@ class RoundTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
+                                   is_finished=True,
                                    start=datetime.combine(t3.start_date, time(hour=8, tzinfo=timezone.utc)),
                                    final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
                                        dias=True,
+                                       is_finished=True,
                                        start=r31.start + HOURS_8,
                                        earliest_end_time=r31.start + HOURS_8,
                                        latest_end_time=r31.start + HOURS_9)
@@ -3026,21 +3033,18 @@ class RoundTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
-        r13.set_is_finished()
         # Add Games to r31
         Game.objects.create(name='g31',
                             started_at=r31.start,
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
-        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=cls.r32.start,
                             the_round=cls.r32,
                             is_finished=True,
                             the_set=cls.set1)
-        cls.r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -3398,25 +3402,25 @@ class RoundTests(TestCase):
         t.delete()
 
     # Round.set_is_finished()
-    def test_round_is_finished_no_games_over(self):
+    def test_round_set_is_finished_no_games_over(self):
         t = Tournament.objects.get(name='t1')
         r1 = t.round_numbered(1)
         r1.set_is_finished()
         self.assertFalse(r1.is_finished)
 
-    def test_round_is_finished_some_games_over(self):
+    def test_round_set_is_finished_some_games_over(self):
         t = Tournament.objects.get(name='t1')
         r2 = t.round_numbered(2)
         r2.set_is_finished()
         self.assertFalse(r2.is_finished)
 
-    def test_round_is_finished_all_games_over(self):
+    def test_round_set_is_finished_all_games_over(self):
         t = Tournament.objects.get(name='t1')
         r3 = t.round_numbered(3)
         r3.set_is_finished()
         self.assertTrue(r3.is_finished)
 
-    def test_round_is_finished_no_games(self):
+    def test_round_set_is_finished_no_games(self):
         """
         Rounds with no games can't have started, let alone finished
         """
@@ -4059,7 +4063,7 @@ class GameTests(TestCase):
         self.assertRaises(PowerAlreadyAssigned, g.assign_powers_from_prefs)
 
     # Game.set_is_finished()
-    def test_set_is_finished_solo(self):
+    def test_game_set_is_finished_solo(self):
         # Game is finished because somebody won
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -4070,7 +4074,7 @@ class GameTests(TestCase):
         g.is_finished = False
         g.save(update_fields=['is_finished'])
 
-    def test_set_is_finished_reached(self):
+    def test_game_set_is_finished_reached(self):
         # Game is finished because it reached the final year
         t = Tournament.objects.get(name='t3')
         r = t.round_numbered(1)
@@ -4083,7 +4087,7 @@ class GameTests(TestCase):
         self.assertTrue(g.is_finished)
         # No cleanup needed
 
-    def test_set_is_finished_not_reached(self):
+    def test_game_set_is_finished_not_reached(self):
         # Game is not finished because it didn't yet reach the final year
         t = Tournament.objects.get(name='t3')
         r = t.round_numbered(1)
@@ -4098,7 +4102,7 @@ class GameTests(TestCase):
         g.is_finished = True
         g.save(update_fields=['is_finished'])
 
-    def test_set_is_finished_unlimited(self):
+    def test_game_set_is_finished_unlimited(self):
         # Game not finished because there is no final year
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
@@ -5817,6 +5821,7 @@ class RoundPlayerTests(TestCase):
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
+                                   is_finished=True,
                                    start=r11.start + HOURS_16)
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
@@ -5853,7 +5858,6 @@ class RoundPlayerTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
-        r13.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
