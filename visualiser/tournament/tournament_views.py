@@ -135,8 +135,17 @@ def tournament_scores(request,
                                           'player__last_name',
                                           'player__first_name').prefetch_related('player')
     rds = t.round_set.prefetch_related('roundplayer_set')
-    # Grab the tournament scores and positions, all "if it ended now"
-    t_positions_and_scores = t.positions_and_scores()
+    if t.show_current_scores:
+        # Grab the tournament scores and positions, all "if it ended now"
+        t_positions_and_scores = t.positions_and_scores()
+    else:
+        # Get the scores after the last finished Round, if any
+        r = rds.filter(is_finished=True).last()
+        if r:
+            t_positions_and_scores = t.positions_and_scores(after_round_num=r.number())
+        else:
+            # After Round 0, everyone had a score of zero
+            t_positions_and_scores = t.positions_and_scores(after_round_num=0)
     # Construct a list of dicts with {rank, tournament player, [round 1 player, ..., round n player]}
     scores = []
     for tp in tps:
@@ -214,7 +223,15 @@ def tournament_best_countries(request,
     t = get_visible_tournament_or_404(tournament_id, request.user)
     # gps is a dict, keyed by power, of lists of lists of gameplayers,
     # sorted by best country criterion
-    gps = t.best_countries(whole_list=True)
+    if t.show_current_scores:
+        gps = t.best_countries(whole_list=True)
+    else:
+        # get the best country list for the end of the last finished Round
+        r = t.round_set.filter(is_finished=True).last()
+        if r:
+            gps = t.best_countries(whole_list=True, after_round_num=r.number())
+        else:
+            gps = t.best_countries(whole_list=True, after_round_num=0)
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').prefetch_related('power')
     # How many rows do we need?

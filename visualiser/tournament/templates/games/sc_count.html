@@ -21,27 +21,29 @@
     {% endfor %}
   </tr></thead>
   <tbody>
-    <tr class="odd_row">
-      <th style="text-align:center;">{% trans "Score" %}</th>
-      {% for gameplayer in players %}
-        <td style="text-align:right;">
-          {% if not gameplayer.score_is_final %}
-	    <i>
-          {% endif %}
-          {% if gameplayer.score_dropped %}
-	    <del>
-          {% endif %}
-            {{ gameplayer.score|floatformat:2 }}
-          {% if gameplayer.score_dropped %}
-	    </del>
-          {% endif %}
-          {% if not gameplayer.score_is_final %}
-	    </i>
-          {% endif %}
-        </td>
-      {% endfor %}
-      <td/>
-    </tr>
+    {% if game.the_round.show_scores %}
+      <tr class="odd_row">
+        <th style="text-align:center;">{% trans "Score" %}</th>
+        {% for gameplayer in players %}
+          <td style="text-align:right;">
+            {% if not gameplayer.score_is_final %}
+	      <i>
+            {% endif %}
+            {% if gameplayer.score_dropped %}
+	      <del>
+            {% endif %}
+              {{ gameplayer.score|floatformat:2 }}
+            {% if gameplayer.score_dropped %}
+	      </del>
+            {% endif %}
+            {% if not gameplayer.score_is_final %}
+	      </i>
+            {% endif %}
+          </td>
+        {% endfor %}
+        <td/>
+      </tr>
+    {% endif %}
     {% for row in rows %}
       <tr class="{% cycle 'even_row' 'odd_row' %}">
         {% for cell in row %}

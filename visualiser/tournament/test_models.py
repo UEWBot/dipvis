@@ -2996,6 +2996,58 @@ class TournamentPlayerTests(TestCase):
         # TODO Tournament using TScoringSumGames scoring system
         pass
 
+    # TournamentPlayer.score_to_show()
+    def test_tournamentplayer_score_to_show_finished(self):
+        """score_to_show() with finished tournament"""
+        t = Tournament.objects.get(name='t3')
+        self.assertTrue(t.is_finished)
+        self.assertTrue(t.show_current_scores)
+        t.show_current_scores = False
+        t.save()
+        tp = t.tournamentplayer_set.get(player=self.p5)
+        score = tp.score_to_show()
+        # TODO set scores so we can tell that we got the right one
+        self.assertEqual(score, tp.score)
+        # Cleanup
+        t.show_current_scores = True
+        t.save()
+
+    def test_tournamentplayer_score_to_show_current(self):
+        """score_to_show() with tournament.show_current_scores True"""
+        t = Tournament.objects.get(name='t3')
+        self.assertTrue(t.is_finished)
+        self.assertTrue(t.show_current_scores)
+        t.is_finished = False
+        t.save()
+        tp = t.tournamentplayer_set.get(player=self.p5)
+        score = tp.score_to_show()
+        # TODO set scores so we can tell that we got the right one
+        self.assertEqual(score, tp.score)
+        # Cleanup
+        t.is_finished = True
+        t.save()
+
+    def test_tournamentplayer_score_to_show_last_round(self):
+        """score_to_show() with ongoing Tournament, show_current_scores False"""
+        t = Tournament.objects.get(name='t3')
+        self.assertTrue(t.is_finished)
+        self.assertTrue(t.show_current_scores)
+        t.is_finished = False
+        t.show_current_scores = False
+        t.save()
+        tp = t.tournamentplayer_set.get(player=self.p5)
+        score = tp.score_to_show()
+        rp = tp.roundplayers().filter(the_round__is_finished=True).last()
+        # TODO set scores so we can tell that we got the right one
+        self.assertEqual(score, rp.tournament_score)
+        # Cleanup
+        t.is_finished = True
+        t.show_current_scores = True
+        t.save()
+
+    # TODO In an ongoing Tournament with show_current_scores False, if there are no finished rounds,
+    #       it should return zero
+
     # TournamentPlayer.position()
     def test_tournamentplayer_position_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -3919,6 +3971,47 @@ class RoundTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
         self.assertFalse(r4.in_progress())
+
+    # Round.show_scores()
+    def test_round_show_scores_round_finished(self):
+        """
+        Return True if the Round is finished
+        """
+        t = Tournament.objects.get(name='t1')
+        self.assertTrue(t.show_current_scores)
+        t.show_current_scores = False
+        t.save()
+        r = t.round_numbered(3)
+        self.assertTrue(r.is_finished)
+        self.assertTrue(r.show_scores())
+        # Cleanup
+        t.show_current_scores = True
+        t.save()
+
+    def test_round_show_scores_show_current_scores(self):
+        """
+        Should return True if the Tournament has show_current_scores set
+        """
+        t = Tournament.objects.get(name='t1')
+        self.assertTrue(t.show_current_scores)
+        r = t.round_numbered(4)
+        self.assertFalse(r.is_finished)
+        self.assertTrue(r.show_scores())
+
+    def test_round_show_scores_round_not_finished(self):
+        """
+        Return False otherwise
+        """
+        t = Tournament.objects.get(name='t1')
+        self.assertTrue(t.show_current_scores)
+        t.show_current_scores = False
+        t.save()
+        r = t.round_numbered(4)
+        self.assertFalse(r.is_finished)
+        self.assertFalse(r.show_scores())
+        # Cleanup
+        t.show_current_scores = True
+        t.save()
 
     # Round.number()
     def test_round_number_11(self):

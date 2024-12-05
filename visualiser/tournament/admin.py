@@ -157,7 +157,7 @@ class TournamentAdmin(admin.ModelAdmin):
               ('seed_games', 'power_assignment'),
               ('tournament_scoring_system', 'handicaps', 'round_scoring_system',
                'non_player_round_score', 'non_player_round_score_once'),
-              ('draw_secrecy', 'best_country_criterion'),
+              ('show_current_scores', 'draw_secrecy', 'best_country_criterion'),
               ('discord_url', 'is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
               'wdd_tournament_id',

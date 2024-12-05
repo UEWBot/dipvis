@@ -6,23 +6,25 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
-{% if player.unranked %}
-  <p>{% blocktrans %}Position: Unranked{% endblocktrans %}</p>
-  <p>{% trans "Ineligible for awards." %}</p>
-{% else %}
-  {% if player.score_is_final %}
-    <p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
+{% if tournament.is_finished or tournament.show_current_scores %}
+  {% if player.unranked %}
+    <p>{% blocktrans %}Position: Unranked{% endblocktrans %}</p>
+    <p>{% trans "Ineligible for awards." %}</p>
   {% else %}
-    <p>{% blocktrans with pos=player.position|ordinal %}Current position: {{ pos }}{% endblocktrans %}</p>
+    {% if player.score_is_final %}
+      <p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
+    {% else %}
+      <p>{% blocktrans with pos=player.position|ordinal %}Current position: {{ pos }}{% endblocktrans %}</p>
+    {% endif %}
+    <h2>{% trans "Awards" %}</h2>
+    <ul>
+      {% for award in player.awards.all %}
+        <li>{{ award.name }}</li>
+      {% empty %}
+        <li>{% trans "None" %}</li>
+      {% endfor %}
+    </ul>
   {% endif %}
-  <h2>{% trans "Awards" %}</h2>
-  <ul>
-    {% for award in player.awards.all %}
-      <li>{{ award.name }}</li>
-    {% empty %}
-      <li>{% trans "None" %}</li>
-    {% endfor %}
-  </ul>
 {% endif %}
 
 <h2>{% trans "Games Played" %}</h2>

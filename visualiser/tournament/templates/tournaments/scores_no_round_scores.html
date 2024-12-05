@@ -30,38 +30,40 @@
         <td style="text-align:right"><a href="{{ p_data.player.get_absolute_url }}">{{ p_data.player.player }}</a></td>
         {% for rp in p_data.rounds %}
           <td style="text-align:right">
-            {% for gp in rp.gameplayers %}
-              {% if not forloop.first %}<br>+ {% endif %}
-              {% if not gp.score_is_final %}
-                <i>
-              {% endif %}
-              {% if gp.score_dropped %}
-                <del>
-              {% endif %}
-                {{ gp.score|floatformat:2 }}
-              {% if gp.score_dropped %}
-                </del>
-              {% endif %}
-              {% if not gp.score_is_final %}
-                </i>
-              {% endif %}
-            {% empty %}
-	      {% if rp.score %}
-                {% if not rp.score_is_final %}
+            {% if rp.the_round.show_scores %}
+              {% for gp in rp.gameplayers %}
+                {% if not forloop.first %}<br>+ {% endif %}
+                {% if not gp.score_is_final %}
                   <i>
                 {% endif %}
-                {% if rp.score_dropped %}
+                {% if gp.score_dropped %}
                   <del>
                 {% endif %}
-                  {{ rp.score|floatformat:2 }}*
-                {% if rp.score_dropped %}
+                  {{ gp.score|floatformat:2 }}
+                {% if gp.score_dropped %}
                   </del>
                 {% endif %}
-                {% if not rp.score_is_final %}
+                {% if not gp.score_is_final %}
                   </i>
                 {% endif %}
-              {% endif %}
-            {% endfor %}
+              {% empty %}
+	        {% if rp.score %}
+                  {% if not rp.score_is_final %}
+                    <i>
+                  {% endif %}
+                  {% if rp.score_dropped %}
+                    <del>
+                  {% endif %}
+                    {{ rp.score|floatformat:2 }}*
+                  {% if rp.score_dropped %}
+                    </del>
+                  {% endif %}
+                  {% if not rp.score_is_final %}
+                    </i>
+                  {% endif %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
           </td>
         {% endfor %}
         {% if tournament.handicaps %}
@@ -77,7 +79,7 @@
           {% if not p_data.player.score_is_final %}
             <i>
           {% endif %}
-            {{ p_data.player.score|floatformat:2 }}
+            {{ p_data.player.score_to_show|floatformat:2 }}
           {% if not p_data.player.score_is_final %}
             </i>
           {% endif %}

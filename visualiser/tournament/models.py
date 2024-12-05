@@ -636,6 +636,8 @@ class Tournament(models.Model):
     # Default of False here becaue it's less work and doesn't matter if non_player_round_score is the default value
     non_player_round_score_once = models.BooleanField(default=False,
                                                       help_text='Can a player only get the sitting out score for one round?')
+    show_current_scores = models.BooleanField(default=True,
+                                              help_text=_('Whether to show up-to-date after-last-round scores'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=_(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
@@ -1244,6 +1246,23 @@ class TournamentPlayer(models.Model):
         # and it can't change
         return True
 
+    def score_to_show(self):
+        """
+        Tournament score to show for the player.
+
+        Returns either the current "if all games ended now" score or the
+        score after the last finished Round, depending on the Tournament
+        attributes.
+        """
+        t = self.tournament
+        if t.is_finished or t.show_current_scores:
+            return self.score
+        rp = self.roundplayers().filter(the_round__is_finished=True).last()
+        if rp:
+            return rp.tournament_score
+        # No Round they played in has finished yet
+        return 0.0
+
     def position(self):
         """
         Where is the player (currently) ranked overall in the tournament?
@@ -1588,6 +1607,12 @@ class Round(models.Model):
         if self.is_finished:
             return False
         return self.roundplayer_set.exists() or self.game_set.exists()
+
+    def show_scores(self):
+        """
+        Whether to show scores from this Round or not.
+        """
+        return self.is_finished or self.tournament.show_current_scores
 
     def number(self):
         """

@@ -505,12 +505,41 @@ class TournamentViewTests(TestCase):
         # Scores page for an in-progress Tournament
         self.assertFalse(self.t1.handicaps)
         self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
+        self.assertTrue(self.t1.show_current_scores)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, 'Current Scores')
         self.assertNotContains(response, 'Handicap')
         self.assertTemplateUsed(response, 'tournaments/scores.html')
+
+    def test_scores_old(self):
+        # Scores page for an in-progress Tournament
+        self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
+        self.assertTrue(self.t1.show_current_scores)
+        self.t1.show_current_scores = False
+        self.t1.save()
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertTemplateUsed(response, 'tournaments/scores.html')
+        # Cleanup
+        self.t1.show_current_scores = True
+        self.t1.save()
+
+    def test_scores_old2(self):
+        # Scores page for an in-progress Tournament
+        self.assertTrue(self.t4.tournament_scoring_system_obj().uses_round_scores)
+        self.assertTrue(self.t4.show_current_scores)
+        self.t4.show_current_scores = False
+        self.t4.save()
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertTemplateUsed(response, 'tournaments/scores.html')
+        # Cleanup
+        self.t4.show_current_scores = True
+        self.t4.save()
 
     def test_scores_no_rounds(self):
         # Scores page for an in-progress Tournament that doesn't use Rounds
@@ -617,6 +646,30 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_best_countries_old(self):
+        self.assertTrue(self.t4.show_current_scores)
+        self.t4.show_current_scores = False
+        self.t4.save()
+        response = self.client.get(reverse('tournament_best_countries',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t4.show_current_scores = True
+        self.t4.save()
+
+    def test_best_countries_old2(self):
+        self.assertTrue(self.t1.show_current_scores)
+        self.t1.show_current_scores = False
+        self.t1.save()
+        response = self.client.get(reverse('tournament_best_countries',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t1.show_current_scores = True
+        self.t1.save()
 
     def test_best_countries_refresh(self):
         response = self.client.get(reverse('tournament_best_countries_refresh',
