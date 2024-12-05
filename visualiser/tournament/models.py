@@ -764,9 +764,9 @@ class Tournament(models.Model):
         """
         Returns the scores for everyone registered for the tournament.
 
-        If the tournament is over, this will be the stored scores.
-        If the tournament is ongoing, it will be the "if all games
-            ended now" scores.
+        These scores are retrieved from the TournamentPlayers and represent
+        the final scores if the tournament is over or the "if all games
+            ended now" scores if it is ongoing.
         Returns a dict, keyed by player, of float tournament scores.
         """
         t_scores = {}
@@ -799,15 +799,6 @@ class Tournament(models.Model):
             result[k] = (place, v)
         return result
 
-    def winner(self):
-        """
-        Return the player who won, or None if the tournament isn't yet finished
-        """
-        if self.is_finished:
-            # TODO This assumes no tie
-            return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
-        return None
-
     def _store_score(self, tp, scores, add_handicap):
         """
         Update tp.score in the database
@@ -817,7 +808,7 @@ class Tournament(models.Model):
         add_handicap is a bool that controls whether tp.handicap is added or not
 
         Sets score to 0 if the player is not in scores
-        If add_handicap is True, adds tp.handicap
+        Otherwise if add_handicap is True, adds tp.handicap
         Saves the resulting score to the database
         """
         if tp.player not in scores:
@@ -855,6 +846,15 @@ class Tournament(models.Model):
                     for gp in gp_list:
                         # TODO What if this gets called more than once?
                         gp.tournamentplayer().awards.add(award)
+
+    def winner(self):
+        """
+        Return the player who won, or None if the tournament isn't yet finished
+        """
+        if self.is_finished:
+            # TODO This assumes no tie
+            return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
+        return None
 
     def round_numbered(self, number):
         """
