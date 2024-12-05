@@ -1715,39 +1715,67 @@ class TournamentTests(TestCase):
         # Add GamePlayers to g11
         GamePlayer.objects.create(player=cls.p1,
                                   game=g11,
-                                  power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey)
+                                  power=cls.austria,
+                                  score=1.0)
+        GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england,
+                                  score=1.1)
+        GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france,
+                                  score=1.2)
+        GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany,
+                                  score=1.3)
+        GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy,
+                                  score=1.4)
+        GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia,
+                                  score=1.6)
+        GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey,
+                                  score=1.5)
         # Add GamePlayers to g12
-        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england)
-        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france)
-        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria,
+                                  score=2.5)
+        GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england,
+                                  score=2.4)
+        GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france,
+                                  score=2.2)
+        GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany,
+                                  score=2.3)
+        GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy,
+                                  score=2.1)
+        GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia,
+                                  score=2.0)
+        GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey,
+                                  score=2.6)
         # Add GamePlayers to g13
         GamePlayer.objects.create(player=cls.p1,
                                   game=g13,
-                                  power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey)
+                                  power=cls.austria,
+                                  score=3.2)
+        GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england,
+                                  score=3.5)
+        GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france,
+                                  score=3.1)
+        GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany,
+                                  score=3.6)
+        GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy,
+                                  score=3.3)
+        GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia,
+                                  score=3.0)
+        GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey,
+                                  score=3.4)
         # Add GamePlayers to g14
-        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england)
-        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france)
-        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria,
+                                  score=4.4)
+        GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england,
+                                  score=4.1)
+        GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france,
+                                  score=4.0)
+        GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany,
+                                  score=4.2)
+        GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy,
+                                  score=4.6)
+        GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia,
+                                  score=4.3)
+        GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey,
+                                  score=4.5)
         # And the corresponding RoundPlayers
         RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=111.0)
         RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=112.0)
@@ -2461,6 +2489,22 @@ class TournamentTests(TestCase):
         for gp in bc[self.germany]:
             with self.subTest(power=gp.power):
                 self.assertFalse(gp.player == self.p5)
+
+    def test_best_countries_after_round(self):
+        t = Tournament.objects.get(name='t1')
+        bc = t.best_countries(after_round_num=1)
+        # All the best countries should come from g12 except when a player is unranked
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                best = bc[power]
+                # We only asked for the best, not the full ranking
+                self.assertEqual(len(best), 1)
+                gp = best[0]
+                self.assertFalse(gp.tournamentplayer().unranked)
+                if power == self.france:
+                    self.assertEqual(gp.game.name, 'g11')
+                else:
+                    self.assertEqual(gp.game.name, 'g12')
 
     def _rank_of(self, gp, in_lists):
         """Find the list in in_lists that contains the gp and return its index"""

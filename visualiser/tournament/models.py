@@ -912,7 +912,7 @@ class Tournament(models.Model):
             gp_list.sort(key=itemgetter(2, 1), reverse=True)
         gp_list.sort(key=itemgetter(3))
 
-    def best_countries(self, whole_list=False):
+    def best_countries(self, whole_list=False, after_round_num=None):
         """
         Find the best result for every power
 
@@ -924,6 +924,9 @@ class Tournament(models.Model):
         GamePlayers will be in the same list. For example, three GamePlayers
         A, B, and C with scores of 2.0, 5.0, and 2.0 respectively would be
         returned as [[B], [A, C]].
+        If after_round_num is None, determines the best countries if all games
+        ended now. Otherwise, returns best countries after the specified round
+        had completed.
         """
         tuples = {}
         # If no Games exist, return a dict of empty lists
@@ -935,6 +938,8 @@ class Tournament(models.Model):
         # of lists of (GamePlayer, score, dots, unranked) 4-tuples
         for gp in GamePlayer.objects.filter(game__the_round__tournament=self).prefetch_related('power', 'player', 'game', 'game__the_round__tournament'):
             if not gp.power:
+                continue
+            if (after_round_num is not None) and (gp.game.the_round.number() > after_round_num):
                 continue
             tuple_ = (gp, gp.score, gp.final_sc_count(), gp.tournamentplayer().unranked)
             tuples.setdefault(gp.power, []).append(tuple_)
