@@ -795,13 +795,12 @@ class Tournament(models.Model):
         """
         # Populate t_scores with a dict keyed by player of scores
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
-            # Construct a QuerySet with the appropriate RoundPlayers
-            rps = RoundPlayer.objects.none()
-            for r in self.round_set.all():
+            t_scores = {}
+            for r in self.round_set.reverse():
                 if r.number() <= after_round_num:
-                    rps |= r.roundplayer_set.all()
-            # Calculate the scores for that set of RoundPlayers
-            t_scores = self._calculated_scores(rps)
+                    for rp in r.roundplayer_set.all():
+                        if rp.player not in t_scores:
+                            t_scores[rp.player] = rp.tournament_score
             # Anyone who hadn't yet played scores zero
             for tp in self.tournamentplayer_set.all():
                 if tp.player not in t_scores:
@@ -1513,10 +1512,10 @@ class Round(models.Model):
         gps = GamePlayer.objects.filter(game__the_round=self).distinct()
         if for_players is not None:
             gps = gps.filter(player__in=for_players)
+        rps = self.roundplayer_set.all()
+        if for_players is not None:
+            rps = rps.filter(player__in=for_players)
         if system:
-            rps = self.roundplayer_set.all()
-            if for_players is not None:
-                rps = rps.filter(player__in=for_players)
             scores = system.scores(gps)
             for rp in rps:
                 try:
@@ -1537,6 +1536,35 @@ class Round(models.Model):
             rp.save(update_fields=['score'])
         # That could change the Tournament scoring for those Players
         self.tournament.update_scores(for_players)
+        # Cache the players' tournament scores
+        # Most of the time, this is called for the current round,
+        # but we need to be careful if a later round has started
+        rps2 = RoundPlayer.objects.none()
+        next_one = False
+        for next_round in self.tournament.round_set.all():
+            if next_round == self:
+                next_one = True
+            elif next_one:
+                break
+            rps2 |= next_round.roundplayer_set.all()
+        # Is there a later round, and if so, has it got Games (and thus potentially scores) ?
+        if (next_round != self) and (next_round.game_set.exists()):
+            # Figure out tournament scores without any later rounds
+            if for_players is not None:
+                rps2 = rps2.filter(player__in=for_players)
+            t_scores = self.tournament._calculated_scores(rps2)
+            for rp in rps:
+                try:
+                    rp.tournament_score = t_scores[rp.player]
+                except KeyError:
+                    # Player hasn't yet played
+                    rp.tournament_score = 0.0
+                rp.save(update_fields=['tournament_score'])
+        else:
+            # Tournament score calculated earlier doesn't include any later Rounds
+            for rp in rps:
+                rp.tournament_score = rp.tournamentplayer().score
+                rp.save(update_fields=['tournament_score'])
 
     def set_is_finished(self):
         """
@@ -2255,6 +2283,10 @@ class RoundPlayer(models.Model):
                                              help_text=_('number of games to play this round'))
     sandboxer = models.BooleanField(default=False,
                                     help_text=_('set if the player is willing to record a game this round'))
+    # This attribute records the player's tournament score after this round
+    # If the round is still in progress, it represents the "if all games ended now" score
+    tournament_score = models.FloatField(default=0.0,
+                                         help_text=_('Tournament score after the round'))
 
     class Meta:
         ordering = ['player', 'the_round__start']

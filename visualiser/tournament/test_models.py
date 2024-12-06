@@ -2018,6 +2018,15 @@ class TournamentTests(TestCase):
 
     def test_tournament_positions_and_scores_round_zero(self):
         t = Tournament.objects.get(name='t3')
+        # Store the current scores
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            scores[tp] = tp.score
+        for r in t.round_set.all():
+            for rp in r.roundplayer_set.all():
+                scores[rp] = rp.score
+            # Call update_scores() to set rp.tournament_score
+            r.update_scores()
         p_and_s = t.positions_and_scores(after_round_num=0)
         # All scores should be zero before the first round
         for tp in t.tournamentplayer_set.all():
@@ -2025,9 +2034,22 @@ class TournamentTests(TestCase):
                 self.assertAlmostEqual(p_and_s[tp.player][1], 0.0)
                 # Everyone should be joint first
                 self.assertEqual(p_and_s[tp.player][0], 1)
+        # Cleanup
+        for xp, score in scores.items():
+            xp.score = score
+            xp.save()
 
     def test_tournament_positions_and_scores_round(self):
         t = Tournament.objects.get(name='t3')
+        # Store the current scores
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            scores[tp] = tp.score
+        for r in t.round_set.all():
+            for rp in r.roundplayer_set.all():
+                scores[rp] = rp.score
+            # Call update_scores() to set rp.tournament_score
+            r.update_scores()
         p_and_s = t.positions_and_scores(after_round_num=1)
         # Just the first round should count
         rps = t.round_numbered(1).roundplayer_set.all()
@@ -2035,14 +2057,31 @@ class TournamentTests(TestCase):
             with self.subTest(player=tp.player):
                 rp = rps.get(player=tp.player)
                 self.assertAlmostEqual(p_and_s[tp.player][1], rp.score)
+        # Cleanup
+        for xp, score in scores.items():
+            xp.score = score
+            xp.save()
 
     def test_tournament_positions_and_scores_last_round(self):
         t = Tournament.objects.get(name='t3')
+        # Store the current scores
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            scores[tp] = tp.score
+        for r in t.round_set.all():
+            for rp in r.roundplayer_set.all():
+                scores[rp] = rp.score
+            # Call update_scores() to set rp.tournament_score
+            r.update_scores()
         p_and_s = t.positions_and_scores(after_round_num=t.round_set.count())
         # This should just report the scores stored in the database
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
                 self.assertAlmostEqual(p_and_s[tp.player][1], tp.score)
+        # Cleanup
+        for xp, score in scores.items():
+            xp.score = score
+            xp.save()
 
     def test_tournament_positions_and_scores_tscoringsumgames(self):
         # Check that positions_and_scores() with round specified
