@@ -137,7 +137,7 @@ def tournament_scores(request,
     rds = t.round_set.prefetch_related('roundplayer_set')
     # Grab the tournament scores and positions, all "if it ended now"
     t_positions_and_scores = t.positions_and_scores()
-    # Construct a list of dicts with [rank, tournament player, round 1 player, ..., round n player, tournament score]
+    # Construct a list of dicts with {rank, tournament player, [round 1 player, ..., round n player]}
     scores = []
     for tp in tps:
         rs = []
