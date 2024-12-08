@@ -267,6 +267,7 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=cls.p6, game=g, power=cls.france)
         GamePlayer.objects.create(player=cls.p7, game=g, power=cls.england)
         GamePlayer.objects.create(player=cls.p8, game=g, power=cls.austria)
+        cls.r31.set_is_finished()
 
         # Published Tournament so it's visible to all. AUTO power assignment
         cls.t4 = Tournament.objects.create(name='t4',
@@ -334,6 +335,7 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=cls.p7, game=g2, power=cls.france, score=5)
         GamePlayer.objects.create(player=cls.p8, game=g2, power=cls.england, score=6)
         GamePlayer.objects.create(player=cls.p9, game=g2, power=cls.austria, score=7)
+        cls.r41.set_is_finished()
 
     def test_detail(self):
         response = self.client.get(reverse('round_detail',
@@ -508,7 +510,7 @@ class RoundViewTests(TestCase):
 
     def test_roll_call_post_old_round(self):
         # POST of roll_call() for a Round that is finished
-        self.assertTrue(self.t3.round_numbered(1).is_finished())
+        self.assertTrue(self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '9',
@@ -550,7 +552,7 @@ class RoundViewTests(TestCase):
         # POST of roll_call() for a Round that is finished
         # trying to delete a player who played a game
         r = self.t3.round_numbered(1)
-        self.assertTrue(r.is_finished())
+        self.assertTrue(r.is_finished)
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
@@ -588,7 +590,7 @@ class RoundViewTests(TestCase):
 
     def test_roll_call_post_add_duplicate_player(self):
         # POST of roll_call() where we add a TournamentPlayer who's already playing
-        self.assertTrue(self.t3.round_numbered(1).is_finished())
+        self.assertTrue(self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '9',

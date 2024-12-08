@@ -124,18 +124,21 @@ class NewsTests(TestCase):
                             the_round=r13,
                             is_finished=True,
                             the_set=cls.set1)
+        r13.set_is_finished()
         # Add Games to r31
         Game.objects.create(name='g31',
                             started_at=r31.start,
                             the_round=r31,
                             is_finished=True,
                             the_set=cls.set1)
+        r31.set_is_finished()
         # Add Games to r32
         Game.objects.create(name='g32',
                             started_at=r32.start,
                             the_round=r32,
                             is_finished=True,
                             the_set=cls.set1)
+        r32.set_is_finished()
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')

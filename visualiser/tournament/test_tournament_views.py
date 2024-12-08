@@ -477,7 +477,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_views_finished(self):
-        self.assertEqual(self.t4.is_finished(), True)
+        self.assertTrue(self.t4.is_finished)
         response = self.client.get(reverse('tournament_views',
                                            args=(self.t4.pk,)),
                                    secure=True)

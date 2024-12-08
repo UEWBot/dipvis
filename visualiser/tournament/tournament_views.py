@@ -494,7 +494,7 @@ def seeder_bias(request, tournament_id):
     form = SeederBiasForm(request.POST or None,
                           tournament=t)
     if request.method == 'POST':
-        if t.is_finished() or not t.editable:
+        if t.is_finished or not t.editable:
             raise Http404
         for k in request.POST.keys():
             if k.startswith('delete_'):

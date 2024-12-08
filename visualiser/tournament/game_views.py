@@ -456,17 +456,20 @@ def sc_counts(request, tournament_id, game_name):
                            'tournament': t,
                            'game': g})
 
-        # Set the "game over" flag as appropriate
-        # Game is over if it reached the final year,
-        # somebody won, or the checkbox was checked
-        if end_form.cleaned_data['is_finished']:
-            g.is_finished = True
-            g.save(update_fields=['is_finished'])
-        else:
-            g.is_finished = False
-            g.save(update_fields=['is_finished'])
-            # Game could still be finished for other reasons
-            g.set_is_finished()
+        if end_form.has_changed():
+            # Set the "game over" flag as appropriate
+            # Game is over if it reached the final year,
+            # somebody won, or the checkbox was checked
+            if end_form.cleaned_data['is_finished']:
+                g.is_finished = True
+                g.save(update_fields=['is_finished'])
+            else:
+                g.is_finished = False
+                g.save(update_fields=['is_finished'])
+                # Game could still be finished for other reasons
+                g.set_is_finished()
+        # Changes are likely to affect the scores
+        g.update_scores()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_chart',
                                             args=(tournament_id, game_name)))
@@ -727,6 +730,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     else:
         _sc_counts_to_cc(game, year, bg.sc_counts)
         game.set_is_finished(year)
+        game.update_scores()
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
@@ -751,6 +755,7 @@ def _scrape_webdip(request, tournament, game, webdip_game):
     # Add the appropriate CentreCounts
     _sc_counts_to_cc(game, year, wg.sc_counts)
     game.set_is_finished(year)
+    game.update_scores()
     # TODO There's more information in wg - like whether the game is over...
     # Report what was done
     return render(request,

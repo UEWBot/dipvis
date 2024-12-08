@@ -652,6 +652,7 @@ class Tournament(models.Model):
                                     verbose_name=_(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
                                     default=DrawSecrecy.SECRET)
+    is_finished = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False,
                                        help_text=_(u'Whether the tournament is visible to all site visitors'))
     managers = models.ManyToManyField(User,
@@ -764,18 +765,18 @@ class Tournament(models.Model):
                 return i
         raise AssertionError(f'award {award} not found in {tournament}')
 
-    def _calculated_scores(self):
+    def _calculated_scores(self, for_players=None):
         """
-        Calculates the scores for everyone registered for the tournament.
+        Calculates the tournament scores for players who have attended
 
+        for_players is an optional QuerySet of RoundPlayers that have changed.
         Return a dict, keyed by player, of floats.
         """
         system = self.tournament_scoring_system_obj()
-        t_scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
-        # Now add in anyone who has yet to attend a round
-        for tp in self.tournamentplayer_set.all():
-            if tp.player not in t_scores:
-                t_scores[tp.player] = 0.0
+        if for_players is None:
+            t_scores = system.scores(RoundPlayer.objects.filter(the_round__tournament=self).distinct())
+        else:
+            t_scores = system.scores(for_players)
         return t_scores
 
     def scores_detail(self):
@@ -821,29 +822,52 @@ class Tournament(models.Model):
         """
         Return the player who won, or None if the tournament isn't yet finished
         """
-        if self.is_finished():
+        if self.is_finished:
             # TODO This assumes no tie
             return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
         return None
 
-    def update_scores(self):
+    def _store_score(self, tp, scores, add_handicap):
+        """
+        Update tp.score in the database
+
+        tp is a TournamentPlayer
+        scores is a dict, keyed by Player, of tournament scores for players who have played
+        add_handicap is a bool that controls whether tp.handicap is added or not
+
+        Sets score to 0 if the player is not in scores
+        If add_handicap is True, adds tp.handicap
+        Saves the resulting score to the database
+        """
+        if tp.player not in scores:
+            scores[tp.player] = 0.0
+        elif add_handicap:
+            scores[tp.player] += tp.handicap
+        tp.score = scores[tp.player]
+        tp.save(update_fields=['score'])
+
+    def update_scores(self, for_players=None):
         """
         Recalculate the scores for the Tournament and store them in the TournamentPlayers.
 
         If the Tournament has now ended, add Best Country awards to
         the appropriate TournamentPlayers.
+        for_players is an optional QuerySet or list of Players that have changed.
         """
-        scores = self._calculated_scores()
-        finished = self.is_finished()
-        add_handicap = finished and self.handicaps
-        for tp in self.tournamentplayer_set.prefetch_related('player'):
-            tp.score = scores[tp.player]
-            # Handicaps, if any, get added after the tournament is complete
-            # but only if the player actually played
-            if add_handicap and tp.roundplayers().exists():
-                tp.score += tp.handicap
-            tp.save(update_fields=['score'])
-        if finished:
+        rps = RoundPlayer.objects.filter(the_round__tournament=self).distinct()
+        if for_players is not None:
+            rps = rps.filter(player__in=for_players)
+        scores = self._calculated_scores(rps)
+        add_handicap = self.is_finished and self.handicaps
+        # Save scores, including for anyone who has yet to attend a round
+        if for_players is not None:
+            for p in for_players:
+                tp = self.tournamentplayer_set.get(player=p)
+                self._store_score(tp, scores, add_handicap)
+        else:
+            for tp in self.tournamentplayer_set.all():
+                self._store_score(tp, scores, add_handicap)
+        if self.is_finished:
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
                 for award in self.awards.filter(power=power).all():
@@ -978,26 +1002,21 @@ class Tournament(models.Model):
         # If no round is in progress, return the first unfinished round
         rds = rds.reverse()
         for r in rds:
-            if not r.is_finished():
+            if not r.is_finished:
                 return r
         return None
 
-    def is_finished(self):
+    def set_is_finished(self):
         """
-        Determines whether the Tournament is complete.
-
-        Returns True if the tournament has rounds, and they are all finished.
-        Returns False otherwise.
+        Sets is_finished to True if the tournament has rounds, and they are all finished.
         """
-        rds = self.round_set.prefetch_related('game_set')
+        rds = self.round_set.all()
         # If there are no rounds, the tournament can't have started
         if not rds:
-            return False
+            return
         # Look for any unfinished round
-        for r in rds:
-            if not r.is_finished():
-                return False
-        return True
+        self.is_finished = not rds.filter(is_finished=False).exists()
+        self.save(update_fields=['is_finished'])
 
     def in_progress(self):
         """
@@ -1031,20 +1050,29 @@ class Tournament(models.Model):
         """
         Save the object to the database.
 
-        Updates score attributes of any RoundPlayers and TournamentPlayers.
+        If round_scoring_system may have changed, updates score attributes of any RoundPlayers
+        If tournament_scoring_system or handicap may have changed, updates score attributes of any TournamentPlayers.
         """
         super().save(*args, **kwargs)
 
-        # Change may affect the scoring
-        try:
-            validate_round_scoring_system(self.round_scoring_system)
-            validate_tournament_scoring_system(self.tournament_scoring_system)
-        except ValidationError:
-            pass
-        else:
-            # Update all round scores. This will also call self.update_scores()
-            for r in self.round_set.all():
-                r.update_scores()
+        if ('update_fields' not in kwargs) or ('round_scoring_system' in kwargs['update_fields']) :
+            # Change may affect the scoring
+            try:
+                validate_round_scoring_system(self.round_scoring_system)
+            except ValidationError:
+                pass
+            else:
+                # Update all round scores. This will also call self.update_scores()
+                for r in self.round_set.all():
+                    r.update_scores()
+        if ('update_fields' not in kwargs) or ('tournament_scoring_system' in kwargs['update_fields']) or ('handicap' in kwargs['update_fields']):
+            # Change may affect the scoring
+            try:
+                validate_tournament_scoring_system(self.tournament_scoring_system)
+            except ValidationError:
+                pass
+            else:
+                self.update_scores()
 
     def __str__(self):
         return '%s %d' % (self.name, self.start_date.year)
@@ -1165,7 +1193,7 @@ class TournamentPlayer(models.Model):
         False if it is the "if all games ended now" score.
         """
         t = self.tournament
-        if t.is_finished():
+        if t.is_finished:
             return True
         if t.handicaps:
             # Handicaps are added after all games end
@@ -1384,6 +1412,7 @@ class Round(models.Model):
     enable_check_in = models.BooleanField(default=False,
                                           verbose_name=_(u'Enable self-check-ins'))
     email_sent = models.BooleanField(default=False)
+    is_finished = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['start']
@@ -1417,36 +1446,49 @@ class Round(models.Model):
             retval[p.player] = p.score
         return retval
 
-    def update_scores(self):
+    def update_scores(self, for_players=None):
         """
         Updates every RoundPlayer's score attribute.
 
         If the Round is ongoing, this will be the "if all games ended now" score.
+        If for_players is provided, it should be a list or QuerySet of Players
+        whose scores should change.
+        Just the scores of the RoundPlayers corresponding to those Players will be updated.
+        If for_players is not provided, every RoundPlayer's score will be updated.
+        This method also calls to update the corresponding TournamentPlayers' scores.
         """
         system = self.tournament.round_scoring_system_obj()
         if system:
+            rps = self.roundplayer_set.all()
+            gps = GamePlayer.objects.filter(game__the_round=self).distinct()
             # Identify any players who were checked in but didn't play
-            gps = GamePlayer.objects.filter(game__the_round=self).distinct().prefetch_related('player')
-            non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps])
+            gps2 = gps.prefetch_related('player')
+            non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps2])
+            if for_players is not None:
+                rps = rps.filter(player__in=for_players)
+                gps = gps.filter(player__in=for_players)
+                non_players = non_players.filter(player__in=for_players)
             scores = system.scores(gps, non_players)
-            for rp in self.roundplayer_set.prefetch_related('player'):
+            for rp in rps:
                 rp.score = scores[rp.player]
                 rp.save(update_fields=['score'])
-        # That could change the Tournament scoring
-        self.tournament.update_scores()
+            for rp in non_players:
+                rp.score = scores[rp.player]
+                rp.save(update_fields=['score'])
+        # That could change the Tournament scoring for those Players
+        self.tournament.update_scores(for_players)
 
-    def is_finished(self):
+    def set_is_finished(self):
         """
-        Is the Round complete?
-
-        Returns True if the Round has games, and they have all finished.
-        Returns False otherwise.
+        Sets self.is_finished to True if the Round has games, and they have all finished.
+        Calls self.tournament.set_is_finished() if the round has finished.
         """
         gs = self.game_set.all()
         if not gs:
             # Rounds with no games can't have started
-            return False
-        return not gs.filter(is_finished=False).exists()
+            return
+        self.is_finished = not gs.filter(is_finished=False).exists()
+        self.save(update_fields=['is_finished'])
 
     def in_progress(self):
         """
@@ -1459,7 +1501,7 @@ class Round(models.Model):
             # Not yet started
             return False
         # Started, so in_progress unless already finished
-        return not self.is_finished()
+        return not self.is_finished
 
     def number(self):
         """
@@ -1506,19 +1548,26 @@ class Round(models.Model):
         """
         Save the object to the database.
 
-        Updates score attributes of any GamePlayers, RoundPlayers and TournamentPlayers.
+        If scoring_system attribute may have changed, updates score attributes of any
+        GamePlayers and corresponding RoundPlayers and TournamentPlayers.
+        If is_finished may have changed, calls Tournament.set_is_finished().
         """
         super().save(*args, **kwargs)
 
-        # Change may affect the scoring
-        try:
-            validate_round_scoring_system(self.tournament.round_scoring_system)
-        except ValidationError:
-            pass
-        else:
-            # Re-score all Games. This will call self.update_scores()
-            for g in self.game_set.all():
-                g.update_scores()
+        if ('update_fields' not in kwargs) or ('scoring_system' in kwargs['update_fields']) :
+            # Change may affect the scoring
+            try:
+                validate_game_scoring_system(self.scoring_system)
+            except ValidationError:
+                pass
+            else:
+                # Re-score all Games. This will call self.update_scores()
+                for g in self.game_set.all():
+                    g.update_scores()
+
+        # Some change may affect the is_finished attribute of the Tournament
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+            self.tournament.set_is_finished()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -1612,15 +1661,14 @@ class Game(models.Model):
         Checks whether the Game has been soloed or drawn or the final_year has been reached.
         If so, sets is_finished to True.
         Should be called whenever CentreCounts for a year have been added.
-        If year is not provided, uses the most recent year for the Game.
+        Year should be the most recent year for the Game, if known.
+        If year is not provided, it will be derived.
         """
         if year is None:
             year = self.final_year()
         if (self.soloer() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
             self.save(update_fields=['is_finished'])
-        # CentreCounts may have changed, so re-calculate scores
-        self.update_scores()
 
     def create_or_update_sc_counts_from_ownerships(self, year):
         """
@@ -1629,8 +1677,8 @@ class Game(models.Model):
         Ensures that there is one CentreCount for each power for the
         specified year, and that the values match those determined by
         looking at the SupplyCentreOwnerships for that year.
-        Sets self.is_finished if self.final_year has been reached or
-        if the Game has been soloed.
+        Calls set_is_finished() to set self.is_finished appropriately.
+        Calls update_scores().
         Can raise SCOwnershipsNotFound.
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
@@ -1643,6 +1691,7 @@ class Game(models.Model):
                                                      year=year,
                                                      defaults={'count': all_scos.filter(owner=p).count()})
         self.set_is_finished(year)
+        self.update_scores()
 
     def compare_sc_counts_and_ownerships(self, year):
         """
@@ -1708,20 +1757,23 @@ class Game(models.Model):
             return retval
         return self._calc_scores()
 
-    def update_scores(self):
+    def update_scores(self, update_round=True):
         """
         Calculate Game scores and set the GamePlayer's score attributes
 
         Calculates the scores for the game using the specified ScoringSystem,
         and stores them in the GamePlayers.
-        Then calls the equivalent function for the Round this Game is in.
+        Then calls the equivalent function for the Round this Game is in, unless update_round is False.
         """
         scores = self._calc_scores()
         for gp in self.gameplayer_set.prefetch_related('power'):
             if gp.power:
                 gp.score = scores[gp.power]
                 gp.save(update_fields=['score'])
-        self.the_round.update_scores()
+        if update_round:
+            # Only the scores for this Game's players can have changed
+            players = [gp.player for gp in self.gameplayer_set.all()]
+            self.the_round.update_scores(players)
 
     def positions(self):
         """
@@ -1912,7 +1964,7 @@ class Game(models.Model):
 
         Ensures that 1901 SC counts and ownership info exists.
         Ensures that S1901M image exists.
-        Updates score attributes of any associated GamePlayers, RoundPlayers, and TournamentPlayers.
+        If is_finished attribute may be changed, called Round.set_is_finished().
         """
         super().save(*args, **kwargs)
 
@@ -1937,13 +1989,9 @@ class Game(models.Model):
                                            phase=Phases.MOVEMENT,
                                            defaults={'image': self.the_set.initial_image})
 
-        # Change may affect the scoring
-        try:
-            validate_game_scoring_system(self.the_round.scoring_system)
-        except ValidationError:
-            pass
-        else:
-            self.update_scores()
+        # Some change may affect the is_finished attribute of the Round
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+            self.the_round.set_is_finished()
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -2127,6 +2175,8 @@ class DrawProposal(models.Model):
         if self.passed:
             self.game.is_finished = True
             self.game.save(update_fields=['is_finished'])
+            # That could change the scoring
+            self.game.update_scores()
 
     def __str__(self):
         return '%(game)s %(year)d%(season)s' % {'game': self.game,
@@ -2167,7 +2217,7 @@ class RoundPlayer(models.Model):
         if (self.score > 0.0) and not self.the_round.tournament.tournament_scoring_system_obj().uses_round_scores:
             # Any later rounds may change the score for this round
             return self.tournamentplayer().score_is_final()
-        if self.the_round.is_finished():
+        if self.the_round.is_finished:
             return True
         # If any of this player's game scores aren't final, the round score isn't final
         for gp in self.gameplayers():
@@ -2201,7 +2251,7 @@ class RoundPlayer(models.Model):
         ret = super().delete(*args, **kwargs)
         # Force a recalculation of scores, if necessary
         if self.score != 0.0:
-            self.the_round.update_scores()
+            self.the_round.tournament.update_scores([self.player])
         return ret
 
     def __str__(self):

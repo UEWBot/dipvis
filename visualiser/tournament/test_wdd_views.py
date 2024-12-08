@@ -329,7 +329,7 @@ class WddViewTests(TestCase):
                                    game=g1,
                                    year=1909,
                                    count=0)
-        g1.set_is_finished()
+        g1.update_scores()
         # Another with an elimination and a draw
         dp = DrawProposal.objects.create(game=g2,
                                          year=1908,
@@ -402,7 +402,7 @@ class WddViewTests(TestCase):
                                    game=g2,
                                    year=1910,
                                    count=3)
-        g2.set_is_finished()
+        g2.update_scores()
         # Top board ends after 1907
         CentreCount.objects.create(power=austria,
                                    game=g3,
@@ -432,7 +432,7 @@ class WddViewTests(TestCase):
                                    game=g3,
                                    year=1907,
                                    count=7)
-        g3.set_is_finished()
+        g3.update_scores()
 
     def test_classification(self):
         response = self.client.get(reverse('csv_classification',
