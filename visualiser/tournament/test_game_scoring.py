@@ -2803,6 +2803,237 @@ class Detour09GameScoringTests(TestCase):
         self.check_score_order(scores)
 
 
+# GScoringRankedClassic
+class RankedClassicGameScoringTests(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+    def check_score_order(self, scores):
+        """Check that the scores appear in GreatPower order when iterated through"""
+        EXPECT = [p for p in GreatPower.objects.all()]
+        order = [k for k in scores.keys()]
+        self.assertEqual(EXPECT, order)
+
+    def test_g_scoring_rankedclassic_no_solo1(self):
+        example_a = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 10,
+                                               self.france: 9,
+                                               self.germany: 8,
+                                               self.italy: 5,
+                                               self.russia: 0,
+                                               self.turkey: 2},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Ranked Classic')
+        scores = system.scores(example_a)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 3)
+                elif p == self.england:
+                    self.assertEqual(s, 30 + 10 * 10 + 200)
+                elif p == self.france:
+                    self.assertEqual(s, 30 + 9 * 10 + 90)
+                elif p == self.germany:
+                    self.assertEqual(s, 30 + 8 * 10 + 60)
+                elif p == self.italy:
+                    self.assertEqual(s, 30 + 5 * 10 + 40)
+                elif p == self.russia:
+                    self.assertEqual(s, 7)
+                else:
+                    # Turkey
+                    self.assertEqual(s, 30 + 2 * 10 + 30)
+        self.check_score_order(scores)
+
+    def test_g_scoring_rankedclassic_no_solo2(self):
+        example_b = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 17,
+                                               self.france: 0,
+                                               self.germany: 10,
+                                               self.italy: 4,
+                                               self.russia: 0,
+                                               self.turkey: 3},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Ranked Classic')
+        scores = system.scores(example_b)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 3)
+                elif p == self.england:
+                    self.assertEqual(s, 30 + 17 * 10 + 200)
+                elif p == self.france:
+                    self.assertEqual(s, 7)
+                elif p == self.germany:
+                    self.assertEqual(s, 30 + 10 * 10 + 90)
+                elif p == self.italy:
+                    self.assertEqual(s, 30 + 4 * 10 + 60)
+                elif p == self.russia:
+                    self.assertEqual(s, 7)
+                else:
+                    # Turkey
+                    self.assertEqual(s, 30 + 3 * 10 + 40)
+        self.check_score_order(scores)
+
+    def test_g_scoring_rankedclassic_no_solo3(self):
+        example_c = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 11,
+                                               self.france: 0,
+                                               self.germany: 11,
+                                               self.italy: 11,
+                                               self.russia: 0,
+                                               self.turkey: 1},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Ranked Classic')
+        scores = system.scores(example_c)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 3)
+                elif p == self.england:
+                    self.assertEqual(s, 30 + 11 * 10 + 60)
+                elif p == self.france:
+                    self.assertEqual(s, 7)
+                elif p == self.germany:
+                    self.assertEqual(s, 30 + 11 * 10 + 60)
+                elif p == self.italy:
+                    self.assertEqual(s, 30 + 11 * 10 + 60)
+                elif p == self.russia:
+                    self.assertEqual(s, 7)
+                else:
+                    # Turkey
+                    self.assertEqual(s, 30 + 1 * 10 + 40)
+        self.check_score_order(scores)
+
+    def test_g_scoring_rankedclassic_no_solo4(self):
+        example_d = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 12,
+                                               self.france: 0,
+                                               self.germany: 11,
+                                               self.italy: 11,
+                                               self.russia: 0,
+                                               self.turkey: 0},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1907,
+                                                       self.turkey: 1907},
+                                    draw=None)
+        system = find_game_scoring_system('Ranked Classic')
+        scores = system.scores(example_d)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 3)
+                elif p == self.england:
+                    self.assertEqual(s, 30 + 12 * 10 + 200)
+                elif p == self.france:
+                    self.assertEqual(s, 7)
+                elif p == self.germany:
+                    self.assertEqual(s, 30 + 11 * 10 + 70)
+                elif p == self.italy:
+                    self.assertEqual(s, 30 + 11 * 10 + 70)
+                elif p == self.russia:
+                    self.assertEqual(s, 6)
+                else:
+                    # Turkey
+                    self.assertEqual(s, 6)
+        self.check_score_order(scores)
+
+    def test_g_scoring_rankedclassic_no_solo5(self):
+        example_e = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 12,
+                                               self.france: 0,
+                                               self.germany: 10,
+                                               self.italy: 10,
+                                               self.russia: 0,
+                                               self.turkey: 2},
+                                    final_year=1908,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Ranked Classic')
+        scores = system.scores(example_e)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 3)
+                elif p == self.england:
+                    self.assertEqual(s, 30 + 12 * 10 + 200)
+                elif p == self.france:
+                    self.assertEqual(s, 7)
+                elif p == self.germany:
+                    self.assertEqual(s, 30 + 10 * 10 + 70)
+                elif p == self.italy:
+                    self.assertEqual(s, 30 + 10 * 10 + 70)
+                elif p == self.russia:
+                    self.assertEqual(s, 7)
+                else:
+                    # Turkey
+                    self.assertEqual(s, 30 + 2 * 10 + 40)
+        self.check_score_order(scores)
+
+    def test_g_scoring_rankedclassic_solo(self):
+        example_f = SimpleGameState(sc_counts={self.austria: 0,
+                                               self.england: 18,
+                                               self.france: 0,
+                                               self.germany: 10,
+                                               self.italy: 4,
+                                               self.russia: 0,
+                                               self.turkey: 2},
+                                    final_year=1911,
+                                    elimination_years={self.austria: 1904,
+                                                       self.france: 1908,
+                                                       self.russia: 1908},
+                                    draw=None)
+        system = find_game_scoring_system('Ranked Classic')
+        scores = system.scores(example_f)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if p == self.austria:
+                    self.assertEqual(s, 3)
+                elif p == self.england:
+                    self.assertEqual(s, 550)
+                elif p == self.france:
+                    self.assertEqual(s, 7)
+                elif p == self.germany:
+                    self.assertEqual(s, 10)
+                elif p == self.italy:
+                    self.assertEqual(s, 10)
+                elif p == self.russia:
+                    self.assertEqual(s, 7)
+                else:
+                    # Turkey
+                    self.assertEqual(s, 10)
+        self.check_score_order(scores)
+
 # GScoringMaxonian
 class MaxonianGameScoringTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']

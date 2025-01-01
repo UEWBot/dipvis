@@ -255,6 +255,52 @@ def _adjust_rank_score_lower(centre_counts, rank_points):
                                                     rank_pts[i:])
 
 
+def _adjust_rank_score_lower_special(centre_counts, rank_points, two_way_rank_points):
+    """
+    Allocate points for rank
+
+    Takes a list of (power, centre count) 2-tuples for one year of one game,
+    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered from first place to last.
+    Also takes a second list of ranking points for positions, also
+    ordered from first place to last, that is used if exactly two players are
+    tied for a given rank.
+    Returns a list of ranking points for positions, ordered to correspond to
+    the centre counts, having made adjustments for any tied positions.
+    Where three or more powers have the same number of SCs, all tied players
+    get the lower bonus points.
+    """
+    if not rank_points:
+        # The rest of them get zero points
+        return [] + [0.0] * len(centre_counts)
+    # Work with copies of rank_points and two_way_rank_points
+    rank_pts = rank_points.copy()
+    two_way_rank_pts = two_way_rank_points.copy()
+    # First identify powers tied at the top
+    i = 0
+    points = 0
+    scs = centre_counts[0][1]
+    while (i < len(centre_counts)) and (centre_counts[i][1] == scs):
+        if i < len(rank_pts):
+            points = rank_pts[i]
+        else:
+            points = 0
+        i += 1
+    # If exactly two players are tied for the rank, use the alternate table
+    if i == 2:
+        points = two_way_rank_pts[0]
+    # Now give the points to those tied players
+    for j in range(0, i):
+        if j < len(rank_pts):
+            rank_pts[j] = points
+        else:
+            rank_pts.append(points)
+    # And recursively continue
+    return rank_pts[0:i] + _adjust_rank_score_lower_special(centre_counts[i:],
+                                                            rank_pts[i:],
+                                                            two_way_rank_pts[i:])
+
+
 class GScoringSolos(GameScoringSystem):
     """
     Only solo victories get points.
@@ -1218,6 +1264,68 @@ class GScoringHaight(GameScoringSystem):
         return _sorted_scores(retval, state)
 
 
+class GScoringRankedClassic(GameScoringSystem):
+    """
+    Ranked Classic scoring system
+
+    Games that end by draw vote or timing out score as follows:
+     - Players score 10 points per supply center.
+     - Eliminated players get 1 point for every year survived.
+     - Surviving players get a 30 point survival bonus.
+     - Surviving players are ranked by their ending supply center count
+       and score a ranking bonus as follows:
+         7th: 10 points
+         6th: 20 points (15 if tied by 2 players)
+         5th: 30 points (25 if tied by 2 players)
+         4th: 40 points (35 if tied by 2 players)
+         3rd: 60 points (50 if tied by 2 players)
+         2nd: 90 points (70 if tied by 2 players)
+         1st: 200 points (135 if tied by 2 players)
+       If there is a tie for a particular rank between three or more players,
+       those players receive the score for the lower of the rankings (i.e.,
+       in a 3-way tie for 1st place, those players are all ranked third; in
+       a 4-way tie for 4th, those players are ranked seventh, etc).
+    Games that end in solos score as follows:
+     - The soloing player gets 550 points.
+     - All other players get 1 point for every year survived.
+    """
+    def __init__(self):
+        self.name = _('Ranked Classic')
+        self.position_points = [200, 90, 60, 40, 30, 20, 10]
+        self.position_points_2_tied = [135, 70, 50, 35, 25, 15]
+        self.dead_score_can_change = False
+
+    def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
+        retval = {}
+        dots = [(p, state.dot_count(p)) for p in state.all_powers()]
+        if state.soloer() is not None:
+            solo_year = state.solo_year()
+            for p, c in dots:
+                if c >= WINNING_SCS:
+                    retval[p] = 550
+                elif c > 0:
+                    # Player counts as eliminated in the solo year
+                    retval[p] = solo_year - FIRST_YEAR
+                else:
+                    retval[p] = state.year_eliminated(p) - FIRST_YEAR
+        else:
+            dots.sort(key = itemgetter(1), reverse=True)
+            # Tweak the ranking points to allow for ties
+            rank_pts = _adjust_rank_score_lower_special(dots,
+                                                        self.position_points,
+                                                        self.position_points_2_tied)
+            for i, (p, c) in enumerate(dots):
+                if c < 1:
+                    # Eliminated players only get participation points
+                    retval[p] = state.year_eliminated(p) - FIRST_YEAR
+                else:
+                    retval[p] = 30 + (10 * c) + rank_pts[i]
+        return _sorted_scores(retval, state)
+
+
 class GScoringManorCon(GameScoringSystem):
     """
     ManorCon scoring system
@@ -1326,6 +1434,7 @@ G_SCORING_SYSTEMS = [
     GScoringMaxonian(_('Maxonian'), 13),
     GScoringMaxonian(_('7Eleven'), 11),
     GScoringOMG(),
+    GScoringRankedClassic(),
     GScoringSolos(),
     GScoringSumOfSquares(),
     GScoringTribute(),
