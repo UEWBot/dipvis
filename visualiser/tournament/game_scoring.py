@@ -1151,7 +1151,7 @@ class GScoringHaight(GameScoringSystem):
 
     Games that end by draw vote or timing out score as follows:
      - Players score 10 points per supply center.
-     - Eliminated players get some 1 point for every year played.
+     - Eliminated players get 1 point for every year played.
      - Players are ranked by their ending supply center count or order of
        elimination and score a ranking bonus as follows:
          7th: 0 points
