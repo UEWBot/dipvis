@@ -386,7 +386,9 @@ def seed_games(request, tournament_id, round_num):
                         gp.power = field
                         gp.save(update_fields=['power'])
                     # Generate initial scores
-                    g.update_scores()
+                    g.update_scores(update_round=False)
+            # Now all GamePlayer scores have been updated, update the RoundPlayer scores
+            r.update_scores()
             # Notify the players
             send_board_call_email(r)
             _send_board_call_to_discord(r)
@@ -533,7 +535,9 @@ def create_games(request, tournament_id, round_num):
                                                   power=p,
                                                   player=field.player)
                 # Generate initial scores
-                g.update_scores()
+                g.update_scores(update_round=False)
+        # Now all GamePlayer scores have been updated, update the RoundPlayer scores
+        r.update_scores()
         # Notify the players
         send_board_call_email(r)
         _send_board_call_to_discord(r)

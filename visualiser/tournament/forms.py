@@ -95,7 +95,7 @@ class SelfCheckInForm(forms.Form):
         super().__init__(*args, **kwargs)
         # Set the label appropriately
         label = _('Round %(number)d') % {'number': self.round.number()}
-        if self.round.is_finished():
+        if self.round.is_finished:
             label += _(' (Finished)')
         elif not self.round.enable_check_in:
             label += _(' (Self-check-in not yet allowed)')
