@@ -2716,7 +2716,7 @@ class Detour09GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 8 / (6+6+6+8+8+8+8))
         self.check_score_order(scores)
 
-    def test_g_scoring_maxonian_2_equal_below_top(self):
+    def test_g_scoring_detour09_2_equal_below_top(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         g = Game.objects.create(name='g12', started_at=r.start, the_round=r, the_set=self.set1)
@@ -2761,7 +2761,7 @@ class Detour09GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 4 / (20+11+9+6+6+5+4))
         self.check_score_order(scores)
 
-    def test_g_scoring_maxonian_3_equal_below_top(self):
+    def test_g_scoring_detour09_3_equal_below_top(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         g = Game.objects.create(name='g12', started_at=r.start, the_round=r, the_set=self.set1)
