@@ -46,18 +46,20 @@
                 </i>
               {% endif %}
             {% empty %}
-              {% if not rp.score_is_final %}
-                <i>
-              {% endif %}
-              {% if rp.score_dropped %}
-                <del>
-              {% endif %}
-                {{ rp.score|floatformat:2 }}*
-              {% if rp.score_dropped %}
-                </del>
-              {% endif %}
-              {% if not rp.score_is_final %}
-                </i>
+	      {% if rp.score %}
+                {% if not rp.score_is_final %}
+                  <i>
+                {% endif %}
+                {% if rp.score_dropped %}
+                  <del>
+                {% endif %}
+                  {{ rp.score|floatformat:2 }}*
+                {% if rp.score_dropped %}
+                  </del>
+                {% endif %}
+                {% if not rp.score_is_final %}
+                  </i>
+                {% endif %}
               {% endif %}
             {% endfor %}
           </td>
