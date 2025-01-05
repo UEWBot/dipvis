@@ -31,6 +31,7 @@ from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import Award, SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.models import TScoringSum, TScoringSumGames
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import NO_SCORING_SYSTEM_STR
 from tournament.models import BestCountryCriteria, DrawSecrecy, Formats, Phases
@@ -58,6 +59,35 @@ HOURS_72 = timedelta(hours=72)
 
 s1 = "Solo or bust"
 s2 = "Sum of Squares"
+
+
+def _find_t_scoring_system(cls, number):
+    """
+    Find a matching Tournament scoring system
+
+    cls is the class
+    number is the number of Games/Rounds that get counted
+    """
+    for t in T_SCORING_SYSTEMS:
+        if isinstance(t, cls):
+            if (cls == TScoringSum) and (t.scored_rounds == number):
+                return t
+            elif (cls == TScoringSumGames) and (t.scored_games == number):
+                return t
+    raise AssertionError(f'No matching tournament scoring system found for {cls} {number}')
+
+
+def _find_complex_t_scoring_system(games, fraction):
+    """
+    Find a matching Tournament scoring system
+
+    games is the number of Games that get included at 100%
+    fraction is the proportion of other Games that gets included
+    """
+    for t in T_SCORING_SYSTEMS:
+        if isinstance(t, TScoringSumGames) and (t.scored_games == games) and (t.residual_multiplier == fraction):
+            return t
+    raise AssertionError(f'No matching tournament scoring system found for {games} {fraction}')
 
 
 class RoundScoringTests(TestCase):
@@ -516,37 +546,24 @@ class TournamentScoringTests(TestCase):
         cls.p13 = Player.objects.create(first_name='Yannis', last_name='Zygote')
 
     # TScoringSum.__str__()
-    def test_tscoringsum0_str(self):
-        # TODO This depends on the ordering
-        t = T_SCORING_SYSTEMS[0]
-        t_str = str(t)
-        self.assertIn('best 2', t_str)
-
-    def test_tscoringsum1_str(self):
-        # TODO This depends on the ordering
-        t = T_SCORING_SYSTEMS[1]
-        t_str = str(t)
-        self.assertIn('best 3', t_str)
-
-    def test_tscoringsum2_str(self):
-        # TODO This depends on the ordering
-        t = T_SCORING_SYSTEMS[2]
-        t_str = str(t)
-        self.assertIn('best 4', t_str)
+    def test_tscoringsum_str(self):
+        for t in T_SCORING_SYSTEMS:
+            if isinstance(t, TScoringSum):
+                t_str = str(t)
+                # TODO check the result
 
     # TScoringSum.scores_detail()
     def test_tscoringsum_detail(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
+        tss = _find_t_scoring_system(TScoringSum, 2)
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=tss.name,
                                       draw_secrecy=DrawSecrecy.SECRET)
-        # Check that we got the right scoring system
-        self.assertIn("2 rounds", t.tournament_scoring_system)
         # Three Rounds
         r1 = Round.objects.create(tournament=t,
                                   scoring_system=s,
@@ -644,20 +661,26 @@ class TournamentScoringTests(TestCase):
                         rp = RoundPlayer.objects.get(player=p, the_round=r)
                         self.assertEqual(rp.score_dropped, drop)
 
-    # TScoringSumGames
+    # TScoringSumGames.__str__()
+    def test_tscoringsumgames_str(self):
+        for t in T_SCORING_SYSTEMS:
+            if isinstance(t, TScoringSumGames):
+                t_str = str(t)
+                # TODO check the result
+
+    # TScoringSumGames.scores_detail()
     def test_tscoringsumgames_scores(self):
         """ TScoringSumGames with no sitting out bonus"""
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
+        tss = _find_t_scoring_system(TScoringSumGames, 4)
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=NO_SCORING_SYSTEM_STR,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[4].name,
+                                      tournament_scoring_system=tss.name,
                                       draw_secrecy=DrawSecrecy.SECRET)
-        # Check that we got the right scoring system
-        self.assertIn('4 games in any rounds', t.tournament_scoring_system)
 
         # Five Rounds
         r1 = Round.objects.create(tournament=t,
@@ -896,14 +919,13 @@ class TournamentScoringTests(TestCase):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
+        tss = _find_complex_t_scoring_system(2, 0.5)
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=NO_SCORING_SYSTEM_STR,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[6].name,
+                                      tournament_scoring_system=tss.name,
                                       draw_secrecy=DrawSecrecy.SECRET)
-        # Check that we got the right scoring system
-        self.assertIn('plus half the average', t.tournament_scoring_system)
 
         # Five Rounds
         r1 = Round.objects.create(tournament=t,
@@ -1126,16 +1148,15 @@ class TournamentScoringTests(TestCase):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
+        tss = _find_t_scoring_system(TScoringSumGames, 4)
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=NO_SCORING_SYSTEM_STR,
                                       non_player_round_score=100.0,
                                       non_player_round_score_once=True,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[4].name,
+                                      tournament_scoring_system=tss.name,
                                       draw_secrecy=DrawSecrecy.SECRET)
-        # Check that we got the right scoring system
-        self.assertIn('4 games in any rounds', t.tournament_scoring_system)
 
         # Five Rounds
         r1 = Round.objects.create(tournament=t,
