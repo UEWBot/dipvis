@@ -24,6 +24,7 @@ from operator import itemgetter
 from pathlib import Path
 import random
 import string
+import sys
 import uuid
 
 from django.conf import settings
@@ -274,7 +275,10 @@ class TScoringSum(TournamentScoringSystem):
     Just add up the best N round scores.
     """
     def __init__(self, name, scored_rounds):
-        self.name = name
+        if name:
+            self.name = name
+        else:
+            self.name = _('Sum best %(number)d rounds') % {'number': scored_rounds}
         self.scored_rounds = scored_rounds
 
     uses_round_scores = True
@@ -407,11 +411,14 @@ class TScoringSumGames(TournamentScoringSystem):
 
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [
-    TScoringSum(_('Sum best 2 rounds'), 2),
-    TScoringSum(_('Sum best 3 rounds'), 3),
-    TScoringSum(_('Sum best 4 rounds'), 4),
+    TScoringSum(_('Sum all round scores'), sys.maxsize),
+    TScoringSum(None, 2),
+    TScoringSum(None, 3),
+    TScoringSum(None, 4),
+    TScoringSum(None, 5),
     TScoringSumGames(_('Sum best 3 games in any rounds'), 3),
     TScoringSumGames(_('Sum best 4 games in any rounds'), 4),
+    TScoringSumGames(_('Sum best 5 games in any rounds'), 5),
     TScoringSumGames(_('Best single game result'), 1),
     TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, 0.5),
 ]
