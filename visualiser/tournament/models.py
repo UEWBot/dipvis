@@ -622,7 +622,7 @@ class Tournament(models.Model):
     tournament_scoring_system = models.CharField(validators=[validate_tournament_scoring_system],
                                                  max_length=TournamentScoringSystem.MAX_NAME_LENGTH,
                                                  choices=get_scoring_systems(T_SCORING_SYSTEMS),
-                                                 help_text=_(u'How to combine round scores into a tournament score'))
+                                                 help_text=_(u'How to combine round or game scores into a tournament score'))
     handicaps = models.BooleanField(default=False,
                                     help_text=_('Check to give each TournamentPlayer a predetermined score bonus'))
     # How do we combine game scores to get an overall player score for a round ?
