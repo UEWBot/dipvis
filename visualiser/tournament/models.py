@@ -270,7 +270,7 @@ class TournamentScoringSystem(ABC):
         return ret
 
 
-class TScoringSum(TournamentScoringSystem):
+class TScoringSumRounds(TournamentScoringSystem):
     """
     Just add up the best N round scores.
     """
@@ -411,11 +411,11 @@ class TScoringSumGames(TournamentScoringSystem):
 
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [
-    TScoringSum(_('Sum all round scores'), sys.maxsize),
-    TScoringSum(None, 2),
-    TScoringSum(None, 3),
-    TScoringSum(None, 4),
-    TScoringSum(None, 5),
+    TScoringSumRounds(_('Sum all round scores'), sys.maxsize),
+    TScoringSumRounds(None, 2),
+    TScoringSumRounds(None, 3),
+    TScoringSumRounds(None, 4),
+    TScoringSumRounds(None, 5),
     TScoringSumGames(_('Sum best 3 games in any rounds'), 3),
     TScoringSumGames(_('Sum best 4 games in any rounds'), 4),
     TScoringSumGames(_('Sum best 5 games in any rounds'), 5),

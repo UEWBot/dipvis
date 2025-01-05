@@ -31,7 +31,7 @@ from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import Award, SeederBias, Series, DBNCoverage
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import TScoringSum, TScoringSumGames
+from tournament.models import TScoringSumRounds, TScoringSumGames
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import NO_SCORING_SYSTEM_STR
 from tournament.models import BestCountryCriteria, DrawSecrecy, Formats, Phases
@@ -70,7 +70,7 @@ def _find_t_scoring_system(cls, number):
     """
     for t in T_SCORING_SYSTEMS:
         if isinstance(t, cls):
-            if (cls == TScoringSum) and (t.scored_rounds == number):
+            if (cls == TScoringSumRounds) and (t.scored_rounds == number):
                 return t
             elif (cls == TScoringSumGames) and (t.scored_games == number):
                 return t
@@ -545,19 +545,19 @@ class TournamentScoringTests(TestCase):
         cls.p12 = Player.objects.create(first_name='Wilfred', last_name='Xylophone')
         cls.p13 = Player.objects.create(first_name='Yannis', last_name='Zygote')
 
-    # TScoringSum.__str__()
-    def test_tscoringsum_str(self):
+    # TScoringSumRounds.__str__()
+    def test_tscoringsumrounds_str(self):
         for t in T_SCORING_SYSTEMS:
-            if isinstance(t, TScoringSum):
+            if isinstance(t, TScoringSumRounds):
                 t_str = str(t)
                 # TODO check the result
 
-    # TScoringSum.scores_detail()
-    def test_tscoringsum_detail(self):
+    # TScoringSumRounds.scores_detail()
+    def test_tscoringsumrounds_detail(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
-        tss = _find_t_scoring_system(TScoringSum, 2)
+        tss = _find_t_scoring_system(TScoringSumRounds, 2)
         t = Tournament.objects.create(name='Tournament Scoring Test',
                                       start_date=today,
                                       end_date=today + HOURS_24,
