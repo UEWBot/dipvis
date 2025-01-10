@@ -10,7 +10,7 @@
     <ul>
       {% for t in tournament_list %}
         <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
-          {% if t.in_progress or t.is_finished %}
+          {% if t.is_finished or t.in_progress %}
             <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
             {% if not t.is_finished %}
               <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>
@@ -30,7 +30,7 @@
       <ul>
         {% for t in unpublished_list %}
           <li><a href="{{ t.get_absolute_url }}">{{ t }}</a> ({{ t.start_date|date:"SHORT_DATE_FORMAT" }} - {{ t.end_date|date:"SHORT_DATE_FORMAT" }})
-            {% if t.in_progress or t.is_finished %}
+            {% if t.is_finished or t.in_progress %}
               <a href="{% url 'tournament_scores' t.id %}">{% trans "Scores" %}</a>
               {% if not t.is_finished %}
                 <a href="{% url 'tournament_round' t.id %}">{% trans "Current Round" %}</a>

@@ -1534,11 +1534,9 @@ class Round(models.Model):
         Returns True if the Round has RoundPlayers (i.e. roll call has happened)
         or Games, and it hasn't finished.
         """
-        if not self.roundplayer_set.exists() and not self.game_set.exists():
-            # Not yet started
+        if self.is_finished:
             return False
-        # Started, so in_progress unless already finished
-        return not self.is_finished
+        return self.roundplayer_set.exists() or self.game_set.exists()
 
     def number(self):
         """
