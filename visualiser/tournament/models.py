@@ -1641,25 +1641,19 @@ class Game(models.Model):
 
     def backstabbr_game(self):
         """
-        Returns a backstabbr.Game for the Game, or None.
+        Returns a backstabbr.Game for the Game
+
+        May raise backstabbr.InvalidGameUrl if self.external_url isn't a parseable backstabbr game page
         """
-        try:
-            return backstabbr.Game(self.external_url)
-        except backstabbr.InvalidGameUrl:
-            # external_url may be something other than a backstabbr URL
-            pass
-        return None
+        return backstabbr.Game(self.external_url)
 
     def webdiplomacy_game(self):
         """
-        Returns a webdip.Game for the Game, or None.
+        Returns a webdip.Game for the Game
+
+        May raise webdip.InvalidGameUrl if self.external_url isn't a parseable backstabbr game page
         """
-        try:
-            return webdip.Game(self.external_url)
-        except webdip.InvalidGameUrl:
-            # external_url may be something other than a WebDiplomacy URL
-            pass
-        return None
+        return webdip.Game(self.external_url)
 
     def assign_powers_from_prefs(self):
         """

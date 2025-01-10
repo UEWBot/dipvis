@@ -23,6 +23,7 @@ from django.db.models import Sum
 from django.db.utils import IntegrityError
 from django.test import TestCase, tag, override_settings
 
+from tournament import backstabbr, webdip
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
@@ -4148,7 +4149,7 @@ class GameTests(TestCase):
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1)
-        self.assertEqual(g.backstabbr_game(), None)
+        self.assertRaises(backstabbr.InvalidGameUrl, g.backstabbr_game)
 
     def test_game_backstabbr_game_non_bs_url(self):
         g = Game(name='newgame1',
@@ -4157,7 +4158,7 @@ class GameTests(TestCase):
                  is_finished=True,
                  the_set=self.set1,
                  external_url='https://webdiplomacy.net/board.php?gameID=436906')
-        self.assertEqual(g.backstabbr_game(), None)
+        self.assertRaises(backstabbr.InvalidGameUrl, g.backstabbr_game)
 
     # Game.webdiplomacy_game()
     @skip('WebDip parsing is broken')
@@ -4176,7 +4177,7 @@ class GameTests(TestCase):
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1)
-        self.assertEqual(g.webdiplomacy_game(), None)
+        self.assertRaises(webdip.InvalidGameUrl, g.webdiplomacy_game)
 
     def test_game_webdiplomacy_game_non_wd_url(self):
         g = Game(name='newgame1',
@@ -4185,7 +4186,7 @@ class GameTests(TestCase):
                  is_finished=True,
                  the_set=self.set1,
                  external_url = 'https://www.backstabbr.com/game/4917371326693376')
-        self.assertEqual(g.webdiplomacy_game(), None)
+        self.assertRaises(webdip.InvalidGameUrl, g.webdiplomacy_game)
 
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):
