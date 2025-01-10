@@ -91,6 +91,12 @@ class InvalidGameUrl(Exception):
     pass
 
 
+def is_backstabbr_url(url):
+    """Returns True if the specified URL points to the backstabbr domain"""
+    parsed_url = urlparse(url)
+    return parsed_url.netloc == BACKSTABBR_NETLOC
+
+
 class Game():
 
     """

@@ -773,17 +773,19 @@ def scrape_external_site(request, tournament_id, game_name):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
     # Do we have a Backstabbr URL ?
-    try:
-        bg = g.backstabbr_game()
-    except backstabbr.InvalidGameUrl:
-        pass
-    else:
-        return _scrape_backstabbr(request, t, g, bg)
+    if backstabbr.is_backstabbr_url(g.external_url):
+        try:
+            bg = g.backstabbr_game()
+        except backstabbr.InvalidGameUrl:
+            pass
+        else:
+            return _scrape_backstabbr(request, t, g, bg)
     # How about WebDiplomacy?
-    try:
-        wg = g.webdiplomacy_game()
-    except webdip.InvalidGameUrl:
-        pass
-    else:
-        return _scrape_webdip(request, t, g, wg)
+    if webdiplomacy.is_webdiplomacy_url(g.external_url):
+        try:
+            wg = g.webdiplomacy_game()
+        except webdip.InvalidGameUrl:
+            pass
+        else:
+            return _scrape_webdip(request, t, g, wg)
     raise Http404

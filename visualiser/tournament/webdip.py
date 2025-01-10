@@ -48,6 +48,12 @@ class UnsupportedVariant(Exception):
     pass
 
 
+def is_webdiplomacy_url(url):
+    """Returns True if the specified URL points to the webdiplomacy domain"""
+    parsed_url = urlparse(url)
+    return parsed_url.netloc == WEBDIPLOMACY_NETLOC
+
+
 class Game():
     """
     A single game on WebDiplomacy
