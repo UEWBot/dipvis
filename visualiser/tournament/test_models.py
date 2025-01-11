@@ -2431,11 +2431,9 @@ class TournamentTests(TestCase):
         CentreCount.objects.create(power=self.italy, game=g14, year=1905, count=5)
         CentreCount.objects.create(power=self.russia, game=g14, year=1905, count=3)
         CentreCount.objects.create(power=self.turkey, game=g14, year=1905, count=5)
-        # flag both games as finished to calculate scores
-        g12.is_finished = True
-        g12.save(update_fields=['is_finished'])
-        g14.is_finished = True
-        g14.save(update_fields=['is_finished'])
+        # calculate scores for both Games
+        g12.update_scores(update_round=False)
+        g14.update_scores(update_round=False)
         # Check best countries with criterion of score
         bc = t.best_countries(whole_list=True)
         for power in GreatPower.objects.all():
@@ -2471,10 +2469,6 @@ class TournamentTests(TestCase):
         g14.the_round.save(update_fields=['scoring_system'])
         g12.centrecount_set.filter(year=1905).delete()
         g14.centrecount_set.filter(year=1905).delete()
-        g12.is_finished = False
-        g12.save(update_fields=['is_finished'])
-        g14.is_finished = False
-        g14.save(update_fields=['is_finished'])
 
     # Tournament.background()
     def test_tournament_background_without_players(self):
