@@ -2437,7 +2437,7 @@ class TournamentTests(TestCase):
         g14.is_finished = True
         g14.save(update_fields=['is_finished'])
         # Check best countries with criterion of score
-        bc = t.best_countries(True)
+        bc = t.best_countries(whole_list=True)
         for power in GreatPower.objects.all():
             with self.subTest(criterion=BestCountryCriteria.SCORE, power=power):
                 gp1 = g12.gameplayer_set.get(power=power)
@@ -2450,7 +2450,7 @@ class TournamentTests(TestCase):
         t.best_country_criterion = BestCountryCriteria.DOTS
         t.save(update_fields=['best_country_criterion'])
         # Now best countries should be different
-        bc = t.best_countries(True)
+        bc = t.best_countries(whole_list=True)
         for power in GreatPower.objects.all():
             with self.subTest(criterion=BestCountryCriteria.DOTS, power=power):
                 gp1 = g12.gameplayer_set.get(power=power)
@@ -6613,7 +6613,7 @@ class GamePlayerTests(TestCase):
     # GamePlayer.is_best_country()
     def test_gameplayer_is_best_country_unranked(self):
         t = Tournament.objects.get(name='t1')
-        bc = t.best_countries(True)
+        bc = t.best_countries(whole_list=True)
         gps = bc[self.germany][0]
         # Check test setup
         for gp in gps:
@@ -6633,7 +6633,7 @@ class GamePlayerTests(TestCase):
     def test_gameplayer_is_best_country_score(self):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
-        bc = t.best_countries(True)
+        bc = t.best_countries(whole_list=True)
         gps = bc[self.austria][0]
         for gp in gps:
             self.assertTrue(gp.is_best_country())
@@ -6649,7 +6649,7 @@ class GamePlayerTests(TestCase):
         self.assertEqual(t.best_country_criterion, BestCountryCriteria.SCORE)
         t.best_country_criterion = BestCountryCriteria.DOTS
         t.save(update_fields=['best_country_criterion'])
-        bc = t.best_countries(True)
+        bc = t.best_countries(whole_list=True)
         gps = bc[self.austria][0]
         for gp in gps:
             self.assertTrue(gp.is_best_country())
