@@ -2319,19 +2319,17 @@ class TournamentTests(TestCase):
         self.assertEqual(t.round_numbered(3).number(), 3)
 
     # Tournament.best_countries()
-    def test_tournament_best_countries_with_games(self):
-        # TODO modify GamePlayer scores so they're not all zero
-        t = Tournament.objects.get(name='t1')
-        bc = t.best_countries(whole_list=True)
+    def validate_best_countries_by_score(self, value):
+        """Check dict returned by best_countries()"""
         # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
-        self.assertEqual(len(bc), 7)
+        self.assertEqual(len(value), 7)
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
-                best_gps = bc[power].pop(0)
+                best_gps = value[power].pop(0)
                 best_score = best_gps[0].score
                 for gp in best_gps:
                     self.assertEqual(best_score, gp.score)
-                for gps in bc[power]:
+                for gps in value[power]:
                     if len(gps) == 1:
                         if not gps[0].tournamentplayer().unranked:
                             self.assertTrue(best_score >= gps[0].score)
@@ -2341,6 +2339,12 @@ class TournamentTests(TestCase):
                         for gp in gps:
                             if not gp.tournamentplayer().unranked:
                                 self.assertEqual(score, gp.score)
+
+    def test_tournament_best_countries_with_games(self):
+        # TODO modify GamePlayer scores so they're not all zero
+        t = Tournament.objects.get(name='t1')
+        bc = t.best_countries(whole_list=True)
+        self.validate_best_countries_by_score(bc)
 
     def test_tournament_best_countries_without_games(self):
         t = Tournament.objects.get(name='t3')
@@ -2358,24 +2362,7 @@ class TournamentTests(TestCase):
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
         bc = t.best_countries(whole_list=True)
-        # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
-        self.assertEqual(len(bc), 7)
-        for power in GreatPower.objects.all():
-            with self.subTest(power=power):
-                best_gps = bc[power].pop(0)
-                best_score = best_gps[0].score
-                for gp in best_gps:
-                    self.assertEqual(best_score, gp.score)
-                for gps in bc[power]:
-                    if len(gps) == 1:
-                        if not gps[0].tournamentplayer().unranked:
-                            self.assertTrue(best_score >= gps[0].score)
-                    else:
-                        score = gps[0].score
-                        self.assertTrue(best_score >= score)
-                        for gp in gps:
-                            if not gp.tournamentplayer().unranked:
-                                self.assertEqual(score, gp.score)
+        self.validate_best_countries_by_score(bc)
         # Restore power assignments
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp.player]
