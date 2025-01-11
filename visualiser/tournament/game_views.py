@@ -781,7 +781,7 @@ def scrape_external_site(request, tournament_id, game_name):
         else:
             return _scrape_backstabbr(request, t, g, bg)
     # How about WebDiplomacy?
-    if webdiplomacy.is_webdiplomacy_url(g.external_url):
+    if webdip.is_webdiplomacy_url(g.external_url):
         try:
             wg = g.webdiplomacy_game()
         except webdip.InvalidGameUrl:
