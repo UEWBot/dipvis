@@ -2322,14 +2322,23 @@ class TournamentTests(TestCase):
     def test_tournament_best_countries_with_games(self):
         # TODO modify GamePlayer scores so they're not all zero
         t = Tournament.objects.get(name='t1')
-        bc = t.best_countries()
+        bc = t.best_countries(whole_list=True)
         # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
         self.assertEqual(len(bc), 7)
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
-                best_gp = bc[power].pop(0)
-                for gp in bc[power]:
-                    self.assertTrue(best_gp.score >= gp.score)
+                best_gps = bc[power].pop(0)
+                best_score = best_gps[0].score
+                for gp in best_gps:
+                    self.assertEqual(best_score, gp.score)
+                for gps in bc[power]:
+                    if len(gps) == 1:
+                        self.assertTrue(best_score >= gps[0].score)
+                    else:
+                        score = gps[0].score
+                        self.assertTrue(best_score >= score)
+                        for gp in gps:
+                            self.assertEqual(score, gp.score)
 
     def test_tournament_best_countries_without_games(self):
         t = Tournament.objects.get(name='t3')
@@ -2346,14 +2355,23 @@ class TournamentTests(TestCase):
             gp.save(update_fields=['power'])
         t = Tournament.objects.get(name='t1')
         # TODO Validate results
-        bc = t.best_countries()
+        bc = t.best_countries(whole_list=True)
         # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
         self.assertEqual(len(bc), 7)
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
-                best_gp = bc[power].pop(0)
-                for gp in bc[power]:
-                    self.assertTrue(best_gp.score >= gp.score)
+                best_gps = bc[power].pop(0)
+                best_score = best_gps[0].score
+                for gp in best_gps:
+                    self.assertEqual(best_score, gp.score)
+                for gps in bc[power]:
+                    if len(gps) == 1:
+                        self.assertTrue(best_score >= gps[0].score)
+                    else:
+                        score = gps[0].score
+                        self.assertTrue(best_score >= score)
+                        for gp in gps:
+                            self.assertEqual(score, gp.score)
         # Restore power assignments
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp.player]
