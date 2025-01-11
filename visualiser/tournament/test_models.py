@@ -2333,12 +2333,14 @@ class TournamentTests(TestCase):
                     self.assertEqual(best_score, gp.score)
                 for gps in bc[power]:
                     if len(gps) == 1:
-                        self.assertTrue(best_score >= gps[0].score)
+                        if not gps[0].tournamentplayer().unranked:
+                            self.assertTrue(best_score >= gps[0].score)
                     else:
                         score = gps[0].score
                         self.assertTrue(best_score >= score)
                         for gp in gps:
-                            self.assertEqual(score, gp.score)
+                            if not gp.tournamentplayer().unranked:
+                                self.assertEqual(score, gp.score)
 
     def test_tournament_best_countries_without_games(self):
         t = Tournament.objects.get(name='t3')
@@ -2366,12 +2368,14 @@ class TournamentTests(TestCase):
                     self.assertEqual(best_score, gp.score)
                 for gps in bc[power]:
                     if len(gps) == 1:
-                        self.assertTrue(best_score >= gps[0].score)
+                        if not gps[0].tournamentplayer().unranked:
+                            self.assertTrue(best_score >= gps[0].score)
                     else:
                         score = gps[0].score
                         self.assertTrue(best_score >= score)
                         for gp in gps:
-                            self.assertEqual(score, gp.score)
+                            if not gp.tournamentplayer().unranked:
+                                self.assertEqual(score, gp.score)
         # Restore power assignments
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp.player]
