@@ -2760,6 +2760,16 @@ class TournamentTests(TestCase):
         t = Tournament.objects.get(name='t3')
         self.assertEqual('', t.wdd_url())
 
+    # Tournament.wdr_url()
+    def test_tournament_wdr_url(self):
+        t = Tournament.objects.get(name='t3')
+        t.wdr_tournament_id = 7
+        self.assertTrue(t.wdr_url().endswith('tournaments/7'))
+
+    def test_tournament_wdr_url_none(self):
+        t = Tournament.objects.get(name='t3')
+        self.assertEqual('', t.wdr_url())
+
     # Tournament.get_absolute_url()
     def test_tournament_get_absolute_url(self):
         t = Tournament.objects.get(name='t3')

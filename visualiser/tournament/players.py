@@ -39,10 +39,10 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from django_countries.fields import CountryField
+from django_countries.fields import Country, CountryField
 
-from tournament.background import WikipediaBackground, WDDBackground
-from tournament.background import InvalidWDDId, WDDNotAccessible
+from tournament.background import WikipediaBackground, WDDBackground, WDRBackground
+from tournament.background import InvalidWDDId, WDDNotAccessible, WDRNotAccessible
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
@@ -51,6 +51,9 @@ from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, Unre
 from tournament.wdd import validate_wdd_player_id, validate_wdd_tournament_id
 from tournament.wdd import WDD_NETLOC, WDD_BASE_RESULTS_PATH, WDD_BASE_RANKING_PATH
 from tournament.wdd import WDD_BASE_RESULTS_URL
+from tournament.wdr import validate_wdr_player_id, validate_wdr_tournament_id
+from tournament.wdr import WDR_BASE_URL
+from tournament.wdr import wdr_power_name_to_greatpower
 
 
 # Mask values to choose which background strings to include
@@ -137,14 +140,20 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
     """
     Creates or updates a PlayerTournamentRanking for the player
 
-    Given a Player and a dict with 'Tournament' 'Date' and 'Position' keys,
-    and optional 'WDD URL' key, representing the World Diplomacy Database data,
+    Given a Player and a dict with 'Tournament' 'Date', 'Position',
+    and 'WDD URL' keys, representing the World Diplomacy Database data,
     plus a dict keyed by WDD tournament id of WPE scores for the player,
     create or update a PlayerTournamentRanking
     """
     d = finish['Date']
     try:
-        defaults = {'position': finish['Position']}
+        wdd_tournament_id = wdd_url_to_tournament_id(finish['WDD URL'])
+        defaults = {'position': finish['Position'],
+                    'tournament': finish['Tournament']}
+        try:
+            defaults['wpe_score']=wpe_scores[wdd_tournament_id]
+        except KeyError:
+            pass
         try:
             # WDD contains some invalid dates (e.g. '2017-09-0')
             datetime.datetime.strptime(d, '%Y-%m-%d')
@@ -152,18 +161,8 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
             pass
         else:
             defaults['date'] = d
-        # Ignore if not present
-        try:
-            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(finish['WDD URL'])
-        except KeyError:
-            pass
-        else:
-            try:
-                defaults['wpe_score'] = wpe_scores[defaults['wdd_tournament_id']]
-            except KeyError:
-                pass
         PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                         tournament=finish['Tournament'],
+                                                         wdd_tournament_id=wdd_tournament_id,
                                                          year=d[:4],
                                                          defaults=defaults)
     except Exception:
@@ -181,13 +180,15 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
     """
     Creates or updates a PlayerTournamentRanking for the player
 
-    Given a Player and a dict with 'Name of the Tournament' 'Date' and 'Rank' keys,
-    and optional 'WDD URL' key, representing the World Diplomacy Database data,
+    Given a Player and a dict with 'Name of the Tournament' 'Date', 'Rank',
+    and 'WDD URL' keys, representing the World Diplomacy Database data,
     create or update a PlayerTournamentRanking
     """
     d = t['Date']
     try:
-        defaults = {'position': t['Rank']}
+        wdd_tournament_id = wdd_url_to_tournament_id(t['WDD URL'])
+        defaults = {'position': t['Rank'],
+                    'tournament': t['Name of the tournament']}
         try:
             # WDD contains some invalid dates (e.g. '2017-09-0')
             datetime.datetime.strptime(d, '%Y-%m-%d')
@@ -195,13 +196,8 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
             pass
         else:
             defaults['date'] = d
-        # Ignore if not present
-        try:
-            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(t['WDD URL'])
-        except KeyError:
-            pass
         PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                         tournament=t['Name of the tournament'],
+                                                         wdd_tournament_id=wdd_tournament_id,
                                                          year=d[:4],
                                                          defaults=defaults)
     except KeyError:
@@ -222,9 +218,9 @@ def _update_or_create_playergameresult(player, b):
     """
     Creates or updates a PlayerGameResult for the player
 
-    Given a Player and a dict with 'Country', 'Name of the Tournament' 'Date' 'Round / Board' and 'Position' keys,
-    and optional 'Position sharing' 'Score' 'Final SCs' 'Game end' 'Elimination year' and 'WDD Tournament URL' keys,
-    representing the World Diplomacy Database data, create or update a PlayerGameResult
+    Given a Player and a dict with 'Country', 'Name of the Tournament' 'Date' 'Round / Board', 'Position',
+    and 'WDD Tournament URL' keys, and optional 'Position sharing' 'Score' 'Final SCs' 'Game end' and
+    'Elimination year' keys, representing the World Diplomacy Database data, create or update a PlayerGameResult
     """
     try:
         power = b['Country']
@@ -240,7 +236,9 @@ def _update_or_create_playergameresult(player, b):
                                                                   str(player)))
         return
     try:
-        defaults = {'position': b['Position']}
+        wdd_tournament_id = wdd_url_to_tournament_id(b['WDD Tournament URL'])
+        defaults = {'position': b['Position'],
+                    'tournament_name': b['Name of the tournament']}
         # If there's no 'Position sharing', they were alone at that position
         try:
             defaults['position_equals'] = b['Position sharing']
@@ -263,14 +261,10 @@ def _update_or_create_playergameresult(player, b):
             defaults['year_eliminated'] = b['Elimination year']
         except KeyError:
             pass
-        try:
-            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(b['WDD Tournament URL'])
-        except KeyError:
-            pass
         # WDD has been known to change the date
         # The result should still be unique without it, though
         defaults['date'] = b['Date']
-        PlayerGameResult.objects.update_or_create(tournament_name=b['Name of the tournament'],
+        PlayerGameResult.objects.update_or_create(wdd_tournament_id=wdd_tournament_id,
                                                   game_name=b['Round / Board'],
                                                   player=player,
                                                   power=p,
@@ -293,8 +287,8 @@ def _update_or_create_playeraward(player, k, a):
     """
     Creates or updates a PlayerAward for the player
 
-    Given a Player and key ('Awards' or a GreatPower name) and a dict with 'Tournament' and 'Date' keys,
-    and optional 'Score' 'SCs' and 'WDD URL' keys,
+    Given a Player and key ('Awards' or a GreatPower name) and a dict with 'Tournament', 'Date',
+    and 'WDD URL' keys, and optional 'Score' and 'SCs' keys,
     representing the World Diplomacy Database data, create or update a PlayerAward
     """
     if k == 'Awards':
@@ -319,7 +313,8 @@ def _update_or_create_playeraward(player, k, a):
         print('Ignoring award with no date %s' % str(a))
         return
     try:
-        defaults = {}
+        wdd_tournament_id = wdd_url_to_tournament_id(a['WDD URL'])
+        defaults = {'tournament': a['Tournament']}
         if k != 'Awards':
             defaults['power'] = p
         # Ignore any of these that aren't present
@@ -331,12 +326,8 @@ def _update_or_create_playeraward(player, k, a):
             defaults['final_sc_count'] = a['SCs']
         except KeyError:
             pass
-        try:
-            defaults['wdd_tournament_id'] = wdd_url_to_tournament_id(a['WDD URL'])
-        except KeyError:
-            pass
         PlayerAward.objects.update_or_create(player=player,
-                                             tournament=a['Tournament'],
+                                             wdd_tournament_id=wdd_tournament_id,
                                              date=date_str,
                                              name=award_name,
                                              defaults=defaults)
@@ -439,6 +430,205 @@ def _add_player_bg_from_wdd(player, wdd_id, include_wpe):
     return fields
 
 
+def _find_wdr_tournament(wdr_id, tournaments_list):
+    """
+    Return the dict for the specified tournament from a list of dicts
+    """
+    for t in tournaments_list:
+        if wdr_id == t['tournament_id']:
+            return t
+
+
+def _add_player_bg_from_wdr(player, wdr_id):
+    """
+    Add or update player background information from the WDR
+
+    Returns a list of Player fields that were updated and need saving.
+    """
+    fields = []
+    bg = WDRBackground(wdr_id)
+    # Podium finishes and Tournaments
+    tournaments = bg.tournaments()
+    for t in tournaments:
+        # We only care about tournaments where the player was ranked
+        # (others are most likely ones where they were TD but played)
+        if not t['tournament_player_rank']:
+            print(f"Skipping {t['tournament_name']} for {player} with no ranking")
+            continue
+        defaults = {'position': t['tournament_player_rank'],
+                    'tournament': t['tournament_name']}
+        if t['tournament_end_date']:
+            defaults['date'] = t['tournament_end_date']
+        else:
+            defaults['date'] = t['tournament_start_date']
+        if t['tournament_wdd_id'] == -1:
+            try:
+                PlayerTournamentRanking.objects.update_or_create(player=player,
+                                                                 wdr_tournament_id=t['tournament_id'],
+                                                                 year=defaults['date'][:4],
+                                                                 defaults=defaults)
+            except Exception:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerTournamentRanking")
+                print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
+                                                                          t['tournament_name'],
+                                                                          t['tournament_player_rank'],
+                                                                          defaults['date'][:4]))
+                traceback.print_exc()
+        else:
+            defaults['wdr_tournament_id'] = t['tournament_id']
+            try:
+                PlayerTournamentRanking.objects.update_or_create(player=player,
+                                                                 wdd_tournament_id=t['tournament_wdd_id'],
+                                                                 year=defaults['date'][:4],
+                                                                 defaults=defaults)
+            except Exception:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerTournamentRanking")
+                print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
+                                                                          t['tournament_name'],
+                                                                          t['tournament_player_rank'],
+                                                                          defaults['date'][:4]))
+                traceback.print_exc()
+    # Boards
+    for b in bg.boards():
+        # What was the tournament?
+        t_id = b['board_tournament']
+        t = _find_wdr_tournament(t_id, tournaments)
+        defaults = {'tournament_name': t['tournament_name'],
+                    'position': b['board_rank']}
+        if t['tournament_end_date']:
+            defaults['date'] = t['tournament_end_date']
+        else:
+            defaults['date'] = t['tournament_start_date']
+        # Ignore any of these that aren't present
+        try:
+            defaults['score'] = b['board_score']
+        except KeyError:
+            pass
+        try:
+            defaults['final_sc_count'] = b['board_centers']
+        except KeyError:
+            pass
+        try:
+            defaults['year_eliminated'] = b['board_year_of_elimination']
+        except KeyError:
+            pass
+        game_name = f'{b["board_round"]} / {b["board_number"]}'
+        if t['tournament_wdd_id'] == -1:
+            try:
+                PlayerGameResult.objects.update_or_create(wdr_tournament_id=t_id,
+                                                          game_name=game_name,
+                                                          player=player,
+                                                          power=wdr_power_name_to_greatpower(b['board_power']),
+                                                          defaults=defaults)
+            except Exception:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerGameResult")
+                print("player=%s, tournament_name=%s, game_name=%s, power=%s, position=%s"
+                      % (str(player),
+                         t['tournament_name'],
+                         game_name,
+                         b['board_power'],
+                         b['board_rank']))
+                traceback.print_exc()
+        else:
+            defaults['wdr_tournament_id'] = t_id
+            try:
+                PlayerGameResult.objects.update_or_create(wdd_tournament_id=t['tournament_wdd_id'],
+                                                          game_name=game_name,
+                                                          player=player,
+                                                          power=wdr_power_name_to_greatpower(b['board_power']),
+                                                          defaults=defaults)
+            except Exception:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerGameResult")
+                print("player=%s, tournament_name=%s, game_name=%s, power=%s, position=%s"
+                      % (str(player),
+                         t['tournament_name'],
+                         game_name,
+                         b['board_power'],
+                         b['board_rank']))
+                traceback.print_exc()
+    # Awards
+    for a in bg.awards():
+        # WDR only stores best country awards at present
+        award_name = 'Best %s' % a['award_country']
+        # What was the tournament?
+        t_id = a['award_tournament']
+        t = _find_wdr_tournament(t_id, tournaments)
+        defaults = {'tournament': t['tournament_name'],
+                    'date': t['tournament_end_date']}
+        if t['tournament_wdd_id'] == -1:
+            try:
+                PlayerAward.objects.update_or_create(player=player,
+                                                     wdr_tournament_id=t_id,
+                                                     name=award_name,
+                                                     power=wdr_power_name_to_greatpower(a['award_country']),
+                                                     defaults=defaults)
+            except Exception:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerAward")
+                print("player=%s, tournament=%s, date=%s, name=%s" % (str(player),
+                                                                      t['tournament_name'],
+                                                                      t['tournament_end_date'],
+                                                                      award_name))
+                traceback.print_exc()
+        else:
+            defaults['wdr_tournament_id']=t_id
+            try:
+                PlayerAward.objects.update_or_create(player=player,
+                                                     wdd_tournament_id=t['tournament_wdd_id'],
+                                                     name=award_name,
+                                                     power=wdr_power_name_to_greatpower(a['award_country']),
+                                                     defaults=defaults)
+            except Exception:
+                # Handle all exceptions
+                # This way, we fail to add/update the single ranking rather than all the background
+                print("Failed to save PlayerAward")
+                print("player=%s, tournament=%s, date=%s, name=%s" % (str(player),
+                                                                      t['tournament_name'],
+                                                                      t['tournament_end_date'],
+                                                                      award_name))
+                traceback.print_exc()
+    # WPE scores (and other Rankings)
+    ranks = bg.rankings()
+    for k, v in ranks.items():
+        try:
+            PlayerRanking.objects.update_or_create(player=player,
+                                                   system=k,
+                                                   # TODO can we just use v directly?
+                                                   defaults={'score': float(v['score']),
+                                                             'international_rank': v['international_rank'],
+                                                             'national_rank': v['national_rank']})
+        except Exception:
+            # Handle all exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print("Failed to save PlayerRanking")
+            print("player=%s, system=%s" % (str(player), k))
+            traceback.print_exc()
+    # Nationalities
+    # Assume that if we know nationalities they either came from the WDR or are more accurate
+    if not player.nationalities:
+        nat = bg.nationality()
+        if nat:
+            player.nationalities = Country(nat)
+            fields.append('nationalities')
+    # Location
+    # Assume that if we know a location it either came from the WDR or is more accurate
+    if not player.location:
+        loc = bg.location()
+        if loc:
+            player.location = Country(nat).name
+            fields.append('location')
+    return fields
+
+
 def add_player_bg(player, include_wpe=False):
     """
     Cache background data for the player
@@ -453,10 +643,21 @@ def add_player_bg(player, include_wpe=False):
     titles = bg.titles()
     for title in titles:
         _update_or_create_playertitle_wiki(player, title)
-    # Do we have a WDD id for this player?
-    wdd = player.wdd_player_id
-    if wdd:
-        fields += _add_player_bg_from_wdd(player, wdd, include_wpe)
+    # TODO If we have both ids, check that the WDR agrees about the WDD id
+    #      player.wdd_player_id == WDRBackground(player.wdr_player_id).wdd_id()
+    # WDR is easier to parse and often more up-to-date, so use it in preference to WDD
+    # Do we have a WDR id for this player?
+    wdr = player.wdr_player_id
+    if wdr:
+        try:
+            fields += _add_player_bg_from_wdr(player, wdr)
+        except WDRNotAccessible:
+            wdr = None
+    if not wdr:
+        # Do we have a WDD id for this player?
+        wdd = player.wdd_player_id
+        if wdd:
+            fields += _add_player_bg_from_wdd(player, wdd, include_wpe)
     if fields:
         player.save(update_fields=fields)
     # TODO Set PlayerTitle.ranking to cross-reference
@@ -512,6 +713,11 @@ class Player(models.Model):
                                      verbose_name=_(u'WDD player id'),
                                      blank=True,
                                      null=True)
+    wdr_player_id = models.PositiveIntegerField(unique=True,
+                                                validators=[validate_wdr_player_id],
+                                                verbose_name=_(u'WDR player id'),
+                                                blank=True,
+                                                null=True)
     backstabbr_username = models.CharField(max_length=40,
                                            blank=True,
                                            help_text=_('Username on the backstabbr website'))
@@ -579,7 +785,13 @@ class Player(models.Model):
         """URL for this player in the World Diplomacy Database."""
         if self.wdd_player_id:
             return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
-        return u''
+        return ''
+
+    def wdr_url(self):
+        """URL for this player in the World Diplomacy Reference."""
+        if self.wdr_player_id:
+            return f'{WDR_BASE_URL}players/{self.wdr_player_id}'
+        return ''
 
     def wdd_firstname_lastname(self):
         """
@@ -604,6 +816,15 @@ class Player(models.Model):
                 raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
                                       params={'wdd_id': self.wdd_player_id}) from e
         return (self._wdd_firstname, self._wdd_lastname)
+
+    def wdr_name(self):
+        """Returns the name of the player in the WDR as a string"""
+        try:
+            bg = WDRBackground(self.wdr_player_id)
+        except WDRNotAccessible:
+            return ''
+        names = bg.firstname_lastname()
+        return f'{names[0]} {names[1]}'
 
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""
@@ -842,7 +1063,7 @@ class PlayerTournamentRanking(models.Model):
     """
     A tournament ranking for a player.
 
-    Used to import background information from the WDD.
+    Used to import background information from external sites.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.CharField(max_length=60)
@@ -851,6 +1072,10 @@ class PlayerTournamentRanking(models.Model):
     date = models.DateField(blank=True, null=True)
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
+                                                    blank=True,
+                                                    null=True)
+    wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
+                                                    verbose_name=_(u'WDR tournament id'),
                                                     blank=True,
                                                     null=True)
     wpe_score = models.FloatField(blank=True,
@@ -866,6 +1091,8 @@ class PlayerTournamentRanking(models.Model):
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
+        if (not self.wdd_tournament_id) or (not self.player.wdd_player_id):
+            return ''
         query = {'id_tournament': self.wdd_tournament_id,
                  'id_player': self.player.wdd_player_id}
         url = urlunparse(('https',
@@ -875,6 +1102,12 @@ class PlayerTournamentRanking(models.Model):
                           urlencode(query),
                           ''))
         return url
+
+    def wdr_url(self):
+        """WDR URL where this ranking can be seen"""
+        if not self.wdr_tournament_id:
+            return ''
+        return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}'
 
     def __str__(self):
         pos = position_str(self.position)
@@ -932,7 +1165,7 @@ class PlayerGameResult(models.Model):
     """
     One player's result for a tournament game.
 
-    Used to import background information from the WDD.
+    Used to import background information from external sites.
     """
 
     tournament_name = models.CharField(max_length=60)
@@ -952,6 +1185,10 @@ class PlayerGameResult(models.Model):
                                                        validators=[validate_year])
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
+                                                    blank=True,
+                                                    null=True)
+    wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
+                                                    verbose_name=_(u'WDR tournament id'),
                                                     blank=True,
                                                     null=True)
     updated = models.DateTimeField(auto_now=True)
@@ -988,6 +1225,8 @@ class PlayerGameResult(models.Model):
 
     def wdd_url(self):
         """WDD URL where this result can be seen"""
+        if not self.wdd_tournament_id:
+            return ''
         query = {'id_tournament': self.wdd_tournament_id,
                  'id_round': self.round(),
                  'id_board': self.board()}
@@ -998,6 +1237,12 @@ class PlayerGameResult(models.Model):
                           urlencode(query),
                           ''))
         return url
+
+    def wdr_url(self):
+        """WDR URL where this ranking can be seen"""
+        if not self.wdr_tournament_id:
+            return ''
+        return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}/boards'
 
     def __str__(self):
         return _(u'%(player)s played %(power)s in %(game)s at %(tourney)s') % {'player': self.player,
@@ -1027,6 +1272,10 @@ class PlayerAward(models.Model):
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
                                                     null=True)
+    wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
+                                                    verbose_name=_(u'WDR tournament id'),
+                                                    blank=True,
+                                                    null=True)
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -1039,6 +1288,8 @@ class PlayerAward(models.Model):
 
     def wdd_url(self):
         """WDD URL where this award can be seen"""
+        if not self.wdd_tournament_id:
+            return ''
         if self.power is None:
             path = 'tournament_award.php'
         else:
@@ -1051,6 +1302,12 @@ class PlayerAward(models.Model):
                           urlencode(query),
                           ''))
         return url
+
+    def wdr_url(self):
+        """WDR URL where this ranking can be seen"""
+        if not self.wdr_tournament_id:
+            return ''
+        return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}'
 
     def __str__(self):
         return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
@@ -1079,6 +1336,8 @@ class PlayerRanking(models.Model):
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
+        if not self.player.wdd_player_id:
+            return ''
         if self.system == 'World Performance Evaluation':
             wdd_system_id = 2
         elif self.system == 'Dip Pouch Tournament Rating':
@@ -1096,6 +1355,12 @@ class PlayerRanking(models.Model):
                           urlencode(query),
                           ''))
         return url
+
+    def wdr_url(self):
+        """WDR URL where this ranking can be seen"""
+        if self.system == 'WPE7':
+            return f'{WDR_BASE_URL}rankings/wpe7'
+        return ''
 
     def national_str(self):
         """Returns a string describing the national_rank"""

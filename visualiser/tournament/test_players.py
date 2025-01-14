@@ -26,7 +26,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import DrawSecrecy
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.players import Player, PlayerRanking, PlayerAward
+from tournament.players import Player, PlayerRanking, PlayerAward, PlayerTitle
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
 from tournament.players import add_player_bg, position_str
 from tournament.players import MASK_ALL_BG
@@ -38,6 +38,8 @@ NATE_COCKERILL_WDD_ID = 5009
 SPIROS_BOBETSIS_WDD_ID = 12304
 CLAESAR_WEBDIP_WDD_ID = 13317
 MELINDA_HOLLEY_WDD_ID = 5185
+
+CHRIS_BRAND_WDR_ID = 7164
 
 
 class PlayerTests(TestCase):
@@ -104,7 +106,7 @@ class PlayerTests(TestCase):
         # TODO check results
 
     @tag('slow', 'wdd')
-    def test_add_player_bg_places(self):
+    def test_add_player_bg_wdd_places(self):
         """add_player_bg() with existing nationalities and location"""
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         self.assertEqual(p.location, '')
@@ -116,6 +118,27 @@ class PlayerTests(TestCase):
         ptrs = p.playertournamentranking_set.all()
         # TODO check results
         # Cleanup
+        p.location = ''
+        p.nationalities = []
+        p.save()
+
+    @tag('slow', 'wdr')
+    def test_add_player_bg_wdr_places(self):
+        """add_player_bg() with existing nationalities and location"""
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        self.assertEqual(p.location, '')
+        self.assertEqual(len(p.nationalities), 0)
+        p.wdd_player_id = None
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.nationalities = Country('CA')
+        p.location = "The moon"
+        p.save()
+        add_player_bg(p)
+        ptrs = p.playertournamentranking_set.all()
+        # TODO check results
+        # Cleanup
+        p.wdd_player_id = CHRIS_BRAND_WDD_ID
+        p.wdr_player_id = None
         p.location = ''
         p.nationalities = []
         p.save()
@@ -176,6 +199,17 @@ class PlayerTests(TestCase):
         # TODO Validate results
         p.wdd_url()
 
+    # Player.wdr_url()
+    def test_player_wdr_url(self):
+        p = Player.objects.create(first_name='John', last_name='Smith', wdr_player_id=69)
+        # TODO Validate results
+        p.wdr_url()
+
+    def test_player_wdr_url_no_id(self):
+        p = Player.objects.create(first_name='John', last_name='Smith')
+        # TODO Validate results
+        p.wdr_url()
+
     # Player.wdd_firstname_lastname()
     @tag('slow', 'wdd')
     def test_player_wdd_firstname_lastname(self):
@@ -188,6 +222,12 @@ class PlayerTests(TestCase):
         name = p.wdd_firstname_lastname()
         self.assertEqual(name[0], 'John')
         self.assertEqual(name[1], 'Smith')
+
+    # Player.wdr_name()
+    @tag('wdr')
+    def test_player_wdr_name(self):
+        p = Player.objects.create(first_name='John', last_name='Smith', wdr_player_id=CHRIS_BRAND_WDR_ID)
+        self.assertEqual(p.wdr_name(), 'Chris Brand')
 
     # Player.tournamentplayers()
     def test_player_tournamentplayers(self):
@@ -229,11 +269,40 @@ class PlayerTests(TestCase):
 
     # Player.background()
     @tag('slow', 'wdd')
-    def test_player_background(self):
+    def test_player_background_wdd(self):
         p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        self.assertIsNone(p.wdr_player_id)
         add_player_bg(p)
         # TODO Validate results
         p.background()
+
+    @tag('wdr')
+    def test_player_background_wdr(self):
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        self.assertIsNone(p.wdr_player_id)
+        p.wdd_player_id = None
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+        p.background()
+        # Cleanup
+        p.wdr_player_id = None
+        p.save()
+
+    @tag('slow', 'wdr', 'wdd')
+    def test_player_background_wdd_and_wdr(self):
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        self.assertIsNone(p.wdr_player_id)
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+        # Cleanup
+        p.wdr_player_id = None
+        p.save()
 
     @tag('slow', 'wdd')
     def test_player_background_no_wins(self):
@@ -388,6 +457,23 @@ class PlayerTests(TestCase):
         url = ptr.wdd_url()
         # TODO verify result
 
+    # PlayerTournamentRanking.wdr_url()
+    @tag('slow', 'wdr')
+    def test_playertournamentranking_wdr_url(self):
+        p = Player.objects.first()
+        wdd_id = p.wdd_player_id
+        p.wdd_player_id = None
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        ptr = PlayerTournamentRanking.objects.first()
+        url = ptr.wdr_url()
+        # TODO verify result
+        # Cleanup
+        p.wdd_player_id = wdd_id
+        p.wdr_player_id = None
+        p.save()
+
     # PlayerTournamentRanking.__str__()
     @tag('slow', 'wdd')
     def test_playertournamentranking_str(self):
@@ -399,6 +485,19 @@ class PlayerTests(TestCase):
         self.assertIn(ptr.player.first_name, p_str)
         self.assertIn(ptr.player.last_name, p_str)
         self.assertIn(ptr.tournament, p_str)
+
+    # PlayerTitle
+    # PlayerTitle.__str__()
+    def test_playertitle_str(self):
+        pt = PlayerTitle(player=Player.objects.first(),
+                         title='Dogwasher of the Year',
+                         year=1900)
+        p_str = str(pt)
+        # We expect to find player name, title, and year
+        self.assertIn(pt.player.first_name, p_str)
+        self.assertIn(pt.player.last_name, p_str)
+        self.assertIn(pt.title, p_str)
+        self.assertIn(str(pt.year), p_str)
 
     # PlayerGameResult
     # PlayerGameResult.for_same_game()
@@ -483,6 +582,23 @@ class PlayerTests(TestCase):
         url = pgr.wdd_url()
         # TODO verify result
 
+    # PlayerGameResult.wdr_url()
+    @tag('slow', 'wdr')
+    def test_playergameresult_wdr_url(self):
+        p = Player.objects.first()
+        wdd_id = p.wdd_player_id
+        p.wdd_player_id = None
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        pgr = PlayerGameResult.objects.first()
+        url = pgr.wdr_url()
+        # TODO verify result
+        # Cleanup
+        p.wdd_player_id = wdd_id
+        p.wdr_player_id = None
+        p.save()
+
     # PlayerGameResult.__str__()
     @tag('slow', 'wdd')
     def test_playergameresult_str(self):
@@ -512,6 +628,23 @@ class PlayerTests(TestCase):
         pa = PlayerAward.objects.filter(power=None).first()
         url = pa.wdd_url()
         # TODO verify result
+
+    # PlayerAward.wdr_url()
+    @tag('slow', 'wdr')
+    def test_playergameresult_wdr_url(self):
+        p = Player.objects.first()
+        wdd_id = p.wdd_player_id
+        p.wdd_player_id = None
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        pa = PlayerAward.objects.exclude(power=None).first()
+        url = pa.wdr_url()
+        # TODO verify result
+        # Cleanup
+        p.wdd_player_id = wdd_id
+        p.wdr_player_id = None
+        p.save()
 
     # PlayerAward.__str__()
     @tag('slow', 'wdd')
@@ -555,6 +688,23 @@ class PlayerTests(TestCase):
         pr = PlayerRanking.objects.filter(system__contains='SDR').first()
         url = pr.wdd_url()
         # TODO Validate results
+
+    # PlayerRanking.wdr_url()
+    @tag('slow', 'wdr')
+    def test_playerranking_wdr_url_wpe(self):
+        p = Player.objects.first()
+        wdd_id = p.wdd_player_id
+        p.wdd_player_id = None
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        pr = PlayerRanking.objects.filter(system='WPE7').first()
+        url = pr.wdr_url()
+        # TODO Validate results
+        # Cleanup
+        p.wdd_player_id = wdd_id
+        p.wdr_player_id = None
+        p.save()
 
     # PlayerRanking.national_str()
     @tag('slow', 'wdd')

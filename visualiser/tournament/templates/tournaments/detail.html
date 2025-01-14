@@ -11,6 +11,9 @@
 {% if tournament.wdd_tournament_id %}
   <p><a href="{{ tournament.wdd_url }}">{% trans "View on WDD" %}</a></p>
 {% endif %}
+{% if tournament.wdr_tournament_id %}
+  <p><a href="{{ tournament.wdr_url }}">{% trans "View on WDR" %}</a></p>
+{% endif %}
 
 {% if tournament.series_set.exists %}
   <p>{% trans "Part of the following series:" %}</p>

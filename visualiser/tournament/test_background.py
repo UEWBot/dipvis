@@ -18,6 +18,7 @@ from django.test import TestCase, tag
 
 from tournament.background import WikipediaBackground
 from tournament.background import WDDBackground, InvalidWDDId
+from tournament.background import WDRBackground, InvalidWDRId
 
 
 class WikipediaBackgroundTests(TestCase):
@@ -68,6 +69,7 @@ class WikipediaBackgroundTests(TestCase):
             with self.subTest(title=t):
                 self.assertEqual(t['Second'], name)
                 self.assertEqual(t['Second Flags'], flags)
+
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
@@ -186,3 +188,47 @@ class WDDBackgroundTests(TestCase):
                     self.assertEqual(s['Score'], '14.40')
                 elif s['Date'] == '1998-07-06':
                     self.assertEqual(s['Score'], '4.00')
+
+
+@tag('wdr')
+class WDRBackgroundTests(TestCase):
+
+    INVALID_WDR_ID = 0
+    CHRIS_BRAND_WDR_ID = 7164
+
+    # WDRBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
+    @tag('wdr')
+    def test_wdr_background_id_invalid(self):
+        self.assertRaises(InvalidWDRId, WDRBackground, self.INVALID_WDR_ID)
+
+    # WDRBackground.wdd_id()
+    @tag('wdr')
+    def test_wdr_background_wdd_id(self):
+        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
+        self.assertEqual(4173, b.wdd_id())
+
+    # WDRBackground.firstname_lastname()
+    @tag('wdr')
+    def test_wdr_background_firstname_lastname(self):
+        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
+        self.assertEqual(('Chris', 'Brand'), b.firstname_lastname())
+
+    # WDRBackground.nationality()
+    @tag('wdr')
+    def test_wdr_background_nationality(self):
+        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
+        self.assertEqual('CA', b.nationality())
+
+    # WDRBackground.location()
+    @tag('wdr')
+    def test_wdr_background_location(self):
+        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
+        self.assertEqual('CA', b.location())
+
+    # TODO WDRBackground.tournaments()
+
+    # TODO WDRBackground.boards()
+
+    # TODO WDRBackground.awards()
+
+    # TODO WDRBackground.rankings()

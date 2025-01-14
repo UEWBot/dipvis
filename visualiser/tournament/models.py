@@ -58,6 +58,8 @@ from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WI
 from tournament.tournament_game_state import TournamentGameState
 from tournament.wdd import WDD_BASE_RESULTS_URL
 from tournament.wdd import validate_wdd_tournament_id
+from tournament.wdr import WDR_BASE_URL
+from tournament.wdr import validate_wdr_tournament_id
 
 
 class Seasons(models.TextChoices):
@@ -652,6 +654,11 @@ class Tournament(models.Model):
                                                     blank=True,
                                                     null=True,
                                                     help_text=_('Add this after the tournament is complete and results have been uploaded to the WDD'))
+    wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
+                                                    verbose_name=_("This tournament's id in the WDR"),
+                                                    blank=True,
+                                                    null=True,
+                                                    help_text=_('Add this after the tournament is complete and results have been uploaded to the WDR'))
     seed_games = models.BooleanField(default=True,
                                      help_text=_('Check to let the software seed players to games'))
     power_assignment = models.CharField(max_length=1,
@@ -1052,6 +1059,12 @@ class Tournament(models.Model):
         """URL for this tournament in the World Diplomacy Database, if known."""
         if self.wdd_tournament_id:
             return WDD_BASE_RESULTS_URL + 'tournament_class.php?id_tournament=%d' % self.wdd_tournament_id
+        return u''
+
+    def wdr_url(self):
+        """URL for this tournament in the World Diplomacy Reference, if known."""
+        if self.wdr_tournament_id:
+            return WDR_BASE_URL + 'tournaments/%d' % self.wdr_tournament_id
         return u''
 
     def get_absolute_url(self):

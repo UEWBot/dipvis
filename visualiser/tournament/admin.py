@@ -165,7 +165,7 @@ class TournamentAdmin(admin.ModelAdmin):
               ('show_current_scores', 'draw_secrecy', 'best_country_criterion'),
               ('discord_url', 'is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
-              'wdd_tournament_id',
+              ('wdd_tournament_id','wdr_tournament_id'),
               'awards')
 
 @admin.register(TournamentPlayer)
