@@ -41,7 +41,6 @@ from django.utils.translation import ngettext
 from tournament import backstabbr
 from tournament import webdip
 
-from tournament.background import WDD_BASE_RESULTS_URL
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
@@ -56,8 +55,9 @@ from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
 from tournament.players import Player, add_player_bg
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WINS
-from tournament.players import validate_wdd_tournament_id
 from tournament.tournament_game_state import TournamentGameState
+from tournament.wdd import WDD_BASE_RESULTS_URL
+from tournament.wdd import validate_wdd_tournament_id
 
 
 class Seasons(models.TextChoices):
