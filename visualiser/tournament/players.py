@@ -372,25 +372,14 @@ def _update_or_create_playerranking(player, r):
         traceback.print_exc()
 
 
-def add_player_bg(player, include_wpe=False):
+def _add_player_bg_from_wdd(player, wdd_id, include_wpe):
     """
-    Cache background data for the player
+    Add or update player background information from the WDD
 
-    include_wpe=True will set PlayerTournamentRanking.wpe_score,
-    which involves parsing an additional WDD page
+    Returns a list of Player fields that were updated and need saving.
     """
     fields = []
-    # First check wikipedia
-    bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
-    # Titles won
-    titles = bg.titles()
-    for title in titles:
-        _update_or_create_playertitle_wiki(player, title)
-    # Do we have a WDD id for this player?
-    wdd = player.wdd_player_id
-    if not wdd:
-        return
-    bg = WDDBackground(wdd)
+    bg = WDDBackground(wdd_id)
     # WPE scores
     wpe_scores = {}
     if include_wpe:
@@ -447,6 +436,27 @@ def add_player_bg(player, include_wpe=False):
                 pass
             else:
                 fields.append('location')
+    return fields
+
+
+def add_player_bg(player, include_wpe=False):
+    """
+    Cache background data for the player
+
+    include_wpe=True will set PlayerTournamentRanking.wpe_score,
+    which involves parsing an additional WDD page
+    """
+    fields = []
+    # First check wikipedia
+    bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
+    # Titles won
+    titles = bg.titles()
+    for title in titles:
+        _update_or_create_playertitle_wiki(player, title)
+    # Do we have a WDD id for this player?
+    wdd = player.wdd_player_id
+    if wdd:
+        fields += _add_player_bg_from_wdd(player, wdd, include_wpe)
     if fields:
         player.save(update_fields=fields)
     # TODO Set PlayerTitle.ranking to cross-reference
