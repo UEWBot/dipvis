@@ -59,7 +59,9 @@ REFRESH_TIME = 60
 def tournament_index(request):
     """Display a list of tournaments"""
     # We actually retrieve two separate lists, one of all published tournaments (visible to all)
-    main_list = Tournament.objects.filter(is_published=True).order_by('is_finished', 'end_date')
+    finished_list = Tournament.objects.filter(is_published=True, is_finished=False).order_by('end_date')
+    unfinished_list = Tournament.objects.filter(is_published=True, is_finished=True).order_by('-start_date')
+    main_list = list(finished_list) + list(unfinished_list)
     # and a second list of unpublished tournaments visible to the current user
     if request.user.is_superuser:
         # All unpublished tournaments
