@@ -16,13 +16,9 @@
 
 from django.test import TestCase, tag
 
-from tournament.background import WDDBackground, WikipediaBackground, InvalidWDDId
+from tournament.background import WikipediaBackground
+from tournament.background import WDDBackground, InvalidWDDId
 
-INVALID_WDD_ID = 1
-BRANDON_FOGEL_WDD_ID = 13051
-MELINDA_HOLLEY_WDD_ID = 5185
-MEHMET_ALPASLAN_WDD_ID = 14082
-BEN_JAMES_WDD_ID = 14140
 
 class WikipediaBackgroundTests(TestCase):
 
@@ -76,11 +72,17 @@ class WikipediaBackgroundTests(TestCase):
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
 
+    INVALID_WDD_ID = 1
+    BRANDON_FOGEL_WDD_ID = 13051
+    MELINDA_HOLLEY_WDD_ID = 5185
+    MEHMET_ALPASLAN_WDD_ID = 14082
+    BEN_JAMES_WDD_ID = 14140
+
     # WDDBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
     # WDDBackground.wdd_name()
     @tag('wdd')
     def test_wdd_background_wdd_name_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.wdd_name)
 
     def test_wdd_background_wdd_firstname_lastname(self):
@@ -106,40 +108,40 @@ class WDDBackgroundTests(TestCase):
     # WDDBackground.nationalities()
     def test_wdd_background_nationalities(self):
         # Mehmet has different location and nationality
-        b = WDDBackground(MEHMET_ALPASLAN_WDD_ID)
+        b = WDDBackground(self.MEHMET_ALPASLAN_WDD_ID)
         nats = b.nationalities()
         self.assertEqual(len(nats), 1)
         self.assertEqual(nats[0], 'TUR')
 
     def test_wdd_background_nationalities_none(self):
         # Mehmet has different location and nationality
-        b = WDDBackground(BEN_JAMES_WDD_ID)
+        b = WDDBackground(self.BEN_JAMES_WDD_ID)
         nats = b.nationalities()
         self.assertEqual(len(nats), 0)
 
     # WDDBackground.finishes()
     @tag('wdd')
     def test_wdd_background_finishes_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.finishes)
 
     @tag('wdd')
     def test_wdd_background_finishes_no_type(self):
         # Brandon has http://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1602
         # listed as a tournament, and it has an empty "Type" column
-        b = WDDBackground(BRANDON_FOGEL_WDD_ID)
+        b = WDDBackground(self.BRANDON_FOGEL_WDD_ID)
         b.finishes()
 
     # WDDBackground.tournaments()
     @tag('wdd')
     def test_wdd_background_tournaments_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.tournaments)
 
     # WDDBackground.boards()
     @tag('wdd')
     def test_wdd_background_boards_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.boards)
 
     @tag('wdd')
@@ -147,30 +149,30 @@ class WDDBackgroundTests(TestCase):
         # Melinda has three boards listed on
         # http://www.world-diplomacy-database.com/php/results/player_fiche9.php?id_player=5185
         # with a rank of "n.c.". See Bug #117.
-        b = WDDBackground(MELINDA_HOLLEY_WDD_ID)
+        b = WDDBackground(self.MELINDA_HOLLEY_WDD_ID)
         b.boards()
 
     # WDDBackground.awards()
     @tag('wdd')
     def test_wdd_background_awards_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.awards)
 
     # WDDBackground.rankings()
     @tag('wdd')
     def test_wdd_background_rankings_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.rankings)
 
     # WDDBackground.wpe_scores()
     @tag('wdd')
     def test_wdd_background_wpe_scores_invalid(self):
-        b = WDDBackground(INVALID_WDD_ID)
+        b = WDDBackground(self.INVALID_WDD_ID)
         s = b.wpe_scores()
         self.assertEqual(len(s), 0)
 
     def test_wdd_background_wpe_scores(self):
-        b = WDDBackground(MELINDA_HOLLEY_WDD_ID)
+        b = WDDBackground(self.MELINDA_HOLLEY_WDD_ID)
         scores = b.wpe_scores()
         for s in scores:
             with self.subTest(s['Tournament']):
