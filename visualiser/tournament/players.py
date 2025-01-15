@@ -385,6 +385,7 @@ def add_player_bg(player, include_wpe=False):
     if not wdd:
         return
     bg = WDDBackground(wdd)
+    # WPE scores
     wpe_scores = {}
     if include_wpe:
         # Construct a dict, keyed by WDD Id, of WPE scores
