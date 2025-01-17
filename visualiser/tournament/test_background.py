@@ -79,11 +79,11 @@ class WDDBackgroundTests(TestCase):
     BEN_JAMES_WDD_ID = 14140
 
     # WDDBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
-    # WDDBackground.wdd_name()
+    # WDDBackground._wdd_name()
     @tag('wdd')
     def test_wdd_background_wdd_name_invalid(self):
         b = WDDBackground(self.INVALID_WDD_ID)
-        self.assertRaises(InvalidWDDId, b.wdd_name)
+        self.assertRaises(InvalidWDDId, b._wdd_name)
 
     @tag('wdd')
     def test_wdd_background_wdd_firstname_lastname(self):
