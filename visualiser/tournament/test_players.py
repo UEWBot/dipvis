@@ -84,18 +84,6 @@ class PlayerTests(TestCase):
             with self.subTest(k):
                 self.assertEqual(position_str(k), v)
 
-    # Player.wdd_name()
-    @tag('slow', 'wdd')
-    def test_player_wdd_name(self):
-        p = Player.objects.first()
-        # TODO Validate results
-        p.wdd_name()
-
-    def test_player_wdd_name_no_id(self):
-        p = Player.objects.create(first_name='John', last_name='Smith')
-        # TODO Validate results
-        p.wdd_name()
-
     # Player.wdd_firstname_lastname()
     @tag('slow', 'wdd')
     def test_player_wdd_firstname_lastname(self):

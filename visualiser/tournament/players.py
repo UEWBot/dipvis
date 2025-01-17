@@ -556,23 +556,6 @@ class Player(models.Model):
 
         return result
 
-    def wdd_name(self):
-        """
-        Name for this player, preferably as in the World Diplomacy Database.
-
-        Falls back to using the local first_name and last_name.
-        """
-        if not self.wdd_player_id:
-            return self.first_name + ' ' + self.last_name
-        # Read from the WDD if we haven't cached it
-        if not self._wdd_firstname and not self._wdd_lastname:
-            first, last = self.wdd_firstname_lastname()
-            if not first and not last:
-                # Failed to read it from the WDD
-                return self.first_name + ' ' + self.last_name
-            return first + ' ' + last
-        return self._wdd_firstname + ' ' + self._wdd_lastname
-
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
         if self.wdd_player_id:
