@@ -17,8 +17,8 @@
 {% if player.location %}<p>{% trans "Location: " %}{{ player.location }}</p>{% endif %}
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
-  {% for t in player.tournamentplayers %}
-  <li><a href="{{ t.tournament.get_absolute_url }}">{{ t.tournament }}</a> {% if t.is_finished or t.show_current_scores %}{% if t.position == t.tournament.UNRANKED %}{% trans "Unranked" %}{% else %}{% if not t.score_is_final %}<i>{% endif %}{{ t.position|ordinal }}{% if not t.score_is_final %}</i>{% endif %}{% endif %}{% endif %}</li>
+  {% for tp in player.tournamentplayers %}
+  <li>{% with t=tp.tournament %}<a href="{{ t.get_absolute_url }}">{{ t }}</a> {% if t.is_finished or t.show_current_scores %}{% with pos=tp.position %}{% if pos == t.UNRANKED %}{% trans "Unranked" %}{% else %}{% if not tp.score_is_final %}<i>{% endif %}{{ pos|ordinal }}{% if not tp.score_is_final %}</i>{% endif %}{% endif %}{% endwith %}{% endif %}{% endwith %}</li>
   {% empty %}
     <li>{% trans "No tournaments in the database" %}</li>
   {% endfor %}
