@@ -85,6 +85,7 @@ class WDDBackgroundTests(TestCase):
         b = WDDBackground(self.INVALID_WDD_ID)
         self.assertRaises(InvalidWDDId, b.wdd_name)
 
+    @tag('wdd')
     def test_wdd_background_wdd_firstname_lastname(self):
         cases = {12108: ('Benjy', 'AARONS-RICHARDSON'),
                  13747: ('Vincent', '?'),
@@ -106,6 +107,7 @@ class WDDBackgroundTests(TestCase):
                 self.assertEqual(b.wdd_firstname_lastname(), cases[id])
 
     # WDDBackground.nationalities()
+    @tag('wdd')
     def test_wdd_background_nationalities(self):
         # Mehmet has different location and nationality
         b = WDDBackground(self.MEHMET_ALPASLAN_WDD_ID)
@@ -113,6 +115,7 @@ class WDDBackgroundTests(TestCase):
         self.assertEqual(len(nats), 1)
         self.assertEqual(nats[0], 'TUR')
 
+    @tag('wdd')
     def test_wdd_background_nationalities_none(self):
         # Mehmet has different location and nationality
         b = WDDBackground(self.BEN_JAMES_WDD_ID)
@@ -171,6 +174,7 @@ class WDDBackgroundTests(TestCase):
         s = b.wpe_scores()
         self.assertEqual(len(s), 0)
 
+    @tag('wdd')
     def test_wdd_background_wpe_scores(self):
         b = WDDBackground(self.MELINDA_HOLLEY_WDD_ID)
         scores = b.wpe_scores()
