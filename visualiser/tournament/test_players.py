@@ -84,6 +84,34 @@ class PlayerTests(TestCase):
             with self.subTest(k):
                 self.assertEqual(position_str(k), v)
 
+    # TODO Player.sortable_str()
+
+    # Player.background_updated()
+    @tag('slow', 'wdd')
+    def test_player_background_updated(self):
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        start = datetime.now(timezone.utc)
+        add_player_bg(p)
+        end = datetime.now(timezone.utc)
+        updated = p.background_updated()
+        self.assertLess(start, updated)
+        self.assertLess(updated, end)
+
+    def test_player_background_updated_none(self):
+        p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
+        self.assertEqual(None, p.background_updated())
+
+    # Player.wdd_url()
+    def test_player_wdd_url(self):
+        p = Player.objects.first()
+        # TODO Validate results
+        p.wdd_url()
+
+    def test_player_wdd_url_no_id(self):
+        p = Player.objects.create(first_name='John', last_name='Smith')
+        # TODO Validate results
+        p.wdd_url()
+
     # Player.wdd_firstname_lastname()
     @tag('slow', 'wdd')
     def test_player_wdd_firstname_lastname(self):
@@ -96,17 +124,6 @@ class PlayerTests(TestCase):
         name = p.wdd_firstname_lastname()
         self.assertEqual(name[0], 'John')
         self.assertEqual(name[1], 'Smith')
-
-    # Player.wdd_url()
-    def test_player_wdd_url(self):
-        p = Player.objects.first()
-        # TODO Validate results
-        p.wdd_url()
-
-    def test_player_wdd_url_no_id(self):
-        p = Player.objects.create(first_name='John', last_name='Smith')
-        # TODO Validate results
-        p.wdd_url()
 
     # Player.tournamentplayers()
     def test_player_tournamentplayers(self):
@@ -276,21 +293,6 @@ class PlayerTests(TestCase):
         self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
         pgr.delete()
         p.delete()
-
-    # Player.background_updated()
-    @tag('slow', 'wdd')
-    def test_player_background_updated(self):
-        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        start = datetime.now(timezone.utc)
-        add_player_bg(p)
-        end = datetime.now(timezone.utc)
-        updated = p.background_updated()
-        self.assertLess(start, updated)
-        self.assertLess(updated, end)
-
-    def test_player_background_updated_none(self):
-        p, created = Player.objects.get_or_create(first_name='Unknown', last_name='Player')
-        self.assertEqual(None, p.background_updated())
 
     # Player.save()
     @tag('slow', 'wdd')
