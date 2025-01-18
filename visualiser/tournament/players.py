@@ -89,41 +89,35 @@ def player_picture_location(instance, filename):
     return Path('player_pictures', filename)
 
 
-def _update_or_create_playertournamentranking_wiki(player, title):
+def _update_or_create_playertitle_wiki(player, title):
     """
-    Creates or updates a PlayerTournamentRanking for the player
+    Creates or updates a PlayerTitle for the player
 
     Given a Player and a dict with 'Tournament' and 'Year' keys,
     and optional 'Champion' key, representing the Wikipedia page,
-    create or update a PlayerTournamentRanking
+    create or update a PlayerTitle
     """
-    pos = None
     the_title = None
     for key, val in TITLE_MAP.items():
         try:
             if title[key] == str(player):
-                pos = val
                 if 'Champion' in key:
                     the_title = key
         except KeyError:
             pass
-    if pos:
+    if the_title:
         try:
-            defaults = {'position': pos}
-            if the_title:
-                defaults['title'] = the_title
-            PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                             tournament=title['Tournament'],
-                                                             year=title['Year'],
-                                                             defaults=defaults)
+            # ranking is left unset
+            PlayerTitle.objects.update_or_create(player=player,
+                                                 title=the_title,
+                                                 year=title['Year'])
         except Exception:
             # Handle all exceptions
-            # This way, we fail to add/update the single ranking rather than all the background
-            print("Failed to save PlayerTournamentRanking")
-            print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
-                                                                      title['Tournament'],
-                                                                      pos,
-                                                                      title['Year']))
+            # This way, we fail to add/update the single title rather than all the background
+            print("Failed to save PlayerTitle")
+            print("player=%s, title=%s, year=%s" % (str(player),
+                                                    the_title,
+                                                    title['Year']))
             traceback.print_exc()
 
 
@@ -379,7 +373,7 @@ def add_player_bg(player, include_wpe=False):
     # Titles won
     titles = bg.titles()
     for title in titles:
-        _update_or_create_playertournamentranking_wiki(player, title)
+        _update_or_create_playertitle_wiki(player, title)
     # Do we have a WDD id for this player?
     wdd = player.wdd_player_id
     if not wdd:
@@ -441,7 +435,9 @@ def add_player_bg(player, include_wpe=False):
                 pass
             else:
                 fields.append('location')
-    player.save(update_fields=fields)
+    if fields:
+        player.save(update_fields=fields)
+    # TODO Set PlayerTitle.ranking to cross-reference
 
 
 def position_str(position):
@@ -656,8 +652,21 @@ class Player(models.Model):
                                   'tourney': a.tournament})
         return results
 
+    def _titles(self, mask=MASK_ALL_BG):
+        """List of titles won"""
+        results = []
+        title_set = self.playertitle_set.order_by('year')
+        if (mask & MASK_TITLES) != 0:
+            # Add summaries of actual titles
+            titles = {}
+            for title in title_set:
+                titles.setdefault(title.title, []).append(title.year)
+            for key, lst in titles.items():
+                results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
+        return results
+
     def _tourney_rankings(self, mask=MASK_ALL_BG):
-        """List of titles won and tournament rankings"""
+        """List of tournament rankings"""
         results = []
         ranking_set = self.playertournamentranking_set.order_by('year')
         plays = ranking_set.count()
@@ -671,14 +680,6 @@ class Player(models.Model):
                                     '%(name)s has competed in %(number)d tournaments.',
                                     plays)
                            % {'name': self, 'number': plays})
-        if (mask & MASK_TITLES) != 0:
-            # Add summaries of actual titles
-            titles = {}
-            for ranking in ranking_set:
-                if ranking.title:
-                    titles.setdefault(ranking.title, []).append(ranking.year)
-            for key, lst in titles.items():
-                results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
             results.append(_(u'%(name)s first competed in a tournament (%(tournament)s) in %(year)d.')
@@ -807,7 +808,7 @@ class Player(models.Model):
         List of background strings about the player, optionally as a specific Great Power
         """
         if power is None:
-            return self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
+            return self._titles(mask=mask) + self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
         return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
     def get_absolute_url(self):
@@ -826,7 +827,6 @@ class PlayerTournamentRanking(models.Model):
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
-    title = models.CharField(max_length=30, blank=True)
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
@@ -861,6 +861,35 @@ class PlayerTournamentRanking(models.Model):
                                                                     'tournament': self.tournament}
         if self.tournament[-4:] != str(self.year):
             s += _(u' in %(year)d') % {'year': self.year}
+        return s
+
+
+class PlayerTitle(models.Model):
+    """
+    A title won by a player.
+
+    Used to import background information from external sites.
+    """
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    title = models.CharField(max_length=30)
+    year = models.PositiveSmallIntegerField()
+    updated = models.DateTimeField(auto_now=True)
+    # Cross-reference to more information about the tournament where the title was won
+    ranking = models.ForeignKey(PlayerTournamentRanking,
+                                on_delete=models.SET_NULL,
+                                blank=True,
+                                null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['player', 'title', 'year'],
+                                    name='unique_player_title_year'),
+        ]
+
+    def __str__(self):
+        s = _(u'%(player)s won %(title)s in %(year)s') % {'player': self.player,
+                                                          'title': self.title,
+                                                          'year': self.year}
         return s
 
 

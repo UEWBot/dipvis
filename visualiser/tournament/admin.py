@@ -29,6 +29,7 @@ from tournament.models import Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
 from tournament.players import PlayerGameResult, PlayerRanking
 from tournament.players import PlayerTournamentRanking
+from tournament.players import PlayerTitle
 
 @admin.register(Award)
 class AwardAdmin(admin.ModelAdmin):
@@ -104,9 +105,13 @@ class PlayerGameResultAdmin(admin.ModelAdmin):
 class PlayerRankingAdmin(admin.ModelAdmin):
     list_filter = ['system', 'player']
 
+@admin.register(PlayerTitle)
+class PlayerTitleAdmin(admin.ModelAdmin):
+    list_filter = ['player', 'title', 'year']
+
 @admin.register(PlayerTournamentRanking)
 class PlayerTournamentRankingAdmin(admin.ModelAdmin):
-    list_filter = ['player', 'tournament', 'position', 'year', 'title']
+    list_filter = ['player', 'tournament', 'position', 'year']
 
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
