@@ -299,7 +299,7 @@ def _update_or_create_playeraward(player, k, a):
         except GreatPower.DoesNotExist:
             # Apparently not a Standard game
             return
-        award_name = 'Best %s' % p
+        award_name = f'Best {p}'
     # Some of the WDD pages are badly-structured with nested tables
     # Ignore any messed-up results
     # TODO "bad date" is often just a year - could pick 31 Dec for those
@@ -513,10 +513,10 @@ class Player(models.Model):
         ordering = ['last_name', 'first_name']
 
     def __str__(self):
-        return u'%s %s' % (self.first_name, self.last_name)
+        return f'{self.first_name} {self.last_name}'
 
     def sortable_str(self):
-        return u'%s, %s' % (self.last_name, self.first_name)
+        return f'{self.last_name}, {self.first_name}'
 
     def _clear_background(self):
         """
@@ -560,7 +560,7 @@ class Player(models.Model):
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
         if self.wdd_player_id:
-            return WDD_BASE_RESULTS_URL + 'player_fiche.php?id_player=%d' % self.wdd_player_id
+            return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
         return u''
 
     def wdd_firstname_lastname(self):
@@ -848,7 +848,7 @@ class PlayerTournamentRanking(models.Model):
                  'id_player': self.player.wdd_player_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
-                          WDD_BASE_RESULTS_PATH + 'tournament_player.php',
+                          f'{WDD_BASE_RESULTS_PATH}tournament_player.php',
                           '',
                           urlencode(query),
                           ''))
@@ -942,7 +942,7 @@ class PlayerGameResult(models.Model):
                  'id_board': self.board()}
         url = urlunparse(('https',
                           WDD_NETLOC,
-                          WDD_BASE_RESULTS_PATH + 'tournament_board.php',
+                          f'{WDD_BASE_RESULTS_PATH}tournament_board.php',
                           '',
                           urlencode(query),
                           ''))
@@ -995,7 +995,7 @@ class PlayerAward(models.Model):
         query = {'id_tournament': self.wdd_tournament_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
-                          WDD_BASE_RESULTS_PATH + path,
+                          f'{WDD_BASE_RESULTS_PATH}{path}',
                           '',
                           urlencode(query),
                           ''))
@@ -1040,7 +1040,7 @@ class PlayerRanking(models.Model):
                  'id_player': self.player.wdd_player_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
-                          WDD_BASE_RANKING_PATH + 'ranking_player.php',
+                          f'{WDD_BASE_RANKING_PATH}ranking_player.php',
                           '',
                           urlencode(query),
                           ''))

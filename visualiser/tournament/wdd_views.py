@@ -132,18 +132,18 @@ def view_classification_csv(request, tournament_id):
               ]
     # Score for each round (extras don't matter)
     for i in range(1, WDD_MAX_ROUNDS + 1):
-        headers.append('R%d' % i)
+        headers.append(f'R{i}')
     # Best country stuff
     for p in GreatPower.objects.all():
         wdd_pwr = power_name_to_wdd(p.name)
-        headers.append('RK_%s' % wdd_pwr)
-        headers.append('PT_%s' % wdd_pwr)
-        headers.append('CT_%s' % wdd_pwr)
-        headers.append('HEAT_%s' % wdd_pwr)
-        headers.append('BOARD_%s' % wdd_pwr)
+        headers.append(f'RK_{wdd_pwr}')
+        headers.append(f'PT_{wdd_pwr}')
+        headers.append(f'CT_{wdd_pwr}')
+        headers.append(f'HEAT_{wdd_pwr}')
+        headers.append(f'BOARD_{wdd_pwr}')
     # Other awards
     for n in range(1, WDD_MAX_AWARDS + 1):
-        headers.append('RK_AWA_%d' % n)
+        headers.append(f'RK_AWA_{n}')
     # Top Board stuff
     # Only add these headers if there was a top board
     if top_board:
@@ -155,8 +155,7 @@ def view_classification_csv(request, tournament_id):
         headers.append('COUNTRY_TOPBOARD')
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="%s%dclassification.csv"' % (t.name,
-                                                                                         t.start_date.year)
+    response['Content-Disposition'] = f'attachment; filename="{t.name}{t.start_date.year}classification.csv"'
 
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()
@@ -191,7 +190,7 @@ def view_classification_csv(request, tournament_id):
                 row_dict['LOCATION'] = wdd_country
         # Add in round score for each round played
         for rp in rps:
-            row_dict['R%d' % rp.the_round.number()] = rp.score
+            row_dict[f'R{rp.the_round.number()}'] = rp.score
         # Add awards
         for award in tp.awards.all():
             if award.power is not None:
@@ -200,14 +199,14 @@ def view_classification_csv(request, tournament_id):
                         wdd_pwr = power_name_to_wdd(award.power.name)
                         # TODO WDD actually supports a full ranking for these fields,
                         #      so ideally we'd also set row_dict['RK_0AU'] = 2 for second-best Austria, etc
-                        row_dict['RK_%s' % wdd_pwr] = 1
-                        row_dict['PT_%s' % wdd_pwr] = gp.score
-                        row_dict['CT_%s' % wdd_pwr] = gp.game.centrecount_set.filter(power=award.power).last().count
-                        row_dict['HEAT_%s' % wdd_pwr] = gp.game.the_round.number()
-                        row_dict['BOARD_%s' % wdd_pwr] = _game_to_wdd_id(gp.game)
+                        row_dict[f'RK_{wdd_pwr}'] = 1
+                        row_dict[f'PT_{wdd_pwr}'] = gp.score
+                        row_dict[f'CT_{wdd_pwr}'] = gp.game.centrecount_set.filter(power=award.power).last().count
+                        row_dict[f'HEAT_{wdd_pwr}'] = gp.game.the_round.number()
+                        row_dict[f'BOARD_{wdd_pwr}'] = _game_to_wdd_id(gp.game)
             else:
                 try:
-                    row_dict['RK_AWA_%d' % _award_number(t, award)] = 1
+                    row_dict[f'RK_AWA_{_award_number(t, award)}'] = 1
                 except TooManyAwards:
                     # Cannot tell WDD about this one
                     pass
@@ -253,8 +252,7 @@ def view_boards_csv(request, tournament_id):
         headers.append('CT_%02d' % i)
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="%s%dboards.csv"' % (t.name,
-                                                                                 t.start_date.year)
+    response['Content-Disposition'] = f'attachment; filename="{t.name}{t.start_date.year}boards.csv"'
 
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()

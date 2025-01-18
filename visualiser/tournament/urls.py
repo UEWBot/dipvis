@@ -35,7 +35,7 @@ class YearConverter:
         return val
 
     def to_url(self, value):
-        return '%d' % value
+        return f'{value}'
 
 register_converter(YearConverter, 'year')
 

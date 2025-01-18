@@ -219,7 +219,7 @@ def wdd_img_to_country(img):
 def power_name_to_wdd(name):
     """Map a power name to a WDD country code"""
     # 0 for variant (standard), plus first two letters of the country name (in English)
-    return '0%s' % name[0:2].upper()
+    return f'0{name[0:2].upper()}'
 
 
 def wdd_nation_to_country(country_code):
