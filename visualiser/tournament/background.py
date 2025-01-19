@@ -84,44 +84,41 @@ class WikipediaBackground():
         except requests.exceptions.Timeout:
             return []
         soup = BeautifulSoup(page.text)
-        # Find the first H2 with a span inside
-        h2 = None
-        for h2 in soup.find_all('h2'):
-            span = h2.span
-            if span:
-                break
+        main = soup.find('main')
         results = []
-        tag = h2
-        while tag:
-            if tag.name == 'h2' or tag.name == 'h3':
-                span = tag.span
-                if span:
-                    tournament = str(span.string)
-            elif tag.name == 'table':
-                row = tag.tr
-                columns = []
-                for th in row.find_all('th'):
-                    columns.append(str(th.string.strip()))
-                while True:
-                    row = row.find_next_sibling()
-                    if not row:
-                        break
-                    result = {'Tournament': tournament}
-                    for key, td in zip(columns, row.find_all('td')):
-                        val = list(td.stripped_strings)
-                        if val:
-                            val = val[0]
-                            try:
-                                val = int(val)
-                            except ValueError:
-                                pass
-                            result[key] = val
-                            for span in td.find_all('span', recursive=False):
-                                if span.a:
-                                    nat = span.a['title']
-                                    result.setdefault(f'{key} Flags', []).append(nat)
-                    results.append(result)
-            tag = tag.find_next_sibling()
+        last_hdr = None
+        for table in main.find_all('table'):
+            # Find the preceeding h3 or h2
+            hdr = table.find_previous('h3')
+            # We don't want to find the same header again
+            if (not hdr) or (hdr == last_hdr):
+               hdr = table.find_previous('h2')
+            last_hdr = hdr
+            tournament = hdr.get_text()
+            # Parse the table itself
+            row = table.tr
+            columns = []
+            for th in row.find_all('th'):
+                columns.append(str(th.string.strip()))
+            while True:
+                row = row.find_next_sibling()
+                if not row:
+                    break
+                result = {'Tournament': tournament}
+                for key, td in zip(columns, row.find_all('td')):
+                    val = list(td.stripped_strings)
+                    if val:
+                        val = val[0]
+                        try:
+                            val = int(val)
+                        except ValueError:
+                            pass
+                        result[key] = val
+                        for span in td.find_all('span', recursive=False):
+                            if span.a:
+                                nat = span.a['title']
+                                result.setdefault(f'{key} Flags', []).append(nat)
+                results.append(result)
         # Now results contains all the results
         # Filter out any that don't refer to the person we care about
         return [item for item in results if self._relevant(item)]

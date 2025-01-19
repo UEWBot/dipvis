@@ -25,11 +25,13 @@ MEHMET_ALPASLAN_WDD_ID = 14082
 BEN_JAMES_WDD_ID = 14140
 
 class WikipediaBackgroundTests(TestCase):
+
     def test_wikipedia_background_titles(self):
         name = 'Cyrille Sevin'
         flags = ['France']
         bg = WikipediaBackground(name)
         titles = bg.titles()
+        self.assertEqual(len(titles), 8)
         for t in titles:
             with self.subTest(title=t):
                 if t['Year'] == 1997:
@@ -65,6 +67,7 @@ class WikipediaBackgroundTests(TestCase):
         flags = ['France', 'Portugal']
         bg = WikipediaBackground(name)
         titles = bg.titles()
+        self.assertEqual(len(titles), 1)
         for t in titles:
             with self.subTest(title=t):
                 self.assertEqual(t['Second'], name)
@@ -72,7 +75,6 @@ class WikipediaBackgroundTests(TestCase):
 
 @tag('wdd')
 class WDDBackgroundTests(TestCase):
-    # WikipediaBackground.titles() gets tested implicitly when Players are created
 
     # WDDBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
     # WDDBackground.wdd_name()
