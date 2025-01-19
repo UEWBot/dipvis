@@ -73,11 +73,16 @@ MASK_ALL_BG = (1 << 15) - 1
 
 TITLE_MAP = {
     'World Champion': 1,
+    'Champion': 1,
     'North American Champion': 1,
+    'Diplomat of the Year': 1,
     'Winner': 1,
     'European Champion': 1,
+    'Online Champion': 1,
+    'APAC Champion': 1,
     'Second': 2,
     'Third': 3,
+    'Runners-up': 2,
 }
 
 
@@ -101,8 +106,15 @@ def _update_or_create_playertitle_wiki(player, title):
     for key, val in TITLE_MAP.items():
         try:
             if title[key] == str(player):
-                if 'Champion' in key:
+                if key == 'Champion':
+                    the_title = f'{title["Tournament"]} Champion'
+                elif key == 'Diplomat of the Year':
+                    the_title = 'DBNI Diplomat of the Year'
+                elif key == 'Winner':
+                    the_title = f'{title["Tournament"]} Winner'
+                elif 'Champion' in key:
                     the_title = key
+                break
         except KeyError:
             pass
     if the_title:
