@@ -39,6 +39,7 @@ from tournament.models import GamePlayer, Preference, Round, RoundPlayer, Seeder
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 from tournament.models import NO_SCORING_SYSTEM_STR
 from tournament.players import Player
+from tournament.players import PlayerTournamentRanking, PlayerGameResult, PlayerAward
 from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
@@ -592,3 +593,62 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
             for r_num in range(1, 4):
                 _import_dixie_round(r_num, p, t, row)
     add_best_country_awards_for_tournament(t, False)
+
+def add_wdr_player_ids(csv_filename, dry_run=False):
+    """
+    Add wdr_player_id attributes to Players
+
+    csv_filename is the name of a CSV file giving the mapping
+      columns are:
+        id - wdr_player_id
+        player_wdd_id - wdd_player_id
+        player_name - player's first name
+        player_surname - player's last name
+    """
+    with open(csv_filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            try:
+                p = Player.objects.get(wdd_player_id=int(row['player_wdd_id']))
+            except Player.DoesNotExist:
+                continue
+            print(f'Setting wdr_player_id for {p.first_name} {p.last_name} to {row["id"]}')
+            p.wdr_player_id = row['id']
+            if not dry_run:
+                p.save(update_fields=['wdr_player_id'])
+
+def add_wdr_tournament_ids(csv_filename, dry_run=False):
+    """
+    Add wdr_tournament_id attributes to Tournaments, PlayerTournamentRankings,
+    PlayerGameResults, and PlayerAwards
+
+    csv_filename is the name of a CSV file giving the mapping
+      columns are:
+        id - wdr_tournament_id
+        tournament_wdd_id - wdd_tournament_id
+        tournament_name - tournament name
+    """
+    with open(csv_filename) as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if row['tournament_wdd_id'] != -1:
+                for t in Tournament.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+                    print(f'Setting wdr_tournament_id for {t} to {row["id"]}')
+                    t.wdr_tournament_id = row['id']
+                    if not dry_run:
+                        t.save(update_fields=['wdr_tournament_id'])
+                for ptr in PlayerTournamentRanking.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+                    print(f'Setting wdr_tournament_id for {ptr} to {row["id"]}')
+                    ptr.wdr_tournament_id = row['id']
+                    if not dry_run:
+                        ptr.save(update_fields=['wdr_tournament_id'])
+                for pgr in PlayerGameResult.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+                    print(f'Setting wdr_tournament_id for {pgr} to {row["id"]}')
+                    pgr.wdr_tournament_id = row['id']
+                    if not dry_run:
+                        pgr.save(update_fields=['wdr_tournament_id'])
+                for pa in PlayerAward.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+                    print(f'Setting wdr_tournament_id for {pa} to {row["id"]}')
+                    pa.wdr_tournament_id = row['id']
+                    if not dry_run:
+                        pa.save(update_fields=['wdr_tournament_id'])
