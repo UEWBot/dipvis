@@ -282,10 +282,10 @@ class GameSeeder:
             pair = (players[0], powers[0])
             game = set()
             game.add(pair)
-            result = list()
+            result = []
             result.append(game)
             return result
-        result = list()
+        result = []
         player = players.pop(0)
         for power in powers:
             pair = (player, power)
@@ -554,7 +554,7 @@ class GameSeeder:
         (player, power) 2-tuples and a list of issues.
         Parameters and exceptions are the same as seed_games()
         """
-        result = list()
+        result = []
         games = self.seed_games(omitting_players, players_doubling_up)
         for game in games:
             result.append(self._assign_powers(game))
