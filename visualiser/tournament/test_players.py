@@ -20,6 +20,8 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django.utils import timezone
 
+from django_countries.fields import Country
+
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import DrawSecrecy
 from tournament.models import Tournament, TournamentPlayer
@@ -55,6 +57,68 @@ class PlayerTests(TestCase):
     # TODO player_picture_location()
 
     # TODO add_player_bg()
+    def test_add_player_bg_wiki1(self):
+        """Test adding PlayerTitles based on Wikipedia"""
+        p = Player.objects.create(first_name = 'Brandon', last_name='Fogel')
+        add_player_bg(p)
+        pts = p.playertitle_set.all()
+        self.assertEqual(len(pts), 2)
+        for pt in pts:
+            if pt.year == 2022:
+                self.assertEqual(pt.title, 'Virtual Diplomacy League (VDL) Champion')
+            elif pt.year == 2023:
+                self.assertEqual(pt.title, 'DBNI Diplomat of the Year')
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_wiki2(self):
+        """Test adding PlayerTitles based on Wikipedia"""
+        p = Player.objects.create(first_name = 'Graham', last_name='Woodring')
+        add_player_bg(p)
+        pts = p.playertitle_set.all()
+        self.assertEqual(len(pts), 1)
+        for pt in pts:
+            if pt.year == 2013:
+                self.assertEqual(pt.title, 'North American Grand Prix Winner')
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_wiki3(self):
+        """Test adding PlayerTitles based on Wikipedia"""
+        p = Player.objects.create(first_name = 'Richard', last_name='Ackerlay')
+        add_player_bg(p)
+        pts = p.playertitle_set.all()
+        self.assertEqual(len(pts), 1)
+        for pt in pts:
+            if pt.year == 1972:
+                self.assertEqual(pt.title, 'North American Champion')
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_wpe(self):
+        """add_player_bg(include_wpe=True)"""
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        add_player_bg(p, include_wpe=True)
+        ptrs = p.playertournamentranking_set.all()
+        # TODO check results
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_places(self):
+        """add_player_bg() with existing nationalities and location"""
+        p = Player.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        self.assertEqual(p.location, '')
+        self.assertEqual(len(p.nationalities), 0)
+        p.nationalities = Country('CA')
+        p.location = "The moon"
+        p.save()
+        add_player_bg(p)
+        ptrs = p.playertournamentranking_set.all()
+        # TODO check results
+        # Cleanup
+        p.location = ''
+        p.nationalities = []
+        p.save()
 
     # position_str()
     def test_position_str_first(self):
