@@ -455,6 +455,9 @@ def _add_player_bg_from_wdr(player, wdr_id):
         if not t['tournament_player_rank']:
             print(f"Skipping {t['tournament_name']} for {player} with no ranking")
             continue
+        elif t['tournament_player_rank'] == -1:
+            print(f"Skipping {t['tournament_name']} for {player} with -1 ranking")
+            continue
         defaults = {'position': t['tournament_player_rank'],
                     'tournament': t['tournament_name']}
         if t['tournament_end_date']:
@@ -497,25 +500,30 @@ def _add_player_bg_from_wdr(player, wdr_id):
         # What was the tournament?
         t_id = b['board_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
+        if not t:
+            # This seems like a bug in WDR - sometimes tournaments are missing from the list
+            print("Failed to find tournament")
+            print(b)
+            print(t_id)
+            continue
         defaults = {'tournament_name': t['tournament_name'],
                     'position': b['board_rank']}
+        if not b['board_rank']:
+            # This seems like a bug in WDR, but sometimes we don't get a rank
+            print("No board_rank")
+            print(b)
+            continue
         if t['tournament_end_date']:
             defaults['date'] = t['tournament_end_date']
         else:
             defaults['date'] = t['tournament_start_date']
         # Ignore any of these that aren't present
-        try:
+        if b['board_score']:
             defaults['score'] = b['board_score']
-        except KeyError:
-            pass
-        try:
+        if b['board_centers']:
             defaults['final_sc_count'] = b['board_centers']
-        except KeyError:
-            pass
-        try:
+        if b['board_year_of_elimination']:
             defaults['year_eliminated'] = b['board_year_of_elimination']
-        except KeyError:
-            pass
         game_name = f'{b["board_round"]} / {b["board_number"]}'
         if t['tournament_wdd_id'] == -1:
             try:
@@ -561,8 +569,9 @@ def _add_player_bg_from_wdr(player, wdr_id):
         # What was the tournament?
         t_id = a['award_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
-        defaults = {'tournament': t['tournament_name'],
-                    'date': t['tournament_end_date']}
+        defaults = {'tournament': t['tournament_name']}
+        if t['tournament_end_date']:
+            defaults['date']=t['tournament_end_date']
         if t['tournament_wdd_id'] == -1:
             try:
                 PlayerAward.objects.update_or_create(player=player,
@@ -599,6 +608,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
     # WPE scores (and other Rankings)
     ranks = bg.rankings()
     for k, v in ranks.items():
+        if not v['score']:
+            continue
         try:
             PlayerRanking.objects.update_or_create(player=player,
                                                    system=k,
@@ -624,7 +635,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
     if not player.location:
         loc = bg.location()
         if loc:
-            player.location = Country(nat).name
+            player.location = Country(loc).name
             fields.append('location')
     return fields
 
@@ -1066,7 +1077,7 @@ class PlayerTournamentRanking(models.Model):
     Used to import background information from external sites.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=60)
+    tournament = models.CharField(max_length=100)
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
@@ -1168,7 +1179,7 @@ class PlayerGameResult(models.Model):
     Used to import background information from external sites.
     """
 
-    tournament_name = models.CharField(max_length=60)
+    tournament_name = models.CharField(max_length=100)
     game_name = models.CharField(max_length=20)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
