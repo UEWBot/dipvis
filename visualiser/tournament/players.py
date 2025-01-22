@@ -1126,7 +1126,7 @@ class PlayerTitle(models.Model):
     Used to import background information from external sites.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    title = models.CharField(max_length=30)
+    title = models.CharField(max_length=50)
     year = models.PositiveSmallIntegerField()
     updated = models.DateTimeField(auto_now=True)
     # Cross-reference to more information about the tournament where the title was won
