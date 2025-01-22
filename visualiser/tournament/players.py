@@ -572,6 +572,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
         defaults = {'tournament': t['tournament_name']}
         if t['tournament_end_date']:
             defaults['date']=t['tournament_end_date']
+        else:
+            defaults['date'] = t['tournament_start_date']
         if t['tournament_wdd_id'] == -1:
             try:
                 PlayerAward.objects.update_or_create(player=player,
@@ -1269,7 +1271,7 @@ class PlayerAward(models.Model):
     Used to import background information.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=60)
+    tournament = models.CharField(max_length=100)
     date = models.DateField()
     name = models.CharField(max_length=50)
     power = models.ForeignKey(GreatPower,
