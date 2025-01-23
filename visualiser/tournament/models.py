@@ -2340,9 +2340,9 @@ class RoundPlayer(models.Model):
         Returns True if the score attribute represents the final score for the RoundPlayer,
         False if it is the "if all games ended now" score.
         """
-        if (self.score > 0.0) and not self.the_round.tournament.tournament_scoring_system_obj().uses_round_scores:
-            # Any later rounds may change the score for this round
-            return self.tournamentplayer().score_is_final()
+        if not self.the_round.tournament.tournament_scoring_system_obj().uses_round_scores:
+            # Can only be a sitting-out bonus, which is fixed once the round has started
+            return self.the_round.is_finished or self.the_round.in_progress()
         if self.the_round.is_finished:
             return True
         # If any of this player's game scores aren't final, the round score isn't final
