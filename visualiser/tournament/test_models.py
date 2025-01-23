@@ -3075,6 +3075,18 @@ class TournamentPlayerTests(TestCase):
         rps = tp.roundplayers()
         self.assertEqual(rps.count(), 2)
 
+    # TournamentPlayer.gameplayers()
+    def test_tournamentplayer_roundplayers(self):
+        t = Tournament.objects.get(name='t3')
+        tp = t.tournamentplayer_set.first()
+        # Add GamePlayers
+        gp = GamePlayer.objects.create(player=tp.player,
+                                       game=t.round_numbered(1).game_set.first())
+        gps = tp.gameplayers()
+        self.assertEqual(gps.count(), 1)
+        # Cleanup
+        gp.delete()
+
     # TournamentPlayer.rounds_played()
     def test_tournamentplayer_rounds_played_none(self):
         t = Tournament.objects.get(name='t3')

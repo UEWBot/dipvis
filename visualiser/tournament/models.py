@@ -1248,8 +1248,7 @@ class TournamentPlayer(models.Model):
             return False
         if not system.uses_round_scores:
             # If the final Round is in progress, just check all their Games
-            for gp in GamePlayer.objects.filter(player=self.player,
-                                                game__the_round__tournament=t):
+            for gp in self.gameplayers():
                 if not gp.score_is_final():
                     return False
             return True
@@ -1289,6 +1288,12 @@ class TournamentPlayer(models.Model):
         Returns a QuerySet for the corresponding RoundPlayers.
         """
         return self.player.roundplayer_set.filter(the_round__tournament=self.tournament).distinct()
+
+    def gameplayers(self):
+        """
+        Returns a QuerySet for the corresponding GamePlayers.
+        """
+        return self.player.gameplayer_set.filter(game__the_round__tournament=self.tournament).distinct()
 
     def rounds_played(self):
         """
