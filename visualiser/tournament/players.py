@@ -1234,7 +1234,7 @@ class PlayerGameResult(models.Model):
         """Which board of the round was the game?"""
         # Parse the game name
         parts = self.game_name.split()
-        return parts[3]
+        return parts[2]
 
     def wdd_url(self):
         """WDD URL where this result can be seen"""
