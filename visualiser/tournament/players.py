@@ -1227,14 +1227,19 @@ class PlayerGameResult(models.Model):
     def round(self):
         """Which round of the tournament was the game played?"""
         # Parse the game name
+        # Format is either "R n B m" or "n / m"
         parts = self.game_name.split()
-        return parts[1]
+        if (len(parts) == 4) and (parts[0] == 'R') and (parts[2] == 'B'):
+            return parts[1]
+        elif (len(parts) == 3) and (parts[1] == '/'):
+            return parts[0]
+        return '?'
 
     def board(self):
         """Which board of the round was the game?"""
         # Parse the game name
-        parts = self.game_name.split()
-        return parts[2]
+        # Format is either "R n B m" or "n / m"
+        return parts[-1]
 
     def wdd_url(self):
         """WDD URL where this result can be seen"""
