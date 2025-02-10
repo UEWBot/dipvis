@@ -118,19 +118,20 @@ def _tournament_news(t):
             # Include who is leading the tournament
             include_leader = True
     if include_leader:
-        the_scores = t.scores_detail()
-        if the_scores:
-            max_score = max(the_scores.values())
-            winners = [str(k) for k, v in the_scores.items() if v == max_score]
-            player_str = ', '.join(winners)
-            results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.')
-                           % {'score': max_score,
-                              'players': player_str})
-            # How many players are close to the leader?
-            contenders = len([s for s in the_scores.values() if s >= max_score * 0.9]) - 1
-            results.append(ngettext("One player has at least 90%% of the leader's current tournament score",
-                                    "%(count)d players have at least 90%% of the leader's current tournament score",
-                                    contenders) % {'count': contenders})
+        if t.show_current_scores:
+            the_scores = t.scores_detail()
+            if the_scores:
+                max_score = max(the_scores.values())
+                winners = [str(k) for k, v in the_scores.items() if v == max_score]
+                player_str = ', '.join(winners)
+                results.append(_(u'If the tournament ended now, the winning score would be %(score).2f for %(players)s.')
+                               % {'score': max_score,
+                                  'players': player_str})
+                # How many players are close to the leader?
+                contenders = len([s for s in the_scores.values() if s >= max_score * 0.9]) - 1
+                results.append(ngettext("One player has at least 90%% of the leader's current tournament score",
+                                        "%(count)d players have at least 90%% of the leader's current tournament score",
+                                        contenders) % {'count': contenders})
         # Include the top score from each previous round (if any)
         for r in t.round_set.all():
             if r.is_finished:
@@ -167,10 +168,11 @@ def _round_news(r):
     This is the latest news for every game in the round.
     """
     results = []
-    # Include who has done best in the round (so far)
-    ls = _round_leader_str(r)
-    if ls:
-        results.append(ls)
+    if r.show_scores:
+        # Include who has done best in the round (so far)
+        ls = _round_leader_str(r)
+        if ls:
+            results.append(ls)
     # Always include the number of players
     if r.is_finished:
         plural_tense_str = _('were')
