@@ -19,7 +19,7 @@ Game Views for the Diplomacy Tournament Visualiser.
 """
 
 import io
-import matplotlib.pyplot as plt
+import matplotlib.figure as figure
 
 from django.db import transaction
 from django.db.models import Count
@@ -244,7 +244,8 @@ def graph(request,
     g = get_game_or_404(t, game_name)
     with io.BytesIO() as f:
         # plot the SC counts
-        fig, ax = plt.subplots()
+        fig = figure.Figure()
+        ax = fig.subplots()
         years = g.years_played()
         for power in GreatPower.objects.all():
             colour = _map_to_fg(g.the_set.setpower_set.get(power=power).colour)
