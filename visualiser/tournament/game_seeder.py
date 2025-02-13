@@ -415,6 +415,8 @@ class GameSeeder:
                 g1, g2 = random.sample(games,2)
                 p1 = g1.pop()
                 p2 = g2.pop()
+                random.shuffle(g1)
+                random.shuffle(g2)
                 if (p1 in g2) or (p2 in g1):
                     # Don't try to create games with players playing themselves
                     g1.add(p1)
