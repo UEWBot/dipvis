@@ -347,7 +347,7 @@ class GamePlayersForm(forms.Form):
 
     def clean(self):
         """Checks that no player is playing multiple powers"""
-        cleaned_data = self.cleaned_data
+        cleaned_data = super().clean()
         r_players = []
         for power in GreatPower.objects.all():
             c = power.name
@@ -588,7 +588,7 @@ class GetSevenPlayersForm(forms.Form):
         that we have either sitters or (standbys or doubles), but not both,
         and that we have the right number of either sitters or (standbys and doubles).
         """
-        cleaned_data = self.cleaned_data
+        cleaned_data = super().clean()
 
         standbys = self._check_duplicates(cleaned_data, 'standby', self.standbys)
         sitters = self._check_duplicates(cleaned_data, 'sitter', self.sitters)
@@ -777,8 +777,8 @@ class SCCountForm(forms.Form):
 
     def clean(self):
         """Checks that the total SC count is reasonable"""
-        cleaned_data = self.cleaned_data
-        year = self.cleaned_data.get('year')
+        cleaned_data = super().clean()
+        year = cleaned_data.get('year')
         total_scs = 0
         for power in GreatPower.objects.all():
             c = power.name
@@ -793,7 +793,7 @@ class SCCountForm(forms.Form):
                                            'dots': total_scs,
                                            'max': TOTAL_SCS})
         # Add a pseudo-field with the number of neutrals, for convenience
-        self.cleaned_data['neutral'] = TOTAL_SCS - total_scs
+        cleaned_data['neutral'] = TOTAL_SCS - total_scs
 
         return cleaned_data
 
