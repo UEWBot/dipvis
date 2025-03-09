@@ -76,8 +76,7 @@ def tournament_index(request):
     return render(request, 'tournaments/index.html', context)
 
 
-# Tournament views
-
+# Utility functions
 
 def tournament_is_visible(t, user):
     """
@@ -119,6 +118,8 @@ def get_modifiable_tournament_or_404(pk, user):
         return t
     raise Http404
 
+
+# Tournament views
 
 def tournament_simple(request, tournament_id, template, context={}):
     """Just render the specified template with the tournament"""
