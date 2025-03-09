@@ -35,11 +35,37 @@ from tournament.models import validate_game_name
 from tournament.players import Player
 
 
+# Fields
+
+class PlayerChoiceField(forms.ModelChoiceField):
+    """Field to pick a Player"""
+    def label_from_instance(self, obj):
+        return obj.sortable_str()
+
+
+class RoundPlayerChoiceField(forms.ModelChoiceField):
+    """Field to pick a RoundPlayer"""
+    def label_from_instance(self, obj):
+        # flag if they are willing to sandbox
+        suffix = ''
+        if obj.sandboxer:
+            suffix = '*'
+        return obj.player.sortable_str() + suffix
+
+
+class TournamentPlayerChoiceField(forms.ModelChoiceField):
+    """Field to pick a TournamentPlayer"""
+    def label_from_instance(self, obj):
+        return obj.player.sortable_str()
+
+
 class TournamentPlayerMultipleChoiceField(forms.ModelMultipleChoiceField):
     """Field to pick TournamentPlayers"""
     def label_from_instance(self, obj):
         return obj.player.sortable_str()
 
+
+# Awards
 
 class AwardsForm(forms.Form):
     """Form to give one Award to TournamentPlayers"""
@@ -83,6 +109,8 @@ class BaseAwardsFormset(BaseFormSet):
         kwargs['award_name'] = str(self.awards[index])
         return super()._construct_form(index, **kwargs)
 
+
+# Self Check-in
 
 class SelfCheckInForm(forms.Form):
     """Form for one TournamentPlayer to selfcheck-in for a single Round"""
@@ -130,6 +158,8 @@ class BaseCheckInFormset(BaseFormSet):
         return super()._construct_form(index, **kwargs)
 
 
+# Handicaps
+
 class HandicapForm(forms.Form):
     """Form to set one TournamentPlayer's handicap"""
     handicap = forms.FloatField()
@@ -167,6 +197,8 @@ class BaseHandicapsFormset(BaseFormSet):
         kwargs['tp'] = self.tps[index]
         return super()._construct_form(index, **kwargs)
 
+
+# Great Power preferences
 
 class PrefsForm(forms.Form):
     """Form for one TournamentPlayer's Preferences"""
@@ -210,6 +242,8 @@ class BasePrefsFormset(BaseFormSet):
         return super()._construct_form(index, **kwargs)
 
 
+# Draws
+
 class DrawForm(forms.Form):
     """Form for a draw vote"""
     year = forms.IntegerField(min_value=FIRST_YEAR)
@@ -245,6 +279,8 @@ class DrawForm(forms.Form):
             raise AssertionError('Unexpected draw secrecy value %c' % secrecy)
 
 
+# Game scoring
+
 class GameScoreForm(forms.Form):
     """Form for score for a single game"""
     name = forms.CharField(label=_(u'Game Name'),
@@ -269,15 +305,7 @@ class GameScoreForm(forms.Form):
             attrs['maxlength'] = 10
 
 
-class RoundPlayerChoiceField(forms.ModelChoiceField):
-    """Field to pick a RoundPlayer"""
-    def label_from_instance(self, obj):
-        # flag if they are willing to sandbox
-        suffix = ''
-        if obj.sandboxer:
-            suffix = '*'
-        return obj.player.sortable_str() + suffix
-
+# Game seeding
 
 class GamePlayersForm(forms.Form):
     """Form for players of a single game"""
@@ -362,6 +390,8 @@ class BaseGamePlayersFormset(BaseFormSet):
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
 
+
+# Power assignment
 
 class PowerAssignForm(forms.Form):
     """Form for players of a single game"""
@@ -453,6 +483,8 @@ class BasePowerAssignFormset(BaseFormSet):
         if len(set(names)) != len(names):
             raise forms.ValidationError(_('Game names must be unique within the tournament'))
 
+
+# Players sitting out or playing two games
 
 class GetSevenPlayersForm(forms.Form):
     """Form to enter players to sit out or play two games"""
@@ -592,6 +624,8 @@ class GetSevenPlayersForm(forms.Form):
         return cleaned_data
 
 
+# Supply Centre ownership
+
 class SCOwnerForm(forms.Form):
     """Form for Supply Centre ownership for one year"""
     # Allow for an initial game-start SC ownership
@@ -649,6 +683,8 @@ class BaseSCOwnerFormset(BaseFormSet):
                                    _('Supply Centres should never change from owned to neutral'))
 
 
+# Registration fee payment
+
 class PaidForm(forms.Form):
     """Form that just provides a checkbox to indicate that a TournamentPlayer has paid"""
     paid = forms.BooleanField(label=_('Paid'),
@@ -683,12 +719,16 @@ class BasePaidFormset(BaseFormSet):
 
 
 
+# Game ended
+
 class GameEndedForm(forms.Form):
     """Form that just provides a checkbox to indicate that a Game is over"""
     is_finished = forms.BooleanField(label=_('Game ended'),
                                      required=False,
                                      initial=False)
 
+
+# Great power death year
 
 class DeathYearForm(forms.Form):
     """Form for elimination year of each power"""
@@ -709,6 +749,8 @@ class DeathYearForm(forms.Form):
             self.fields[c].widget.attrs['size'] = 4
             self.fields[c].widget.attrs['maxlength'] = 4
 
+
+# Supply Centre count
 
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
@@ -787,6 +829,8 @@ class BaseSCCountFormset(BaseFormSet):
             neutrals = years[year]
 
 
+# Enable self check-ins
+
 class EnableCheckInForm(forms.Form):
     """Form to enable self-check-ins for roll call"""
 
@@ -818,11 +862,7 @@ class EnableCheckInForm(forms.Form):
                 self.fields[name].disabled = True
 
 
-class PlayerChoiceField(forms.ModelChoiceField):
-    """Field to pick a Player"""
-    def label_from_instance(self, obj):
-        return obj.sortable_str()
-
+# Pick a Player
 
 class PlayerForm(forms.Form):
     """Form to pick a Player"""
@@ -839,6 +879,8 @@ class PlayerForm(forms.Form):
         if t is not None:
             self.fields['player'].queryset = Player.objects.filter(tournamentplayer__in=t.tournamentplayer_set.all()).distinct()
 
+
+# Roll call
 
 class PlayerRoundForm(forms.Form):
     """Form to specify whether a player is available to play a specific round"""
@@ -890,11 +932,7 @@ class BasePlayerRoundFormset(BaseFormSet):
         return super()._construct_form(index, **kwargs)
 
 
-class TournamentPlayerChoiceField(forms.ModelChoiceField):
-    """Field to pick a TournamentPlayer"""
-    def label_from_instance(self, obj):
-        return obj.player.sortable_str()
-
+# Round scoring
 
 class PlayerRoundScoreForm(forms.Form):
     """Form to enter round score(s) for a player"""
@@ -948,6 +986,8 @@ class BasePlayerRoundScoreFormset(BaseFormSet):
         return super()._construct_form(index, **kwargs)
 
 
+# Seeder bias
+
 class SeederBiasForm(ModelForm):
     """Form to create/update a SeederBias object"""
     player1 = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
@@ -964,6 +1004,8 @@ class SeederBiasForm(ModelForm):
         self.fields['player1'].queryset = self.tournament.tournamentplayer_set.prefetch_related('player')
         self.fields['player2'].queryset = self.tournament.tournamentplayer_set.prefetch_related('player')
 
+
+# Game images
 
 class GameImageForm(ModelForm):
     """Form for a single GameImage"""
