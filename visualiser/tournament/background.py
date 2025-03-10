@@ -141,7 +141,7 @@ class WDDBackground():
     """
 
     # timeout in seconds for read requests to WDD
-    TIMEOUT=3.0
+    TIMEOUT=4.0
 
     def __init__(self, wdd_id):
         self.wdd_id = wdd_id
