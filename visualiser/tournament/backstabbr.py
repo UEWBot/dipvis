@@ -103,6 +103,8 @@ class Game():
     A single game on Backstabbr
     """
 
+    TIMEOUT = 3.0
+
     def __init__(self, url):
         """
         url is a link to the game on backstabbr.
@@ -171,7 +173,7 @@ class Game():
         """
         page = requests.get(url,
                             allow_redirects=False,
-                            timeout=2.5)
+                            timeout=self.TIMEOUT)
         if page.status_code != requests.codes.ok:
             raise InvalidGameUrl(url)
         return BeautifulSoup(page.text)
