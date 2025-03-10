@@ -652,3 +652,16 @@ def add_wdr_tournament_ids(csv_filename, dry_run=False):
                     pa.wdr_tournament_id = row['id']
                     if not dry_run:
                         pa.save(update_fields=['wdr_tournament_id'])
+
+def check_wdd_ids():
+    """
+    Where we have WDR ids, we can use the WDR to double-check WDD ids
+    """
+    for p in Player.objects.filter(wdr_player_id__isnull=False).all():
+        bg = WDRBackground(p.wdr_player_id)
+        wdd_id = bg.wdd_id()
+        if p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
+            # We have a different WDD id
+            print(f'{p.name} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+        elif (not p.wdd_player_id) and wdd_id:
+            printf(f'{p.name} ({p.id}) has no WDD here but {wdd_id} in the WDR')
