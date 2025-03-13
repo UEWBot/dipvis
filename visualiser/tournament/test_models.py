@@ -512,6 +512,283 @@ class RoundScoringTests(TestCase):
         self.assertIn('ll game scores', r_str)
 
 
+class TournamentScoringWDC2025Tests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.tss = find_tournament_scoring_system('WDC 2025')
+
+        cls.set1 = GameSet.objects.get(name='Avalon Hill')
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Create some players
+        # Avoid hitting the WDD by not providing a WDD id
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Antelope')
+        cls.p2 = Player.objects.create(first_name='Beth', last_name='Bottom')
+        cls.p3 = Player.objects.create(first_name='Charles', last_name='Chicanery')
+        cls.p4 = Player.objects.create(first_name='Daisy', last_name='Duke')
+        cls.p5 = Player.objects.create(first_name='Ethel', last_name='Elephant')
+        cls.p6 = Player.objects.create(first_name='Fred', last_name='Flintstone')
+        cls.p7 = Player.objects.create(first_name='George', last_name='Gigantic')
+        cls.p8 = Player.objects.create(first_name='Helen', last_name='Horrendous')
+        cls.p9 = Player.objects.create(first_name='Iris', last_name='Idiotic')
+        cls.p10 = Player.objects.create(first_name='Jake', last_name='Jello')
+        cls.p11 = Player.objects.create(first_name='Kevin', last_name='Koala')
+        cls.p12 = Player.objects.create(first_name='Lydia', last_name='Lamppost')
+        cls.p13 = Player.objects.create(first_name='Michelle', last_name='Mybelle')
+        cls.p14 = Player.objects.create(first_name='Nicola', last_name='Nuts')
+        cls.p15 = Player.objects.create(first_name='Owen', last_name='Ocelot')
+        cls.p16 = Player.objects.create(first_name='Pete', last_name='Peculiar')
+        cls.p17 = Player.objects.create(first_name='Queenie', last_name='Qwerty')
+        cls.p18 = Player.objects.create(first_name='Robert', last_name='Rules')
+        cls.p19 = Player.objects.create(first_name='Sebastian', last_name='Saxophone')
+        cls.p20 = Player.objects.create(first_name='Theresa', last_name='Tumultuous')
+        cls.p21 = Player.objects.create(first_name='Ursula', last_name='Umbrella')
+        cls.p22 = Player.objects.create(first_name='Victoria', last_name='Virgin')
+        cls.p23 = Player.objects.create(first_name='Wilfred', last_name='Wildebeest')
+        cls.p24 = Player.objects.create(first_name='Xavier', last_name='Xray')
+        cls.p25 = Player.objects.create(first_name='Yannis', last_name='Yellow')
+        cls.p26 = Player.objects.create(first_name='Zara', last_name='Zebra')
+        players = [cls.p1, cls.p2, cls.p3, cls.p4, cls.p5, cls.p6, cls.p7, cls.p8, cls.p9,
+                   cls.p10, cls.p11, cls.p12, cls.p13, cls.p14, cls.p15, cls.p16, cls.p17,
+                   cls.p18, cls.p19, cls.p20, cls.p21, cls.p22, cls.p23, cls.p24]
+
+        # 4-round tournament with 4 games per round
+        s = G_SCORING_SYSTEMS[0].name
+        today = date.today()
+        cls.t = Tournament.objects.create(name='WDC 2025 Tournament Scoring Test',
+                                          start_date=today,
+                                          end_date=today + HOURS_24,
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=cls.tss.name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.r1 = Round.objects.create(tournament=cls.t,
+                                      scoring_system=s,
+                                      dias=False,
+                                      start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        cls.r2 = Round.objects.create(tournament=cls.t,
+                                      scoring_system=s,
+                                      dias=False,
+                                      start=cls.r1.start + HOURS_8)
+        cls.r3 = Round.objects.create(tournament=cls.t,
+                                      scoring_system=s,
+                                      dias=False,
+                                      start=cls.r2.start + HOURS_8)
+        cls.r4 = Round.objects.create(tournament=cls.t,
+                                      scoring_system=s,
+                                      dias=False,
+                                      start=cls.r3.start + HOURS_8)
+        gps = [[(cls.p1, cls.austria, 10.0), # Round 1 Game 1
+                (cls.p2, cls.england, 20.0),
+                (cls.p3, cls.russia, 30.0),
+                (cls.p4, cls.germany, 40.0),
+                (cls.p5, cls.italy, 50.0),
+                (cls.p6, cls.france, 60.0),
+                (cls.p7, cls.turkey, 70.0)],
+               [(cls.p8, cls.austria, 10.0), # Round 1 Game 2
+                (cls.p9, cls.england, 20.0),
+                (cls.p10, cls.france, 30.0),
+                (cls.p11, cls.germany, 40.0),
+                (cls.p12, cls.italy, 50.0),
+                (cls.p13, cls.russia, 60.0),
+                (cls.p14, cls.turkey, 70.0)],
+               [(cls.p15, cls.austria, 10.0), # Round 1 Game 3
+                (cls.p16, cls.england, 20.0),
+                (cls.p17, cls.france, 30.0),
+                (cls.p18, cls.germany, 40.0),
+                (cls.p19, cls.italy, 50.0),
+                (cls.p20, cls.russia, 60.0),
+                (cls.p21, cls.turkey, 70.0)],
+               [(cls.p1, cls.austria, 10.0), # Round 2 Game 1
+                (cls.p2, cls.england, 20.0),
+                (cls.p3, cls.france, 30.0),
+                (cls.p4, cls.germany, 40.0),
+                (cls.p5, cls.italy, 50.0),
+                (cls.p6, cls.russia, 60.0),
+                (cls.p7, cls.turkey, 70.0)],
+               [(cls.p8, cls.austria, 10.0), # Round 2 Game 2
+                (cls.p9, cls.england, 20.0),
+                (cls.p10, cls.france, 30.0),
+                (cls.p11, cls.germany, 40.0),
+                (cls.p12, cls.italy, 50.0),
+                (cls.p13, cls.russia, 60.0),
+                (cls.p14, cls.turkey, 70.0)],
+               [(cls.p15, cls.austria, 10.0), # Round 2 Game 3
+                (cls.p16, cls.russia, 20.0),
+                (cls.p17, cls.france, 30.0),
+                (cls.p18, cls.germany, 40.0),
+                (cls.p19, cls.italy, 50.0),
+                (cls.p20, cls.england, 60.0),
+                (cls.p21, cls.turkey, 70.0)],
+               [(cls.p1, cls.austria, 10.0), # Round 3 Game 1
+                (cls.p2, cls.england, 20.0),
+                (cls.p3, cls.france, 30.0),
+                (cls.p4, cls.germany, 40.0),
+                (cls.p5, cls.italy, 50.0),
+                (cls.p6, cls.russia, 60.0),
+                (cls.p7, cls.turkey, 70.0)],
+               [(cls.p9, cls.austria, 10.0), # Round 3 Game 2
+                (cls.p10, cls.england, 20.0),
+                (cls.p11, cls.france, 30.0),
+                (cls.p12, cls.germany, 40.0),
+                (cls.p13, cls.italy, 50.0),
+                (cls.p14, cls.russia, 60.0),
+                (cls.p15, cls.turkey, 70.0)],
+               [(cls.p17, cls.austria, 10.0), # Round 3 Game 3
+                (cls.p18, cls.england, 20.0),
+                (cls.p19, cls.france, 30.0),
+                (cls.p20, cls.germany, 40.0),
+                (cls.p21, cls.italy, 50.0),
+                (cls.p22, cls.russia, 60.0),
+                (cls.p23, cls.turkey, 70.0)],
+               [(cls.p24, cls.austria, 10.0), # Round 4 Game 1
+                (cls.p23, cls.england, 20.0),
+                (cls.p22, cls.france, 30.0),
+                (cls.p21, cls.germany, 40.0),
+                (cls.p20, cls.italy, 50.0),
+                (cls.p19, cls.russia, 60.0),
+                (cls.p18, cls.turkey, 70.0)],
+               [(cls.p17, cls.austria, 10.0), # Round 4 Game 2
+                (cls.p16, cls.england, 20.0),
+                (cls.p15, cls.france, 30.0),
+                (cls.p14, cls.germany, 40.0),
+                (cls.p13, cls.italy, 50.0),
+                (cls.p12, cls.russia, 60.0),
+                (cls.p11, cls.turkey, 70.0)],
+               [(cls.p10, cls.austria, 10.0), # Round 4 Game 3
+                (cls.p9, cls.england, 20.0),
+                (cls.p8, cls.france, 30.0),
+                (cls.p7, cls.germany, 40.0),
+                (cls.p6, cls.italy, 50.0),
+                (cls.p5, cls.russia, 60.0),
+                (cls.p4, cls.turkey, 70.0)],
+              ]
+        # Create 3 games per round, and store players, powers, and scores
+        games = {}
+        for r in [cls.r1, cls.r2, cls.r3, cls.r4]:
+            for n in range(3):
+                g = Game.objects.create(name=f'g{r.number()}{n}',
+                                        started_at=r.start,
+                                        the_round=r,
+                                        is_finished=True,
+                                        the_set=cls.set1)
+                games[g] = gps.pop(0)
+        # Create TournamentPlayers
+        for p in players:
+            TournamentPlayer.objects.create(tournament=cls.t, player=p)
+        # Create RoundPlayers
+        for r in [cls.r1, cls.r2, cls.r3, cls.r4]:
+            for p in players:
+                RoundPlayer.objects.create(player=p, the_round=r)
+        # Create GamePlayers
+        for g, players in games.items():
+            for player, power, score in players:
+                gp = GamePlayer.objects.create(player=player, game=g, power=power, score=score)
+
+    # TScoringWDC2025.__str__()
+    def test_str(self):
+        res = str(self.tss)
+        self.assertEqual(res, 'WDC 2025')
+
+    # TScoringWDC2025.scores() without ties
+    def test_scores_no_ties(self):
+        # Propagate scores from GP through RP to TP
+        for r in [self.r1, self.r2, self.r3, self.r4]:
+            r.update_scores()
+        rps = RoundPlayer.objects.filter(the_round__tournament=self.t)
+        scores = self.tss.scores(rps)
+        # validate results
+        self.assertEqual(len(scores), 24)
+        for p, score in scores.items():
+            with self.subTest(player=str(p)):
+                gps = p.gameplayer_set.filter(game__the_round__tournament=self.t).order_by('-score')
+                # Score should be either:
+                # - best two of the first three rounds plus the 4th round
+                # - best two of the first three rounds plus 1.5x the 4th round
+                gp13 = gps.exclude(game__the_round=self.r4)
+                try:
+                    gp4_score = gps.get(game__the_round=self.r4).score
+                except GamePlayer.DoesNotExist:
+                    gp4_score = 0.0
+                if len(gp13) == 3:
+                    res = sum(gp.score for gp in list(gp13)[:2])
+                else:
+                    res = sum(gp.score for gp in gp13.all())
+                self.assertTrue((score - res == gp4_score) or (score - res == 1.5 * gp4_score))
+
+    # TScoringWDC2025.scores() tiebreakers
+    def test_scores_with_ties(self):
+        # Set GP scores to have some ties
+        # TODO This still needs work. The idea is to have 8 players tied,
+        #      that split into two equal groups on the each tiebreaker
+        scores = {self.p2: {self.r1: 60, self.r2: 0, self.r3: 0},
+                  self.p3: {self.r1: 30, self.r2: 30, self.r3: 10},
+                  self.p8: {self.r1: 60, self.r2: 0},
+                  self.p9: {self.r1: 30, self.r2: 30, self.r3: 5},
+                  self.p10: {self.r1: 60, self.r2: 0, self.r3: 0},
+                  self.p16: {self.r1: 30, self.r2: 30},
+                  self.p17: {self.r1: 30, self.r2: 30, self.r3: 20},
+                  self.p22: {self.r3: 60}}
+        tied = {self.p2: 60.0,   # wins first tiebreak (single game score)
+                self.p3: 60.0,   # wins second tiebreak (total SCs in scored games)
+                self.p8: 105.0,  # wins first tiebreak (single game score)
+                self.p9: 80.0,   # loses all three tiebreaks
+                self.p10: 75.0,  # wins first tiebreak (single game score)
+                self.p16: 90.0,  # wins second tiebreak (total SCs in scored games)
+                self.p17: 75.0,  # wins third tiebreak (score in dropped round)
+                self.p22: 105.0, # wins first tiebreak (single game score)
+               }
+        old_scores = {}
+        for p, res in scores.items():
+            old_scores[p] = {}
+            for r, points in res.items():
+                gp = p.gameplayer_set.get(game__the_round=r)
+                old_scores[p][r] = gp.score
+                gp.score = points
+                gp.save(update_fields=['score'])
+        # Propagate scores from GP through RP to TP
+        for r in [self.r1, self.r2, self.r3, self.r4]:
+            r.update_scores()
+        rps = RoundPlayer.objects.filter(the_round__tournament=self.t)
+        scores = self.tss.scores(rps)
+        # validate results
+        self.assertEqual(len(scores), 24)
+        for p, score in scores.items():
+            with self.subTest(player=str(p)):
+                gps = p.gameplayer_set.filter(game__the_round__tournament=self.t).order_by('-score')
+                # Score should be either:
+                # - best two of the first three rounds plus the 4th round
+                # - best two of the first three rounds plus 1.5x the 4th round
+                gp13 = gps.exclude(game__the_round=self.r4)
+                try:
+                    gp4_score = gps.get(game__the_round=self.r4).score
+                except GamePlayer.DoesNotExist:
+                    gp4_score = 0.0
+                if len(gp13) == 3:
+                    res = sum(gp.score for gp in list(gp13)[:2])
+                else:
+                    res = sum(gp.score for gp in gp13.all())
+                self.assertTrue((score - res == gp4_score) or (score - res == 1.5 * gp4_score))
+                # Check that ties were broken correctly
+                if p in tied:
+                    self.assertEqual(score, tied[p])
+        # Cleanup
+        for p, res in old_scores.items():
+            for r, points in res.items():
+                gp = GamePlayer.objects.get(game__the_round=r, player=p)
+                gp.score = points
+                gp.save(update_fields=['score'])
+
+
 class TournamentScoringTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -553,8 +830,8 @@ class TournamentScoringTests(TestCase):
                 t_str = str(t)
                 # TODO check the result
 
-    # TScoringSumRounds.scores_detail()
-    def test_tscoringsumrounds_detail(self):
+    # TScoringSumRounds.scores()
+    def test_tscoringsumrounds_scores(self):
         # New Tournament just for this test
         s = G_SCORING_SYSTEMS[0].name
         today = date.today()
@@ -669,7 +946,7 @@ class TournamentScoringTests(TestCase):
                 t_str = str(t)
                 # TODO check the result
 
-    # TScoringSumGames.scores_detail()
+    # TScoringSumGames.scores()
     def test_tscoringsumgames_scores(self):
         """ TScoringSumGames with no sitting out bonus"""
         # New Tournament just for this test

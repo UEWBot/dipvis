@@ -20,7 +20,7 @@ Django models file for the Diplomacy Tournament Visualiser.
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
 import inspect
-from operator import itemgetter
+from operator import itemgetter, countOf
 from pathlib import Path
 import random
 import string
@@ -313,6 +313,183 @@ class TScoringSumRounds(TournamentScoringSystem):
         return t_scores
 
 
+class TScoringWDC2025(TournamentScoringSystem):
+    """
+    Scoring for WDC 2025
+
+    Sum best 2 of the first three round scores plus the 4th round score.
+    Top 21 after the first three rounds get 50% bonus of their 4th round score.
+    """
+    def __init__(self):
+        self.name = _('WDC 2025')
+
+    uses_round_scores = True
+
+    def _early_scores(self, round_players):
+        """
+        Returns a dict, indexed by player key, of tournament scores
+
+        No round four RoundPlayers should be passed in.
+        Just calculates the sum of the best two round scores.
+        """
+        t_scores = {}
+        # for each player who played any of the specified rounds
+        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
+            # Find just their rounds, sort by score, descending
+            rps = round_players.filter(player=p).order_by('-score')
+            # Add up the best 2
+            t_scores[p] = 0.0
+            for n, rp in enumerate(rps):
+                if n < 2:
+                    t_scores[p] += rp.score
+                    rp.score_dropped = False
+                    rp.save(update_fields=['score_dropped'])
+                else:
+                    rp.score_dropped = True
+                    rp.save(update_fields=['score_dropped'])
+        return t_scores
+
+    def _top21(self, scores, tournament):
+        """
+        Sort the scores, handling ties.
+
+        Takes a dict, indexed by player, of scores.
+        Returns a list of the top 21 players.
+        If there are ties, tiebreakers are:
+        - Higher single game score
+        - Higher score where the tied players went head to head (still TODO)
+        - Total number of SCs
+        - Higher score in dropped round
+        """
+        # Convert to an ordered list of (player, score) tuples
+        tuples = list(scores.items())
+        tuples.sort(reverse=True, key=itemgetter(1))
+        # If player 21 has a higher score than player 22, we're done
+        player21_score = tuples[20][1]
+        if player21_score > tuples[21][1]:
+            return [p for p, s in tuples][:21]
+        # Count the number of player with a score higher than the tied score
+        num = sum(s > player21_score for p,s in tuples)
+        tied_needed = 21 - num
+        # They all make the cut
+        retval = [p for p, s in tuples][:num]
+        round_four = tournament.round_numbered(4)
+        # For each player with the same score as player 21, get all their games in first three rounds
+        tied_gps = {}
+        for p in (p for p, s in tuples if s == player21_score):
+            tied_gps[p] = []
+            for gp in p.gameplayer_set.filter(game__the_round__tournament=tournament).exclude(game__the_round=round_four).order_by('-score'):
+                tied_gps[p].append(gp)
+        # Keep going until we have enough of the tied players
+        while tied_needed > 0:
+            high_score = 0.0
+            for p, gps in tied_gps.items():
+                if gps[0].score > high_score:
+                    high_score = gps[0].score
+            # How many players have that score?
+            high_scorers = []
+            for p, gps in tied_gps.items():
+                if gps[0].score == high_score:
+                    high_scorers.append(p)
+            if len(high_scorers) <= tied_needed:
+                # All in high_scorers make the cut
+                for p in high_scorers:
+                    retval.append(p)
+                    del tied_gps[p]
+                    tied_needed -= 1
+            else:
+                # All not in high_scorers don't make the cut
+                for p, gps in tied_gps.items():
+                    if gps[0].score < high_score:
+                        del tied_gps[p]
+                # Higher score in games played together
+                # Find any games with more than one of the tied players
+                # TODO
+                pass
+                # Total SCs in scored games for tied players
+                total_scs = {}
+                for p, gps in tied_gps.items():
+                    total_scs[p] = sum(gp.final_sc_count() for gp in gps[:2])
+                best_scs = max(total_scs.values())
+                if countOf(total_scs.values(), best_scs) <= tied_needed:
+                    # All with best_scs make the cut
+                    for p, scs in total_scs.items():
+                        if scs == best_scs:
+                            retval.append(p)
+                            del tied_gps[p]
+                            tied_needed -= 1
+                else:
+                    # All with fewer total SCs don't make the cut
+                    for p, scs in total_scs.items():
+                        if scs < best_scs:
+                            del tied_gps[p]
+                    # Higher score in dropped round
+                    dropped_scores = {}
+                    for p, gps in tied_gps.items():
+                        try:
+                            dropped_scores[p] = gps[2].score
+                        except IndexError:
+                            dropped_scores[p] = 0.0
+                    best_dropped_score = max(dropped_scores.values())
+                    if countOf(dropped_scores.values(), best_dropped_score) <= tied_needed:
+                        # All with that dropped score make the cut
+                        for p, score in dropped_scores.items():
+                            if score == best_dropped_score:
+                                retval.append(p)
+                                del tied_gps[p]
+                                tied_needed -= 1
+                    else:
+                        # All with lower dropped scores don't make the cut
+                        for p, score in dropped_scores.items():
+                            if score < best_dropped_score:
+                                del tied_gps[p]
+                        # If we still have a tie, pick a single player at random to make the cut
+                        # TODO supposed to be distnace from home
+                        p = random.choice(list(tied_gps.keys()))
+                        retval.append(p)
+                        del tied_gps[p]
+                        tied_needed -= 1
+        return retval
+
+    def scores(self, round_players):
+        """
+        Returns a dict, indexed by player key, of tournament scores
+
+        Sum best 2 of the first three round scores plus the 4th round score.
+        Top 21 after the first three rounds get 50% bonus of their 4th round score.
+
+        Also updates score_dropped for all the RoundPlayers examined.
+        """
+        t_scores = {}
+        if len(round_players) == 0:
+            return t_scores
+        # calculate the pre-round-four scores
+        tournament = round_players.first().the_round.tournament
+        round_four = tournament.round_numbered(4)
+        early_scores = self._early_scores(round_players.exclude(the_round=round_four))
+        # If there are no round four scores included, we're done
+        if not round_players.filter(the_round=round_four).exists():
+            return early_scores
+        # find the top 21 players going into round 4
+        top21 = self._top21(early_scores, tournament)
+        round_four_rps = round_players.filter(the_round=round_four)
+        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
+            try:
+                t_scores[p] = early_scores[p]
+            except KeyError:
+                # No score from rounds 1..3
+                t_scores[p] = 0.0
+            if p in top21:
+                try:
+                    t_scores[p] += round_four_rps.get(player=p).score * 1.5
+                except RoundPlayer.DoesNotExist:
+                    # No round four score to add
+                    pass
+            else:
+                t_scores[p] += round_four_rps.get(player=p).score
+        return t_scores
+
+
 class TScoringSumGames(TournamentScoringSystem):
     """
     Just add up the best N Game scores regardless of the round(s) in which they were played.
@@ -424,6 +601,7 @@ T_SCORING_SYSTEMS = [
     TScoringSumGames(_('Sum best 5 games in any rounds'), 5),
     TScoringSumGames(_('Best single game result'), 1),
     TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, 0.5),
+    TScoringWDC2025(),
 ]
 
 # Special "name" used to not calculate scores
