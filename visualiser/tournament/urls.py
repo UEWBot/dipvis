@@ -257,4 +257,6 @@ urlpatterns = [
     path('', tournament_views.tournament_index, name='index'),
     path('series/', include(series_patterns)),
     path('<int:tournament_id>/', include(tournament_patterns)),
+    path('api/v1/tournament/<int:tournament_id>/', tournament_views.api,
+         {'version': 1}, name='api_tournament'),
 ]

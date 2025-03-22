@@ -1548,6 +1548,13 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+    def test_api(self):
+        response = self.client.get(reverse('api_tournament', args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+
+
     def test_tournament_awards(self):
         # Should be viewable without logging in
         response = self.client.get(reverse('tournament_awards',

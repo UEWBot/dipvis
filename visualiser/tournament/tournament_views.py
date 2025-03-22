@@ -26,6 +26,7 @@ from django.contrib.auth.decorators import permission_required
 from django.db import transaction
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils.translation import gettext as _
 from django.urls import reverse
@@ -701,6 +702,28 @@ def enter_teams(request, tournament_id):
                   'tournaments/enter_teams.html',
                   {'tournament': t,
                    'formset': formset})
+
+
+def api(request, tournament_id, version):
+    """JSON API to retrieve data"""
+    if version != 1:
+        raise Http404(f'Invalid API version {version}')
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    rounds = {}
+    for r in t.round_set.all():
+        games = {}
+        for g in r.game_set.all():
+            players = {}
+            for gp in g.gameplayer_set.all():
+                players[str(gp.power)] = {'name': str(gp.player),
+                                     'location': gp.player.location}
+            games[g.name] = {'sandbox': g.external_url,
+                             'players': players}
+        rounds[r.number()] = {'games': games}
+    data = {'name': t.name,
+            'year': t.start_date.year,
+            'rounds': rounds}
+    return JsonResponse(data)
 
 
 def round_index(request, tournament_id):
