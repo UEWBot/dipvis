@@ -2061,7 +2061,7 @@ class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
     """
-    MAX_NAME_LENGTH=20
+    MAX_NAME_LENGTH=200
     MAX_NOTES_LENGTH=120
 
     name = models.CharField(max_length=MAX_NAME_LENGTH,
