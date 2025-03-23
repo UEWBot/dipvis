@@ -103,7 +103,7 @@ class Game():
     A single game on Backstabbr
     """
 
-    TIMEOUT = 3.0
+    TIMEOUT = 3.5
 
     def __init__(self, url):
         """
