@@ -78,17 +78,18 @@ def _find_t_scoring_system(cls, number):
     raise AssertionError(f'No matching tournament scoring system found for {cls} {number}')
 
 
-def _find_complex_t_scoring_system(games, fraction):
+def _find_complex_t_scoring_system(games, fraction, count=None):
     """
     Find a matching Tournament scoring system
 
     games is the number of Games that get included at 100%
     fraction is the proportion of other Games that gets included
+    count is the max number of other games that get included
     """
     for t in T_SCORING_SYSTEMS:
-        if isinstance(t, TScoringSumGames) and (t.scored_games == games) and (t.residual_multiplier == fraction):
+        if isinstance(t, TScoringSumGames) and (t.scored_games == games) and (t.residual_multiplier == fraction) and (t.residual_count == count):
             return t
-    raise AssertionError(f'No matching tournament scoring system found for {games} {fraction}')
+    raise AssertionError(f'No matching tournament scoring system found for {games} {fraction} {count}')
 
 
 class RoundScoringTests(TestCase):
@@ -942,6 +943,12 @@ class TournamentScoringTests(TestCase):
                         rp = RoundPlayer.objects.get(player=p, the_round=r)
                         self.assertEqual(rp.score_dropped, drop)
 
+    # TScoringSumGames.__init__()
+    def test_tscoringsum_games_init(self):
+        self.assertRaises(ValueError,
+                          TScoringSumGames,
+                          'Test system', 3, 0.0, 1)
+
     # TScoringSumGames.__str__()
     def test_tscoringsumgames_str(self):
         for t in T_SCORING_SYSTEMS:
@@ -1688,6 +1695,238 @@ class TournamentScoringTests(TestCase):
                                 # One or both scores count.
                                 # Round not dropped
                                 self.assertFalse(rp.score_dropped)
+
+    def test_tscoringsumgames_scores4(self):
+        """Test TScoringSumGames with residual_multiplier and residual_count"""
+        # New Tournament just for this test
+        s = G_SCORING_SYSTEMS[0].name
+        today = date.today()
+        tss = _find_complex_t_scoring_system(2, 0.5, 1)
+        t = Tournament.objects.create(name='Tournament Scoring Test',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                      tournament_scoring_system=tss.name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+
+        # Five Rounds
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_8)
+        r3 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_9)
+        r4 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_10)
+        r5 = Round.objects.create(tournament=t,
+                                  scoring_system=s,
+                                  dias=False,
+                                  start=r1.start + HOURS_16)
+        # Two finished Games per round
+        g11 = Game.objects.create(name='g11',
+                                  started_at=r1.start,
+                                  the_round=r1,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g12 = Game.objects.create(name='g12',
+                                  started_at=r1.start,
+                                  the_round=r1,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g21 = Game.objects.create(name='g21',
+                                  started_at=r2.start,
+                                  the_round=r2,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g22 = Game.objects.create(name='g22',
+                                  started_at=r2.start,
+                                  the_round=r2,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g31 = Game.objects.create(name='g31',
+                                  started_at=r3.start,
+                                  the_round=r3,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g32 = Game.objects.create(name='g32',
+                                  started_at=r3.start,
+                                  the_round=r3,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g41 = Game.objects.create(name='g41',
+                                  started_at=r4.start,
+                                  the_round=r4,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g42 = Game.objects.create(name='g42',
+                                  started_at=r4.start,
+                                  the_round=r4,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g51 = Game.objects.create(name='g51',
+                                  started_at=r5.start,
+                                  the_round=r5,
+                                  is_finished=True,
+                                  the_set=self.set1)
+        g52 = Game.objects.create(name='g52',
+                                  started_at=r5.start,
+                                  the_round=r5,
+                                  is_finished=True,
+                                  the_set=self.set1)
+
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        TournamentPlayer.objects.create(player=self.p3, tournament=t)
+        TournamentPlayer.objects.create(player=self.p4, tournament=t)
+        # p5 doesn't play at all
+        TournamentPlayer.objects.create(player=self.p5, tournament=t)
+        TournamentPlayer.objects.create(player=self.p6, tournament=t)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t)
+        TournamentPlayer.objects.create(player=self.p8, tournament=t, unranked=True)
+        TournamentPlayer.objects.create(player=self.p9, tournament=t)
+        TournamentPlayer.objects.create(player=self.p10, tournament=t)
+        TournamentPlayer.objects.create(player=self.p11, tournament=t)
+        TournamentPlayer.objects.create(player=self.p12, tournament=t)
+        TournamentPlayer.objects.create(player=self.p13, tournament=t)
+
+        game_scores = {g11: {self.p1: 20,
+                             self.p2: 7000,
+                             self.p3: 30000,
+                             self.p8: 1,
+                             self.p9: 2,
+                             self.p10: 3,
+                             self.p11: 20000},
+                       g12: {self.p2: 10000,
+                             self.p4: 700,
+                             self.p8: 2,
+                             self.p9: 300,
+                             self.p10: 20000,
+                             self.p12: 6000,
+                             self.p13: 2000},
+                       g21: {self.p1: 1,
+                             self.p2: 400,
+                             self.p4: 40000,
+                             self.p9: 1,
+                             self.p11: 8,
+                             self.p12: 6,
+                             self.p13: 3},
+                       g22: {self.p3: 50,
+                             self.p8: 30,
+                             self.p9: 3000,
+                             self.p10: 10,
+                             self.p11: 20,
+                             self.p12: 80000,
+                             self.p13: 40000},
+                       g31: {self.p1: 7000,
+                             self.p3: 400,
+                             self.p8: 200,
+                             self.p9: 10000,
+                             self.p10: 5000,
+                             self.p11: 600,
+                             self.p12: 300},
+                       g32: {self.p2: 50,
+                             self.p4: 7000,
+                             self.p8: 3000,
+                             self.p9: 5,
+                             self.p10: 2,
+                             self.p11: 6,
+                             self.p13: 2},
+                       g41: {self.p1: 90000,
+                             self.p4: 4,
+                             self.p6: 2000,
+                             self.p7: 100,
+                             self.p8: 50000,
+                             self.p10: 1,
+                             self.p11: 3000},
+                       g42: {self.p3: 5000,
+                             self.p6: 70,
+                             self.p8: 5,
+                             self.p9: 10,
+                             self.p10: 7,
+                             self.p12: 6,
+                             self.p13: 40},
+                       g51: {self.p1: 300,
+                             self.p6: 400,
+                             self.p8: 9,
+                             self.p9: 8,
+                             self.p11: 7,
+                             self.p12: 3,
+                             self.p13: 300},
+                       g52: {self.p4: 70,
+                             self.p7: 70,
+                             self.p8: 7,
+                             self.p10: 200,
+                             self.p11: 2,
+                             self.p12: 60,
+                             self.p13: 4}}
+
+        powers = [self.austria,
+                  self.england,
+                  self.france,
+                  self.germany,
+                  self.italy,
+                  self.russia,
+                  self.turkey]
+
+        for g in game_scores.keys():
+            for p, s in game_scores[g].items():
+                try:
+                    with transaction.atomic():
+                        RoundPlayer.objects.create(player=p, the_round=g.the_round)
+                except IntegrityError:
+                    # This player is playing two games this round
+                    pass
+                the_power = powers.pop(0)
+                powers.append(the_power)
+                GamePlayer.objects.create(player=p, game=g, power=the_power, score=s)
+
+        for r in t.round_set.all():
+            r.update_scores()
+        t_scores = t.scores_detail()
+
+        # Check tournament scores
+        expected_scores = {self.p1: 97000 + (300/2),
+                           self.p2: 17000 + (400/2),
+                           self.p3: 35000 + (400/2),
+                           self.p4: 47000 + (700/2),
+                           self.p5: 0,
+                           self.p6: 2400 + (70/2),
+                           self.p7: 170,
+                           self.p8: 53000 + (200/2),
+                           self.p9: 13000 + (300/2),
+                           self.p10: 25000 + (200/2),
+                           self.p11: 23000 + (600/2),
+                           self.p12: 86000 + (300/2),
+                           self.p13: 42000 + (300/2)}
+        for p, score in expected_scores.items():
+            with self.subTest(player=p):
+                self.assertAlmostEqual(t_scores[p], score)
+
+        # Check GamePlayer score_dropped flags
+        for g in game_scores.keys():
+            with self.subTest(game=g):
+                for p, s in game_scores[g].items():
+                    with self.subTest(player=p):
+                        gp = GamePlayer.objects.get(player=p, game=g)
+                        # All scores are used
+                        self.assertFalse(gp.score_dropped)
+
+        # Check round scores and score_dropped flags
+        for r in t.round_set.all():
+            with self.subTest(round_num=r.number()):
+                for rp in r.roundplayer_set.all():
+                    with self.subTest(player=rp.player):
+                        # With no sitting-out bonus, we don't get a round score at all
+                        self.assertEqual(rp.score, 0.0)
+                        self.assertFalse(rp.score_dropped)
 
 
 class ModelTests(TestCase):

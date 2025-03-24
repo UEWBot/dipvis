@@ -496,14 +496,20 @@ class TScoringSumGames(TournamentScoringSystem):
     Just add up the best N Game scores regardless of the round(s) in which they were played.
 
     Optionally if a player played more than that number of Games, add the average of the scores
-    of the remaining Games, multiplied by some factor.
+    of the remaining Games, multiplied by some factor (residual_multiplier). When
+    residual_multiplier is non-zero, residual_count can be set to limit the number of scores
+    that get included.
     In this case, GamePlayer.score is used directly and any (non-zero) RoundPlayer.scores are
     treated as "pseudo Game scores" due to sitting-out bonuses.
     """
-    def __init__(self, name, scored_games, residual_multiplier=0.0):
+    def __init__(self, name, scored_games, residual_multiplier=0.0, residual_count=None):
         self.name = name
         self.scored_games = scored_games
         self.residual_multiplier = residual_multiplier
+        self.residual_count = residual_count
+        # Residual count is only meaningful with non-zero residual_multiplier
+        if residual_count and (residual_multiplier == 0.0):
+            raise ValueError("non-None residual_count with zero residual_multiplier")
 
     uses_round_scores = False
 
@@ -576,6 +582,10 @@ class TScoringSumGames(TournamentScoringSystem):
                         gp.score_dropped = False
                         gp.save(update_fields=['score_dropped'])
                 if (self.residual_multiplier != 0.0) and len(player_scores):
+                    if self.residual_count:
+                        # Remove any remaining scores that don't contribute
+                        while self.residual_count < len(player_scores):
+                            player_scores.pop(0)
                     # How much does each additional score contribute ?
                     bonus_factor = self.residual_multiplier / len(player_scores)
                 # Then go through any remaining Game scores
@@ -601,7 +611,9 @@ T_SCORING_SYSTEMS = [
     TScoringSumGames(_('Sum best 4 games in any rounds'), 4),
     TScoringSumGames(_('Sum best 5 games in any rounds'), 5),
     TScoringSumGames(_('Best single game result'), 1),
-    TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, 0.5),
+    TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, residual_multiplier=0.5),
+    TScoringSumGames(_('Sum best 2 games plus half the third best'), 2, residual_multiplier=0.5, residual_count=1),
+    TScoringSumGames(_('Sum best 3 games plus half the fourth best'), 3, residual_multiplier=0.5, residual_count=1),
     TScoringWDC2025(),
 ]
 
