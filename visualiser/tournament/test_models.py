@@ -918,18 +918,21 @@ class TournamentScoringTests(TestCase):
         t.update_scores()
         t_scores = t.scores_detail()
 
-        self.assertEqual(t_scores[self.p1], 706)
-        self.assertEqual(t_scores[self.p2], 57)
-        self.assertEqual(t_scores[self.p3], 400)
-        self.assertEqual(t_scores[self.p4], 270)
-        self.assertEqual(t_scores[self.p5], 0)
-        self.assertEqual(t_scores[self.p6], 100)
-        self.assertEqual(t_scores[self.p7], 33)
-        self.assertEqual(t_scores[self.p8], 510)
-        self.assertEqual(t_scores[self.p9], 620)
-        self.assertEqual(t_scores[self.p10], 60)
-        self.assertEqual(t_scores[self.p11], 4)
-        self.assertEqual(t_scores[self.p12], 340)
+        expected_scores = {self.p1: 706,
+                           self.p2: 57,
+                           self.p3: 400,
+                           self.p4: 270,
+                           self.p5: 0,
+                           self.p6: 100,
+                           self.p7: 33,
+                           self.p8: 510,
+                           self.p9: 620,
+                           self.p10: 60,
+                           self.p11: 4,
+                           self.p12: 340}
+        for p, score in expected_scores.items():
+            with self.subTest(player=p):
+                self.assertAlmostEqual(t_scores[p], score)
 
         for r in round_scores.keys():
             with self.subTest(round_num=r.number()):
@@ -1144,19 +1147,22 @@ class TournamentScoringTests(TestCase):
         t_scores = t.scores_detail()
 
         # Check tournament scores
-        self.assertEqual(t_scores[self.p1], 97320)
-        self.assertEqual(t_scores[self.p2], 17450)
-        self.assertEqual(t_scores[self.p3], 35450)
-        self.assertEqual(t_scores[self.p4], 47770)
-        self.assertEqual(t_scores[self.p5], 0)
-        self.assertEqual(t_scores[self.p6], 2470)
-        self.assertEqual(t_scores[self.p7], 170)
-        self.assertEqual(t_scores[self.p8], 53230)
-        self.assertEqual(t_scores[self.p9], 13310)
-        self.assertEqual(t_scores[self.p10], 25210)
-        self.assertEqual(t_scores[self.p11], 23620)
-        self.assertEqual(t_scores[self.p12], 86360)
-        self.assertEqual(t_scores[self.p13], 42340)
+        expected_scores = {self.p1: 97320,
+                           self.p2: 17450,
+                           self.p3: 35450,
+                           self.p4: 47770,
+                           self.p5: 0,
+                           self.p6: 2470,
+                           self.p7: 170,
+                           self.p8: 53230,
+                           self.p9: 13310,
+                           self.p10: 25210,
+                           self.p11: 23620,
+                           self.p12: 86360,
+                           self.p13: 42340}
+        for p, score in expected_scores.items():
+            with self.subTest(player=p):
+                self.assertAlmostEqual(t_scores[p], score)
 
         # Check GamePlayer score_dropped flags
         for g in game_scores.keys():
@@ -1389,19 +1395,22 @@ class TournamentScoringTests(TestCase):
         t_scores = t.scores_detail()
 
         # Check tournament scores
-        self.assertAlmostEqual(t_scores[self.p1], 97000 + (321/6))
-        self.assertAlmostEqual(t_scores[self.p2], 17000 + (450/4))
-        self.assertAlmostEqual(t_scores[self.p3], 35000 + (450/4))
-        self.assertAlmostEqual(t_scores[self.p4], 47000 + (774/6))
-        self.assertAlmostEqual(t_scores[self.p5], 0)
-        self.assertAlmostEqual(t_scores[self.p6], 2400 + (70/2))
-        self.assertAlmostEqual(t_scores[self.p7], 170)
-        self.assertAlmostEqual(t_scores[self.p8], 53000 + (254/14))
-        self.assertAlmostEqual(t_scores[self.p9], 13000 + (326/12))
-        self.assertAlmostEqual(t_scores[self.p10], 25000 + (223/12))
-        self.assertAlmostEqual(t_scores[self.p11], 23000 + (643/12))
-        self.assertAlmostEqual(t_scores[self.p12], 86000 + (375/10))
-        self.assertAlmostEqual(t_scores[self.p13], 42000 + (349/10))
+        expected_scores = {self.p1: 97000 + (321/6),
+                           self.p2: 17000 + (450/4),
+                           self.p3: 35000 + (450/4),
+                           self.p4: 47000 + (774/6),
+                           self.p5: 0,
+                           self.p6: 2400 + (70/2),
+                           self.p7: 170,
+                           self.p8: 53000 + (254/14),
+                           self.p9: 13000 + (326/12),
+                           self.p10: 25000 + (223/12),
+                           self.p11: 23000 + (643/12),
+                           self.p12: 86000 + (375/10),
+                           self.p13: 42000 + (349/10)}
+        for p, score in expected_scores.items():
+            with self.subTest(player=p):
+                self.assertAlmostEqual(t_scores[p], score)
 
         # Check GamePlayer score_dropped flags
         for g in game_scores.keys():
@@ -1622,19 +1631,22 @@ class TournamentScoringTests(TestCase):
         t_scores = t.scores_detail()
 
         # Check tournament scores
-        self.assertEqual(t_scores[self.p1], 97320)
-        self.assertEqual(t_scores[self.p2], 17500) # Sat 2 rounds
-        self.assertEqual(t_scores[self.p3], 35500) # Sat 1 round
-        self.assertEqual(t_scores[self.p4], 47770)
-        self.assertEqual(t_scores[self.p5], 0)
-        self.assertEqual(t_scores[self.p6], 2570) # Sat 3 rounds
-        self.assertEqual(t_scores[self.p7], 270) # Sat 3 rounds
-        self.assertEqual(t_scores[self.p8], 53230)
-        self.assertEqual(t_scores[self.p9], 13310)
-        self.assertEqual(t_scores[self.p10], 25210)
-        self.assertEqual(t_scores[self.p11], 23620)
-        self.assertEqual(t_scores[self.p12], 86360)
-        self.assertEqual(t_scores[self.p13], 42340)
+        expected_scores = {self.p1: 97320,
+                           self.p2: 17500, # Sat 2 rounds
+                           self.p3: 35500, # Sat 1 round
+                           self.p4: 47770,
+                           self.p5: 0,
+                           self.p6: 2570, # Sat 3 rounds
+                           self.p7: 270, # Sat 3 rounds
+                           self.p8: 53230,
+                           self.p9: 13310,
+                           self.p10: 25210,
+                           self.p11: 23620,
+                           self.p12: 86360,
+                           self.p13: 42340}
+        for p, score in expected_scores.items():
+            with self.subTest(player=p):
+                self.assertAlmostEqual(t_scores[p], score)
 
         # Check GamePlayer score_dropped flags
         for g in game_scores.keys():
