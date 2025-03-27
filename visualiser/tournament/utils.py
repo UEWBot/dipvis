@@ -25,9 +25,11 @@ This module provides utility functions for DipVis.
 import csv
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime, time, timezone
+from datetime import datetime, time, timedelta
 
 from django_countries.fields import Country
+
+from django.utils import timezone
 
 from tournament import backstabbr
 from tournament.background import WDDBackground
@@ -665,3 +667,17 @@ def check_wdd_ids():
             print(f'{p.name} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
         elif (not p.wdd_player_id) and wdd_id:
             printf(f'{p.name} ({p.id}) has no WDD here but {wdd_id} in the WDR')
+
+def upcoming_rounds(num_days=45, include_unpublished=False):
+    """
+    Print a list of tournament rounds for the next few weeks
+
+    num_days specifies how many days ahead to look
+    include_unpublished says whether to include unpublished tournaments
+    """
+    current_tz = timezone.get_current_timezone()
+    today = timezone.now()
+    end_date = today + timedelta(days=num_days)
+    for r in Round.objects.filter(is_finished=False).filter(start__range=[today, end_date]):
+        if include_unpublished or r.tournament.is_published:
+            print(f'{r.start.astimezone(current_tz)} {r}')
