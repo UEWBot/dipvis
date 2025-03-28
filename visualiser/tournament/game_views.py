@@ -712,6 +712,30 @@ def _sc_counts_to_cc(game, year, sc_counts):
                                                  defaults={'count': v})
 
 
+def _bs_orders_to_piffs(orders):
+    """
+    Extract a list of destroyed units from a backstabbr order set
+
+    Returns a list of 3-character strings containing province abbreviations
+    """
+    piffs = []
+    for power, units in orders.items():
+        for province, order in units.items():
+            try:
+                retreat = order['retreat']
+            except KeyError:
+                continue
+            # "no retreat available" or "retreated off the board"
+            if retreat['type'] == 'DISBAND':
+                piffs.append(province)
+            # Multiple retreats to the same province
+            elif retreat['result'] == 'FAILS':
+                # This is the province retreated from
+                # retreat['to'] is the destination of the retreat order
+                piffs.append(province)
+    return piffs
+
+
 def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     """Import CentreCounts and SupplyCentreOwnerships from Backstabbr"""
     bg = backstabbr_game
@@ -732,6 +756,8 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
         _sc_counts_to_cc(game, year, bg.sc_counts)
         game.set_is_finished(year)
         game.update_scores()
+    # Find destroyed units
+    piffs = _bs_orders_to_piffs(bg.orders)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
@@ -740,7 +766,8 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
                    'game': game,
                    'year': year,
                    'ownerships': game.supplycentreownership_set.filter(year=year).order_by('owner'),
-                   'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
+                   'centrecounts': game.centrecount_set.filter(year=year).order_by('power'),
+                   'piffs': piffs})
 
 
 def _scrape_webdip(request, tournament, game, webdip_game):
