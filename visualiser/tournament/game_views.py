@@ -756,8 +756,6 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
         _sc_counts_to_cc(game, year, bg.sc_counts)
         game.set_is_finished(year)
         game.update_scores()
-    # Find destroyed units
-    piffs = _bs_orders_to_piffs(bg.orders)
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
@@ -766,8 +764,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
                    'game': game,
                    'year': year,
                    'ownerships': game.supplycentreownership_set.filter(year=year).order_by('owner'),
-                   'centrecounts': game.centrecount_set.filter(year=year).order_by('power'),
-                   'piffs': piffs})
+                   'centrecounts': game.centrecount_set.filter(year=year).order_by('power')})
 
 
 def _scrape_webdip(request, tournament, game, webdip_game):

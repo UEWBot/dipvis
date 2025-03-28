@@ -5,14 +5,6 @@
 
 {% block content %}
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> external site import{% endblocktrans %}</h1>
-<p>{% trans "Units destroyed in the following provinces:" %}</p>
-<ul>
-  {% for piff in piffs %}
-    <li>{{ piff }}</li>
-  {% empty %}
-    <li>{% trans "None" %}</li>
-  {% endfor %}
-</ul>
 <p>{% blocktrans with year=year %}Imported centre counts for {{ year }}:{% endblocktrans %}</p>
 <ul>
   {% for cc in centrecounts %}
