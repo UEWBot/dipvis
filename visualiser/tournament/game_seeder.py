@@ -413,13 +413,11 @@ class GameSeeder:
             for _ in range(self.iterations):
                 # Try swapping a random player between two random games
                 g1, g2 = random.sample(games,2)
-                p1 = g1.pop()
-                p2 = g2.pop()
-                if (p1 in g2) or (p2 in g1):
-                    # Don't try to create games with players playing themselves
-                    g1.add(p1)
-                    g2.add(p2)
-                    continue
+                # Pick a player from each game that isn't also playing the other
+                p1 = random.choice(list(g1 - g2))
+                p2 = random.choice(list(g2 - g1))
+                g1.remove(p1)
+                g2.remove(p2)
                 g1.add(p2)
                 g2.add(p1)
                 fitness = self._set_fitness(games, include_these_games)
