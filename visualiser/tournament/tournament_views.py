@@ -716,10 +716,14 @@ def api(request, tournament_id, version):
             players = {}
             for gp in g.gameplayer_set.all():
                 players[str(gp.power)] = {'name': str(gp.player),
-                                     'location': gp.player.location}
+                                          'location': gp.player.location}
+                if gp.score_is_final():
+                    players[str(gp.power)]['score'] = gp.score
             games[g.name] = {'sandbox': g.external_url,
+                             'started' : g.started_at,
                              'players': players}
-        rounds[r.number()] = {'games': games}
+        rounds[r.number()] = {'scoring_system': r.scoring_system,
+                              'games': games}
     data = {'name': t.name,
             'year': t.start_date.year,
             'rounds': rounds}
