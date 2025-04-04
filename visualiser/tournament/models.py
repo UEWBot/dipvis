@@ -2085,8 +2085,9 @@ class Game(models.Model):
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
+    # Note that we don't check for a URL we can parse - any valid URL is fine
     external_url = models.URLField(blank=True,
-                                   verbose_name=_('Backstabbr URL'),
+                                   verbose_name=_('External site URL'),
                                    help_text=_('Will be included in board call emails and game page'))
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
