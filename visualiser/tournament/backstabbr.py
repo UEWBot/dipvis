@@ -117,6 +117,7 @@ class Game():
         self.sandbox_game = ('sandbox/' in self.parsed_url.path)
         if not self.regular_game and not self.sandbox_game:
             raise InvalidGameUrl(self.url)
+        self._trim_url_path()
         try:
             self.number = self._extract_game_number()
         except ValueError as e:
@@ -143,14 +144,30 @@ class Game():
         self._parse_page()
         self._calculate_result()
 
+    def _trim_url_path(self):
+        """
+        Shorten the URL path to just the game itself
+
+        This will remove any trailing slash, invite code, or season
+        from both self.url and self.parsed_url.path
+        """
+        # Expected format is [game|sandbox]/<optional name>/<number>
+        # Anything after the <number> needs to be removed
+        parts = self.parsed_url.path.split('/')
+        if len(parts) > 3:
+            if parts[2].isdecimal():
+                new_path = '/'.join(parts[:3])
+            elif parts[3].isdecimal():
+                new_path = '/'.join(parts[:4])
+            else:
+                raise InvalidGameUrl(self.url)
+            self.parsed_url = self.parsed_url._replace(path=new_path)
+            self.url = urlunparse(self.parsed_url)
+
     def _extract_game_number(self):
         """Extracts the backstabbr game id as an int from the URL"""
-        url = self.parsed_url.path
-        # strip any trailing '/'
-        if url[-1] == '/':
-            url = url[:-1]
         # game number should be everything after the last '/'
-        return int(url.split('/')[-1])
+        return int(self.parsed_url.path.rsplit('/', 1)[-1])
 
     def _calculate_result(self):
         """

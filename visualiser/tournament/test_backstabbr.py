@@ -25,11 +25,13 @@ from tournament.backstabbr import POWERS, SPRING, FALL, WINTER
 
 INVALID_GAME_NUMBER = 1
 SOLO_GAME_NUMBER = 5128998112198656
+SOLO_GAME_NAME = f'VHGunboat-93-Neptunium/{SOLO_GAME_NUMBER}'
 #DRAW_2_GAME_NUMBER = 5127188186136576
 DRAW_3_GAME_NUMBER = 4917371326693376
 DRAW_4_GAME_NUMBER = 5127188186136576
 DRAW_5_GAME_NUMBER = 4745603911778304
 DRAW_6_GAME_NUMBER = 4902987233755136
+DRAW_6_GAME_NAME = f'299-The-seventh-seal/{DRAW_6_GAME_NUMBER}'
 DRAW_7_GAME_NUMBER = 4662834623938560
 SANDBOX_GAME_NUMBER = 5766492401172480
 
@@ -44,8 +46,20 @@ class BackstabbrTests(TestCase):
         self.assertRaises(InvalidGameUrl, Game, url)
 
     def test_backstabbr_game_invalid_game_number(self):
-        """Invalid game number."""
+        """Invalid game number (but it is a number)"""
         path = 'game/%s' % INVALID_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
+
+    def test_backstabbr_game_game_number_isnt1(self):
+        """Invalid game number (not a number, single path part)"""
+        path = 'game/monkey'
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
+
+    def test_backstabbr_game_game_number_isnt2(self):
+        """Invalid game number (not a number, multi-path part)"""
+        path = 'game/duck/goose'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
@@ -55,11 +69,14 @@ class BackstabbrTests(TestCase):
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
-    def test_backstabbr_game_turn_url(self):
-        """URL inside the game (would be nice to support this some day)."""
-        path = 'game/%s/1902/spring' % DRAW_3_GAME_NUMBER
+    def test_backstabbr_invite_url(self):
+        """URL including invite code"""
+        path = 'game/Kinderdip/5067172693803008'
+        path_with_invite = path + '/invite/2FSU7J'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
-        self.assertRaises(InvalidGameUrl, Game, url)
+        url_with_invite = urlunparse(('https', BACKSTABBR_NETLOC, path_with_invite, '', '', ''))
+        g = Game(url_with_invite)
+        self.assertEqual(g.url, url)
 
     def check_results(self, sc_counts, results):
         """Check that the centrecounts are as expected"""
@@ -77,8 +94,8 @@ class BackstabbrTests(TestCase):
 
     @tag('backstabbr')
     def test_backstabbr_game_solo(self):
-        """Solo victory. Also validates WINTER"""
-        path = 'game/%s' % SOLO_GAME_NUMBER
+        """Solo victory. Also validates URL including name but no trailing slash, and WINTER"""
+        path = 'game/%s' % SOLO_GAME_NAME
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'KodaHack#1592'),
@@ -109,10 +126,12 @@ class BackstabbrTests(TestCase):
 
     @tag('backstabbr')
     def test_backstabbr_game_3way(self):
-        """3-way draw. Also validates FALL"""
+        """3-way draw. Also validates URL including turn, and FALL"""
         path = 'game/%s' % DRAW_3_GAME_NUMBER
+        path_with_turn = path + '/1902/spring'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
-        g = Game(url)
+        url_with_turn = urlunparse(('https', BACKSTABBR_NETLOC, path_with_turn, '', '', ''))
+        g = Game(url_with_turn)
         RESULTS = {POWERS[0]: (0, 'edwardzachary#5878'),
                    POWERS[1]: (0, 'RobertTheRousse#5998'),
                    POWERS[2]: (7, 'zhammond527#4601'),
@@ -166,9 +185,11 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_5way(self):
         """5-way draw. Also validates trailing / in game URL"""
-        path = 'game/%s/' % DRAW_5_GAME_NUMBER
+        path = 'game/%s' % DRAW_5_GAME_NUMBER
+        path_with_slash = path + '/'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
-        g = Game(url)
+        url_with_slash = urlunparse(('https', BACKSTABBR_NETLOC, path_with_slash, '', '', ''))
+        g = Game(url_with_slash)
         RESULTS = {POWERS[0]: (10, 'Mike Moore#5938'),
                    POWERS[1]: (0, 'arielmendezp#1663'),
                    POWERS[2]: (11, 'Riaz #6696'),
@@ -179,6 +200,7 @@ class BackstabbrTests(TestCase):
                   }
         self.assertEqual(g.number, DRAW_5_GAME_NUMBER)
         self.assertEqual(g.name, "343 we're already dead")
+        # Trailing slash should be cleaned up
         self.assertEqual(g.url, url)
         self.assertTrue(g.regular_game)
         self.assertFalse(g.sandbox_game)
@@ -193,10 +215,12 @@ class BackstabbrTests(TestCase):
 
     @tag('backstabbr')
     def test_backstabbr_game_6way(self):
-        """6-way draw."""
-        path = 'game/%s' % DRAW_6_GAME_NUMBER
+        """6-way draw. Also validates both game name and trailing slash in URL"""
+        path = 'game/%s' % DRAW_6_GAME_NAME
+        path_with_slash = path + '/'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
-        g = Game(url)
+        url_with_slash = urlunparse(('https', BACKSTABBR_NETLOC, path_with_slash, '', '', ''))
+        g = Game(url_with_slash)
         RESULTS = {POWERS[0]: (13, 'David Hood#2887'),
                    POWERS[1]: (1, 'Jason Mastbaum#8314'),
                    POWERS[2]: (5, 'Chris Brand#8810'),
