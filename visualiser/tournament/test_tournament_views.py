@@ -374,7 +374,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_detail_manager_wrong_tournament(self):
-        # A manager can't see an unpublished tournament that isn't theirs
+        """A manager can't see an unpublished tournament that isn't theirs"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t3.pk,)),
@@ -382,14 +382,14 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
-        # Don't have to be logged in to see a published tournament
+        """Don't have to be logged in to see a published tournament"""
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_detail_regular_user(self):
-        # Any user can see a published tournament
+        """Any user can see a published tournament"""
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t1.pk,)),
@@ -397,7 +397,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_detail_superuser(self):
-        # A superuser can see any tournament
+        """A superuser can see any tournament"""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t3.pk,)),
@@ -405,7 +405,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_detail_manager(self):
-        # A manager can see their unpublished tournament
+        """A manager can see their unpublished tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t2.pk,)),
@@ -413,7 +413,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_detail_handicap(self):
-        # Check for link to handicaps page
+        """Check for link to handicaps page"""
         self.assertFalse(self.t2.handicaps)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_detail',
@@ -506,7 +506,7 @@ class TournamentViewTests(TestCase):
         self.assertContains(response, '<meta http-equiv="refresh"')
 
     def test_scores(self):
-        # Scores page for an in-progress Tournament
+        """Scores page for an in-progress Tournament"""
         self.assertFalse(self.t1.handicaps)
         self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
         self.assertTrue(self.t1.show_current_scores)
@@ -518,7 +518,7 @@ class TournamentViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournaments/scores.html')
 
     def test_scores_old(self):
-        # Scores page for an in-progress Tournament
+        """Scores page for an in-progress Tournament"""
         self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
         self.assertTrue(self.t1.show_current_scores)
         self.t1.show_current_scores = False
@@ -532,7 +532,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_scores_old2(self):
-        # Scores page for an in-progress Tournament
+        """Scores page for an in-progress Tournament"""
         self.assertTrue(self.t4.tournament_scoring_system_obj().uses_round_scores)
         self.assertTrue(self.t4.show_current_scores)
         self.t4.show_current_scores = False
@@ -546,7 +546,7 @@ class TournamentViewTests(TestCase):
         self.t4.save()
 
     def test_scores_no_rounds(self):
-        # Scores page for an in-progress Tournament that doesn't use Rounds
+        """Scores page for an in-progress Tournament that doesn't use Rounds"""
         self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
         rss = self.t1.round_scoring_system
         tss = self.t1.tournament_scoring_system
@@ -564,7 +564,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_scores_completed(self):
-        # Scores page for a completed Tournament
+        """Scores page for a completed Tournament"""
         self.assertFalse(self.t4.handicaps)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t4.pk,)),
@@ -573,7 +573,7 @@ class TournamentViewTests(TestCase):
         self.assertNotContains(response, 'Handicap')
 
     def test_scores_with_sitter(self):
-        # Scores page for a Tournament where somebody sat out a round
+        """Scores page for a Tournament where somebody sat out a round"""
         # Add a sitting-out player
         tp = TournamentPlayer.objects.create(player=self.p2,
                                              tournament=self.t4)
@@ -586,7 +586,7 @@ class TournamentViewTests(TestCase):
         tp.delete()
 
     def test_scores_handicap(self):
-        # Scores page for an in-progress Tournament with handicaps
+        """Scores page for an in-progress Tournament with handicaps"""
         self.assertFalse(self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
@@ -606,7 +606,7 @@ class TournamentViewTests(TestCase):
         tp.save()
 
     def test_scores_completed_handicap(self):
-        # Scores page for a completed Tournament with handicaps
+        """Scores page for a completed Tournament with handicaps"""
         self.assertFalse(self.t4.handicaps)
         self.t4.handicaps = True
         self.t4.save()
@@ -852,7 +852,7 @@ class TournamentViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_enter_scores_regular_user(self):
-        # A regular user can't enter scores for any old tournament
+        """A regular user can't enter scores for any old tournament"""
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('enter_scores',
                                            args=(self.t1.pk,)),
@@ -861,7 +861,7 @@ class TournamentViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_enter_scores_manager_wrong_tournament(self):
-        # A manager can't enter scores for a tournament that isn't theirs
+        """A manager can't enter scores for a tournament that isn't theirs"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_scores',
                                            args=(self.t3.pk,)),
@@ -869,7 +869,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_enter_scores_archived(self):
-        # Nobody can enter scores for an archived tournament
+        """Nobody can enter scores for an archived tournament"""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('enter_scores',
                                            args=(self.t4.pk,)),
@@ -877,7 +877,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_enter_scores_superuser(self):
-        # A superuser can enter scores for any tournament
+        """A superuser can enter scores for any tournament"""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('enter_scores',
                                            args=(self.t1.pk,)),
@@ -885,7 +885,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_enter_scores_manager(self):
-        # A manager can enter scores for their tournament
+        """A manager can enter scores for their tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_scores',
                                            args=(self.t2.pk,)),
@@ -893,7 +893,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_enter_scores_post(self):
-        # A manager can enter scores for their tournament
+        """A manager can enter scores for their tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         tp = self.t2.tournamentplayer_set.first()
         tp_score = tp.score
@@ -944,7 +944,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_enter_handicaps_regular_user(self):
-        # A regular user can't enter handicaps for any old tournament
+        """A regular user can't enter handicaps for any old tournament"""
         self.assertFalse(self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
@@ -959,7 +959,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_enter_handicaps_manager_wrong_tournament(self):
-        # A manager can't enter handicaps for a tournament that isn't theirs
+        """A manager can't enter handicaps for a tournament that isn't theirs"""
         self.assertFalse(self.t3.handicaps)
         self.t3.handicaps = True
         self.t3.save()
@@ -973,7 +973,7 @@ class TournamentViewTests(TestCase):
         self.t3.save()
 
     def test_enter_handicaps_archived(self):
-        # Nobody can enter handicaps for an archived tournament
+        """Nobody can enter handicaps for an archived tournament"""
         self.assertFalse(self.t4.handicaps)
         self.t4.handicaps = True
         self.t4.save()
@@ -987,7 +987,7 @@ class TournamentViewTests(TestCase):
         self.t4.save()
 
     def test_enter_handicaps_superuser(self):
-        # A superuser can enter handicaps for any tournament
+        """A superuser can enter handicaps for any tournament"""
         self.assertFalse(self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
@@ -1001,7 +1001,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_enter_handicaps_manager(self):
-        # A manager can enter handicaps for their tournament
+        """A manager can enter handicaps for their tournament"""
         self.assertFalse(self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
@@ -1015,7 +1015,7 @@ class TournamentViewTests(TestCase):
         self.t2.save()
 
     def test_enter_handicaps_not_applicable(self):
-        # Nobody can enter handicaps if the tournament doesn't use them
+        """Nobody can enter handicaps if the tournament doesn't use them"""
         self.assertFalse(self.t2.handicaps)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_handicaps',
@@ -1024,7 +1024,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_enter_handicaps_post(self):
-        # A manager can enter handicaps for their tournament
+        """A manager can enter handicaps for their tournament"""
         for tp in self.t2.tournamentplayer_set.all():
             self.assertEqual(tp.handicap, 0.0)
         self.assertFalse(self.t2.handicaps)
@@ -1099,7 +1099,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_enter_teams_regular_user(self):
-        # A regular user can't enter teams for any old tournament
+        """A regular user can't enter teams for any old tournament"""
         self.assertIsNone(self.t1.team_size)
         self.t1.team_size = 3
         self.t1.save()
@@ -1114,7 +1114,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_enter_teams_manager_wrong_tournament(self):
-        # A manager can't enter teams for a tournament that isn't theirs
+        """A manager can't enter teams for a tournament that isn't theirs"""
         self.assertIsNone(self.t3.team_size)
         self.t3.team_size = 3
         self.t3.save()
@@ -1128,7 +1128,7 @@ class TournamentViewTests(TestCase):
         self.t3.save()
 
     def test_enter_teams_archived(self):
-        # Nobody can enter teams for an archived tournament
+        """Nobody can enter teams for an archived tournament"""
         self.assertIsNone(self.t4.team_size)
         self.t4.team_size = 3
         self.t4.save()
@@ -1142,7 +1142,7 @@ class TournamentViewTests(TestCase):
         self.t4.save()
 
     def test_enter_teams_superuser(self):
-        # A superuser can enter teams for any tournament
+        """A superuser can enter teams for any tournament"""
         self.assertIsNone(self.t1.team_size)
         self.t1.team_size = 3
         self.t1.save()
@@ -1156,7 +1156,7 @@ class TournamentViewTests(TestCase):
         self.t1.save()
 
     def test_enter_teams_manager(self):
-        # A manager can enter teams for their tournament
+        """A manager can enter teams for their tournament"""
         self.assertIsNone(self.t2.team_size)
         self.t2.team_size = 3
         self.t2.save()
@@ -1170,7 +1170,7 @@ class TournamentViewTests(TestCase):
         self.t2.save()
 
     def test_enter_teams_not_applicable(self):
-        # Nobody can enter teams if the tournament doesn't use them
+        """Nobody can enter teams if the tournament doesn't use them"""
         self.assertIsNone(self.t2.team_size)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_teams',
@@ -1179,7 +1179,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_enter_teams_create(self):
-        # A manager can enter teams for their tournament
+        """A manager can enter teams for their tournament"""
         self.assertEqual(0, self.t2.team_set.count())
         self.assertIsNone(self.t2.team_size)
         self.t2.team_size = 3
@@ -1221,7 +1221,7 @@ class TournamentViewTests(TestCase):
         self.t2.save()
 
     def test_enter_teams_change(self):
-        # A manager can modify teams for their tournament
+        """A manager can modify teams for their tournament"""
         self.assertIsNone(self.t2.team_size)
         self.t2.team_size = 3
         self.t2.save()
@@ -1297,7 +1297,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_current_round_completed(self):
-        # "Current round" for a tournament that has ended
+        """'Current round' for a tournament that has ended"""
         response = self.client.get(reverse('tournament_round',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -1373,7 +1373,7 @@ class TournamentViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_enter_prefs_manager(self):
-        # A manager can enter preferences for players in their Tournament
+        """A manager can enter preferences for players in their Tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_prefs',
                                            args=(self.t2.pk,)),
@@ -1381,7 +1381,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_enter_prefs_no_prefs(self):
-        # Even a manager can't enter preferences for a tournament that uses another power assignment method
+        """Even a manager can't enter preferences for a tournament that uses another power assignment method"""
         self.assertEqual(self.t2.power_assignment, PowerAssignMethods.PREFERENCES)
         self.t2.power_assignment = PowerAssignMethods.AUTO
         self.t2.save()
@@ -1395,7 +1395,7 @@ class TournamentViewTests(TestCase):
         self.t2.save()
 
     def test_enter_prefs(self):
-        # A manager can enter preferences for players in their Tournament
+        """A manager can enter preferences for players in their Tournament"""
         self.assertFalse(Preference.objects.filter(player__tournament=self.t2).exists())
         # Add a Preference for one Player
         tp = self.t2.tournamentplayer_set.last()
@@ -1533,7 +1533,7 @@ class TournamentViewTests(TestCase):
         sb1.delete()
 
     def test_seeder_bias_archived(self):
-        # Try to add SeederBias to an archived Tournament
+        """Try to add SeederBias to an archived Tournament"""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         # Pick two suitable TournamentPlayers
         tp1 = self.t4.tournamentplayer_set.first()
@@ -1556,7 +1556,7 @@ class TournamentViewTests(TestCase):
 
 
     def test_tournament_awards(self):
-        # Should be viewable without logging in
+        """Should be viewable without logging in"""
         response = self.client.get(reverse('tournament_awards',
                                            args=(self.t1.pk,)),
                                    secure=True)
@@ -1564,7 +1564,7 @@ class TournamentViewTests(TestCase):
 
 
     def test_tournament_awards_afterwards(self):
-        # For a finished Tournament, it should show who received the awards
+        """For a finished Tournament, it should show who received the awards"""
         self.assertEqual(self.t4.awards.count(), 0)
         for tp in self.t4.tournamentplayer_set.all():
             self.assertEqual(tp.awards.count(), 0)
@@ -1647,7 +1647,7 @@ class TournamentViewTests(TestCase):
 
 
     def test_tournament_wdd_awards(self):
-        # Should be viewable without logging in
+        """Should be viewable without logging in"""
         response = self.client.get(reverse('tournament_wdd_awards',
                                            args=(self.t1.pk,)),
                                    secure=True)

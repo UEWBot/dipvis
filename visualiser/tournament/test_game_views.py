@@ -164,7 +164,7 @@ class GameViewTests(TestCase):
         self.assertContains(response, NOTE)
 
     def test_detail_no_powers(self):
-        # Add some GamePlayers, but don't assign powers
+        """Add some GamePlayers, but don't assign powers"""
         p1 = Player.objects.create(first_name='Abbey', last_name='Artichoke')
         TournamentPlayer.objects.create(player=p1, tournament=self.t1)
         RoundPlayer.objects.create(player=p1, the_round=self.r1)
@@ -370,7 +370,7 @@ class GameViewTests(TestCase):
         p.delete()
 
     def test_aar_non_player(self):
-        # Try to retrieve an AAR from somebody who didn't play the Game
+        """Try to retrieve an AAR from somebody who didn't play the Game"""
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
         response = self.client.get(reverse('aar',
                                            args=(self.t1.pk, self.g1.name, p.pk)),
@@ -386,7 +386,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_sc_chart_no_powers(self):
-        # GamePlayers exists but don't have powers assigned
+        """GamePlayers exist but don't have powers assigned"""
         self.assertEqual(self.g1.gameplayer_set.count(), 0)
         p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
         p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
@@ -416,7 +416,7 @@ class GameViewTests(TestCase):
         p7.delete()
 
     def test_sc_chart(self):
-        # GamePlayers exist with powers assigned
+        """GamePlayers exist with powers assigned"""
         self.assertEqual(self.g1.gameplayer_set.count(), 0)
         p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
         p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
@@ -1059,14 +1059,14 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_game_image_invalid1(self):
-        # Year too early
+        """Year too early"""
         response = self.client.get(reverse('game_image',
                                            args=(self.t1.pk, self.g1.name, 'S1900M')),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_game_image_invalid2(self):
-        # Invalid season/phase combo
+        """Invalid season/phase combo"""
         response = self.client.get(reverse('game_image',
                                            args=(self.t1.pk, self.g1.name, 'S1901A')),
                                    secure=True)
@@ -1713,21 +1713,21 @@ class GameViewTests(TestCase):
         self.g1.centrecount_set.filter(year=1915).delete()
 
     def test_sc_graph(self):
-        # Test the page that holds the graph image
+        """Test the page that holds the graph image"""
         response = self.client.get(reverse('game_sc_graph',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_sc_graph_refresh(self):
-        # Test the page that holds the graph image
+        """Test the page that holds the graph image"""
         response = self.client.get(reverse('game_sc_graph_refresh',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_graph(self):
-        # This is the actual graph image
+        """This is the actual graph image"""
         response = self.client.get(reverse('graph',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)

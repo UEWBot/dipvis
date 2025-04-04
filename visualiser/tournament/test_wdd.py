@@ -99,7 +99,7 @@ class WDDTests(TestCase):
                 self.assertEqual(c.code, code)
 
     def test_wdd_nation_to_country_yugoslavia(self):
-        # WDD still has Yugoslavia as a country
+        """WDD still has Yugoslavia as a country"""
         self.assertRaises(UnrecognisedCountry, wdd_nation_to_country, 'YOU')
 
     def test_wdd_nation_to_country_unknown(self):

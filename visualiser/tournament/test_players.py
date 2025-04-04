@@ -315,7 +315,6 @@ class PlayerTests(TestCase):
 
     @tag('slow', 'wdd')
     def test_player_background_invalid_date(self):
-        # Spiros has yet to win a tournament
         p, created = Player.objects.get_or_create(first_name='Claesar',
                                                   last_name='Webdip',
                                                   wdd_player_id=CLAESAR_WEBDIP_WDD_ID)

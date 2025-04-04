@@ -494,7 +494,7 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(len(games), 0)
 
     def test_seed_games_exhaustive_bad_count(self):
-        # Exhaustive seeding with only 6 players in the second round
+        """Exhaustive seeding with only 6 players in the second round"""
         seeder = GameSeeder(self.powers,
                             seed_method=SeedMethod.EXHAUSTIVE)
         seeder.add_player('A')
@@ -514,8 +514,11 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertRaises(InvalidPlayerCount, seeder.seed_games, set(['E']))
 
     def test_seed_games_impossible(self):
-        # 6 players, with one playing two games
-        # So we have 7 players, but still can't form a valid game
+        """
+        6 players, with one playing two games
+
+        So we have 7 players, but still can't form a valid game
+        """
         seeder = GameSeeder(self.powers,
                             seed_method=SeedMethod.EXHAUSTIVE)
         seeder.add_player('A')
@@ -527,8 +530,11 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertRaises(ImpossibleToSeed, seeder.seed_games, set(), set(['E']))
 
     def test_seed_games_impossible_round_2(self):
-        # 7 players, with one playing two games and one sitting out
-        # So we have 7 players, but still can't form a valid game
+        """
+        7 players, with one playing two games and one sitting out
+
+        So we have 7 players, but still can't form a valid game
+        """
         seeder = GameSeeder(self.powers,
                             seed_method=SeedMethod.EXHAUSTIVE)
         seeder.add_player('A')
@@ -549,7 +555,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # seed_games_and_powers() issues
     def test_seed_games_and_powers_issues(self):
-        # Check that the issues list is properly populated
+        """Check that the issues list is properly populated"""
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')
         seeder.add_player('B')
@@ -626,7 +632,7 @@ def create_seeder(starts=1, iterations=1000, num_players=20):
     return seeder
 
 def with_powers(game):
-    # Convert a set of seven players to a set of seven (player, power) 2-tuples
+    """Convert a set of seven players to a set of seven (player, power) 2-tuples"""
     return set(zip(list(game), ['1', '2', '3', '4', '5', '6', '7']))
 
 
@@ -713,7 +719,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         self.assertEqual(s._set_fitness(r), 30)
 
     def seed_bigger_tournament(self, starts, iterations):
-        # Two rounds of a 49-player tournament
+        """Two rounds of a 49-player tournament"""
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
         for i in range(49):
             seeder.add_player('%dp' % i)
@@ -741,35 +747,35 @@ class GameSeederSeedingTest(unittest.TestCase):
                 self.seed_bigger_tournament(starts, iterations)
 
     def test_seed_games_wrong_number_of_players(self):
-        # Total player count not a multiple of 7
+        """Total player count not a multiple of 7"""
         s = create_seeder(num_players=22)
         self.assertRaises(InvalidPlayerCount, s.seed_games)
 
     def test_seed_games_wrong_number_of_players_2(self):
-        # Multiple of 7 players, minus one not playing
+        """Multiple of 7 players, minus one not playing"""
         s = create_seeder(num_players=21)
         self.assertRaises(InvalidPlayerCount, s.seed_games, set(['U']))
 
     def test_seed_games_wrong_number_of_players_3(self):
-        # Multiple of 7 players, plus one playing two games
+        """Multiple of 7 players, plus one playing two games"""
         s = create_seeder(num_players=21)
         self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['U']))
 
     def test_seed_games_wrong_number_of_players_4(self):
-        # Multiple of 7 players, plus two playing two games
+        """Multiple of 7 players, plus two playing two games"""
         s = create_seeder(num_players=21)
         self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['T', 'U']))
         self.check_no_games_played(s)
 
     def test_seed_games_with_omission(self):
-        # Multiple of 7 players plus one, minus one not playing
+        """Multiple of 7 players plus one, minus one not playing"""
         s = create_seeder(num_players=22)
         omits = set(['U'])
         r = s.seed_games(omits)
         self.check_game_set(r, 21, omits)
 
     def test_seed_games_with_multiples(self):
-        # Multiple of 7 players minus one, minus one playing two games
+        """Multiple of 7 players minus one, minus one playing two games"""
         s = create_seeder()
         dups = set(['T'])
         r = s.seed_games(players_doubling_up=dups)

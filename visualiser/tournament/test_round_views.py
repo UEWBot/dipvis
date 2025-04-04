@@ -420,7 +420,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_roll_call_post_current_round_no_seeding(self):
-        # roll_call() POST for t1, which only has a single Round
+        """roll_call() POST for t1, which only has a single Round"""
         self.assertEqual(self.t1.current_round().number(), 1)
         self.assertFalse(self.t1.seed_games)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -476,7 +476,7 @@ class RoundViewTests(TestCase):
         self.rp113 = RoundPlayer.objects.create(player=self.p13, the_round=self.r11, game_count=2)
 
     def test_roll_call_post_current_round_with_seeding(self):
-        # roll_call POST for current round of a tournament with seeding
+        """roll_call POST for current round of a tournament with seeding"""
         self.assertEqual(self.t3.current_round().number(), 2)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
@@ -515,7 +515,7 @@ class RoundViewTests(TestCase):
         # No clean up needed because we left the same 8 players playing
 
     def test_roll_call_post_old_round(self):
-        # POST of roll_call() for a Round that is finished
+        """POST of roll_call() for a Round that is finished"""
         self.assertTrue(self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
@@ -555,8 +555,7 @@ class RoundViewTests(TestCase):
         # No clean up needed because we left the same 7 players playing
 
     def test_roll_call_post_old_round_refuse_delete(self):
-        # POST of roll_call() for a Round that is finished
-        # trying to delete a player who played a game
+        """POST of roll_call() for a Round that is finished, trying to delete a player who played a game"""
         r = self.t3.round_numbered(1)
         self.assertTrue(r.is_finished)
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
@@ -595,7 +594,7 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
 
     def test_roll_call_post_add_duplicate_player(self):
-        # POST of roll_call() where we add a TournamentPlayer who's already playing
+        """POST of roll_call() where we add a TournamentPlayer who's already playing"""
         self.assertTrue(self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
@@ -647,7 +646,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_seven_too_few_players(self):
-        # Nothing we can do if have fewer than seven players
+        """Nothing we can do if have fewer than seven players"""
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('get_seven',
                                            args=(self.t2.pk, 2)),
@@ -656,7 +655,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.url, reverse('tournament_players', args=(self.t2.pk,)))
 
     def test_get_seven_good_number(self):
-        # No action needed if we have an exact multiple of seven players
+        """No action needed if we have an exact multiple of seven players"""
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('get_seven',
@@ -666,7 +665,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_get_seven_sitters(self):
-        # get_seven where we specify people sitting out
+        """get_seven where we specify people sitting out"""
         # Remember the game_counts
         initial_values = {}
         for rp in self.r11.roundplayer_set.all():
@@ -717,7 +716,7 @@ class RoundViewTests(TestCase):
             rp.save(update_fields=['game_count'])
 
     def test_get_seven_doublers(self):
-        # get_seven where we specify people playing two games
+        """get_seven where we specify people playing two games"""
         # Remember the game_counts
         initial_values = {}
         for rp in self.r11.roundplayer_set.all():
@@ -763,7 +762,7 @@ class RoundViewTests(TestCase):
             rp.save(update_fields=['game_count'])
 
     def test_get_seven_standbys(self):
-        # Check that we can fill a game with standby players
+        """Check that we can fill a game with standby players"""
         self.assertEqual(RoundPlayer.objects.filter(the_round=self.r11, standby=True).count(), 0)
         # Set it up so we have 5 players and 8 standbys
         self.rp11.standby = True
@@ -836,7 +835,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
 
     def test_seed_games_odd_number(self):
-        # if we dont have a mutiple of 7 players, this view should redirect to fix that
+        """if we dont have a mutiple of 7 players, this view should redirect to fix that"""
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -845,7 +844,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.url, reverse('get_seven', args=(self.t1.pk, 1)))
 
     def test_seed_games_preferences_good_number(self):
-        # Simple case with exactly seven players with PREFERENCES power assignment
+        """Simple case with exactly seven players with PREFERENCES power assignment"""
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -863,7 +862,7 @@ class RoundViewTests(TestCase):
         g.delete()
 
     def test_seed_games_manual_good_number(self):
-        # Simple case with exactly seven players with MANUAL power assignment
+        """Simple case with exactly seven players with MANUAL power assignment"""
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
         self.assertEqual(self.t2.power_assignment, PowerAssignMethods.PREFERENCES)
@@ -886,7 +885,7 @@ class RoundViewTests(TestCase):
         self.t2.save(update_fields=['power_assignment'])
 
     def test_seed_games_auto_good_number_with_sitters(self):
-        # Eight players, one sitting out, AUTO power assignment
+        """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
@@ -903,7 +902,7 @@ class RoundViewTests(TestCase):
         g.delete()
 
     def test_seed_games_auto_good_number_with_doublers(self):
-        # 13 players, one playing two games, AUTO power assignment
+        """13 players, one playing two games, AUTO power assignment"""
         self.assertEqual(self.r11.game_set.count(), 0)
         # Tweak initial data for this test
         self.rp112.game_count = 1
@@ -925,7 +924,7 @@ class RoundViewTests(TestCase):
         self.rp112.save(update_fields=['game_count'])
 
     def test_seed_games_with_teams(self):
-        # 14 players, AUTO power assignment
+        """14 players, AUTO power assignment"""
         self.assertEqual(self.r11.game_set.count(), 0)
         tp = TournamentPlayer.objects.create(player=self.p14,
                                              tournament=self.t1)
@@ -1114,7 +1113,7 @@ class RoundViewTests(TestCase):
         g.delete()
 
     def test_seed_games_post_invalid_game_name(self):
-        # Eight players, one sitting out, AUTO power assignment
+        """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
@@ -1159,7 +1158,7 @@ class RoundViewTests(TestCase):
         g.delete()
 
     def test_seed_games_post_invalid_power(self):
-        # Eight players, one sitting out, AUTO power assignment
+        """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
@@ -1204,7 +1203,7 @@ class RoundViewTests(TestCase):
         g.delete()
 
     def test_seed_games_post_duplicate_power(self):
-        # Eight players, one sitting out, AUTO power assignment
+        """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # We need the Game to already exist
@@ -1294,7 +1293,7 @@ class RoundViewTests(TestCase):
             gp.save(update_fields=['power'])
 
     def test_create_games_post(self):
-        # Simple case - no pre-existing Games. Create one.
+        """Simple case - no pre-existing Games. Create one"""
         self.assertEqual(self.r11.game_set.count(), 0)
         powers = {self.austria : self.rp11,
                   self.turkey : self.rp12,
@@ -1473,7 +1472,7 @@ class RoundViewTests(TestCase):
         self.r11.game_set.all().delete()
 
     def test_create_games_post_duplicate_name(self):
-        # Duplicate a Game name in another Round of the same Tournament
+        """Duplicate a Game name in another Round of the same Tournament"""
         self.assertEqual(self.r21.game_set.count(), 0)
         self.assertEqual(self.r23.game_set.count(), 0)
         powers = {self.austria : self.rp21,

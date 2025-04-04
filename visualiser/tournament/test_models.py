@@ -2919,8 +2919,7 @@ class TournamentTests(TestCase):
             xp.save()
 
     def test_tournament_positions_and_scores_tscoringsumgames(self):
-        # Check that positions_and_scores() with round specified
-        # doesn't break TScoringSumGames
+        """Check that positions_and_scores() with round specified doesn't break TScoringSumGames"""
         t = Tournament.objects.get(name='t3')
         # Store current scores
         t_scores = {}
@@ -3383,7 +3382,7 @@ class TournamentTests(TestCase):
         t.delete()
 
     def test_tournament_update_scores_awards(self):
-        # Verify that best country awards get set
+        """Verify that best country awards get set"""
         today = date.today()
         t = Tournament(name='t5',
                        start_date=today,
@@ -3640,8 +3639,11 @@ class TournamentTests(TestCase):
 
     # Tournament.best_countries()
     def validate_best_countries_by_score(self, value):
-        """Check dict returned by best_countries()"""
-        # Result should be a dict, keyed by GreatPower, of lists of GamePlayers
+        """
+        Check dict returned by best_countries()
+
+        Result should be a dict, keyed by GreatPower, of lists of GamePlayers
+        """
         self.assertEqual(len(value), 7)
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
@@ -4381,7 +4383,7 @@ class TournamentPlayerTests(TestCase):
 
     # TournamentPlayer.get_prefs_url()
     def test_tp_get_prefs_url(self):
-        # A TournamentPlayer with a uuid_str
+        """A TournamentPlayer with a uuid_str"""
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
         t = tp.tournament
         old_pa = t.power_assignment
@@ -4394,7 +4396,7 @@ class TournamentPlayerTests(TestCase):
         t.save(update_fields=['power_assignment'])
 
     def test_tp_get_prefs_url_no_uuid(self):
-        # A TournamentPlayer without a uuid_str
+        """A TournamentPlayer without a uuid_str"""
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
         t = tp.tournament
         old_pa = t.power_assignment
@@ -4406,7 +4408,7 @@ class TournamentPlayerTests(TestCase):
         t.save(update_fields=['power_assignment'])
 
     def test_tp_get_prefs_url_wrong_tournament(self):
-        # A Tournament where powers are not assigned by preferences
+        """A Tournament where powers are not assigned by preferences"""
         tp = TournamentPlayer.objects.filter(uuid_str='').first()
         self.assertNotEqual(tp.tournament.power_assignment,
                             PowerAssignMethods.PREFERENCES)
@@ -4427,7 +4429,7 @@ class TournamentPlayerTests(TestCase):
 
     # TournamentPlayer.save()
     def test_new_tp_set_uuid(self):
-        # New TournamentPlayer for Player with email in Tournament with prefs should get uuid_str set
+        """New TournamentPlayer for Player with email in Tournament with prefs should get uuid_str set"""
         self.assertEqual(len(self.p1.email), 0)
         self.p1.email = 'example@example.com'
         self.p1.save(update_fields=['email'])
@@ -4443,8 +4445,7 @@ class TournamentPlayerTests(TestCase):
         self.p1.save(update_fields=['email'])
 
     def test_new_tp_no_set_uuid(self):
-        # New TournamentPlayer in Tournament without prefs should not get uuid_str,
-        # even for Player with email
+        """New TournamentPlayer in Tournament without prefs should not get uuid_str, even for Player with email"""
         self.assertEqual(len(self.p1.email), 0)
         self.p1.email = 'example@example.com'
         self.p1.save(update_fields=['email'])
@@ -4460,7 +4461,7 @@ class TournamentPlayerTests(TestCase):
         self.p1.save(update_fields=['email'])
 
     def test_new_tp_copy_bs_username(self):
-        # New TournamentPlayer should get backstabbr_username copied over from Player
+        """New TournamentPlayer should get backstabbr_username copied over from Player"""
         t = Tournament.objects.get(name='t3')
         self.assertEqual(len(self.p1.backstabbr_username), 0)
         self.p1.backstabbr_username = 'My_username'
@@ -4475,8 +4476,7 @@ class TournamentPlayerTests(TestCase):
         self.p1.save(update_fields=['backstabbr_username'])
 
     def test_new_tp_override_bs_username(self):
-        # Can specify different backstabbr_username for new TP
-        # and Player will be updated
+        """Can specify different backstabbr_username for new TP and Player will be updated"""
         t = Tournament.objects.get(name='t3')
         self.assertEqual(len(self.p1.backstabbr_username), 0)
         self.p1.backstabbr_username = 'My_username'
@@ -4495,7 +4495,7 @@ class TournamentPlayerTests(TestCase):
         self.p1.save(update_fields=['backstabbr_username'])
 
     def test_save_tp_leave_bs_username(self):
-        # Existing TournamentPlayer should not get backstabbr_username changed
+        """Existing TournamentPlayer should not get backstabbr_username changed"""
         t = Tournament.objects.get(name='t1')
         tp = t.tournamentplayer_set.get(player=self.p3)
         self.assertEqual(len(self.p3.backstabbr_username), 0)
@@ -5117,9 +5117,7 @@ class RoundTests(TestCase):
         self.assertTrue(r3.is_finished)
 
     def test_round_set_is_finished_no_games(self):
-        """
-        Rounds with no games can't have started, let alone finished
-        """
+        """Rounds with no games can't have started, let alone finished"""
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
         r4.set_is_finished()
@@ -5142,10 +5140,7 @@ class RoundTests(TestCase):
         self.assertFalse(r3.in_progress())
 
     def test_round_in_progress_no_games(self):
-        """
-        Rounds with round players but no games are just starting,
-        and so are deemed to be "in progress".
-        """
+        """Rounds with round players but no games are just starting, and so are deemed to be 'in progress'"""
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
         rp = RoundPlayer(player=self.p9, the_round=r4)
@@ -5154,18 +5149,14 @@ class RoundTests(TestCase):
         rp.delete()
 
     def test_round_in_progress_no_round_players(self):
-        """
-        Rounds with no round players haven't started
-        """
+        """Rounds with no round players haven't started"""
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
         self.assertFalse(r4.in_progress())
 
     # Round.show_scores()
     def test_round_show_scores_round_finished(self):
-        """
-        Return True if the Round is finished
-        """
+        """Return True if the Round is finished"""
         t = Tournament.objects.get(name='t1')
         self.assertTrue(t.show_current_scores)
         t.show_current_scores = False
@@ -5178,9 +5169,7 @@ class RoundTests(TestCase):
         t.save()
 
     def test_round_show_scores_show_current_scores(self):
-        """
-        Should return True if the Tournament has show_current_scores set
-        """
+        """Should return True if the Tournament has show_current_scores set"""
         t = Tournament.objects.get(name='t1')
         self.assertTrue(t.show_current_scores)
         r = t.round_numbered(4)
@@ -5188,9 +5177,7 @@ class RoundTests(TestCase):
         self.assertTrue(r.show_scores())
 
     def test_round_show_scores_round_not_finished(self):
-        """
-        Return False otherwise
-        """
+        """Return False otherwise"""
         t = Tournament.objects.get(name='t1')
         self.assertTrue(t.show_current_scores)
         t.show_current_scores = False
@@ -5820,7 +5807,7 @@ class GameTests(TestCase):
 
     # Game.set_is_finished()
     def test_game_set_is_finished_solo(self):
-        # Game is finished because somebody won
+        """Game is finished because somebody won"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertFalse(g.is_finished)
@@ -5831,7 +5818,7 @@ class GameTests(TestCase):
         g.save(update_fields=['is_finished'])
 
     def test_game_set_is_finished_reached(self):
-        # Game is finished because it reached the final year
+        """Game is finished because it reached the final year"""
         t = Tournament.objects.get(name='t3')
         r = t.round_numbered(1)
         y = r.final_year
@@ -5844,7 +5831,7 @@ class GameTests(TestCase):
         # No cleanup needed
 
     def test_game_set_is_finished_not_reached(self):
-        # Game is not finished because it didn't yet reach the final year
+        """Game is not finished because it didn't yet reach the final year"""
         t = Tournament.objects.get(name='t3')
         r = t.round_numbered(1)
         y = r.final_year
@@ -5859,7 +5846,7 @@ class GameTests(TestCase):
         g.save(update_fields=['is_finished'])
 
     def test_game_set_is_finished_unlimited(self):
-        # Game not finished because there is no final year
+        """Game not finished because there is no final year"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
         self.assertFalse(g.is_finished)
@@ -6047,7 +6034,7 @@ class GameTests(TestCase):
         self.assertRaises(InvalidScoringSystem, g.update_scores)
 
     def test_game_update_scores_no_powers_assigned(self):
-        # Test Game.update_scores() with no powers assigned
+        """Test Game.update_scores() with no powers assigned"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         power_map = {}
@@ -7311,8 +7298,8 @@ class DrawProposalTests(TestCase):
         dp.clean()
         dp.delete()
 
-    # DrawProposal.clean() after Game has been won
     def test_draw_proposal_clean_after_win(self):
+        """DrawProposal.clean() after Game has been won"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertFalse(g.centrecount_set.filter(year=1904).exists())
@@ -7414,8 +7401,8 @@ class DrawProposalTests(TestCase):
         self.assertRaises(ValidationError, dp2.clean)
         dp1.delete()
 
-    # Test DrawProposal.clean() when votes_in_favour is > number of surviving powers
     def test_draw_proposal_clean_votes_in_favour_too_many(self):
+        """DrawProposal.clean() when votes_in_favour is > number of surviving powers"""
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
         self.assertEqual(CentreCount.objects.filter(game=g, year=1903).count(), 0)
@@ -7451,7 +7438,6 @@ class DrawProposalTests(TestCase):
         dp.delete()
 
     # DrawProposal.save()
-
     def test_draw_proposal_save_vote_passed(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
@@ -7724,7 +7710,7 @@ class RoundPlayerTests(TestCase):
         self.assertFalse(rp.score_is_final())
 
     def test_roundplayer_score_is_final_round_mixed(self):
-        # Player playing two games, one of which is done
+        """Player playing two games, one of which is done"""
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(2)
         self.assertFalse(r.is_finished)
@@ -7733,10 +7719,7 @@ class RoundPlayerTests(TestCase):
         self.assertFalse(rp.score_is_final())
 
     def test_roundplayer_score_is_final_round_mixed(self):
-        """
-        RoundPlayer.score_is_final() for player whose game(s)
-        are finished, in a round that is still ongoing
-        """
+        """RoundPlayer.score_is_final() for player whose game(s) are finished, in a round that is still ongoing"""
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(2)
         self.assertFalse(r.is_finished)
@@ -7807,7 +7790,6 @@ class RoundPlayerTests(TestCase):
 
     # RoundPlayer deletion
     def test_roundplayer_delete(self):
-        # Chris
         today = date.today()
         # Single Round Tournament, with points for sitting out a round
         s = 'Best game counts'
@@ -8111,14 +8093,14 @@ class GamePlayerTests(TestCase):
         self.assertTrue(gp.score_is_final())
 
     def test_gameplayer_score_is_final_game_ongoing(self):
-        # player not eliminated in a game that's still going
+        """player not eliminated in a game that's still going"""
         g = Game.objects.filter(is_finished=False).first()
         cc = g.survivors()[0]
         gp = g.gameplayer_set.get(power=cc.power)
         self.assertFalse(gp.score_is_final())
 
     def test_gameplayer_score_is_final_game_eliminated(self):
-        # player eliminated in a game that's still going
+        """player eliminated in a game that's still going"""
         g = Game.objects.filter(is_finished=False).first()
         self.assertFalse(g.the_round.game_scoring_system_obj().dead_score_can_change)
         cc = g.centrecount_set.filter(count=0).first()
@@ -8518,9 +8500,12 @@ class CentreCountTests(TestCase):
         # Clean up
         cc1.delete()
 
-    # Make sure that Issue #44 hasn't re-appeared
-    # We should be able to save the CentreCounts for all 7 powers for the final game year
     def test_issue_44_1(self):
+        """
+        We should be able to save the CentreCounts for all 7 powers for the final game year
+
+        Make sure that Issue #44 hasn't re-appeared
+        """
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(4)
         r = Round.objects.create(tournament=t,
@@ -8557,8 +8542,8 @@ class CentreCountTests(TestCase):
         self.assertFalse(g.is_finished)
         r.delete()
 
-    # We should be able to save the CentreCounts for all 7 powers for a game with a soloer
     def test_issue_44_2(self):
+        """We should be able to save the CentreCounts for all 7 powers for a game with a soloer"""
         t = Tournament.objects.get(name='t1')
         r = Round.objects.create(tournament=t,
                                  scoring_system='Sum of Squares',

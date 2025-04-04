@@ -323,7 +323,7 @@ class EmailTests(TestCase):
 
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
     def test_send_board_call_no_email(self):
-        # Exactly the same as the previous test, but with t.no_email = True
+        """The same as test_send_board_call_email(), but with t.no_email = True"""
         r = Round.objects.first()
         t = r.tournament
         self.assertEqual(t.is_virtual(), False)
@@ -339,7 +339,7 @@ class EmailTests(TestCase):
 
     # TournamentPlayer.save() calls send_prefs_email()
     def test_send_prefs_email_no_prefs_new(self):
-        # Save a TournamentPlayer with email in a tournament without prefs
+        """Save a TournamentPlayer with email in a tournament without prefs"""
         tp = TournamentPlayer.objects.create(player=self.p24,
                                              tournament=self.t1)
         tp.save()
@@ -347,7 +347,7 @@ class EmailTests(TestCase):
         tp.delete()
 
     def test_send_prefs_email_no_email_new(self):
-        # Save a TournamentPlayer with no email in a Tournament with prefs
+        """Save a TournamentPlayer with no email in a Tournament with prefs"""
         tp = TournamentPlayer.objects.create(player=self.p6,
                                              tournament=self.t2)
         tp.save()
@@ -355,7 +355,7 @@ class EmailTests(TestCase):
         tp.delete()
 
     def test_send_prefs_email_prefs_new(self):
-        # Save a TournamentPlayer with email in a Tournament with prefs
+        """Save a TournamentPlayer with email in a Tournament with prefs"""
         tp = TournamentPlayer.objects.create(player=self.p24,
                                              tournament=self.t2)
         tp.save()
@@ -364,30 +364,28 @@ class EmailTests(TestCase):
 
     # send_prefs_email()
     def test_send_prefs_email_no_prefs_done(self):
-        # Send without forcing to a Player with email in a Tournament without prefs
+        """Send without forcing to a Player with email in a Tournament without prefs"""
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         self.assertIsNotNone(tp)
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_no_address(self):
-        # Send without forcing to a Player without email in a Tournament with prefs
+        """Send without forcing to a Player without email in a Tournament with prefs"""
         tp = self.t2.tournamentplayer_set.filter(player__email='').first()
         self.assertIsNotNone(tp)
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_prefs_done(self):
-        # Call without force for a Player with email in Tournament with prefs
-        # when previously emailed
+        """ Call without force for a Player with email in Tournament with prefs when previously emailed"""
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         self.assertIsNotNone(tp)
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_prefs_not_done(self):
-        # Call without force for a Player with email in Tournament with prefs
-        # when not previously emailed
+        """Call without force for a Player with email in Tournament with prefs when not previously emailed"""
         tp = self.t2.tournamentplayer_set.filter(uuid_str='').first()
         # add an email address
         tp.player.email='new.email@example.com'
@@ -416,15 +414,14 @@ class EmailTests(TestCase):
 
     # send_prefs_email(force=True)
     def test_send_prefs_email_no_prefs_force(self):
-        # Call with force=True for a Player with an email, but for a Tournament without prefs
+        """Call with force=True for a Player with an email, but for a Tournament without prefs"""
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         self.assertIsNotNone(tp)
         send_prefs_email(tp, force=True)
         self.assertEqual(len(mail.outbox), 0)
 
     def test_send_prefs_email_prefs_force(self):
-        # Call with force=True, for a Player with an email, for a Tournament with prefs
-        # when previously emailed
+        """Call with force=True, for a Player with an email, for a Tournament with prefs when previously emailed"""
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         self.assertIsNotNone(tp)
         send_prefs_email(tp, force=True)

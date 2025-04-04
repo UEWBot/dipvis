@@ -381,7 +381,7 @@ class TournamentPlayerViewTests(TestCase):
                     self.assertNotContains(response, '%s*' % tp.player.last_name)
 
     def test_index_editable_prefs(self):
-        # A tournament that can be edited, that uses preferences for power assignment
+        """A tournament that can be edited, that uses preferences for power assignment"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_players',
                                            args=(self.t2.pk,)),
@@ -391,7 +391,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertContains(response, 'prefs_')
 
     def test_index_editable_no_prefs(self):
-        # A tournament that can be edited, that doesn't use preferences for power assignment
+        """A tournament that can be edited, that doesn't use preferences for power assignment"""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players',
                                            args=(self.t3.pk,)),
@@ -401,7 +401,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertNotContains(response, 'prefs_')
 
     def test_index_editable_handicaps(self):
-        # A tournament that can be edited, that uses handicaps
+        """A tournament that can be edited, that uses handicaps"""
         self.assertFalse(self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
@@ -423,7 +423,7 @@ class TournamentPlayerViewTests(TestCase):
         tp.save()
 
     def test_index_editable_no_handicaps(self):
-        # A tournament that can be edited, that doesn't use handicaps
+        """A tournament that can be edited, that doesn't use handicaps"""
         self.assertFalse(self.t2.handicaps)
         tp = self.t2.tournamentplayer_set.first()
         self.assertEqual(tp.handicap, 0.0)
@@ -441,7 +441,7 @@ class TournamentPlayerViewTests(TestCase):
         tp.save()
 
     def test_index_archived(self):
-        # A tournament that the user could edit, except that it's been set to not editable
+        """A tournament that the user could edit, except that it's been set to not editable"""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('tournament_players',
                                            args=(self.t4.pk,)),
@@ -450,7 +450,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertNotContains(response, 'Register Players')
 
     def test_index_unregister_from_editable(self):
-        # A tournament that can be edited
+        """A tournament that can be edited"""
         # Add a TournamentPlayer and RoundPlayer just for this test
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         tp = TournamentPlayer.objects.create(player=self.p2,
@@ -477,7 +477,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertFalse(self.t2.round_numbered(1).roundplayer_set.filter(player=self.p2).exists())
 
     def test_index_unregister_from_archived(self):
-        # A tournament that the user could edit, except that it's been set to not editable
+        """A tournament that the user could edit, except that it's been set to not editable"""
         # Use an existing TournamentPlayer
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
@@ -497,8 +497,8 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(self.t4.tournamentplayer_set.filter(player=self.p1).exists())
 
     def test_index_unregister_from_finished(self):
+        """A tournament that the user could edit, except that it is finished"""
         # TODO: Why does this not behave the same as when it's not editable?
-        # A tournament that the user could edit, except that it is finished
         self.assertFalse(self.t4.editable)
         self.t4.editable = True
         self.t4.save(update_fields=['editable'])
@@ -523,7 +523,7 @@ class TournamentPlayerViewTests(TestCase):
         self.t4.save(update_fields=['editable'])
 
     def test_index_register_player(self):
-        # Use the form to register a Player
+        """Use the form to register a Player"""
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p2).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
@@ -548,7 +548,7 @@ class TournamentPlayerViewTests(TestCase):
         tp_qs.delete()
 
     def test_index_register_registered_player(self):
-        # Use the form to register a Player who is already registered
+        """Use the form to register a Player who is already registered"""
         self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p1).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
@@ -565,7 +565,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.url, url)
 
     def test_index_resend_prefs_email(self):
-        # Use the form to re-send the preferences email to a Player
+        """Use the form to re-send the preferences email to a Player"""
         tp = self.t2.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
@@ -584,7 +584,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
 
     def test_index_flag_as_unranked(self):
-        # Adding a manager as a TournamentPlayer should flag them as unranked
+        """Adding a manager as a TournamentPlayer should flag them as unranked"""
         self.assertFalse(self.t2.tournamentplayer_set.filter(player=self.p11).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
@@ -705,7 +705,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_details_versus(self):
-        # Test the "Versus" button
+        """Test the 'Versus' button"""
         data = urlencode({'player': str(self.tp12.player.pk)})
         response = self.client.post(reverse('tournament_player_detail',
                                             args=(self.t1.pk, self.tp11.pk)),
@@ -724,21 +724,21 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_player_prefs_invalid_uuid(self):
-        # Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer
+        """Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer"""
         response = self.client.get(reverse('player_prefs',
                                            args=(self.t1.pk, uuid.uuid4())),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_archived(self):
-        # Should get a 404 error if the Tournament has been archived
+        """Should get a 404 error if the Tournament has been archived"""
         response = self.client.get(reverse('player_prefs',
                                            args=(self.t4.pk, self.tp41.uuid_str)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
     def test_player_prefs_too_late(self):
-        # Should get a 404 error if the final round has started
+        """Should get a 404 error if the final round has started"""
         response = self.client.get(reverse('player_prefs',
                                            args=(self.t5.pk, self.tp51.uuid_str)),
                                    secure=True)

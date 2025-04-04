@@ -85,7 +85,7 @@ class SeriesViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
-        # Don't have to be logged in to see a series
+        """Don't have to be logged in to see a series"""
         response = self.client.get(reverse('series_detail',
                                            args=(self.s1.slug,)),
                                    secure=True)
@@ -98,28 +98,25 @@ class SeriesViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_players(self):
-        # Don't have to be logged in to see a series
+        """Don't have to be logged in to see a series' players"""
         response = self.client.get(reverse('series_players',
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_players_ftf(self):
-        # Don't have to be logged in to see a series
         response = self.client.get(reverse('series_players_ftf',
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_players_vftf(self):
-        # Don't have to be logged in to see a series
         response = self.client.get(reverse('series_players_vftf',
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
     def test_players_empty_series(self):
-        # Don't have to be logged in to see a series
         response = self.client.get(reverse('series_players',
                                            args=(self.s2.slug,)),
                                    secure=True)

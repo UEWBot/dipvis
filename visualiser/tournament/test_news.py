@@ -321,7 +321,7 @@ class NewsTests(TestCase):
         _game_news(g, for_year=1920)
 
     def test_game_news_without_ownerships(self):
-        # Test with no SupplyCentreOwnership objects
+        """Test with no SupplyCentreOwnership objects"""
         # We need a year with CentreCounts but no SupplyCentreOwnerships,
         # where the previous year *does* have SupplyCentreOwnerships.
         # 1900 always has the latter.

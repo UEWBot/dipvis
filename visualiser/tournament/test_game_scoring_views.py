@@ -46,7 +46,7 @@ class GameScoringViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
-        # Don't have to be logged in to see a scoring system
+        """Don't have to be logged in to see a scoring system"""
         response = self.client.get(reverse('game_scoring_detail',
                                            args=(G_SCORING_SYSTEMS[0].slug,)),
                                    secure=True)

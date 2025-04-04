@@ -59,7 +59,7 @@ class WikipediaBackgroundTests(TestCase):
                     self.assertEqual(t['European Champion Flags'], flags)
 
     def test_wikipedia_background_nationalities(self):
-        # Check that multi-nationals get parsed correctly
+        """Check that multi-nationals get parsed correctly"""
         name = 'Antonio Ribeiro da Silva'
         flags = ['France', 'Portugal']
         bg = WikipediaBackground(name)
@@ -111,7 +111,7 @@ class WDDBackgroundTests(TestCase):
     # WDDBackground.nationalities()
     @tag('wdd')
     def test_wdd_background_nationalities(self):
-        # Mehmet has different location and nationality
+        """Different location and nationality"""
         b = WDDBackground(self.MEHMET_ALPASLAN_WDD_ID)
         nats = b.nationalities()
         self.assertEqual(len(nats), 1)
@@ -119,7 +119,7 @@ class WDDBackgroundTests(TestCase):
 
     @tag('wdd')
     def test_wdd_background_nationalities_none(self):
-        # Mehmet has different location and nationality
+        """No known nationality"""
         b = WDDBackground(self.BEN_JAMES_WDD_ID)
         nats = b.nationalities()
         self.assertEqual(len(nats), 0)
@@ -132,10 +132,14 @@ class WDDBackgroundTests(TestCase):
 
     @tag('wdd')
     def test_wdd_background_finishes_no_type(self):
+        """Tournament with no Type"""
         # Brandon has http://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1602
         # listed as a tournament, and it has an empty "Type" column
         b = WDDBackground(self.BRANDON_FOGEL_WDD_ID)
-        b.finishes()
+        finishes = b.finishes()
+        for finish in finishes:
+            if finish['WDD URL'] == "http://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1602":
+                self.assertNotIn('Type', finish)
 
     # WDDBackground.tournaments()
     @tag('wdd')
@@ -151,6 +155,7 @@ class WDDBackgroundTests(TestCase):
 
     @tag('wdd')
     def test_wdd_background_boards_nc(self):
+        """Rank of n.c."""
         # Melinda has three boards listed on
         # http://www.world-diplomacy-database.com/php/results/player_fiche9.php?id_player=5185
         # with a rank of "n.c.". See Bug #117.

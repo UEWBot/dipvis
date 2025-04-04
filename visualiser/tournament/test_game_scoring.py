@@ -168,7 +168,7 @@ class GameScoringTests(TestCase):
         self.assertEqual(EXPECT, order)
 
     def test_no_corruption(self):
-        # Ensure that calls to calculate scores are independent
+        """Ensure that calls to calculate scores are independent"""
         # Essentially a test for issue #188
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(self.three_way_tie)
@@ -204,7 +204,7 @@ class GameScoringTests(TestCase):
 
     # dead_score_can_change() for a system
     def test_score_changes(self):
-        # Compare score for eliminated power before and after a solo
+        """Compare score for eliminated power before and after a solo"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         scs1 = g.centrecount_set.filter(year__lte=1906)

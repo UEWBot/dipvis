@@ -59,7 +59,7 @@ class PlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_detail(self):
-        # Don't have to be logged in to see a player
+        """Don't have to be logged in to see a player"""
         response = self.client.get(reverse('player_detail',
                                            args=(self.p1.pk,)),
                                    secure=True)
@@ -78,7 +78,7 @@ class PlayerViewTests(TestCase):
         self.p1.nationalities.clear()
 
     def test_detail_refresh_wdd(self):
-        # Test the "Refresh From WDD" button
+        """Test the 'Refresh From WDD' button"""
         self.client.login(username=self.USERNAME, password=self.PWORD)
         player_url = reverse('player_detail', args=(self.p1.pk,))
         data = urlencode({'update_bg': 'Update background'})
@@ -91,7 +91,7 @@ class PlayerViewTests(TestCase):
         self.assertEqual(response.url, player_url)
 
     def test_detail_versus(self):
-        # Test the "Versus" button
+        """Test the 'Versus' button"""
         p = Player.objects.create(first_name='Barry',
                                   last_name='Bandersnatch')
         self.client.login(username=self.USERNAME, password=self.PWORD)
@@ -170,7 +170,7 @@ class PlayerViewTests(TestCase):
         p2.delete()
 
     def test_wpe(self):
-        # Test WPE page
+        """Test WPE page"""
         response = self.client.get(reverse('wep7',
                                            args=(self.p1.pk,)),
                                    secure=True)

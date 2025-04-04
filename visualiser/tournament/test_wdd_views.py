@@ -460,7 +460,7 @@ class WddViewTests(TestCase):
         g.save(update_fields=['is_top_board'])
 
     def test_classification_many_awards(self):
-        # Tournament with more than the 12 (non-best country) awards supported by the WDD
+        """Tournament with more than the 12 (non-best country) awards supported by the WDD"""
         awards = self.t.awards.all()
         orig_awards = list(awards)
         for n in range(13 - awards.filter(power=None).count()):
