@@ -7732,8 +7732,18 @@ class RoundPlayerTests(TestCase):
         self.assertEqual(rp.gameplayers().count(), 2)
         self.assertFalse(rp.score_is_final())
 
-    # TODO RoundPlayer.score_is_final() for player playing two games,
-    #      both of which are finished, in a round that is still going
+    def test_roundplayer_score_is_final_round_mixed(self):
+        """
+        RoundPlayer.score_is_final() for player whose game(s)
+        are finished, in a round that is still ongoing
+        """
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(2)
+        self.assertFalse(r.is_finished)
+        rp = r.roundplayer_set.get(player=self.p8)
+        for gp in rp.gameplayers():
+            self.assertTrue(gp.score_is_final())
+        self.assertTrue(rp.score_is_final())
 
     def test_roundplayer_score_is_final_sum_games(self):
         # Score can change if there are more rounds that haven't started,
