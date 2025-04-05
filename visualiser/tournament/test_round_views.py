@@ -1024,7 +1024,8 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
-    def test_seed_games_post_success(self):
+    def test_seed_games_post_change_players(self):
+        """Change the power assignment"""
         # Eight players, one sitting out, AUTO power assignment
         self.assertEqual(self.r32.game_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1052,10 +1053,51 @@ class RoundViewTests(TestCase):
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
-                'form-0-name': 'NewName',
-                'form-0-the_set': str(self.gibsons.pk)}
+                'form-0-name': g.name,
+                'form-0-the_set': str(g.the_set.pk)}
         for gp, p in powers.items():
             data[f'form-0-{gp.pk}'] = str(p.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t3.pk, 2)))
+        # And power assignments for the 7 GamePlayers
+        for gp, p in powers.items():
+            gp.refresh_from_db()
+            self.assertEqual(gp.power, p)
+        # TODO Check that board call email was sent out
+        # Clean up
+        g.delete()
+
+    def test_seed_games_post_no_player_change(self):
+        """Change something other than the players"""
+        # Eight players, one sitting out, AUTO power assignment
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # We need the Game to already exist
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'NewName',
+                'form-0-the_set': str(self.gibsons.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = str(gp.power.pk)
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
@@ -1067,10 +1109,6 @@ class RoundViewTests(TestCase):
         g.refresh_from_db()
         self.assertEqual(g.name, 'NewName')
         self.assertEqual(g.the_set, self.gibsons)
-        # And power assignments for the 7 GamePlayers
-        for gp, p in powers.items():
-            gp.refresh_from_db()
-            self.assertEqual(gp.power, p)
         # TODO Check that board call email was sent out
         # Clean up
         g.delete()
@@ -1304,11 +1342,12 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
+        # TODO Verify that email is sent
         # Clean up
         self.r11.game_set.all().delete()
 
-    def test_create_games_post_modify(self):
-        # Modify an existing Game
+    def test_create_games_post_modify_players(self):
+        """Change players or power assignments"""
         self.assertEqual(self.r11.game_set.count(), 0)
         powers = {self.austria : self.rp11,
                   self.turkey : self.rp12,
@@ -1335,6 +1374,61 @@ class RoundViewTests(TestCase):
                 GamePlayer.objects.create(game=g,
                                           power=p,
                                           player=rp.player)
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-game_id': str(g.id),
+                'form-0-name': g.name,
+                'form-0-external_url': g.external_url,
+                'form-0-notes': g.notes,
+                'form-0-the_set': str(g.the_set.pk),
+                # Include a blank form in the formset
+                'form-1-game_id': '',
+                'form-1-name': '',
+                'form-1-external_url': '',
+                'form-1-notes': '',
+                'form-1-the_set': ''}
+        for p, rp in powers.items():
+            data[f'form-0-{p.name}'] = str(rp.pk)
+            data[f'form-1-{p.name}'] = ''
+        data = urlencode(data)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should re-direct to the board call page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t1.pk, 1)))
+        # The one Game should still exist
+        self.assertEqual(self.r11.game_set.count(), 1)
+        g = self.r11.game_set.get()
+        self.assertEqual(g.gameplayer_set.count(), 7)
+        for p, rp in powers.items():
+            self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
+        # TODO Verify that email is sent
+        # Clean up
+        self.r11.game_set.all().delete()
+
+    def test_create_games_post_modify_non_players(self):
+        """Change attributes other than players and power assignments"""
+        self.assertEqual(self.r11.game_set.count(), 0)
+        powers = {self.austria : self.rp11,
+                  self.turkey : self.rp12,
+                  self.england : self.rp13,
+                  self.russia : self.rp15,
+                  self.italy : self.rp16,
+                  self.france : self.rp17,
+                  self.germany : self.rp19}
+        g = Game.objects.create(the_round=self.r11,
+                                name='Existing',
+                                the_set=self.gibsons,
+                                external_url='http://example.com/old.html')
+        for p, rp in powers.items():
+            GamePlayer.objects.create(game=g,
+                                      power=p,
+                                      player=rp.player)
         URL = 'http://example.com/new.html'
         NOTE = 'Some note'
         data = {'form-TOTAL_FORMS': '2',
@@ -1374,6 +1468,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
+        # TODO Verify that email is NOT sent
         # Clean up
         self.r11.game_set.all().delete()
 
