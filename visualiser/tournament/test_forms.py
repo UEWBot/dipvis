@@ -855,7 +855,7 @@ class GamePlayersFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain ', form.errors['name'][0])
+        self.assertFormError(form, 'name', 'Game names cannot contain " "')
 
     def test_name_error2(self):
         data = {'name': 'R1/G1',
@@ -871,7 +871,7 @@ class GamePlayersFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain ', form.errors['name'][0])
+        self.assertFormError(form, 'name', 'Game names cannot contain "/"')
 
     def test_field_error(self):
         data = {'name': 'R1G1',
@@ -887,7 +887,7 @@ class GamePlayersFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('That choice is not one of the available choices', form.errors['the_set'][0])
+        self.assertFormError(form, 'the_set', 'Select a valid choice. That choice is not one of the available choices.')
 
     def test_player_error(self):
         data = {'name': 'R1G1',
@@ -903,7 +903,7 @@ class GamePlayersFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('That choice is not one of the available choices', form.errors['France'][0])
+        self.assertFormError(form, 'France', 'Select a valid choice. That choice is not one of the available choices.')
 
     def test_reject_duplicate_players(self):
         data = {'name': 'R1G1',
@@ -920,9 +920,8 @@ class GamePlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('appears more than once', form.errors['__all__'][0])
         # We should see the Player, not the RoundPlayer, in any error
-        self.assertNotIn(str(self.rp1), form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Player Arthur Amphitheatre appears more than once')
 
     def test_teammates_in_team_round(self):
         """Players from the same team in the same game in a team round"""
@@ -948,9 +947,7 @@ class GamePlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Multiple players from team', form.errors['__all__'][0])
-        # We should see the Player, not the RoundPlayer, in any error
-        self.assertNotIn(str(self.rp2), form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Multiple players from team The test team')
         # Cleanup
         tm.delete()
         self.t.team_size = None
@@ -1134,7 +1131,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('Game names must be unique', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Game names must be unique within the tournament')
 
 
 class PowerAssignFormTest(TestCase):
@@ -1283,7 +1280,7 @@ class PowerAssignFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain ', form.errors['name'][0])
+        self.assertFormError(form, 'name', 'Game names cannot contain " "')
 
     def test_name_error2(self):
         data = {'name': 'R1/G1',
@@ -1300,7 +1297,7 @@ class PowerAssignFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Game names cannot contain ', form.errors['name'][0])
+        self.assertFormError(form, 'name', 'Game names cannot contain "/"')
 
     def test_field_error(self):
         data = {'name': 'R1G1',
@@ -1317,7 +1314,7 @@ class PowerAssignFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('That choice is not one of the available choices', form.errors['the_set'][0])
+        self.assertFormError(form, 'the_set', 'Select a valid choice. That choice is not one of the available choices.')
 
     def test_power_error(self):
         data = {'name': 'R1G1',
@@ -1352,7 +1349,7 @@ class PowerAssignFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('appears more than once', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Power France appears more than once')
 
 
 class BasePowerAssignFormsetTest(TestCase):
@@ -1544,7 +1541,7 @@ class BasePowerAssignFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('Game names must be unique', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Game names must be unique within the tournament')
 
 
 class GetSevenPlayersFormTest(TestCase):
@@ -1762,7 +1759,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('appears more than once', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Player Christina Calculus appears more than once')
 
     def test_doubling_twice(self):
         """One person listed twice as playing two games"""
@@ -1776,7 +1773,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('appears more than once', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Player Julia Jug appears more than once')
 
     def test_provide_both(self):
         """Both people sitting out and people playing two boards"""
@@ -1792,7 +1789,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Either have players sit out', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Either have players sit out the round or have players play two games')
 
     def test_too_few_sitters(self):
         data = {'sitter_0': str(self.rp1_10.pk),
@@ -1802,7 +1799,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Too few players sitting out', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Too few players sitting out games. Got 1, expected 2')
 
     def test_too_few_doublers(self):
         data = {'double_0': str(self.rp1_10.pk),
@@ -1814,7 +1811,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Too few players playing two', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Too few players playing two games. Got 3, expected 4')
 
     def test_none_needed(self):
         """Exact multiple of seven already"""
@@ -1855,7 +1852,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Too few standby players selected to play', form.errors['__all__'][0])
+        self.assertFormError(form, None, 'Too few standby players selected to play. Got 1, expected 2')
 
 
 class SCOwnerFormTest(TestCase):
@@ -1882,7 +1879,7 @@ class SCOwnerFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Ensure this value is greater than', form.errors['year'][0])
+        self.assertFormError(form, 'year', 'Ensure this value is greater than or equal to 1900.')
 
 
 class BaseSCOwnerFormsetTest(TestCase):
@@ -1988,7 +1985,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('appears more than once', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Year 1902 appears more than once')
 
     def test_scs_become_neutral(self):
         """SC changes from owned to neutral"""
@@ -2004,7 +2001,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('should never change from owned', formset.errors[1]['Belgium'][0])
+        self.assertFormSetError(formset, 1, 'Belgium', 'Supply Centres should never change from owned to neutral')
 
 
 class GameEndedFormTest(TestCase):
@@ -2086,7 +2083,7 @@ class SCCountFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Ensure this value is greater than', form.errors['year'][0])
+        self.assertFormError(form, 'year', 'Ensure this value is greater than or equal to 1900.')
 
     def test_negative_sc_count(self):
         """One power has lost more than all their dots"""
@@ -2103,7 +2100,7 @@ class SCCountFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Ensure this value is greater than', form.errors['France'][0])
+        self.assertFormError(form, 'France', 'Ensure this value is greater than or equal to 0.')
 
     def test_power_with_too_many_dots(self):
         """One power has more than all the dots"""
@@ -2120,7 +2117,7 @@ class SCCountFormTest(TestCase):
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
-        self.assertIn('Ensure this value is less than', form.errors['Italy'][0])
+        self.assertFormError(form, 'Italy', 'Ensure this value is less than or equal to 34.')
 
     def test_too_many_dots_in_total(self):
         """More than 34 in total"""
@@ -2136,8 +2133,7 @@ class SCCountFormTest(TestCase):
         form = SCCountForm(data=data)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
-        # This includes non-field errors
-        self.assertEqual(len(form.errors), 1)
+        self.assertFormError(form, None, 'Total SC count for 1920 is 35, more than 34')
 
     def test_fake_neutral_field(self):
         """Ensure that the extra 'neutral' field gets added"""
@@ -2243,7 +2239,7 @@ class BaseSCCountFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('appears more than once', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Year 1902 appears more than once')
 
     def test_neutrals_increase(self):
         """SupplyCentres become neutral"""
@@ -2263,7 +2259,7 @@ class BaseSCCountFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('Neutrals increase', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Neutrals increases from 6 to 8 in 1903')
 
 
 class PlayerFormTest(TestCase):
@@ -2486,7 +2482,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('appears more than once', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Player Arthur Bottom appears more than once')
 
     def test_form_error(self):
         """Check that errors in an individual form get handled correctly"""
