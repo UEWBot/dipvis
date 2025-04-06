@@ -1055,7 +1055,7 @@ class RoundViewTests(TestCase):
                 'form-0-name': 'NewName',
                 'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
-            data['form-0-%d' % gp.pk] = str(p.pk)
+            data[f'form-0-{gp.pk}'] = str(p.pk)
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
@@ -1106,7 +1106,7 @@ class RoundViewTests(TestCase):
                 'form-0-name': 'S P A C E',
                 'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
-            data['form-0-%d' % gp.pk] = str(p.pk)
+            data[f'form-0-{gp.pk}'] = str(p.pk)
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
@@ -1151,8 +1151,8 @@ class RoundViewTests(TestCase):
                 'form-0-name': 'NewName',
                 'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
-            data['form-0-%d' % gp.pk] = str(p.pk)
-        data['form-0-%d' % gp5.pk] = '99'
+            data[f'form-0-{gp.pk}'] = str(p.pk)
+        data[f'form-0-{gp5.pk}'] = '99'
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
@@ -1196,7 +1196,7 @@ class RoundViewTests(TestCase):
                 'form-0-name': 'NewName',
                 'form-0-the_set': str(self.gibsons.pk)}
         for gp, p in powers.items():
-            data['form-0-%d' % gp.pk] = str(p.pk)
+            data[f'form-0-{gp.pk}'] = str(p.pk)
         data = urlencode(data)
         response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
                                     data,
@@ -1282,9 +1282,9 @@ class RoundViewTests(TestCase):
                 'form-1-notes': '',
                 'form-1-the_set': ''}
         for p, rp in powers.items():
-            data['form-0-%s' % p.name] = str(rp.pk)
+            data[f'form-0-{p.name}'] = str(rp.pk)
             # Include a blank form in the formset
-            data['form-1-%s' % p.name] = ''
+            data[f'form-1-{p.name}'] = ''
         data = urlencode(data)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
@@ -1352,9 +1352,9 @@ class RoundViewTests(TestCase):
                 'form-1-notes': '',
                 'form-1-the_set': ''}
         for p, rp in powers.items():
-            data['form-0-%s' % p.name] = str(rp.pk)
+            data[f'form-0-{p.name}'] = str(rp.pk)
             # Include a blank form in the formset
-            data['form-1-%s' % p.name] = ''
+            data[f'form-1-{p.name}'] = ''
         data = urlencode(data)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
@@ -1407,9 +1407,9 @@ class RoundViewTests(TestCase):
                 'form-1-notes': '',
                 'form-1-the_set': ''}
         for p, rp in powers.items():
-            data['form-0-%s' % p.name] = str(rp.pk)
+            data[f'form-0-{p.name}'] = str(rp.pk)
             # Include a blank form in the formset
-            data['form-1-%s' % p.name] = ''
+            data[f'form-1-{p.name}'] = ''
         data = urlencode(data)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.post(reverse('create_games', args=(self.t2.pk, 3)),
@@ -1448,12 +1448,12 @@ class RoundViewTests(TestCase):
         expected_scores = {}
         for gp in g1.gameplayer_set.all():
             # Leave game 1 scores unchanged
-            data['form-0-%s' % gp.power.name] = str(gp.score)
+            data[f'form-0-{gp.power.name}'] = str(gp.score)
             expected_scores[gp] = gp.score
         data['form-1-name'] = g2.name
         for gp in g2.gameplayer_set.all():
             # Modify game 2 scores
-            data['form-1-%s' % gp.power.name] = str(gp.player.pk)
+            data[f'form-1-{gp.power.name}'] = str(gp.player.pk)
             expected_scores[gp] = gp.player.pk
         data = urlencode(data)
         response = self.client.post(reverse('game_scores', args=(self.t4.pk, 1)),
