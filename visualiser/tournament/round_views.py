@@ -320,16 +320,32 @@ def _create_game_seeder(tournament, the_round):
 
 
 def _seed_games(tournament, the_round):
-    """Wrapper round GameSeeder to do the actual seeding for a round"""
+    """
+    Wrapper round GameSeeder to do the actual seeding for a round
+
+    Return value is the same format as _seed_games_and_powers()
+    """
     seeder = _create_game_seeder(tournament, the_round)
     sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
     # Generate the games
-    return seeder.seed_games(omitting_players=sitters,
-                             players_doubling_up=two_gamers)
+    games = seeder.seed_games(omitting_players=sitters,
+                              players_doubling_up=two_gamers)
+    # Add dummy powers and an empty issues list,
+    # to match _seed_games_and_powers()
+    retval = []
+    for players in games:
+        game = set()
+        for player in players:
+            tup = (player, None)
+            game.add(tup)
+        retval.append((game, []))
+    return retval
 
 
 def _seed_games_and_powers(tournament, the_round):
-    """Wrapper round GameSeeder to do the actual seeding for a round"""
+    """
+    Wrapper round GameSeeder to do the actual seeding for a round
+    """
     seeder = _create_game_seeder(tournament, the_round)
     sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
     # Generate the games
@@ -438,41 +454,29 @@ def seed_games(request, tournament_id, round_num):
         # Generate a seeding, and assign powers if required
         if t.power_assignment == PowerAssignMethods.AUTO:
             games = _seed_games_and_powers(t, r)
-            # Add the Games and GamePlayers to the database
-            for n, (g, i) in enumerate(games, start=1):
-                new_game = Game.objects.create(name=_generate_game_name(round_num, n),
-                                               the_round=r,
-                                               the_set=default_set)
-                current = {'name': new_game.name,
-                           'the_set': new_game.the_set,
-                           'issues': '\n'.join(i)}
-                for tp, power in g:
-                    gp = GamePlayer.objects.create(player=tp.player,
-                                                   game=new_game,
-                                                   power=power)
-                    current[gp.id] = power
-                data.append(current)
         else:
             games = _seed_games(t, r)
-            # Add the Games and GamePlayers to the database
-            for n, g in enumerate(games, start=1):
-                new_game = Game.objects.create(name=_generate_game_name(round_num, n),
-                                               the_round=r,
-                                               the_set=default_set)
-                current = {'name': new_game.name,
-                           'the_set': new_game.the_set,
-                           'issues': ''}
-                for tp in g:
-                    gp = GamePlayer.objects.create(player=tp.player,
-                                                   game=new_game)
-                # If we're assigning powers from preferences, do so now
-                if t.power_assignment == PowerAssignMethods.PREFERENCES:
-                    new_game.assign_powers_from_prefs()
-                for tp in g:
+        # Add the Games and GamePlayers to the database
+        for n, (g, i) in enumerate(games, start=1):
+            new_game = Game.objects.create(name=_generate_game_name(round_num, n),
+                                           the_round=r,
+                                           the_set=default_set)
+            current = {'name': new_game.name,
+                       'the_set': new_game.the_set,
+                       'issues': '\n'.join(i)}
+            for tp, power in g:
+                gp = GamePlayer.objects.create(player=tp.player,
+                                               game=new_game,
+                                               power=power)
+                current[gp.id] = power
+            # If we're assigning powers from preferences, do so now
+            if t.power_assignment == PowerAssignMethods.PREFERENCES:
+                new_game.assign_powers_from_prefs()
+                for tp, _ in g:
                     gp = GamePlayer.objects.get(player=tp.player,
                                                 game=new_game)
                     current[gp.id] = gp.power
-                data.append(current)
+            data.append(current)
         # Create a form for each of the resulting games
         PowerAssignFormset = formset_factory(PowerAssignForm,
                                              formset=BasePowerAssignFormset,
