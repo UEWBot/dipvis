@@ -1198,7 +1198,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Check error(s)
         self.assertIn('Select a valid choice. That choice is not one of the available choices.',
-                      response.context['formset'].errors[0][gp5.pk])
+                      response.context['formset'].errors[0][str(gp5.pk)])
         # Clean up
         g.delete()
 

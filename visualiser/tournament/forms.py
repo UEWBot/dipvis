@@ -536,7 +536,7 @@ class PowerAssignForm(forms.Form):
 
         # Create the right player fields
         for gp in self.game.gameplayer_set.order_by('power__abbreviation'):
-            c = gp.id
+            c = str(gp.id)
             # flag if they are able to sandbox
             suffix = ''
             if gp.roundplayer().sandboxer:
@@ -561,7 +561,7 @@ class PowerAssignForm(forms.Form):
         cleaned_data = super().clean()
         powers = []
         for player in self.game.gameplayer_set.all():
-            c = player.id
+            c = str(player.id)
             power = cleaned_data.get(c)
             # If the field itself didn't validate, drop out
             if power is None:
