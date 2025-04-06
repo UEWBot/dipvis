@@ -18,7 +18,7 @@ from urllib.parse import urlunparse
 
 from django.test import TestCase, tag
 
-from tournament.backstabbr import Game, InvalidGameUrl
+from tournament.backstabbr import Game, InvalidGameUrl, is_backstabbr_url
 from tournament.backstabbr import BACKSTABBR_NETLOC
 from tournament.backstabbr import POWERS, SPRING, FALL, WINTER
 
@@ -38,7 +38,16 @@ SANDBOX_GAME_NUMBER = 5766492401172480
 
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
-    @tag('backstabbr')
+    def test_is_backstabbr_url_true(self):
+        path = 'game/%s' % INVALID_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        self.assertTrue(is_backstabbr_url(url))
+
+    def test_is_backstabbr_url_false(self):
+        path = 'game/%s' % INVALID_GAME_NUMBER
+        url = urlunparse(('https', 'google.com', path, '', '', ''))
+        self.assertFalse(is_backstabbr_url(url))
+
     def test_backstabbr_game_non_bs_url(self):
         """Not a backstabbr URL."""
         path = 'game/%s' % INVALID_GAME_NUMBER
