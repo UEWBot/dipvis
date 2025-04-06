@@ -583,15 +583,11 @@ def game_scores(request, tournament_id, round_num):
                 g = Game.objects.get(name=f.cleaned_data['name'],
                                      the_round=r)
                 # Set the score for each player
-                for power, field in f.cleaned_data.items():
-                    try:
-                        p = GreatPower.objects.get(name=power)
-                    except GreatPower.DoesNotExist:
-                        # Ignore non-GreatPower fields (name)
-                        continue
-                    # Find the matching GamePlayer
+                for power in f.changed_data:
+                    p = GreatPower.objects.get(name=power)
+                    # Update the matching GamePlayer's score
                     GamePlayer.objects.filter(game=g,
-                                              power=p).update(score=field)
+                                              power=p).update(score=f.cleaned_data[power])
         # Update the Round and Tournament scores to reflect the changes
         r.update_scores()
         # Redirect to the round index
