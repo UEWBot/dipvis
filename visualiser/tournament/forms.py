@@ -241,13 +241,12 @@ class TeamForm(forms.Form):
             try:
                 players.append(cleaned_data[f'player_{n}'])
             except KeyError:
-                # Ignore empty player fields
+                # If there are already errors, cleaned_data may not include all fields
                 continue
-        if len(set(players)) != len(players):
-            for p in players:
-                if p and (players.count(p) > 1):
-                    raise forms.ValidationError(_('Player %(player)s appears more than once')
-                                                % {'player': p})
+        for p in players:
+            if p and (players.count(p) > 1):
+                raise forms.ValidationError(_('Player %(player)s appears more than once')
+                                            % {'player': p})
         return cleaned_data
 
 
@@ -292,15 +291,10 @@ class BaseTeamsFormset(BaseFormSet):
         players = []
         for form in self.forms:
             for n in range(self.tournament.team_size):
-                try:
-                    players.append(form.cleaned_data[f'player_{n}'])
-                except KeyError:
-                    # Ignore unused player fields
-                    pass
-        if len(set(players)) != len(players):
-            for p in players:
-                if p and (players.count(p) > 1):
-                    raise forms.ValidationError(_('Player %(player)s appears in multiple teams')
+                players.append(form.cleaned_data[f'player_{n}'])
+        for p in players:
+            if p and (players.count(p) > 1):
+                raise forms.ValidationError(_('Player %(player)s appears in multiple teams')
                                                 % {'player': p})
 
 

@@ -412,6 +412,8 @@ class TeamFormTest(TestCase):
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         cls.p2 = Player.objects.create(first_name='Catherine', last_name='Dirigible')
         p3 = Player.objects.create(first_name='Ethel', last_name='Felony')
+        # This one isn't in the tournament
+        cls.p4 = Player.objects.create(first_name='Gregory', last_name='Human')
         today = date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
@@ -438,8 +440,6 @@ class TeamFormTest(TestCase):
         """One player should be required, others optional"""
         form = TeamForm(tournament=self.t, data={'name': 'Sausages',
                                                  'player_0': str(self.p1.pk)})
-        print(form.errors)
-        print(form.non_field_errors())
         self.assertTrue(form.is_valid())
 
     def test_team_form_existing_team(self):
@@ -447,12 +447,24 @@ class TeamFormTest(TestCase):
         form = TeamForm(tournament=self.t, team=self.tm)
 
     def test_team_repeated_player(self):
-        """same player can't appear more than once in a team"""
+        """Same player can't appear more than once in a team"""
         form = TeamForm(tournament=self.t, data={'name': 'Sausages',
                                                  'player_0': str(self.p2.pk),
                                                  'player_1': str(self.p1.pk),
                                                  'player_2': str(self.p1.pk)})
         self.assertFalse(form.is_valid())
+        self.assertFormError(form, None, 'Player Arthur Bottom appears more than once')
+
+    def test_team_invalid_player(self):
+        """Team includes a player who isn't playing the Tournament"""
+        form = TeamForm(tournament=self.t, data={'name': 'Sausages',
+                                                 'player_0': str(self.p2.pk),
+                                                 'player_1': str(self.p1.pk),
+                                                 'player_2': str(self.p4.pk)})
+        self.assertFalse(form.is_valid())
+        self.assertFormError(form,
+                             'player_2',
+                             'Select a valid choice. That choice is not one of the available choices.')
 
 
 class TeamsFormsetTest(TestCase):
@@ -461,6 +473,9 @@ class TeamsFormsetTest(TestCase):
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         cls.p2 = Player.objects.create(first_name='Catherine', last_name='Dirigible')
         cls.p3 = Player.objects.create(first_name='Ethel', last_name='Felony')
+        cls.p4 = Player.objects.create(first_name='Gregory', last_name='Human')
+        # This one isn't in the tournament
+        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jogger')
         today = date.today()
         cls.t = Tournament.objects.create(name='t1',
                                           start_date=today,
@@ -472,13 +487,68 @@ class TeamsFormsetTest(TestCase):
         TournamentPlayer.objects.create(player=cls.p1, tournament=cls.t)
         TournamentPlayer.objects.create(player=cls.p2, tournament=cls.t)
         TournamentPlayer.objects.create(player=cls.p3, tournament=cls.t)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=cls.t)
         # Single team with a single player
         cls.tm = Team.objects.create(tournament=cls.t, name='The Team')
         cls.tm.players.add(cls.p2)
 
         cls.TeamsFormset = formset_factory(TeamForm, extra=2, formset=BaseTeamsFormset)
 
+    def test_teams_success(self):
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.p1.pk),
+                'form-0-player_1': str(self.p2.pk),
+                'form-1-name': 'Team 1',
+                'form-1-player_0': str(self.p3.pk),
+                'form-1-player_1': str(self.p4.pk),
+               }
+        formset = self.TeamsFormset(data, tournament=self.t)
+        self.assertTrue(formset.is_valid())
+
+    def test_teams_invalid_form(self):
+        """One form fails validation"""
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.p1.pk),
+                'form-0-player_1': str(self.p1.pk),
+                'form-1-name': 'Team 1',
+                'form-1-player_0': str(self.p3.pk),
+                'form-1-player_1': str(self.p2.pk),
+               }
+        formset = self.TeamsFormset(data, tournament=self.t)
+        self.assertFalse(formset.is_valid())
+        # Should have one form error, and that's it
+        self.assertEqual(sum(len(err) for err in formset.errors), 1)
+        self.assertEqual(formset.total_error_count(), 1)
+
+    def test_teams_invalid_player(self):
+        """One player isn't playing the tournament"""
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.p1.pk),
+                'form-0-player_1': str(self.p5.pk),
+                'form-1-name': 'Team 1',
+                'form-1-player_0': str(self.p3.pk),
+                'form-1-player_1': str(self.p2.pk),
+               }
+        formset = self.TeamsFormset(data, tournament=self.t)
+        self.assertFalse(formset.is_valid())
+        # Should have one form error, and that's it
+        self.assertEqual(sum(len(err) for err in formset.errors), 1)
+        self.assertEqual(formset.total_error_count(), 1)
+
     def test_teams_duplicate_player(self):
+        """Player playing for multiple Teams"""
         data = {'form-TOTAL_FORMS': '2',
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
@@ -495,7 +565,7 @@ class TeamsFormsetTest(TestCase):
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
-        self.assertIn('Player Arthur Bottom appears in multiple teams', formset.non_form_errors()[0])
+        self.assertFormSetError(formset, None, None, 'Player Arthur Bottom appears in multiple teams')
 
 
 class DrawFormTest(TestCase):
