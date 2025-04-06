@@ -605,7 +605,7 @@ class GameSeeder:
                     # This gives us a list of 2-tuples with (seeding, fitness)
                     seedings.append(self._seed_games(omitting_players,
                                                      players_doubling_up))
-            elif self.seed_method == SeedMethod.EXHAUSTIVE:
+            else: # self.seed_method == SeedMethod.EXHAUSTIVE
                 players = self._player_pool(omitting_players, players_doubling_up)
                 seedings = []
                 try:
