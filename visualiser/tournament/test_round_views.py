@@ -400,6 +400,12 @@ class RoundViewTests(TestCase):
         # Should redirect back to game 1
         self.assertContains(response, 'sc_graphs/T4R1G1/')
 
+    def test_game_cycle_invalid_game(self):
+        response = self.client.get(reverse('round_sc_graphs_from_game',
+                                           args=(self.t4.pk, 1, 'T4R1G3')),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
     def test_roll_call_not_logged_in(self):
         response = self.client.get(reverse('round_roll_call',
                                            args=(self.t1.pk, 1)),
@@ -978,6 +984,46 @@ class RoundViewTests(TestCase):
         self.t1.team_size = None
         self.t1.save(update_fields=['team_size'])
 
+    def test_seed_games_post_no_change(self):
+        """Just accept the generated seeding"""
+        # Eight players, one sitting out, AUTO power assignment
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # We need the Game to already exist
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': g.name,
+                'form-0-the_set': str(g.the_set.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = str(gp.power.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t3.pk, 2)))
+        # TODO Initial game, round, and tournament scores should have been calculated
+        for gp in g.gameplayer_set.all():
+            self.assertNotEqual(gp.score, 0.0)
+        # TODO Check that board call email was sent out
+        # Clean up
+        g.delete()
+
     def test_seed_games_post_success(self):
         # Eight players, one sitting out, AUTO power assignment
         self.assertEqual(self.r32.game_set.count(), 0)
@@ -1399,11 +1445,16 @@ class RoundViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         data['form-0-name'] = g1.name
+        expected_scores = {}
         for gp in g1.gameplayer_set.all():
-            data['form-0-%s' % gp.power.name] = str(gp.player.pk)
+            # Leave game 1 scores unchanged
+            data['form-0-%s' % gp.power.name] = str(gp.score)
+            expected_scores[gp] = gp.score
         data['form-1-name'] = g2.name
         for gp in g2.gameplayer_set.all():
+            # Modify game 2 scores
             data['form-1-%s' % gp.power.name] = str(gp.player.pk)
+            expected_scores[gp] = gp.player.pk
         data = urlencode(data)
         response = self.client.post(reverse('game_scores', args=(self.t4.pk, 1)),
                                     data,
@@ -1416,7 +1467,7 @@ class RoundViewTests(TestCase):
         for g in r.game_set.all():
             for gp in g.gameplayer_set.all():
                 with self.subTest(player=gp.player, game=g.name):
-                    self.assertEqual(gp.score, gp.player.pk)
+                    self.assertEqual(gp.score, expected_scores[gp])
         # Round scores should be recalculated
         for rp in r.roundplayer_set.all():
             with self.subTest(player=rp.player):
