@@ -69,7 +69,25 @@ class GameSeederSetupTest(unittest.TestCase):
                                     ('F', '6'),
                                     ('G', '7')]))
 
-    def test_add_played_game_invalid_player(self):
+    def test_add_played_game_invalid_player1(self):
+        seeder = GameSeeder(self.powers)
+        seeder.add_player('A')
+        seeder.add_player('B')
+        seeder.add_player('C')
+        seeder.add_player('D')
+        seeder.add_player('E')
+        seeder.add_player('F')
+        self.assertRaises(InvalidPlayer,
+                          seeder.add_played_game,
+                          set([('G', '1'),
+                               ('H', '2'),
+                               ('I', '3'),
+                               ('J', '4'),
+                               ('K', '5'),
+                               ('L', '6'),
+                               ('M', '7')]))
+
+    def test_add_played_game_invalid_player2(self):
         seeder = GameSeeder(self.powers)
         seeder.add_player('A')
         seeder.add_player('B')
