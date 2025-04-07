@@ -895,22 +895,31 @@ class TournamentViewTests(TestCase):
     def test_enter_scores_post(self):
         """A manager can enter scores for their tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
-        tp = self.t2.tournamentplayer_set.first()
-        tp_score = tp.score
-        rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
-        rp_score = rp.score
+        old_tp_scores = {}
+        old_rp_scores = {}
         data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
-            data['form-%d-tp' % i] = str(tp2.pk)
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            old_tp_scores[tp] = tp.score
+            rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
+            old_rp_scores[rp] = rp.score
+            data['form-%d-tp' % i] = str(tp.pk)
             data['form-%d-game_scores_1' % i] = '0.0'
-            data['form-%d-round_1' % i] = '37.5'
-            data['form-%d-overall_score' % i] = '124.8'
+            if i == 0:
+                # Give a unique value to the first TournamentPlayer
+                data['form-%d-round_1' % i] = '73.5'
+                data['form-%d-overall_score' % i] = '142.8'
+            elif i == 1:
+                # And don't change the second
+                unchanged_rp = rp
+                data['form-%d-round_1' % i] = str(rp.score)
+                unchanged_tp = tp
+                data['form-%d-overall_score' % i] = str(tp.score)
+            else:
+                data['form-%d-round_1' % i] = '37.5'
+                data['form-%d-overall_score' % i] = '124.8'
         i += 1
         data['form-TOTAL_FORMS'] = '%d' % i
         data['form-INITIAL_FORMS'] = '%d' % i
-        # Give a unique value to the first TournamentPlayer
-        data['form-0-round_1'] = '73.5'
-        data['form-0-overall_score'] = '142.8'
         data = urlencode(data)
         response = self.client.post(reverse('enter_scores', args=(self.t2.pk,)),
                                     data,
@@ -920,15 +929,26 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_scores', args=(self.t2.pk,)))
         # And the scores entered should be saved
-        tp.refresh_from_db()
-        rp.refresh_from_db()
-        self.assertEqual(rp.score, 73.5)
-        self.assertEqual(tp.score, 142.8)
+        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+            tp.refresh_from_db()
+            rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
+            rp.refresh_from_db()
+            if i == 0:
+                self.assertEqual(rp.score, 73.5)
+                self.assertEqual(tp.score, 142.8)
+            elif i == 1:
+                self.assertEqual(rp.score, old_rp_scores[unchanged_rp])
+                self.assertEqual(tp.score, old_tp_scores[unchanged_tp])
+            else:
+                self.assertEqual(rp.score, 37.5)
+                self.assertEqual(tp.score, 124.8)
         # Clean up
-        tp.score = tp_score
-        tp.save(update_fields=['score'])
-        rp.score = rp_score
-        rp.save(update_fields=['score'])
+        for tp, score in old_tp_scores.items():
+            tp.score = score
+            tp.save(update_fields=['score'])
+        for rp, score in old_rp_scores.items():
+            rp.score = score
+            rp.save(update_fields=['score'])
 
     def test_enter_handicaps_not_logged_in(self):
         self.assertFalse(self.t1.handicaps)
@@ -1397,9 +1417,11 @@ class TournamentViewTests(TestCase):
     def test_enter_prefs(self):
         """A manager can enter preferences for players in their Tournament"""
         self.assertFalse(Preference.objects.filter(player__tournament=self.t2).exists())
-        # Add a Preference for one Player
-        tp = self.t2.tournamentplayer_set.last()
+        # Add a Preference for two Players
+        tp = self.t2.tournamentplayer_set.first()
         tp.create_preferences_from_string('ART')
+        tp = self.t2.tournamentplayer_set.last()
+        tp.create_preferences_from_string('FART')
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
@@ -1549,10 +1571,25 @@ class TournamentViewTests(TestCase):
 
 
     def test_api(self):
-        response = self.client.get(reverse('api_tournament', args=(self.t4.pk,)),
+        # Change one of the games to not be finished
+        r = self.t4.round_numbered(1)
+        g = r.game_set.first()
+        self.assertTrue(g.is_finished)
+        g.is_finished = False
+        g.save()
+        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
+        # Cleanup
+        g.is_finished = True
+        g.save()
+
+
+    def test_api_invalid_version(self):
+        response = self.client.get(reverse('api_tournament', args=(7, self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
 
 
     def test_tournament_awards(self):
