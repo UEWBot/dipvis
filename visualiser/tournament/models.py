@@ -479,14 +479,15 @@ class TScoringWDC2025(TournamentScoringSystem):
             except KeyError:
                 # No score from rounds 1..3
                 t_scores[p] = 0.0
+            try:
+                round_four_score = round_four_rps.get(player=p).score
+            except RoundPlayer.DoesNotExist:
+                # No round four score to add
+                round_four_score = 0.0
             if p in top21:
-                try:
-                    t_scores[p] += round_four_rps.get(player=p).score * 1.5
-                except RoundPlayer.DoesNotExist:
-                    # No round four score to add
-                    pass
+                t_scores[p] += round_four_score * 1.5
             else:
-                t_scores[p] += round_four_rps.get(player=p).score
+                t_scores[p] += round_four_score
         return t_scores
 
 
