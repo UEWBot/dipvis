@@ -564,6 +564,24 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, url)
 
+    def test_index_register_invalid(self):
+        # Use the form to register an invalid Player
+        self.assertTrue(self.t2.tournamentplayer_set.filter(player=self.p1).exists())
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_players', args=(self.t2.pk,))
+        data = urlencode({'form-TOTAL_FORMS': '4',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-INITIAL_FORMS': 0,
+                          'form-1-player': 'me'})
+        response = self.client.post(url,
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect back to the same page
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual('Select a valid choice. That choice is not one of the available choices.',
+                         response.context['formset'].errors[1]['player'][0])
+
     def test_index_resend_prefs_email(self):
         """Use the form to re-send the preferences email to a Player"""
         tp = self.t2.tournamentplayer_set.get(player=self.p1)
@@ -634,6 +652,20 @@ class TournamentPlayerViewTests(TestCase):
                                    content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
+
+    def test_payments_success(self):
+        self.assertGreaterEqual(self.t2.tournamentplayer_set.count(), 5)
+        perm = Permission.objects.get(name='Can change tournament player')
+        self.u3.user_permissions.add(perm)
+        self.u3.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_player_payments', args=(self.t2.pk,))
+        response = self.client.get(url,
+                                   secure=True,
+                                   content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.u3.user_permissions.remove(perm)
+        self.u3.save()
 
     def test_payments_form(self):
         self.assertGreaterEqual(self.t2.tournamentplayer_set.count(), 5)

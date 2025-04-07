@@ -51,6 +51,7 @@ def index(request, tournament_id):
     if request.method == 'POST':
         if t.is_finished or not t.editable:
             raise Http404
+        redirect = False
         for k in request.POST.keys():
             # Send preferences email to the specified TournamentPlayer
             if k.startswith('prefs_'):
@@ -58,6 +59,7 @@ def index(request, tournament_id):
                 pk = int(k[6:])
                 tp = TournamentPlayer.objects.get(pk=pk)
                 send_prefs_email(tp, force=True)
+                redirect = True
                 break
             # Delete the specified TournamentPlayer
             if k.startswith('unregister_'):
@@ -69,6 +71,7 @@ def index(request, tournament_id):
                 for rp in tp_qs.get().roundplayers():
                     rp.delete()
                 tp_qs.delete()
+                redirect = True
                 break
         # Create a TournamentPlayer for each player to register
         if formset.is_valid():
@@ -87,9 +90,11 @@ def index(request, tournament_id):
                         # In practice, though, the player *is* (already) registered...
                         form.add_error('player',
                                        _("Player already registered"))
-        # Redirect back here to flush the POST data
-        return HttpResponseRedirect(reverse('tournament_players',
-                                            args=(tournament_id,)))
+            redirect = True
+        if redirect:
+            # Redirect back here to flush the POST data
+            return HttpResponseRedirect(reverse('tournament_players',
+                                                args=(tournament_id,)))
     context = {'tournament': t, 'formset': formset}
     return render(request, 'tournament_players/index_form.html', context)
 
@@ -108,7 +113,7 @@ def payments(request, tournament_id):
     formset = PaidFormset(request.POST or None, tournament=t, initial=data)
     if formset.is_valid():
         for form in formset:
-            if form.has_changed:
+            if form.has_changed():
                 tp = form.tp
                 if form.cleaned_data['paid'] is True:
                     tp.paid = True
