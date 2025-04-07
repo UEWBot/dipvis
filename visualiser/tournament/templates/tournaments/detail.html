@@ -104,7 +104,7 @@
     {% if perms.tournament.add_seederbias %}
       <li><a href="{% url 'seeder_bias' tournament.id %}">{% trans "Add bias to the game seeder" %}</a> - {% trans "Use this if you have people playing in the tournament you want to keep apart (e.g. family members)." %}</li>
     {% endif %}
-    {% if perms.tournament.add_team %}
+    {% if tournament.team_size and perms.tournament.add_team %}
       <li><a href="{% url 'enter_teams' tournament.id %}">{% trans "Add/edit teams" %}</a></li>
     {% endif %}
     {% if perms.tournament.add_preference %}
