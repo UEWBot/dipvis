@@ -192,48 +192,46 @@ def team_scores(request,
                 redirect_url_name='team_scores_refresh'):
     """Display team scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    refresh_time = REFRESH_TIME
     # If we're showing this as part of the tournament overview,
     # skip it if either there's no team round or the first team round
     # hasn't started
+    show_page = True
     if refresh and redirect_url_name != 'team_scores_refresh':
-        show_page = False
         rds = t.team_rounds()
-        if rds.filter(is_finished=True).exists():
-            show_page = True
-        else:
+        # If any team round has finished, show the page
+        show_page = rds.filter(is_finished=True).exists()
+        # Otherwise, show it if a team round is in progress
+        if not show_page:
             for r in rds:
                 if r.in_progress():
                     show_page = True
                     break
-        if not show_page:
-            refresh_time = 0
     elif not t.team_size:
         raise Http404
-    scores = []
-    if refresh_time:
-        if t.show_current_scores:
-            # Grab the team scores and positions, all "if it ended now"
-            team_scores = t.team_scores()
-        else:
-            # Get the scores after the last finished Round, if any
-            r = t.round_set.filter(is_finished=True).last()
-            if r:
-                team_scores = t.team_scores(after_round_num=r.number())
-            else:
-                # After Round 0, all teams had a score of zero
-                team_scores = t.team_scores(after_round_num=0)
-        for team, (rank, score) in team_scores.items():
-            row = {'rank': rank,
-                   'team': team,
-                   'score': score}
-            scores.append(row)
-    elif refresh:
+    if not show_page:
+        # Redirect immediately
         return HttpResponseRedirect(reverse(redirect_url_name, args=(tournament_id,)))
+    scores = []
+    if t.show_current_scores:
+        # Grab the team scores and positions, all "if it ended now"
+        team_scores = t.team_scores()
+    else:
+        # Get the scores after the last finished Round, if any
+        r = t.round_set.filter(is_finished=True).last()
+        if r:
+            team_scores = t.team_scores(after_round_num=r.number())
+        else:
+            # After Round 0, all teams had a score of zero
+            team_scores = t.team_scores(after_round_num=0)
+    for team, (rank, score) in team_scores.items():
+        row = {'rank': rank,
+               'team': team,
+               'score': score}
+        scores.append(row)
     context = {'tournament': t, 'scores': scores}
     if refresh:
         context['refresh'] = True
-        context['redirect_time'] = refresh_time
+        context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/team_scores.html', context)
 
