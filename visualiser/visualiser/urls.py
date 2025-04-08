@@ -21,6 +21,13 @@ from tournament import game_scoring_system_views, player_views
 
 admin.autodiscover()
 
+game_scoring_patterns = [
+    path('', game_scoring_system_views.game_scoring_index,
+         name='game_scoring_index'),
+    path('<slug:slug>/', game_scoring_system_views.game_scoring_detail,
+         name='game_scoring_detail'),
+]
+
 player_patterns = [
     path('', player_views.PlayerIndexView.as_view(),
          name='player_index'),
@@ -34,21 +41,10 @@ player_patterns = [
          {'years': 7, 'count': 7}, name='wep7'),
 ]
 
-game_scoring_patterns = [
-    path('', game_scoring_system_views.game_scoring_index,
-         name='game_scoring_index'),
-    path('<slug:slug>/', game_scoring_system_views.game_scoring_detail,
-         name='game_scoring_detail'),
-]
-
 urlpatterns = [
-    # Examples:
-    # url(r'^$', 'visualiser.views.home', name='home'),
-    # url(r'^blog/', include('blog.urls')),
-
-    path('tournaments/', include('tournament.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
-    path('players/', include(player_patterns)),
     path('game_scoring/', include(game_scoring_patterns)),
+    path('players/', include(player_patterns)),
+    path('tournaments/', include('tournament.urls')),
 ]
