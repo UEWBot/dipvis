@@ -19,10 +19,12 @@ Forms for the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.forms import ModelForm
 from django.forms.formsets import BaseFormSet
 from django.utils.translation import gettext as _
 
+from tournament import backstabbr
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
@@ -108,6 +110,22 @@ class BaseAwardsFormset(BaseFormSet):
         kwargs['tournament'] = self.tournament
         kwargs['award_name'] = str(self.awards[index])
         return super()._construct_form(index, **kwargs)
+
+
+# Backstabbr URL entry
+
+class BackstabbrUrlForm(forms.Form):
+    """Form to provide a backstabbr game URL"""
+    url = forms.URLField(label=_('Backstabbr Game URL'))
+
+    def clean_url(self):
+        url = self.cleaned_data['url']
+        # Check that it seems to be a backstabbr game
+        try:
+            g = backstabbr.Game(url, skip_read=True)
+        except backstabbr.InvalidGameUrl as e:
+            raise ValidationError(_('Not a valid backstabbr game URL'))
+        return url
 
 
 # Self Check-in

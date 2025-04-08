@@ -17,9 +17,18 @@
 from django.contrib import admin
 from django.urls import include, path
 
-from tournament import game_scoring_system_views, player_views
+from tournament import backstabbr_views, game_scoring_system_views, player_views
 
 admin.autodiscover()
+
+backstabbr_patterns = [
+    # This is just the graph image
+    path('graph/<int:game_number>/', backstabbr_views.graph, name='graph'),
+    # This is the page showing the graph
+    path('sc_graph/<int:game_number>/', backstabbr_views.game_sc_graph,
+         name='game_sc_graph'),
+    path('sc_graph/enter_url/', backstabbr_views.url_form, name='enter_url'),
+]
 
 game_scoring_patterns = [
     path('', game_scoring_system_views.game_scoring_index,
@@ -44,6 +53,7 @@ player_patterns = [
 urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
+    path('backstabbr/', include(backstabbr_patterns)),
     path('game_scoring/', include(game_scoring_patterns)),
     path('players/', include(player_patterns)),
     path('tournaments/', include('tournament.urls')),

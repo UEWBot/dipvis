@@ -18,10 +18,12 @@
 Forms Tests for the Diplomacy Tournament Visualiser.
 """
 from datetime import date, datetime, time, timedelta, timezone
+from urllib.parse import urlunparse
 
 from django.forms.formsets import formset_factory
 from django.test import TestCase
 
+from tournament.backstabbr import BACKSTABBR_NETLOC
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
@@ -32,6 +34,7 @@ from tournament.models import Award, Tournament, Round, Game, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
+from tournament.forms import BackstabbrUrlForm
 from tournament.forms import AwardsForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
@@ -155,6 +158,24 @@ class AwardsFormsetTest(TestCase):
         for form in formset:
             self.assertEqual(form['players'].initial, [self.tp2.id])
         self.assertEqual(len(formset), len(initial))
+
+
+class BackstabbrUrlFormTest(TestCase):
+    def test_url_field(self):
+        form = BackstabbrUrlForm()
+        self.assertIn('url', form.fields)
+
+    def test_invalid_url(self):
+        url = 'monkey'
+        form = BackstabbrUrlForm(data={'url': url})
+        self.assertFalse(form.is_valid())
+
+    def test_valid_url(self):
+        path = 'game/4917371326693376'
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        form = BackstabbrUrlForm(data={'url': url})
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data['url'], url)
 
 
 class PaidFormTest(TestCase):

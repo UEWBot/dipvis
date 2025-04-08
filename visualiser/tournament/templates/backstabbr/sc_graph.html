@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% blocktrans with game_number=game_number %}Backstabbr Game {{ game_number }} SC Graph{% endblocktrans %}{% endblock title %}
+
+{% block content %}
+<h1>{% blocktrans with game_number=game_number %}Backstabbr Game {{ game_number }} SC Graph{% endblocktrans %}</h1>
+<img src="{% url 'graph' game_number %}" alt="{% trans "Graph of supply centre count over time"%}">
+{% endblock content %}
