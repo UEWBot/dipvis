@@ -630,7 +630,7 @@ class PlayerTests(TestCase):
 
     # PlayerAward.wdr_url()
     @tag('slow', 'wdr')
-    def test_playergameresult_wdr_url(self):
+    def test_playeraward_wdr_url(self):
         p = Player.objects.first()
         wdd_id = p.wdd_player_id
         p.wdd_player_id = None

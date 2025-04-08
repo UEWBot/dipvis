@@ -4245,7 +4245,7 @@ class TournamentPlayerTests(TestCase):
         self.assertEqual(rps.count(), 2)
 
     # TournamentPlayer.gameplayers()
-    def test_tournamentplayer_roundplayers(self):
+    def test_tournamentplayer_gameplayers(self):
         t = Tournament.objects.get(name='t3')
         tp = t.tournamentplayer_set.first()
         # Add GamePlayers
