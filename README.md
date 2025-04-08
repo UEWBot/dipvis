@@ -3,7 +3,7 @@
 Inspired by the TV coverage for sports events, Dipvis was originally designed to
 provide something analagous for Diplomacy tournaments. The goal of Dipvis is to
 allow spectators (and players) to follow the tournament. However, Dipvis has evolved 
-beyond to be a Tournament Director aid - seeding boards, scoring tournaments,
+to be mostly a Tournament Director aid - seeding boards, scoring tournaments,
 etc. The live tracking of scores is also used a lot by players at tournaments.
 
 This project has been used for several tournaments already at https://diplomacytv.com/
@@ -12,12 +12,13 @@ This project was created using [python](https://www.python.org/) code, HTML,
 and [Django](https://www.djangoproject.com/) templates.
 
 You can:
-- create tournaments, consisting of a numer of rounds 
+- create tournaments, consisting of a number of rounds 
 - add players to games
-- track game, round, and tournament progress. 
+- track game, round, and tournament progress
+- it supports many scoring systems and also team rounds
 
-Dipvis will automatically generate "commentary" on things related to player history
-and can read from the World Diplomacy Database if given:
+Dipvis will automatically generate "commentary" on things related to player history and
+can read from the World Diplomacy Database and/or World Diplomacy Reference if given:
 - appropriate player id
 - tournament history
 - game progress

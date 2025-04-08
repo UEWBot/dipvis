@@ -22,6 +22,8 @@ Tournaments may be part of a Series, for example an annual tournament or an
 event like DipCon that is hosted by different tournaments in different years.
 A Tournament hands out Awards to deserving Players based on various criteria.
 By default, these are just seven "Best Country" awards.
+A Team is a group of players whose scores in certain Round(s) are added to give
+the team score.
 
 When Players register to play in a Tournament, this is represented by a
 TournamentPlayer. When Players are present at roll call for a particular Round,
@@ -56,9 +58,10 @@ Essentially it tells the system to do its best not to have those players play a
 game against each other. It is intended for use when you have family members
 that you would prefer not to end up at the same board.
 
-Finally, it reads background information from the World Diplomacy Database and
-stores it as PlayerAwards, PlayerGameResults, PlayerRankings, and PlayerTournamentRankings,
-but you shouldn't need to worry about those at all.
+Finally, it reads background information from the World Diplomacy Database and/or
+World Diplomacy Reference and stores it as PlayerAwards, PlayerGameResults,
+PlayerRankings, and PlayerTournamentRankings, but you shouldn't need to worry about
+those at all.
 
 Creating Your Tournament
 ------------------------
@@ -66,10 +69,14 @@ Creating Your Tournament
 Start out at https://example.com/admin/tournament/tournament/add.
 Give the tournament a name (the year will automatically be appended), format (FTF
 or vFTF), location, dates, and pick a TournamentScoringSystem and RoundScoringSystem.
+If you want to include a team round, specify the size of the teams (number of
+players).
 You can specify any bonus points for sitting out a Round and whether those
 bonus points can be awarded more then once or not. You can also specify whether
 the Tournament uses handicaps, which are additional points that are assigned by
 the TD but kept secret until all Games have finished.
+The system can either show the scores as they were after the last round ended,
+or "if all games ended now", so choose which of those you prefer.
 Decide whether you want the system to seed the games or not, how Great Powers
 will be assigned, what you're going to tell players about failed DrawProposals,
 and whether best countries are determined by score or centre count.
@@ -91,14 +98,18 @@ You may also want to check "Delay publishing game URL" if you are going to have
 games taking place on Backstabbr or recorded in Backstabbr sandboxes. By default
 in these case, the system will link to Backstabbr.
 
-There is also a field to enter the Tournament's id in the World Diplomacy Database,
-but you won't be able to enter this until after the results have been uploaded to
-the WDD.
+There are also fields to enter the Tournament's id in the World Diplomacy Database
+and World Diplomacy Reference, but you won't be able to enter these until after the
+results have been uploaded to those sites.
+
+Pick which awards you are going to hand out. If needed, you can add additional awards
+by clicking the "Awards" link in the left-hand panel.
 
 Next you can add Rounds. For each one, you need to specify the start and end times and dates,
 and the scoring system used for games in that Round (most Tournaments will use the
 same scoring system for every round, but the system supports deviations from that).
-You also need to decide whether Draws in the Round include all survivors (DIAS).
+You also need to decide whether Draws in the Round include all survivors (DIAS). If
+you have teams, specify which round(s) will count towards team scores.
 If you want, you can specify that a Round ends after a particular game year or
 between specified times.
 
@@ -196,6 +207,13 @@ centre-count information. Once you're happy, press "Submit" and the Games will b
 including sending out emails to the players (unless your Tournament has the "no email"
 option selected) and posting to the Discord webhook (if any).
 
+Team Entry
+----------
+
+Before the first team round, you'll need to follow the link to "Add/edit teams" and enter
+all the teams. Each team needs a name and a set of players (teams can have fewer than the
+specified number of players).
+
 Game Tracking
 -------------
 
@@ -206,7 +224,7 @@ Your options are:
 Upload images for games as they progress. Ideally every season, but gaps are ok.
 Enter SupplyCentre ownership data after each game year (in this case the system will
 calculate CentreCounts).
-Enter CentreCounts after each game year. (For a vFTF game, if the Game has a
+Enter CentreCounts after each game year. (For a vFTF game, or if the Game has a
 backstabbr URL, you can grab the current CentreCounts from Backstabbr by
 just clicking the "Import SC Counts from Backstabbr" link on the Game page).
 For DrawProposals, you can enter all of them or just the ones that pass, or just flag Games

@@ -2,8 +2,7 @@ Assuming you have python and Django installed.
 
 You can test out the system as follows:
 0. Run migrations
-   "python manage.py makemigrations"
-   "python manage.py makemigrations"
+   "python manage.py migrate"
 1. Create a SQLite database -
    "python manage.py loaddata players"
    "python manage.py loaddata game_sets"
