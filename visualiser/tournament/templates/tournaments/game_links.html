@@ -4,10 +4,10 @@
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Game Sandox Links{% endblocktrans %}{% endblock title %}
 
 {% block content %}
-<ul>
+<dl>
   {% for r in tournament.round_set.all %}
-    <li>{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</li>
-    <li><ul>
+    <dt>{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</dt>
+    <dd><ul>
       {% for g in r.game_set.all %}
         {% if g.external_url %}
           <li><a href={{ g.external_url }}>{{ g.name }}</a></li>
@@ -15,8 +15,8 @@
           <li>{{ g.name }} - {% trans "No sandbox link" %}</li>
         {% endif %}
       {% endfor %}
-    </ul></li>
+    </ul></dd>
   {% endfor %}
-</ul>
+</dl>
 
 {% endblock content %}
