@@ -714,9 +714,11 @@ def api(request, tournament_id, version):
             players = {}
             for gp in g.gameplayer_set.all():
                 players[str(gp.power)] = {'name': str(gp.player),
-                                          'location': gp.player.location}
+                                          'location': gp.player.location,
+                                          'wdr_id': gp.player.wdr_player_id}
                 if gp.score_is_final():
                     players[str(gp.power)]['score'] = gp.score
+                    players[str(gp.power)]['final_scs'] = gp.final_sc_count()
             games[g.name] = {'sandbox': g.external_url,
                              'started' : g.started_at,
                              'players': players}
