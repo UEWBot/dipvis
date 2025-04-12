@@ -7718,7 +7718,7 @@ class RoundPlayerTests(TestCase):
         self.assertEqual(rp.gameplayers().count(), 2)
         self.assertFalse(rp.score_is_final())
 
-    def test_roundplayer_score_is_final_round_mixed(self):
+    def test_roundplayer_score_is_final_round_mixed_2(self):
         """RoundPlayer.score_is_final() for player whose game(s) are finished, in a round that is still ongoing"""
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(2)
