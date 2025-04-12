@@ -129,10 +129,8 @@ def _update_or_create_playertitle_wiki(player, title):
         except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single title rather than all the background
-            print("Failed to save PlayerTitle")
-            print("player=%s, title=%s, year=%s" % (str(player),
-                                                    the_title,
-                                                    title['Year']))
+            print('Failed to save PlayerTitle')
+            print(f'player={str(player)}, title={the_title}, year={title["Year"]}')
             traceback.print_exc()
 
 
@@ -168,11 +166,8 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
-        print("Failed to save PlayerTournamentRanking")
-        print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
-                                                                  finish['Tournament'],
-                                                                  finish['Position'],
-                                                                  d[:4]))
+        print('Failed to save PlayerTournamentRanking')
+        print(f'player={str(player)}, tournament={finish["Tournament"]}, position={finish["Position"]}, year={d[:4]}')
         traceback.print_exc()
 
 
@@ -202,15 +197,12 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
                                                          defaults=defaults)
     except KeyError:
         # No rank implies they were the TD or similar - just ignore that tournament
-        print("Ignoring unranked %s for %s" % (t['Name of the tournament'], player))
+        print(f'Ignoring unranked {t["Name of the tournament"]} for {player}')
     except Exception:
         # Handle all other exceptions
         # This way, we fail to add/update the single ranking rather than all the background
-        print("Failed to save PlayerTournamentRanking")
-        print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
-                                                                  t['Name of the tournament'],
-                                                                  t['Rank'],
-                                                                  d[:4]))
+        print('Failed to save PlayerTournamentRanking')
+        print(f'player={str(player)}, tournament={t["Name of the tournament"]}, position={t["Rank"]}, year={d[:4]}')
         traceback.print_exc()
 
 
@@ -231,9 +223,7 @@ def _update_or_create_playergameresult(player, b):
     if 'Position' not in b:
         # We can't make assumptions about how players are ranked within a game
         # without knowing the scoring system, DIAS, etc.
-        print('Ignoring game %s in %s for %s with no position' % (b['Round / Board'],
-                                                                  b['Name of the tournament'],
-                                                                  str(player)))
+        print(f'Ignoring game {b["Round / Board"]} in {b["Name of the tournament"]} for {str(player)} with no position')
         return
     try:
         wdd_tournament_id = wdd_url_to_tournament_id(b['WDD Tournament URL'])
@@ -272,14 +262,8 @@ def _update_or_create_playergameresult(player, b):
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
-        print("Failed to save PlayerGameResult")
-        print("player=%s, tournament_name=%s, game_name=%s, power=%s, position=%s, date=%s"
-              % (str(player),
-                 b['Name of the tournament'],
-                 b['Round / Board'],
-                 str(p),
-                 b['Position'],
-                 b['Date']))
+        print('Failed to save PlayerGameResult')
+        print(f'player={str(player)}, tournament_name={b["Name of the tournament"]}, game_name={b["Round / Board"]}, power={str(p)}, position={b["Position"]}, date={b["Date"]}')
         traceback.print_exc()
 
 
@@ -307,10 +291,10 @@ def _update_or_create_playeraward(player, k, a):
     try:
         date_str = a['Date']
         if len(date_str) != 10:
-            print('Ignoring award with bad date %s' % str(a))
+            print(f'Ignoring award with bad date {str(a)}')
             return
     except KeyError:
-        print('Ignoring award with no date %s' % str(a))
+        print(f'Ignoring award with no date {str(a)}')
         return
     try:
         wdd_tournament_id = wdd_url_to_tournament_id(a['WDD URL'])
@@ -334,11 +318,8 @@ def _update_or_create_playeraward(player, k, a):
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
-        print("Failed to save PlayerAward")
-        print("player=%s, tournament=%s, date=%s, name=%s" % (str(player),
-                                                              a['Tournament'],
-                                                              date_str,
-                                                              award_name))
+        print('Failed to save PlayerAward')
+        print(f'player={str(player)}, tournament={a["Tournament"]}, date={date_str}, name={award_name}')
         traceback.print_exc()
 
 
@@ -358,8 +339,8 @@ def _update_or_create_playerranking(player, r):
     except Exception:
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
-        print("Failed to save PlayerRanking")
-        print("player=%s, system=%s" % (str(player), r['Name']))
+        print('Failed to save PlayerRanking')
+        print(f'player={str(player)}, system={r["Name"]}')
         traceback.print_exc()
 
 
@@ -473,11 +454,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print("Failed to save PlayerTournamentRanking")
-                print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
-                                                                          t['tournament_name'],
-                                                                          t['tournament_player_rank'],
-                                                                          defaults['date'][:4]))
+                print('Failed to save PlayerTournamentRanking')
+                print(f'player={str(player)}, tournament={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t['tournament_id']
@@ -489,11 +467,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print("Failed to save PlayerTournamentRanking")
-                print("player=%s, tournament=%s, position=%s, year=%s" % (str(player),
-                                                                          t['tournament_name'],
-                                                                          t['tournament_player_rank'],
-                                                                          defaults['date'][:4]))
+                print('Failed to save PlayerTournamentRanking')
+                print(f'player={str(player)}, tournament={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
                 traceback.print_exc()
     # Boards
     for b in bg.boards():
@@ -535,13 +510,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print("Failed to save PlayerGameResult")
-                print("player=%s, tournament_name=%s, game_name=%s, power=%s, position=%s"
-                      % (str(player),
-                         t['tournament_name'],
-                         game_name,
-                         b['board_power'],
-                         b['board_rank']))
+                print('Failed to save PlayerGameResult')
+                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, game_name={game_name}, power={b["board_power"]}, position={b["board_rank"]}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t_id
@@ -554,13 +524,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print("Failed to save PlayerGameResult")
-                print("player=%s, tournament_name=%s, game_name=%s, power=%s, position=%s"
-                      % (str(player),
-                         t['tournament_name'],
-                         game_name,
-                         b['board_power'],
-                         b['board_rank']))
+                print('Failed to save PlayerGameResult')
+                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, game_name={game_name}, power={b["board_power"]}, position={b["board_rank"]}')
                 traceback.print_exc()
     # Awards
     for a in bg.awards():
@@ -584,11 +549,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print("Failed to save PlayerAward")
-                print("player=%s, tournament=%s, date=%s, name=%s" % (str(player),
-                                                                      t['tournament_name'],
-                                                                      t['tournament_end_date'],
-                                                                      award_name))
+                print('Failed to save PlayerAward')
+                print(f'player={str(player)}, tournament={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id']=t_id
@@ -601,11 +563,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print("Failed to save PlayerAward")
-                print("player=%s, tournament=%s, date=%s, name=%s" % (str(player),
-                                                                      t['tournament_name'],
-                                                                      t['tournament_end_date'],
-                                                                      award_name))
+                print('Failed to save PlayerAward')
+                print(f'player={str(player)}, tournament={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
                 traceback.print_exc()
     # WPE scores (and other Rankings)
     ranks = bg.rankings()
@@ -622,8 +581,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
         except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single ranking rather than all the background
-            print("Failed to save PlayerRanking")
-            print("player=%s, system=%s" % (str(player), k))
+            print('Failed to save PlayerRanking')
+            print(f'player={str(player)}, system={k}')
             traceback.print_exc()
     # Nationalities
     # Assume that if we know nationalities they either came from the WDR or are more accurate

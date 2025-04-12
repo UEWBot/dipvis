@@ -82,9 +82,7 @@ def board_call_csv(request, tournament_id, round_num):
     headers = [_('Round'), _('Board'), _('Power'), _('Player Name'), _('Player Id'), _('Backstabbr Username')]
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="%s%dround%sboard_call.csv"' % (t.name,
-                                                                                            t.start_date.year,
-                                                                                            round_num)
+    response['Content-Disposition'] = f'attachment; filename="{t.name}{t.start_date.year}round{round_num}board_call.csv"'
 
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()
@@ -257,8 +255,7 @@ def _sitters_and_two_gamers(tournament, the_round):
     sitters = set()
     two_gamers = set()
     for rp in round_players:
-        assert rp.gameplayers().count() == 0, "%d games already exist for %s in this round" % (rp.gameplayers().count(),
-                                                                                               str(rp))
+        assert rp.gameplayers().count() == 0, f'{rp.gameplayers().count()} games already exist for {str(rp)}s in this round'
         rps.append(rp)
         if rp.game_count == 1:
             continue
@@ -269,7 +266,7 @@ def _sitters_and_two_gamers(tournament, the_round):
             # This player is playing two games this round
             two_gamers.add(rp.tournamentplayer())
         else:
-            raise AssertionError('Unexpected game_count value %d for %s' % (rp.game_count, str(rp)))
+            raise AssertionError(f'Unexpected game_count value {rp.game_count} for {str(rp)}')
     assert (not sitters) or (not two_gamers)
     if sitters:
         # Check that we have the right number of players sitting out
@@ -355,7 +352,7 @@ def _seed_games_and_powers(tournament, the_round):
 
 def _generate_game_name(round_num, i):
     """Generate a default name for Game n in round round_num"""
-    return 'R%sG%s' % (round_num, chr(ord('A') + i - 1))
+    return f'R{round_num}G{chr(ord("A") + i - 1)}'
 
 
 def _send_board_call_to_discord(the_round):

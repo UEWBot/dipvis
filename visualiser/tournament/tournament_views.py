@@ -410,7 +410,7 @@ def self_check_in_control(request, tournament_id):
     round_set = t.round_set.all()
     enable_data = {}
     for r in round_set.all():
-        enable_data['round_%d' % r.number()] = r.enable_check_in
+        enable_data[f'round_{r.number()}'] = r.enable_check_in
     form = EnableCheckInForm(request.POST or None,
                              tournament=t,
                              initial=enable_data)
@@ -522,7 +522,7 @@ def upload_prefs(request, tournament_id):
             try:
                 tp.create_preferences_from_string(ps)
             except InvalidPreferenceList:
-                messages.error(request, 'Invalid preference string %s' % ps)
+                messages.error(request, f'Invalid preference string {ps}')
                 return HttpResponseRedirect(reverse('upload_prefs',
                                                     args=(tournament_id,)))
     except Exception as e:
@@ -545,8 +545,7 @@ def prefs_csv(request, tournament_id):
               ]
 
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="%s_%d_prefs.csv"' % (t.name,
-                                                                                  t.start_date.year)
+    response['Content-Disposition'] = f'attachment; filename="{t.name}_{t.start_date.year}_prefs.csv"'
 
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()

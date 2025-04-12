@@ -452,8 +452,7 @@ class GameSeeder:
         specified players.
         """
         if len(players) % self.num_powers != 0:
-            raise InvalidPlayerCount("%d is not an exact multiple of %d"
-                                     % (len(players), self.num_powers))
+            raise InvalidPlayerCount(f'{len(players)} is not an exact multiple of {self.num_powers}')
         if len(set(players)) < self.num_powers:
             # We've ended up with a group of players that we can't make a valid game from
             raise _AssignmentFailed
@@ -524,17 +523,11 @@ class GameSeeder:
             return [], 0
         # Check that we have a multiple of seven players
         if len(players) % self.num_powers != 0:
-            raise InvalidPlayerCount("%d total plus %d duplicated minus %d omitted"
-                                     % (len(self.games_played_matrix),
-                                        len(players_doubling_up),
-                                        len(omitting_players)))
+            raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
         # If any players are playing two games, there must be at least two games
         if players_doubling_up:
             if len(players) < 2 * self.num_powers:
-                raise ImpossibleToSeed("%d total plus %d duplicated minus %d omitted"
-                                       % (len(self.games_played_matrix),
-                                          len(players_doubling_up),
-                                          len(omitting_players)))
+                raise ImpossibleToSeed(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
         if self.games_played or (len(players_doubling_up) > 1):
@@ -619,13 +612,10 @@ class GameSeeder:
             # Sort them by fitness
             seedings.sort(key=itemgetter(1))
             if self.seed_method == SeedMethod.RANDOM:
-                bg_str = "With starts=%d and iterations=%d" % (self.starts,
-                                                               self.iterations)
+                bg_str = f'With starts={self.starts} and iterations={self.iterations}'
             else:
-                bg_str = "With Exhaustive seeding"
-            print("%s, best fitness score is %d in %d seedings" % (bg_str,
-                                                                   seedings[0][1],
-                                                                   len(seedings)))
+                bg_str = 'With Exhaustive seeding'
+            print(f'{bg_str}, best fitness score is {seedings[0][1]} in {len(seedings)} seedings')
         finally:
             # Remove temporary bias
             self._add_bias_for_doublers(players_doubling_up, add=False)

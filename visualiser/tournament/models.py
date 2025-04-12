@@ -1315,13 +1315,13 @@ class Tournament(models.Model):
     def wdd_url(self):
         """URL for this tournament in the World Diplomacy Database, if known."""
         if self.wdd_tournament_id:
-            return WDD_BASE_RESULTS_URL + 'tournament_class.php?id_tournament=%d' % self.wdd_tournament_id
+            return WDD_BASE_RESULTS_URL + f'tournament_class.php?id_tournament={self.wdd_tournament_id}'
         return u''
 
     def wdr_url(self):
         """URL for this tournament in the World Diplomacy Reference, if known."""
         if self.wdr_tournament_id:
-            return WDR_BASE_URL + 'tournaments/%d' % self.wdr_tournament_id
+            return WDR_BASE_URL + f'tournaments/{self.wdr_tournament_id}'
         return u''
 
     def get_absolute_url(self):
@@ -1370,7 +1370,7 @@ class Tournament(models.Model):
                 self.update_scores()
 
     def __str__(self):
-        return '%s %d' % (self.name, self.start_date.year)
+        return f'{self.name} {self.start_date.year}'
 
 
 class DBNCoverage(models.Model):
@@ -1387,7 +1387,7 @@ class DBNCoverage(models.Model):
         verbose_name_plural = 'DBN coverages'
 
     def __str__(self):
-        return '%s %s' % (self.tournament, self.description)
+        return f'{self.tournament} {self.description}'
 
 
 class SeriesSlugField(models.SlugField):
@@ -1422,7 +1422,7 @@ class Series(models.Model):
         return reverse('series_detail', args=[self.slug])
 
     def __str__(self):
-        return '%s' % (self.name)
+        return f'{self.name}'
 
 
 class TPPlayerField(models.CharField):
@@ -2169,7 +2169,7 @@ class Game(models.Model):
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
         if not all_scos.exists():
-            raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
+            raise SCOwnershipsNotFound(f'{year} of game {str(self)}')
         with transaction.atomic():
             for p in GreatPower.objects.all():
                 CentreCount.objects.update_or_create(power=p,
@@ -2190,7 +2190,7 @@ class Game(models.Model):
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
         if not all_scos.exists():
-            raise SCOwnershipsNotFound('%d of game %s' % (year, str(self)))
+            raise SCOwnershipsNotFound(f'{year} of game {str(self)}')
         retval = []
         for p in GreatPower.objects.all():
             sco_dots = all_scos.filter(owner=p).count()
@@ -2653,7 +2653,7 @@ class DrawProposal(models.Model):
             if self.votes_in_favour is None:
                 raise ValidationError(_('Votes_in_favour needs a value'))
         else:
-            raise AssertionError('Tournament draw secrecy has an unexpected value %c' % self.game.the_round.tournament.draw_secrecy)
+            raise AssertionError(f'Tournament draw secrecy has an unexpected value {self.game.the_round.tournament.draw_secrecy}')
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -3087,7 +3087,7 @@ class GameImage(models.Model):
 
         e.g. 'S1901M'
         """
-        return u'%s%d%s' % (self.season, self.year, PHASE_STR[self.phase])
+        return f'{self.season}{self.year}{PHASE_STR[self.phase]}'
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""

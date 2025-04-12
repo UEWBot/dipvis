@@ -376,7 +376,7 @@ class DrawForm(forms.Form):
             self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
                                                                 max_value=player_count)
         else:
-            raise AssertionError('Unexpected draw secrecy value %c' % secrecy)
+            raise AssertionError(f'Unexpected draw secrecy value {secrecy}')
 
 
 # Game scoring
@@ -971,7 +971,7 @@ class EnableCheckInForm(forms.Form):
 
         # Create the right number of enable fields, with the right ones read-only
         for i in range(first_round_num, 1 + last_round_num):
-            name = 'round_%d' % i
+            name = f'round_{i}'
             readonly = (i < this_round_num)
             self.fields[name] = forms.BooleanField(required=False, initial=False)
             if readonly:

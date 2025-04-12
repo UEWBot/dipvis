@@ -129,9 +129,9 @@ class Game():
         if self.soloer is not None:
             self.result = 'Solo'
         elif self.ongoing:
-            self.result = '%d powers still alive' % alive
+            self.result = f'{alive} powers still alive'
         else:
-            self.result = '%d-way draw' % alive
+            self.result = f'{alive}-way draw'
 
     def _parse_invariants_from_soup(self, soup):
         """

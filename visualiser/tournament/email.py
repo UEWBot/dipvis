@@ -151,7 +151,7 @@ def send_roll_call_emails(round_num, tournamentplayer_list):
         # Can't do anything unless we have an email address for the player
         if not addr:
             continue
-        subject = 'Self-check-in now available for round %d of %s' % (round_num, t)
+        subject = f'Self-check-in now available for round {round_num} of {t}'
         # Create the email and add it to the list
         msg_body = ROLL_CALL_EMAIL % {'tourney': t,
                                       'url': tp.get_prefs_url(),
