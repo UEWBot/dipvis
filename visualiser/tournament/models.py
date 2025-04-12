@@ -692,8 +692,8 @@ def scoring_systems_are_compatible(round_scoring_system_name, tournament_scoring
     tss = find_tournament_scoring_system(tournament_scoring_system_name)
     rss = find_round_scoring_system(round_scoring_system_name)
     if tss.uses_round_scores:
-        return rss != None
-    return rss == None
+        return rss is not None
+    return rss is None
 
 
 def validate_weight(value):
