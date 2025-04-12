@@ -80,8 +80,8 @@ class BackstabbrTests(TestCase):
 
     def test_backstabbr_invite_url(self):
         """URL including invite code"""
-        path = 'game/Kinderdip/5067172693803008'
-        path_with_invite = path + '/invite/2FSU7J'
+        path = 'game/Ben-gives-Riaz-Munich/5184867179298816'
+        path_with_invite = path + '/invite/ANMJ5K'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         url_with_invite = urlunparse(('https', BACKSTABBR_NETLOC, path_with_invite, '', '', ''))
         g = Game(url_with_invite)
