@@ -52,10 +52,14 @@ def _dots(game):
             retval[power].append(sc_counts[power])
     return retval
 
-def graph(request, game_number):
-    """Just an SC graph for the specified game, as a PNG image"""
-    # TODO Ideally, we'd support sandoxes as well as games
-    url = urlunparse(('https', backstabbr.BACKSTABBR_NETLOC, f'game/{game_number}', '', '', ''))
+def graph(request, game_type, game_number):
+    """
+    Just an SC graph for the specified game, as a PNG image
+
+    game_type should be either 'game' or 'sandbox'
+    """
+    game_path = f'{game_type}/{game_number}'
+    url = urlunparse(('https', backstabbr.BACKSTABBR_NETLOC, game_path, '', '', ''))
     try:
         g = backstabbr.Game(url)
     except backstabbr.InvalidGameUrl as e:
@@ -83,9 +87,14 @@ def graph(request, game_number):
     response = HttpResponse(graphic, content_type="image/png")
     return response
 
-def game_sc_graph(request, game_number):
+def game_sc_graph(request, game_number, sandbox):
     """Show a Supply Centre chart for a backstabbr game"""
-    context = {'game_number': str(game_number)}
+    if sandbox:
+        game_type = 'sandbox'
+    else:
+        game_type = 'game'
+    context = {'game_type': game_type,
+               'game_number': str(game_number)}
     return render(request, 'backstabbr/sc_graph.html', context)
 
 def url_form(request):
@@ -93,12 +102,14 @@ def url_form(request):
     form = BackstabbrUrlForm(request.POST or None)
     if form.is_valid():
         url = form.cleaned_data['url']
-        # extract the game number from the URL
+        # Extract the game number from the URL
         # Note that the form checks for a backstabbr URL
         g = backstabbr.Game(url, skip_read=True)
-        game_num = g.number
         # If all went well, redirect
-        return HttpResponseRedirect(reverse('game_sc_graph', args=(game_num,)))
+        if g.regular_game:
+            return HttpResponseRedirect(reverse('game_sc_graph', args=(g.number,)))
+        else:
+            return HttpResponseRedirect(reverse('sandbox_sc_graph', args=(g.number,)))
     return render(request,
                   'backstabbr/enter_url.html',
                   {'form': form})

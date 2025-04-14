@@ -15,18 +15,33 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, register_converter
 
 from tournament import backstabbr_views, game_scoring_system_views, player_views
 
 admin.autodiscover()
 
+class BackstabbrTypeConverter:
+    """Converter for the backstabbr game type (sandbox/game) part of a URL"""
+    regex = r'game|sandbox'
+
+    def to_python(self, value):
+        return value
+
+    def to_url(self, value):
+        return value
+
+register_converter(BackstabbrTypeConverter, 'bs_type')
+
+
 backstabbr_patterns = [
     # This is just the graph image
-    path('graph/<int:game_number>/', backstabbr_views.graph, name='graph'),
+    path('graph/<bs_type:game_type>/<int:game_number>', backstabbr_views.graph, name='graph'),
     # This is the page showing the graph
-    path('sc_graph/<int:game_number>/', backstabbr_views.game_sc_graph,
-         name='game_sc_graph'),
+    path('sc_graph/game/<int:game_number>/', backstabbr_views.game_sc_graph,
+        {'sandbox': False}, name='game_sc_graph'),
+    path('sc_graph/sandbox/<int:game_number>/', backstabbr_views.game_sc_graph,
+        {'sandbox': True}, name='sandbox_sc_graph'),
     path('sc_graph/enter_url/', backstabbr_views.url_form, name='enter_url'),
 ]
 
