@@ -79,12 +79,12 @@ class BackstabbrTests(TestCase):
         self.assertRaises(InvalidGameUrl, Game, url)
 
     def test_backstabbr_invite_url(self):
-        """URL including invite code"""
+        """URL including invite code. Also validates skip_read"""
         path = 'game/Ben-gives-Riaz-Munich/5184867179298816'
         path_with_invite = path + '/invite/ANMJ5K'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         url_with_invite = urlunparse(('https', BACKSTABBR_NETLOC, path_with_invite, '', '', ''))
-        g = Game(url_with_invite)
+        g = Game(url_with_invite, skip_read=True)
         self.assertEqual(g.url, url)
 
     def check_results(self, sc_counts, results):

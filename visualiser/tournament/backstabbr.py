@@ -105,9 +105,13 @@ class Game():
 
     TIMEOUT = 3.5
 
-    def __init__(self, url):
+    def __init__(self, url, skip_read=False):
         """
         url is a link to the game on backstabbr.
+
+        If skip_read is True, the URL will not be accessed, and not all
+        attributes will be available/accurate. read_current_state() can
+        be called later to populate these attributes.
         """
         self.url = url
         self.parsed_url = urlparse(url)
@@ -140,7 +144,20 @@ class Game():
         self.sc_ownership = {}
         self.position = {}
         self.orders = {}
-        # Now parse the current state of the game
+        if not skip_read:
+            # Now parse the current state of the game
+            self.read_current_state()
+
+    def read_current_state(self):
+        """
+        Read the current state of the game
+
+        Sets self.name, self.season, self.year, self.players, self.gm, self.ongoing,
+        self.sc_counts, self.soloing_power, self.sc_ownership, self.position, self.orders,
+        self.result, and self.soloer.
+
+        Only needed if the Game was created with skip_read=True.
+        """
         self._parse_page()
         self._calculate_result()
 
