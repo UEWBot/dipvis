@@ -40,16 +40,27 @@ _power_to_fg = {
     'Turkey':  'yellow',
 }
 
+S1901_dots = {
+    'Austria': 3,
+    'England': 3,
+    'France': 3,
+    'Germany': 3,
+    'Italy': 3,
+    'Russia': 4,
+    'Turkey': 3,
+}
+
 def _dots(game):
-    """Return a dict, keyed by power, of lists of SC counts for the specified power"""
-    retval = {}
-    sc_counts, _, _, _, _ = game.turn_details(backstabbr.SPRING, 1901)
-    for power in backstabbr.POWERS:
-        retval[power] = [sc_counts[power]]
+    """Return a dict, keyed by year, of dicts keyed by power of SC counts"""
+    retval = {1900: S1901_dots}
     for y in range(1901, game.year):
-        sc_counts, _, _, _, _ = game.turn_details(backstabbr.WINTER, y)
-        for power in backstabbr.POWERS:
-            retval[power].append(sc_counts[power])
+        try:
+            sc_counts, _, _, _, _ = game.turn_details(backstabbr.WINTER, y)
+        except backstabbr.InvalidGameUrl:
+            # Just skip this year
+            pass
+        else:
+            retval[y] = sc_counts
     return retval
 
 def graph(request, game_type, game_number):
@@ -72,11 +83,12 @@ def graph(request, game_type, game_number):
     with io.BytesIO() as f:
         # plot the SC counts
         fig, ax = plt.subplots()
-        years = range(1900, g.year)
+        years = dots.keys()
         for power in backstabbr.POWERS:
             colour = _power_to_fg[power]
+            power_dots = [c[power] for c in dots.values()]
             # X-axis is year, y-axis is SC count. Colour by power
-            ax.plot(years, dots[power], label=_(power), color=colour, linewidth=2)
+            ax.plot(years, power_dots, label=_(power), color=colour, linewidth=2)
         ax.axis([1900, g.year, 0, 18])
         ax.set_xlabel(_('Year'))
         ax.set_ylabel(_('Centres'))
