@@ -33,6 +33,7 @@ DRAW_5_GAME_NUMBER = 4745603911778304
 DRAW_6_GAME_NUMBER = 4902987233755136
 DRAW_6_GAME_NAME = f'299-The-seventh-seal/{DRAW_6_GAME_NUMBER}'
 DRAW_7_GAME_NUMBER = 4662834623938560
+WINTER_GAME_NUMBER = 6287060712161280
 SANDBOX_GAME_NUMBER = 5766492401172480
 
 
@@ -322,6 +323,26 @@ class BackstabbrTests(TestCase):
                    POWERS[4]: (8, 'adam.silverman#5954'),
                    POWERS[5]: (3, 'Grant Steel#4368'),
                    POWERS[6]: (0, 'maddotter#1574'),
+                  }
+        self.assertIs(soloing_power, None)
+        self.check_results(sc_counts, RESULTS)
+
+    @tag('backstabbr')
+    def test_backstabbr_winter_game(self):
+        """Check that we correctly parse the final year of a game that ended in winter"""
+        # When we ask for the current turn, backstabbr will redirect to
+        # the default page for the game
+        path = 'game/%s' % WINTER_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        g = Game(url)
+        sc_counts, soloing_power, sc_ownership, position, orders = g.turn_details(WINTER, 1907)
+        RESULTS = {POWERS[0]: (2, 'Teo Ananiadis#7379'),
+                   POWERS[1]: (12, 'Nicholas Germanacos#5874'),
+                   POWERS[2]: (5, 'Yannis#6092'),
+                   POWERS[3]: (6, 'Josh Powell#9413'),
+                   POWERS[4]: (0, 'Babis Tsimoris#3532'),
+                   POWERS[5]: (1, 'libertarian#8324'),
+                   POWERS[6]: (8, 'Spyros Dovas#9701'),
                   }
         self.assertIs(soloing_power, None)
         self.check_results(sc_counts, RESULTS)

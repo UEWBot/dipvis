@@ -206,7 +206,6 @@ class Game():
         Open the specified URL, turn the web page into soup.
         """
         page = requests.get(url,
-                            allow_redirects=False,
                             timeout=self.TIMEOUT)
         if page.status_code != requests.codes.ok:
             raise InvalidGameUrl(url)
