@@ -53,7 +53,7 @@ S1901_dots = {
 def _dots(game):
     """Return a dict, keyed by year, of dicts keyed by power of SC counts"""
     retval = {1900: S1901_dots}
-    for y in range(1901, game.year):
+    for y in range(1901, game.year+1):
         try:
             sc_counts, _, _, _, _ = game.turn_details(backstabbr.WINTER, y)
         except backstabbr.InvalidGameUrl:
