@@ -45,7 +45,7 @@ from tournament.background import WikipediaBackground, WDDBackground, WDRBackgro
 from tournament.background import InvalidWDDId, WDDNotAccessible, WDRNotAccessible
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
+from tournament.diplomacy.tasks.validate_max_supplycentres import validate_max_supplycentres
 from tournament.diplomacy.tasks.validate_year import validate_year
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 from tournament.wdd import validate_wdd_player_id, validate_wdd_tournament_id
@@ -1150,7 +1150,7 @@ class PlayerGameResult(models.Model):
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True,
                                                       null=True,
-                                                      validators=[validate_sc_count])
+                                                      validators=[validate_max_supplycentres])
     result = models.CharField(max_length=2, choices=GameResults.choices, blank=True)
     year_eliminated = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,

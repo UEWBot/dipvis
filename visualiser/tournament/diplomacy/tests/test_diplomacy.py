@@ -17,12 +17,12 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
+from ..tasks.validate_max_greatpowers import validate_max_greatpowers
+from ..tasks.validate_max_supplycentres import validate_max_supplycentres
 from ..tasks.validate_year import validate_year
 from ..tasks.validate_year_including_start import  validate_year_including_start
-from ..tasks.validate_ranking import validate_ranking
-from ..tasks.validate_sc_count import validate_sc_count
-from ..models.great_power import GreatPower
 from ..models.game_set import GameSet
+from ..models.great_power import GreatPower
 from ..models.set_power import SetPower
 from ..models.supply_centre import SupplyCentre
 from ..values.diplomacy_values import TOTAL_SCS, WINNING_SCS
@@ -38,18 +38,19 @@ class DiplomacyTests(TestCase):
     def test_winning_scs(self):
         self.assertEqual(WINNING_SCS, 18)
 
-    # validate_sc_count()
-    def test_validate_sc_count_negative(self):
-        self.assertRaises(ValidationError, validate_sc_count, -1)
+    # validate_max_greatpowers()
+    def test_validate_max_greatpowers_seven(self):
+        self.assertIsNone(validate_max_greatpowers(7))
 
-    def test_validate_sc_count_0(self):
-        self.assertIsNone(validate_sc_count(0))
+    def test_validate_max_greatpowers_eight(self):
+        self.assertRaises(ValidationError, validate_max_greatpowers, 8)
 
-    def test_validate_sc_count_34(self):
-        self.assertIsNone(validate_sc_count(34))
+    # validate_max_supplycentres()
+    def test_validate_max_supplycentres_34(self):
+        self.assertIsNone(validate_max_supplycentres(34))
 
-    def test_validate_sc_count_35(self):
-        self.assertRaises(ValidationError, validate_sc_count, 35)
+    def test_validate_max_supplycentres_35(self):
+        self.assertRaises(ValidationError, validate_max_supplycentres, 35)
 
     # validate_year()
     def test_validate_year_negative(self):
@@ -76,22 +77,6 @@ class DiplomacyTests(TestCase):
 
     def test_validate_year_inc_start_1901(self):
         self.assertIsNone(validate_year_including_start(1901))
-
-    # validate_ranking()
-    def test_validate_ranking_negative(self):
-        self.assertRaises(ValidationError, validate_ranking, -1)
-
-    def test_validate_ranking_zero(self):
-        self.assertRaises(ValidationError, validate_ranking, 0)
-
-    def test_validate_ranking_one(self):
-        self.assertIsNone(validate_ranking(1))
-
-    def test_validate_ranking_seven(self):
-        self.assertIsNone(validate_ranking(7))
-
-    def test_validate_ranking_eight(self):
-        self.assertRaises(ValidationError, validate_ranking, 8)
 
     # TODO validate_preference_string()
 

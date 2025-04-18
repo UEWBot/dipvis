@@ -14,18 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.core.exceptions import ValidationError
-from django.utils.translation import gettext as _
-
-from ..values.diplomacy_values import TOTAL_SCS
-
 def validate_sc_count(value):
     """
-    Checks for a valid SC count
+    No longer used. Retained for migrations.
     """
-    if (value < 0) or (value > TOTAL_SCS):
-        raise ValidationError(_(u'%(value)d is not a valid SC count'),
-                              params={'value': value})
-
-
-
+    raise AssertionError("This function should no longer be used")

@@ -46,7 +46,10 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
+from tournament.diplomacy.tasks.validate_max_greatpowers import validate_max_greatpowers
+from tournament.diplomacy.tasks.validate_max_supplycentres import validate_max_supplycentres
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
+# validate_sc_count() and validate_ranking() are no longer used except by migrations
 from tournament.diplomacy.tasks.validate_ranking import validate_ranking
 from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
@@ -1775,7 +1778,8 @@ class Preference(models.Model):
     """
     player = models.ForeignKey(TournamentPlayer, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, on_delete=models.CASCADE)
-    ranking = models.PositiveSmallIntegerField(validators=[validate_ranking])
+    ranking = models.PositiveSmallIntegerField(validators=[MinValueValidator(1),
+                                                           validate_max_greatpowers])
 
     class Meta:
         constraints = [
@@ -2544,7 +2548,8 @@ class DrawProposal(models.Model):
     drawing_powers = models.ManyToManyField(GreatPower, related_name='+')
     votes_in_favour = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
-                                                       validators=[validate_vote_count])
+                                                       validators=[MinValueValidator(0),
+                                                                   validate_max_greatpowers])
 
     class Meta:
         constraints = [
@@ -3103,7 +3108,7 @@ class CentreCount(models.Model):
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     year = models.PositiveSmallIntegerField(validators=[validate_year_including_start])
-    count = models.PositiveSmallIntegerField(validators=[validate_sc_count])
+    count = models.PositiveSmallIntegerField(validators=[validate_max_supplycentres])
 
     class Meta:
         constraints = [

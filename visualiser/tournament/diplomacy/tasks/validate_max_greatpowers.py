@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2020 Chris Brand
+# Copyright (C) 2025 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,8 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-def validate_ranking(value):
-    """
-    No longer used. Retained for migrations.
-    """
-    raise AssertionError("This function should no longer be used")
+from django.core.validators import MaxValueValidator
+
+from ..models.great_power import GreatPower
+
+"""
+Checks that value doesn't exceed the number of GreatPowers
+"""
+validate_max_greatpowers = MaxValueValidator(GreatPower.objects.count())
