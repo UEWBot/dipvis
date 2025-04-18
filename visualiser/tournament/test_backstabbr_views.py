@@ -23,7 +23,9 @@ from tournament.backstabbr import BACKSTABBR_NETLOC
 
 INVALID_GAME_NUMBER = 1
 SOLO_GAME_NUMBER = 5128998112198656
-SANDBOX_GAME_NUMBER = 5766492401172480
+SANDBOX_1_GAME_NUMBER = 5766492401172480
+SANDBOX_2_GAME_NUMBER = 5412944885972992
+SANDBOX_3_GAME_NUMBER = 5101432468275200
 
 class BackstabbrViewTests(TestCase):
     def test_graph_page_game(self):
@@ -34,7 +36,7 @@ class BackstabbrViewTests(TestCase):
 
     def test_graph_page_sandbox(self):
         response = self.client.get(reverse('sandbox_sc_graph',
-                                           args=(SANDBOX_GAME_NUMBER, )),
+                                           args=(SANDBOX_1_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
@@ -44,9 +46,21 @@ class BackstabbrViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
-    def test_graph_sandbox(self):
+    def test_graph_sandbox_1(self):
         response = self.client.get(reverse('graph',
-                                           args=('sandbox', SANDBOX_GAME_NUMBER, )),
+                                           args=('sandbox', SANDBOX_1_GAME_NUMBER, )),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_graph_sandbox_2(self):
+        response = self.client.get(reverse('graph',
+                                           args=('sandbox', SANDBOX_2_GAME_NUMBER, )),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_graph_sandbox_3(self):
+        response = self.client.get(reverse('graph',
+                                           args=('sandbox', SANDBOX_3_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
@@ -74,7 +88,7 @@ class BackstabbrViewTests(TestCase):
         self.assertEqual(response.url, reverse('game_sc_graph', args=(SOLO_GAME_NUMBER, )))
 
     def test_url_form_post_sandbox(self):
-        path = f'sandbox/{SANDBOX_GAME_NUMBER}'
+        path = f'sandbox/{SANDBOX_1_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         data = urlencode({'url': url})
         response = self.client.post(reverse('enter_url'),
@@ -83,7 +97,7 @@ class BackstabbrViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the graph page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('sandbox_sc_graph', args=(SANDBOX_GAME_NUMBER, )))
+        self.assertEqual(response.url, reverse('sandbox_sc_graph', args=(SANDBOX_1_GAME_NUMBER, )))
 
     def test_url_form_post_invalid_game_url(self):
         """Backstabbr game URL, but for a game that isn't readable"""
