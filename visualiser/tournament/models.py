@@ -1700,8 +1700,7 @@ class TournamentPlayer(models.Model):
                            args=[str(self.tournament_id), self.uuid_str])
         else:
             raise InvalidPowerAssignmentMethod(self.tournament.power_assignment)
-        return 'https://%(host)s%(path)s' % {'host': settings.HOSTNAME,
-                                             'path': path}
+        return f'https://{settings.HOSTNAME}{path}'
 
     def _generate_uuid(self):
         """
@@ -2380,12 +2379,11 @@ class Game(models.Model):
         if self.notes:
             game_text += ' ' + self.notes + '\n'
         for gp in self.gameplayer_set.order_by('power').prefetch_related('player', 'power'):
-            game_text += ' %(power)s: %(player)s' % {'power': gp.power or _('Power TBD'),
-                                                     'player': gp.player}
+            game_text += f' {gp.power or _("Power TBD")}: {gp.player}'
             if self.the_round.tournament.is_virtual():
                 bs_un = gp.tournamentplayer().backstabbr_username
                 if bs_un:
-                    game_text += ' (%(backstabbr)s)\n' % {'backstabbr': bs_un}
+                    game_text += f' ({bs_un})\n'
                 else:
                     game_text += '\n'
             else:
@@ -2665,9 +2663,7 @@ class DrawProposal(models.Model):
             self.game.update_scores()
 
     def __str__(self):
-        return '%(game)s %(year)d%(season)s' % {'game': self.game,
-                                                'year': self.year,
-                                                'season': self.season}
+        return f'{self.game} {self.year}{self.season}'
 
 
 class RoundPlayer(models.Model):
@@ -3151,6 +3147,4 @@ class CentreCount(models.Model):
             raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
 
     def __str__(self):
-        return u'%(game)s %(year)d %(power)s' % {'game': self.game,
-                                                 'year': self.year,
-                                                 'power': _(self.power.abbreviation)}
+        return f'{self.game} {self.year} {_(self.power.abbreviation)}'

@@ -81,7 +81,7 @@ def populate_bs_profile_urls(dry_run=False):
     players_changed = 0
     mismatches = 0
     for g in Game.objects.filter(external_url__contains='backstabbr.com'):
-        print("Checking game %s" % g.external_url)
+        print(f'Checking game {g.external_url}')
         # read the game page
         try:
             bg = g.backstabbr_game()
@@ -95,24 +95,22 @@ def populate_bs_profile_urls(dry_run=False):
                 if url == gp.player.backstabbr_profile_url:
                     players_left += 1
                 else:
-                    print("%s: In-game URL %s doesn't match stored URL %s" % (str(gp.player),
-                                                                              url,
-                                                                              gp.player.backstabbr_profile_url))
+                    print(f"{str(gp.player)}: In-game URL {url} doesn't match stored URL {gp.player.backstabbr_profile_url}")
                     mismatches += 1
             else:
                 # Add the profile URL
-                print("Adding URL %s to %s" % (url, str(gp.player)))
+                print(f'Adding URL {url} to {str(gp.player)}')
                 if not dry_run:
                     gp.player.backstabbr_profile_url = url
                     gp.player.save(update_fields=['backstabbr_profile_url'])
                 players_changed += 1
-    print("Checked %d games" % games)
-    print("Matched %d profile URLs" % players_left)
+    print(f'Checked {games} games')
+    print(f'Matched {players_left} profile URLs')
     if dry_run:
-        print("Updated %d profile URLs" % players_changed)
+        print(f'Updated {players_changed} profile URLs')
     else:
-        print("Would have updated %d profile URLs" % players_changed)
-    print("%d mismatches detected" % mismatches)
+        print(f'Would have updated {players_changed} profile URLs')
+    print(f'{mismatches} mismatches detected')
 
 
 def populate_missed_years(game, dry_run=False):
@@ -123,11 +121,11 @@ def populate_missed_years(game, dry_run=False):
     try:
         bg = game.backstabbr_game()
     except backstabbr.InvalidGameUrl:
-        print("No Backstabbr URL for %s" % game)
+        print(f'No Backstabbr URL for {game}')
         return
     for year in range(FIRST_YEAR, bg.year):
         if not game.centrecount_set.filter(year=year).count() == 7:
-            print("Reading results for %d" % year)
+            print(f'Reading results for {year}')
             if dry_run:
                 continue
             try:
@@ -189,21 +187,21 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
 
     # Move GamePlayers
     for gp in del_player.gameplayer_set.all():
-        print("Moving %s" % gp)
+        print(f'Moving {gp}')
         if not dry_run:
             gp.player = keep_player
             gp.save(update_fields=['player'])
 
     # Move RoundPlayers
     for rp in del_player.roundplayer_set.all():
-        print("Moving %s" % rp)
+        print(f'Moving {rp}')
         if not dry_run:
             rp.player = keep_player
             rp.save(update_fields=['player'])
 
     # Move TournamentPlayers
     for tp in del_player.tournamentplayer_set.all():
-        print("Moving %s" % tp)
+        print(f'Moving {tp}')
         if not dry_run:
             tp.player = keep_player
             tp.save(update_fields=['player'])
@@ -211,7 +209,7 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
     if dry_run:
         print("No issues found")
     else:
-        print("Player with private key %d ready to delete from the admin" % del_player.pk)
+        print(f'Player with private key {del_player.pk} ready to delete from the admin')
 
 
 def clone_tournament(t):
@@ -345,19 +343,19 @@ def fix_round_players(the_round, dry_run=False):
     # so this could delete a player who sat out the round
     for rp in the_round.roundplayer_set.filter(game_count=1):
         if not game_set.filter(gameplayer__player=rp.player).exists():
-            print("%s didn't actually play in the round - deleting.\n" % rp)
+            print(f"{rp} didn't actually play in the round - deleting.\n")
             if not dry_run:
                 rp.delete()
     # Check for missing RoundPlayers
     for g in game_set.all():
         for gp in g.gameplayer_set.all():
             if not RoundPlayer.objects.filter(player=gp.player).exists():
-                print("Missing RoundPlayer %s - adding\n" % gp.player)
+                print(f'Missing RoundPlayer {gp.player} - adding\n')
                 if not dry_run:
                     RoundPlayer.objects.create(player=gp.player,
                                                the_round=the_round)
         # Trigger a score recalculation
-        print("Saving game %s to trigger score recalculation\n" % g)
+        print(f'Saving game {g} to trigger score recalculation\n')
         if not dry_run:
             g.save()
 
@@ -393,7 +391,7 @@ def add_missing_wdd_ids(dry_run=False):
                 wdd_id = url.split('=')[-1]
                 name = str(a.string)
                 if name.lower() == str(p).lower():
-                    print("Giving %s WDD id %s" % (str(p), wdd_id))
+                    print(f'Giving {str(p)} WDD id {wdd_id}')
                     if not dry_run:
                         p.wdd_player_id = int(wdd_id)
                         p.save(update_fields=['wdd_player_id'])
@@ -532,18 +530,18 @@ def _import_dixie_round(r_num, player, tournament, row):
     """
     Utility function for import_dixie_csv()
     """
-    if row['round%d' % r_num] == '%d' % r_num:
+    if row[f'round{r_num}'] == f'{r_num}':
         # Create a RoundPlayer
         r = tournament.round_numbered(r_num)
         rp = RoundPlayer.objects.create(player=player,
                                         the_round=r,
-                                        score=float(row['score%d' % r_num]))
+                                        score=float(row[f'score{r_num}']))
         # And a GamePlayer
         gp = GamePlayer.objects.create(player=player,
                                        game=Game.objects.get(the_round=r,
-                                                             name='R%dG%c' % (r_num, row['game%d' % r_num])),
-                                       power=GreatPower.objects.get(abbreviation=row['power%d' % r_num]),
-                                       score=float(row['score%d' % r_num]))
+                                                             name='R%dG%c' % (r_num, row[f'game{r_num}'])),
+                                       power=GreatPower.objects.get(abbreviation=row[f'power{r_num}']),
+                                       score=float(row[f'score{r_num}']))
 
 
 def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):

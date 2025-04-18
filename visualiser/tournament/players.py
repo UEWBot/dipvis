@@ -530,7 +530,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
     # Awards
     for a in bg.awards():
         # WDR only stores best country awards at present
-        award_name = 'Best %s' % a['award_country']
+        award_name = f'Best {a["award_country"]}'
         # What was the tournament?
         t_id = a['award_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
@@ -610,7 +610,7 @@ def add_player_bg(player, include_wpe=False):
     """
     fields = []
     # First check wikipedia
-    bg = WikipediaBackground('%s %s' % (player.first_name, player.last_name))
+    bg = WikipediaBackground(f'{player.first_name} {player.last_name}')
     # Titles won
     titles = bg.titles()
     for title in titles:
@@ -812,7 +812,7 @@ class Player(models.Model):
             return results
         rankings_set = self.playerranking_set.all()
         for r in rankings_set:
-            results.append('%s.' % str(r))
+            results.append(f'{str(r)}.')
         return results
 
     def _awards(self, power=None, mask=MASK_ALL_BG):
