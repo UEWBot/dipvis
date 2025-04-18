@@ -130,7 +130,7 @@ def populate_missed_years(game, dry_run=False):
                 continue
             try:
                 parsed_turn = bg.turn_details(backstabbr.SPRING, year+1)
-            except backstabbr.InvalidGameUrl:
+            except backstabbr.NoSuchSeason:
                 print("Failed to read that year from backstabbr")
                 continue
             sc_counts = parsed_turn[0]

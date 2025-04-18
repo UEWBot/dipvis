@@ -18,7 +18,8 @@ from urllib.parse import urlunparse
 
 from django.test import TestCase, tag
 
-from tournament.backstabbr import Game, InvalidGameUrl, is_backstabbr_url
+from tournament.backstabbr import Game, is_backstabbr_url
+from tournament.backstabbr import NoSuchSeason, InvalidGameUrl
 from tournament.backstabbr import BACKSTABBR_NETLOC
 from tournament.backstabbr import POWERS, SPRING, FALL, WINTER
 
@@ -34,8 +35,8 @@ DRAW_6_GAME_NUMBER = 4902987233755136
 DRAW_6_GAME_NAME = f'299-The-seventh-seal/{DRAW_6_GAME_NUMBER}'
 DRAW_7_GAME_NUMBER = 4662834623938560
 WINTER_GAME_NUMBER = 6287060712161280
-SANDBOX_GAME_NUMBER = 5766492401172480
-
+SANDBOX_1_GAME_NUMBER = 5766492401172480
+SANDBOX_2_GAME_NUMBER = 5412944885972992
 
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
@@ -284,7 +285,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_sandbox(self):
         """Sandbox game"""
-        path = 'sandbox/%s' % SANDBOX_GAME_NUMBER
+        path = 'sandbox/%s' % SANDBOX_1_GAME_NUMBER
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'Unknown'),
@@ -295,7 +296,7 @@ class BackstabbrTests(TestCase):
                    POWERS[5]: (11, 'Unknown'),
                    POWERS[6]: (6, 'Unknown'),
                   }
-        self.assertEqual(g.number, SANDBOX_GAME_NUMBER)
+        self.assertEqual(g.number, SANDBOX_1_GAME_NUMBER)
         self.assertEqual(g.name, '#R2 FB Game')
         self.assertEqual(g.url, url)
         self.assertFalse(g.regular_game)
@@ -308,6 +309,14 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.year, 1905)
         self.assertEqual(g.gm, 'Unknown')
         self.check_game_results(g, RESULTS)
+
+    @tag('backstabbr')
+    def test_backstabbr_nosuchseason(self):
+        """NoSuchSeason exception"""
+        path = 'sandbox/%s' % SANDBOX_2_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        g = Game(url)
+        self.assertRaises(NoSuchSeason, g.turn_details, 'spring', 1902)
 
     @tag('backstabbr')
     def test_backstabbr_turn_details(self):

@@ -56,7 +56,7 @@ def _dots(game):
     for y in range(1901, game.year+1):
         try:
             sc_counts, _, _, _, _ = game.turn_details(backstabbr.WINTER, y)
-        except backstabbr.InvalidGameUrl:
+        except backstabbr.NoSuchSeason:
             # Just skip this year
             pass
         else:

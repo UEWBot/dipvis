@@ -91,6 +91,11 @@ class InvalidGameUrl(Exception):
     pass
 
 
+class NoSuchSeason(Exception):
+    """The specified season isn't present in the game."""
+    pass
+
+
 def is_backstabbr_url(url):
     """Returns True if the specified URL points to the backstabbr domain"""
     parsed_url = urlparse(url)
@@ -236,16 +241,31 @@ class Game():
            The order dict may contain 'from', 'to', 'result', 'result_reason', 'type', 'to', and probably others.
         """
         url = urljoin(self.url + '/', f'{year}/{season}')
-        return self._parse_turn_page(url)
+        return self._parse_turn_page(url, season, year)
 
-    def _parse_turn_page(self, url):
+    def _parse_turn_page(self, url, season, year):
         """
         Read the game page on backstabbr and extract the interesting details.
 
         Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
         """
         soup = self._url_to_soup(url)
+        s, y = self._season_and_year(soup)
+        if (s != season) or (y != year):
+            raise NoSuchSeason(season, year)
         return self._parse_turn_from_soup(soup)
+
+    def _season_and_year(self, soup):
+        """
+        Read the season and year from the page
+
+        Returns a (season, year) 2-tuple
+        """
+        a = soup.find('a', id='history_current_season')
+        season_year = a.get_text().split()
+        season = season_year[0]
+        year = int(season_year[1])
+        return season, year
 
     def _parse_invariants_from_soup(self, soup):
         """
