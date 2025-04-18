@@ -722,7 +722,7 @@ def validate_vote_count(value):
     """
     Checks for a valid vote count
     """
-    if (value < 0) or (value > 7):
+    if (value < 0) or (value > GreatPower.objects.count()):
         raise ValidationError(_('%(value)d is not a valid vote count'),
                               params={'value': value})
 
