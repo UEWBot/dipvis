@@ -253,21 +253,17 @@ class Game():
 
         Sets self.name, self.season, self.year, self.players, self.gm, and self.ongoing
         """
-        # Extract the game name
+        # Extract the game name and current season and year
         m = soup.find('meta', property="og:title", content=True)
         if m:
-            self.name = m["content"].partition('(')[0].strip()
+            title = m["content"].rsplit('(')
+            self.name = title[0].strip()
+            season_year = title[1][:-1].split()
+            self.season = season_year[0].lower()
+            self.year = int(season_year[1])
         else:
             title = soup.find('title')
             self.name = title.string.partition('Game:')[2].partition('|  Backstabbr')[0].strip()
-        # Season and year
-        for div in soup.find_all('div'):
-            if div.has_attr('class') and 'modal-body' in div['class']:
-                if div.a:
-                    # This gives us the "current season" i.e. the next season to be played
-                    season_year = div.a.string.split()
-                    self.season = season_year[0]
-                    self.year = int(season_year[1])
         # Players
         for h4 in soup.find_all('h4'):
             if 'Players' in h4.string:
