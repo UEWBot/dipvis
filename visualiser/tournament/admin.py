@@ -61,7 +61,7 @@ class GamePlayerInline(admin.TabularInline):
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
-    fields = ['the_round', 'name', 'external_url', 'notes', 'is_top_board', 'started_at', 'is_finished']
+    fields = ['name', 'started_at', 'is_finished', 'is_top_board', 'the_round', 'the_set', 'external_url', 'notes']
     inlines = [GamePlayerInline]
     list_filter = ['the_round__tournament', 'name', 'is_finished']
 
