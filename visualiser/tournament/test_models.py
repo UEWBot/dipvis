@@ -4076,11 +4076,11 @@ class TournamentTests(TestCase):
         for i in range(1, r.number()):
             with self.subTest(round_number=i):
                 self.assertTrue(t.round_numbered(i).is_finished or t.round_numbered(i).in_progress(),
-                                'round %d' % i)
+                                f'round {i}')
         # All later rounds should be not in progress
         for i in range(r.number() + 1, rounds + 1):
             with self.subTest(round_number=i):
-                self.assertFalse(t.round_numbered(i).in_progress(), 'round %d' % i)
+                self.assertFalse(t.round_numbered(i).in_progress(), f'round {i}')
         # This round should be unfinished
         self.assertFalse(r.is_finished)
 

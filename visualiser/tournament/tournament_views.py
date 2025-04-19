@@ -480,7 +480,7 @@ def upload_prefs(request, tournament_id):
         csv_file = request.FILES['csv_file']
         if csv_file.multiple_chunks():
             messages.error(request,
-                           'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
+                           f'Uploaded file is too big ({csv_file.size / (1024 * 1024):.2f} MB)')
             return HttpResponseRedirect(reverse('upload_prefs',
                                                 args=(tournament_id,)))
         # TODO How do I know what charset to use?

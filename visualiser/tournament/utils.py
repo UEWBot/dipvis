@@ -267,7 +267,7 @@ def add_wpe_scores(player, dry_run=False):
     for score in scores:
         wdd_id = wdd_url_to_tournament_id(score['WDD WPE URL'])
         for ptr in ptr_s.filter(wdd_tournament_id=wdd_id):
-            print("Setting wpe_score for %s to %.2f" % (score['Tournament'], float(score['Score'])))
+            print(f'Setting wpe_score for {score["Tournament"]} to {float(score["Score"]):.2f}')
             if not dry_run:
                 ptr.wpe_score = score['Score']
                 ptr.save(update_fields=['wpe_score'])
