@@ -1159,9 +1159,8 @@ class PlayerGameResult(models.Model):
     """
 
     tournament_name = models.CharField(max_length=100)
-    game_name = models.CharField(max_length=20)
-    round_number = models.PositiveSmallIntegerField(default=1)
-    game_number = models.PositiveSmallIntegerField(default=1)
+    round_number = models.PositiveSmallIntegerField()
+    game_number = models.PositiveSmallIntegerField()
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     date = models.DateField()
