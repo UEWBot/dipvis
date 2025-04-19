@@ -18,7 +18,11 @@ from django.core.validators import MaxValueValidator
 
 from ..models.supply_centre import SupplyCentre
 
+def num_supplycentres():
+    return SupplyCentre.objects.count()
+
 """
 Checks that value doesn't exceed the number of SupplyCentres
 """
-validate_max_supplycentres = MaxValueValidator(SupplyCentre.objects.count())
+# Workaround migration issue by using intermediate callable
+validate_max_supplycentres = MaxValueValidator(num_supplycentres)

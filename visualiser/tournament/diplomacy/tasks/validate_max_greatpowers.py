@@ -18,7 +18,11 @@ from django.core.validators import MaxValueValidator
 
 from ..models.great_power import GreatPower
 
+def num_greatpowers():
+    return GreatPower.objects.count()
+
 """
 Checks that value doesn't exceed the number of GreatPowers
 """
-validate_max_greatpowers = MaxValueValidator(GreatPower.objects.count())
+# Workaround migration issue by using intermediate callable
+validate_max_greatpowers = MaxValueValidator(num_greatpowers)
