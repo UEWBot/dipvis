@@ -39,8 +39,7 @@ def send_board_call_email(the_round):
     # TODO Translation is complex, because we don't want to use the language of the
     # person who triggered sending the email but of the person it's going to
     # and right now we send one email to all the players
-    subject = 'Board call for %(tourney)s Round %(round)d' % {'tourney': the_round.tournament,
-                                                              'round': the_round.number()}
+    subject = f'Board call for {the_round.tournament} Round {the_round.number()}'
     email_from = settings.EMAIL_HOST_USER
     # We want to include all the boards in the message,
     # with each player's board at the top of their message

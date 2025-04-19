@@ -202,7 +202,7 @@ def upload_players(request):
                                                                    'backstabbr_username': bs_un,
                                                                    'wdd_player_id': wdd_id})
             if created:
-                messages.info(request, 'Player %s %s added' % (first_name, last_name))
+                messages.info(request, f'Player {first_name} {last_name} added')
                 count += 1
             else:
                 # Add missing info and flag mismatches
@@ -244,6 +244,6 @@ def upload_players(request):
     except Exception as e:
         messages.error(request, 'Unable to upload file: ' + repr(e))
 
-    messages.success(request, 'Added %d player(s)' % count)
+    messages.success(request, f'Added {count} player(s)')
 
     return HttpResponseRedirect(reverse('upload_players'))
