@@ -398,7 +398,8 @@ class PlayerTests(TestCase):
         p.save()
         # No final_sc_count (or other optional fields)
         pgr = PlayerGameResult(tournament_name='Best Tournament',
-                               game_name='Top Board',
+                               round_number=1,
+                               game_number=1,
                                player=p,
                                power=self.austria,
                                date=date.today(),
@@ -415,7 +416,8 @@ class PlayerTests(TestCase):
         p.save()
         # No final_sc_count (or other optional fields)
         pgr = PlayerGameResult(tournament_name='Best Tournament',
-                               game_name='Top Board',
+                               round_number=1,
+                               game_number=1,
                                player=p,
                                power=self.austria,
                                date=date.today(),
@@ -505,13 +507,15 @@ class PlayerTests(TestCase):
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(tournament_name='Best Tournament',
-                                game_name='Top Board',
+                                round_number=1,
+                                game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
-                                game_name=pgr1.game_name,
+                                round_number=pgr1.round_number,
+                                game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
                                 date=pgr1.date,
@@ -523,13 +527,35 @@ class PlayerTests(TestCase):
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(tournament_name='Best Tournament',
-                                game_name='Top Board',
+                                round_number=1,
+                                game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name='Worst Tournament',
-                                game_name=pgr1.game_name,
+                                round_number=pgr1.round_number,
+                                game_number=pgr1.game_number,
+                                player=p2,
+                                power=self.russia,
+                                date=pgr1.date,
+                                position=4)
+        self.assertFalse(pgr1.for_same_game(pgr2))
+
+    def test_playergameresult_same_wrong_round(self):
+        p1 = Player.objects.first()
+        p2 = Player.objects.last()
+        # No final_sc_count (or other optional fields)
+        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+                                round_number=1,
+                                game_number=1,
+                                player=p1,
+                                power=self.austria,
+                                date=date.today(),
+                                position=2)
+        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+                                round_number=2,
+                                game_number=1,
                                 player=p2,
                                 power=self.russia,
                                 date=pgr1.date,
@@ -541,13 +567,15 @@ class PlayerTests(TestCase):
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(tournament_name='Best Tournament',
-                                game_name='Top Board',
+                                round_number=1,
+                                game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
-                                game_name='Bottom Board',
+                                round_number=1,
+                                game_number=2,
                                 player=p2,
                                 power=self.russia,
                                 date=pgr1.date,
@@ -559,13 +587,15 @@ class PlayerTests(TestCase):
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(tournament_name='Best Tournament',
-                                game_name='Top Board',
+                                round_number=1,
+                                game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
         pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
-                                game_name=pgr1.game_name,
+                                round_number=pgr1.round_number,
+                                game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
                                 date=date.today() + timedelta(hours=24),

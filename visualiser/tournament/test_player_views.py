@@ -138,21 +138,24 @@ class PlayerViewTests(TestCase):
         # Add in another result for a non-shared game
         today = date.today()
         pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
-                                               game_name='R 2 B 1',
+                                               round_number=2,
+                                               game_number=1,
                                                date=today,
                                                player=self.p1,
                                                power=germany,
                                                position=2)
         # One with lots of blanks
         pgr2 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
-                                               game_name='R 3 B 2',
+                                               round_number=3,
+                                               game_number=2,
                                                date=today,
                                                player=self.p1,
                                                power=england,
                                                position=3)
         # One with lots of detail
         PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
-                                        game_name=pgr1.game_name,
+                                        round_number=pgr1.round_number,
+                                        game_number=pgr1.game_number,
                                         date=pgr1.date,
                                         player=p2,
                                         power=germany,

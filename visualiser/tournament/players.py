@@ -206,6 +206,21 @@ def _update_or_create_playertournamentranking_wdd2(player, t):
         traceback.print_exc()
 
 
+def _split_wdd_game_name(name):
+    """
+    Extracts the round number and game number from a WDD game name.
+
+    Returns a (round_number, game_number) 2-tuple.
+    """
+    # Format is "R n B m" or "R / B"
+    parts = name.split()
+    if (len(parts) == 4) and (parts[0] == 'R') and (parts[2] == 'B'):
+        return parts[1], parts[-1]
+    elif (len(parts) == 3) and (parts[1] == '/'):
+        return parts[0], parts[-1]
+    raise ValueError(name)
+
+
 def _update_or_create_playergameresult(player, b):
     """
     Creates or updates a PlayerGameResult for the player
@@ -254,8 +269,10 @@ def _update_or_create_playergameresult(player, b):
         # WDD has been known to change the date
         # The result should still be unique without it, though
         defaults['date'] = b['Date']
+        round_num, game_num = _split_wdd_game_name(b['Round / Board'])
         PlayerGameResult.objects.update_or_create(wdd_tournament_id=wdd_tournament_id,
-                                                  game_name=b['Round / Board'],
+                                                  round_number=round_num,
+                                                  game_number=game_num,
                                                   player=player,
                                                   power=p,
                                                   defaults=defaults)
@@ -263,7 +280,7 @@ def _update_or_create_playergameresult(player, b):
         # Handle all exceptions
         # This way, we fail to add/update the single ranking rather than all the background
         print('Failed to save PlayerGameResult')
-        print(f'player={str(player)}, tournament_name={b["Name of the tournament"]}, game_name={b["Round / Board"]}, power={str(p)}, position={b["Position"]}, date={b["Date"]}')
+        print(f'player={str(player)}, tournament_name={b["Name of the tournament"]}, round_number={round_num}, game_number={game_num}, power={str(p)}, position={b["Position"]}, date={b["Date"]}')
         traceback.print_exc()
 
 
@@ -499,11 +516,11 @@ def _add_player_bg_from_wdr(player, wdr_id):
             defaults['final_sc_count'] = b['board_centers']
         if b['board_year_of_elimination']:
             defaults['year_eliminated'] = b['board_year_of_elimination']
-        game_name = f'{b["board_round"]} / {b["board_number"]}'
         if t['tournament_wdd_id'] == -1:
             try:
                 PlayerGameResult.objects.update_or_create(wdr_tournament_id=t_id,
-                                                          game_name=game_name,
+                                                          round_number=b['board_round'],
+                                                          game_number=b['board_number'],
                                                           player=player,
                                                           power=wdr_power_name_to_greatpower(b['board_power']),
                                                           defaults=defaults)
@@ -511,13 +528,14 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, game_name={game_name}, power={b["board_power"]}, position={b["board_rank"]}')
+                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t_id
             try:
                 PlayerGameResult.objects.update_or_create(wdd_tournament_id=t['tournament_wdd_id'],
-                                                          game_name=game_name,
+                                                          round_number=b['board_round'],
+                                                          game_number=b['board_number'],
                                                           player=player,
                                                           power=wdr_power_name_to_greatpower(b['board_power']),
                                                           defaults=defaults)
@@ -525,7 +543,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, game_name={game_name}, power={b["board_power"]}, position={b["board_rank"]}')
+                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}')
                 traceback.print_exc()
     # Awards
     for a in bg.awards():
@@ -1142,6 +1160,8 @@ class PlayerGameResult(models.Model):
 
     tournament_name = models.CharField(max_length=100)
     game_name = models.CharField(max_length=20)
+    round_number = models.PositiveSmallIntegerField(default=1)
+    game_number = models.PositiveSmallIntegerField(default=1)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
     date = models.DateField()
@@ -1173,41 +1193,24 @@ class PlayerGameResult(models.Model):
                                    name='%(class)s_result_valid'),
             models.CheckConstraint(check=Q(year_eliminated__gte=FIRST_YEAR) | Q(year_eliminated__isnull=True),
                                    name='%(class)s_year_eliminated_valid'),
-            models.UniqueConstraint(fields=['tournament_name', 'game_name', 'player', 'power'],
+            models.UniqueConstraint(fields=['tournament_name', 'round_number', 'game_number', 'player', 'power'],
                                     name='unique_names_player_power'),
         ]
 
     def for_same_game(self, pgr):
         """Returns True if the two PlayerGameResults are for the same game"""
         return ((self.tournament_name == pgr.tournament_name) and
-                (self.game_name == pgr.game_name) and
+                (self.round_number == pgr.round_number) and
+                (self.game_number == pgr.game_number) and
                 (self.date == pgr.date))
-
-    def round(self):
-        """Which round of the tournament was the game played?"""
-        # Parse the game name
-        # Format is either "R n B m" or "n / m"
-        parts = self.game_name.split()
-        if (len(parts) == 4) and (parts[0] == 'R') and (parts[2] == 'B'):
-            return parts[1]
-        elif (len(parts) == 3) and (parts[1] == '/'):
-            return parts[0]
-        return '?'
-
-    def board(self):
-        """Which board of the round was the game?"""
-        # Parse the game name
-        # Format is either "R n B m" or "n / m"
-        parts = self.game_name.split()
-        return parts[-1]
 
     def wdd_url(self):
         """WDD URL where this result can be seen"""
         if not self.wdd_tournament_id:
             return ''
         query = {'id_tournament': self.wdd_tournament_id,
-                 'id_round': self.round(),
-                 'id_board': self.board()}
+                 'id_round': self.round_number,
+                 'id_board': self.game_number}
         url = urlunparse(('https',
                           WDD_NETLOC,
                           f'{WDD_BASE_RESULTS_PATH}tournament_board.php',
@@ -1223,10 +1226,11 @@ class PlayerGameResult(models.Model):
         return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}/boards'
 
     def __str__(self):
-        return _(u'%(player)s played %(power)s in %(game)s at %(tourney)s') % {'player': self.player,
-                                                                               'power': self.power,
-                                                                               'game': self.game_name,
-                                                                               'tourney': self.tournament_name}
+        return _(u'%(player)s played %(power)s in R %(r_num)d B %(g_num)d at %(tourney)s') % {'player': self.player,
+                                                                                              'power': self.power,
+                                                                                              'r_num': self.round_number,
+                                                                                              'g_num': self.game_number,
+                                                                                              'tourney': self.tournament_name}
 
 
 class PlayerAward(models.Model):
