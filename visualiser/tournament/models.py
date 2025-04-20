@@ -1073,6 +1073,30 @@ class Tournament(models.Model):
                 ),
             })
 
+    def can_be_changed_by(self, user):
+        """
+        Returns False if the specified user is not allowed to modify the Tournament
+
+        This method only checks self.managers and self.editable. It is up to
+        the caller to check permissions, etc.
+        """
+        # Note that this means that only the superuser can unset editable
+        return self.managers.filter(pk=user.pk).exists() and self.editable
+
+    def can_be_deleted_by(self, user):
+        """
+        Returns False if the specified user is not allowed to delete the Tournament
+
+        This method only checks self.managers, self.editable, and whether Games
+        already exist. It is up to the caller to check permissions, etc.
+        """
+        if not self.managers.filter(pk=user.pk).exists():
+            return False
+        if not self.editable:
+            return False
+        # If there are already Games, don't allow the deletion
+        return not Game.objects.filter(the_round__tournament=self).exists()
+
     def powers_assigned_from_prefs(self):
         """
         Returns True if power_assignment is PREFERENCES.

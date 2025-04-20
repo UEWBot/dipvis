@@ -28,14 +28,57 @@ from tournament.players import (Player, PlayerAward, PlayerGameResult,
                                 PlayerTournamentRanking, WDDPlayer)
 
 
+class TournamentPermissionAdminMixin:
+    """Shared object-level permission checks for tournament-scoped models."""
+
+    # How do we find the Tournament corresponding to obj?
+    tournament_attr = 'tournament'
+
+    def get_tournament_for_permission(self, obj):
+        """Return the Tournament associated with obj."""
+        tournament = obj
+        for attr in self.tournament_attr.split('.'):
+            tournament = getattr(tournament, attr)
+        return tournament
+
+    def has_change_permission(self, request, obj=None):
+        """Check admin permission plus Tournament-level constraints for action."""
+        # Generic permissions for unspecified obj
+        if request.user.is_superuser:
+            return True
+        if not super().has_change_permission(request, None):
+            return False
+        if obj is None:
+            return True
+
+        # Specific permissions for objects in a given tournament
+        tournament = self.get_tournament_for_permission(obj)
+        return tournament.can_be_changed_by(request.user)
+
+    def has_delete_permission(self, request, obj=None):
+        """Check admin permission plus Tournament-level constraints for action."""
+        # Generic permissions for unspecified obj
+        if request.user.is_superuser:
+            return True
+        if not super().has_delete_permission(request, None):
+            return False
+        if obj is None:
+            return True
+
+        # Specific permissions for objects in a given tournament
+        tournament = self.get_tournament_for_permission(obj)
+        return tournament.can_be_deleted_by(request.user)
+
+
 @admin.register(Award)
 class AwardAdmin(admin.ModelAdmin):
     list_filter = ['power']
 
 
 @admin.register(CentreCount)
-class CentreCountAdmin(admin.ModelAdmin):
+class CentreCountAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'year']
+    tournament_attr = 'game.the_round.tournament'
 
 
 @admin.register(DBNCoverage)
@@ -44,8 +87,9 @@ class DBNCoverageAdmin(admin.ModelAdmin):
 
 
 @admin.register(DrawProposal)
-class DrawProposalAdmin(admin.ModelAdmin):
+class DrawProposalAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'passed', 'game', 'year']
+    tournament_attr = 'game.the_round.tournament'
 
 
 class GamePlayerInline(admin.TabularInline):
@@ -59,21 +103,24 @@ class GamePlayerInline(admin.TabularInline):
 
 
 @admin.register(Game)
-class GameAdmin(admin.ModelAdmin):
+class GameAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
     fields = ['name', 'started_at', 'is_finished', 'is_top_board', 'the_round', 'the_set', 'external_url', 'notes']
     inlines = [GamePlayerInline]
     list_filter = ['the_round__tournament', 'name', 'is_finished']
+    tournament_attr = 'the_round.tournament'
 
 
 @admin.register(GameImage)
-class GameImageAdmin(admin.ModelAdmin):
+class GameImageAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'game', 'year', 'season', 'phase']
+    tournament_attr = 'game.the_round.tournament'
 
 
 @admin.register(GamePlayer)
-class GamePlayerAdmin(admin.ModelAdmin):
+class GamePlayerAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'player']
+    tournament_attr = 'game.the_round.tournament'
 
 
 class SetPowerInline(admin.TabularInline):
@@ -137,20 +184,23 @@ class PlayerTournamentRankingAdmin(admin.ModelAdmin):
 
 
 @admin.register(Pool)
-class PoolAdmin(admin.ModelAdmin):
+class PoolAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['the_round__tournament']
     prepopulated_fields = {"slug": ["name"]}
+    tournament_attr = 'the_round.tournament'
 
 
 @admin.register(Round)
-class RoundAdmin(admin.ModelAdmin):
+class RoundAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament']
     ordering = ['tournament__name', 'start']
+    tournament_attr = 'tournament'
 
 
 @admin.register(RoundPlayer)
-class RoundPlayerAdmin(admin.ModelAdmin):
+class RoundPlayerAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['the_round__tournament', 'the_round', 'player', 'game_count']
+    tournament_attr = 'the_round.tournament'
 
     # RoundPlayer.delete() needs to be called for each object
     def delete_queryset(self, request, queryset):
@@ -158,15 +208,16 @@ class RoundPlayerAdmin(admin.ModelAdmin):
             for obj in queryset:
                 obj.delete()
 
-
 @admin.register(SupplyCentreOwnership)
-class SCOwnershipAdmin(admin.ModelAdmin):
+class SCOwnershipAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'game', 'owner', 'year']
+    tournament_attr = 'game.the_round.tournament'
 
 
 @admin.register(SeederBias)
-class SeederBiasAdmin(admin.ModelAdmin):
+class SeederBiasAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['player1__tournament']
+    tournament_attr = 'player1.tournament'
 
 
 @admin.register(Series)
@@ -194,12 +245,13 @@ class RoundInline(admin.StackedInline):
 
 
 @admin.register(Team)
-class TeamAdmin(admin.ModelAdmin):
+class TeamAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament']
+    tournament_attr = 'tournament'
 
 
 @admin.register(Tournament)
-class TournamentAdmin(admin.ModelAdmin):
+class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     """Include Round as part of Tournament"""
     inlines = [RoundInline]
     fields = (('name', 'format', 'location'),
@@ -214,10 +266,14 @@ class TournamentAdmin(admin.ModelAdmin):
               ('wdd_tournament_id', 'wdr_tournament_id'),
               'awards')
 
+    def get_tournament_for_permission(self, obj):
+        return obj
+
 
 @admin.register(TournamentPlayer)
-class TournamentPlayerAdmin(admin.ModelAdmin):
+class TournamentPlayerAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament', 'player', 'location', 'unranked']
+    tournament_attr = 'tournament'
 
 
 @admin.register(WDDPlayer)

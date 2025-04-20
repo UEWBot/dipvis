@@ -5106,6 +5106,101 @@ class TournamentTests(TestCase):
         self.assertIn('round_scoring_system', form.errors)
         self.assertIn('tournament_scoring_system', form.errors)
 
+    def test_tournament_can_be_changed_by_manager_when_editable(self):
+        today = date.today()
+        manager = User.objects.create_user(username='change-manager')
+        tournament = Tournament.objects.create(name='Change permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=True)
+        try:
+            tournament.managers.add(manager)
+            self.assertTrue(tournament.can_be_changed_by(manager))
+        finally:
+            tournament.delete()
+            manager.delete()
+
+    def test_tournament_can_be_changed_by_rejects_non_manager_or_non_editable(self):
+        today = date.today()
+        manager = User.objects.create_user(username='change-manager-2')
+        other_user = User.objects.create_user(username='change-non-manager')
+        tournament = Tournament.objects.create(name='Change permission reject test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=True)
+        try:
+            tournament.managers.add(manager)
+
+            self.assertFalse(tournament.can_be_changed_by(other_user))
+
+            tournament.editable = False
+            tournament.save(update_fields=['editable'])
+            self.assertFalse(tournament.can_be_changed_by(manager))
+        finally:
+            tournament.delete()
+            manager.delete()
+            other_user.delete()
+
+    def test_tournament_can_be_deleted_by_manager_when_editable_and_no_games(self):
+        today = date.today()
+        manager = User.objects.create_user(username='delete-manager')
+        tournament = Tournament.objects.create(name='Delete permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=True)
+        try:
+            tournament.managers.add(manager)
+            self.assertTrue(tournament.can_be_deleted_by(manager))
+        finally:
+            tournament.delete()
+            manager.delete()
+
+    def test_tournament_can_be_deleted_by_rejects_non_manager_non_editable_or_games(self):
+        today = date.today()
+        manager = User.objects.create_user(username='delete-manager-2')
+        other_user = User.objects.create_user(username='delete-non-manager')
+        tournament = Tournament.objects.create(name='Delete permission reject test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=True)
+        try:
+            tournament.managers.add(manager)
+
+            self.assertFalse(tournament.can_be_deleted_by(other_user))
+
+            tournament.editable = False
+            tournament.save(update_fields=['editable'])
+            self.assertFalse(tournament.can_be_deleted_by(manager))
+
+            tournament.editable = True
+            tournament.save(update_fields=['editable'])
+            r = Round.objects.create(tournament=tournament,
+                                     scoring_system=G_SCORING_SYSTEMS[0].name,
+                                     dias=True,
+                                     start=datetime.combine(tournament.start_date,
+                                                            time(hour=8, tzinfo=datetime_timezone.utc)))
+            Game.objects.create(name='delete-permission-game',
+                                started_at=r.start,
+                                the_round=r,
+                                the_set=self.set1)
+            self.assertFalse(tournament.can_be_deleted_by(manager))
+        finally:
+            tournament.delete()
+            manager.delete()
+            other_user.delete()
+
     def test_tournament_clean_sum_1(self):
         today = date.today()
         t = Tournament(name='Test tournament',
