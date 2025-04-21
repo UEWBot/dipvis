@@ -1403,9 +1403,51 @@ class GScoringManorCon(GameScoringSystem):
         return retval
 
 
+class GScoringBase3(GameScoringSystem):
+    """
+    Base 3 scoring system
+
+    1 point per centre
+    3 points for survival
+    9 point bonus for topping the board, divided by by 3 for each additional person
+    sharing the top (9 points for lone top, 3 each for 2-way top, 1 each for 3-way top, etc)
+    Solos score 46 points.
+    Elimination or loss to a solo scores 0.
+    """
+    def __init__(self):
+        self.name = _('Base 3')
+
+    def scores(self, state):
+        """
+        Return a dict, indexed by power id, of scores.
+        """
+        retval = {}
+        soloer = state.soloer()
+        soloed = soloer is not None
+        leader_scs = state.highest_dot_count()
+        num_leaders = state.num_powers_with(leader_scs)
+        # Calculate the bonus each board topper gets
+        bonus = 9.0 / (3 ** (num_leaders - 1))
+        for p in state.all_powers():
+            retval[p] = 0.0
+            if soloed:
+                if soloer == p:
+                    retval[p] = 46.0
+            else:
+                dots = state.dot_count(p)
+                if dots:
+                    # 3 points for survival plus 1 per centre
+                    retval[p] = 3.0 + dots
+                # Bonus points for board toppers
+                if dots == leader_scs:
+                   retval[p] += bonus
+        return retval
+
+
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringBangkok(),
+    GScoringBase3(),
     GScoringCarnage(_('Carnage with dead equal'),
                     centre_based=False,
                     dead_equal=True,
