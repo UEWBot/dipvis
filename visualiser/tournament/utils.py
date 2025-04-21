@@ -129,6 +129,17 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
     add_best_country_awards_for_tournament(t, False)
 
 
+def archive_tournaments(dry_run=False):
+    """
+    Clear the editable flag in all published tournaments that are over
+    """
+    for t in Tournament.objects.filter(editable=True).filter(is_published=True).filter(end_date__lte=timezone.now()):
+        print(f'Archiving {t}')
+        if not dry_run:
+            t.editable = False
+            t.save()
+
+
 # Populate attributes - set attributes that can be figured out
 
 def add_missing_player_wdd_ids(dry_run=False):
