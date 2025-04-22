@@ -127,7 +127,7 @@ class TournamentViewTests(TestCase):
                                            start_date=today,
                                            end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         cls.t1.awards.add(cls.a1)
@@ -150,7 +150,7 @@ class TournamentViewTests(TestCase):
                                            start_date=today,
                                            end_date=today + timedelta(hours=24),
                                            round_scoring_system=NO_SCORING_SYSTEM_STR,
-                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            power_assignment=PowerAssignMethods.PREFERENCES,
                                            is_published=False)
@@ -214,7 +214,7 @@ class TournamentViewTests(TestCase):
                                            start_date=today,
                                            end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=False)
 
@@ -224,7 +224,7 @@ class TournamentViewTests(TestCase):
                                            start_date=today,
                                            end_date=today + timedelta(hours=24),
                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                           tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                           tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            editable=False)

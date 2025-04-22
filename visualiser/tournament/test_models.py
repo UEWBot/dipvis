@@ -135,7 +135,7 @@ class RoundScoringTests(TestCase):
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("Best", t.round_scoring_system)
@@ -239,7 +239,7 @@ class RoundScoringTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       non_player_round_score=4005,
                                       non_player_round_score_once=False,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("Best", t.round_scoring_system)
@@ -308,7 +308,7 @@ class RoundScoringTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       non_player_round_score=4005,
                                       non_player_round_score_once=True,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("Best", t.round_scoring_system)
@@ -408,7 +408,7 @@ class RoundScoringTests(TestCase):
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[1].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("all", t.round_scoring_system)
@@ -1968,7 +1968,7 @@ class ModelTests(TestCase):
 
     # validate_tournament_scoring_system()
     def test_validate_tournament_scoring_system_ok(self):
-        self.assertIsNone(validate_tournament_scoring_system(T_SCORING_SYSTEMS[0].name))
+        self.assertIsNone(validate_tournament_scoring_system('Sum all round scores'))
 
     def test_validate_tournament_scoring_system_bad(self):
         self.assertRaises(ValidationError, validate_tournament_scoring_system, "Chris Wins")
@@ -2055,7 +2055,7 @@ class TeamTests(TestCase):
                                           start_date=today,
                                           end_date=today + HOURS_24,
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system='Sum all round scores',
                                           team_size=2,
                                           draw_secrecy=DrawSecrecy.SECRET)
         cls.tm = Team.objects.create(tournament=cls.t,
@@ -2358,7 +2358,7 @@ class DBNCoverageTests(TestCase):
                                           start_date=today,
                                           end_date=today + HOURS_24,
                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system='Sum all round scores',
                                           draw_secrecy=DrawSecrecy.SECRET)
 
     def test_dbncoverage_str(self):
@@ -2381,19 +2381,19 @@ class TournamentTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        is_finished=True,
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
@@ -2658,7 +2658,7 @@ class TournamentTests(TestCase):
         t = Tournament(name='Test Tournament',
                        start_date=today,
                        end_date=today + HOURS_24,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        power_assignment=PowerAssignMethods.PREFERENCES)
         self.assertTrue(t.powers_assigned_from_prefs())
@@ -3162,7 +3162,7 @@ class TournamentTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
@@ -3228,7 +3228,7 @@ class TournamentTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
@@ -3306,7 +3306,7 @@ class TournamentTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        handicaps=True,
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
@@ -3388,7 +3388,7 @@ class TournamentTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        is_finished=True,
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
@@ -3876,7 +3876,7 @@ class TournamentTests(TestCase):
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+                                      tournament_scoring_system='Sum all round scores')
         t.set_is_finished()
         self.assertFalse(t.is_finished)
 
@@ -3899,7 +3899,7 @@ class TournamentTests(TestCase):
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+                                      tournament_scoring_system='Sum all round scores')
         self.assertFalse(t.in_progress())
 
     def test_tourney_in_progress_rounds_not_started(self):
@@ -3908,7 +3908,7 @@ class TournamentTests(TestCase):
                                       start_date=today,
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name)
+                                      tournament_scoring_system='Sum all round scores')
         t.save()
         r = Round.objects.create(tournament=t,
                                  scoring_system=s1,
@@ -4024,19 +4024,19 @@ class TournamentPlayerTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        is_finished=True,
                                        draw_secrecy=DrawSecrecy.COUNTS)
         Tournament.objects.create(name='t4',
                                        start_date=today,
                                        end_date=today + HOURS_24,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        power_assignment=PowerAssignMethods.PREFERENCES)
 
@@ -4530,13 +4530,13 @@ class SeederBiasTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Create some players
@@ -4605,7 +4605,7 @@ class PreferenceTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Create a player
@@ -4639,19 +4639,19 @@ class RoundTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        is_finished=True,
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
@@ -4843,7 +4843,7 @@ class RoundTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       non_player_round_score=4005,
                                       non_player_round_score_once=True,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET)
         # Check that we got the right scoring system
         self.assertIn("Best", t.round_scoring_system)
@@ -4896,7 +4896,7 @@ class RoundTests(TestCase):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=today,
                                                       end_date=today + HOURS_24,
-                                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                      tournament_scoring_system='Sum all round scores',
                                                       round_scoring_system='Invalid System')
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -4910,7 +4910,7 @@ class RoundTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t,
@@ -4998,7 +4998,7 @@ class RoundTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t,
@@ -5401,13 +5401,13 @@ class GameTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
@@ -5664,7 +5664,7 @@ class GameTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp1 = TournamentPlayer(tournament=t, player=self.p1)
@@ -6024,7 +6024,7 @@ class GameTests(TestCase):
         t, created = Tournament.objects.get_or_create(name='Invalid Tournament',
                                                       start_date=today,
                                                       end_date=today + HOURS_24,
-                                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                      tournament_scoring_system='Sum all round scores',
                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name)
         r = Round.objects.create(tournament=t,
                                  scoring_system='Invalid System',
@@ -6518,7 +6518,7 @@ class GameTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
@@ -6597,7 +6597,7 @@ class GameTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
@@ -6685,7 +6685,7 @@ class GameTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp = TournamentPlayer(tournament=t, player=self.p1)
@@ -6770,7 +6770,7 @@ class SupplyCentreOwnershipTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
@@ -6810,13 +6810,13 @@ class DrawProposalTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
@@ -7548,7 +7548,7 @@ class RoundPlayerTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
@@ -7735,7 +7735,7 @@ class RoundPlayerTests(TestCase):
         # For now, let's make sure it gets called for a TScoringSumGames tournament
         t = Tournament.objects.get(name='t1')
         sys = t.tournament_scoring_system
-        t.tournament_scoring_system = T_SCORING_SYSTEMS[6].name
+        t.tournament_scoring_system = 'Sum best 4 games in any rounds'
         t.save()
         self.assertFalse(t.tournament_scoring_system_obj().uses_round_scores)
         r = t.round_numbered(1)
@@ -7799,7 +7799,7 @@ class RoundPlayerTests(TestCase):
                                       round_scoring_system=s,
                                       non_player_round_score=4005,
                                       non_player_round_score_once=False,
-                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
                                       draw_secrecy=DrawSecrecy.SECRET)
         r = Round.objects.create(tournament=t,
                                  scoring_system=s1,
@@ -7905,7 +7905,7 @@ class GamePlayerTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
@@ -8216,7 +8216,7 @@ class GamePlayerTests(TestCase):
                        start_date=today,
                        end_date=today + HOURS_24,
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                       tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
         tp1 = TournamentPlayer(tournament=t, player=self.p1)
@@ -8351,7 +8351,7 @@ class GameImageTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
@@ -8414,13 +8414,13 @@ class CentreCountTests(TestCase):
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.SECRET)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system='Sum all round scores',
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
