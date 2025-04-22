@@ -494,6 +494,44 @@ class TScoringWDC2025(TournamentScoringSystem):
         return t_scores
 
 
+class TScoringAverageGames(TournamentScoringSystem):
+    """
+    Sum all Game scores and divide by the number of games plus an optional offset.
+    """
+    def __init__(self, name, offset=0):
+        self.name = name
+        self.offset = offset
+
+    uses_round_scores = False
+
+    def scores(self, round_players):
+        """
+        Returns a dict, indexed by player key, of tournament scores
+        """
+        t_scores = {}
+        # for each player who played any of the specified rounds
+        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
+            # All the scores to consider. Dict, keyed by rp or gp, of scores
+            player_scores = []
+            # Find just the rounds they played
+            rps = round_players.filter(player=p)
+            rounds = []
+            for rp in rps:
+                rounds.append(rp.the_round)
+                # Treat sitting-out bonuses as pseudo-games
+                if rp.score != 0.0:
+                    player_scores.append(rp.score)
+            for gp in GamePlayer.objects.filter(player=p,
+                                                game__the_round__in=rounds):
+                player_scores.append(gp.score)
+            t_scores[p] = 0
+            # Sum all the game (and pseudo-game) scores
+            total = sum(player_scores)
+            # And divide by the count plus offset
+            t_scores[p] = total / (len(player_scores) + self.offset)
+        return t_scores
+
+
 class TScoringSumGames(TournamentScoringSystem):
     """
     Just add up the best N Game scores regardless of the round(s) in which they were played.
@@ -605,6 +643,7 @@ class TScoringSumGames(TournamentScoringSystem):
 
 # All the tournament scoring systems we support
 T_SCORING_SYSTEMS = [
+    TScoringAverageGames('Sum games, divide by count + 10', 10),
     TScoringSumRounds(_('Sum all round scores'), sys.maxsize),
     TScoringSumRounds(None, 2),
     TScoringSumRounds(None, 3),
