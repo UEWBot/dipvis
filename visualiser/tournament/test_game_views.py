@@ -1735,6 +1735,27 @@ class GameViewTests(TestCase):
         # Does the response look like a PNG image?
         self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
 
+    def test_graph_sparse_data(self):
+        """Check that we can generate a graph when some years have missing SC CentreCounts"""
+        # Add two elimination years
+        sc1 = CentreCount.objects.create(game=self.g1,
+                                         year=1902,
+                                         power=self.italy,
+                                         count=0)
+        sc2 = CentreCount.objects.create(game=self.g1,
+                                         year=1904,
+                                         power=self.austria,
+                                         count=0)
+        response = self.client.get(reverse('graph',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Does the response look like a PNG image?
+        self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
+        # Cleanup
+        sc1.delete()
+        sc2.delete()
+
     # TODO check initial value for year and season in draw vote page with and without game images
 
     # TODO check errors from DrawProposal.clean() get displayed
