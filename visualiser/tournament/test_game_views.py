@@ -501,15 +501,16 @@ class GameViewTests(TestCase):
                          self.italy: 4,
                          self.russia: 8,
                          self.turkey: 0},
+                  1911: {self.italy: 0},
                   1912: {self.austria: 9,
                          self.england: 9,
-                         self.france: 3,
+                         self.france: 4,
                          self.germany: 3,
-                         self.italy: 3,
-                         self.russia: 7,
+                         self.italy: 0,
+                         self.russia: 9,
                          self.turkey: 0}}
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        data = {'scs-TOTAL_FORMS': '4',
+        data = {'scs-TOTAL_FORMS': '5',
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
@@ -537,7 +538,10 @@ class GameViewTests(TestCase):
         for year, dots in counts.items():
             with self.subTest(year=year):
                 ccs = CentreCount.objects.filter(game=self.g1, year=year)
-                self.assertEqual(ccs.count(), 7)
+                if year==1911:
+                    self.assertEqual(ccs.count(), 1)
+                else:
+                    self.assertEqual(ccs.count(), 7)
                 for p, c in dots.items():
                     with self.subTest(year=year, power=p):
                         self.assertEqual(ccs.get(power=p).count, c)

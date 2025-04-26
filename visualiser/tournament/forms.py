@@ -900,10 +900,10 @@ class SCCountForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            # TODO It may make sense to use required=False
-            # and to default any not provided to zero
-            # It may also make sense for that default to be in the model...
-            self.fields[c] = forms.IntegerField(min_value=0, max_value=TOTAL_SCS)
+            # Support just providing counts for some powers (e.g. eliminations)
+            self.fields[c] = forms.IntegerField(min_value=0,
+                                                max_value=TOTAL_SCS,
+                                                required=False)
             # We don't want the default capitalisation
             self.fields[c].label = _(c)
             self.fields[c].widget.attrs['size'] = 2
@@ -914,20 +914,23 @@ class SCCountForm(forms.Form):
         cleaned_data = super().clean()
         year = cleaned_data.get('year')
         total_scs = 0
+        got_full_set = True
         for power in GreatPower.objects.all():
             c = power.name
             dots = cleaned_data.get(c)
-            # If the field itself didn't validate, drop out
             if dots is None:
-                return cleaned_data
-            total_scs += dots
+                # This power is either missing or didn't validate
+                got_full_set = False
+            else:
+                total_scs += dots
         if total_scs > TOTAL_SCS:
             raise forms.ValidationError(_("Total SC count for %(year)d is %(dots)d, more than %(max)d")
                                         % {'year': year,
                                            'dots': total_scs,
                                            'max': TOTAL_SCS})
-        # Add a pseudo-field with the number of neutrals, for convenience
-        cleaned_data['neutral'] = TOTAL_SCS - total_scs
+        if got_full_set:
+            # Add a pseudo-field with the number of neutrals, for convenience
+            cleaned_data['neutral'] = TOTAL_SCS - total_scs
 
         return cleaned_data
 
@@ -940,27 +943,34 @@ class BaseSCCountFormset(BaseFormSet):
         """
         if any(self.errors):
             return
-        years = {}
+        years = []
+        neutrals = {}
         for i in range(0, self.total_form_count()):
             form = self.forms[i]
-            year = form.cleaned_data.get('year')
-            if not year:
+            try:
+                year = form.cleaned_data['year']
+            except KeyError:
                 # Blank form
                 continue
             if year in years:
                 raise forms.ValidationError(_('Year %(year)s appears more than once')
                                             % {'year': year})
+            years.append(year)
             # Remember the number of neutrals left
-            years[year] = form.cleaned_data.get('neutral')
+            try:
+                neutrals[year] = form.cleaned_data['neutral']
+            except KeyError:
+                # Don't check years with partial data
+                pass
         # Now check that the number of neutrals only goes down
-        neutrals = TOTAL_SCS
-        for year in sorted(years.keys()):
-            if years[year] > neutrals:
+        prev_neutrals = TOTAL_SCS
+        for year in sorted(neutrals.keys()):
+            if neutrals[year] > prev_neutrals:
                 raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d')
-                                            % {'before': neutrals,
-                                               'after': years[year],
+                                            % {'before': prev_neutrals,
+                                               'after': neutrals[year],
                                                'year': year})
-            neutrals = years[year]
+            prev_neutrals = neutrals[year]
 
 
 # Enable self check-ins

@@ -400,6 +400,9 @@ def sc_counts(request, tournament_id, game_name):
                             continue
                         with transaction.atomic():
                             for name, value in form.cleaned_data.items():
+                                if value is None:
+                                    # No SC count provided for this GreatPower
+                                    continue
                                 try:
                                     power = GreatPower.objects.get(name=name)
                                 except GreatPower.DoesNotExist:

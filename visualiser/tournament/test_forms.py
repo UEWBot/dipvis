@@ -2171,6 +2171,16 @@ class SCCountFormTest(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['neutral'], 1)
 
+    def test_missing_powers(self):
+        """Check handling of years with just an elimination"""
+        data = {'year': 1902,
+                'England': 0,
+               }
+        form = SCCountForm(data=data)
+        self.assertTrue(form.is_valid())
+        # In this case, the neutrals count should not be generated
+        self.assertNotIn('neutral', form.cleaned_data)
+
 
 class BaseSCCountFormsetTest(TestCase):
     fixtures = ['game_sets.json']
@@ -2224,6 +2234,22 @@ class BaseSCCountFormsetTest(TestCase):
         formset = self.SCCountFormset(data)
         self.assertTrue(formset.is_valid())
 
+    def test_elimination_year(self):
+        """Year with just an elimination"""
+        data = self.data.copy()
+        data['form-0-Austria-Hungary'] = 4
+        data['form-0-England'] = 4
+        data['form-0-France'] = 4
+        data['form-0-Germany'] = 4
+        data['form-0-Italy'] = 4
+        data['form-0-Russia'] = 3
+        data['form-0-Turkey'] = 4
+        data['form-0-year'] = 1902
+        data['form-1-Italy'] = 0
+        data['form-1-year'] = 1904
+        formset = self.SCCountFormset(data)
+        self.assertTrue(formset.is_valid())
+
     def test_form_error(self):
         """Something wrong in one of the forms"""
         data = self.data.copy()
@@ -2261,6 +2287,52 @@ class BaseSCCountFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
         self.assertFormSetError(formset, None, None, 'Year 1902 appears more than once')
+
+    def test_duplicate_elimination_year(self):
+        """One year with partial data is repeated"""
+        # TODO Ideally, we'd probably allow this as long as there are no inconsistencies
+        # (e.g. the data here)
+        data = self.data.copy()
+        data['form-0-England'] = 0
+        data['form-0-year'] = 1904
+        data['form-1-Italy'] = 0
+        data['form-1-year'] = 1904
+        formset = self.SCCountFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertFormSetError(formset, None, None, 'Year 1904 appears more than once')
+
+    def test_duplicate_partial_year1(self):
+        """One year with partial data is repeated"""
+        # TODO Ideally, we'd probably allow this as long as there are no inconsistencies
+        # (e.g. the data here)
+        data = self.data.copy()
+        data['form-0-England'] = 3
+        data['form-0-year'] = 1904
+        data['form-1-Italy'] = 6
+        data['form-1-year'] = 1904
+        formset = self.SCCountFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertFormSetError(formset, None, None, 'Year 1904 appears more than once')
+
+    def test_duplicate_partial_year2(self):
+        """One year with partial data is repeated"""
+        data = self.data.copy()
+        data['form-0-England'] = 3
+        data['form-0-year'] = 1904
+        data['form-1-England'] = 6
+        data['form-1-year'] = 1904
+        formset = self.SCCountFormset(data)
+        self.assertFalse(formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertFormSetError(formset, None, None, 'Year 1904 appears more than once')
 
     def test_neutrals_increase(self):
         """SupplyCentres become neutral"""
