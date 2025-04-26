@@ -276,9 +276,9 @@ class Game():
         # Extract the game name and current season and year
         m = soup.find('meta', property="og:title", content=True)
         if m:
-            title = m["content"].rsplit('(')
+            title = m["content"].rpartition('(')
             self.name = title[0].strip()
-            season_year = title[1][:-1].split()
+            season_year = title[2][:-1].split()
             self.season = season_year[0].lower()
             self.year = int(season_year[1])
         else:
