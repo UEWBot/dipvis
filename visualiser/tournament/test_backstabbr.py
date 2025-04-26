@@ -37,6 +37,7 @@ DRAW_7_GAME_NUMBER = 4662834623938560
 WINTER_GAME_NUMBER = 6287060712161280
 SANDBOX_1_GAME_NUMBER = 5766492401172480
 SANDBOX_2_GAME_NUMBER = 5412944885972992
+SANDBOX_3_GAME_NUMBER = 6238301148020736
 
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
@@ -309,6 +310,20 @@ class BackstabbrTests(TestCase):
         self.assertEqual(g.year, 1905)
         self.assertEqual(g.gm, 'Unknown')
         self.check_game_results(g, RESULTS)
+
+    @tag('backstabbr')
+    def test_backstabbr_parentheses(self):
+        """Game with parentheses in its name"""
+        path = 'sandbox/%s' % SANDBOX_3_GAME_NUMBER
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        g = Game(url)
+        self.assertEqual(g.number, SANDBOX_3_GAME_NUMBER)
+        self.assertEqual(g.name, 'WDC 2025 R1GJ (Full)')
+        self.assertEqual(g.url, url)
+        self.assertFalse(g.regular_game)
+        self.assertTrue(g.sandbox_game)
+        self.assertEqual(g.season, SPRING)
+        self.assertEqual(g.year, 1909)
 
     @tag('backstabbr')
     def test_backstabbr_nosuchseason(self):
