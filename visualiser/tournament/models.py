@@ -466,13 +466,19 @@ class TScoringWDC2025(TournamentScoringSystem):
         t_scores = {}
         if len(round_players) == 0:
             return t_scores
-        # calculate the pre-round-four scores
+        # Because we dynamically figure out the top 21, we must always calculate every
+        # player's score for rounds 1-3
         tournament = round_players.first().the_round.tournament
+        all_round_players = RoundPlayer.objects.filter(the_round__tournament=tournament)
+        # calculate the pre-round-four scores
         round_four = tournament.round_numbered(4)
-        early_scores = self._early_scores(round_players.exclude(the_round=round_four))
+        early_scores = self._early_scores(all_round_players.exclude(the_round=round_four))
         # If there are no round four scores included, we're done
         if not round_players.filter(the_round=round_four).exists():
-            return early_scores
+            # filter to just round_players
+            for p in Player.objects.filter(roundplayer__in=round_players).distinct():
+                t_scores[p] = early_scores[p]
+            return t_scores
         # find the top 21 players going into round 4
         top21 = self._top21(early_scores, tournament)
         round_four_rps = round_players.filter(the_round=round_four)

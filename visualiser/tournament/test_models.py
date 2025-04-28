@@ -726,6 +726,32 @@ class TournamentScoringWDC2025Tests(TestCase):
                     res = sum(gp.score for gp in gp13.all())
                 self.assertTrue((score - res == gp4_score) or (score - res == 1.5 * gp4_score))
 
+    # TScoringWDC2025.scores() with not all round_players
+    def test_scores_not_all_players(self):
+        # Propagate scores from GP through RP to TP
+        for r in [self.r1, self.r2, self.r3, self.r4]:
+            r.update_scores()
+        rps = RoundPlayer.objects.filter(the_round__tournament=self.t).filter(player=self.p10)
+        scores = self.tss.scores(rps)
+        # validate results
+        self.assertEqual(len(scores), 1)
+        for p, score in scores.items():
+            with self.subTest(player=str(p)):
+                gps = p.gameplayer_set.filter(game__the_round__tournament=self.t).order_by('-score')
+                # Score should be either:
+                # - best two of the first three rounds plus the 4th round
+                # - best two of the first three rounds plus 1.5x the 4th round
+                gp13 = gps.exclude(game__the_round=self.r4)
+                try:
+                    gp4_score = gps.get(game__the_round=self.r4).score
+                except GamePlayer.DoesNotExist:
+                    gp4_score = 0.0
+                if len(gp13) == 3:
+                    res = sum(gp.score for gp in list(gp13)[:2])
+                else:
+                    res = sum(gp.score for gp in gp13.all())
+                self.assertTrue((score - res == gp4_score) or (score - res == 1.5 * gp4_score))
+
     # TScoringWDC2025.scores() tiebreakers
     def test_scores_with_ties(self):
         # Set GP scores to have some ties
