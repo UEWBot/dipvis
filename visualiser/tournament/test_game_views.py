@@ -1014,14 +1014,19 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
         self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 0)
         # Create some CentreCounts for 1907
-        CentreCount.objects.create(game=self.g1,
-                                   power=self.austria,
-                                   year=1907,
-                                   count=6)
-        CentreCount.objects.create(game=self.g1,
-                                   power=self.italy,
-                                   year=1907,
-                                   count=16)
+        ccs = {self.austria: 6,
+               self.england: 0,
+               self.france: 0,
+               self.germany: 0,
+               self.italy: 16,
+               self.russia: 0,
+               self.turkey: 0,
+        }
+        for p, count in ccs.items():
+            CentreCount.objects.create(game=self.g1,
+                                       power=p,
+                                       year=1907,
+                                       count=count)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = {'form-TOTAL_FORMS': '5',
                 'form-INITIAL_FORMS': '1',
@@ -1041,8 +1046,9 @@ class GameViewTests(TestCase):
         self.assertEqual(response.url, reverse('game_sc_owners', args=(self.t1.pk, self.g1.name)))
         # There should still be no SupplyCentreOwnerships
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 0)
-        # and the two CentreCounts we added at the start
-        self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 2)
+        # and the seven CentreCounts we added at the start
+        for p, count in ccs.items():
+            self.assertEqual(self.g1.centrecount_set.get(year=1907, power=p).count, count)
         # Clean up
         self.g1.centrecount_set.filter(year=1907).delete()
 

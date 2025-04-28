@@ -2211,8 +2211,6 @@ class Game(models.Model):
         Ensures that there is one CentreCount for each power for the
         specified year, and that the values match those determined by
         looking at the SupplyCentreOwnerships for that year.
-        Calls set_is_finished() to set self.is_finished appropriately.
-        Calls update_scores().
         Can raise SCOwnershipsNotFound.
         """
         all_scos = self.supplycentreownership_set.filter(year=year)
@@ -2224,8 +2222,6 @@ class Game(models.Model):
                                                      game=self,
                                                      year=year,
                                                      defaults={'count': all_scos.filter(owner=p).count()})
-        self.set_is_finished(year)
-        self.update_scores()
 
     def compare_sc_counts_and_ownerships(self, year):
         """

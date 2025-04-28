@@ -347,6 +347,8 @@ def sc_owners(request, tournament_id, game_name):
                     except SCOwnershipsNotFound:
                         # We have a row with just the year but no actual ownerships
                         continue
+        # Changes are likely to affect the scores
+        g.update_scores()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('game_sc_owners',
                                             args=(tournament_id, game_name)))
@@ -758,8 +760,8 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
         game.create_or_update_sc_counts_from_ownerships(year)
     else:
         _sc_counts_to_cc(game, year, bg.sc_counts)
-        game.set_is_finished(year)
-        game.update_scores()
+    game.set_is_finished(year)
+    game.update_scores()
     # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
