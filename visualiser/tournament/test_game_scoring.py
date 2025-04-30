@@ -33,6 +33,14 @@ from tournament.tournament_game_state import TournamentGameState
 HOURS_24 = timedelta(hours=24)
 
 
+# Function needed by most classes
+def check_score_order(self, scores):
+    """Check that the scores appear in GreatPower order when iterated through"""
+    EXPECT = [p for p in GreatPower.objects.all()]
+    order = [k for k in scores.keys()]
+    self.assertEqual(EXPECT, order)
+
+
 class GameScoringTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -160,12 +168,6 @@ class GameScoringTests(TestCase):
                                                                  cls.germany: 1905,
                                                                  cls.turkey: 1905},
                                               draw=None)
-
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
 
     def test_no_corruption(self):
         """Ensure that calls to calculate scores are independent"""
@@ -302,7 +304,7 @@ class GameScoringTests(TestCase):
         self.assertEqual(7, len(scores))
         for s in scores.values():
             self.assertEqual(s, 0)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_solos_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -318,7 +320,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 100)
             else:
                 self.assertEqual(s, 0)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 
     # GScoringDrawSize
@@ -333,7 +335,7 @@ class GameScoringTests(TestCase):
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_draws_7way_draw(self):
         t = Tournament.objects.get(name='t1')
@@ -358,7 +360,7 @@ class GameScoringTests(TestCase):
         for s in scores.values():
             self.assertEqual(s, 100.0/7)
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_draws_4way_draw(self):
         t = Tournament.objects.get(name='t1')
@@ -386,7 +388,7 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 100)
         # Clean up
         dp.delete()
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_draws_eliminations(self):
         """No draw, no solo, but with powers eliminated"""
@@ -403,7 +405,7 @@ class GameScoringTests(TestCase):
             else:
                 self.assertEqual(scores[p], 100.0/6)
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_draws_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -420,7 +422,7 @@ class GameScoringTests(TestCase):
             else:
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringCDiplo
     def test_g_scoring_cdiplo_no_solo(self):
@@ -440,7 +442,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 1 + (38 + 14 + 7) / 4 + 5)
         # With 2 neutrals, the total of all scores should be 100-2=98
         self.assertEqual(sum(scores.values()), 100 - 2)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -457,7 +459,7 @@ class GameScoringTests(TestCase):
             else:
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo80_no_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -476,7 +478,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, (25 + 14 + 7) / 4 + 5)
         # With 2 neutrals, the total of all scores should be 80-2=78
         self.assertEqual(sum(scores.values()), 80 - 2)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo80_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -493,7 +495,7 @@ class GameScoringTests(TestCase):
             else:
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 80)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringSumOfSquares
     def test_g_scoring_squares_no_solo(self):
@@ -513,7 +515,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 100.0 * 25 / 148)
         # Total of all scores should always be very close to 100
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_squares_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -530,7 +532,7 @@ class GameScoringTests(TestCase):
             else:
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringTribute
     def test_g_scoring_tribute_no_solo(self):
@@ -551,7 +553,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 66 / 7 + 5)
         # Total of all scores should be 100 minus 2 (neutrals)
         self.assertAlmostEqual(sum(scores.values()), 98)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_tribute_tied_top(self):
         t = Tournament.objects.get(name='t1')
@@ -574,7 +576,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 8 + 66/6 + 2 * 4 / 2)
         # Total of all scores should be 100
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_tribute_no_solo_2(self):
         t = Tournament.objects.get(name='t1')
@@ -601,7 +603,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 13 + 66/6 + 7 * 5)
         # Total of all scores should be 100
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_tribute_no_solo_3(self):
         t = Tournament.objects.get(name='t1')
@@ -624,7 +626,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 17 + 66/4 + 11*3)
         # Total of all scores should be 100
         self.assertAlmostEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_tribute_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -642,7 +644,7 @@ class GameScoringTests(TestCase):
                 else:
                     self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringHaight
     def test_g_scoring_haight_no_solo1(self):
@@ -677,7 +679,7 @@ class GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 42)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_haight_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -712,7 +714,7 @@ class GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 63)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_haight_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -747,7 +749,7 @@ class GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 43)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_haight_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -783,7 +785,7 @@ class GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, (7 + 11))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_haight_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -818,7 +820,7 @@ class GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 53)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_haight_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -856,7 +858,7 @@ class GameScoringTests(TestCase):
                     # assumes the game end in 1910 or earlier but I want to test the
                     # "or number of years played, if greater" part
                     self.assertEqual(s, 11)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringOpenTribute
     def test_g_scoring_opentribute_no_solo(self):
@@ -875,7 +877,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 34 + 3 * 4 - 1)
                 else:
                     self.assertEqual(s, 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_opentribute_tied_top(self):
         t = Tournament.objects.get(name='t1')
@@ -896,7 +898,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 34 + 3 * 5 - 3)
                 else:
                     self.assertEqual(s, 34 + 3 * 8 + floor((8 + 4 + 4 + 3 + 3) / 2 ** 2))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_opentribute_no_solo_2(self):
         t = Tournament.objects.get(name='t1')
@@ -924,7 +926,7 @@ class GameScoringTests(TestCase):
         # 6 players alive, with a total of 34 dots. Tribute of 57, unshared
         # one power eliminated contributes tribute of 13
         self.assertAlmostEqual(sum(scores.values()), 34 * 6 + 34 * 3 - 57 + 57 + 13)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_opentribute_no_solo_3(self):
         t = Tournament.objects.get(name='t1')
@@ -948,7 +950,7 @@ class GameScoringTests(TestCase):
         # 4 players alive, with a total of 34 dots. Tribute of 85, unshared
         # Three powers eliminated contribute tribute of 17 each
         self.assertAlmostEqual(sum(scores.values()), 34 * 4 + 34 * 3 - 85 + 85 + 3 * 17)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_opentribute_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -966,7 +968,7 @@ class GameScoringTests(TestCase):
                 else:
                     self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 340)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringOMG
     def test_g_scoring_omg_no_solo(self):
@@ -985,7 +987,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, (4 * 1.5) + 9 + 0)
                 else:
                     self.assertEqual(s, (5 * 1.5) + 9 + (4.5 + 3 + 1.5) / 4)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_omg_tied_top(self):
         t = Tournament.objects.get(name='t1')
@@ -1006,7 +1008,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, (5 * 1.5) + 9 + (1.5 + 0) / 2)
                 else:
                     self.assertEqual(s, (8 * 1.5) + 9 + (4.5 + 3) / 2)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_omg_no_solo_2(self):
         t = Tournament.objects.get(name='t1')
@@ -1031,7 +1033,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, (6 * 1.5) + 9 + 3 - 7)
                 else:
                     self.assertEqual(s, (13 * 1.5) + 9 + 4.5 + (7 * 3) + (6.75 * 2))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_omg_no_solo_3(self):
         t = Tournament.objects.get(name='t1')
@@ -1052,7 +1054,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, (7 * 1.5) + 9 + 3 - 10)
                 else:
                     self.assertEqual(s, (17 * 1.5) + 9 + 4.5 + (10  + 8.625 * 2))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_omg_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1070,7 +1072,7 @@ class GameScoringTests(TestCase):
                 else:
                     self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 100)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 
     # GScoringBangkok
@@ -1093,7 +1095,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 8 + 6 + 3)
                 else:
                     self.assertAlmostEqual(s, 0.9)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_bangkok_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -1118,7 +1120,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 13 + 12 + 3)
                 else:
                     self.assertAlmostEqual(s, 0.9)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_bangkok_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -1145,7 +1147,7 @@ class GameScoringTests(TestCase):
                     else:
                         # Italy
                         self.assertAlmostEqual(s, 1.5)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_bangkok_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1162,7 +1164,7 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 41)
                 else:
                     self.assertAlmostEqual(s, 0.5 * sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringManorCon
     def test_g_scoring_manorcon_no_solo1(self):
@@ -1184,7 +1186,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 112 / 458)
                 else:
                     self.assertAlmostEqual(s, 0.3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -1209,7 +1211,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 237 / 512)
                 else:
                     self.assertAlmostEqual(s, 0.3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -1236,7 +1238,7 @@ class GameScoringTests(TestCase):
                     else:
                         # Italy
                         self.assertAlmostEqual(s, 0.5)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1260,7 +1262,7 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.5)
                     else:
                         self.assertAlmostEqual(s, 0.6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon2_no_solo1(self):
         t = Tournament.objects.get(name='t1')
@@ -1281,7 +1283,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 112 / 458)
                 else:
                     self.assertAlmostEqual(s, 0.3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon2_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -1306,7 +1308,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 237 / 512)
                 else:
                     self.assertAlmostEqual(s, 0.3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon2_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -1333,7 +1335,7 @@ class GameScoringTests(TestCase):
                     else:
                         # Italy
                         self.assertAlmostEqual(s, 0.5)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorcon2_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1357,7 +1359,7 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.5)
                     else:
                         self.assertAlmostEqual(s, 0.6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorconv2_no_solo1(self):
         t = Tournament.objects.get(name='t1')
@@ -1378,7 +1380,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 112 / 442)
                 else:
                     self.assertAlmostEqual(s, 0.3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorconv2_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -1403,7 +1405,7 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 237 / 496)
                 else:
                     self.assertAlmostEqual(s, 0.3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorconv2_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -1430,7 +1432,7 @@ class GameScoringTests(TestCase):
                     else:
                         # Italy
                         self.assertAlmostEqual(s, 0.5)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_manorconv2_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1454,7 +1456,7 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.5)
                     else:
                         self.assertAlmostEqual(s, 0.6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # GScoringWhipping
     def test_g_scoring_whipping_example_a(self):
@@ -1488,7 +1490,7 @@ class GameScoringTests(TestCase):
             else:
                 # Turkey
                 self.assertEqual(s, (40 + 12))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_whipping_example_b(self):
         example_b = SimpleGameState(sc_counts={self.austria: 17,
@@ -1522,7 +1524,7 @@ class GameScoringTests(TestCase):
             else:
                 # Turkey
                 self.assertEqual(s, 5)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_whipping_example_c(self):
         example_c = SimpleGameState(sc_counts={self.austria: 18,
@@ -1556,7 +1558,7 @@ class GameScoringTests(TestCase):
             else:
                 # Turkey
                 self.assertEqual(s, 4)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_whipping_example_d(self):
         example_d = SimpleGameState(sc_counts={self.austria: 4,
@@ -1590,7 +1592,7 @@ class GameScoringTests(TestCase):
             else:
                 # Turkey
                 self.assertEqual(s, (80 + 15))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 
 class CDiploNamurGameScoringTests(TestCase):
@@ -1721,12 +1723,6 @@ class CDiploNamurGameScoringTests(TestCase):
                                                                  cls.turkey: 1905},
                                               draw=None)
 
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
-
     def test_g_scoring_cdiplo_namur_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -1748,7 +1744,7 @@ class CDiploNamurGameScoringTests(TestCase):
                     self.assertEqual(s, 1 + 20 + (38 + 14)/2)
                 else:
                     raise AssertionError(f'Unexpected SC count {sc.count}')
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo_namur_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -1775,7 +1771,7 @@ class CDiploNamurGameScoringTests(TestCase):
                     self.assertEqual(s, 1 + (18 + 7) + 38)
                 else:
                     raise AssertionError(f'Unexpected SC count {sc.count}')
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo_namur_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -1798,7 +1794,7 @@ class CDiploNamurGameScoringTests(TestCase):
                     self.assertEqual(s, 1 + (18 + 11) + 38)
                 else:
                     raise AssertionError(f'Unexpected SC count {sc.count}')
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo_namur_3way(self):
         t = Tournament.objects.get(name='t1')
@@ -1817,7 +1813,7 @@ class CDiploNamurGameScoringTests(TestCase):
                     self.assertEqual(s, 1 + 18 + (38 + 14 + 7)/3)
                 else:
                     raise AssertionError(f'Unexpected SC count {sc.count}')
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_cdiplo_namur_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -1834,7 +1830,7 @@ class CDiploNamurGameScoringTests(TestCase):
                     self.assertEqual(s, 85)
                 else:
                     self.assertEqual(s, 0)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 
 class WorldClassicGameScoringTests(TestCase):
@@ -1965,12 +1961,6 @@ class WorldClassicGameScoringTests(TestCase):
                                                                  cls.turkey: 1905},
                                               draw=None)
 
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
-
     def test_g_scoring_world_classic_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -1988,7 +1978,7 @@ class WorldClassicGameScoringTests(TestCase):
                     self.assertEqual(s, 30 + 10 * sc.count + 48/2)
                 else:
                     self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_world_classic_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -2007,7 +1997,7 @@ class WorldClassicGameScoringTests(TestCase):
                     self.assertEqual(s, 30 + 10 * sc.count + 48)
                 else:
                     self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_world_classic_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -2029,7 +2019,7 @@ class WorldClassicGameScoringTests(TestCase):
                     self.assertEqual(s, 30 + 10 * sc.count + 48)
                 else:
                     self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_world_classic_3way(self):
         t = Tournament.objects.get(name='t1')
@@ -2046,7 +2036,7 @@ class WorldClassicGameScoringTests(TestCase):
                     self.assertEqual(s, 30 + 10 * sc.count + 48/3)
                 else:
                     self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_summer_classic_3way(self):
         t = Tournament.objects.get(name='t1')
@@ -2063,7 +2053,7 @@ class WorldClassicGameScoringTests(TestCase):
                     self.assertEqual(s, 30 + 10 * sc.count)
                 else:
                     self.assertEqual(s, 30 + 10 * sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_world_classic_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -2087,7 +2077,7 @@ class WorldClassicGameScoringTests(TestCase):
                         self.assertEqual(s, 5)
                     else:
                         self.assertEqual(s, 6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 
 class CarnageGameScoringTests(TestCase):
@@ -2218,12 +2208,6 @@ class CarnageGameScoringTests(TestCase):
                                                                  cls.turkey: 1905},
                                               draw=None)
 
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
-
     # GScoringCarnage (with dead equal)
     def test_g_scoring_carnage1_simple(self):
         t = Tournament.objects.get(name='t1')
@@ -2242,7 +2226,7 @@ class CarnageGameScoringTests(TestCase):
                 self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
         # 2 SCs are still neutral
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_carnage1_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -2259,7 +2243,7 @@ class CarnageGameScoringTests(TestCase):
             else:
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_carnage1_eliminations(self):
         t = Tournament.objects.get(name='t1')
@@ -2282,7 +2266,7 @@ class CarnageGameScoringTests(TestCase):
             else:
                 self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # Carnage with elimination order
     def test_g_scoring_carnage2_simple(self):
@@ -2301,7 +2285,7 @@ class CarnageGameScoringTests(TestCase):
             else:
                 self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_carnage2_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -2318,7 +2302,7 @@ class CarnageGameScoringTests(TestCase):
             else:
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_carnage2_eliminations(self):
         t = Tournament.objects.get(name='t1')
@@ -2344,7 +2328,7 @@ class CarnageGameScoringTests(TestCase):
                 else:
                     self.assertEqual(s, 1000 + sc.count)
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     # Carnage 2023 (elimination order and leader gap bonus)
     def test_g_scoring_carnage2023_simple(self):
@@ -2364,7 +2348,7 @@ class CarnageGameScoringTests(TestCase):
                 self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sc.count)
         # With tied lead, we know the total score
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_carnage2023_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -2382,7 +2366,7 @@ class CarnageGameScoringTests(TestCase):
                 self.assertEqual(s, 0)
         # With a solo, we know the total score
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_carnage2023_eliminations(self):
         t = Tournament.objects.get(name='t1')
@@ -2408,7 +2392,7 @@ class CarnageGameScoringTests(TestCase):
                     self.assertEqual(s, (3000 + 2000) / 2 + sc.count)
                 else:
                     self.assertEqual(s, 1000 + sc.count)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
         # Total score now varies depending on the lead the leader has
 
     # GScoringCentreCarnage
@@ -2443,7 +2427,7 @@ class CarnageGameScoringTests(TestCase):
             else:
                 # Turkey:
                 self.assertEqual(s, 1001)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_centrecarnage_2(self):
         # There used to be an "example 1" and "example 2" in the doc, but no more :-(
@@ -2477,7 +2461,7 @@ class CarnageGameScoringTests(TestCase):
             else:
                 # Turkey:
                 self.assertEqual(s, 1001)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 # GScoringDetour09
 class Detour09GameScoringTests(TestCase):
@@ -2565,12 +2549,6 @@ class Detour09GameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1910, count=5)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1910, count=7)
 
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
-
     def test_g_scoring_detour09_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -2593,7 +2571,7 @@ class Detour09GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 13 / (6+6+8+8+13+13))
                 else:
                     self.assertAlmostEqual(s, 0.75)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -2623,7 +2601,7 @@ class Detour09GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 100 * 26 / (5+5+7+9+11+26))
                 else:
                     self.assertAlmostEqual(s, 0.75)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -2653,7 +2631,7 @@ class Detour09GameScoringTests(TestCase):
                     else:
                         # Italy
                         self.assertAlmostEqual(s, 2.00)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -2674,7 +2652,7 @@ class Detour09GameScoringTests(TestCase):
                     else:
                         # Suvival bonus is capped at 2.0
                         self.assertAlmostEqual(s, 2.00)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_3_equal_top(self):
         t = Tournament.objects.get(name='t1')
@@ -2694,7 +2672,7 @@ class Detour09GameScoringTests(TestCase):
                     # sc.count == 6
                     # 6+2+0+2=10
                     self.assertAlmostEqual(s, 100 * 10 / (6+6+6+6+10+10+10))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_4_equal_top(self):
         t = Tournament.objects.get(name='t1')
@@ -2714,7 +2692,7 @@ class Detour09GameScoringTests(TestCase):
                     # sc.count == 5
                     # 5+2+0+1=8
                     self.assertAlmostEqual(s, 100 * 8 / (6+6+6+8+8+8+8))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_2_equal_below_top(self):
         t = Tournament.objects.get(name='t1')
@@ -2759,7 +2737,7 @@ class Detour09GameScoringTests(TestCase):
                     # 7th
                     # 2+2=4
                     self.assertAlmostEqual(s, 100 * 4 / (20+11+9+6+6+5+4))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_detour09_3_equal_below_top(self):
         t = Tournament.objects.get(name='t1')
@@ -2800,7 +2778,7 @@ class Detour09GameScoringTests(TestCase):
                     # 7th
                     # 2+2=4
                     self.assertAlmostEqual(s, 100 * 4 / (19+12+6+6+6+5+4))
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 
 # GScoringRankedClassic
@@ -2817,12 +2795,6 @@ class RankedClassicGameScoringTests(TestCase):
         cls.italy = GreatPower.objects.get(abbreviation='I')
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
-
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
 
     def test_g_scoring_rankedclassic_no_solo1(self):
         example_a = SimpleGameState(sc_counts={self.austria: 0,
@@ -2856,7 +2828,7 @@ class RankedClassicGameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 30 + 2 * 10 + 30)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_rankedclassic_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -2891,7 +2863,7 @@ class RankedClassicGameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 30 + 3 * 10 + 40)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_rankedclassic_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -2926,7 +2898,7 @@ class RankedClassicGameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 30 + 1 * 10 + 40)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_rankedclassic_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -2962,7 +2934,7 @@ class RankedClassicGameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_rankedclassic_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -2997,7 +2969,7 @@ class RankedClassicGameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 30 + 2 * 10 + 40)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_rankedclassic_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -3032,7 +3004,7 @@ class RankedClassicGameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 10)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 # GScoringBase3
 class Base3GameScoringTests(TestCase):
@@ -3048,12 +3020,6 @@ class Base3GameScoringTests(TestCase):
         cls.italy = GreatPower.objects.get(abbreviation='I')
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
-
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
 
     def test_g_scoring_base3_no_solo1(self):
         example_a = SimpleGameState(sc_counts={self.austria: 0,
@@ -3087,7 +3053,7 @@ class Base3GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 2 + 3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_base3_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -3122,7 +3088,7 @@ class Base3GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 3 + 3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_base3_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -3157,7 +3123,7 @@ class Base3GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 1 + 3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_base3_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -3193,7 +3159,7 @@ class Base3GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 0)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_base3_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -3228,7 +3194,7 @@ class Base3GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 2 + 3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_base3_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -3263,7 +3229,7 @@ class Base3GameScoringTests(TestCase):
                 else:
                     # Turkey
                     self.assertEqual(s, 0)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
 # GScoringMaxonian
 class MaxonianGameScoringTests(TestCase):
@@ -3353,12 +3319,6 @@ class MaxonianGameScoringTests(TestCase):
         CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=1)
         CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=14)
 
-    def check_score_order(self, scores):
-        """Check that the scores appear in GreatPower order when iterated through"""
-        EXPECT = [p for p in GreatPower.objects.all()]
-        order = [k for k in scores.keys()]
-        self.assertEqual(EXPECT, order)
-
     def test_g_scoring_maxonian_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -3391,7 +3351,7 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # 2nd
                     self.assertAlmostEqual(s, 6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_maxonian_no_solo2(self):
         t = Tournament.objects.get(name='t1')
@@ -3425,7 +3385,7 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # 2nd
                     self.assertAlmostEqual(s, 6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_maxonian_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -3459,7 +3419,7 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # 2nd, 1 over threshold
                     self.assertAlmostEqual(s, 6+1)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_7eleven_no_solo3(self):
         t = Tournament.objects.get(name='t1')
@@ -3493,7 +3453,7 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # 2nd, 3 over threshold
                     self.assertAlmostEqual(s, 6+3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_maxonian_solo(self):
         t = Tournament.objects.get(name='t1')
@@ -3527,7 +3487,7 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # 2nd
                     self.assertAlmostEqual(s, 6)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_maxonian_3_equal_top(self):
         t = Tournament.objects.get(name='t1')
@@ -3552,7 +3512,7 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # 3rd
                     self.assertAlmostEqual(s, 5)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
 
     def test_g_scoring_maxonian_4_equal_top(self):
         t = Tournament.objects.get(name='t1')
@@ -3571,4 +3531,4 @@ class MaxonianGameScoringTests(TestCase):
                 else:
                     # Joint 5th
                     self.assertAlmostEqual(s, (3 + 2 + 1) / 3)
-        self.check_score_order(scores)
+        check_score_order(self, scores)
