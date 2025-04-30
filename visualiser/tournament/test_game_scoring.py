@@ -195,14 +195,14 @@ class GameScoringTests(TestCase):
                 self.assertEqual(s, 0)
         self.assertEqual(sum(scores.values()), 80)
 
-    # description
+    # description for all G_SCORING_SYSTEMS
     def test_description(self):
         for system in G_SCORING_SYSTEMS:
             with self.subTest(system=system.name):
                 desc = system.description
                 # TODO verify desc
 
-    # dead_score_can_change() for a system
+    # dead_score_can_change() for all G_SCORING_SYSTEMS
     def test_score_changes(self):
         """Compare score for eliminated power before and after a solo"""
         t = Tournament.objects.get(name='t1')
