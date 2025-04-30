@@ -221,7 +221,7 @@ class GameScoringTests(TestCase):
                 self.assertEqual(changes, system.dead_score_can_change)
 
     # Some tests for TournamentGameState
-    def test_concession_is_solo(self):
+    def test_tgs_concession_is_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertIsNone(g.passed_draw())
@@ -246,7 +246,7 @@ class GameScoringTests(TestCase):
         # Clean up
         dp.delete()
 
-    def test_draw_is_not_solo(self):
+    def test_tgs_draw_is_not_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertIsNone(g.passed_draw())
@@ -269,7 +269,7 @@ class GameScoringTests(TestCase):
         # Clean up
         dp.delete()
 
-    def test_solo_year_none(self):
+    def test_tgs_solo_year_none(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertIsNone(g.passed_draw())
@@ -277,7 +277,7 @@ class GameScoringTests(TestCase):
         tgs = TournamentGameState(scs)
         self.assertIsNone(tgs.solo_year())
 
-    def test_dot_count_invalid_year(self):
+    def test_tgs_dot_count_invalid_year(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertIsNone(g.passed_draw())
@@ -285,13 +285,32 @@ class GameScoringTests(TestCase):
         tgs = TournamentGameState(scs)
         self.assertRaises(InvalidYear, tgs.dot_count, self.france, year=1899)
 
-    def test_year_eliminated_none(self):
+    def test_tgs_year_eliminated_none(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
         self.assertIsNone(g.passed_draw())
         scs = g.centrecount_set.filter(year__lte=1901)
         tgs = TournamentGameState(scs)
         self.assertIsNone(tgs.year_eliminated(self.france))
+
+    # Some tests of SimpleGameState
+    def test_sgs_concession_is_solo(self):
+        sgs = SimpleGameState(sc_counts={self.austria: 1,
+                                         self.england: 10,
+                                         self.france: 1,
+                                         self.germany: 1,
+                                         self.italy: 10,
+                                         self.russia: 10,
+                                         self.turkey: 1},
+                              final_year=1907,
+                              elimination_years={},
+                              draw=[self.italy])
+        self.assertEqual(sgs.soloer(), self.italy)
+        self.assertEqual(sgs.powers_in_draw(), [self.italy])
+
+    def test_sgs_solo_year_none(self):
+        self.assertIsNone(self.three_survivors.solo_year())
+
 
     # GScoringSolos
     def test_g_scoring_solos_no_solo(self):
