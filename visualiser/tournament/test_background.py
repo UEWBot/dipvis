@@ -138,7 +138,7 @@ class WDDBackgroundTests(TestCase):
         b = WDDBackground(self.BRANDON_FOGEL_WDD_ID)
         finishes = b.finishes()
         for finish in finishes:
-            if finish['WDD URL'] == "http://world-diplomacy-database.com/php/results/tournament_class.php?id_tournament=1602":
+            if "id_tournament=1602" in finish['WDD URL']:
                 self.assertNotIn('Type', finish)
 
     # WDDBackground.tournaments()
