@@ -42,6 +42,9 @@ def check_score_order(self, scores):
 
 
 class GameScoringTests(TestCase):
+    """
+    Tests that aren't specific to one scoring system
+    """
     fixtures = ['game_sets.json', 'players.json']
 
     @classmethod
@@ -312,7 +315,134 @@ class GameScoringTests(TestCase):
         self.assertIsNone(self.three_survivors.solo_year())
 
 
-    # GScoringSolos
+class SolosGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_solos_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -342,7 +472,134 @@ class GameScoringTests(TestCase):
         check_score_order(self, scores)
 
 
-    # GScoringDrawSize
+class DrawSizeGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_draws_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -443,7 +700,135 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 100)
         check_score_order(self, scores)
 
-    # GScoringCDiplo
+
+class CDiploGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_cdiplo_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -516,7 +901,135 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 80)
         check_score_order(self, scores)
 
-    # GScoringSumOfSquares
+
+class SumOfSquaresGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_squares_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -553,7 +1066,135 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 100)
         check_score_order(self, scores)
 
-    # GScoringTribute
+
+class TributeGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_tribute_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -665,7 +1306,135 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 100)
         check_score_order(self, scores)
 
-    # GScoringHaight
+
+class HaightGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_haight_no_solo1(self):
         example_a = SimpleGameState(sc_counts={self.austria: 0,
                                                self.england: 10,
@@ -879,7 +1648,135 @@ class GameScoringTests(TestCase):
                     self.assertEqual(s, 11)
         check_score_order(self, scores)
 
-    # GScoringOpenTribute
+
+class OpenTributeGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_opentribute_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -989,7 +1886,135 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 340)
         check_score_order(self, scores)
 
-    # GScoringOMG
+
+class OMGGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_omg_no_solo(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -1094,7 +2119,134 @@ class GameScoringTests(TestCase):
         check_score_order(self, scores)
 
 
-    # GScoringBangkok
+class BangkokGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_Scoring_bangkok_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -1185,7 +2337,135 @@ class GameScoringTests(TestCase):
                     self.assertAlmostEqual(s, 0.5 * sc.count)
         check_score_order(self, scores)
 
-    # GScoringManorCon
+
+class ManorConGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_manorcon_no_solo1(self):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -1477,7 +2757,135 @@ class GameScoringTests(TestCase):
                         self.assertAlmostEqual(s, 0.6)
         check_score_order(self, scores)
 
-    # GScoringWhipping
+
+class WhippingGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        set1 = GameSet.objects.get(name='Avalon Hill')
+
+        s1 = G_SCORING_SYSTEMS[0].name
+
+        today = date.today()
+
+        t1 = Tournament.objects.create(name='t1',
+                                       start_date=today,
+                                       end_date=today + HOURS_24,
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET)
+
+        # Add Rounds to t1
+        r11 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        r12 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+        r13 = Round.objects.create(tournament=t1,
+                                   scoring_system=s1,
+                                   dias=True,
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+
+        # Add Games to r11
+        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
+        Game.objects.create(name='g12', started_at=r11.start, the_round=r11, the_set=set1)
+        # Add Games to r12
+        Game.objects.create(name='g13', started_at=r12.start, the_round=r12, is_finished=True, the_set=set1)
+        Game.objects.create(name='g14', started_at=r12.start, the_round=r12, the_set=set1)
+        # Add Games to r13
+        Game.objects.create(name='g15', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+        Game.objects.create(name='g16', started_at=r13.start, the_round=r13, is_finished=True, the_set=set1)
+
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+        # Add CentreCounts to g11
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=7)
+
+        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=4)
+        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
+        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
+        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=5)
+        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=7)
+        # SimpleGameStates for two Games
+        cls.three_way_tie = SimpleGameState(sc_counts={cls.austria: 1,
+                                                       cls.england: 10,
+                                                       cls.france: 1,
+                                                       cls.germany: 1,
+                                                       cls.italy: 10,
+                                                       cls.russia: 10,
+                                                       cls.turkey: 1},
+                                            final_year=1907,
+                                            elimination_years={},
+                                            draw=None)
+        cls.three_survivors = SimpleGameState(sc_counts={cls.austria: 0,
+                                                         cls.england: 17,
+                                                         cls.france: 0,
+                                                         cls.germany: 0,
+                                                         cls.italy: 16,
+                                                         cls.russia: 1,
+                                                         cls.turkey: 0},
+                                              final_year=1907,
+                                              elimination_years={cls.austria: 1903,
+                                                                 cls.france: 1907,
+                                                                 cls.germany: 1905,
+                                                                 cls.turkey: 1905},
+                                              draw=None)
+
     def test_g_scoring_whipping_example_a(self):
         example_a = SimpleGameState(sc_counts={self.austria: 0,
                                                self.england: 12,
