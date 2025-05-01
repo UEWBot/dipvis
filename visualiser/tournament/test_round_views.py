@@ -1583,6 +1583,6 @@ class RoundViewTests(TestCase):
 
     def test_board_call(self):
         response = self.client.get(reverse('board_call',
-                                           args=(self.t1.pk, 1)),
+                                           args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
