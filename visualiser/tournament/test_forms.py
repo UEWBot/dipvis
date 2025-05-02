@@ -1224,6 +1224,8 @@ class PowerAssignFormTest(TestCase):
     def test_name_field(self):
         form = PowerAssignForm(game=self.g)
         self.assertIn('name', form.fields)
+        attrs = form.fields['name'].widget.attrs
+        self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_set_field(self):
         form = PowerAssignForm(game=self.g)
@@ -1242,11 +1244,13 @@ class PowerAssignFormTest(TestCase):
         for gp in self.g.gameplayer_set.all():
             with self.subTest(gp=str(gp)):
                 self.assertTrue(form.fields[str(gp.pk)].required)
+                # TODO verify sandboxer annotation
 
     def test_issues_field(self):
         form = PowerAssignForm(game=self.g)
         self.assertIn('issues', form.fields)
         self.assertTrue(form.fields['issues'].disabled)
+        self.assertFalse(form.fields['issues'].required)
 
     def test_player_choices(self):
         """Each player should have a choice of all seven GreatPowers"""

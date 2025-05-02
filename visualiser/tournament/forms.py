@@ -531,7 +531,8 @@ class PowerAssignForm(forms.Form):
     """Form for players of a single game"""
     name = forms.CharField(label=_(u'Game Name'),
                            max_length=Game.MAX_NAME_LENGTH,
-                           validators=[validate_game_name])
+                           validators=[validate_game_name],
+                           widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
     external_url = forms.URLField(label=_('URL'),
@@ -539,14 +540,15 @@ class PowerAssignForm(forms.Form):
     notes = forms.CharField(required=False,
                             max_length=Game.MAX_NOTES_LENGTH)
 
+    issues = forms.CharField(label=_('Issues'),
+                             required=False,
+                             disabled=True)
+
     def __init__(self, *args, **kwargs):
         """Dynamically creates one GreatPower field per RoundPlayer"""
         # Remove our special kwargs from the list
         self.game = kwargs.pop('game')
         super().__init__(*args, **kwargs)
-
-        attrs = self.fields['name'].widget.attrs
-        attrs['size'] = attrs['maxlength']
 
         queryset = GreatPower.objects.all()
 
@@ -563,12 +565,6 @@ class PowerAssignForm(forms.Form):
             self.fields[c] = forms.ModelChoiceField(label=label,
                                                     queryset=queryset)
             field_order.append(c)
-
-        # And add the Issues (read-only) field last
-        # TODO Can we do this in the declaration instead?
-        self.fields['issues'] = forms.CharField(label=_('Issues'),
-                                                required=False)
-        self.fields['issues'].disabled = True
 
         # Put notes and issues at the end
         field_order.extend(['notes', 'issues'])
