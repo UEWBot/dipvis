@@ -552,10 +552,13 @@ class PowerAssignForm(forms.Form):
 
         queryset = GreatPower.objects.all()
 
+        # We want to insert the new fields after these three
         field_order = ['name', 'the_set', 'external_url']
 
         # Create the right player fields
         for gp in self.game.gameplayer_set.order_by('power__abbreviation'):
+            # Find the initial GreatPower provided for this GamePlayer
+            init = self.initial.get(gp.id)
             c = str(gp.id)
             # flag if they are able to sandbox
             suffix = ''
@@ -563,7 +566,8 @@ class PowerAssignForm(forms.Form):
                 suffix = '*'
             label = str(gp.player) + suffix
             self.fields[c] = forms.ModelChoiceField(label=label,
-                                                    queryset=queryset)
+                                                    queryset=queryset,
+                                                    initial=init)
             field_order.append(c)
 
         # Put notes and issues at the end
