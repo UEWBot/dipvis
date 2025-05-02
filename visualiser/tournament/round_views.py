@@ -376,7 +376,9 @@ def seed_games(request, tournament_id, round_num):
         data = []
         for g in r.game_set.all():
             current = {'name': g.name,
-                       'the_set': g.the_set}
+                       'the_set': g.the_set,
+                       'external_url': g.external_url,
+                       'notes': g.notes}
             for gp in g.gameplayer_set.all():
                 current[gp.id] = gp.power
             data.append(current)
