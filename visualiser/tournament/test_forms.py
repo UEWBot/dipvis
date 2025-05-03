@@ -718,12 +718,17 @@ class GameScoreFormTest(TestCase):
     def test_name_field_disabled(self):
         form = GameScoreForm()
         self.assertTrue(form.fields['name'].disabled)
+        attrs = form.fields['name'].widget.attrs
+        self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_power_fields_exist(self):
         form = GameScoreForm()
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
                 self.assertIn(power.name, form.fields)
+                attrs = form.fields[power.name].widget.attrs
+                self.assertEqual(attrs['maxlength'], '10')
+                self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_power_fields_optional(self):
         form = GameScoreForm()
@@ -797,6 +802,8 @@ class GamePlayersFormTest(TestCase):
     def test_name_field(self):
         form = GamePlayersForm(the_round=self.r1)
         self.assertIn('name', form.fields)
+        attrs = form.fields['name'].widget.attrs
+        self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_set_field(self):
         form = GamePlayersForm(the_round=self.r1)
@@ -1912,6 +1919,11 @@ class SCOwnerFormTest(TestCase):
         form = SCOwnerForm()
         self.assertEqual(len(form.fields), 1 + SupplyCentre.objects.count())
 
+    def test_year(self):
+        form = SCOwnerForm()
+        attrs = form.fields['year'].widget.attrs
+        self.assertEqual(attrs['size'], '4')
+
     def test_required(self):
         form = SCOwnerForm()
         for field in form.fields:
@@ -2073,6 +2085,9 @@ class DeathYearFormTest(TestCase):
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
                 self.assertFalse(form.fields[power.name].required)
+                attrs = form.fields[power.name].widget.attrs
+                self.assertEqual(attrs['size'], '4')
+                self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_year_1900(self):
         data = {'France': 1900,
@@ -2089,6 +2104,20 @@ class DeathYearFormTest(TestCase):
 
 class SCCountFormTest(TestCase):
     fixtures = ['game_sets.json']
+
+    def test_year_field(self):
+        form = SCCountForm()
+        attrs = form.fields['year'].widget.attrs
+        self.assertEqual(attrs['size'], '4')
+
+    def test_power_fields(self):
+        form = SCCountForm()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                self.assertFalse(form.fields[power.name].required)
+                attrs = form.fields[power.name].widget.attrs
+                self.assertEqual(attrs['size'], '2')
+                self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_success(self):
         """Everything is ok"""
@@ -2647,6 +2676,47 @@ class PlayerRoundScoreFormTest(TestCase):
         with self.assertRaises(KeyError):
             PlayerRoundScoreForm(tournament=self.t)
 
+    def test_player_field(self):
+        form = PlayerRoundScoreForm(tournament=self.t,
+                                    last_round_num=2)
+        self.assertTrue(form.fields['player'].disabled)
+        attrs = form.fields['player'].widget.attrs
+        self.assertEqual(attrs['size'], '20')
+
+    def test_game_scores_fields(self):
+        """Many fields should be disabled"""
+        initial = {'tp': self.tp1,
+                   'player': self.tp1.player,
+                  }
+        form = PlayerRoundScoreForm(initial=initial,
+                                    tournament=self.t,
+                                    last_round_num=3)
+        for field in ['game_scores_1', 'game_scores_2', 'game_scores_3']:
+            with self.subTest(field=field):
+                self.assertTrue(form.fields[field].disabled)
+                self.assertFalse(form.fields[field].required)
+                attrs = form.fields[field].widget.attrs
+                self.assertEqual(attrs['maxlength'], '10')
+
+    def test_round_fields(self):
+        form = PlayerRoundScoreForm(tournament=self.t,
+                                    last_round_num=2)
+        for n in range(1, 3):
+            with self.subTest(round_number=n):
+                name = f'round_{n}'
+                self.assertFalse(form.fields[name].required)
+                attrs = form.fields[name].widget.attrs
+                self.assertEqual(attrs['size'], '10')
+                self.assertEqual(attrs['maxlength'], '40')
+
+    def test_overall_score_field(self):
+        form = PlayerRoundScoreForm(tournament=self.t,
+                                    last_round_num=2)
+        self.assertFalse(form.fields['overall_score'].required)
+        attrs = form.fields['overall_score'].widget.attrs
+        self.assertEqual(attrs['size'], '10')
+        self.assertEqual(attrs['maxlength'], '20')
+
     def test_success(self):
         """Everything is ok"""
         initial = {'tp': self.tp1,
@@ -2668,18 +2738,6 @@ class PlayerRoundScoreFormTest(TestCase):
                                     tournament=self.t,
                                     last_round_num=2)
         self.assertTrue(form.is_valid())
-
-    def test_fields_disabled(self):
-        """Many fields should be disabled"""
-        initial = {'tp': self.tp1,
-                   'player': self.tp1.player,
-                  }
-        form = PlayerRoundScoreForm(initial=initial,
-                                    tournament=self.t,
-                                    last_round_num=3)
-        for field in ['player', 'game_scores_1', 'game_scores_2', 'game_scores_3']:
-            with self.subTest(field=field):
-                self.assertTrue(form.fields[field].disabled)
 
 
 class BasePlayerRoundScoreFormsetTest(TestCase):

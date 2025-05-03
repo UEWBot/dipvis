@@ -403,24 +403,21 @@ class GameScoreForm(forms.Form):
     """Form for score for a single game"""
     name = forms.CharField(label=_(u'Game Name'),
                            max_length=Game.MAX_NAME_LENGTH,
-                           disabled=True)
+                           disabled=True,
+                           widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one score field per Great Power"""
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['name'].widget.attrs
-        attrs['size'] = attrs['maxlength']
-
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
             # Don't require a score for every player
-            self.fields[c] = forms.FloatField(required=False)
-            self.fields[c].label = _(c)
-            attrs = self.fields[c].widget.attrs
-            attrs['size'] = 10
-            attrs['maxlength'] = 10
+            self.fields[c] = forms.FloatField(label=_(c),
+                                              required=False,
+                                              widget=forms.TextInput(attrs={'size': '10',
+                                                                            'maxlength': '10'}))
 
 
 # Game seeding
@@ -431,7 +428,8 @@ class GamePlayersForm(forms.Form):
                                  widget=forms.HiddenInput())
     name = forms.CharField(label=_(u'Game Name'),
                            max_length=Game.MAX_NAME_LENGTH,
-                           validators=[validate_game_name])
+                           validators=[validate_game_name],
+                           widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
     external_url = forms.URLField(label=_('URL'),
@@ -445,9 +443,6 @@ class GamePlayersForm(forms.Form):
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['name'].widget.attrs
-        attrs['size'] = attrs['maxlength']
-
         queryset = self.the_round.roundplayer_set.prefetch_related('player')
 
         field_order = ['name', 'the_set', 'external_url']
@@ -455,8 +450,8 @@ class GamePlayersForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            self.fields[c] = RoundPlayerChoiceField(queryset)
-            self.fields[c].label = _(c)
+            self.fields[c] = RoundPlayerChoiceField(label=_(c),
+                                                    queryset=queryset)
             field_order.append(c)
 
         # Put notes at the end
@@ -626,7 +621,7 @@ class GetSevenPlayersForm(forms.Form):
     def __create_player_fields(self, queryset, prefix, count):
         """Do the actual field creation"""
         for i in range(count):
-            self.fields[f'{prefix}_{i}'] = RoundPlayerChoiceField(queryset,
+            self.fields[f'{prefix}_{i}'] = RoundPlayerChoiceField(queryset=queryset,
                                                                   required=False,
                                                                   label=self.LABELS[prefix])
 
@@ -759,13 +754,13 @@ class GetSevenPlayersForm(forms.Form):
 class SCOwnerForm(forms.Form):
     """Form for Supply Centre ownership for one year"""
     # Allow for an initial game-start SC ownership
-    year = forms.IntegerField(min_value=FIRST_YEAR-1, required=False)
+    year = forms.IntegerField(min_value=FIRST_YEAR-1,
+                              required=False,
+                              widget=forms.TextInput(attrs={'size': '4'}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one owner field per SupplyCentre"""
         super().__init__(*args, **kwargs)
-
-        self.fields['year'].widget.attrs['size'] = 4
 
         # Create the right country fields
         for sc in SupplyCentre.objects.all():
@@ -874,10 +869,10 @@ class DeathYearForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            self.fields[c] = forms.IntegerField(min_value=FIRST_YEAR)
-            self.fields[c].required = False
-            self.fields[c].widget.attrs['size'] = 4
-            self.fields[c].widget.attrs['maxlength'] = 4
+            self.fields[c] = forms.IntegerField(min_value=FIRST_YEAR,
+                                                required=False,
+                                                widget=forms.TextInput(attrs={'size': '4',
+                                                                              'maxlength': '4'}))
 
 
 # Supply Centre count
@@ -885,25 +880,24 @@ class DeathYearForm(forms.Form):
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count
-    year = forms.IntegerField(min_value=FIRST_YEAR-1)
+    year = forms.IntegerField(min_value=FIRST_YEAR-1,
+                              widget=forms.TextInput(attrs={'size': '4'}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one count field per Great Power"""
         super().__init__(*args, **kwargs)
 
-        self.fields['year'].widget.attrs['size'] = 4
-
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
             # Support just providing counts for some powers (e.g. eliminations)
-            self.fields[c] = forms.IntegerField(min_value=0,
-                                                max_value=TOTAL_SCS,
-                                                required=False)
             # We don't want the default capitalisation
-            self.fields[c].label = _(c)
-            self.fields[c].widget.attrs['size'] = 2
-            self.fields[c].widget.attrs['maxlength'] = 2
+            self.fields[c] = forms.IntegerField(label=_(c),
+                                                min_value=0,
+                                                max_value=TOTAL_SCS,
+                                                required=False,
+                                                widget=forms.TextInput(attrs={'size': '2',
+                                                                              'maxlength': '2'}))
 
     def clean(self):
         """Checks that the total SC count is reasonable"""
@@ -1079,8 +1073,8 @@ class PlayerRoundScoreForm(forms.Form):
     tp = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
                                      widget=forms.HiddenInput())
     player = forms.CharField(max_length=Player._meta.get_field('first_name').max_length + Player._meta.get_field('last_name').max_length + 1,
-                             disabled=True)
-    player.widget.attrs.update(size='20')
+                             disabled=True,
+                             widget=forms.TextInput(attrs={'size': '20'}))
 
     def __init__(self, *args, **kwargs):
         # Remove our three special kwargs from the list
@@ -1098,16 +1092,14 @@ class PlayerRoundScoreForm(forms.Form):
             self.fields[game_scores_name] = forms.CharField(max_length=10,
                                                             required=False,
                                                             disabled=True)
-            self.fields[name] = forms.FloatField(required=False)
-            attrs = self.fields[name].widget.attrs
-            attrs['size'] = 10
-            attrs['maxlength'] = 40
+            self.fields[name] = forms.FloatField(required=False,
+                                                 widget=forms.TextInput(attrs={'size': '10',
+                                                                               'maxlength': '40'}))
 
         # Last field is for the overall tournament score
-        self.fields['overall_score'] = forms.FloatField(required=False)
-        attrs = self.fields['overall_score'].widget.attrs
-        attrs['size'] = 10
-        attrs['maxlength'] = 20
+        self.fields['overall_score'] = forms.FloatField(required=False,
+                                                        widget=forms.TextInput(attrs={'size': '10',
+                                                                                      'maxlength': '20'}))
 
 
 class BasePlayerRoundScoreFormset(BaseFormSet):
