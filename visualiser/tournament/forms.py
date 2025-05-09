@@ -643,6 +643,10 @@ class GetSevenPlayersForm(forms.Form):
                 if rp.game_count == 2:
                     initial[f'double_{doublers}'] = rp
                     doublers += 1
+            standing = 0
+            for rp in standbys:
+                initial[f'standby_{standing}'] = rp
+                standing += 1
             kwargs['initial'] = initial
 
         super().__init__(*args, **kwargs)
@@ -1070,7 +1074,7 @@ class PlayerRoundScoreForm(forms.Form):
                              widget=forms.TextInput(attrs={'size': '20'}))
 
     def __init__(self, *args, **kwargs):
-        # Remove our three special kwargs from the list
+        # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
         self.last_round_num = kwargs.pop('last_round_num')
         super().__init__(*args, **kwargs)
