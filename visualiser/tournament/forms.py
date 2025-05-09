@@ -227,10 +227,7 @@ class TeamForm(forms.Form):
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
-        try:
-            self.team = kwargs.pop('team')
-        except KeyError:
-            self.team = None
+        self.team = kwargs.pop('team', None)
         # Create an appropriate number of player fields
         queryset = Player.objects.filter(tournamentplayer__in=self.tournament.tournamentplayer_set.all()).distinct()
         # Overridable default initial value, like ModelForm
@@ -1004,11 +1001,7 @@ class PlayerForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         # Optional Tournament parameter
-        t = None
-        try:
-            t = kwargs.pop('tournament')
-        except KeyError:
-            pass
+        t = kwargs.pop('tournament', None)
         super().__init__(*args, **kwargs)
         if t is not None:
             self.fields['player'].queryset = Player.objects.filter(tournamentplayer__in=t.tournamentplayer_set.all()).distinct()

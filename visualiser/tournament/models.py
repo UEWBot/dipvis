@@ -483,11 +483,7 @@ class TScoringWDC2025(TournamentScoringSystem):
         top21 = self._top21(early_scores, tournament)
         round_four_rps = round_players.filter(the_round=round_four)
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
-            try:
-                t_scores[p] = early_scores[p]
-            except KeyError:
-                # No score from rounds 1..3
-                t_scores[p] = 0.0
+            t_scores[p] = early_scores.get(p, 0.0)
             try:
                 round_four_score = round_four_rps.get(player=p).score
             except RoundPlayer.DoesNotExist:
@@ -1989,11 +1985,7 @@ class Round(models.Model):
                 rps2 = rps2.filter(player__in=for_players)
             t_scores = self.tournament._calculated_scores(rps2)
             for rp in rps:
-                try:
-                    rp.tournament_score = t_scores[rp.player]
-                except KeyError:
-                    # Player hasn't yet played
-                    rp.tournament_score = 0.0
+                rp.tournament_score = t_scores.get(rp.player, 0.0)
                 rp.save(update_fields=['tournament_score'])
         else:
             # Tournament score calculated earlier doesn't include any later Rounds
@@ -2198,8 +2190,7 @@ class Game(models.Model):
         Year should be the most recent year for the Game, if known.
         If year is not provided, it will be derived.
         """
-        if year is None:
-            year = self.final_year()
+        year = year or self.final_year()
         if (self.soloer() is not None) or (self.passed_draw() is not None) or (year == self.the_round.final_year):
             self.is_finished = True
             self.save(update_fields=['is_finished'])
@@ -2369,8 +2360,7 @@ class Game(models.Model):
 
     def neutrals(self, year=None):
         """How many neutral SCs are/were there ?"""
-        if year is None:
-            year = self.final_year()
+        year = year or self.final_year()
         scs = self.centrecount_set.filter(year=year)
         if not scs.exists():
             raise InvalidYear(year)
@@ -2404,8 +2394,7 @@ class Game(models.Model):
         list will be returned.
         """
         final_year = self.final_year()
-        if year is None:
-            year = final_year
+        year = year or final_year
         if year > final_year:
             year = final_year
         final_scs = self.centrecount_set.filter(year=year)

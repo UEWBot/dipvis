@@ -219,10 +219,7 @@ def _map_to_fg(colour):
     """
     MAP = {'grey': 'black',
            'white': 'grey'}
-    try:
-        return MAP[colour]
-    except KeyError:
-        return colour
+    return MAP.get(colour, colour)
 
 
 def _graph_end_year(game):

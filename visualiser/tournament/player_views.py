@@ -81,12 +81,11 @@ def player_versus(request, pk1, pk2):
                                                                            'tournament_name',
                                                                            'round_number',
                                                                            'game_number'):
-        if r1:
-            if r1.for_same_game(r):
-                if r.player == p1:
-                    matches.append((r, r1))
-                else:
-                    matches.append((r1, r))
+        if r1 and r1.for_same_game(r):
+            if r.player == p1:
+                matches.append((r, r1))
+            else:
+                matches.append((r1, r))
         r1 = r
 
     return render(request,

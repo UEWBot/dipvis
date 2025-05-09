@@ -99,9 +99,7 @@ class SimpleGameState(GameState):
         For a concession, return an iterable containing just the power conceded to.
         If there is no passed draw vote or concession, returns survivors().
         """
-        if self.draw is not None:
-            return self.draw
-        return self.survivors()
+        return self.draw or self.survivors()
 
     def solo_year(self):
         """Returns the year in which a solo occurred, or None."""

@@ -245,10 +245,7 @@ def _update_or_create_playergameresult(player, b):
         defaults = {'position': b['Position'],
                     'tournament_name': b['Name of the tournament']}
         # If there's no 'Position sharing', they were alone at that position
-        try:
-            defaults['position_equals'] = b['Position sharing']
-        except KeyError:
-            defaults['position_equals'] = 1
+        defaults['position_equals'] = b.get('Position sharing', 1)
         # Ignore any of these that aren't present
         try:
             defaults['score'] = b['Score']

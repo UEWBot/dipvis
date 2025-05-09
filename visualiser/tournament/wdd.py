@@ -230,8 +230,8 @@ def wdd_nation_to_country(country_code):
     """
     try:
         c = Country(WDD_COUNTRY_TO_ISO_CODE[country_code])
-    except KeyError:
-        raise UnrecognisedCountry(country_code)
+    except KeyError as e:
+        raise UnrecognisedCountry(country_code) from e
     assert len(c) > 0
     return c
 

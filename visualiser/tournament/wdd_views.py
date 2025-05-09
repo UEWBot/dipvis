@@ -98,12 +98,7 @@ def _location_country(location):
         location = location[comma+1:]
         location = location.lstrip()
     # Handle special cases (commonly-abbreviated country names)
-    try:
-        return SPECIAL_CASE_COUNTRIES[location]
-    except KeyError:
-        pass
-    # Hope we're left with a country name
-    return location
+    return SPECIAL_CASE_COUNTRIES.get(location, location)
 
 
 def view_classification_csv(request, tournament_id):
