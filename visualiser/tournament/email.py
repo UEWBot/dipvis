@@ -104,7 +104,6 @@ def send_prefs_email(tournamentplayer, force=False):
 
     body = PREFS_EMAIL
     subject = PREFS_SUBJECT
-    rule = None
     addr = tournamentplayer.player.email
     # Can't do anything unless we have an email address for the player
     if not addr:
@@ -120,8 +119,7 @@ def send_prefs_email(tournamentplayer, force=False):
         return
     # Create the email and send it
     msg_body = body % {'tourney': t,
-                       'url': tournamentplayer.get_prefs_url(),
-                       'rule': rule}
+                       'url': tournamentplayer.get_prefs_url()}
     send_mail(subject % t,
               msg_body,
               settings.EMAIL_HOST_USER,
