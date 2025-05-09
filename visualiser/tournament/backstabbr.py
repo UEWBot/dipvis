@@ -134,9 +134,12 @@ class Game():
         # Default all the other instance variables
         self.name = 'Unknown'
         self.gm = 'Unknown'
+        # The current turn, or final turn if the game has ended
         self.season = SPRING
         self.year = 1901
+        # A string describing how the game ended
         self.result = 'Unknown'
+        # This is the player who soloed (if any)
         self.soloer = None
         self.ongoing = True
         self.players = {}
@@ -193,7 +196,7 @@ class Game():
 
     def _calculate_result(self):
         """
-        Set self.result and self.soloer from self.sc_counts, self.players, and self.ongoing.
+        Set self.result and self.soloer from self.soloing_power, self.sc_counts, self.players, and self.ongoing.
         """
         self.soloer = None
         if self.soloing_power is not None:

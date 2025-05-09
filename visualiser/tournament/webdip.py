@@ -120,7 +120,7 @@ class Game():
 
     def _calculate_result(self):
         """
-        Set self.result and self.soloer from self.sc_counts, self.players, and self.ongoing
+        Set self.result and self.soloer from self.sc_counts, self.soloing_power, self.players, and self.ongoing
         """
         self.soloer = None
         if self.soloing_power is not None:
