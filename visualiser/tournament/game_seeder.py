@@ -21,12 +21,15 @@ Assign players to Diplomacy games in a tournament setting.
 import copy
 import itertools
 import random
+import time
 #No auto until python 3.6
 #from enum import Enum, auto
 from enum import Enum
 from operator import itemgetter
 
 from django.utils.translation import gettext as _
+import numpy as np
+import pandas as pd
 
 
 class InvalidPlayer(Exception):
@@ -81,6 +84,7 @@ class SeedMethod(Enum):
     """
     #RANDOM = auto()
     #EXHAUSTIVE = auto()
+    MATRIX = 0
     RANDOM = 1
     EXHAUSTIVE = 2
 
@@ -107,7 +111,9 @@ class GameSeeder:
                  powers,
                  starts=1,
                  iterations=1000,
-                 seed_method=SeedMethod.RANDOM):
+                 #seed_method=SeedMethod.RANDOM):
+                 #seed_method=SeedMethod.EXHAUSTIVE):
+                 seed_method=SeedMethod.MATRIX):
         """
         Create a GameSeeder object
 
@@ -410,7 +416,14 @@ class GameSeeder:
         # There's nothing to do if we only have one game
         if len(games) >= 2:
             # The more iterations, the better the result, but the longer it takes
-            for _ in range(self.iterations):
+
+            try:
+                iterations = self.iterations
+            except:
+                iterations = 30_000*len(games)
+
+            start = time.time()
+            for _ in range(iterations):
                 # Try swapping a random player between two random games
                 g1, g2 = random.sample(games,2)
                 # Pick a player from each game that isn't also playing the other
@@ -426,6 +439,10 @@ class GameSeeder:
                     #print(games)
                     best_fitness = fitness
                     best_set = copy.deepcopy(games)
+            end = time.time()
+            runtime = end-start
+            runtime = str(round(runtime,2))
+            print(f"improving fitness took {runtime} seconds")
         return best_set, best_fitness
 
     def _assign_players_wrapper(self, players):
@@ -566,6 +583,106 @@ class GameSeeder:
         for (p1, p2) in itertools.combinations(players_doubling_up, 2):
             self._add_bias(p1, p2, w)
 
+    def _matrix_assignment(self, players):
+        players_to_index = {player: index for index, player in enumerate(players)}
+        index_to_players = {index: player for index, player in enumerate(players)}
+        n = len(players)
+        n_games = int(len(players)/7)
+        
+        games_matrix_np = np.zeros((n,n), dtype=int)
+        games_matrix_pd = pd.DataFrame(games_matrix_np, index=players, columns=players)
+
+        for player in players:
+            row = self.games_played_matrix[player]
+            for other_player in row:
+                games_matrix_pd.loc[player, other_player] = self.games_played_matrix[player][other_player]
+
+        games_matrix_np = games_matrix_pd.to_numpy()
+
+        games = [set() for _ in range(int(n_games))]
+
+        bins = np.unique(games_matrix_np)
+        current_bin = 0
+        for b in bins:
+            current_bin = b
+            stop_adding_pairs = False
+
+            rows, columns = np.where(games_matrix_np == b)
+            bin_indices = list(zip(rows, columns))
+
+            #returns rows as array[0] and columns as array[1]
+            #will exclude the diagonal
+            upper_triang = np.triu_indices(n, k=1)
+
+            #turn this into a list of (row, col)
+            upper_triang = [u for u in zip(upper_triang[0], upper_triang[1])] 
+            
+            bin_indices = [b for b in bin_indices if b in upper_triang]
+
+            bin_entries = set([ (int(bin_index[0]), int(bin_index[1])) for bin_index in bin_indices])
+            i = 0
+            while len(bin_entries) > 0:
+                bin_entry = random.choice(list(bin_entries))
+                row = bin_entry[0]
+                col = bin_entry[1]
+                #print("\ngame "+str(i%n_games))
+                #print("adding ", str(row), " and ", str(col))
+
+                if len(games[i%n_games]) + 2 > 6:
+                    print("games: ", games)
+                    print("switching from pairs of players to individuals, all games have six players")
+                    stop_adding_pairs = True
+                    break
+                games[i%n_games].add(row)
+                games[i%n_games].add(col)
+                i += 1
+                for bin_entry in bin_entries:
+                    if (row in bin_entry) or (col in bin_entry):
+                        bin_entries = bin_entries - {bin_entry}
+                try:
+                    print("bin entries: ", bin_entries)
+                except:
+                    print("no bins")
+            if stop_adding_pairs == True:
+                break
+        
+        assigned_players = []
+        for game in games:
+            for player in game:
+                assigned_players.append(player)
+
+        print("assigned players ", assigned_players)
+
+        rows, columns = np.where(games_matrix_np == b)
+        bin_indices = list(zip(rows, columns))
+        bin_entries = set([ (int(bin_index[0]), int(bin_index[1])) for bin_index in bin_indices])
+        valid_entries = set()
+        for entry in bin_entries:
+            if (entry[0] not in assigned_players) and (entry[1] not in assigned_players):
+                valid_entries.add(entry)
+        print("valid entries ", valid_entries)
+        players_to_assign = []
+        for entry in valid_entries:
+            for subentry in entry:
+                players_to_assign.append(subentry)
+
+        while len(players_to_assign) > 0:
+            player = random.choice(list(players_to_assign))
+            remaining_games = [game for game in games if len(game) < 7]
+            if remaining_games == []:
+                break
+            game = random.choice([game for game in games if len(game) < 7])
+            game.add(player)
+            players_to_assign.remove(player)
+
+        games_with_names = [set() for _ in range(int(n_games))]
+
+        for game_index, game in enumerate(games):
+            for player_index in game:
+                games_with_names[game_index].add(index_to_players[player_index])
+
+        return games_with_names
+
     def seed_games(self, omitting_players=(), players_doubling_up=()):
         """
         Seed players into games
@@ -588,7 +705,17 @@ class GameSeeder:
             # Generate the specified number of seedings
             # Use the random method if no games have been played yet and at most
             # one player is playing two games, because any seeding is fine
-            if ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
+            if self.seed_method == SeedMethod.MATRIX:
+                seedings = []
+
+                players = self._player_pool(omitting_players, players_doubling_up)
+                s = self._matrix_assignment(players)
+                
+                if self.games_played:
+                    s, fitness = self._improve_fitness(s)
+
+                seedings.append((s, fitness))
+            elif ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
                 seedings = []
                 # No point generating multiples if they're all equally good
                 starts = 1
@@ -613,8 +740,10 @@ class GameSeeder:
             seedings.sort(key=itemgetter(1))
             if self.seed_method == SeedMethod.RANDOM:
                 bg_str = f'With starts={self.starts} and iterations={self.iterations}'
-            else:
+            elif self.seed_method == SeedMethod.EXHAUSTIVE:
                 bg_str = 'With Exhaustive seeding'
+            else:
+                bg_str = 'With Matrix seeding'
             print(f'{bg_str}, best fitness score is {seedings[0][1]} in {len(seedings)} seedings')
         finally:
             # Remove temporary bias
