@@ -36,7 +36,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 
 from tournament.email import send_roll_call_emails
 
-from tournament.forms import AwardsForm
+from tournament.forms import AwardForm
 from tournament.forms import BaseAwardsFormset
 from tournament.forms import BaseHandicapsFormset
 from tournament.forms import BasePlayerRoundScoreFormset
@@ -596,7 +596,7 @@ def seeder_bias(request, tournament_id):
 def enter_awards(request, tournament_id):
     """Enter awards for the Tournament"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    AwardsFormset = formset_factory(AwardsForm,
+    AwardsFormset = formset_factory(AwardForm,
                                     extra=0,
                                     formset=BaseAwardsFormset)
     formset = AwardsFormset(request.POST or None, tournament=t)

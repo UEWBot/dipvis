@@ -69,7 +69,7 @@ class TournamentPlayerMultipleChoiceField(forms.ModelMultipleChoiceField):
 
 # Awards
 
-class AwardsForm(forms.Form):
+class AwardForm(forms.Form):
     """Form to give one Award to TournamentPlayers"""
     award = forms.ModelChoiceField(queryset=Award.objects.all(),
                                    widget=forms.HiddenInput())

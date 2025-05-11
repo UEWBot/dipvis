@@ -35,7 +35,7 @@ from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
 from tournament.forms import BackstabbrUrlForm
-from tournament.forms import AwardsForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
+from tournament.forms import AwardForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PaidForm, BasePaidFormset
@@ -49,7 +49,7 @@ from tournament.forms import SeederBiasForm
 from tournament.forms import TeamForm, BaseTeamsFormset
 
 
-class AwardsFormTest(TestCase):
+class AwardFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
@@ -75,18 +75,18 @@ class AwardsFormTest(TestCase):
 
     def test_init_needs_tournament(self):
         with self.assertRaises(KeyError):
-            AwardsForm(award_name=str(self.a1))
+            AwardForm(award_name=str(self.a1))
 
     def test_init_needs_award_name(self):
         with self.assertRaises(KeyError):
-            AwardsForm(tournament=self.t)
+            AwardForm(tournament=self.t)
 
     def test_awards_form_player_field_label(self):
-        form = AwardsForm(tournament=self.t, award_name=str(self.a1))
+        form = AwardForm(tournament=self.t, award_name=str(self.a1))
         self.assertEqual(form.fields['players'].label, str(self.a1))
 
     def test_awards_form_player_choices(self):
-        form = AwardsForm(tournament=self.t, award_name=str(self.a1))
+        form = AwardForm(tournament=self.t, award_name=str(self.a1))
         the_choices = list(form.fields['players'].choices)
         # We should have one per TournamentPlayer
         self.assertEqual(len(the_choices), self.t.tournamentplayer_set.filter(unranked=False).count())
@@ -130,7 +130,7 @@ class AwardsFormsetTest(TestCase):
         cls.tp2.awards.add(cls.a2)
         cls.tp3.awards.add(cls.a2)
 
-        cls.AwardsFormset = formset_factory(AwardsForm, extra=0, formset=BaseAwardsFormset)
+        cls.AwardsFormset = formset_factory(AwardForm, extra=0, formset=BaseAwardsFormset)
 
     def test_awards_formset_creation(self):
         formset = self.AwardsFormset(tournament=self.t)
