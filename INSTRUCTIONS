@@ -9,24 +9,28 @@ You can test out the system as follows:
    It will be auto-populated with Great Powers and a few known players.
 2. Create an admin account -- "python manage.py createsuperuser"
 3. Run the test server - "python manage.py runserver"
-3. Open the URL "http://127.0.0.1:8000/admin/tournament/player/" in
+   3.a. If running this locally, you also need to install:
+        pip install Werkzeug
+        pip install pyOpenSSL
+        and run "python manage.py runserver_plus --cert-file cert.crt"
+4. Open the URL "http://127.0.0.1:8000/admin/tournament/player/" in
    a web broswer and add players by filling in the fields.
-4. Open the URL "http://127.0.0.1:8000/admin/tournament/tournament/" in
+5. Open the URL "http://127.0.0.1:8000/admin/tournament/tournament/" in
    a web browser and add a tournament by filling in the fields. Optionally
    add players to the tournament. Note that adding a player to a tournament
    can take a while because the system copies information from the WDD to
    its own database. This can be avoided by not providing WDD Ids for
    TournamentPlayers.
-5. Open the tournament's page "http://127.0.0.1:8000/tournaments/1/" in a
+6. Open the tournament's page "http://127.0.0.1:8000/tournaments/1/" in a
    web browser and try out some of the links.
-6. Open the Registered Players URL "http://127.0.0.1:8000/tournaments/1/players/"
+7. Open the Registered Players URL "http://127.0.0.1:8000/tournaments/1/players/"
    in a web browser and add players to one or more rounds.
-7. Go to the roll call page for the first round at
+8. Go to the roll call page for the first round at
    "http://127.0.0.1:8000/tournaments/1/roll_call/" and identify at least
    seven players as playing in the round (for simplicity, you probably want
    to pick a multiple of seven to start with, although the system can
    deal with other numbers).
-8. You'll be taken to the page to create a game for the round. Go ahead and
+9. You'll be taken to the page to create a game for the round. Go ahead and
    do that.
    # When I create a game, I get an error message, but it does populate
    # the game into the tournament. I think it's trying to send emails to
