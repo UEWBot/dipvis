@@ -380,7 +380,7 @@ def seed_games(request, tournament_id, round_num):
                        'external_url': g.external_url,
                        'notes': g.notes}
             for gp in g.gameplayer_set.all():
-                current[gp.id] = gp.power
+                current[str(gp.id)] = gp.power
             data.append(current)
         PowerAssignFormset = formset_factory(PowerAssignForm,
                                              formset=BasePowerAssignFormset,

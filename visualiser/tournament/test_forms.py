@@ -1290,6 +1290,31 @@ class PowerAssignFormTest(TestCase):
         form = PowerAssignForm(data, game=self.g)
         self.assertTrue(form.is_valid())
 
+    def test_has_changed(self):
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                str(self.gp1.pk): str(self.turkey.pk),
+                str(self.gp2.pk): str(self.austria.pk),
+                str(self.gp3.pk): str(self.england.pk),
+                str(self.gp4.pk): str(self.france.pk),
+                str(self.gp5.pk): str(self.germany.pk),
+                str(self.gp6.pk): str(self.italy.pk),
+                str(self.gp7.pk): str(self.russia.pk),
+                'issues': ''}
+        form = PowerAssignForm(data,
+                               game=self.g,
+                               initial={'name': 'R1G1',
+                                        'the_set': GameSet.objects.first(),
+                                        str(self.gp1.pk): self.turkey,
+                                        str(self.gp2.pk): self.austria,
+                                        str(self.gp3.pk): self.england,
+                                        str(self.gp4.pk): self.france,
+                                        str(self.gp5.pk): self.germany,
+                                        str(self.gp6.pk): self.italy,
+                                        str(self.gp7.pk): self.russia,
+                                        'issues': ''})
+        self.assertFalse(form.has_changed())
+
     def test_name_error1(self):
         data = {'name': 'R1 G1',
                 'the_set': str(GameSet.objects.first().pk),
