@@ -200,37 +200,20 @@ def game_scoring_detail(request, slug):
     sys = next((s for s in G_SCORING_SYSTEMS if s.slug == slug), None)
     if sys is None:
         raise Http404
+
+    examples = []
+
     # Use sys to score some sample games
-    state1 = _create_state(GAME_1)
-    try:
-        scores1 = sys.scores(state1)
-    except DotCountUnknown:
-        scores1 = None
-    state2 = _create_state(GAME_2)
-    try:
-        scores2 = sys.scores(state2)
-    except DotCountUnknown:
-        scores2 = None
-    state3 = _create_state(GAME_3)
-    try:
-        scores3 = sys.scores(state3)
-    except DotCountUnknown:
-        scores3 = None
-    state4 = _create_state(GAME_4)
-    try:
-        scores4 = sys.scores(state4)
-    except DotCountUnknown:
-        scores4 = None
-    state5 = _create_state(GAME_5)
-    try:
-        scores5 = sys.scores(state5)
-    except DotCountUnknown:
-        scores5 = None
+    for game in [GAME_1, GAME_2, GAME_3, GAME_4, GAME_5]:
+        state = _create_state(game)
+        try:
+            scores = sys.scores(state)
+        except DotCountUnknown:
+            pass
+        else:
+            examples.append((state, scores))
+
     return render(request,
                   'game_scoring_systems/detail.html',
                   {'system': sys,
-                   'examples': [(state1, scores1),
-                                (state2, scores2),
-                                (state3, scores3),
-                                (state4, scores4),
-                                (state5, scores5)]})
+                   'examples': examples})
