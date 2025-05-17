@@ -32,7 +32,7 @@ from django_countries.fields import Country
 from django.utils import timezone
 
 from tournament import backstabbr
-from tournament.background import WDDBackground
+from tournament.background import WDDBackground, WDRBackground
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
@@ -46,7 +46,6 @@ from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 from tournament.wdd_views import _power_award_to_gameplayers
-
 
 def add_wep_scores(player, dry_run=False):
     """Update the Player's PlayerTournamentRankings to set the wep_score attribute."""
@@ -660,11 +659,15 @@ def check_wdd_ids():
     for p in Player.objects.filter(wdr_player_id__isnull=False).all():
         bg = WDRBackground(p.wdr_player_id)
         wdd_id = bg.wdd_id()
-        if p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
+        if (wdd_id == -1):
+            # WDR uses -1 to indicate "no WDD id"
+            if p.wdd_player_id:
+                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
             # We have a different WDD id
-            print(f'{p.name} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
         elif (not p.wdd_player_id) and wdd_id:
-            printf(f'{p.name} ({p.id}) has no WDD here but {wdd_id} in the WDR')
+            print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
 
 def upcoming_rounds(num_days=45, include_unpublished=False):
     """
