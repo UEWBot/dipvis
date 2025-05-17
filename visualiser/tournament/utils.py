@@ -26,13 +26,14 @@ import csv
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, time, timedelta
+from time import sleep
 
 from django_countries.fields import Country
 
 from django.utils import timezone
 
 from tournament import backstabbr
-from tournament.background import WDDBackground, WDRBackground
+from tournament.background import WDDBackground, WDRBackground, WDRNotAccessible, InvalidWDRId
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
@@ -657,7 +658,15 @@ def check_wdd_player_ids():
     Where we have WDR ids, we can use the WDR to double-check WDD ids
     """
     for p in Player.objects.filter(wdr_player_id__isnull=False).all():
-        bg = WDRBackground(p.wdr_player_id)
+        sleep(0.5)
+        try:
+            bg = WDRBackground(p.wdr_player_id)
+        except WDRNotAccessible:
+            print(f'Failed to check {p}')
+            continue
+        except InvalidWDRId:
+            print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
+            continue
         wdd_id = bg.wdd_id()
         if (wdd_id == -1):
             # WDR uses -1 to indicate "no WDD id"
@@ -667,6 +676,7 @@ def check_wdd_player_ids():
             # We have a different WDD id
             print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
         elif (not p.wdd_player_id) and wdd_id:
+            # Note that some players have multiple entries on the WDD, so both could be right
             print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
 
 def upcoming_rounds(num_days=45, include_unpublished=False):
