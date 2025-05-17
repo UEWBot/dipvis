@@ -49,14 +49,12 @@ class DrawProposalAdmin(admin.ModelAdmin):
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
+    extra = 7
     fieldsets = [
         (None, {
             'fields': ['player', 'power', 'score']
         }),
     ]
-    def get_extra(self, request, obj=None, **kwargs):
-        # We're going to want 7 players
-        return 7
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
@@ -142,7 +140,6 @@ class SeriesAdmin(admin.ModelAdmin):
 
 class RoundInline(admin.StackedInline):
     model = Round
-    extra = 4
     fieldsets = [
         (None, {
             'fields': ['start', 'scoring_system', 'dias', 'is_team_round']
@@ -152,6 +149,12 @@ class RoundInline(admin.StackedInline):
             'fields': ['final_year', 'earliest_end_time', 'latest_end_time']
         }),
     ]
+
+    def get_extra(self, request, obj=None, **kwargs):
+        if obj is not None:
+            # "Add another Round" will be there anyway
+            return 0
+        return 3
 
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
