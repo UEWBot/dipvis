@@ -359,6 +359,14 @@ def fix_round_players(the_round, dry_run=False):
             g.save()
 
 
+def find_tournaments_missing_wdd_ids():
+    """List completed tournaments without WDD ids (they should probably have one)"""
+    for t in Tournament.objects.filter(wdd_tournament_id=None):
+        if not t.is_finished:
+            continue
+        print(t)
+
+
 def find_players_missing_wdd_ids():
     """
     Find Players with no wdd_player_id in Tournaments on the WDD.
@@ -486,14 +494,6 @@ def set_nationalities(dry_run=False):
         if not dry_run:
             p.nationalities = c
             p.save(update_fields=['nationalities'])
-
-
-def find_tournaments_missing_wdd_ids():
-    """List completed tournaments without WDD ids (they should probably have one)"""
-    for t in Tournament.objects.filter(wdd_tournament_id=None):
-        if not t.is_finished:
-            continue
-        print(t)
 
 
 def player_emails(for_tournament):
