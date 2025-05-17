@@ -71,7 +71,7 @@ def map_to_backstabbr_power(gp):
     raise ValueError(gp)
 
 
-def populate_bs_profile_urls(dry_run=False):
+def add_bs_profile_urls(dry_run=False):
     """
     Finds as many Backstabbr profile URLs as possible and adds them to the appropriate Players.
     """
@@ -359,9 +359,9 @@ def fix_round_players(the_round, dry_run=False):
             g.save()
 
 
-def find_missing_wdd_ids():
+def find_players_missing_wdd_ids():
     """
-    Report all Players with no wdd_player_id that should have one.
+    Find Players with no wdd_player_id in Tournaments on the WDD.
     """
     for p in Player.objects.filter(wdd_player_id=None):
         for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
@@ -371,9 +371,9 @@ def find_missing_wdd_ids():
                 break
 
 
-def add_missing_wdd_ids(dry_run=False):
+def add_missing_player_wdd_ids(dry_run=False):
     """
-    Find Players with no wdd_player_id that should have one and add it.
+    Find Players with no wdd_player_id in Tournaments on the WDD and add their WDD id.
     """
     for p in Player.objects.filter(wdd_player_id=None):
         for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
@@ -488,7 +488,7 @@ def set_nationalities(dry_run=False):
             p.save(update_fields=['nationalities'])
 
 
-def list_tournaments_missing_wdd_ids():
+def find_tournaments_missing_wdd_ids():
     """List completed tournaments without WDD ids (they should probably have one)"""
     for t in Tournament.objects.filter(wdd_tournament_id=None):
         if not t.is_finished:
@@ -652,7 +652,7 @@ def add_wdr_tournament_ids(csv_filename, dry_run=False):
                     if not dry_run:
                         pa.save(update_fields=['wdr_tournament_id'])
 
-def check_wdd_ids():
+def check_wdd_player_ids():
     """
     Where we have WDR ids, we can use the WDR to double-check WDD ids
     """
