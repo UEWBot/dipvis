@@ -48,6 +48,169 @@ from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 from tournament.wdd_views import _power_award_to_gameplayers
 
+
+# Actual utilities
+
+def map_to_backstabbr_power(gp):
+    """Map a GreatPower to a Backstabbr.POWER."""
+    for power in backstabbr.POWERS:
+        if gp.abbreviation == power[0]:
+            return power
+    raise ValueError(gp)
+
+
+def _import_dixie_round(r_num, player, tournament, row):
+    """
+    Utility function for import_dixie_csv()
+    """
+    if row[f'round{r_num}'] == f'{r_num}':
+        # Create a RoundPlayer
+        r = tournament.round_numbered(r_num)
+        rp = RoundPlayer.objects.create(player=player,
+                                        the_round=r,
+                                        score=float(row[f'score{r_num}']))
+        # And a GamePlayer
+        gp = GamePlayer.objects.create(player=player,
+                                       game=Game.objects.get(the_round=r,
+                                                             name='R%dG%c' % (r_num, row[f'game{r_num}'])),
+                                       power=GreatPower.objects.get(abbreviation=row[f'power{r_num}']),
+                                       score=float(row[f'score{r_num}']))
+
+
+def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
+    """
+    Import a CSV file containing results from Dixie
+
+    Given the name of a CSV file containing DixeCon results,
+    create the Tournament with all the data provided.
+    Probably loads of assumptions...
+    """
+    with open(csvfilename) as csvfile:
+        cols = ['first', 'last', 'round1', 'game1', 'power1', 'score1', 'round2', 'game2', 'power2', 'score2', 'round3', 'game3', 'power3', 'score3', 'blank', 'total']
+        reader = csv.DictReader(csvfile, fieldnames=cols)
+        # Create the tournament
+        a_set = GameSet.objects.first()
+        t = Tournament.objects.create(name=name,
+                                      start_date=start_date,
+                                      end_date=end_date,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                      tournament_scoring_system='Sum best 2 rounds')
+        # Create 3 rounds
+        for r_num in range(1, 4):
+            r = Round.objects.create(tournament=t,
+                                     scoring_system='Dixie',
+                                     dias=False,
+                                     start=datetime.combine(t.start_date, time(hour=r_num, tzinfo=timezone.utc)))
+            # Create 4 Games
+            for g_num in range(1,5):
+                g = Game.objects.create(name=_generate_game_name(r_num, g_num),
+                                        the_round=r,
+                                        the_set=a_set,
+                                        is_finished=True)
+        for row in reader:
+            # Skip rows with no player name
+            if not row['first'].lstrip() or not row['first'].isprintable():
+                continue
+            try:
+                p = Player.objects.get(first_name=row['first'], last_name=row['last'])
+            except Player.DoesNotExist:
+                first=row['first']
+                last=row['last']
+                print(f'Unable to find player "{first} {last}"')
+                continue
+            # Create a TournamentPlayer
+            tp = TournamentPlayer.objects.create(player=p,
+                                                 tournament=t,
+                                                 score=float(row['total']))
+            # Create RoundPlayer and GamePlayer for each applicable Round
+            for r_num in range(1, 4):
+                _import_dixie_round(r_num, p, t, row)
+    add_best_country_awards_for_tournament(t, False)
+
+
+# Populate attributes - set attributes that can be figured out
+
+def add_missing_player_wdd_ids(dry_run=False):
+    """
+    Find Players with no wdd_player_id in Tournaments on the WDD and add their WDD id.
+    """
+    for p in Player.objects.filter(wdd_player_id=None):
+        for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
+            url = tp.tournament.wdd_url()
+            page = requests.get(url,
+                                timeout=1.0)
+            soup = BeautifulSoup(page.text)
+            for a in soup.find_all('a'):
+                if not a.string:
+                    continue
+                url = a['href']
+                if 'id_player' not in url:
+                    continue
+                wdd_id = url.split('=')[-1]
+                name = str(a.string)
+                if name.lower() == str(p).lower():
+                    print(f'Giving {str(p)} WDD id {wdd_id}')
+                    if not dry_run:
+                        p.wdd_player_id = int(wdd_id)
+                        p.save(update_fields=['wdd_player_id'])
+                        break
+
+
+def set_nationalities(dry_run=False):
+    """
+    Set Player.nationalities as specified in the WDD, unless already set.
+    """
+    for p in Player.objects.filter(nationalities='', wdd_player_id__isnull=False):
+        bg = WDDBackground(p.wdd_player_id)
+        nats = bg.nationalities()
+        if not nats:
+            # No nationality information in the WDD
+            print(f'WDD has no nationality for {p}')
+            continue
+        elif len(nats) > 1:
+            # This is currently impossible
+            print('Setting multiple nationalities is not supported')
+        n = nats[0]
+        try:
+            c = wdd_nation_to_country(n)
+        except UnrecognisedCountry:
+            print(f'Skipping unrecognised country "{n}" for WDD player {p.wdd_player_id}')
+            continue
+        print(f'Setting nationality of {p} to {c.name}')
+        if not dry_run:
+            p.nationalities = c
+            p.save(update_fields=['nationalities'])
+
+
+def add_missing_wdd_player_ids(dry_run=False):
+    """
+    Where we have WDR ids, we can use the WDR to double-check WDD ids
+    """
+    for p in Player.objects.filter(wdr_player_id__isnull=False).all():
+        sleep(0.5)
+        try:
+            bg = WDRBackground(p.wdr_player_id)
+        except WDRNotAccessible:
+            print(f'Failed to check {p}')
+            continue
+        except InvalidWDRId:
+            print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
+            continue
+        wdd_id = bg.wdd_id()
+        if (wdd_id == -1):
+            # WDR uses -1 to indicate "no WDD id"
+            if p.wdd_player_id:
+                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
+            # We have a different WDD id
+            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+        elif (not p.wdd_player_id) and wdd_id:
+            print(f'Adding WDD id {wdd_id} to {p} ({p.id})')
+            if not dry_run:
+                p.wdd_player_id = wdd_id
+                p.save()
+
+
 def add_wep_scores(player, dry_run=False):
     """Update the Player's PlayerTournamentRankings to set the wep_score attribute."""
     # First get the WPE scores
@@ -62,14 +225,6 @@ def add_wep_scores(player, dry_run=False):
             if not dry_run:
                 ptr.wpe_score = score['Score']
                 ptr.save(update_fields=['wpe_score'])
-
-
-def map_to_backstabbr_power(gp):
-    """Map a GreatPower to a Backstabbr.POWER."""
-    for power in backstabbr.POWERS:
-        if gp.abbreviation == power[0]:
-            return power
-    raise ValueError(gp)
 
 
 def add_bs_profile_urls(dry_run=False):
@@ -143,6 +298,77 @@ def populate_missed_years(game, dry_run=False):
                 _sc_counts_to_cc(game, year, sc_counts)
 
 
+# Reports - Summarise data
+
+def find_tournaments_missing_wdd_ids():
+    """List completed tournaments without WDD ids (they should probably have one)"""
+    for t in Tournament.objects.filter(wdd_tournament_id=None):
+        if not t.is_finished:
+            continue
+        print(t)
+
+
+def find_players_missing_wdd_ids():
+    """
+    Find Players with no wdd_player_id in Tournaments on the WDD.
+    """
+    for p in Player.objects.filter(wdd_player_id=None):
+        for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
+            # It's possible that they were registered but never played
+            if tp.roundplayers():
+                print(p)
+                break
+
+
+def upcoming_rounds(num_days=45, include_unpublished=False):
+    """
+    Print a list of tournament rounds for the next few weeks
+
+    num_days specifies how many days ahead to look
+    include_unpublished says whether to include unpublished tournaments
+    """
+    current_tz = timezone.get_current_timezone()
+    today = timezone.now()
+    end_date = today + timedelta(days=num_days)
+    for r in Round.objects.filter(is_finished=False).filter(start__range=[today, end_date]):
+        if include_unpublished or r.tournament.is_published:
+            print(f'{r.start.astimezone(current_tz)} {r}')
+
+
+def player_emails(for_tournament):
+    """Return a list of emails for players registered for the Tournament"""
+    return [tp.player.email for tp in for_tournament.tournamentplayer_set.all()]
+
+
+def check_wdd_player_ids():
+    """
+    Where we have WDR ids, we can use the WDR to double-check WDD ids
+    """
+    for p in Player.objects.filter(wdr_player_id__isnull=False).all():
+        sleep(0.5)
+        try:
+            bg = WDRBackground(p.wdr_player_id)
+        except WDRNotAccessible:
+            print(f'Failed to check {p}')
+            continue
+        except InvalidWDRId:
+            print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
+            continue
+        wdd_id = bg.wdd_id()
+        if (wdd_id == -1):
+            # WDR uses -1 to indicate "no WDD id"
+            if p.wdd_player_id:
+                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
+            # We have a different WDD id
+            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
+        elif (not p.wdd_player_id) and wdd_id:
+            # Note that some players have multiple entries on the WDD, so both could be right
+            print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
+
+
+# Maintenance utilities - fix errors in the database
+
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
     Moves any TournamentPlayers, RoundPlayers, and GamePlayers from del_player to keep_player.
@@ -211,6 +437,82 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
     else:
         print(f'Player with private key {del_player.pk} ready to delete from the admin')
 
+
+def fix_round_players(the_round, dry_run=False):
+    """
+    Utility to clean up RoundPlayers.
+
+    Checks for any RoundPlayers without Games in the Round.
+    If they don't have a game_count of zero, delete them.
+    Then checks for any Games in the Round where there is no
+    corresponding RoundPlayer, and creates one.
+    Finally, triggers a score recalculation for all Games in the round.
+    If dry_run is True, just report what would be done.
+
+    Note that this can remove RoundPlayers who checked in but didn't play
+    """
+    # First, check that the Round does have Games. If not, abort
+    game_set = the_round.game_set.all()
+    if not game_set.exists():
+        print("No games in round - exiting.\n")
+        return
+    # Check for spurious RoundPlayers
+    # game_count gets reset back to 1 by the roll call page,
+    # so this could delete a player who sat out the round
+    for rp in the_round.roundplayer_set.filter(game_count=1):
+        if not game_set.filter(gameplayer__player=rp.player).exists():
+            print(f"{rp} didn't actually play in the round - deleting.\n")
+            if not dry_run:
+                rp.delete()
+    # Check for missing RoundPlayers
+    for g in game_set.all():
+        for gp in g.gameplayer_set.all():
+            if not RoundPlayer.objects.filter(player=gp.player).exists():
+                print(f'Missing RoundPlayer {gp.player} - adding\n')
+                if not dry_run:
+                    RoundPlayer.objects.create(player=gp.player,
+                                               the_round=the_round)
+        # Trigger a score recalculation
+        print(f'Saving game {g} to trigger score recalculation\n')
+        if not dry_run:
+            g.save()
+
+
+def clean_best_country_awards(dry_run=False):
+    """
+    Check for spurious "Best Country" awards and remove them.
+    """
+    for t in Tournament.objects.all():
+        for a in t.awards.filter(power__isnull=False):
+            best = t.best_countries()[a.power]
+            tps = a.tournamentplayer_set.filter(tournament=t)
+            if len(tps) > 1:
+                # We have a best country award with multple recipients
+                gps = _power_award_to_gameplayers(t, a)
+                for tp in tps:
+                    # Did any recipients not play that power?
+                    tp_gp = None
+                    for gp in gps:
+                        if gp.player == tp.player:
+                            tp_gp = gp
+                            break;
+                    if not tp_gp:
+                        print(f"{tp} didn't play {a.power}")
+                        if not dry_run:
+                            tp.awards.remove(a)
+                    # Was any recipient outplayed as that power?
+                    if tp_gp not in best:
+                        print(f'{tp} was outplayed as {a.power}')
+                        if not dry_run:
+                            tp.awards.remove(a)
+                    # Are any recipients unranked?
+                    if tp.unranked:
+                        print(f'Removing {a} from unranked {tp}')
+                        if not dry_run:
+                            tp.awards.remove(a)
+
+
+# Testing utilities - useful for bug investigation
 
 def clone_tournament(t):
     """
@@ -320,91 +622,31 @@ def clone_tournament(t):
     return new_t
 
 
-def fix_round_players(the_round, dry_run=False):
+def recreate_seeder(for_tournament, round_number):
     """
-    Utility to clean up RoundPlayers.
+    Prepare to seed games for the specified Round
 
-    Checks for any RoundPlayers without Games in the Round.
-    If they don't have a game_count of zero, delete them.
-    Then checks for any Games in the Round where there is no
-    corresponding RoundPlayer, and creates one.
-    Finally, triggers a score recalculation for all Games in the round.
-    If dry_run is True, just report what would be done.
-
-    Note that this can remove RoundPlayers who checked in but didn't play
+    Returns a GameSeeder, set of players sitting out,
+    and set of players playing two games.
     """
-    # First, check that the Round does have Games. If not, abort
-    game_set = the_round.game_set.all()
-    if not game_set.exists():
-        print("No games in round - exiting.\n")
-        return
-    # Check for spurious RoundPlayers
-    # game_count gets reset back to 1 by the roll call page,
-    # so this could delete a player who sat out the round
-    for rp in the_round.roundplayer_set.filter(game_count=1):
-        if not game_set.filter(gameplayer__player=rp.player).exists():
-            print(f"{rp} didn't actually play in the round - deleting.\n")
-            if not dry_run:
-                rp.delete()
-    # Check for missing RoundPlayers
-    for g in game_set.all():
-        for gp in g.gameplayer_set.all():
-            if not RoundPlayer.objects.filter(player=gp.player).exists():
-                print(f'Missing RoundPlayer {gp.player} - adding\n')
-                if not dry_run:
-                    RoundPlayer.objects.create(player=gp.player,
-                                               the_round=the_round)
-        # Trigger a score recalculation
-        print(f'Saving game {g} to trigger score recalculation\n')
-        if not dry_run:
-            g.save()
+    r = for_tournament.round_numbered(round_number)
+    seeder = _create_game_seeder(for_tournament, r)
+    sitters = set()
+    two_boarders = set()
+    for tp in for_tournament.tournamentplayer_set.all():
+        try:
+            rp = r.roundplayer_set.get(player=tp.player)
+        except RoundPlayer.DoesNotExist:
+            sitters.add(tp)
+        else:
+            if rp.game_count == 0:
+                sitters.add(tp)
+            elif rp.game_count == 2:
+                two_boarders.add(tp)
+    return seeder, sitters, two_boarders
 
 
-def find_tournaments_missing_wdd_ids():
-    """List completed tournaments without WDD ids (they should probably have one)"""
-    for t in Tournament.objects.filter(wdd_tournament_id=None):
-        if not t.is_finished:
-            continue
-        print(t)
-
-
-def find_players_missing_wdd_ids():
-    """
-    Find Players with no wdd_player_id in Tournaments on the WDD.
-    """
-    for p in Player.objects.filter(wdd_player_id=None):
-        for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
-            # It's possible that they were registered but never played
-            if tp.roundplayers():
-                print(p)
-                break
-
-
-def add_missing_player_wdd_ids(dry_run=False):
-    """
-    Find Players with no wdd_player_id in Tournaments on the WDD and add their WDD id.
-    """
-    for p in Player.objects.filter(wdd_player_id=None):
-        for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
-            url = tp.tournament.wdd_url()
-            page = requests.get(url,
-                                timeout=1.0)
-            soup = BeautifulSoup(page.text)
-            for a in soup.find_all('a'):
-                if not a.string:
-                    continue
-                url = a['href']
-                if 'id_player' not in url:
-                    continue
-                wdd_id = url.split('=')[-1]
-                name = str(a.string)
-                if name.lower() == str(p).lower():
-                    print(f'Giving {str(p)} WDD id {wdd_id}')
-                    if not dry_run:
-                        p.wdd_player_id = int(wdd_id)
-                        p.save(update_fields=['wdd_player_id'])
-                        break
-
+# Old utilities, used on schema changes
 
 def add_best_country_awards_to_tournament(tournament, dry_run=False):
     """
@@ -437,163 +679,6 @@ def add_best_country_awards(dry_run=False):
         add_best_country_awards_for_tournament(t, dry_run)
 
 
-def clean_best_country_awards(dry_run=False):
-    """
-    Check for spurious "Best Country" awards and remove them.
-    """
-    for t in Tournament.objects.all():
-        for a in t.awards.filter(power__isnull=False):
-            best = t.best_countries()[a.power]
-            tps = a.tournamentplayer_set.filter(tournament=t)
-            if len(tps) > 1:
-                # We have a best country award with multple recipients
-                gps = _power_award_to_gameplayers(t, a)
-                for tp in tps:
-                    # Did any recipients not play that power?
-                    tp_gp = None
-                    for gp in gps:
-                        if gp.player == tp.player:
-                            tp_gp = gp
-                            break;
-                    if not tp_gp:
-                        print(f"{tp} didn't play {a.power}")
-                        if not dry_run:
-                            tp.awards.remove(a)
-                    # Was any recipient outplayed as that power?
-                    if tp_gp not in best:
-                        print(f'{tp} was outplayed as {a.power}')
-                        if not dry_run:
-                            tp.awards.remove(a)
-                    # Are any recipients unranked?
-                    if tp.unranked:
-                        print(f'Removing {a} from unranked {tp}')
-                        if not dry_run:
-                            tp.awards.remove(a)
-
-
-def set_nationalities(dry_run=False):
-    """
-    Set Player.nationalities as specified in the WDD, unless already set.
-    """
-    for p in Player.objects.filter(nationalities='', wdd_player_id__isnull=False):
-        bg = WDDBackground(p.wdd_player_id)
-        nats = bg.nationalities()
-        if not nats:
-            # No nationality information in the WDD
-            print(f'WDD has no nationality for {p}')
-            continue
-        elif len(nats) > 1:
-            # This is currently impossible
-            print('Setting multiple nationalities is not supported')
-        n = nats[0]
-        try:
-            c = wdd_nation_to_country(n)
-        except UnrecognisedCountry:
-            print(f'Skipping unrecognised country "{n}" for WDD player {p.wdd_player_id}')
-            continue
-        print(f'Setting nationality of {p} to {c.name}')
-        if not dry_run:
-            p.nationalities = c
-            p.save(update_fields=['nationalities'])
-
-
-def player_emails(for_tournament):
-    """Return a list of emails for players registered for the Tournament"""
-    return [tp.player.email for tp in for_tournament.tournamentplayer_set.all()]
-
-
-def recreate_seeder(for_tournament, round_number):
-    """
-    Prepare to seed games for the specified Round
-
-    Returns a GameSeeder, set of players sitting out,
-    and set of players playing two games.
-    """
-    r = for_tournament.round_numbered(round_number)
-    seeder = _create_game_seeder(for_tournament, r)
-    sitters = set()
-    two_boarders = set()
-    for tp in for_tournament.tournamentplayer_set.all():
-        try:
-            rp = r.roundplayer_set.get(player=tp.player)
-        except RoundPlayer.DoesNotExist:
-            sitters.add(tp)
-        else:
-            if rp.game_count == 0:
-                sitters.add(tp)
-            elif rp.game_count == 2:
-                two_boarders.add(tp)
-    return seeder, sitters, two_boarders
-
-
-def _import_dixie_round(r_num, player, tournament, row):
-    """
-    Utility function for import_dixie_csv()
-    """
-    if row[f'round{r_num}'] == f'{r_num}':
-        # Create a RoundPlayer
-        r = tournament.round_numbered(r_num)
-        rp = RoundPlayer.objects.create(player=player,
-                                        the_round=r,
-                                        score=float(row[f'score{r_num}']))
-        # And a GamePlayer
-        gp = GamePlayer.objects.create(player=player,
-                                       game=Game.objects.get(the_round=r,
-                                                             name='R%dG%c' % (r_num, row[f'game{r_num}'])),
-                                       power=GreatPower.objects.get(abbreviation=row[f'power{r_num}']),
-                                       score=float(row[f'score{r_num}']))
-
-
-def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
-    """
-    Import a CSV file containing results from Dixie
-
-    Given the name of a CSV file containing DixeCon results,
-    create the Tournament with all the data provided.
-    Probably loads of assumptions...
-    """
-    with open(csvfilename) as csvfile:
-        cols = ['first', 'last', 'round1', 'game1', 'power1', 'score1', 'round2', 'game2', 'power2', 'score2', 'round3', 'game3', 'power3', 'score3', 'blank', 'total']
-        reader = csv.DictReader(csvfile, fieldnames=cols)
-        # Create the tournament
-        a_set = GameSet.objects.first()
-        t = Tournament.objects.create(name=name,
-                                      start_date=start_date,
-                                      end_date=end_date,
-                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
-                                      tournament_scoring_system='Sum best 2 rounds')
-        # Create 3 rounds
-        for r_num in range(1, 4):
-            r = Round.objects.create(tournament=t,
-                                     scoring_system='Dixie',
-                                     dias=False,
-                                     start=datetime.combine(t.start_date, time(hour=r_num, tzinfo=timezone.utc)))
-            # Create 4 Games
-            for g_num in range(1,5):
-                g = Game.objects.create(name=_generate_game_name(r_num, g_num),
-                                        the_round=r,
-                                        the_set=a_set,
-                                        is_finished=True)
-        for row in reader:
-            # Skip rows with no player name
-            if not row['first'].lstrip() or not row['first'].isprintable():
-                continue
-            try:
-                p = Player.objects.get(first_name=row['first'], last_name=row['last'])
-            except Player.DoesNotExist:
-                first=row['first']
-                last=row['last']
-                print(f'Unable to find player "{first} {last}"')
-                continue
-            # Create a TournamentPlayer
-            tp = TournamentPlayer.objects.create(player=p,
-                                                 tournament=t,
-                                                 score=float(row['total']))
-            # Create RoundPlayer and GamePlayer for each applicable Round
-            for r_num in range(1, 4):
-                _import_dixie_round(r_num, p, t, row)
-    add_best_country_awards_for_tournament(t, False)
-
 def add_wdr_player_ids(csv_filename, dry_run=False):
     """
     Add wdr_player_id attributes to Players
@@ -616,6 +701,7 @@ def add_wdr_player_ids(csv_filename, dry_run=False):
             p.wdr_player_id = row['id']
             if not dry_run:
                 p.save(update_fields=['wdr_player_id'])
+
 
 def add_wdr_tournament_ids(csv_filename, dry_run=False):
     """
@@ -652,71 +738,3 @@ def add_wdr_tournament_ids(csv_filename, dry_run=False):
                     pa.wdr_tournament_id = row['id']
                     if not dry_run:
                         pa.save(update_fields=['wdr_tournament_id'])
-
-def add_missing_wdd_player_ids(dry_run=False):
-    """
-    Where we have WDR ids, we can use the WDR to double-check WDD ids
-    """
-    for p in Player.objects.filter(wdr_player_id__isnull=False).all():
-        sleep(0.5)
-        try:
-            bg = WDRBackground(p.wdr_player_id)
-        except WDRNotAccessible:
-            print(f'Failed to check {p}')
-            continue
-        except InvalidWDRId:
-            print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
-            continue
-        wdd_id = bg.wdd_id()
-        if (wdd_id == -1):
-            # WDR uses -1 to indicate "no WDD id"
-            if p.wdd_player_id:
-                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
-            # We have a different WDD id
-            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif (not p.wdd_player_id) and wdd_id:
-            print(f'Adding WDD id {wdd_id} to {p} ({p.id})')
-            if not dry_run:
-                p.wdd_player_id = wdd_id
-                p.save()
-
-def check_wdd_player_ids():
-    """
-    Where we have WDR ids, we can use the WDR to double-check WDD ids
-    """
-    for p in Player.objects.filter(wdr_player_id__isnull=False).all():
-        sleep(0.5)
-        try:
-            bg = WDRBackground(p.wdr_player_id)
-        except WDRNotAccessible:
-            print(f'Failed to check {p}')
-            continue
-        except InvalidWDRId:
-            print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
-            continue
-        wdd_id = bg.wdd_id()
-        if (wdd_id == -1):
-            # WDR uses -1 to indicate "no WDD id"
-            if p.wdd_player_id:
-                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
-            # We have a different WDD id
-            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif (not p.wdd_player_id) and wdd_id:
-            # Note that some players have multiple entries on the WDD, so both could be right
-            print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
-
-def upcoming_rounds(num_days=45, include_unpublished=False):
-    """
-    Print a list of tournament rounds for the next few weeks
-
-    num_days specifies how many days ahead to look
-    include_unpublished says whether to include unpublished tournaments
-    """
-    current_tz = timezone.get_current_timezone()
-    today = timezone.now()
-    end_date = today + timedelta(days=num_days)
-    for r in Round.objects.filter(is_finished=False).filter(start__range=[today, end_date]):
-        if include_unpublished or r.tournament.is_published:
-            print(f'{r.start.astimezone(current_tz)} {r}')
