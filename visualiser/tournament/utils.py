@@ -205,8 +205,10 @@ def add_missing_wdd_player_ids(dry_run=False):
             # We have a different WDD id
             print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
         elif (not p.wdd_player_id) and wdd_id:
-            print(f'Adding WDD id {wdd_id} to {p} ({p.id})')
-            if not dry_run:
+            if dry_run:
+                print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
+            else:
+                print(f'Adding WDD id {wdd_id} to {p} ({p.id})')
                 p.wdd_player_id = wdd_id
                 p.save()
 
@@ -352,27 +354,7 @@ def check_wdd_player_ids():
     """
     Where we have WDR ids, we can use the WDR to double-check WDD ids
     """
-    for p in Player.objects.filter(wdr_player_id__isnull=False).all():
-        sleep(0.5)
-        try:
-            bg = WDRBackground(p.wdr_player_id)
-        except WDRNotAccessible:
-            print(f'Failed to check {p}')
-            continue
-        except InvalidWDRId:
-            print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
-            continue
-        wdd_id = bg.wdd_id()
-        if (wdd_id == -1):
-            # WDR uses -1 to indicate "no WDD id"
-            if p.wdd_player_id:
-                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
-            # We have a different WDD id
-            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif (not p.wdd_player_id) and wdd_id:
-            # Note that some players have multiple entries on the WDD, so both could be right
-            print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
+    add_missing_wdd_player_ids(dry_run=True)
 
 
 # Maintenance utilities - fix errors in the database
