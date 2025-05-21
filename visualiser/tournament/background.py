@@ -611,7 +611,7 @@ class WDRBackground():
     """
 
     # timeout in seconds for read requests to WDR
-    TIMEOUT=3.0
+    TIMEOUT=4.0
 
     def __init__(self, wdr_id):
         self.wdr_id = wdr_id
