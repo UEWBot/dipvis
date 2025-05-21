@@ -41,7 +41,7 @@ from tournament.models import Award, CentreCount, DrawProposal, Game, GameImage
 from tournament.models import GamePlayer, Preference, Round, RoundPlayer, SeederBias
 from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
 from tournament.models import NO_SCORING_SYSTEM_STR
-from tournament.players import Player
+from tournament.players import Player, WDDPlayer
 from tournament.players import PlayerTournamentRanking, PlayerGameResult, PlayerAward
 from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
@@ -133,9 +133,11 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
 
 def add_missing_player_wdd_ids(dry_run=False):
     """
-    Find Players with no wdd_player_id in Tournaments on the WDD and add their WDD id.
+    Find Players with no WDDPlayer that are in Tournaments on the WDD and add a WDDPlayer.
     """
-    for p in Player.objects.filter(wdd_player_id=None):
+    for p in Player.objects.all():
+        if p.wddplayer_set.exists():
+            continue
         for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
             url = tp.tournament.wdd_url()
             page = requests.get(url,
@@ -152,8 +154,8 @@ def add_missing_player_wdd_ids(dry_run=False):
                 if name.lower() == str(p).lower():
                     print(f'Giving {str(p)} WDD id {wdd_id}')
                     if not dry_run:
-                        p.wdd_player_id = int(wdd_id)
-                        p.save(update_fields=['wdd_player_id'])
+                        WDDPlayer.objects.create(wdd_player_id=int(wdd_id),
+                                                 player=p)
                         break
 
 
@@ -186,12 +188,13 @@ def set_nationalities(dry_run=False):
     """
     Set Player.nationalities as specified in the WDD, unless already set.
     """
-    for p in Player.objects.filter(nationalities='', wdd_player_id__isnull=False):
-        bg = WDDBackground(p.wdd_player_id)
+    for wdd in WDDplayer.objects.filter(player__nationalities=''):
+        p = wdd.player
+        bg = WDDBackground(wdd.wdd_player_id)
         nats = bg.nationalities()
         if not nats:
             # No nationality information in the WDD
-            print(f'WDD has no nationality for {p}')
+            print(f'WDD has no nationality for WDD player {wdd.wdd_player_id}')
             continue
         elif len(nats) > 1:
             # This is currently impossible
@@ -200,7 +203,7 @@ def set_nationalities(dry_run=False):
         try:
             c = wdd_nation_to_country(n)
         except UnrecognisedCountry:
-            print(f'Skipping unrecognised country "{n}" for WDD player {p.wdd_player_id}')
+            print(f'Skipping unrecognised country "{n}" for WDD player {wdd.wdd_player_id}')
             continue
         print(f'Setting nationality of {p} to {c.name}')
         if not dry_run:
@@ -223,26 +226,30 @@ def add_missing_wdd_player_ids(dry_run=False):
             print(f'{p} ({p.id}) has invalid WDR id {p.wdr_player_id}')
             continue
         wdd_id = bg.wdd_id()
+        wdd_ids = []
+        for wdd in p.wddplayer_set.all():
+            wdd_ids.append(wdd.wdd_player_id)
         if (wdd_id == -1):
             # WDR uses -1 to indicate "no WDD id"
-            if p.wdd_player_id:
-                print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif p.wdd_player_id and wdd_id and (p.wdd_player_id != wdd_id):
-            # We have a different WDD id
-            print(f'{p} ({p.id}) has WDD id {p.wdd_player_id} here but {wdd_id} in the WDR')
-        elif (not p.wdd_player_id) and wdd_id:
+            if wdd_ids:
+                print(f'{p} ({p.id}) has WDD ids {wdd_ids} here but {wdd_id} in the WDR')
+        elif wdd_id and not wdd_ids:
             if dry_run:
                 print(f'{p} ({p.id}) has no WDD here but {wdd_id} in the WDR')
             else:
+                # We don't have a WDD id at all, so add it
                 print(f'Adding WDD id {wdd_id} to {p} ({p.id})')
-                p.wdd_player_id = wdd_id
-                p.save()
+                WDDPlayer.create(wdd_player_id=wdd_id,
+                                 player=p)
+        elif wdd_id and (wdd_id not in wdd_ids):
+            # We have a different WDD id
+            print(f'{p} ({p.id}) has WDD ids {wdd_ids} here but {wdd_id} in the WDR')
 
 
-def add_wep_scores(player, dry_run=False):
-    """Update the Player's PlayerTournamentRankings to set the wep_score attribute."""
+def add_wpe_scores(player, dry_run=False):
+    """Update the Player's PlayerTournamentRankings to set the wpe_score attribute."""
     # First get the WPE scores
-    bg = WDDBackground(player.wdd_player_id)
+    bg = WDDBackground(player.wddplayer_set.first().wdd_player_id)
     scores = bg.wpe_scores()
     # Now update their rankings
     ptr_s = player.playertournamentranking_set.all()
@@ -346,9 +353,11 @@ def find_tournaments_missing_wdr_ids():
 
 def find_players_missing_wdd_ids():
     """
-    Find Players with no wdd_player_id in Tournaments on the WDD.
+    Find Players with no WDDPlayer in Tournaments on the WDD.
     """
-    for p in Player.objects.filter(wdd_player_id=None):
+    for p in Player.objects.all():
+        if p.wddplayer_set.exists():
+            continue
         for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
             # It's possible that they were registered but never played
             if tp.roundplayers():
@@ -398,7 +407,7 @@ def clean_duplicate_player(del_player, keep_player, dry_run=False):
     if del_player.last_name != keep_player.last_name:
         print("Player last names don't match!")
         return
-    if del_player.wdd_player_id is not None:
+    if WDDPlayer.objects.filter(player=del_player).exists():
         print("Player to delete has a WDD player id!")
         return
 
@@ -710,9 +719,10 @@ def add_wdr_player_ids(csv_filename, dry_run=False):
         reader = csv.DictReader(csvfile)
         for row in reader:
             try:
-                p = Player.objects.get(wdd_player_id=int(row['player_wdd_id']))
-            except Player.DoesNotExist:
+                wdd = WDDPlayer.objects.get(wdd_player_id=int(row['player_wdd_id']))
+            except WDDPlayer.DoesNotExist:
                 continue
+            p = wdd.player
             print(f'Setting wdr_player_id for {p.first_name} {p.last_name} to {row["id"]}')
             p.wdr_player_id = row['id']
             if not dry_run:

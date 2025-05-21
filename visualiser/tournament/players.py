@@ -641,10 +641,9 @@ def add_player_bg(player, include_wpe=False):
         except WDRNotAccessible:
             wdr = None
     if not wdr:
-        # Do we have a WDD id for this player?
-        wdd = player.wdd_player_id
-        if wdd:
-            fields += _add_player_bg_from_wdd(player, wdd, include_wpe)
+        # Do we have any WDD ids for this player?
+        for wdd in player.wddplayer_set.all():
+            fields += _add_player_bg_from_wdd(player, wdd.wdd_player_id, include_wpe)
     if fields:
         player.save(update_fields=fields)
     # TODO Set PlayerTitle.ranking to cross-reference
@@ -670,24 +669,6 @@ def position_str(position):
     return _(result)
 
 
-class WDDPlayerIdField(models.PositiveIntegerField):
-    """A field that represents the unique id for a player in the WDD"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._old_val = None
-
-    def pre_save(self, model_instance, add):
-        # Clear cached WDD Name if WDD id has changed
-        model_instance._wdd_firstname = ''
-        model_instance._wdd_lastname = ''
-        val = super().pre_save(model_instance, add)
-        if (val != self._old_val) and not add:
-            # Background data is presumably wrong
-            model_instance._clear_background()
-            self._old_val = val
-        return val
-
-
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -695,11 +676,6 @@ class Player(models.Model):
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
     email = models.EmailField(blank=True)
-    wdd_player_id = WDDPlayerIdField(unique=True,
-                                     validators=[validate_wdd_player_id],
-                                     verbose_name=_(u'WDD player id'),
-                                     blank=True,
-                                     null=True)
     wdr_player_id = models.PositiveIntegerField(unique=True,
                                                 validators=[validate_wdr_player_id],
                                                 verbose_name=_(u'WDR player id'),
@@ -713,8 +689,6 @@ class Player(models.Model):
     location = models.CharField(max_length=60, blank=True)
     nationalities = CountryField(multiple=True, blank=True)
     # Cache of the player's name in the WDD
-    _wdd_firstname = models.CharField(max_length=40, blank=True)
-    _wdd_lastname = models.CharField(max_length=40, blank=True)
     user = models.OneToOneField(User,
                                 blank=True,
                                 null=True,
@@ -768,12 +742,6 @@ class Player(models.Model):
 
         return result
 
-    def wdd_url(self):
-        """URL for this player in the World Diplomacy Database."""
-        if self.wdd_player_id:
-            return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
-        return ''
-
     def wdr_url(self):
         """URL for this player in the World Diplomacy Reference."""
         if self.wdr_player_id:
@@ -784,25 +752,14 @@ class Player(models.Model):
         """
         Name for this player as a 2-tuple, as in the WDD.
 
-        If the player has no WDD id, returns the name used locally.
-        If the name in the WDD cannot be determined, returns ('', '').
+        If the name in the WDD cannot be determined, returns the name used locally.
         """
-        if not self.wdd_player_id:
+        qs = self.wddplayer_set.all()
+        try:
+           wdd = qs[0]
+        except IndexError:
             return (self.first_name, self.last_name)
-        # Read from the WDD if we haven't cached it
-        if not self._wdd_firstname and not self._wdd_lastname:
-            bg = WDDBackground(self.wdd_player_id)
-            try:
-                self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
-                self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
-            except WDDNotAccessible:
-                # Nothing we can do
-                pass
-            except InvalidWDDId as e:
-                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
-                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                      params={'wdd_id': self.wdd_player_id}) from e
-        return (self._wdd_firstname, self._wdd_lastname)
+        return wdd.wdd_firstname_lastname()
 
     def wdr_name(self):
         """Returns the name of the player in the WDR as a string"""
@@ -1046,6 +1003,74 @@ class Player(models.Model):
         return reverse('player_detail', args=[str(self.id)])
 
 
+class WDDPlayerIdField(models.PositiveIntegerField):
+    """A field that represents the unique id for a player in the WDD"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._old_val = None
+
+    def pre_save(self, model_instance, add):
+        # Clear cached WDD Name if WDD id has changed
+        model_instance._wdd_firstname = ''
+        model_instance._wdd_lastname = ''
+        val = super().pre_save(model_instance, add)
+        if (val != self._old_val) and not add:
+            # Background data is presumably wrong
+            model_instance._clear_background()
+            self._old_val = val
+        return val
+
+
+class WDDPlayer(models.Model):
+    """
+    A Single Diplomacy player on the World Diplomacy Database
+
+    A separate model because some players have multiple entries on the WDD
+    """
+    wdd_player_id = WDDPlayerIdField(unique=True,
+                                     validators=[validate_wdd_player_id],
+                                     verbose_name=_(u'WDD player id'))
+    _wdd_firstname = models.CharField(max_length=40, blank=True)
+    _wdd_lastname = models.CharField(max_length=40, blank=True)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+
+    def _clear_background(self):
+        self.player._clear_background()
+
+    def wdd_url(self):
+        """URL for this player in the World Diplomacy Database."""
+        return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
+
+    def wdd_firstname_lastname(self):
+        """
+        Name for this player as a 2-tuple, as in the WDD.
+
+        If the name in the WDD cannot be determined, returns ('', '').
+        """
+        # Read from the WDD if we haven't cached it
+        if not self._wdd_firstname and not self._wdd_lastname:
+            bg = WDDBackground(self.wdd_player_id)
+            try:
+                self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
+                self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
+            except WDDNotAccessible:
+                # Nothing we can do
+                pass
+            except InvalidWDDId as e:
+                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
+                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
+                                      params={'wdd_id': self.wdd_player_id}) from e
+        return (self._wdd_firstname, self._wdd_lastname)
+
+    def delete(self, *args, **kwargs):
+        # Nuke any background that may have been from this WDDPlayer
+        self.player._clear_background()
+        return super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.player} {self.wdd_player_id}'
+
+
 class PlayerTournamentRanking(models.Model):
     """
     A tournament ranking for a player.
@@ -1078,10 +1103,14 @@ class PlayerTournamentRanking(models.Model):
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
-        if (not self.wdd_tournament_id) or (not self.player.wdd_player_id):
+        if not self.wdd_tournament_id:
+            return ''
+        try:
+            wdd = WDDPlayer.objects.get(player=self.player)
+        except (WDDPlayer.DoesNotExist, WDDPlayer.MultipleObjectsReturned):
             return ''
         query = {'id_tournament': self.wdd_tournament_id,
-                 'id_player': self.player.wdd_player_id}
+                 'id_player': wdd.wdd_player_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
                           f'{WDD_BASE_RESULTS_PATH}tournament_player.php',
@@ -1318,7 +1347,9 @@ class PlayerRanking(models.Model):
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
-        if not self.player.wdd_player_id:
+        try:
+            wdd = WDDPlayer.objects.get(player=self.player)
+        except (WDDPlayer.DoesNotExist, WDDPlayer.MultipleObjectsReturned):
             return ''
         if self.system == 'World Performance Evaluation':
             wdd_system_id = 2
@@ -1329,7 +1360,7 @@ class PlayerRanking(models.Model):
         else:
             return ''
         query = {'id_ranking': wdd_system_id,
-                 'id_player': self.player.wdd_player_id}
+                 'id_player': wdd.wdd_player_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
                           f'{WDD_BASE_RANKING_PATH}ranking_player.php',

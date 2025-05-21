@@ -14,7 +14,9 @@
   <img src="{{ country.flag }}" alt="{{ country.name }}" style="width:32px;">
 {% endfor %}
 <p>{% trans "WDR Name and Id:" %} {% if player.wdr_player_id %}<a href="{{ player.wdr_url }}">{{ player.wdr_name }} {{ player.wdr_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
-<p>{% trans "WDD Name and Id:" %} {% if player.wdd_player_id %}{% with wdd_name=player.wdd_firstname_lastname %}<a href="{{ player.wdd_url }}">{{ wdd_name.0 }} {{wdd_name.1 }} {{ player.wdd_player_id }}</a>{% endwith %}{% else %} {% trans "None" %} {% endif %}</p>
+{% for wdd in player.wddplayer_set.all %}
+  <p>{% trans "WDD Name and Id: " %}{% with wdd_name=wdd.wdd_firstname_lastname %}<a href="{{ wdd.wdd_url }}">{{ wdd_name.0 }} {{wdd_name.1 }} {{ wdd.wdd_player_id }}</a>{% endwith %}</p>
+{% endfor %}
 {% if player.location %}<p>{% trans "Location: " %}{{ player.location }}</p>{% endif %}
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
