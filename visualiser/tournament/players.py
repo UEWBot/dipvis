@@ -1200,6 +1200,10 @@ class PlayerGameResult(models.Model):
                 (self.game_number == pgr.game_number) and
                 (self.date == pgr.date))
 
+    def game_name(self):
+        """Returns a string representing the round and board numbers"""
+        return f'R {self.round_number} B {self.game_number}'
+
     def wdd_url(self):
         """WDD URL where this result can be seen"""
         if not self.wdd_tournament_id:

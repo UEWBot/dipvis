@@ -602,6 +602,18 @@ class PlayerTests(TestCase):
                                 position=4)
         self.assertFalse(pgr1.for_same_game(pgr2))
 
+    # PlayeGameResult.game_name()
+    def test_playergameresult_game_name(self):
+        p1 = Player.objects.first()
+        pgr = PlayerGameResult(tournament_name='Best Tournament',
+                               round_number=1,
+                               game_number=1,
+                               player=p1,
+                               power=self.austria,
+                               date=date.today(),
+                               position=2)
+        name = pgr.game_name()
+
     # PlayerGameResult.wdd_url()
     @tag('slow', 'wdd')
     def test_playergameresult_wdd_url(self):
