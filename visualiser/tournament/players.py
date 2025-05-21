@@ -486,6 +486,11 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 traceback.print_exc()
     # Boards
     for b in bg.boards():
+        # Skip variant boards because they don't factor well into the statistics
+        if b['board_variant'] != 'Standard (7)':
+            print('Skipping variant board')
+            print(b)
+            continue
         # What was the tournament?
         t_id = b['board_tournament']
         t = _find_wdr_tournament(t_id, tournaments)

@@ -663,6 +663,7 @@ class WDRBackground():
 
         list of dicts. Dict keys are:
             "tournament_id"
+            "tournament_wdd_id"
             "tournament_name"
             "tournament_start_date"
             "tournament_end_date"
@@ -686,6 +687,7 @@ class WDRBackground():
             "board_rank"
             "board_year_of_elimination"
             "board_url"
+            "board_variant"
         """
         return self.data['player_boards_played']
 
