@@ -13,8 +13,8 @@
 {% for country in player.nationalities %}
   <img src="{{ country.flag }}" alt="{{ country.name }}" style="width:32px;">
 {% endfor %}
-<p>{% trans "WDD Name and Id:" %} {% if player.wdd_player_id %}{% with wdd_name=player.wdd_firstname_lastname %}<a href="{{ player.wdd_url }}">{{ wdd_name.0 }} {{wdd_name.1 }} {{ player.wdd_player_id }}</a>{% endwith %}{% else %} {% trans "None" %} {% endif %}</p>
 <p>{% trans "WDR Name and Id:" %} {% if player.wdr_player_id %}<a href="{{ player.wdr_url }}">{{ player.wdr_name }} {{ player.wdr_player_id }}</a>{% else %} {% trans "None" %} {% endif %}</p>
+<p>{% trans "WDD Name and Id:" %} {% if player.wdd_player_id %}{% with wdd_name=player.wdd_firstname_lastname %}<a href="{{ player.wdd_url }}">{{ wdd_name.0 }} {{wdd_name.1 }} {{ player.wdd_player_id }}</a>{% endwith %}{% else %} {% trans "None" %} {% endif %}</p>
 {% if player.location %}<p>{% trans "Location: " %}{{ player.location }}</p>{% endif %}
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
@@ -26,7 +26,7 @@
 </ul>
 <p>{% trans "Italics indicate position may change" %}</p>
 <h2>{% trans "Background" %}</h2>
-<p>{% blocktrans with wdd_url="http://www.world-diplomacy-database.com/" wdr_url="http://www.world-diplomacy-reference.com/" %}From the <a href="{{wdd_url}}">World Diplomacy Database</a> and/or the <a href="{{wdr_url}}">World Diplomacy Reference</a></p>{% endblocktrans %}
+<p>{% blocktrans with wdd_url="http://www.world-diplomacy-database.com/" wdr_url="http://www.world-diplomacy-reference.com/" %}From the <a href="{{wdr_url}}">World Diplomacy Reference</a> and/or the <a href="{{wdd_url}}">World Diplomacy Database</a></p>{% endblocktrans %}
 <p>{% blocktrans with datetime=player.background_updated %}Last retrieved {{datetime}}{% endblocktrans %}</p>
 <ul>
   {% for b in player.background %}
