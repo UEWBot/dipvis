@@ -47,6 +47,7 @@ from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
 from tournament.wdd_views import _power_award_to_gameplayers
+from tournament.wdr import wdr_tournament_as_json
 
 
 # Actual utilities
@@ -153,6 +154,31 @@ def add_missing_player_wdd_ids(dry_run=False):
                     if not dry_run:
                         p.wdd_player_id = int(wdd_id)
                         p.save(update_fields=['wdd_player_id'])
+                        break
+
+
+def add_missing_player_wdr_ids(dry_run=False):
+    """
+    Find Players with no wdr_player_id who played in tournaments on the WDR, and add their WDR id.
+    """
+    for t in Tournament.objects.filter(is_published=True).exclude(wdr_tournament_id=None):
+        tps = t.tournamentplayer_set.filter(player__wdr_player_id=None)
+        if len(tps):
+            results = t.positions_and_scores()
+            data = wdr_tournament_as_json(t.wdr_tournament_id)
+            for tp in tps:
+                p = tp.player
+                for player in data['tournament_classifications']:
+                    # Look for matching score, rank, and first name
+                    # But skip anyone with a score of zero due to ties
+                    if ((player['player_score'] == results[p][1]) and
+                        (player['player_rank'] == results[p][0]) and
+                        (results[p][1] != 0.0) and
+                        (player['player_full_name'].startswith(p.first_name))):
+                        print(f'Adding WDR id {player["player_id"]} to {p} (from {t})')
+                        if not dry_run:
+                            p.wdr_player_id = player['player_id']
+                            p.save()
                         break
 
 

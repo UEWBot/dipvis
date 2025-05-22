@@ -63,6 +63,15 @@ def validate_wdr_tournament_id(value):
     _validate_wdr_id('tournaments', 'tournament', value)
 
 
+def wdr_tournament_as_json(wdr_tournament_id):
+    """
+    Uses the WDR API to read the details of the specified tournament as JSON
+    """
+    url = WDR_BASE_URL + f'api/v1/tournaments/{wdr_tournament_id}'
+    page = requests.get(url, headers={'Accept': 'application/json'}, timeout=4.0)
+    return page.json()
+
+
 _GPCache = {}
 
 def wdr_power_name_to_greatpower(name):
