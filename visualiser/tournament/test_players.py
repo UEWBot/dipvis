@@ -475,10 +475,18 @@ class PlayerTests(TestCase):
 
     # WDDPlayer.wdd_firstname_lastname()
     @tag('wdd')
-    def test_wddplayer_wdd_url(self):
+    def test_wddplayer_wdd_name1(self):
         wdd = WDDPlayer.objects.first()
-        url = wdd.wdd_firstname_lastname()
+        name = wdd.wdd_firstname_lastname()
         # TODO verify result
+
+    @tag('wdd')
+    def test_wddplayer_wdd_name2(self):
+        """Fast path if already cached"""
+        wdd = WDDPlayer.objects.first()
+        wdd._wdd_firstname = 'Arthur'
+        name = wdd.wdd_firstname_lastname()
+        self.assertEqual(name[0], 'Arthur')
 
     # WDDPlayer.delete()
     @tag('wdd')
@@ -511,6 +519,12 @@ class PlayerTests(TestCase):
         wdd.wdd_player_id = wdd_id
         wdd.save(update_fields=['wdd_player_id'])
 
+    # WDDPlayer.__str__()
+    def test_wddplayer_str(self):
+        wdd = WDDPlayer.objects.first()
+        string = str(wdd)
+        # TODO Verify result
+
     # PlayerTournamentRanking
     # PlayerTournamentRanking.wdd_url()
     @tag('slow', 'wdd')
@@ -518,8 +532,12 @@ class PlayerTests(TestCase):
         p = Player.objects.first()
         add_player_bg(p)
         ptr = PlayerTournamentRanking.objects.first()
+        self.assertIsNotNone(ptr.wdd_tournament_id)
         url = ptr.wdd_url()
         # TODO verify result
+        # Also check wdr_url() for a PTR with no WDR id
+        self.assertIsNone(ptr.wdr_tournament_id)
+        self.assertEqual('', ptr.wdr_url())
 
     # PlayerTournamentRanking.wdr_url()
     @tag('slow', 'wdr')
@@ -532,6 +550,7 @@ class PlayerTests(TestCase):
         p.save()
         add_player_bg(p)
         ptr = PlayerTournamentRanking.objects.first()
+        self.assertIsNotNone(ptr.wdr_tournament_id)
         url = ptr.wdr_url()
         # TODO verify result
         # Cleanup
@@ -685,8 +704,12 @@ class PlayerTests(TestCase):
         p = Player.objects.first()
         add_player_bg(p)
         pgr = PlayerGameResult.objects.first()
+        self.assertIsNotNone(pgr.wdd_tournament_id)
         url = pgr.wdd_url()
         # TODO verify result
+        # Check wdr_url() for a PGR with no WDR id
+        self.assertIsNone(pgr.wdr_tournament_id)
+        url = pgr.wdr_url()
 
     # PlayerGameResult.wdr_url()
     @tag('slow', 'wdr')
@@ -699,8 +722,12 @@ class PlayerTests(TestCase):
         p.save()
         add_player_bg(p)
         pgr = PlayerGameResult.objects.first()
+        self.assertIsNotNone(pgr.wdr_tournament_id)
         url = pgr.wdr_url()
         # TODO verify result
+        # Check wdr_url() for a PGR with no WDR id
+        self.assertIsNotNone(pgr.wdr_tournament_id)
+        url = pgr.wdr_url()
         # Cleanup
         WDDPlayer.objects.create(player=p,
                                  wdd_player_id=wdd_id)
@@ -726,14 +753,19 @@ class PlayerTests(TestCase):
         p = Player.objects.first()
         add_player_bg(p)
         pa = PlayerAward.objects.exclude(power=None).first()
+        self.assertIsNotNone(pa.wdd_tournament_id)
         url = pa.wdd_url()
         # TODO verify result
+        # Also check wdr_url() for a PA with no WDR id
+        self.assertIsNone(pa.wdr_tournament_id)
+        self.assertEqual('', pa.wdr_url())
 
     @tag('slow', 'wdd')
     def test_playeraward_wdd_url_no_power(self):
         p = Player.objects.first()
         add_player_bg(p)
         pa = PlayerAward.objects.filter(power=None).first()
+        self.assertIsNotNone(pa.wdd_tournament_id)
         url = pa.wdd_url()
         # TODO verify result
 
@@ -744,10 +776,13 @@ class PlayerTests(TestCase):
         p = wdd.player
         wdd_id = wdd.wdd_player_id
         wdd.delete()
+        self.assertFalse(p.wddplayer_set.exists())
         p.wdr_player_id = CHRIS_BRAND_WDR_ID
         p.save()
+        self.assertEqual(PlayerAward.objects.count(), 0)
         add_player_bg(p)
         pa = PlayerAward.objects.exclude(power=None).first()
+        self.assertIsNotNone(pa.wdr_tournament_id)
         url = pa.wdr_url()
         # TODO verify result
         # Cleanup
@@ -777,14 +812,18 @@ class PlayerTests(TestCase):
         p = Player.objects.first()
         add_player_bg(p)
         pr = PlayerRanking.objects.filter(system__contains='World').first()
+        self.assertNotEqual(p.wddplayer_set.count(), 0)
         url = pr.wdd_url()
         # TODO Validate results
+        # Also check wdr_url() for a non-WPE7 system
+        self.assertEqual('', pr.wdr_url())
 
     @tag('slow', 'wdd')
     def test_playerranking_wdd_url_dip_pouch(self):
         p = Player.objects.first()
         add_player_bg(p)
         pr = PlayerRanking.objects.filter(system__contains='Pouch').first()
+        self.assertNotEqual(p.wddplayer_set.count(), 0)
         url = pr.wdd_url()
         # TODO Validate results
 
@@ -797,6 +836,7 @@ class PlayerTests(TestCase):
                                        wdd_player_id=2199)
         add_player_bg(p)
         pr = PlayerRanking.objects.filter(system__contains='SDR').first()
+        self.assertNotEqual(p.wddplayer_set.count(), 0)
         url = pr.wdd_url()
         # TODO Validate results
         # Cleanup
@@ -815,6 +855,9 @@ class PlayerTests(TestCase):
         pr = PlayerRanking.objects.filter(system='WPE7').first()
         url = pr.wdr_url()
         # TODO Validate results
+        # Also check wdd_url() for a PR with no WDD id
+        self.assertEqual(p.wddplayer_set.count(), 0)
+        self.assertEqual('', pr.wdd_url())
         # Cleanup
         WDDPlayer.objects.create(wdd_player_id=wdd_id,
                                  player=p)
