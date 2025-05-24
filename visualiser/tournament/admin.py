@@ -29,7 +29,7 @@ from tournament.models import Team, Tournament, TournamentPlayer
 from tournament.players import Player, PlayerAward
 from tournament.players import PlayerGameResult, PlayerRanking
 from tournament.players import PlayerTournamentRanking
-from tournament.players import PlayerTitle
+from tournament.players import PlayerTitle, WDDPlayer
 
 @admin.register(Award)
 class AwardAdmin(admin.ModelAdmin):
@@ -178,6 +178,10 @@ class TournamentAdmin(admin.ModelAdmin):
 @admin.register(TournamentPlayer)
 class TournamentPlayerAdmin(admin.ModelAdmin):
     list_filter = ['tournament', 'player', 'location', 'unranked']
+
+@admin.register(WDDPlayer)
+class WDDPlayerAdmin(admin.ModelAdmin):
+    list_filter = ['player']
 
 # Register models
 admin.site.register(GreatPower)
