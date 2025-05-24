@@ -1034,6 +1034,9 @@ class WDDPlayer(models.Model):
     _wdd_lastname = models.CharField(max_length=40, blank=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name = 'WDD player'
+
     def _clear_background(self):
         self.player._clear_background()
 

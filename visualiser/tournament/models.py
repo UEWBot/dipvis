@@ -1428,7 +1428,7 @@ class DBNCoverage(models.Model):
     description = models.CharField(max_length=MAX_DESC_LENGTH)
 
     class Meta:
-        verbose_name_plural = 'DBN coverages'
+        verbose_name = 'DBN coverage'
 
     def __str__(self):
         return f'{self.tournament} {self.description}'
