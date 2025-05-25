@@ -844,7 +844,7 @@ class PlayerTests(TestCase):
 
     # PlayerRanking.wdr_url()
     @tag('slow', 'wdr')
-    def test_playerranking_wdr_url_wpe(self):
+    def test_playerranking_wdr_url_wpe1(self):
         wdd = WDDPlayer.objects.first()
         p = wdd.player
         wdd_id = wdd.wdd_player_id
@@ -861,6 +861,22 @@ class PlayerTests(TestCase):
         # Cleanup
         WDDPlayer.objects.create(wdd_player_id=wdd_id,
                                  player=p)
+        p.wdr_player_id = None
+        p.save()
+
+    @tag('slow', 'wdr')
+    def test_playerranking_wdr_url_wpe2(self):
+        wdd = WDDPlayer.objects.first()
+        p = wdd.player
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        pr = PlayerRanking.objects.filter(system='WPE7').first()
+        url = pr.wdr_url()
+        # TODO Validate results
+        # Also check wdd_url() for a WPE PR
+        self.assertEqual('', pr.wdd_url())
+        # Cleanup
         p.wdr_player_id = None
         p.save()
 
