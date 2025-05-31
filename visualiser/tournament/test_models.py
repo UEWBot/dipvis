@@ -687,6 +687,7 @@ class TournamentScoringWDC2025Tests(TestCase):
         for p in players:
             TournamentPlayer.objects.create(tournament=cls.t, player=p)
         # Create RoundPlayers
+        # TODO skip players that don't play in a Round
         for r in [cls.r1, cls.r2, cls.r3, cls.r4]:
             for p in players:
                 RoundPlayer.objects.create(player=p, the_round=r)
