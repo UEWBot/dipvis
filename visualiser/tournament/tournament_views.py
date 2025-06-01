@@ -725,6 +725,10 @@ def api(request, tournament_id, version):
                               'games': games}
     data = {'name': t.name,
             'year': t.start_date.year,
+            'url': request.build_absolute_uri(t.get_absolute_url()),
+            'wdr_id': t.wdr_tournament_id,
+            'wdd_id': t.wdd_tournament_id,
+            'dbn_coverage': [d.dbn_url for d in t.dbncoverage_set.all()],
             'rounds': rounds}
     return JsonResponse(data)
 
