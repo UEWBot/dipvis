@@ -372,6 +372,7 @@ def seed_games(request, tournament_id, round_num):
     """Seed players to the games for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
+    breakpoint()
     if request.method == 'POST':
         data = []
         for g in r.game_set.all():
@@ -467,14 +468,14 @@ def seed_games(request, tournament_id, round_num):
                 gp = GamePlayer.objects.create(player=tp.player,
                                                game=new_game,
                                                power=power)
-                current[gp.id] = power
+                current[str(gp.id)] = power
             # If we're assigning powers from preferences, do so now
             if t.power_assignment == PowerAssignMethods.PREFERENCES:
                 new_game.assign_powers_from_prefs()
                 for tp, _ in g:
                     gp = GamePlayer.objects.get(player=tp.player,
                                                 game=new_game)
-                    current[gp.id] = gp.power
+                    current[str(gp.id)] = gp.power
             data.append(current)
         # Create a form for each of the resulting games
         PowerAssignFormset = formset_factory(PowerAssignForm,
