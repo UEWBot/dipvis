@@ -872,7 +872,8 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('seed_games',
                                            args=(self.t2.pk, 3)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
+        # Check that the powers are not selected in the form (this also checks for status 200)
+        self.assertContains(response, 'option value="" selected')
         # A single Game should have been created
         g_qs = self.t2.round_numbered(3).game_set
         self.assertEqual(g_qs.count(), 1)
@@ -894,7 +895,8 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('seed_games',
                                            args=(self.t3.pk, 2)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
+        # Check that the powers are selected in the form (this also checks for status 200)
+        self.assertNotContains(response, 'option value="" selected')
         # A single Game should have been created
         g_qs = self.t3.round_numbered(2).game_set
         self.assertEqual(g_qs.count(), 1)
@@ -917,7 +919,8 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
+        # Check that the powers are selected in the form (this also checks for status 200)
+        self.assertNotContains(response, 'option value="" selected')
         # Two Games should have been created
         g_qs = self.t1.round_numbered(1).game_set
         self.assertEqual(g_qs.count(), 2)
@@ -963,7 +966,8 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
                                    secure=True)
-        self.assertEqual(response.status_code, 200)
+        # Check that the powers are selected in the form (this also checks for status 200)
+        self.assertNotContains(response, 'option value="" selected')
         # Two Games should have been created
         g_qs = self.t1.round_numbered(1).game_set
         self.assertEqual(g_qs.count(), 2)
