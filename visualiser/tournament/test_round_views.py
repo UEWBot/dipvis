@@ -879,6 +879,9 @@ class RoundViewTests(TestCase):
         # with seven GamePlayers
         g = g_qs.get()
         self.assertEqual(g.gameplayer_set.count(), 7)
+        # And no powers assigned
+        for gp in g.gameplayer_set.all():
+            self.assertIsNone(gp.power)
         # Clean up
         g.delete()
         self.t2.power_assignment = PowerAssignMethods.PREFERENCES
@@ -898,6 +901,9 @@ class RoundViewTests(TestCase):
         # with seven GamePlayers
         g = g_qs.get()
         self.assertEqual(g.gameplayer_set.count(), 7)
+        # and powers assigned
+        for gp in g.gameplayer_set.all():
+            self.assertIsNotNone(gp.power)
         # Clean up
         g.delete()
 
@@ -918,6 +924,9 @@ class RoundViewTests(TestCase):
         # with seven GamePlayers
         for g in g_qs.all():
             self.assertEqual(g.gameplayer_set.count(), 7)
+            # and powers assigned
+            for gp in g.gameplayer_set.all():
+                self.assertIsNotNone(gp.power)
         # Clean up
         g_qs.all().delete()
         self.rp112.game_count = 0
@@ -961,6 +970,9 @@ class RoundViewTests(TestCase):
         # with seven GamePlayers
         for g in g_qs.all():
             self.assertEqual(g.gameplayer_set.count(), 7)
+            # and powers assigned
+            for gp in g.gameplayer_set.all():
+                self.assertIsNotNone(gp.power)
         # Team members should not be playing each other
         for tm in [tm1, tm2]:
             games = set()
