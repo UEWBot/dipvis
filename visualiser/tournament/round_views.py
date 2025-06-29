@@ -372,7 +372,6 @@ def seed_games(request, tournament_id, round_num):
     """Seed players to the games for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    breakpoint()
     if request.method == 'POST':
         data = []
         for g in r.game_set.all():
