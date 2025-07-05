@@ -131,6 +131,25 @@ class FunctionTests(TestCase):
         p.nationalities = []
         p.save()
 
+    @tag('slow', 'wdd')
+    def test_add_player_bg_wdd_nationality(self):
+        """add_player_bg() from WDD without existing nationalities and location"""
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
+        self.assertEqual(p.location, '')
+        self.assertEqual(len(p.nationalities), 0)
+        add_player_bg(p)
+        # check results - values from WDD should be used
+        p.refresh_from_db()
+        self.assertEqual(p.nationalities, [Country('CA')])
+        # Note that WDDBackground.location() currently always returns ''
+        self.assertEqual(p.location, '')
+        # Cleanup
+        p.location = ''
+        p.nationalities = []
+        p.save()
+
     @tag('slow', 'wdr', 'wdd')
     def test_add_player_bg_wdr_places_nop(self):
         """add_player_bg() from WDR with existing nationalities and location"""
@@ -149,6 +168,30 @@ class FunctionTests(TestCase):
         p.refresh_from_db()
         self.assertEqual(p.nationalities, [Country('US')])
         self.assertEqual(p.location, 'The moon')
+        # Cleanup
+        WDDPlayer.objects.create(player=p,
+                                 wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p.wdr_player_id = None
+        p.location = ''
+        p.nationalities = []
+        p.save()
+
+    @tag('slow', 'wdr', 'wdd')
+    def test_add_player_bg_wdr_places(self):
+        """add_player_bg() from WDR without existing nationalities and location"""
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
+        self.assertEqual(p.location, '')
+        self.assertEqual(len(p.nationalities), 0)
+        wdd.delete()
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        # check results - values from WDR should be stored
+        p.refresh_from_db()
+        self.assertEqual(p.nationalities, [Country('CA')])
+        self.assertEqual(p.location, 'Canada')
         # Cleanup
         WDDPlayer.objects.create(player=p,
                                  wdd_player_id=CHRIS_BRAND_WDD_ID)
