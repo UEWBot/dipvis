@@ -931,15 +931,13 @@ class Player(models.Model):
                                % {'name': self,
                                   'power': c_str})
             return results
-        games_word = _('games')
-        if games == 1:
-            games_word = _('game')
         if (mask & MASK_GAMES_PLAYED) != 0:
-            results.append(_(u'%(name)s has played %(games)d tournament %(games_word)s%(power)s.')
-                           % {'name': self,
-                              'games': games,
-                              'games_word': games_word,
-                              'power': c_str})
+            msg = ngettext('%(name)s has played %(games)d tournament game%(power)s.',
+                           '%(name)s has played %(games)d tournament games%(power)s.',
+                           games)
+            results.append(msg % {'name': self,
+                                  'games': games,
+                                  'power': c_str})
         if (mask & MASK_BEST_SC_COUNT) != 0:
             best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
             # SC count is optional
@@ -951,13 +949,14 @@ class Player(models.Model):
         if (mask & MASK_SOLO_COUNT) != 0:
             solos = results_set.filter(final_sc_count__gte=WINNING_SCS).count()
             if solos > 0:
-                results.append(_(u'%(name)s has soloed %(solos)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'solos': solos,
-                                  'games': games,
-                                  'games_word': games_word,
-                                  'power': c_str,
-                                  'percentage': 100.0 * float(solos) / float(games)})
+                msg = ngettext('%(name)s has soloed %(solos)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s has soloed %(solos)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                               games)
+                results.append(msg % {'name': self,
+                                      'solos': solos,
+                                      'games': games,
+                                      'power': c_str,
+                                      'percentage': 100.0 * float(solos) / float(games)})
             else:
                 results.append(_(u'%(name)s has yet to solo%(power)s at a tournament.')
                                % {'name': self,
@@ -967,13 +966,14 @@ class Player(models.Model):
             eliminations_set = results_set.filter(query)
             eliminations = eliminations_set.count()
             if eliminations > 0:
-                results.append(_(u'%(name)s was eliminated in %(deaths)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'deaths': eliminations,
-                                  'games': games,
-                                  'games_word': games_word,
-                                  'power': c_str,
-                                  'percentage': 100.0 * float(eliminations) / float(games)})
+                msg = ngettext('%(name)s was eliminated in %(deaths)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s was eliminated in %(deaths)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                               games)
+                results.append(msg % {'name': self,
+                                      'deaths': eliminations,
+                                      'games': games,
+                                      'power': c_str,
+                                      'percentage': 100.0 * float(eliminations) / float(games)})
             else:
                 results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.')
                                % {'name': self,
@@ -982,13 +982,14 @@ class Player(models.Model):
             query = Q(result=GameResults.WIN) | Q(position=1)
             board_tops = results_set.filter(query).count()
             if board_tops > 0:
-                results.append(_(u'%(name)s topped the board in %(tops)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'tops': board_tops,
-                                  'games': games,
-                                  'games_word': games_word,
-                                  'power': c_str,
-                                  'percentage': 100.0 * float(board_tops) / float(games)})
+                msg = ngettext('%(name)s topped the board in %(tops)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s topped the board in %(tops)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                               games)
+                results.append(msg % {'name': self,
+                                      'tops': board_tops,
+                                      'games': games,
+                                      'power': c_str,
+                                      'percentage': 100.0 * float(board_tops) / float(games)})
             else:
                 results.append(_(u'%(name)s has yet to top the board%(power)s at a tournament.')
                                % {'name': self,
