@@ -247,16 +247,176 @@ class PlayerTests(TestCase):
     # TODO Player.sortable_str()
 
     # Player.background_updated()
-    @tag('slow', 'wdd')
-    def test_player_background_updated(self):
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
+    # TODO test when some background objects are missing
+    def test_player_background_updated_playertournamentranking(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
         start = datetime.now(timezone.utc)
-        add_player_bg(p)
+        # Create one of each type of background record, with PlayerTournamentRanking last
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
         end = datetime.now(timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
+        self.assertEqual(updated, ptr.updated)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_updated_playertitle(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        start = datetime.now(timezone.utc)
+        # Create one of each type of background record, with PlayerTitle last
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        end = datetime.now(timezone.utc)
+        updated = p.background_updated()
+        self.assertLess(start, updated)
+        self.assertLess(updated, end)
+        self.assertEqual(updated, pt.updated)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_updated_playergameresult(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        start = datetime.now(timezone.utc)
+        # Create one of each type of background record, with PlayerGameResult last
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        end = datetime.now(timezone.utc)
+        updated = p.background_updated()
+        self.assertLess(start, updated)
+        self.assertLess(updated, end)
+        self.assertEqual(updated, pgr.updated)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_updated_playeraward(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        start = datetime.now(timezone.utc)
+        # Create one of each type of background record, with PlayerAward last
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        end = datetime.now(timezone.utc)
+        updated = p.background_updated()
+        self.assertLess(start, updated)
+        self.assertLess(updated, end)
+        self.assertEqual(updated, pa.updated)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_updated_playerranking(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        start = datetime.now(timezone.utc)
+        # Create one of each type of background record, with PlayerRanking last
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        end = datetime.now(timezone.utc)
+        updated = p.background_updated()
+        self.assertLess(start, updated)
+        self.assertLess(updated, end)
+        self.assertEqual(updated, pr.updated)
+        # Cleanup
+        p.delete()
 
     def test_player_background_updated_none(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')

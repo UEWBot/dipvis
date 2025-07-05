@@ -745,6 +745,12 @@ class Player(models.Model):
         elif latest is not None:
             result = max(result, latest)
 
+        latest = self.playertitle_set.aggregate(Max('updated'))['updated__max']
+        if result is None:
+            result = latest
+        elif latest is not None:
+            result = max(result, latest)
+
         return result
 
     def wdr_url(self):
