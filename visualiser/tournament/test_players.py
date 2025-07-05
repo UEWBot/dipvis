@@ -244,7 +244,17 @@ class PlayerTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
-    # TODO Player.sortable_str()
+    # Player.__str__()
+    def test_wddplayer_str(self):
+        p = Player.objects.first()
+        string = str(p)
+        # TODO Verify result
+
+    # Player.sortable_str()
+    def test_wddplayer_sortable_str(self):
+        p = Player.objects.first()
+        string = p.sortable_str()
+        # TODO Verify result
 
     # Player._clear_background()
     def test_player_clear_background(self):
@@ -463,23 +473,31 @@ class PlayerTests(TestCase):
     def test_player_wdr_url(self):
         p = Player.objects.create(first_name='John', last_name='Smith', wdr_player_id=69)
         # TODO Validate results
-        p.wdr_url()
+        res = p.wdr_url()
         # Cleanup
         p.delete()
 
     def test_player_wdr_url_no_id(self):
         p = Player.objects.create(first_name='John', last_name='Smith')
-        # TODO Validate results
-        p.wdr_url()
+        res = p.wdr_url()
+        self.assertEqual(res, '')
         # Cleanup
         p.delete()
 
     # Player.wdd_firstname_lastname()
     @tag('slow', 'wdd')
     def test_player_wdd_firstname_lastname(self):
-        p = Player.objects.first()
-        # TODO Validate results
-        p.wdd_firstname_lastname()
+        p = Player.objects.create(first_name='John', last_name='Smith')
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        player = wdd.player
+        wdd.player = p
+        wdd.save()
+        res = p.wdd_firstname_lastname()
+        self.assertEqual(res, ('Chris','BRAND'))
+        # Cleanup
+        wdd.player = player
+        wdd.save()
+        p.delete()
 
     def test_player_wdd_firstname_lastname_no_id(self):
         p = Player.objects.create(first_name='John', last_name='Smith')
@@ -493,7 +511,8 @@ class PlayerTests(TestCase):
     @tag('wdr')
     def test_player_wdr_name(self):
         p = Player.objects.create(first_name='John', last_name='Smith', wdr_player_id=CHRIS_BRAND_WDR_ID)
-        self.assertEqual(p.wdr_name(), 'Chris Brand')
+        res = p.wdr_name()
+        self.assertEqual(res, 'Chris Brand')
         # Cleanup
         p.delete()
 
