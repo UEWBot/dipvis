@@ -29,6 +29,7 @@ Database or World Diplomacy Reference for everything else.
 import requests
 from bs4 import BeautifulSoup
 
+from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 from tournament.wdd import wdd_img_to_country, WDD_BASE_RANKING_URL, WDD_BASE_RESULTS_URL
 from tournament.wdr import WDR_BASE_URL
 
@@ -433,7 +434,7 @@ class WDDBackground():
                                 n = int(td.string[:-2])
                                 result[u'Final SCs'] = n
                                 # Not all solos are flagged as such
-                                if n > 17:
+                                if n >= WINNING_SCS:
                                     result[u'Game end'] = u'W'
                         else:
                             # It's a year of elimination
