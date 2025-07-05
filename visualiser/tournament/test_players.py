@@ -62,7 +62,7 @@ class FunctionTests(TestCase):
         res = player_picture_location(None, 'pretty_boy.jpg')
         # TODO validate result
 
-    # TODO add_player_bg()
+    # add_player_bg()
     def test_add_player_bg_wiki1(self):
         """Test adding PlayerTitles based on Wikipedia"""
         p = Player.objects.create(first_name = 'Brandon', last_name='Fogel')
@@ -111,38 +111,44 @@ class FunctionTests(TestCase):
         # TODO check results
 
     @tag('slow', 'wdd')
-    def test_add_player_bg_wdd_places(self):
-        """add_player_bg() with existing nationalities and location"""
+    def test_add_player_bg_wdd_places_nop(self):
+        """add_player_bg() from WDD with existing nationalities and location"""
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
         self.assertEqual(p.location, '')
         self.assertEqual(len(p.nationalities), 0)
-        p.nationalities = Country('CA')
+        p.nationalities = Country('US')
         p.location = "The moon"
         p.save()
         add_player_bg(p)
-        ptrs = p.playertournamentranking_set.all()
-        # TODO check results
+        # check results - existing values should be left intact
+        p.refresh_from_db()
+        self.assertEqual(p.nationalities, [Country('US')])
+        self.assertEqual(p.location, 'The moon')
         # Cleanup
         p.location = ''
         p.nationalities = []
         p.save()
 
     @tag('slow', 'wdr', 'wdd')
-    def test_add_player_bg_wdr_places(self):
-        """add_player_bg() with existing nationalities and location"""
+    def test_add_player_bg_wdr_places_nop(self):
+        """add_player_bg() from WDR with existing nationalities and location"""
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
         self.assertEqual(p.location, '')
         self.assertEqual(len(p.nationalities), 0)
         wdd.delete()
         p.wdr_player_id = CHRIS_BRAND_WDR_ID
-        p.nationalities = Country('CA')
+        p.nationalities = Country('US')
         p.location = "The moon"
         p.save()
         add_player_bg(p)
-        ptrs = p.playertournamentranking_set.all()
-        # TODO check results
+        # check results - existing values should be left intact
+        p.refresh_from_db()
+        self.assertEqual(p.nationalities, [Country('US')])
+        self.assertEqual(p.location, 'The moon')
         # Cleanup
         WDDPlayer.objects.create(player=p,
                                  wdd_player_id=CHRIS_BRAND_WDD_ID)
