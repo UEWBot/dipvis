@@ -28,7 +28,7 @@ from tournament.models import Tournament, TournamentPlayer
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player, PlayerRanking, PlayerAward, PlayerTitle, WDDPlayer
 from tournament.players import PlayerGameResult, PlayerTournamentRanking
-from tournament.players import add_player_bg, position_str
+from tournament.players import player_picture_location, add_player_bg, position_str
 from tournament.players import MASK_ALL_BG
 
 CHRIS_BRAND_WDD_ID = 4173
@@ -57,7 +57,10 @@ class FunctionTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
-    # TODO player_picture_location()
+    # player_picture_location()
+    def test_player_picture_location(self):
+        res = player_picture_location(None, 'pretty_boy.jpg')
+        # TODO validate result
 
     # TODO add_player_bg()
     def test_add_player_bg_wiki1(self):
