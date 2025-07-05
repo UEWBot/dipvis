@@ -102,6 +102,130 @@ class FunctionTests(TestCase):
         p.delete()
 
     @tag('slow', 'wdd')
+    def test_add_player_bg_wdd(self):
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+
+    @tag('wdr', 'wdd')
+    def test_add_player_bg_wdr(self):
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
+        wdd.delete()
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+        p.background()
+        # Cleanup
+        WDDPlayer.objects.create(wdd_player_id=CHRIS_BRAND_WDD_ID,
+                                 player=p)
+        p.wdr_player_id = None
+        p.save()
+
+    @tag('slow', 'wdr', 'wdd')
+    def test_add_player_bg_wdd_and_wdr(self):
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertIsNone(p.wdr_player_id)
+        p.wdr_player_id = CHRIS_BRAND_WDR_ID
+        p.save()
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+        # Cleanup
+        p.wdr_player_id = None
+        p.save()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_no_wins(self):
+        # Spiros has yet to win a tournament
+        p = Player.objects.create(first_name='Spiros',
+                                  last_name='Bobetsis')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
+        # TODO Validate results
+        p.background()
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_invalid_date(self):
+        p = Player.objects.create(first_name='Claesar',
+                                  last_name='Webdip')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=CLAESAR_WEBDIP_WDD_ID)
+        # TODO Validate results
+        p.background()
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_td(self):
+        # Matt has tournaments listings for tournaments when he was TD
+        p = Player.objects.create(first_name='Matt',
+                                  last_name='Shields')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=MATT_SHIELDS_WDD_ID)
+        # TODO Validate results
+        # WAC 10 he played Germany
+        p.background(power=self.germany)
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_non_std(self):
+        # Matt has tournaments listings for non-Standard games
+        p = Player.objects.create(first_name='Matt',
+                                  last_name='Sundstrom')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=MATT_SUNDSTROM_WDD_ID)
+        # TODO Validate results
+        # Windy City Weasels 2012 he played United Kingdom
+        p.background()
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_non_std_2(self):
+        # Nate has tournaments listings for non-Standard games,
+        # where power names match Standard powers (France)
+        p = Player.objects.create(first_name='Nate',
+                                  last_name='Cockerill')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=NATE_COCKERILL_WDD_ID)
+        # TODO Validate results
+        # Windy City Weasels 2012 he played France
+        p.background(power=self.france)
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
+    def test_add_player_bg_non_std_3(self):
+        # Melinda has games listed with no ranking (n.c)
+        p = Player.objects.create(first_name='Melinda',
+                                  last_name='Holley')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=MELINDA_HOLLEY_WDD_ID)
+        # TODO Validate results
+        p.background()
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_unknown(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        add_player_bg(p)
+        # TODO Validate results
+        p.background()
+        # Cleanup
+        p.delete()
+
+    @tag('slow', 'wdd')
     def test_add_player_bg_wpe(self):
         """add_player_bg(include_wpe=True)"""
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
@@ -557,70 +681,6 @@ class PlayerTests(TestCase):
 
     # Player.background()
     @tag('slow', 'wdd')
-    def test_player_background_wdd(self):
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertIsNone(p.wdr_player_id)
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
-
-    @tag('wdr', 'wdd')
-    def test_player_background_wdr(self):
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertIsNone(p.wdr_player_id)
-        wdd.delete()
-        p.wdr_player_id = CHRIS_BRAND_WDR_ID
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
-        p.background()
-        # Cleanup
-        WDDPlayer.objects.create(wdd_player_id=CHRIS_BRAND_WDD_ID,
-                                 player=p)
-        p.wdr_player_id = None
-        p.save()
-
-    @tag('slow', 'wdr', 'wdd')
-    def test_player_background_wdd_and_wdr(self):
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertIsNone(p.wdr_player_id)
-        p.wdr_player_id = CHRIS_BRAND_WDR_ID
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
-        # Cleanup
-        p.wdr_player_id = None
-        p.save()
-
-    @tag('slow', 'wdd')
-    def test_player_background_no_wins(self):
-        # Spiros has yet to win a tournament
-        p = Player.objects.create(first_name='Spiros',
-                                  last_name='Bobetsis')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
-        # TODO Validate results
-        p.background()
-        # Cleanup
-        p.delete()
-
-    @tag('slow', 'wdd')
-    def test_player_background_invalid_date(self):
-        p = Player.objects.create(first_name='Claesar',
-                                  last_name='Webdip')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=CLAESAR_WEBDIP_WDD_ID)
-        # TODO Validate results
-        p.background()
-        # Cleanup
-        p.delete()
-
-    @tag('slow', 'wdd')
     def test_player_background_mask(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
@@ -647,66 +707,6 @@ class PlayerTests(TestCase):
         add_player_bg(p)
         # TODO Validate results
         p.background(power=self.germany)
-
-    @tag('slow', 'wdd')
-    def test_player_background_td(self):
-        # Matt has tournaments listings for tournaments when he was TD
-        p = Player.objects.create(first_name='Matt',
-                                  last_name='Shields')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=MATT_SHIELDS_WDD_ID)
-        # TODO Validate results
-        # WAC 10 he played Germany
-        p.background(power=self.germany)
-        # Cleanup
-        p.delete()
-
-    @tag('slow', 'wdd')
-    def test_player_background_non_std(self):
-        # Matt has tournaments listings for non-Standard games
-        p = Player.objects.create(first_name='Matt',
-                                  last_name='Sundstrom')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=MATT_SUNDSTROM_WDD_ID)
-        # TODO Validate results
-        # Windy City Weasels 2012 he played United Kingdom
-        p.background()
-        # Cleanup
-        p.delete()
-
-    @tag('slow', 'wdd')
-    def test_player_background_non_std_2(self):
-        # Nate has tournaments listings for non-Standard games,
-        # where power names match Standard powers (France)
-        p = Player.objects.create(first_name='Nate',
-                                  last_name='Cockerill')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=NATE_COCKERILL_WDD_ID)
-        # TODO Validate results
-        # Windy City Weasels 2012 he played France
-        p.background(power=self.france)
-        # Cleanup
-        p.delete()
-
-    @tag('slow', 'wdd')
-    def test_player_background_non_std_3(self):
-        # Melinda has games listed with no ranking (n.c)
-        p = Player.objects.create(first_name='Melinda',
-                                  last_name='Holley')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=MELINDA_HOLLEY_WDD_ID)
-        # TODO Validate results
-        p.background()
-        # Cleanup
-        p.delete()
-
-    def test_player_background_unknown(self):
-        p = Player.objects.create(first_name='Unknown', last_name='Player')
-        add_player_bg(p)
-        # TODO Validate results
-        p.background()
-        # Cleanup
-        p.delete()
 
     def test_player_background_no_sc_count(self):
         p = Player.objects.create(first_name='Joe',
