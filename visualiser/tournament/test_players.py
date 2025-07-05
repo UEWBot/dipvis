@@ -42,7 +42,8 @@ MELINDA_HOLLEY_WDD_ID = 5185
 CHRIS_BRAND_WDR_ID = 7164
 
 
-class PlayerTests(TestCase):
+class FunctionTests(TestCase):
+    """Test functions that are not class methods"""
     fixtures = ['game_sets.json', 'players.json']
 
     @classmethod
@@ -174,6 +175,22 @@ class PlayerTests(TestCase):
         for k,v in tests.items():
             with self.subTest(k):
                 self.assertEqual(position_str(k), v)
+
+
+class PlayerTests(TestCase):
+    """Test the Player class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
 
     # TODO Player.sortable_str()
 
@@ -466,7 +483,22 @@ class PlayerTests(TestCase):
         p = Player.objects.first()
         p.get_absolute_url()
 
-    # WDDPlayer
+
+class WDDPlayerTests(TestCase):
+    """Test the WDDPlayer class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
     # WDDPlayer.wdd_url()
     def test_wddplayer_wdd_url(self):
         wdd = WDDPlayer.objects.first()
@@ -525,7 +557,22 @@ class PlayerTests(TestCase):
         string = str(wdd)
         # TODO Verify result
 
-    # PlayerTournamentRanking
+
+class PlayerTournamentRankingTests(TestCase):
+    """Test the PlayerTournamentRanking class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
     # PlayerTournamentRanking.wdd_url()
     @tag('slow', 'wdd')
     def test_playertournamentranking_wdd_url(self):
@@ -571,7 +618,22 @@ class PlayerTests(TestCase):
         self.assertIn(ptr.player.last_name, p_str)
         self.assertIn(ptr.tournament, p_str)
 
-    # PlayerTitle
+
+class PlayerTitleTests(TestCase):
+    """Test the PlayerTitle class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
     # PlayerTitle.__str__()
     def test_playertitle_str(self):
         pt = PlayerTitle(player=Player.objects.first(),
@@ -584,7 +646,22 @@ class PlayerTests(TestCase):
         self.assertIn(pt.title, p_str)
         self.assertIn(str(pt.year), p_str)
 
-    # PlayerGameResult
+
+class PlayerGameResultTests(TestCase):
+    """Test the PlayerGameResult class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
     # PlayerGameResult.for_same_game()
     def test_playergameresult_same(self):
         p1 = Player.objects.first()
@@ -746,7 +823,22 @@ class PlayerTests(TestCase):
         self.assertIn(pgr.player.last_name, p_str)
         self.assertIn(pgr.power.name, p_str)
 
-    # PlayerAward
+
+class PlayerAwardTests(TestCase):
+    """Test the PlayerAward class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
     # PlayerAward.wdd_url()
     @tag('slow', 'wdd')
     def test_playeraward_wdd_url_power(self):
@@ -804,7 +896,21 @@ class PlayerTests(TestCase):
         self.assertIn(pa.name, p_str)
         self.assertIn(pa.tournament, p_str)
 
-    # PlayerRanking
+
+class PlayerRankingTests(TestCase):
+    """Test the PlayerRanking class"""
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
 
     # PlayerRanking.wdd_url()
     @tag('slow', 'wdd')
