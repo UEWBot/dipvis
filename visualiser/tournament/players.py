@@ -714,6 +714,7 @@ class Player(models.Model):
 
         This undoes add_player_bg()
         """
+        self.playertitle_set.all().delete()
         self.playerranking_set.all().delete()
         self.playeraward_set.all().delete()
         self.playertournamentranking_set.all().delete()

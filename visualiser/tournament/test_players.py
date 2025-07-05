@@ -246,6 +246,41 @@ class PlayerTests(TestCase):
 
     # TODO Player.sortable_str()
 
+    # Player._clear_background()
+    def test_player_clear_background(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        # Create one of each type of background record
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        p._clear_background()
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
+        # Cleanup
+        p.delete()
+
     # Player.background_updated()
     # TODO test when some background objects are missing
     def test_player_background_updated_playertournamentranking(self):
