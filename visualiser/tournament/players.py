@@ -817,14 +817,13 @@ class Player(models.Model):
                     results.append(_('%(name)s has never won Best %(power)s.')
                                    % {'name': self, 'power': p})
                     continue
-                elif award_count == 1:
-                    count_str = _('once')
                 else:
-                    count_str = _('%(count)d times') % {'count': award_count}
-                results.append(_('%(name)s has won Best %(power)s %(count_str)s.')
-                               % {'name': self,
-                                  'power': p,
-                                  'count_str': count_str})
+                    msg = ngettext('%(name)s has won Best %(power)s once.',
+                                   '%(name)s has won Best %(power)s %(count)d times.',
+                                   award_count)
+                    results.append(msg % {'name': self,
+                                          'power': p,
+                                          'count': award_count})
                 a = power_award_set.first()
                 s = _('%(name)s first won %(award)s in %(year)d at %(tourney)s') % {'name': self,
                                                                                     'award': a.name,
