@@ -672,18 +672,72 @@ class PlayerTests(TestCase):
         t1.delete()
 
     # Player.background()
-    @tag('slow', 'wdd')
     def test_player_background_mask(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
-        add_player_bg(p)
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
+        # Add one of each type of background object
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
         self.assertEqual([], p.background(mask=0))
+        # Cleanup
+        p._clear_background()
 
-    @tag('slow', 'wdd')
     def test_player_background_mask_2(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
-        add_player_bg(p)
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
+        # Add one of each type of background object
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
         # Test each mask bit individually
         mask = 1
         while mask <= MASK_ALL_BG:
@@ -691,49 +745,137 @@ class PlayerTests(TestCase):
                 # TODO Validate results
                 p.background(mask=mask)
             mask *= 2
+        # Cleanup
+        p._clear_background()
 
-    @tag('slow', 'wdd')
+    def test_player_background_with_power_never_played(self):
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
+        # Add one of each type of background object
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.austria,
+                                              date=datetime.now(timezone.utc),
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=datetime.now(timezone.utc),
+                                        name='Nicest Person')
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        res = p.background(power=self.germany)
+        self.assertEqual(2, len(res))
+        self.assertIn('Chris Brand has never played as Germany in a tournament before.', res)
+        self.assertIn('Chris Brand has never won Best Germany.', res)
+        res = p.background(power=self.germany, mask=0)
+        self.assertEqual([], res)
+        # Cleanup
+        p._clear_background()
+
     def test_player_background_with_power(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
-        add_player_bg(p)
-        # TODO Validate results
-        p.background(power=self.germany)
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
+        # Add one of each type of background object
+        today = datetime.today()
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Some tournament',
+                                                     position=3,
+                                                     year=1974)
+        pt = PlayerTitle.objects.create(player=p,
+                                        title='Canadian Beaver',
+                                        year=1976)
+        pgr = PlayerGameResult.objects.create(player=p,
+                                              tournament_name='Some tournament',
+                                              round_number=4,
+                                              game_number=17,
+                                              power=self.germany,
+                                              date=today,
+                                              position=2)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=today,
+                                        name='Best German',
+                                        power=self.germany)
+        pr = PlayerRanking.objects.create(player=p,
+                                          system='Who Chris Likes Most',
+                                          international_rank='8',
+                                          national_rank='3')
+        res = p.background(power=self.germany)
+        # The Award and the GameResult should be included
+        self.assertEqual(7, len(res))
+        self.assertIn('Chris Brand has played 1 tournament game as Germany.', res)
+        self.assertIn('Chris Brand has yet to solo as Germany at a tournament.', res)
+        self.assertIn('Chris Brand has yet to be eliminated as Germany in a tournament.', res)
+        self.assertIn('Chris Brand has yet to top the board as Germany at a tournament.', res)
+        self.assertIn('Chris Brand has won Best Germany once.', res)
+        self.assertIn(f'Chris Brand first won Best German in {today.year} at Some tournament.', res)
+        self.assertIn(f'Chris Brand most recently won Best German in {today.year} at Some tournament.', res)
+        # Cleanup
+        p._clear_background()
 
     def test_player_background_no_sc_count(self):
         p = Player.objects.create(first_name='Joe',
                                   last_name='Bloggs')
         # No final_sc_count (or other optional fields)
-        pgr = PlayerGameResult(tournament_name='Best Tournament',
-                               round_number=1,
-                               game_number=1,
-                               player=p,
-                               power=self.austria,
-                               date=date.today(),
-                               position=2)
-        pgr.save()
-        # TODO validate results
-        p.background()
+        pgr = PlayerGameResult.objects.create(tournament_name='Best Tournament',
+                                              round_number=1,
+                                              game_number=1,
+                                              player=p,
+                                              power=self.austria,
+                                              date=date.today(),
+                                              position=2)
+        bg = p.background()
+        self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
         # Cleanup
-        pgr.delete()
         p.delete()
 
     def test_player_background_game_count(self):
         p = Player.objects.create(first_name='Joe',
                                   last_name='Bloggs')
-        # No final_sc_count (or other optional fields)
-        pgr = PlayerGameResult(tournament_name='Best Tournament',
-                               round_number=1,
-                               game_number=1,
-                               player=p,
-                               power=self.austria,
-                               date=date.today(),
-                               position=2)
-        pgr.save()
+        pgr = PlayerGameResult.objects.create(tournament_name='Best Tournament',
+                                              round_number=1,
+                                              game_number=1,
+                                              player=p,
+                                              power=self.austria,
+                                              date=date.today(),
+                                              position=1,
+                                              final_sc_count=19)
+        pgr = PlayerGameResult.objects.create(tournament_name='Worst Tournament',
+                                              round_number=1,
+                                              game_number=1,
+                                              player=p,
+                                              power=self.germany,
+                                              date=date.today(),
+                                              position=6,
+                                              final_sc_count=0)
         bg = p.background()
-        self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
+        self.assertIn('Joe Bloggs has played 2 tournament games.', bg)
+        self.assertIn('Joe Bloggs has finished with as many as 19 centres in tournament games.', bg)
+        self.assertIn('Joe Bloggs has soloed 1 of 2 tournament games played (50.00%).', bg)
+        self.assertIn('Joe Bloggs was eliminated in 1 of 2 tournament games played (50.00%).', bg)
+        self.assertIn('Joe Bloggs topped the board in 1 of 2 tournament games played (50.00%).', bg)
         # Cleanup
-        pgr.delete()
         p.delete()
 
     # Player.get_absolute_url()
