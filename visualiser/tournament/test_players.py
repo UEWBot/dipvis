@@ -108,7 +108,6 @@ class FunctionTests(TestCase):
         self.assertIsNone(p.wdr_player_id)
         add_player_bg(p)
         # TODO Validate results
-        p.background()
 
     @tag('wdr', 'wdd')
     def test_add_player_bg_wdr(self):
@@ -120,8 +119,6 @@ class FunctionTests(TestCase):
         p.save()
         add_player_bg(p)
         # TODO Validate results
-        p.background()
-        p.background()
         # Cleanup
         WDDPlayer.objects.create(wdd_player_id=CHRIS_BRAND_WDD_ID,
                                  player=p)
@@ -137,33 +134,39 @@ class FunctionTests(TestCase):
         p.save()
         add_player_bg(p)
         # TODO Validate results
-        p.background()
         # Cleanup
         p.wdr_player_id = None
         p.save()
 
     @tag('slow', 'wdd')
-    def test_add_player_bg_no_wins(self):
-        # Spiros has yet to win a tournament
+    def test_add_player_bg_no_podiums(self):
+        # Spiros has no podium finishes
         p = Player.objects.create(first_name='Spiros',
                                   last_name='Bobetsis')
         wdd = WDDPlayer.objects.create(player=p,
                                        wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
-        # TODO Validate results
-        p.background()
+        add_player_bg(p)
+        # Validate results
+        ptrs = p.playertournamentranking_set.all()
+        self.assertEqual(2, ptrs.count())
         # Cleanup
         p.delete()
 
     @tag('slow', 'wdd')
-    def test_add_player_bg_invalid_date(self):
-        p = Player.objects.create(first_name='Claesar',
-                                  last_name='Webdip')
+    def test_add_player_bg_with_podiums(self):
+        # Matt has podium finishes in 2008
+        p = Player.objects.create(first_name='Matt',
+                                  last_name='Shields')
         wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=CLAESAR_WEBDIP_WDD_ID)
-        # TODO Validate results
-        p.background()
+                                       wdd_player_id=MATT_SHIELDS_WDD_ID)
+        add_player_bg(p)
+        # Validate results (mostly check that no tournaments get double-counted)
+        ptrs = p.playertournamentranking_set.filter(year=2008)
+        self.assertEqual(4, ptrs.count())
         # Cleanup
         p.delete()
+
+    # TODO Test handling of invalid dates (PlayerTournamentRanking and PlayerAward)
 
     @tag('slow', 'wdd')
     def test_add_player_bg_td(self):
@@ -172,56 +175,43 @@ class FunctionTests(TestCase):
                                   last_name='Shields')
         wdd = WDDPlayer.objects.create(player=p,
                                        wdd_player_id=MATT_SHIELDS_WDD_ID)
-        # TODO Validate results
-        # WAC 10 he played Germany
-        p.background(power=self.germany)
+        add_player_bg(p)
+        # Validate results
+        # WAC 10 he played Germany and Turkey
+        pgrs = p.playergameresult_set.filter(tournament_name='WAC 10 2013')
+        self.assertNotEqual(0, pgrs.count())
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdd')
-    def test_add_player_bg_non_std(self):
-        # Matt has tournaments listings for non-Standard games
-        p = Player.objects.create(first_name='Matt',
-                                  last_name='Sundstrom')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=MATT_SUNDSTROM_WDD_ID)
-        # TODO Validate results
-        # Windy City Weasels 2012 he played United Kingdom
-        p.background()
-        # Cleanup
-        p.delete()
+    # TODO Test filtering out variant games
+    #      There is a variant game in the Windy City Weasels 2012 league,
+    #      but we only look at tournament games
 
     @tag('slow', 'wdd')
-    def test_add_player_bg_non_std_2(self):
-        # Nate has tournaments listings for non-Standard games,
-        # where power names match Standard powers (France)
-        p = Player.objects.create(first_name='Nate',
-                                  last_name='Cockerill')
-        wdd = WDDPlayer.objects.create(player=p,
-                                       wdd_player_id=NATE_COCKERILL_WDD_ID)
-        # TODO Validate results
-        # Windy City Weasels 2012 he played France
-        p.background(power=self.france)
-        # Cleanup
-        p.delete()
-
-    @tag('slow', 'wdd')
-    def test_add_player_bg_non_std_3(self):
+    def test_add_player_bg_unranked(self):
         # Melinda has games listed with no ranking (n.c)
         p = Player.objects.create(first_name='Melinda',
                                   last_name='Holley')
         wdd = WDDPlayer.objects.create(player=p,
                                        wdd_player_id=MELINDA_HOLLEY_WDD_ID)
-        # TODO Validate results
-        p.background()
+        add_player_bg(p)
+        # Validate results
+        pgrs = p.playergameresult_set.filter(tournament_name__contains='DipCon')
+        self.assertNotEqual(0, pgrs.count())
+        pgrs = pgrs.filter(tournament_name__contains='DipCon 27')
+        self.assertEqual(0, pgrs.count())
         # Cleanup
         p.delete()
 
     def test_add_player_bg_unknown(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
         add_player_bg(p)
-        # TODO Validate results
-        p.background()
+        # Validate results
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
         # Cleanup
         p.delete()
 
@@ -230,9 +220,11 @@ class FunctionTests(TestCase):
         """add_player_bg(include_wpe=True)"""
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
+        self.assertEqual(0, p.playertournamentranking_set.count())
         add_player_bg(wdd.player, include_wpe=True)
-        ptrs = p.playertournamentranking_set.all()
-        # TODO check results
+        # check results
+        ptrs = p.playertournamentranking_set.filter(wpe_score__isnull=False)
+        self.assertNotEqual(0, ptrs.count())
 
     @tag('slow', 'wdd')
     def test_add_player_bg_wdd_places_nop(self):
