@@ -878,6 +878,61 @@ class PlayerTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_player_background_award_repeat(self):
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='Bloggs')
+        today = datetime.today()
+        yesterday = today - timedelta(days=1)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Some tournament',
+                                        date=yesterday,
+                                        name='Best Germany',
+                                        power=self.germany,
+                                        final_sc_count=10)
+        pa = PlayerAward.objects.create(player=p,
+                                        tournament='Another tournament',
+                                        date=today,
+                                        name='Best Germany',
+                                        power=self.germany,
+                                        final_sc_count=12)
+        bg = p.background()
+        self.assertIn('Joe Bloggs has won Best Germany 2 times.', bg)
+        self.assertIn(f'Joe Bloggs first won Best Germany in {yesterday.year} at Some tournament with 10 Supply Centres.', bg)
+        self.assertIn(f'Joe Bloggs most recently won Best Germany in {today.year} at Another tournament with 12 Supply Centres.', bg)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_winner(self):
+        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
+        p = wdd.player
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playertitle_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        self.assertEqual(0, p.playerranking_set.count())
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Alpha',
+                                                     position=3,
+                                                     year=1994)
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Bravo',
+                                                     position=1,
+                                                     year=2004)
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Charlie',
+                                                     position=1,
+                                                     year=2014)
+        ptr = PlayerTournamentRanking.objects.create(player=p,
+                                                     tournament='Delta',
+                                                     position=5,
+                                                     year=2024)
+        res = p.background()
+        self.assertIn('Chris Brand has won 2 of 4 tournaments (50.00%).', res)
+        self.assertIn('Chris Brand won their first tournament (Bravo) in 2004.', res)
+        self.assertIn('Chris Brand most recently won a tournament (Charlie) in 2014.', res)
+        # Cleanup
+        p._clear_background()
+
     # Player.get_absolute_url()
     def test_player_get_absolute_url(self):
         p = Player.objects.first()
