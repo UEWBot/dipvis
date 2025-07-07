@@ -301,19 +301,12 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                        % {'game': gn_str,
                           'dots': max_scs,
                           'player': first_str})
-    # TODO Guaranteed to be True?
-    if last_year > 1900:
-        prev_scs = centres_set.filter(year=last_year-1)
-        prev_scos = g.supplycentreownership_set.filter(year=last_year-1)
-        sc_gains, sc_losses = _sc_gains_and_losses(prev_scos, current_scos)
-        if not prev_scos.exists() or not current_scos.exists():
-            # Filter out stuff that needs supply centre ownership information
-            mask &= ~MASK_OWNERSHIP
-    else:
-        # We only look for differences, so just force no differences
-        prev_scs = current_scs
-        sc_gains = {}
-        sc_losses = {}
+    prev_scs = centres_set.filter(year=last_year-1)
+    prev_scos = g.supplycentreownership_set.filter(year=last_year-1)
+    sc_gains, sc_losses = _sc_gains_and_losses(prev_scos, current_scos)
+    if not prev_scos.exists() or not current_scos.exists():
+        # Filter out stuff that needs supply centre ownership information
+        mask &= ~MASK_OWNERSHIP
     for scs in current_scs:
         power = scs.power
         try:
