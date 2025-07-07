@@ -7282,7 +7282,16 @@ class DrawProposalTests(TestCase):
     # DrawProposal.votes_against()
     def test_draw_proposal_votes_against_none(self):
         t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.draw_secrecy, DrawSecrecy.COUNTS)
         g = t.round_numbered(1).game_set.get(name='g31')
+        self.assertEqual(0, g.centrecount_set.filter(year=1903).count())
+        CentreCount.objects.create(power=self.austria, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.england, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.france, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.germany, game=g, year=1903, count=9)
+        CentreCount.objects.create(power=self.italy, game=g, year=1903, count=1)
+        CentreCount.objects.create(power=self.russia, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1903, count=4)
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
                                          season=Seasons.FALL,
@@ -7296,10 +7305,13 @@ class DrawProposalTests(TestCase):
         dp.drawing_powers.add(self.russia)
         dp.drawing_powers.add(self.turkey)
         self.assertEqual(dp.votes_against(), 0)
+        # Cleanup
+        g.centrecount_set.filter(year=1903).delete()
         dp.delete()
 
     def test_draw_proposal_votes_against_some(self):
         t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.draw_secrecy, DrawSecrecy.COUNTS)
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
@@ -7318,6 +7330,7 @@ class DrawProposalTests(TestCase):
 
     def test_draw_proposal_votes_against_exception(self):
         t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.draw_secrecy, DrawSecrecy.SECRET)
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,

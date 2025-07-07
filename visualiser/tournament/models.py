@@ -2559,7 +2559,7 @@ class DPPassedField(models.BooleanField):
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         if model_instance.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
-            survivors = len(model_instance.game.survivors(model_instance.year))
+            survivors = len(model_instance.game.survivors(model_instance.year - 1))
             if model_instance.votes_in_favour:
                 # Votes must be unanimous
                 val = (model_instance.votes_in_favour == survivors)
@@ -2620,8 +2620,7 @@ class DrawProposal(models.Model):
         Returns the number of votes against the draw proposal.
         """
         # Get the most recent CentreCounts before the DrawProposal
-        scs = self.game.centrecount_set.filter(year__lt=self.year)
-        survivors = scs.filter(count__gt=0).count()
+        survivors = len(self.game.survivors(year=self.year - 1))
         try:
             return survivors - self.votes_in_favour
         except TypeError as e:
@@ -2647,7 +2646,7 @@ class DrawProposal(models.Model):
             raise ValidationError(_(u'Game was soloed in %(year)d'),
                                   params={'year': final_year})
         # Figure out how many powers are still alive
-        survivors = len(self.game.survivors(self.year))
+        survivors = len(self.game.survivors(self.year - 1))
         if self.votes_in_favour and (self.votes_in_favour > survivors):
             raise ValidationError(_(u'%(voters)d voters exceeds %(survivors)d surviving powers') % {'voters': self.votes_in_favour,
                                                                                                     'survivors': survivors})

@@ -402,15 +402,12 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                                                                       'against': d.votes_against()}
             else:
                 count_str = ''
-            if sz == 1:
-                d_str = _(u'Vote to concede to %(powers)s failed%(game)s%(count)s.') % {'powers': incl_str,
-                                                                                        'game': gn_str,
-                                                                                        'count': count_str}
-            else:
-                d_str = _(u'Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s.') % {'n': sz,
-                                                                                                     'powers': incl_str,
-                                                                                                     'game': gn_str,
-                                                                                                     'count': count_str}
+            d_str = ngettext('Vote to concede to %(powers)s failed%(game)s%(count)s.',
+                             'Draw vote for %(n)d-way between %(powers)s failed%(game)s%(count)s.',
+                             sz) % {'n': sz,
+                                    'powers': incl_str,
+                                    'game': gn_str,
+                                    'count': count_str}
             results.append(d_str)
     if (mask & MASK_ELIMINATIONS) != 0:
         # Who has been eliminated so far, and when ?

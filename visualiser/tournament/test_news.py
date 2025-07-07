@@ -22,7 +22,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy
+from tournament.models import DrawProposal, DrawSecrecy, Seasons
 from tournament.models import Tournament, Round, Game
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -56,13 +56,13 @@ class NewsTests(TestCase):
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=DrawSecrecy.SECRET)
+                                       draw_secrecy=DrawSecrecy.COUNTS)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + HOURS_24,
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=DrawSecrecy.COUNTS)
+                                       draw_secrecy=DrawSecrecy.SECRET)
 
         # Add Rounds to t1
         r11 = Round.objects.create(tournament=t1,
@@ -347,6 +347,32 @@ class NewsTests(TestCase):
                 # TODO Validate results
                 res = _game_news(g, mask=mask)
             mask *= 2
+
+    def test_game_news_draw_votes(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        # Add some failed draw votes. Any prior to the specified year should be ignored
+        dp1 = DrawProposal.objects.create(game=g,
+                                          year=1902,
+                                          season=Seasons.FALL,
+                                          votes_in_favour=1)
+        dp2 = DrawProposal.objects.create(game=g,
+                                          year=1903,
+                                          season=Seasons.SPRING,
+                                          votes_in_favour=2)
+        dp2.drawing_powers.add(self.austria)
+        dp3 = DrawProposal.objects.create(game=g,
+                                          year=1903,
+                                          season=Seasons.FALL,
+                                          votes_in_favour=1)
+        dp3.drawing_powers.add(self.austria, self.germany)
+        res = _game_news(g, for_year=1903)
+        self.assertIn('Vote to concede to Abbey Brown (A) failed, 2 for, 5 against.', res)
+        self.assertIn('Draw vote for 2-way between Abbey Brown (A), Iris Jackson (G) failed, 1 for, 6 against.', res)
+        # Cleanup
+        dp1.delete()
+        dp2.delete()
+        dp3.delete()
 
     def test_game_news_year_too_late(self):
         g = Game.objects.first()
