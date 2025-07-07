@@ -2388,17 +2388,22 @@ class Game(models.Model):
 
         If a year is provided, it returns a list of the powers that survived
         that whole year.
-        If a year is provided that is after the most recent year for which we have CentreCounts,
-        the most recent list will be returned.
-        If a year is provided for which there are no CentreCounts, an empty
-        list will be returned.
+        If there is no CentreCount for a GreatPower for the specified year, the most
+        recent one for previous years will be returned for that GreatPower.
         """
         final_year = self.final_year()
         year = year or final_year
         if year > final_year:
             year = final_year
-        final_scs = self.centrecount_set.filter(year=year)
-        return [sc for sc in final_scs if sc.count > 0]
+        scs = self.centrecount_set.filter(year__lte=year)
+        result = []
+        # Find the most recent CentreCount for each GreatPower
+        for power in GreatPower.objects.all():
+            power_scs = scs.filter(power=power)
+            sc = power_scs.last()
+            if sc.count > 0:
+                result.append(sc)
+        return result
 
     def board_call_msg(self):
         """
