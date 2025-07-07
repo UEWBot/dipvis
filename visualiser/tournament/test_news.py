@@ -267,44 +267,76 @@ class NewsTests(TestCase):
     # _tournament_news()
     def test_tournament_news_in_progress(self):
         t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        _tournament_news(t)
+        res = _tournament_news(t)
+        self.assertIn('8 players are registered to play in the tournament.', res)
+        self.assertIn('Round 2 of 4 is currently being played.', res)
+        self.assertIn('If the tournament ended now, the winning score would be 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
+        self.assertIn("7 players have at least 90% of the leader's current tournament score.", res)
+        self.assertIn('One of the 2 games in round 2 has ended.', res)
+        self.assertIn('8 players are registered to play in the round.', res)
+        self.assertIn('Current top score for round 2 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
+        self.assertIn('Highest centre count in round 2 is 4 for R in g13, R in g14.', res)
 
     def test_tournament_news_ended(self):
         t = Tournament.objects.get(name='t3')
-        # TODO Validate results
-        _tournament_news(t)
+        res = _tournament_news(t)
+        self.assertIn('Iris Jackson came 1st, with a score of 147.30.', res)
+        self.assertIn('1 players were registered to play in the tournament.', res)
 
     # _round_leader_str()
     def test_round_leader_str_unfinished(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_set.all()[0]
-        # TODO Validate results
-        _round_leader_str(r)
+        res = _round_leader_str(r)
+        self.assertEqual('Current top score for round 1 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
 
     def test_round_leader_str_finished(self):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
-        # TODO Validate results
-        _round_leader_str(r)
+        res = _round_leader_str(r)
+        # t3 only has one player
+        self.assertEqual('Final top score for round 1 is 0.00 for Iris Jackson.', res)
 
     # _round_news()
     def test_round_news_unfinished(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_set.all()[0]
-        # TODO Validate results
-        _round_news(r)
+        res = _round_news(r)
+        self.assertIn('8 players are registered to play in the round.', res)
+        self.assertIn('0 of the 2 games in round 1 have ended.', res)
+        self.assertIn('Current top score for round 1 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
+        self.assertIn('Highest SC count in game g11 is 18, for Iris Jackson (G).', res)
+        self.assertIn('Iris Jackson (G) grew from 10 to 18 centres in game g11.', res)
+        self.assertIn('Kevin Lame (I) was eliminated in 1903 in game g11.', res)
+        self.assertIn('Abbey Brown (A) shrank from 5 to 0 centres in game g11.', res)
+        self.assertIn('Michelle Nobody (R) shrank from 5 to 3 centres in game g11.', res)
+        self.assertIn('Highest centre count in round 1 is 18 for G in g11.', res)
+        self.assertIn('Abbey Brown (A) was eliminated in 1904 in game g11.', res)
+        self.assertIn('0 draw votes have been taken in game g11.', res)
+        # Note that g12 has no CentreCounts, so we should get background for that game, not news
 
     # _game_news()
     def test_game_news(self):
         g = Game.objects.first()
-        # TODO Validate results
-        _game_news(g)
+        res = _game_news(g)
+        self.assertIn('Michelle Nobody (R) shrank from 5 to 3 centres.', res)
+        self.assertIn('Abbey Brown (A) was eliminated in 1904.', res)
+        self.assertIn('Kevin Lame (I) was eliminated in 1903.', res)
+        self.assertIn('Abbey Brown (A) shrank from 5 to 0 centres.', res)
+        self.assertIn('Iris Jackson (G) grew from 10 to 18 centres.', res)
+        self.assertIn('Highest SC count is 18, for Iris Jackson (G).', res)
+        self.assertIn('0 draw votes have been taken.', res)
 
     def test_game_news_with_name(self):
         g = Game.objects.first()
-        # TODO Validate results
-        _game_news(g, include_game_name=True)
+        res = _game_news(g, include_game_name=True)
+        self.assertIn('Michelle Nobody (R) shrank from 5 to 3 centres in game g11.', res)
+        self.assertIn('Abbey Brown (A) was eliminated in 1904 in game g11.', res)
+        self.assertIn('Kevin Lame (I) was eliminated in 1903 in game g11.', res)
+        self.assertIn('Abbey Brown (A) shrank from 5 to 0 centres in game g11.', res)
+        self.assertIn('Iris Jackson (G) grew from 10 to 18 centres in game g11.', res)
+        self.assertIn('Highest SC count in game g11 is 18, for Iris Jackson (G).', res)
+        self.assertIn('0 draw votes have been taken in game g11.', res)
 
     def test_game_news_mask(self):
         g = Game.objects.first()
@@ -313,12 +345,19 @@ class NewsTests(TestCase):
         while mask <= MASK_ALL_NEWS:
             with self.subTest(mask=mask):
                 # TODO Validate results
-                _game_news(g, mask=mask)
+                res = _game_news(g, mask=mask)
             mask *= 2
 
     def test_game_news_year_too_late(self):
         g = Game.objects.first()
-        _game_news(g, for_year=1920)
+        res = _game_news(g, for_year=1920)
+        self.assertIn('Michelle Nobody (R) shrank from 5 to 3 centres.', res)
+        self.assertIn('Abbey Brown (A) was eliminated in 1904.', res)
+        self.assertIn('Kevin Lame (I) was eliminated in 1903.', res)
+        self.assertIn('Abbey Brown (A) shrank from 5 to 0 centres.', res)
+        self.assertIn('Iris Jackson (G) grew from 10 to 18 centres.', res)
+        self.assertIn('Highest SC count is 18, for Iris Jackson (G).', res)
+        self.assertIn('0 draw votes have been taken.', res)
 
     def test_game_news_without_ownerships(self):
         """Test with no SupplyCentreOwnership objects"""
@@ -327,8 +366,10 @@ class NewsTests(TestCase):
         # 1900 always has the latter.
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        # TODO Validate results
-        _game_news(g, for_year=1901)
+        res = _game_news(g, for_year=1901)
+        self.assertIn('Abbey Brown (A) grew from 3 to 5 centres.', res)
+        self.assertIn('George Hotel (F) grew from 3 to 5 centres.', res)
+        self.assertIn('Iris Jackson (G) grew from 3 to 5 centres.', res)
 
     def test_game_news_sc_gains_losses(self):
         # Austria lost three, flagging it as interesting
@@ -375,26 +416,33 @@ class NewsTests(TestCase):
             sco = SupplyCentreOwnership(sc=k, owner=v, year=1901, game=g)
             sco.save()
         g.create_or_update_sc_counts_from_ownerships(1901)
-        # TODO Validate the result
-        _game_news(g)
-        # Remove everything we added to the database
-        for sco in g.supplycentreownership_set.filter(year=1901):
-            sco.delete()
-        for sc in g.centrecount_set.filter(year=1901):
-            sc.delete()
+        res = _game_news(g)
+        self.assertIn('5 non-neutral centres changed hands.', res)
+        self.assertIn('Michelle Nobody (A) shrank from 3 to 0 centres.', res)
+        self.assertIn('Michelle Nobody (A) was eliminated in 1901.', res)
+        self.assertIn('Michelle Nobody (A) took no centres and lost Vie (to I), Tri (to I), Bud (to R).', res)
+        self.assertIn('Iris Jackson (F) grew from 3 to 6 centres.', res)
+        self.assertIn('Iris Jackson (F) took Por (neutral), Mun (from G), Spa (neutral) and lost no centres.', res)
+        self.assertIn('George Hotel (G) took Den (neutral), Hol (neutral) and lost Ber (to R), Mun (to F).', res)
+        self.assertIn('Ethel Frankenstein (I) grew from 3 to 6 centres.', res)
+        self.assertIn('Ethel Frankenstein (I) took Gre (neutral), Vie (from A), Tri (from A) and lost no centres.', res)
+        self.assertIn('Charles Dog (R) grew from 4 to 6 centres.', res)
+        # Cleanup
+        g.supplycentreownership_set.filter(year=1901).delete()
+        g.centrecount_set.filter(year=1901).delete()
 
     # news()
     def test_news_for_tournament(self):
         t = Tournament.objects.first()
         # TODO Validate results
-        news(t)
+        res = news(t)
 
     def test_news_for_round(self):
         r = Round.objects.first()
         # TODO Validate results
-        news(r)
+        res = news(r)
 
     def test_news_for_game(self):
         g = Game.objects.first()
         # TODO Validate results
-        news(g)
+        res = news(g)
