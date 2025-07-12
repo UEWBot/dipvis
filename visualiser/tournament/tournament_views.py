@@ -347,9 +347,8 @@ def tournament_round(request, tournament_id):
     return HttpResponse("No round currently being played")
 
 
-# TODO Name is confusing - sounds like it takes a round_num
 @permission_required('tournament.change_roundplayer')
-def round_scores(request, tournament_id):
+def enter_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
