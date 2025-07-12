@@ -71,7 +71,7 @@ def _tournament_news(t):
                               'date': str(current_round.start)})
         # Get the news for the current round
         results += _round_news(current_round)
-    # If the tournament is over, just report the top three players, plus best countries
+    # If the tournament is over, just report the top three players, plus awards
     elif t.is_finished:
         for player, (rank, score) in t.positions_and_scores().items():
             if rank in [1, 2, 3]:
@@ -79,29 +79,24 @@ def _tournament_news(t):
                                % {'player': str(player),
                                   'pos':  position_str(rank),
                                   'score':  score})
-        # Add best countries
-        for power, gps in t.best_countries().items():
-            gp = gps[0]
-            if len(gps) == 1:
-                results.append(ngettext('%(player)s won Best %(country)s with one centre and a score of %(score).2f in game %(game)s of round %(round)d.',
-                                        '%(player)s won Best %(country)s with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d.',
-                                  gp.final_sc_count())
-                               % {'player': str(gp.player),
-                                  'country': _(power.name),
-                                  'dots': gp.final_sc_count(),
-                                  'score': gp.score,
-                                  'game': gp.game.name,
-                                  'round': gp.game.the_round.number()})
-            else:
-                # Tie for best power
-                winner_str = ', '.join([str(p.player) for p in gps])
-                results.append(ngettext('Best %(country)s was jointly won by %(winner_str)s with one centre and a score of %(score).2f.',
-                                        'Best %(country)s was jointly won by %(winner_str)s with %(dots)d centres and a score of %(score).2f.',
-                               gp.final_sc_count())
-                               % {'country': _(power.name),
-                                  'winner_str': winner_str,
-                                  'dots': gp.final_sc_count(),
-                                  'score': gp.score})
+        # Add all awards
+        for tp in t.tournamentplayer_set.exclude(awards=None):
+            awards_str = ''
+            for a in tp.awards.all():
+                if len(awards_str):
+                    awards_str += ', '
+                if a.power:
+                    gp = tp.gameplayers().filter(power=a.power).order_by('-score').first()
+                    awards_str += _('%(award)s (with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d)') % {'award': a.name,
+                                                                                                                                         'game': gp.game.name,
+                                                                                                                                         'round': gp.game.the_round.number(),
+                                                                                                                                         'score': gp.score,
+                                                                                                                                         'dots': gp.final_sc_count()}
+                        
+                else:
+                    awards_str += a.name
+            results.append(_('%(player)s won %(awards)s.') % {'player': tp.player,
+                                                              'awards': awards_str})
     else:
         # which rounds have been played ?
         played_rounds = 0

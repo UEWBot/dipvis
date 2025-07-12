@@ -22,7 +22,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.models import DrawProposal, DrawSecrecy, Seasons
+from tournament.models import Award, DrawProposal, DrawSecrecy, Seasons
 from tournament.models import Tournament, Round, Game
 from tournament.models import SupplyCentreOwnership, CentreCount
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -299,18 +299,26 @@ class NewsTests(TestCase):
 
     def test_tournament_news_ended(self):
         t = Tournament.objects.get(name='t3')
+        a1 = Award.objects.create(name='Longest Hair')
+        a2 = Award.objects.create(name='Best France', power=self.france)
+        a3 = Award.objects.create(name='Best Germany', power=self.germany)
+        t.awards.add(a1)
+        t.awards.add(a2)
+        t.awards.add(a3)
+        tp = t.tournamentplayer_set.get(player__first_name='Iris')
+        tp.awards.add(a1)
+        tp.awards.add(a2)
+        tp = t.tournamentplayer_set.get(player__first_name='George')
+        tp.awards.add(a3)
         res = _tournament_news(t)
         self.assertIn('Michelle Nobody came 1st, with a score of 147.30.', res)
         self.assertIn('Kevin Lame came 2nd, with a score of 137.30.', res)
         self.assertIn('Iris Jackson came 3rd, with a score of 127.30.', res)
         self.assertIn('7 players were registered to play in the tournament.', res)
-        self.assertIn('Michelle Nobody won Best Austria-Hungary with 3 centres and a score of 0.00 in game g31 of round 1.', res)
-        self.assertIn('Kevin Lame won Best England with 3 centres and a score of 0.00 in game g31 of round 1.', res)
-        self.assertIn('Iris Jackson won Best France with 3 centres and a score of 0.00 in game g31 of round 1.', res)
-        self.assertIn('George Hotel won Best Germany with 3 centres and a score of 0.00 in game g31 of round 1.', res)
-        self.assertIn('Ethel Frankenstein won Best Italy with 3 centres and a score of 0.00 in game g31 of round 1.', res)
-        self.assertIn('Charles Dog won Best Russia with 4 centres and a score of 0.00 in game g31 of round 1.', res)
-        self.assertIn('Abbey Brown won Best Turkey with 3 centres and a score of 0.00 in game g31 of round 1.', res)
+        self.assertIn('Iris Jackson won Best France (with 3 centres and a score of 0.00 in game g31 of round 1), Longest Hair.', res)
+        self.assertIn('George Hotel won Best Germany (with 3 centres and a score of 0.00 in game g31 of round 1).', res)
+        # Cleanup
+        t.awards.all().delete()
 
     def test_tournament_news_not_started(self):
         # TODO is a Tournament with no rounds the only way to get this message?
