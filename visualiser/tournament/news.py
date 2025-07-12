@@ -92,7 +92,6 @@ def _tournament_news(t):
                                                                                                                                          'round': gp.game.the_round.number(),
                                                                                                                                          'score': gp.score,
                                                                                                                                          'dots': gp.final_sc_count()}
-                        
                 else:
                     awards_str += a.name
             results.append(_('%(player)s won %(awards)s.') % {'player': tp.player,
