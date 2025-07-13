@@ -850,6 +850,42 @@ class TournamentViewTests(TestCase):
         self.t4.team_size = None
         self.t4.save()
 
+    def test_score_graph(self):
+        response = self.client.get(reverse('tournament_score_graph',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_score_graph_refresh(self):
+        self.assertTrue(self.t4.is_finished)
+        self.t4.is_finished = False
+        self.t4.save()
+        response = self.client.get(reverse('tournament_score_graph_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        self.t4.is_finished = True
+        self.t4.save()
+
+    def test_score_graph_refresh_after_end(self):
+        self.assertTrue(self.t4.is_finished)
+        response = self.client.get(reverse('tournament_score_graph_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+
+    def test_graph(self):
+        """Just the graph itself"""
+        response = self.client.get(reverse('graph',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Should be a PNG image
+        self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
+
     def test_game_results(self):
         response = self.client.get(reverse('tournament_game_results',
                                            args=(self.t4.pk,)),

@@ -17,6 +17,7 @@
   {% endif %}
   <li><a href="{% url 'tournament_best_countries_refresh' tournament.id %}">{% trans "Best Countries" %}</a></li>
   <li><a href="{% url 'tournament_game_results_refresh' tournament.id %}">{% trans "Game Summary" %}</a></li>
+  <li><a href="{% url 'tournament_score_graph_refresh' tournament.id %}">{% trans "Score Graph" %}</a></li>
   {% for round in tournament.round_set.all %}
     <li>{% trans "Round" %} {{ round.number }}</li>
       <p><a href="{% url 'board_call' tournament.id round.number %}">{% trans "Board Call" %}</a></p>

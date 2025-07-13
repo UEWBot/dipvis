@@ -204,6 +204,13 @@ tournament_patterns = [
     path('team_scores/', tournament_views.team_scores, name='team_scores'),
     path('team_scores_refresh/', tournament_views.team_scores,
          {'refresh': True}, name='team_scores_refresh'),
+    # This is just the graph image
+    path('graph/', tournament_views.graph, name='graph'),
+    # This is the page showing the graph
+    path('score_graph/', tournament_views.tournament_score_graph,
+         name='tournament_score_graph'),
+    path('score_graph_refresh/', tournament_views.tournament_score_graph,
+         {'refresh': True}, name='tournament_score_graph_refresh'),
     path('game_results/', tournament_views.tournament_game_results,
          name='tournament_game_results'),
     path('game_results_refresh/', tournament_views.tournament_game_results,

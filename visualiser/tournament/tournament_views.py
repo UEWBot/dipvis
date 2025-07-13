@@ -19,7 +19,11 @@ Tournament Views for the Diplomacy Tournament Visualiser.
 """
 
 import csv
+import io
 from io import StringIO
+import matplotlib.figure as figure
+import matplotlib.ticker as ticker
+import matplotlib.pyplot as plt
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -240,6 +244,65 @@ def team_scores(request,
         context['redirect_time'] = REFRESH_TIME
         context['redirect_url'] = reverse(redirect_url_name, args=(tournament_id,))
     return render(request, 'tournaments/team_scores.html', context)
+
+
+def graph(request, tournament_id):
+    """Score graph for the specified tournament, as a PNG image"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    with io.BytesIO() as f:
+        # plot the scores
+        fig = figure.Figure()
+        ax = fig.subplots()
+        rounds = t.round_set.all()
+        # Get scores for each round in a suitable format
+        all_scores = {}
+        for tp in t.tournamentplayer_set.all():
+            all_scores[tp.player] = []
+        max_score = 0.0
+        for n, r in enumerate(rounds, start=1):
+            if r.show_scores():
+                for p, (rank, score) in t.positions_and_scores(after_round_num=n).items():
+                    all_scores[p].append((n, score))
+                    if rank == 1:
+                        max_score = score
+        # This gives us 40 distinct colors
+        ax.set_prop_cycle('color', plt.get_cmap('tab20b').colors + plt.get_cmap('tab20c').colors)
+        # Add a line for each player
+        for player in all_scores.keys():
+            player_scores = all_scores[player]
+            ax.plot([r for r,s in player_scores],
+                    [s for r,s in player_scores],
+                    label=str(player),
+                    linewidth=2)
+        ax.axis([1, n, 0.0, max_score])
+        # Ticks at whole numbers of rounds
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.set_xlabel(_('Round'))
+        ax.set_ylabel(_('Score'))
+        # Place the legend to the right of the graph
+        ax.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
+        # Save it, auto-expanding the area to include the legend
+        fig.savefig(f, format='png', bbox_inches="tight")
+        graphic = f.getvalue()
+    return HttpResponse(graphic, content_type="image/png")
+
+
+def tournament_score_graph(request,
+                           tournament_id,
+                           refresh=False,
+                           redirect_url_name='tournament_score_graph_refresh'):
+    """Display the score graph for a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    if t.is_finished and (redirect_url_name == 'tournament_score_graph_refresh'):
+        # Don't bother refreshing if nothing can change
+        refresh = False
+    context = {'tournament': t}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = REFRESH_TIME
+        context['redirect_url'] = reverse(redirect_url_name,
+                                          args=(tournament_id, ))
+    return render(request, 'tournaments/score_graph.html', context)
 
 
 def tournament_game_results(request,
