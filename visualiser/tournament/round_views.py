@@ -521,6 +521,9 @@ def create_games(request, tournament_id, round_num):
         players_changed = False
         for f in formset:
             if f.has_changed():
+                if f.cleaned_data['game_id'] is not None:
+                    # Game should exist
+                    g = Game.objects.get(pk=f.cleaned_data['game_id'])
                 # Have any non-player fields changed?
                 if set(f.changed_data) & non_player_fields:
                     try:

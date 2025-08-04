@@ -1487,6 +1487,79 @@ class RoundViewTests(TestCase):
         # Clean up
         self.r11.game_set.all().delete()
 
+    def test_create_games_modify_two_games(self):
+        """Check that multiple games can be changed in different ways"""
+        self.assertEqual(self.r11.game_set.count(), 0)
+        powers = {self.austria : self.rp11,
+                  self.turkey : self.rp12,
+                  self.england : self.rp13,
+                  self.russia : self.rp15,
+                  self.italy : self.rp16,
+                  self.france : self.rp17,
+                  self.germany : self.rp19}
+        g1 = Game.objects.create(the_round=self.r11,
+                                 name='Existing1',
+                                 the_set=self.gibsons,
+                                 external_url='http://example.com/old.html')
+        g2 = Game.objects.create(the_round=self.r11,
+                                 name='Existing2',
+                                 the_set=self.gibsons,
+                                 external_url='http://example.com/old.html')
+        for p, rp in powers.items():
+            GamePlayer.objects.create(game=g1,
+                                      power=p,
+                                      player=rp.player)
+            # Swap England and Russia in g2
+            if p == self.england:
+                GamePlayer.objects.create(game=g2,
+                                          power=self.russia,
+                                          player=rp.player)
+            elif p == self.russia:
+                GamePlayer.objects.create(game=g2,
+                                          power=self.england,
+                                          player=rp.player)
+            else:
+                GamePlayer.objects.create(game=g2,
+                                          power=p,
+                                          player=rp.player)
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-game_id': str(g1.id),
+                'form-0-name': g1.name,
+                # Change a non-player field in g1, too
+                'form-0-external_url': '',
+                'form-0-notes': g1.notes,
+                'form-0-the_set': str(g1.the_set.pk),
+                'form-1-game_id': str(g2.id),
+                'form-1-name': g2.name,
+                'form-1-external_url': g2.external_url,
+                'form-1-notes': g2.notes,
+                'form-1-the_set': str(g2.the_set.pk)}
+        for p, rp in powers.items():
+            data[f'form-0-{p.name}'] = str(rp.pk)
+            data[f'form-1-{p.name}'] = str(rp.pk)
+        data = urlencode(data)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should re-direct to the board call page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t1.pk, 1)))
+        # The two Games should still exist
+        self.assertEqual(self.r11.game_set.count(), 2)
+        for g in self.r11.game_set.all():
+            # GamePlayers should be set as expected
+            self.assertEqual(g.gameplayer_set.count(), 7)
+            for p, rp in powers.items():
+                self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
+        # TODO Verify that email is sent
+        # Clean up
+        self.r11.game_set.all().delete()
+
     def test_create_games_post_duplicate_name(self):
         """Duplicate a Game name in another Round of the same Tournament"""
         self.assertEqual(self.r21.game_set.count(), 0)
