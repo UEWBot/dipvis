@@ -486,13 +486,19 @@ def seed_games(request, tournament_id, round_num):
     return render(request, 'rounds/seeded_games.html', context)
 
 
+# TODO: Name is misleading - also used to modify existing game(s)
 @permission_required('tournament.add_game')
-def create_games(request, tournament_id, round_num):
+def create_games(request, tournament_id, round_num, game_name=None):
     """Provide a form to create the games for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    # Do any games already exist for the round ?
-    games = r.game_set.all()
+    if game_name is not None:
+        games = r.game_set.filter(name=game_name)
+        if not games.exists():
+            raise Http404
+    else:
+        # Do any games already exist for the round ?
+        games = r.game_set.all()
     data = []
     for g in games:
         current = {'game_id': g.id,
@@ -504,12 +510,15 @@ def create_games(request, tournament_id, round_num):
             if gp.power:
                 current[gp.power.name] = gp.roundplayer()
         data.append(current)
-    # Estimate the number of games for the round
-    round_players = r.roundplayer_set.count()
-    expected_games = (round_players + 6) // 7
-    # This can happen if there are no RoundPlayers for this round
-    if expected_games < 1:
+    if game_name is not None:
         expected_games = 1
+    else:
+        # Estimate the number of games for the round
+        round_players = r.roundplayer_set.count()
+        expected_games = (round_players + 6) // 7
+        # This can happen if there are no RoundPlayers for this round
+        if expected_games < 1:
+            expected_games = 1
     GamePlayersFormset = formset_factory(GamePlayersForm,
                                          extra=expected_games - games.count(),
                                          formset=BaseGamePlayersFormset)

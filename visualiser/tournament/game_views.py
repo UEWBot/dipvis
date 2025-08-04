@@ -44,6 +44,8 @@ from tournament.forms import GameImageForm
 from tournament.forms import SCCountForm
 from tournament.forms import SCOwnerForm
 
+from tournament.round_views import create_games
+
 from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
 
@@ -291,6 +293,13 @@ def _blank_row_num(queryset, final_year):
         # So how many years are missing?
         years_to_go = 2 + final_year - FIRST_YEAR - years
     return years_to_go
+
+
+def change_game(request, tournament_id, game_name):
+    """Provide a form to change a single game"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    return create_games(request, tournament_id, g.the_round.number(), game_name)
 
 
 @permission_required('tournament.add_centrecount')

@@ -80,6 +80,7 @@ round_patterns = [
 game_patterns = [
     path('', game_views.game_simple,
          {'template': 'detail'}, name='game_detail'),
+    path('change_game/', game_views.change_game, name='change_game'),
     path('sc_chart/', game_views.game_sc_chart, name='game_sc_chart'),
     path('sc_chart_refresh/', game_views.game_sc_chart,
          {'refresh': True}, name='game_sc_chart_refresh'),

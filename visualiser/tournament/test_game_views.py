@@ -465,6 +465,29 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_change_game_not_logged_in(self):
+        response = self.client.get(reverse('change_game',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_change_game(self):
+        r = self.g1.the_round
+        self.assertEqual(r.game_set.count(), 1)
+        # Add another Game
+        g = Game.objects.create(name='Game2',
+                                started_at=r.start,
+                                the_round=r,
+                                the_set=GameSet.objects.first())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('change_game',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'form-1')
+        # Clean up
+        g.delete()
+
     def test_enter_scs_not_logged_in(self):
         response = self.client.get(reverse('enter_scs',
                                            args=(self.t1.pk, self.g1.name)),
