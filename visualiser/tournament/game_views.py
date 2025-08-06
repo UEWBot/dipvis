@@ -108,6 +108,9 @@ def game_sc_owners(request,
     """Display the SupplyCentre ownership for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # No point in refreshing the page if the Game is over
+    if g.is_finished and (redirect_url_name == 'game_sc_owners_refresh'):
+        refresh = False
     scs = SupplyCentre.objects.all()
     scos = g.supplycentreownership_set.prefetch_related('owner')
     # Create a list of years that have been played, starting with the most recent
@@ -177,6 +180,9 @@ def game_sc_chart(request,
     """Display the SupplyCentre chart for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # No point in refreshing the page if the Game is over
+    if g.is_finished and (redirect_url_name == 'game_sc_chart_refresh'):
+        refresh = False
     # Template relies on set_powers and ps having the same ordering
     # TODO Sort alphabetically by translated power.name
     set_powers = g.the_set.setpower_set.order_by('power__name').prefetch_related('power')
@@ -273,6 +279,9 @@ def game_sc_graph(request,
     """Display the SupplyCentre graph for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # No point in refreshing the page if the Game is over
+    if g.is_finished and (redirect_url_name == 'game_sc_graph_refresh'):
+        refresh = False
     context = {'game': g}
     if refresh:
         context['refresh'] = True
@@ -622,6 +631,9 @@ def game_image(request,
         # With the URLs as they stand, turn='' only occurs with timelapse=True
         if not timelapse:
             raise Http404
+        # No point in refreshing the page if the Game is over
+        if g.is_finished and (redirect_url_name == 'current_game_image'):
+            timelapse = False
         # If we're just showing the current position, use the standard refresh time
         refresh_time = REFRESH_TIME
         # Always display the latest image

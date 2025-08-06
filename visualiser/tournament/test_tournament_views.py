@@ -643,6 +643,19 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
 
+    def test_scores_refresh_after_finish(self):
+        t = Tournament.objects.get(pk=self.t1.pk)
+        self.assertFalse(t.is_finished)
+        t.is_finished = True
+        t.save()
+        response = self.client.get(reverse('tournament_scores_refresh',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        t.is_finished = False
+        t.save()
+
     def test_team_scores(self):
         """No refresh, team tournament, showing current scores"""
         self.t4.team_size = 2
@@ -677,8 +690,35 @@ class TournamentViewTests(TestCase):
 
     def test_team_scores_old(self):
         """Refresh, team tournament, showing scores after last finished round"""
+        t = self.t4
+        self.assertTrue(t.is_finished)
+        t.team_size = 2
+        t.show_current_scores = False
+        t.save()
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('team_scores_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # TODO Check result
+        self.assertContains(response, TEAM_NAME)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        tm.delete()
+        t.team_size = None
+        t.show_current_scores = True
+        t.save()
+
+    def test_team_scores_refresh(self):
+        """Refresh, team tournament, after Tournament completion"""
+        t = self.t4
+        self.assertTrue(t.is_finished)
         self.t4.team_size = 2
         self.t4.show_current_scores = False
+        self.t4.is_finished = False
         self.t4.save()
         TEAM_NAME = 'Spam, eggs, and spam'
         tm = Team.objects.create(tournament=self.t4,
@@ -690,8 +730,10 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         # TODO Check result
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
+        self.t4.is_finished = True
         self.t4.team_size = None
         self.t4.show_current_scores = True
         self.t4.save()
@@ -716,6 +758,7 @@ class TournamentViewTests(TestCase):
         # TODO Check result
         self.assertContains(response, TEAM_NAME)
         self.assertNotContains(response, '123.4')
+        self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
         self.r41.is_finished = True
@@ -755,6 +798,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         # TODO Check result
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
         self.r41.is_team_round = False
@@ -820,6 +864,29 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_game_results_refresh_after_finish(self):
+        t = self.t4
+        self.assertTrue(t.is_finished)
+        response = self.client.get(reverse('tournament_game_results_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+
+    def test_game_results_refresh(self):
+        t = self.t4
+        self.assertTrue(t.is_finished)
+        t.is_finished = False
+        t.save()
+        response = self.client.get(reverse('tournament_game_results_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        t.is_finished = True
+        t.save()
+
     def test_best_countries(self):
         response = self.client.get(reverse('tournament_best_countries',
                                            args=(self.t4.pk,)),
@@ -855,6 +922,19 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
+
+    def test_best_countries_refresh_after_finish(self):
+        t = self.t1
+        self.assertFalse(t.is_finished)
+        t.is_finished = True
+        t.save()
+        response = self.client.get(reverse('tournament_best_countries_refresh',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        t.is_finished = False
+        t.save()
 
     def test_enter_scores_not_logged_in(self):
         response = self.client.get(reverse('enter_scores',

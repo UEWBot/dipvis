@@ -465,6 +465,19 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_chart_refresh_after_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('game_sc_chart_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
+
     def test_change_game_not_logged_in(self):
         response = self.client.get(reverse('change_game',
                                            args=(self.t1.pk, self.g1.name)),
@@ -880,6 +893,19 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_owners_refresh_after_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('game_sc_owners_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
+
     def test_sc_owners_redirect(self):
         # TODO assert that overview 2 is SC owners
         self.assertEqual(self.g1.final_year(), 1900)
@@ -1084,6 +1110,19 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_current_game_image_after_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('current_game_image',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
 
     def test_game_image(self):
         response = self.client.get(reverse('game_image',
@@ -1758,6 +1797,20 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_sc_graph_refresh_after_end(self):
+        """Test the page that holds the graph image"""
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('game_sc_graph_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
 
     def test_graph(self):
         """This is the actual graph image"""

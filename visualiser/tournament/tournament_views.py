@@ -137,6 +137,9 @@ def tournament_scores(request,
                       redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'tournament_scores_refresh'):
+        refresh = False
     tps = t.tournamentplayer_set.order_by('-score',
                                           'player__last_name',
                                           'player__first_name').prefetch_related('player')
@@ -192,6 +195,9 @@ def team_scores(request,
                 redirect_url_name='team_scores_refresh'):
     """Display team scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'team_scores_refresh'):
+        refresh = False
     # If we're showing this as part of the tournament overview,
     # skip it if either there's no team round or the first team round
     # hasn't started
@@ -242,6 +248,9 @@ def tournament_game_results(request,
                             redirect_url_name='tournament_game_results_refresh'):
     """Display the results of all the games of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'tournament_game_results_refresh'):
+        refresh = False
     tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name').prefetch_related('player__gameplayer_set')
     rds = t.round_set.prefetch_related('game_set')
     rounds = [r.number() for r in rds]
@@ -277,6 +286,9 @@ def tournament_best_countries(request,
                               redirect_url_name='tournament_best_countries_refresh'):
     """Display best countries of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'tournament_best_countries_refresh'):
+        refresh = False
     # gps is a dict, keyed by power, of lists of lists of gameplayers,
     # sorted by best country criterion
     if t.show_current_scores:
