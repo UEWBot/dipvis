@@ -734,13 +734,29 @@ def api(request, tournament_id, version):
                              'players': players}
         rounds[r.number()] = {'scoring_system': r.scoring_system,
                               'games': games}
+    results = []
+    p_and_s = t.positions_and_scores()
+    for player, res in p_and_s.items():
+        entry = {'player_name': str(player),
+                 'player_wdr_id': player.wdr_player_id,
+                 'ranking': res[0],
+                 'score': res[1],
+                 'round_scores': []}
+        for r in t.round_set.all():
+            try:
+                rp = player.roundplayer_set.get(the_round=r)
+                entry['round_scores'].append({'score': rp.score})
+            except RoundPlayer.DoesNotExist:
+                entry['round_scores'].append({'score': 0.0})
+        results.append(entry)
     data = {'name': t.name,
             'year': t.start_date.year,
             'url': request.build_absolute_uri(t.get_absolute_url()),
             'wdr_id': t.wdr_tournament_id,
             'wdd_id': t.wdd_tournament_id,
             'dbn_coverage': [d.dbn_url for d in t.dbncoverage_set.all()],
-            'rounds': rounds}
+            'rounds': rounds,
+            'results': results}
     return JsonResponse(data)
 
 
