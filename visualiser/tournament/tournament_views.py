@@ -742,6 +742,8 @@ def api(request, tournament_id, version):
                  'ranking': res[0],
                  'score': res[1],
                  'round_scores': []}
+        if entry['ranking'] == Tournament.UNRANKED:
+            entry['ranking'] = None
         for r in t.round_set.all():
             try:
                 rp = player.roundplayer_set.get(the_round=r)
