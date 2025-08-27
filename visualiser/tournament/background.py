@@ -92,7 +92,9 @@ class WikipediaBackground():
         """
         url = WIKIPEDIA_URL
         try:
-            page = requests.get(url, timeout=self.TIMEOUT)
+            page = requests.get(url,
+                                headers={'User-Agent': 'DipTVBot/0.0 (https://diplomacytv.com/; chris.carter.brand@gmail.com)'},
+                                timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return []
         soup = BeautifulSoup(page.text)
