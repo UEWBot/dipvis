@@ -29,6 +29,8 @@ Database or World Diplomacy Reference for everything else.
 import requests
 from bs4 import BeautifulSoup
 
+from django.conf import settings
+
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 from tournament.wdd import wdd_img_to_country, WDD_BASE_RANKING_URL, WDD_BASE_RESULTS_URL
 from tournament.wdr import WDR_BASE_URL
@@ -93,7 +95,7 @@ class WikipediaBackground():
         url = WIKIPEDIA_URL
         try:
             page = requests.get(url,
-                                headers={'User-Agent': 'DipTVBot/0.0 (https://diplomacytv.com/; chris.carter.brand@gmail.com)'},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return []
@@ -159,6 +161,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -206,6 +209,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -243,6 +247,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -301,6 +306,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -372,6 +378,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -469,6 +476,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -542,6 +550,7 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -574,6 +583,7 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_ranking': 2,
                                         'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -626,7 +636,8 @@ class WDRBackground():
         url = f'{WDR_BASE_URL}api/v1/players/{self.wdr_id}'
         try:
             page = requests.get(url,
-                                headers={'Accept': 'application/json'},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept': 'application/json'},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDRNotAccessible from e

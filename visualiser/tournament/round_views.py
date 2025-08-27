@@ -22,6 +22,7 @@ import csv
 import requests
 from itertools import combinations
 
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -364,7 +365,9 @@ def _send_board_call_to_discord(the_round):
         "content": text,
         "username": "Diplomacy TV"
            }
-    requests.post(the_round.tournament.discord_url, json=data)
+    requests.post(the_round.tournament.discord_url,
+                  json=data,
+                  headers={'User-Agent': settings.USER_AGENT})
 
 
 @permission_required('tournament.add_game')

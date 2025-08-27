@@ -21,6 +21,8 @@ import requests
 from urllib.parse import urlparse, parse_qs, urlunparse
 from bs4 import BeautifulSoup
 
+from django.conf import settings
+
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 
 WEBDIPLOMACY_NETLOC = 'webdiplomacy.net'
@@ -104,7 +106,7 @@ class Game():
         """
         # TODO Ideally, I think we should pass the gameID in params
         page = requests.get(url,
-                            headers={'User-Agent': "Magic Browser"},
+                            headers={'User-Agent': settings.USER_AGENT},
                             allow_redirects=False,
                             timeout=2.0)
         if page.status_code != requests.codes.ok:

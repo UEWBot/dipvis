@@ -13,6 +13,11 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve(strict=True).parents[1]
 
+# Configuration
+
+# User-Agent used when reading other sites
+# consider conforming to https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy
+USER_AGENT = 'DipvisBot/0.0 (https://github.com/UEWBot/dipvis/; user@example.com)'
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/

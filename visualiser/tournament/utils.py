@@ -30,6 +30,7 @@ from time import sleep
 
 from django_countries.fields import Country
 
+from django.conf import settings
 from django.utils import timezone
 
 from tournament import backstabbr
@@ -152,6 +153,7 @@ def add_missing_player_wdd_ids(dry_run=False):
         for tp in p.tournamentplayer_set.exclude(tournament__wdd_tournament_id=None):
             url = tp.tournament.wdd_url()
             page = requests.get(url,
+                                headers={'User-Agent': settings.USER_AGENT},
                                 timeout=1.0)
             soup = BeautifulSoup(page.text)
             for a in soup.find_all('a'):
