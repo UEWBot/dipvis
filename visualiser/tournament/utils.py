@@ -288,6 +288,9 @@ def add_bs_profile_urls(dry_run=False):
         # read the game page
         try:
             bg = g.backstabbr_game()
+        except backstabbr.BackstabbrNotAccessible:
+            print("Failed to read backstabbr URL - skipping")
+            continue
         except backstabbr.InvalidGameUrl:
             print("Failed to extract backstabbr URL - skipping")
             continue
@@ -325,6 +328,9 @@ def populate_missed_years(game, dry_run=False):
         bg = game.backstabbr_game()
     except backstabbr.InvalidGameUrl:
         print(f'No Backstabbr URL for {game}')
+        return
+    except backstabbr.BackstabbrNotAccessible:
+        print(f"Can't read game {game} from Backstabbr")
         return
     for year in range(FIRST_YEAR, bg.year):
         if not game.centrecount_set.filter(year=year).count() == 7:

@@ -828,6 +828,8 @@ def scrape_external_site(request, tournament_id, game_name):
     if backstabbr.is_backstabbr_url(g.external_url):
         try:
             bg = g.backstabbr_game()
+        except backstabbr.BackstabbrNotAccessible:
+            pass
         except backstabbr.InvalidGameUrl:
             pass
         else:

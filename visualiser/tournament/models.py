@@ -2141,6 +2141,7 @@ class Game(models.Model):
         Returns a backstabbr.Game for the Game
 
         May raise backstabbr.InvalidGameUrl if self.external_url isn't a parseable backstabbr game page
+        May raise backstabbr.BackstabbrNotAccessible if an error occurs reading the game from backstabbr
         """
         return backstabbr.Game(self.external_url)
 

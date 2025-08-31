@@ -86,6 +86,11 @@ ORDERS = re.compile('var orders = (.*);')
 UNITS = re.compile('var unitsByPlayer = (.*);')
 
 
+class BackstabbrNotAccessible(Exception):
+    """Unable to retrieve the game from Backstabbr."""
+    pass
+
+
 class InvalidGameUrl(Exception):
     """Expected a Backstabbr game URL."""
     pass
@@ -117,6 +122,8 @@ class Game():
         If skip_read is True, the URL will not be accessed, and not all
         attributes will be available/accurate. read_current_state() can
         be called later to populate these attributes.
+
+        May raise BackstabbrNotAccessible, InvalidGameUrl.
         """
         self.url = url
         self.parsed_url = urlparse(url)
@@ -165,6 +172,8 @@ class Game():
         self.result, and self.soloer.
 
         Only needed if the Game was created with skip_read=True.
+
+        May raise BackstabbrNotAccessible, InvalidGameUrl.
         """
         self._parse_page()
         self._calculate_result()
@@ -175,6 +184,8 @@ class Game():
 
         This will remove any trailing slash, invite code, or season
         from both self.url and self.parsed_url.path
+
+        May raise InvalidGameUrl.
         """
         # Expected format is [game|sandbox]/<optional name>/<number>
         # Anything after the <number> needs to be removed
@@ -212,16 +223,28 @@ class Game():
     def _url_to_soup(self, url):
         """
         Open the specified URL, turn the web page into soup.
+
+        May raise BackstabbrNotAccessible, InvalidGameUrl.
         """
-        page = requests.get(url,
-                            timeout=self.TIMEOUT)
-        if page.status_code != requests.codes.ok:
-            raise InvalidGameUrl(url)
-        return BeautifulSoup(page.text)
+        tries = 0
+        # Backstabbr has occasional problems. A retry usually works
+        while tries < 2:
+            page = requests.get(url,
+                                timeout=self.TIMEOUT)
+            tries += 1
+            if page.status_code == requests.codes.ok:
+                return BeautifulSoup(page.text)
+            elif page.status_code == requests.codes.not_found:
+                raise InvalidGameUrl(url)
+            elif page.status_code != requests.codes.internal_server_error:
+                raise BackstabbrNotAccessible(f'{page.status_code} {url}')
+        raise BackstabbrNotAccessible(f'{page.status_code} {url}')
 
     def _parse_page(self):
         """
         Read the game page on backstabbr and extract the interesting details.
+
+        May raise BackstabbrNotAccessible, InvalidGameUrl.
         """
         soup = self._url_to_soup(self.url)
         self._parse_invariants_from_soup(soup)
@@ -242,6 +265,8 @@ class Game():
            Where the province is coastal, unit is replaced by a dict indexed by 'coast' and 'type'
         orders is a dict, indexed by power, of dicts, indexed by province, of order dicts.
            The order dict may contain 'from', 'to', 'result', 'result_reason', 'type', 'to', and probably others.
+
+        May raise NoSuchSeason, BackstabbrNotAccessible, InvalidGameUrl.
         """
         url = urljoin(self.url + '/', f'{year}/{season}')
         return self._parse_turn_page(url, season, year)
@@ -251,6 +276,8 @@ class Game():
         Read the game page on backstabbr and extract the interesting details.
 
         Returns a (sc_counts, soloing_power, sc_ownership, position, orders) 5-tuple
+
+        May raise NoSuchSeason, BackstabbrNotAccessible, InvalidGameUrl.
         """
         soup = self._url_to_soup(url)
         s, y = self._season_and_year(soup)
