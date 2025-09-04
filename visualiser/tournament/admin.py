@@ -22,7 +22,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.set_power import SetPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.models import Award, CentreCount, DrawProposal
-from tournament.models import Game, GameImage, GamePlayer
+from tournament.models import Game, GameImage, GamePlayer, Pool
 from tournament.models import Round, RoundPlayer, DBNCoverage
 from tournament.models import SeederBias, Series, SupplyCentreOwnership
 from tournament.models import Team, Tournament, TournamentPlayer
@@ -110,6 +110,11 @@ class PlayerTitleAdmin(admin.ModelAdmin):
 @admin.register(PlayerTournamentRanking)
 class PlayerTournamentRankingAdmin(admin.ModelAdmin):
     list_filter = ['player', 'tournament', 'position', 'year']
+
+@admin.register(Pool)
+class PoolAdmin(admin.ModelAdmin):
+    list_filter = ['the_round__tournament']
+    prepopulated_fields = {"slug": ["name"]}
 
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
