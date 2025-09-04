@@ -34,6 +34,15 @@ def _filtered_recipients(recipients, tournament):
         recipients = list(set(recipients) & managers)
     return recipients
 
+def _add_game_to_email(game, tournament, the_list):
+    """Add a (game details, recipients list) 2-tuple for the specified Game to the_list"""
+    game_text = game.board_call_msg()
+    recipients = []
+    for gp in game.gameplayer_set.exclude(player__email=''):
+        recipients.append(gp.player.email)
+    recipients = _filtered_recipients(recipients, tournament)
+    the_list.append((game_text, recipients))
+
 def send_board_call_email(the_round):
     """Send an email to all players in the round with the board calls"""
     # TODO Translation is complex, because we don't want to use the language of the
@@ -45,13 +54,15 @@ def send_board_call_email(the_round):
     # with each player's board at the top of their message
     # Start off with a list of (description, player_email) 2-tuples, one per board
     games = []
-    for g in the_round.game_set.all():
-        game_text = g.board_call_msg()
-        recipients = []
-        for gp in g.gameplayer_set.exclude(player__email=''):
-            recipients.append(gp.player.email)
-        recipients = _filtered_recipients(recipients, the_round.tournament)
-        games.append((game_text, recipients))
+    # If the Round is split into Pools, group Games by Pool
+    pool_set = list(the_round.pool_set.all())
+    if pool_set:
+        for pool in pool_set:
+            for g in pool.game_set.all():
+                _add_game_to_email(g, the_round.tournament, games)
+    else:
+        for g in the_round.game_set.all():
+            _add_game_to_email(g, the_round.tournament, games)
     # Put together the common body of the message
     all_games = 'The full round:\n' + '\n'.join([g[0] for g in games])
     # Create one message per game

@@ -6,10 +6,6 @@
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% blocktrans with round=round.number %}Round {{ round }} Views{% endblocktrans %}</h1>
 
-{% if round.is_team_round %}
-  <p>{% trans "Team Round" %}</p>
-{% endif %}
-
 <p>{% trans "Start time:" %} {{ round.start }}</p>
 
 <p>{% trans "Scoring system:" %} <a href="{{ round.game_scoring_system_obj.get_absolute_url }}">{{ round.scoring_system }}</a></p>
@@ -26,14 +22,40 @@
   <p>{% trans "Games in this round have no set endpoint." %}</p>
 {% endif %}
 
+{% if round.pool_set.exists and not round.game_set.exists %}
+  <p>{% trans "Pools:" %}</p>
+  <ul>
+    {% for pool in round.pool_set.all %}
+      <li>{{ pool.name }}{% if pool.board_count %}{% blocktrans count count=pool.board_count %} - {{count}} game{% plural %} - {{count}} games{% endblocktrans %}{% endif %}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+{% if round.is_team_round %}
+  <p>{% trans "Team Round" %}</p>
+{% endif %}
+
 <p>{{ round.roundplayer_set.count }}{% trans " players present." %}</p>
 
 <p>{% blocktrans count count=round.game_set.count %}{{ count }} Game{% plural %}{{ count }} Games{% endblocktrans %}:</p>
-<ul>
-  {% for g in round.game_set.all %}
-    <li><a href="{{ g.get_absolute_url }}">{{ g.name}}</a> {% blocktrans with year=g.final_year %}Played {{ year }}.{% endblocktrans %}{% if g.is_finished %}{% trans " (Complete)" %}{% endif %}</li>
-  {% endfor %}
-</ul>
+{% if round.pool_set.exists %}
+  <ul>
+    {% for pool in round.pool_set.all %}
+      <li><dl>
+        <dt>{{ pool.name }}:</dt>
+        {% for g in pool.game_set.all %}
+          <dd><a href="{{ g.get_absolute_url }}">{{ g.name}}</a> {% blocktrans with year=g.final_year %}Played {{ year }}.{% endblocktrans %}{% if g.is_finished %}{% trans " (Complete)" %}{% endif %}</dd>
+        {% endfor %}
+      </dl></li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <ul>
+    {% for g in round.game_set.all %}
+      <li><a href="{{ g.get_absolute_url }}">{{ g.name}}</a> {% blocktrans with year=g.final_year %}Played {{ year }}.{% endblocktrans %}{% if g.is_finished %}{% trans " (Complete)" %}{% endif %}</li>
+    {% endfor %}
+  </ul>
+{% endif %}
 
 <p>{% trans "Views:" %}</p>
 <ul>

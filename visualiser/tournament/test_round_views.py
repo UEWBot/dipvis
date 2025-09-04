@@ -26,7 +26,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
-from tournament.models import Round, RoundPlayer, Team
+from tournament.models import Pool, Round, RoundPlayer, Team
 from tournament.models import Game, GamePlayer, SeederBias
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.players import Player
@@ -514,6 +514,51 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.url, reverse('get_seven', args=(self.t3.pk, 2)))
         # No clean up needed because we left the same 8 players playing
 
+    def test_roll_call_post_current_round_with_pools(self):
+        """roll_call POST for current round of a tournament with pools"""
+        r = self.t3.current_round()
+        self.assertEqual(r.number(), 2)
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # TODO Why doesn't this work?
+        #data = urlencode({'form-TOTAL_FORMS': '10',
+        data = urlencode({'form-TOTAL_FORMS': '8',
+                          'form-INITIAL_FORMS': '8',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p1.pk),
+                          'form-0-present': 'ok',
+                          'form-1-player': str(self.p3.pk),
+                          'form-1-present': 'ok',
+                          'form-2-player': str(self.p4.pk),
+                          'form-2-present': 'ok',
+                          'form-3-player': str(self.p5.pk),
+                          'form-3-present': 'ok',
+                          'form-4-player': str(self.p6.pk),
+                          'form-4-present': 'ok',
+                          'form-5-player': str(self.p7.pk),
+                          'form-5-present': 'ok',
+                          'form-6-player': str(self.p8.pk),
+                          'form-6-present': 'ok',
+                          'form-7-player': str(self.p9.pk),
+                          'form-7-present': 'ok',
+                          'form-8-player': '',
+                          'form-8-present': '',
+                          'form-9-player': '',
+                          'form-9-present': ''})
+        response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # It should redirect to the populate pools page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('populate_pools', args=(self.t3.pk, 2)))
+        # No clean up needed because we left the same 8 players playing
+
     def test_roll_call_post_old_round(self):
         """POST of roll_call() for a Round that is finished"""
         self.assertTrue(self.t3.round_numbered(1).is_finished)
@@ -828,6 +873,219 @@ class RoundViewTests(TestCase):
             rp.standby = False
             rp.save(update_fields=['standby'])
 
+    def test_get_seven_with_pools_fixed_pool_right(self):
+        """get_seven for a round with pools"""
+        # Remember the game_counts
+        initial_values = {}
+        for rp in self.r11.roundplayer_set.all():
+            initial_values[rp] = rp.game_count
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        # Assign players to pools
+        # Correct number in the fixed pool
+        for rp in [self.rp11, self.rp12, self.rp13, self.rp14, self.rp15, self.rp16, self.rp17]:
+            rp.pool = pool1
+            rp.save()
+        # Remainder in the variable pool - too few for a game
+        for rp in [self.rp18, self.rp19, self.rp110, self.rp111, self.rp112, self.rp113]:
+            rp.pool = pool2
+            rp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'double_0': str(self.rp12.pk)})
+        response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_players', args=(self.t1.pk,)))
+        # Clean up
+        for rp in self.r11.roundplayer_set.all():
+            rp.pool = None
+            rp.game_count = initial_values[rp]
+            rp.save(update_fields=['game_count'])
+        self.r11.pool_set.all().delete()
+
+    def test_get_seven_with_pools_fixed_pool_wrong(self):
+        """get_seven for a round with pools"""
+        # Remember the game_counts
+        initial_values = {}
+        for rp in self.r11.roundplayer_set.all():
+            initial_values[rp] = rp.game_count
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        # Assign players to pools
+        # Too few in the fixed pool
+        for rp in [self.rp11, self.rp12, self.rp13, self.rp14, self.rp15, self.rp16]:
+            rp.pool = pool1
+            rp.save()
+        # Remainder in the variable pool
+        for rp in [self.rp17, self.rp18, self.rp19, self.rp110, self.rp111, self.rp112, self.rp113]:
+            rp.pool = pool2
+            rp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'double_0': str(self.rp12.pk)})
+        response = self.client.post(reverse('get_seven', args=(self.t1.pk, 1)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('populate_pools', args=(self.t1.pk, 1)))
+        # Clean up
+        for rp in self.r11.roundplayer_set.all():
+            rp.pool = None
+            rp.game_count = initial_values[rp]
+            rp.save(update_fields=['game_count'])
+        self.r11.pool_set.all().delete()
+
+    def test_populate_pools_not_logged_in(self):
+        response = self.client.get(reverse('populate_pools',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_populate_pools_no_pools(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('populate_pools',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_populate_pools(self):
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('populate_pools',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.r11.pool_set.all().delete()
+
+    def test_populate_too_few_pools(self):
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with self.assertRaises(Pool.DoesNotExist):
+            response = self.client.get(reverse('populate_pools',
+                                               args=(self.t1.pk, 1)),
+                                       secure=True)
+        # Cleanup
+        self.r11.pool_set.all().delete()
+
+    def test_populate_too_many_pools(self):
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed1',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed2',
+                                    board_count=1)
+        pool3 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with self.assertRaises(Pool.MultipleObjectsReturned):
+            response = self.client.get(reverse('populate_pools',
+                                               args=(self.t1.pk, 1)),
+                                       secure=True)
+        # Cleanup
+        self.r11.pool_set.all().delete()
+
+    def test_populate_pools_post(self):
+        rp13_game_count = self.rp13.game_count
+        self.rp13.game_count = 0
+        self.rp13.save()
+        # Seven players for the fixed pool
+        fixed_players = [self.rp12, self.rp13, self.rp16, self.rp17, self.rp19, self.rp110, self.rp113]
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {}
+        for n, rp in enumerate(fixed_players, start=1):
+            data[f'player_{n}'] = str(rp.pk)
+        response = self.client.post(reverse('populate_pools', args=(self.t1.pk, 1)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('get_seven', args=(self.t1.pk, 1)))
+        # RoundPlayers should all be assigned to a pool
+        # RoundPlayers in the fixed pool should be set to playing one game
+        # (they are skipped in the get_seven form)
+        for rp in self.r11.roundplayer_set.all():
+            if rp in fixed_players:
+                self.assertEqual(rp.pool, pool1)
+                self.assertEqual(rp.game_count, 1)
+            else:
+                self.assertEqual(rp.pool, pool2)
+        # Cleanup
+        self.rp13.game_count = rp13_game_count
+        self.rp13.save()
+        for rp in self.r11.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        self.r11.pool_set.all().delete()
+
+    def test_populate_pools_post_missing_player(self):
+        # Seven players for the fixed pool
+        fixed_players = [self.rp12, self.rp13, self.rp16, self.rp17, self.rp19, self.rp110, self.rp113]
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {}
+        for n, rp in enumerate(fixed_players, start=1):
+            data[f'player_{n}'] = str(rp.pk)
+        # Remove one player
+        del data['player_4']
+        response = self.client.post(reverse('populate_pools', args=(self.t1.pk, 1)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # All 7 players should be required
+        self.assertContains(response, 'This field is required.')
+        # No RoundPlayers should be assigned to a pool
+        for rp in self.r11.roundplayer_set.all():
+            self.assertEqual(rp.pool, None)
+        # Cleanup
+        self.r11.pool_set.all().delete()
+
+    def test_populate_pools_post_duplicate_player(self):
+        # Seven players for the fixed pool
+        fixed_players = [self.rp12, self.rp13, self.rp16, self.rp12, self.rp19, self.rp110, self.rp113]
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r11,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = {}
+        for n, rp in enumerate(fixed_players, start=1):
+            data[f'player_{n}'] = str(rp.pk)
+        response = self.client.post(reverse('populate_pools', args=(self.t1.pk, 1)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # Duplicate should be reported as an error
+        self.assertContains(response, 'Player Bobby Bandersnatch appears more than once')
+        # No RoundPlayers should be assigned to a pool
+        for rp in self.r11.roundplayer_set.all():
+            self.assertEqual(rp.pool, None)
+        # Cleanup
+        self.r11.pool_set.all().delete()
+
     def test_seed_games_not_logged_in(self):
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -998,6 +1256,100 @@ class RoundViewTests(TestCase):
         self.r11.save(update_fields=['is_team_round'])
         self.t1.team_size = None
         self.t1.save(update_fields=['team_size'])
+
+    def test_seed_games_with_pools(self):
+        self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
+        self.t1.power_assignment = PowerAssignMethods.MANUAL
+        self.t1.save()
+        r = self.t1.round_numbered(1)
+        self.assertFalse(r.game_set.exists())
+        tp = TournamentPlayer.objects.create(player=self.p14,
+                                             tournament=self.t1)
+        new_rp = RoundPlayer.objects.create(player=self.p14,
+                                            the_round=self.r11)
+        self.assertEqual(self.rp112.game_count, 0)
+        self.rp112.game_count = 1
+        self.rp112.save(update_fields=['game_count'])
+        self.assertEqual(self.rp113.game_count, 2)
+        self.rp113.game_count = 1
+        self.rp113.save(update_fields=['game_count'])
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        for rp in [self.rp11, self.rp13, self.rp15, self.rp17, self.rp19, self.rp111, self.rp113]:
+            rp.pool = pool1
+            rp.save()
+        for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
+            rp.pool = pool2
+            rp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        # Form should be for one game in each of the two pools
+        self.assertContains(response, 'R1GA')
+        self.assertContains(response, 'R1GB')
+        # Cleanup
+        new_rp.delete()
+        tp.delete()
+        for rp in r.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        r.game_set.all().delete()
+        r.pool_set.all().delete()
+        self.rp112.game_count = 0
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 2
+        self.rp113.save(update_fields=['game_count'])
+        self.t1.power_assignment = PowerAssignMethods.AUTO
+        self.t1.save()
+
+    def test_seed_games_and_powers_with_pools(self):
+        self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
+        r = self.t1.round_numbered(1)
+        self.assertFalse(r.game_set.exists())
+        tp = TournamentPlayer.objects.create(player=self.p14,
+                                             tournament=self.t1)
+        new_rp = RoundPlayer.objects.create(player=self.p14,
+                                            the_round=self.r11)
+        self.assertEqual(self.rp112.game_count, 0)
+        self.rp112.game_count = 1
+        self.rp112.save(update_fields=['game_count'])
+        self.assertEqual(self.rp113.game_count, 2)
+        self.rp113.game_count = 1
+        self.rp113.save(update_fields=['game_count'])
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        for rp in [self.rp11, self.rp13, self.rp15, self.rp17, self.rp19, self.rp111, self.rp113]:
+            rp.pool = pool1
+            rp.save()
+        for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
+            rp.pool = pool2
+            rp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        # Form should be for one game in each of the two pools
+        self.assertContains(response, 'R1GA')
+        self.assertContains(response, 'R1GB')
+        # Cleanup
+        new_rp.delete()
+        tp.delete()
+        for rp in r.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        r.game_set.all().delete()
+        r.pool_set.all().delete()
+        self.rp112.game_count = 0
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 2
+        self.rp113.save(update_fields=['game_count'])
 
     def test_seed_games_post_no_change(self):
         """Just accept the generated seeding"""
@@ -1288,6 +1640,50 @@ class RoundViewTests(TestCase):
                                            args=(self.t3.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_create_games_invalid_pool(self):
+        r = self.t3.round_numbered(1)
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('create_games_in_pool',
+                                           args=(self.t3.pk, 1, 'invalid-pool-slug')),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Cleanup
+        r.pool_set.all().delete()
+
+    def test_create_games_in_pool(self):
+        r = self.t4.round_numbered(1)
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        self.assertEqual(r.game_set.count(), 2)
+        # Last game in pool2, rest in pool1
+        g1 = r.game_set.first()
+        g1.pool = pool2
+        g1.save()
+        g2 = r.game_set.last()
+        g2.pool = pool1
+        g2.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('create_games_in_pool',
+                                           args=(self.t4.pk, 1, pool1.slug)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # g2 should be in the form, g1 should not
+        self.assertNotContains(response, g1.name)
+        self.assertContains(response, g2.name)
+        # Cleanup
+        for g in r.game_set.all():
+            g.pool = None
+            g.save()
+        r.pool_set.all().delete()
 
     def test_create_games_when_games_exist_powers_unassigned(self):
         r = self.t3.round_numbered(1)
