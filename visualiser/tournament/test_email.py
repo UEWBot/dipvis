@@ -321,6 +321,8 @@ class EmailTests(TestCase):
             # or any parentheses for backstabbr usernames
             self.assertNotIn('(', m.body)
 
+    # TODO Test board call email for a Round with Pools
+
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
     def test_send_board_call_no_email(self):
         """The same as test_send_board_call_email(), but with t.no_email = True"""

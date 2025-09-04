@@ -28,7 +28,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
+from tournament.models import Tournament, Round, Pool, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import Award, SeederBias, Series, DBNCoverage, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
@@ -5466,7 +5466,7 @@ class RoundTests(TestCase):
         self.assertEqual(r22.number(), 2)
 
     # Round.board_call_msg()
-    def test_round_board_call_msg(self):
+    def test_round_board_call_msg_no_pools(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(3)
         for g in r.game_set.all():
@@ -5497,6 +5497,50 @@ class RoundTests(TestCase):
         # Cleanup
         for g in r.game_set.all():
             g.gameplayer_set.all().delete()
+
+    def test_round_board_call_msg_with_pools(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(3)
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        for g in r.game_set.all():
+            self.assertEqual(g.gameplayer_set.count(), 0)
+            g.pool = pool2
+            g.save()
+            GamePlayer.objects.create(game=g,
+                                      player=self.p1,
+                                      power=self.austria)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p2,
+                                      power=self.england)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p3,
+                                      power=self.france)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p4,
+                                      power=self.germany)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p5,
+                                      power=self.italy)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p6,
+                                      power=self.russia)
+            GamePlayer.objects.create(game=g,
+                                      player=self.p7,
+                                      power=self.turkey)
+        g.pool = pool1
+        g.save()
+        msg = r.board_call_msg()
+        # TODO Validate results
+        # Cleanup
+        for g in r.game_set.all():
+            g.pool = None
+            g.save()
+            g.gameplayer_set.all().delete()
+        r.pool_set.all().delete()
 
     # Round.background()
     def test_round_background(self):
@@ -5632,6 +5676,56 @@ class RoundTests(TestCase):
                                     self.assertEqual(gp.score, scores[gp])
 
 
+class PoolTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        today = date.today()
+
+        t = Tournament.objects.create(name='t1',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        cls.r = Round.objects.create(tournament=t,
+                                     scoring_system=s1,
+                                     dias=True,
+                                     start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        cls.pool1 = Pool.objects.create(the_round=cls.r,
+                                        name='Fixed',
+                                        board_count=1)
+        cls.pool2 = Pool.objects.create(the_round=cls.r,
+                                        name='Variable')
+
+
+    # Pool.__str__()
+    def test_pool_str(self):
+        res = str(self.pool1)
+
+    # Pool.clean()
+    def test_pool_clean_multiple_variable_sized(self):
+        pool3 = Pool(the_round=self.r,
+                     name='Erroneous')
+        with self.assertRaises(ValidationError):
+            pool3.full_clean()
+
+    def test_pool_clean_with_board_count(self):
+        self.pool1.clean()
+
+    def test_pool_clean_no_board_count(self):
+        self.pool2.clean()
+
+    # Pool.name must be unique within a Round
+    def test_pool_name_constraint(self):
+        pool3 = Pool(the_round=self.r,
+                     name='Fixed',
+                     board_count=2)
+        with self.assertRaises(IntegrityError):
+            pool3.save()
+
+
 class GameTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
@@ -5656,22 +5750,22 @@ class GameTests(TestCase):
                                        draw_secrecy=DrawSecrecy.COUNTS)
 
         # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
-        r12 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=r11.start + HOURS_8)
-        Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=r11.start + HOURS_16)
+        cls.r11 = Round.objects.create(tournament=t1,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+        cls.r12 = Round.objects.create(tournament=t1,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       start=cls.r11.start + HOURS_8)
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
                              dias=True,
-                             start=r11.start + HOURS_24)
+                             start=cls.r11.start + HOURS_16)
+        Round.objects.create(tournament=t1,
+                             scoring_system=s1,
+                             dias=True,
+                             start=cls.r11.start + HOURS_24)
         # Add Rounds to t3
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
@@ -5687,22 +5781,22 @@ class GameTests(TestCase):
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11',
-                                  started_at=r11.start,
-                                  the_round=r11,
+                                  started_at=cls.r11.start,
+                                  the_round=cls.r11,
                                   the_set=cls.set1)
         g12 = Game.objects.create(name='g12',
-                                  started_at=r11.start,
-                                  the_round=r11,
+                                  started_at=cls.r11.start,
+                                  the_round=cls.r11,
                                   the_set=cls.set1)
         # Add Games to r12
         g13 = Game.objects.create(name='g13',
-                                  started_at=r12.start,
-                                  the_round=r12,
+                                  started_at=cls.r12.start,
+                                  the_round=cls.r12,
                                   is_finished=True,
                                   the_set=cls.set1)
         g14 = Game.objects.create(name='g14',
-                                  started_at=r12.start,
-                                  the_round=r12,
+                                  started_at=cls.r12.start,
+                                  the_round=cls.r12,
                                   the_set=cls.set1)
         # Add Games to r31
         Game.objects.create(name='g31',
@@ -5803,22 +5897,22 @@ class GameTests(TestCase):
         GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia)
         GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey)
         # And the corresponding RoundPlayers
-        RoundPlayer.objects.create(player=cls.p1, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r11)
-        RoundPlayer.objects.create(player=cls.p1, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r12)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r12)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p2, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r11)
+        RoundPlayer.objects.create(player=cls.p1, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p2, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p4, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p6, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r12)
+        RoundPlayer.objects.create(player=cls.p8, the_round=cls.r12)
         # And TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=t1,
@@ -6728,6 +6822,54 @@ class GameTests(TestCase):
     def test_game_clean_non_unique_name_2(self):
         g1 = Game.objects.first()
         g1.clean()
+
+    def test_game_clean_pool_in_round_without_pools(self):
+        """Game.pool must be None if Game.the_round.pool_set is empty"""
+        self.assertFalse(self.r11.pool_set.exists())
+        g = self.r11.game_set.first()
+        self.assertIsNone(g.pool)
+        pool = Pool.objects.create(the_round=self.r12,
+                                   name="Fixed",
+                                   board_count=1)
+        g.pool = pool
+        # Should not be able to set pool non-None
+        with self.assertRaises(ValidationError):
+            g.full_clean()
+        # Cleanup
+        pool.delete()
+
+    def test_game_clean_pool_in_round_with_pools(self):
+        """
+        Game.pool must not be None if Game.the_round.pool_set exists.
+
+        In that case, it must be set to a member of that set.
+        """
+        self.assertFalse(self.r11.pool_set.exists())
+        self.assertFalse(self.r12.pool_set.exists())
+        g = self.r11.game_set.first()
+        self.assertIsNone(g.pool)
+        pool1 = Pool.objects.create(the_round=self.r11,
+                                    name="Fixed",
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r12,
+                                    name="Fixed",
+                                    board_count=1)
+        # Pool from correct round should be allowed
+        g.pool = pool1
+        g.full_clean()
+        # Pool from wrong round should be rejected
+        g.pool = pool2
+        with self.assertRaises(ValidationError):
+            g.full_clean()
+        # No pool should also be rejected
+        g.pool = None
+        with self.assertRaises(ValidationError):
+            g.full_clean()
+        # Cleanup
+        pool1.delete()
+        pool2.delete()
+        g.pool = None
+        g.save()
 
     # Game.save()
     def test_game_save_new_game(self):
@@ -8028,12 +8170,46 @@ class RoundPlayerTests(TestCase):
         self.assertEqual(rp.gameplayers().count(), 2)
 
     # RoundPlayer.clean()
-    def test_roundplayer_clean(self):
+    def test_roundplayer_clean_no_tp(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         p = Player.objects.first()
+        self.assertFalse(t.tournamentplayer_set.filter(player=p).exists())
         rp = RoundPlayer(player=p, the_round=r)
         self.assertRaises(ValidationError, rp.clean)
+
+    def test_roundplayer_clean_no_pool_in_pool_round(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        rp = r.roundplayer_set.first()
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        with self.assertRaises(ValidationError):
+            rp.clean()
+        # Cleanup
+        r.pool_set.all().delete()
+
+    def test_roundplayer_clean_pool_in_non_pool_round(self):
+        t = Tournament.objects.get(name='t1')
+        r1 = t.round_numbered(1)
+        r2 = t.round_numbered(2)
+        rp = r2.roundplayer_set.first()
+        pool1 = Pool.objects.create(the_round=r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r1,
+                                    name='Variable')
+        rp.pool = pool1
+        rp.save()
+        with self.assertRaises(ValidationError):
+            rp.clean()
+        # Cleanup
+        rp.pool = None
+        rp.save()
+        r1.pool_set.all().delete()
 
     def test_roundplayer_clean_ok(self):
         tp = TournamentPlayer.objects.first()
