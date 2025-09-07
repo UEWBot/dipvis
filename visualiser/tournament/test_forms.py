@@ -2767,11 +2767,6 @@ class PlayerRoundFormTest(TestCase):
         cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
 
-    def test_form_needs_round_num(self):
-        """Omit round_num constructor parameter"""
-        with self.assertRaises(KeyError):
-            PlayerRoundForm()
-
     def test_success(self):
         """Do everything right"""
         data = {'player': str(self.p1.pk),
@@ -2784,8 +2779,7 @@ class PlayerRoundFormTest(TestCase):
                    'sandboxer': False,
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
-                               initial=initial,
-                               round_num=1)
+                               initial=initial)
         self.assertTrue(form.is_valid())
 
     def test_success2(self):
@@ -2797,19 +2791,18 @@ class PlayerRoundFormTest(TestCase):
                    'sandboxer': False,
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
-                               initial=initial,
-                               round_num=1)
+                               initial=initial)
         self.assertTrue(form.is_valid())
 
     def test_round_fields(self):
         """Check that the correct round fields are created"""
-        form = PlayerRoundForm(round_num=2)
+        form = PlayerRoundForm()
         # We should have five fields - player, present, standby, sandboxer, and rounds_played
         self.assertEqual(len(form.fields), 5)
 
     def test_player_labels(self):
         """Check the player names"""
-        form = PlayerRoundForm(round_num=2)
+        form = PlayerRoundForm()
         the_choices = list(form.fields['player'].choices)
         # We should have one per Player, plus the initial empty choice
         self.assertEqual(len(the_choices), Player.objects.count() + 1)
@@ -2830,7 +2823,7 @@ class PlayerRoundFormTest(TestCase):
                    'standby': True,
                    'sandboxer': True,
                    'rounds_played': 1}
-        form = PlayerRoundForm(round_num=2, data=data, initial=initial)
+        form = PlayerRoundForm(data=data, initial=initial)
         self.assertFalse(form.has_changed())
 
 
@@ -2896,12 +2889,7 @@ class BasePlayerRoundFormsetTest(TestCase):
 
     def test_formset_needs_tournament(self):
         with self.assertRaises(KeyError):
-            self.PlayerRoundFormset(round_num=2)
-
-    def test_formset_needs_round_num(self):
-        """Omit round_num constructor parameter"""
-        with self.assertRaises(KeyError):
-            self.PlayerRoundFormset(tournament=self.t2)
+            self.PlayerRoundFormset()
 
     def test_success(self):
         data = self.data.copy()
@@ -2909,9 +2897,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-0-present'] = 'ok'
         data['form-0-standby'] = 'ok'
         data['form-1-player'] = str(self.p2.pk)
-        ROUND_NUM = 2
         formset = self.PlayerRoundFormset(self.data,
-                                          round_num=ROUND_NUM,
                                           tournament=self.t1)
         self.assertTrue(formset.is_valid())
         for form in formset:
@@ -2925,12 +2911,12 @@ class BasePlayerRoundFormsetTest(TestCase):
 
     def test_no_players(self):
         """Should be fine for a Tournament with no TournamentPlayers"""
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t2, round_num=1)
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t2)
         self.assertTrue(formset.is_valid())
 
     def test_tournament_over(self):
         """Should be fine for a Tournament that is finished"""
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t3, round_num=1)
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t3)
         self.assertTrue(formset.is_valid())
 
     def test_duplicate_players(self):
@@ -2939,7 +2925,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-0-player'] = str(self.p1.pk)
         data['form-0-present'] = 'ok'
         data['form-1-player'] = str(self.p1.pk)
-        formset = self.PlayerRoundFormset(data, tournament=self.t2, round_num=1)
+        formset = self.PlayerRoundFormset(data, tournament=self.t2)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
@@ -2951,7 +2937,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-player'] = str(self.p1.pk)
         data['form-1-player'] = 'Aardvark'
-        formset = self.PlayerRoundFormset(data, tournament=self.t2, round_num=1)
+        formset = self.PlayerRoundFormset(data, tournament=self.t2)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)

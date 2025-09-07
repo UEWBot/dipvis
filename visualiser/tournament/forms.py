@@ -1015,6 +1015,7 @@ class PlayerForm(forms.Form):
 
 class PlayerRoundForm(forms.Form):
     """Form to specify whether a player is available to play a specific round"""
+
     # We want all Players to be available to be chosen,
     # as this provides an easy way to add TournamentPlayers
     player = PlayerChoiceField(queryset=Player.objects.all())
@@ -1026,14 +1027,10 @@ class PlayerRoundForm(forms.Form):
                                        max_value=10,
                                        min_value=0)
 
-    def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
-        self.round_num = kwargs.pop('round_num')
-        super().__init__(*args, **kwargs)
-
 
 class BasePlayerRoundFormset(BaseFormSet):
     """Form to specify which players are playing in a round"""
+
     def clean(self):
         """Checks that no player appears more than once"""
         if any(self.errors):
@@ -1050,17 +1047,9 @@ class BasePlayerRoundFormset(BaseFormSet):
             players.append(player)
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
-        round_num = kwargs.pop('round_num')
         super().__init__(*args, **kwargs)
-        # Cache parameters we'll pass to each form's constructor
-        self.round_num = round_num
-
-    def _construct_form(self, index, **kwargs):
-        # Pass the special args down to the form itself
-        kwargs['round_num'] = self.round_num
-        return super()._construct_form(index, **kwargs)
 
 
 # Round scoring

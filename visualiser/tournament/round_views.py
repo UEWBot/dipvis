@@ -135,7 +135,6 @@ def roll_call(request, tournament_id, round_num):
         player_data.append(current)
     formset = PlayerRoundFormset(request.POST or None,
                                  tournament=t,
-                                 round_num=int(round_num),
                                  initial=player_data)
     if formset.is_valid():
         errors_added = False
