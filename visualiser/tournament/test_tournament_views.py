@@ -1185,7 +1185,7 @@ class TournamentViewTests(TestCase):
             if i == 1:
                 data[f'form-{i}-handicap'] = '0.0'
             else:
-                data[f'form-{i}-handicap'] = '%f' % float(i)
+                data[f'form-{i}-handicap'] = f'{float(i)}'
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
         data['form-INITIAL_FORMS'] = f'{i}'
