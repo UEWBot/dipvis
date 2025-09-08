@@ -5,6 +5,6 @@
 
 {% block content %}
 <h1><a href="{{ game.get_absolute_url }}">{% blocktrans with game=game %}Game {{ game }}</a> SC Graph{% endblocktrans %}</h1>
-<img src="{% url 'graph' game.the_round.tournament.id game.name %}" alt="{% trans "Graph of supply centre count over time"%}">
+<img src="{% url 'graph_img_scs' game.the_round.tournament.id game.name %}" alt="{% trans "Graph of supply centre count over time"%}">
 <p>{% if game.is_finished %}{{ game.result_str }}{% else %}{% trans "Game ongoing" %}{% endif %}</p>
 {% endblock content %}

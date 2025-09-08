@@ -879,7 +879,7 @@ class TournamentViewTests(TestCase):
 
     def test_graph(self):
         """Just the graph itself"""
-        response = self.client.get(reverse('graph',
+        response = self.client.get(reverse('graph_img_score',
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)

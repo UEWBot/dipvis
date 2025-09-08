@@ -5,6 +5,6 @@
 
 {% block content %}
 <h1><a href="{{ tournament.get_absolute_url }}">{% blocktrans with tournament=tournament %}{{ tournament }}</a> Score Graph{% endblocktrans %}</h1>
-<img src="{% url 'graph' tournament.id %}" alt="{% trans "Graph of player scores against round"%}">
+<img src="{% url 'graph_img_score' tournament.id %}" alt="{% trans "Graph of player scores against round"%}">
 <p>{% if not tournament.is_finished %}{% trans "Tournament ongoing" %}{% endif %}</p>
 {% endblock content %}

@@ -85,7 +85,7 @@ game_patterns = [
     path('sc_chart_refresh/', game_views.game_sc_chart,
          {'refresh': True}, name='game_sc_chart_refresh'),
     # This is just the graph image
-    path('graph/', game_views.graph, name='graph'),
+    path('graph/', game_views.graph, name='graph_img_scs'),
     # This is the page showing the graph
     path('sc_graph/', game_views.game_sc_graph, name='game_sc_graph'),
     path('sc_graph_refresh/', game_views.game_sc_graph,
@@ -205,7 +205,7 @@ tournament_patterns = [
     path('team_scores_refresh/', tournament_views.team_scores,
          {'refresh': True}, name='team_scores_refresh'),
     # This is just the graph image
-    path('graph/', tournament_views.graph, name='graph'),
+    path('graph/', tournament_views.graph, name='graph_img_score'),
     # This is the page showing the graph
     path('score_graph/', tournament_views.tournament_score_graph,
          name='tournament_score_graph'),

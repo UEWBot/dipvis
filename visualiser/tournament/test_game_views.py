@@ -1814,7 +1814,7 @@ class GameViewTests(TestCase):
 
     def test_graph(self):
         """This is the actual graph image"""
-        response = self.client.get(reverse('graph',
+        response = self.client.get(reverse('graph_img_scs',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1832,7 +1832,7 @@ class GameViewTests(TestCase):
                                          year=1904,
                                          power=self.austria,
                                          count=0)
-        response = self.client.get(reverse('graph',
+        response = self.client.get(reverse('graph_img_scs',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)

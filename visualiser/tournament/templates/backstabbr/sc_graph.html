@@ -5,5 +5,5 @@
 
 {% block content %}
 <h1>{% blocktrans with game_type=game_type|capfirst %}Backstabbr {{ game_type }} SC Graph{% endblocktrans %}</h1>
-<img src="{% url 'graph' game_type game_number %}" alt="{% trans "Graph of supply centre count over time"%}">
+<img src="{% url 'graph_img_bs' game_type game_number %}" alt="{% trans "Graph of supply centre count over time"%}">
 {% endblock content %}
