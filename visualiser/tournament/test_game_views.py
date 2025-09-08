@@ -550,18 +550,18 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): '1908',
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': '1908',
                 'end-is_finished': 'ok'}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -611,18 +611,18 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): '1908',
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': '1908',
                 'end-is_finished': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -696,17 +696,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '2',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '1908',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '1908',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -769,17 +769,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -812,17 +812,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '1908',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '1908',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -858,17 +858,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -991,9 +991,9 @@ class GameViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         for n, year in enumerate([1907]):
-            data['form-%d-year' % n] = str(year)
+            data[f'form-{n}-year'] = str(year)
             for sc, p in self.default_owners.items():
-                data['form-%d-%s' % (n, sc)] = str(p.id)
+                data[f'form-{n}-{sc}'] = str(p.id)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -1026,14 +1026,14 @@ class GameViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         for n, year in enumerate([1907]):
-            data['form-%d-year' % n] = str(year)
+            data[f'form-{n}-year'] = str(year)
             for sc, p in self.default_owners.items():
-                data['form-%d-%s' % (n, sc)] = str(p.id)
+                data[f'form-{n}-{sc}'] = str(p.id)
         # Include a blank row
         n += 1
-        data['form-%d-year' % n] = ''
+        data[f'form-{n}-year'] = ''
         for sc, p in self.default_owners.items():
-            data['form-%d-%s' % (n, sc)] = ''
+            data[f'form-{n}-{sc}'] = ''
         # Now change the ownership of Trieste
         data['form-0-Trieste'] = str(self.italy.id)
         # And make Greece and Rumania neutral
@@ -1086,9 +1086,9 @@ class GameViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         for n, year in enumerate([1907]):
-            data['form-%d-year' % n] = str(year)
+            data[f'form-{n}-year'] = str(year)
             for sc, p in self.default_owners.items():
-                data['form-%d-%s' % (n, sc)] = ''
+                data[f'form-{n}-{sc}'] = ''
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,

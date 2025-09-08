@@ -1718,23 +1718,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
-        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
-        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
-        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
-        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
-        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
-        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = 'Game2'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
-        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
-        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
-        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
-        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
-        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
-        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertTrue(formset.is_valid())
@@ -1744,23 +1744,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
-        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
-        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
-        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
-        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
-        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
-        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = 'RidiculouslyLongGameName'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
-        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
-        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
-        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
-        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
-        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
-        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertFalse(formset.is_valid())
@@ -1774,23 +1774,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = GAME_NAME
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
-        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
-        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
-        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
-        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
-        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
-        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = GAME_NAME
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
-        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
-        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
-        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
-        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
-        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
-        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertFalse(formset.is_valid())
@@ -1906,7 +1906,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(the_round=self.r1)
         for i in range(0, 2):
             with self.subTest(i=i):
-                name = '%s_%d' % (prefix, i)
+                name = f'{prefix}_{i}'
                 self.assertIn(name, form.fields)
                 the_choices = list(form.fields[name].choices)
                 # We should have one choice per non-standby RoundPlayer, plus the initial empty choice
@@ -1930,7 +1930,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(the_round=self.r1)
         for i in range(0, 4):
             with self.subTest(i=i):
-                name = '%s_%d' % (prefix, i)
+                name = f'{prefix}_{i}'
                 self.assertIn(name, form.fields)
                 the_choices = list(form.fields[name].choices)
                 # We should have one choice per RoundPlayer, plus the initial empty choice
@@ -2081,7 +2081,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(the_round=self.r3)
         for i in range(0, 2):
             with self.subTest(i=i):
-                name = '%s_%d' % (prefix, i)
+                name = f'{prefix}_{i}'
                 self.assertIn(name, form.fields)
                 the_choices = list(form.fields[name].choices)
                 # We should have one choice per standby RoundPlayer, plus the initial empty choice
@@ -2216,7 +2216,7 @@ class SCOwnerFormTest(TestCase):
         for sc in SupplyCentre.objects.all():
             if sc.initial_owner:
                 initial[sc.name] = sc.initial_owner
-                data[sc.name] = str(sc.initial_owner.pk)
+                data[sc.name] = str(sc.initial_owner_id)
         form = SCOwnerForm(data=data, initial=initial)
         self.assertFalse(form.has_changed())
 
@@ -2253,8 +2253,8 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
-            data['form-%d-year' % i] = 1902 + i
+                    data[f'form-{i}-{key}'] = val.pk
+            data[f'form-{i}-year'] = 1902 + i
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
@@ -2265,7 +2265,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data = self.data.copy()
         for key, val in self.row_data.items():
             if val:
-                data['form-0-%s' % key] = val.pk
+                data[f'form-0-{key}'] = val.pk
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
@@ -2280,7 +2280,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data = self.data.copy()
         for key, val in self.row_data.items():
             if val:
-                data['form-0-%s' % key] = val.pk
+                data[f'form-0-{key}'] = val.pk
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         initial = []
@@ -2298,9 +2298,9 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
+                    data[f'form-{i}-{key}'] = val.pk
             # First year will be 1899, which is invalid
-            data['form-%d-year' % i] = 1899 + i
+            data[f'form-{i}-year'] = 1899 + i
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
@@ -2315,8 +2315,8 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
-            data['form-%d-year' % i] = 1902
+                    data[f'form-{i}-{key}'] = val.pk
+            data[f'form-{i}-year'] = 1902
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
@@ -2332,8 +2332,8 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
-            data['form-%d-year' % i] = 1902 + i
+                    data[f'form-{i}-{key}'] = val.pk
+            data[f'form-{i}-year'] = 1902 + i
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
         self.assertFalse(formset.is_valid())
@@ -2558,14 +2558,14 @@ class BaseSCCountFormsetTest(TestCase):
         """Everything is ok"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4 + i
-            data['form-%d-England' % i] = 4 + i
-            data['form-%d-France' % i] = 4 + i
-            data['form-%d-Germany' % i] = 4 + i
-            data['form-%d-Italy' % i] = 4 + i
-            data['form-%d-Russia' % i] = 3 + i
-            data['form-%d-Turkey' % i] = 4 + i
-            data['form-%d-year' % i] = 1902 + i
+            data[f'form-{i}-Austria-Hungary'] = 4 + i
+            data[f'form-{i}-England'] = 4 + i
+            data[f'form-{i}-France'] = 4 + i
+            data[f'form-{i}-Germany'] = 4 + i
+            data[f'form-{i}-Italy'] = 4 + i
+            data[f'form-{i}-Russia'] = 3 + i
+            data[f'form-{i}-Turkey'] = 4 + i
+            data[f'form-{i}-year'] = 1902 + i
         formset = self.SCCountFormset(data)
         self.assertTrue(formset.is_valid())
 
@@ -2603,15 +2603,15 @@ class BaseSCCountFormsetTest(TestCase):
         """Something wrong in one of the forms"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4 + i
-            data['form-%d-England' % i] = 4 + i
-            data['form-%d-France' % i] = 4 + i
-            data['form-%d-Germany' % i] = 4 + i
-            data['form-%d-Italy' % i] = 4 + i
-            data['form-%d-Russia' % i] = 3 + i
+            data[f'form-{i}-Austria-Hungary'] = 4 + i
+            data[f'form-{i}-England'] = 4 + i
+            data[f'form-{i}-France'] = 4 + i
+            data[f'form-{i}-Germany'] = 4 + i
+            data[f'form-{i}-Italy'] = 4 + i
+            data[f'form-{i}-Russia'] = 3 + i
             # Negative SC counts are not allowed
-            data['form-%d-Turkey' % i] = i - 1
-            data['form-%d-year' % i] = 1902 + i
+            data[f'form-{i}-Turkey'] = i - 1
+            data[f'form-{i}-year'] = 1902 + i
         formset = self.SCCountFormset(data)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
@@ -2622,14 +2622,14 @@ class BaseSCCountFormsetTest(TestCase):
         """One year is repeated"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4 + i
-            data['form-%d-England' % i] = 4 + i
-            data['form-%d-France' % i] = 4 + i
-            data['form-%d-Germany' % i] = 4 + i
-            data['form-%d-Italy' % i] = 4 + i
-            data['form-%d-Russia' % i] = 3 + i
-            data['form-%d-Turkey' % i] = 4 + i
-            data['form-%d-year' % i] = 1902
+            data[f'form-{i}-Austria-Hungary'] = 4 + i
+            data[f'form-{i}-England'] = 4 + i
+            data[f'form-{i}-France'] = 4 + i
+            data[f'form-{i}-Germany'] = 4 + i
+            data[f'form-{i}-Italy'] = 4 + i
+            data[f'form-{i}-Russia'] = 3 + i
+            data[f'form-{i}-Turkey'] = 4 + i
+            data[f'form-{i}-year'] = 1902
         formset = self.SCCountFormset(data)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error
@@ -2687,13 +2687,13 @@ class BaseSCCountFormsetTest(TestCase):
         """SupplyCentres become neutral"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4
-            data['form-%d-England' % i] = 4
-            data['form-%d-France' % i] = 4
-            data['form-%d-Germany' % i] = 4
-            data['form-%d-Italy' % i] = 4
-            data['form-%d-Russia' % i] = 3
-            data['form-%d-year' % i] = 1902 + i
+            data[f'form-{i}-Austria-Hungary'] = 4
+            data[f'form-{i}-England'] = 4
+            data[f'form-{i}-France'] = 4
+            data[f'form-{i}-Germany'] = 4
+            data[f'form-{i}-Italy'] = 4
+            data[f'form-{i}-Russia'] = 3
+            data[f'form-{i}-year'] = 1902 + i
         data['form-0-Turkey'] = 5
         data['form-1-Turkey'] = 3
         formset = self.SCCountFormset(data)

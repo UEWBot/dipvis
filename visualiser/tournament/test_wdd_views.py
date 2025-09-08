@@ -269,7 +269,7 @@ class WddViewTests(TestCase):
         # for a power that they actually played
         played = [gp.power for gp in GamePlayer.objects.filter(player=cls.tp8.player)]
         if a2.power not in played:
-            raise AssertionError("%s didn't play %s" % (str(cls.tp8.player), str(a2.power)))
+            raise AssertionError(f"{str(cls.tp8.player)} didn't play {str(a2.power)}")
         cls.tp8.awards.add(a2)
         # CentreCounts and DrawProposals
         # One game ends in a solo

@@ -376,9 +376,9 @@ class TournamentPlayerViewTests(TestCase):
         for tp in self.t1.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
                 if tp.paid:
-                    self.assertContains(response, '%s</a>*' % tp.player.last_name)
+                    self.assertContains(response, f'{tp.player.last_name}</a>*')
                 else:
-                    self.assertNotContains(response, '%s*' % tp.player.last_name)
+                    self.assertNotContains(response, f'{tp.player.last_name}*')
 
     def test_index_editable_prefs(self):
         """A tournament that can be edited, that uses preferences for power assignment"""
@@ -461,7 +461,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(self.t2.round_numbered(1).roundplayer_set.filter(player=self.p2).exists())
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
-        data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
+        data = urlencode({f'unregister_{tp.pk}': 'Unregister player',
                           'form-TOTAL_FORMS': '4',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-INITIAL_FORMS': 0})
@@ -482,7 +482,7 @@ class TournamentPlayerViewTests(TestCase):
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         url = reverse('tournament_players', args=(self.t4.pk,))
-        data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
+        data = urlencode({f'unregister_{tp.pk}': 'Unregister player',
                           'form-TOTAL_FORMS': '4',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-INITIAL_FORMS': 0})
@@ -506,7 +506,7 @@ class TournamentPlayerViewTests(TestCase):
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         url = reverse('tournament_players', args=(self.t4.pk,))
-        data = urlencode({'unregister_%d' % tp.pk: 'Unregister player',
+        data = urlencode({f'unregister_{tp.pk}': 'Unregister player',
                           'form-TOTAL_FORMS': '4',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-INITIAL_FORMS': 0})
@@ -587,7 +587,7 @@ class TournamentPlayerViewTests(TestCase):
         tp = self.t2.tournamentplayer_set.get(player=self.p1)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_players', args=(self.t2.pk,))
-        data = urlencode({'prefs_%d' % tp.pk: 'Send prefs email',
+        data = urlencode({f'prefs_{tp.pk}': 'Send prefs email',
                           'form-TOTAL_FORMS': '4',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-INITIAL_FORMS': 0})
@@ -680,14 +680,14 @@ class TournamentPlayerViewTests(TestCase):
                 tp.save()
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_player_payments', args=(self.t2.pk,))
-        data = {'form-TOTAL_FORMS': '%d' % self.t2.tournamentplayer_set.count(),
+        data = {'form-TOTAL_FORMS': f'{self.t2.tournamentplayer_set.count()}',
                 'form-MIN_NUM_FORMS': '0',
                 'form-MAX_NUM_FORMS': '1000',
-                'form-INITIAL_FORMS': '%d' % self.t2.tournamentplayer_set.count()}
+                'form-INITIAL_FORMS': f'{self.t2.tournamentplayer_set.count()}'}
         # Toggle [1] from paid to unpaid, [2] from unpaid to paid, leave [3] as paid, leave [4] unpaid
         for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
             if i not in [1, 4]:
-                data['form-%d-paid' % i] = 'on'
+                data[f'form-{i}-paid'] = 'on'
         data = urlencode(data)
         response = self.client.post(url,
                                     data,

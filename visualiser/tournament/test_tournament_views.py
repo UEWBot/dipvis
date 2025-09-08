@@ -1030,24 +1030,24 @@ class TournamentViewTests(TestCase):
             old_tp_scores[tp] = tp.score
             rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
             old_rp_scores[rp] = rp.score
-            data['form-%d-tp' % i] = str(tp.pk)
-            data['form-%d-game_scores_1' % i] = '0.0'
+            data[f'form-{i}-tp'] = str(tp.pk)
+            data[f'form-{i}-game_scores_1'] = '0.0'
             if i == 0:
                 # Give a unique value to the first TournamentPlayer
-                data['form-%d-round_1' % i] = '73.5'
-                data['form-%d-overall_score' % i] = '142.8'
+                data[f'form-{i}-round_1'] = '73.5'
+                data[f'form-{i}-overall_score'] = '142.8'
             elif i == 1:
                 # And don't change the second
                 unchanged_rp = rp
-                data['form-%d-round_1' % i] = str(rp.score)
+                data[f'form-{i}-round_1'] = str(rp.score)
                 unchanged_tp = tp
-                data['form-%d-overall_score' % i] = str(tp.score)
+                data[f'form-{i}-overall_score'] = str(tp.score)
             else:
-                data['form-%d-round_1' % i] = '37.5'
-                data['form-%d-overall_score' % i] = '124.8'
+                data[f'form-{i}-round_1'] = '37.5'
+                data[f'form-{i}-overall_score'] = '124.8'
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
         response = self.client.post(reverse('enter_scores', args=(self.t2.pk,)),
                                     data,
@@ -1183,12 +1183,12 @@ class TournamentViewTests(TestCase):
         # Update most handicaps to a different value
         for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
             if i == 1:
-                data['form-%d-handicap' % i] = '0.0'
+                data[f'form-{i}-handicap'] = '0.0'
             else:
-                data['form-%d-handicap' % i] = '%f' % float(i)
+                data[f'form-{i}-handicap'] = '%f' % float(i)
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
         response = self.client.post(reverse('enter_handicaps', args=(self.t2.pk,)),
                                     data,
@@ -1553,10 +1553,10 @@ class TournamentViewTests(TestCase):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
-            data['form-%d-prefs' % i] = 'FART'
+            data[f'form-{i}-prefs'] = 'FART'
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
 
         response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
@@ -1668,7 +1668,7 @@ class TournamentViewTests(TestCase):
         # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         url = reverse('seeder_bias', args=(self.t2.pk,))
-        data = urlencode({'delete_%d' % sb2.pk: 'Remove Bias'})
+        data = urlencode({f'delete_{sb2.pk}': 'Remove Bias'})
         response = self.client.post(url,
                                     data,
                                     secure=True,
@@ -1791,11 +1791,11 @@ class TournamentViewTests(TestCase):
         tp = self.t1.tournamentplayer_set.first()
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, a in enumerate(self.t1.awards.all()):
-            data['form-%d-award' % i] = str(a.id)
-            data['form-%d-players' % i] = [str(tp.id)]
+            data[f'form-{i}-award'] = str(a.id)
+            data[f'form-{i}-players'] = [str(tp.id)]
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data, doseq=True)
         response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
                                     data,

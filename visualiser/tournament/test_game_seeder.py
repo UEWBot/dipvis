@@ -692,7 +692,7 @@ class GameSeederSeedingTest(unittest.TestCase):
             for g in game_set:
                 if p in g:
                     count += 1
-            self.assertEqual(count, 2, "Player %s should be playing 2 games but is actually playing %d" % (p, count))
+            self.assertEqual(count, 2, f'Player {p} should be playing 2 games but is actually playing {count}')
 
     def check_no_games_played(self, seeder):
         for p1 in seeder.games_played_matrix.values():
@@ -740,7 +740,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         """Two rounds of a 49-player tournament"""
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
         for i in range(49):
-            seeder.add_player('%dp' % i)
+            seeder.add_player(f'{i}p')
         r = seeder.seed_games()
         self.check_game_set(r, 49)
         # First round by definition should have a fitness of zero
@@ -871,7 +871,7 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
                 seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                                     seed_method=SeedMethod.EXHAUSTIVE)
                 for i in range(count):
-                    seeder.add_player('%dp' % i)
+                    seeder.add_player(f'{i}p')
                 r = seeder.seed_games()
                 self.check_game_set(r, count)
                 # First round by definition should have a fitness of zero
@@ -888,8 +888,8 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                             seed_method=SeedMethod.EXHAUSTIVE)
         for i in range(13):
-            seeder.add_player('%dp' %i)
-        dup = '%dp' % 2
+            seeder.add_player(f'{i}p')
+        dup = '2p'
         r = seeder.seed_games(players_doubling_up={dup})
         # We should have two valid games, with player <dup> in both
         self.assertEqual(len(r), 2)
@@ -900,7 +900,7 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         # Add those games as played
         for g in r:
             seeder.add_played_game(with_powers(g))
-        dup = '%dp' % 3
+        dup = '3p'
         r = seeder.seed_games(players_doubling_up={dup})
         # We should again have two valid games, again with (different) player <dup> in both
         self.assertEqual(len(r), 2)
@@ -914,5 +914,5 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                             seed_method=SeedMethod.EXHAUSTIVE)
         for i in range(13):
-            seeder.add_player('%dp' %i)
+            seeder.add_player(f'{i}p')
         self.assertRaises(InvalidPlayerCount, seeder.seed_games)

@@ -42,24 +42,24 @@ SANDBOX_3_GAME_NUMBER = 6238301148020736
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
     def test_is_backstabbr_url_true(self):
-        path = 'game/%s' % INVALID_GAME_NUMBER
+        path = f'game/{INVALID_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertTrue(is_backstabbr_url(url))
 
     def test_is_backstabbr_url_false(self):
-        path = 'game/%s' % INVALID_GAME_NUMBER
+        path = f'game/{INVALID_GAME_NUMBER}'
         url = urlunparse(('https', 'google.com', path, '', '', ''))
         self.assertFalse(is_backstabbr_url(url))
 
     def test_backstabbr_game_non_bs_url(self):
         """Not a backstabbr URL."""
-        path = 'game/%s' % INVALID_GAME_NUMBER
+        path = f'game/{INVALID_GAME_NUMBER}'
         url = urlunparse(('https', 'google.com', path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
     def test_backstabbr_game_invalid_game_number(self):
         """Invalid game number (but it is a number)"""
-        path = 'game/%s' % INVALID_GAME_NUMBER
+        path = f'game/{INVALID_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
@@ -107,7 +107,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_solo(self):
         """Solo victory. Also validates URL including name but no trailing slash, and WINTER"""
-        path = 'game/%s' % SOLO_GAME_NAME
+        path = f'game/{SOLO_GAME_NAME}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'KodaHack#1592'),
@@ -139,7 +139,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_3way(self):
         """3-way draw. Also validates URL including turn, and FALL"""
-        path = 'game/%s' % DRAW_3_GAME_NUMBER
+        path = f'game/{DRAW_3_GAME_NUMBER}'
         path_with_turn = path + '/1902/spring'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         url_with_turn = urlunparse(('https', BACKSTABBR_NETLOC, path_with_turn, '', '', ''))
@@ -169,7 +169,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_4way(self):
         """4-way draw. Also validates SPRING and long game name."""
-        path = 'game/%s' % DRAW_4_GAME_NUMBER
+        path = f'game/{DRAW_4_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'sjmauris#7661'),
@@ -197,7 +197,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_5way(self):
         """5-way draw. Also validates trailing / in game URL"""
-        path = 'game/%s' % DRAW_5_GAME_NUMBER
+        path = f'game/{DRAW_5_GAME_NUMBER}'
         path_with_slash = path + '/'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         url_with_slash = urlunparse(('https', BACKSTABBR_NETLOC, path_with_slash, '', '', ''))
@@ -228,7 +228,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_6way(self):
         """6-way draw. Also validates both game name and trailing slash in URL"""
-        path = 'game/%s' % DRAW_6_GAME_NAME
+        path = f'game/{DRAW_6_GAME_NAME}'
         path_with_slash = path + '/'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         url_with_slash = urlunparse(('https', BACKSTABBR_NETLOC, path_with_slash, '', '', ''))
@@ -258,7 +258,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_game_7way(self):
         """7-way draw. Also validates short game name with description."""
-        path = 'game/%s' % DRAW_7_GAME_NUMBER
+        path = f'game/{DRAW_7_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (6, 'Medusa#4960'),
@@ -286,7 +286,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_sandbox(self):
         """Sandbox game"""
-        path = 'sandbox/%s' % SANDBOX_1_GAME_NUMBER
+        path = f'sandbox/{SANDBOX_1_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'Unknown'),
@@ -314,7 +314,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_parentheses(self):
         """Game with parentheses in its name"""
-        path = 'sandbox/%s' % SANDBOX_3_GAME_NUMBER
+        path = f'sandbox/{SANDBOX_3_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         self.assertEqual(g.number, SANDBOX_3_GAME_NUMBER)
@@ -328,7 +328,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_nosuchseason(self):
         """NoSuchSeason exception"""
-        path = 'sandbox/%s' % SANDBOX_2_GAME_NUMBER
+        path = f'sandbox/{SANDBOX_2_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         self.assertRaises(NoSuchSeason, g.turn_details, 'spring', 1902)
@@ -336,7 +336,7 @@ class BackstabbrTests(TestCase):
     @tag('backstabbr')
     def test_backstabbr_turn_details(self):
         """Game.turn_details()"""
-        path = 'game/%s' % DRAW_6_GAME_NUMBER
+        path = f'game/{DRAW_6_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         sc_counts, soloing_power, sc_ownership, position, orders = g.turn_details(FALL, 1912)
@@ -356,7 +356,7 @@ class BackstabbrTests(TestCase):
         """Check that we correctly parse the final year of a game that ended in winter"""
         # When we ask for the current turn, backstabbr will redirect to
         # the default page for the game
-        path = 'game/%s' % WINTER_GAME_NUMBER
+        path = f'game/{WINTER_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         g = Game(url)
         sc_counts, soloing_power, sc_ownership, position, orders = g.turn_details(WINTER, 1907)
