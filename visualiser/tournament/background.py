@@ -127,7 +127,7 @@ class WikipediaCache():
         # Check the current revision and re-read the page if the cache is out-of-date
         if self.revision != self._latest_revision():
             self._read_page()
-        if self.the_soup == None:
+        if self.the_soup is None:
             raise WikipediaNotAccessible
         return self.the_soup
 
