@@ -183,7 +183,7 @@ class HandicapForm(forms.Form):
     handicap = forms.FloatField()
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.tp = kwargs.pop('tp')
         # Overridable default initial value, like ModelForm
         if 'initial' not in kwargs.keys():
@@ -538,7 +538,7 @@ class PowerAssignForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one GreatPower field per RoundPlayer"""
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.game = kwargs.pop('game')
         super().__init__(*args, **kwargs)
 
@@ -585,7 +585,7 @@ class BasePowerAssignFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # This formset only makes sense if the Games already exist and have GamePlayers assigned
         assert self.extra == 0
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
         self.games = self.the_round.game_set.all()
@@ -624,7 +624,7 @@ class GetSevenPlayersForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates the appropriate number of player fields"""
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
 
         present = self.the_round.roundplayer_set.prefetch_related('player')
@@ -1091,7 +1091,7 @@ class PlayerRoundScoreForm(forms.Form):
 class BasePlayerRoundScoreFormset(BaseFormSet):
     """Form to enter round scores for all players"""
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
         # Cache value we'll pass to each form's constructor
@@ -1132,7 +1132,7 @@ class GameImageForm(ModelForm):
         fields = ('game', 'year', 'season', 'phase', 'image')
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
         self.fields['game'].queryset = Game.objects.filter(the_round__tournament=tournament).distinct()

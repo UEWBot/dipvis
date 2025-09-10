@@ -491,7 +491,7 @@ def seed_games(request, tournament_id, round_num):
 # TODO: Name is misleading - also used to modify existing game(s)
 @permission_required('tournament.add_game')
 def create_games(request, tournament_id, round_num, game_name=None):
-    """Provide a form to create the games for a round"""
+    """Form to create games for a round or to modify existing game(s)"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     if game_name is not None:
