@@ -72,7 +72,8 @@ def wdr_tournament_as_json(wdr_tournament_id):
     url = WDR_BASE_URL + f'api/v1/tournaments/{wdr_tournament_id}'
     page = requests.get(url,
                         headers={'User-Agent': settings.USER_AGENT,
-                                 'Accept': 'application/json'},
+                                 'Accept': 'application/json',
+                                 'Accept-Encoding': 'gzip'},
                         timeout=4.0)
     return page.json()
 

@@ -93,7 +93,8 @@ class WikipediaCache():
         url = self.PAGE_URL
         try:
             page = requests.get(url,
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return
@@ -115,7 +116,8 @@ class WikipediaCache():
         url = self.TITLE_URL
         try:
             page = requests.get(url,
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return ''
@@ -223,7 +225,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -271,7 +274,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -309,7 +313,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -368,7 +373,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -440,7 +446,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -538,7 +545,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -612,7 +620,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -645,7 +654,8 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_ranking': 2,
                                         'id_player': self.wdd_id},
-                                headers={'User-Agent': settings.USER_AGENT},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -699,7 +709,8 @@ class WDRBackground():
         try:
             page = requests.get(url,
                                 headers={'User-Agent': settings.USER_AGENT,
-                                         'Accept': 'application/json'},
+                                         'Accept': 'application/json',
+                                         'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDRNotAccessible from e
