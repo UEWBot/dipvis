@@ -1804,10 +1804,11 @@ class GetSevenPlayersFormTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # We need a Tournament, with 4 Rounds, one with an exact multiple of 7 (round 2),
-        # one that needs all standby players plus some to play two boards (round 1),
-        # one that needs all the standby players to play (round 4),
-        # and one that needs a subset of the standby players to play (round 3)
+        # We need a Tournament, with 4 Rounds:
+        # - one that needs all standby players plus some to play two boards (round 1),
+        # - one with an exact multiple of 7 (round 2),
+        # - one that needs a subset of the standby players to play (round 3)
+        # - one that needs all the standby players to play (round 4),
         today = date.today()
         t = Tournament.objects.create(name='t1',
                                       start_date=today,
@@ -1901,7 +1902,7 @@ class GetSevenPlayersFormTest(TestCase):
             GetSevenPlayersForm()
 
     def test_sitters_fields(self):
-        """We should have 2 fields for players sitting out"""
+        """Check fields for players sitting out"""
         prefix='sitter'
         form = GetSevenPlayersForm(the_round=self.r1)
         for i in range(0, 2):
@@ -1923,9 +1924,10 @@ class GetSevenPlayersFormTest(TestCase):
                 self.assertEqual(the_choices[7][1], self.rp1_8.player.sortable_str())
                 self.assertEqual(the_choices[8][1], self.rp1_9.player.sortable_str())
                 self.assertEqual(the_choices[9][1], self.rp1_10.player.sortable_str())
+        self.assertNotIn(f'{prefix}_2', form.fields)
 
     def test_doubles_fields(self):
-        """We should have 4 fields for players playing two games"""
+        """Check fields for players playing two games"""
         prefix='double'
         form = GetSevenPlayersForm(the_round=self.r1)
         for i in range(0, 4):
@@ -1948,6 +1950,7 @@ class GetSevenPlayersFormTest(TestCase):
                 self.assertEqual(the_choices[8][1], self.rp1_8.player.sortable_str())
                 self.assertEqual(the_choices[9][1], self.rp1_9.player.sortable_str())
                 self.assertEqual(the_choices[10][1], self.rp1_10.player.sortable_str())
+        self.assertNotIn(f'{prefix}_4', form.fields)
 
     def test_no_standbys_fields(self):
         """We should have no standby fields if all standby players are needed"""
