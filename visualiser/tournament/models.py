@@ -2070,7 +2070,7 @@ class Round(models.Model):
         Can't be a team round in a tournament without teams.
         """
         if self.is_team_round and not self.tournament.team_size:
-            raise ValidationError(_('Team rounds can only happen in tournaments with teams'))
+            raise ValidationError({'is_team_round': _('Team rounds can only happen in tournaments with teams')})
 
     def save(self, *args, **kwargs):
         """
@@ -2480,7 +2480,7 @@ class Game(models.Model):
         Game names must be unique within the tournament.
         """
         if Game.objects.filter(the_round__tournament=self.the_round.tournament).exclude(pk=self.pk).filter(name=self.name).exists():
-            raise ValidationError(_('Game names must be unique within the tournament'))
+            raise ValidationError({'name': _('Game names must be unique within the tournament')})
 
     def save(self, *args, **kwargs):
         """
@@ -2649,8 +2649,9 @@ class DrawProposal(models.Model):
         # Figure out how many powers are still alive
         survivors = len(self.game.survivors(self.year - 1))
         if self.votes_in_favour and (self.votes_in_favour > survivors):
-            raise ValidationError(_(u'%(voters)d voters exceeds %(survivors)d surviving powers') % {'voters': self.votes_in_favour,
-                                                                                                    'survivors': survivors})
+            raise ValidationError({'votes_in_favour': _(u'%(voters)d voters exceeds %(survivors)d surviving powers')},
+                                  params={'voters': self.votes_in_favour,
+                                          'survivors': survivors})
         # Only one successful draw proposal
         if self.passed or (self.votes_in_favour == survivors):
             try:
@@ -2677,19 +2678,19 @@ class DrawProposal(models.Model):
             for sc in scs:
                 if self.drawing_powers.filter(pk=sc.power.pk).exists():
                     if sc.count == 0:
-                        raise ValidationError(_(u'Dead power %(power)s included in proposal'),
+                        raise ValidationError({'drawing_powers': _(u'Dead power %(power)s included in proposal')},
                                               params={'power': sc.power})
                 else:
                     if dias and sc.count > 0:
-                        raise ValidationError(_(u'Missing alive power %(power)s in DIAS game'),
+                        raise ValidationError({'drawing_powers': _(u'Missing alive power %(power)s in DIAS game')},
                                               params={'power': sc.power})
         # Ensure that either passed or votes_in_favour, as appropriate, are set
         if self.game.the_round.tournament.draw_secrecy == DrawSecrecy.SECRET:
             if self.passed is None:
-                raise ValidationError(_('Passed needs a value'))
+                raise ValidationError({'passed': _('Passed needs a value')})
         elif self.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
             if self.votes_in_favour is None:
-                raise ValidationError(_('Votes_in_favour needs a value'))
+                raise ValidationError({'votes_in_favour': _('Votes_in_favour needs a value')})
         else:
             raise AssertionError(f'Tournament draw secrecy has an unexpected value {self.game.the_round.tournament.draw_secrecy}')
 
@@ -2775,7 +2776,7 @@ class RoundPlayer(models.Model):
         """
         t = self.the_round.tournament
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
-            raise ValidationError(_(u'Player is not yet in the tournament'))
+            raise ValidationError({'player': _(u'Player is not yet in the tournament')})
 
     def delete(self, *args, **kwargs):
         ret = super().delete(*args, **kwargs)
@@ -3072,7 +3073,7 @@ class GamePlayer(models.Model):
         # Player should already be in the tournament
         t = self.game.the_round.tournament
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
-            raise ValidationError(_(u'Player is not yet in the tournament'))
+            raise ValidationError({'player': _(u'Player is not yet in the tournament')})
 
     def __str__(self):
         if self.power:
@@ -3170,7 +3171,7 @@ class CentreCount(models.Model):
         # Is this for a year that is supposed to be played ?
         final_year = self.game.the_round.final_year
         if final_year and self.year > final_year:
-            raise ValidationError(_(u'Games in this round end with %(year)d'),
+            raise ValidationError({'year': _(u'Games in this round end with %(year)d')},
                                   params={'year': final_year})
         # Not possible to more than double your count in one year
         # or to recover from an elimination
@@ -3182,9 +3183,9 @@ class CentreCount(models.Model):
             # We're either missing a year, or this is the first year - let that go
             return
         if (prev.count == 0) and (self.count > 0):
-            raise ValidationError(_(u'SC count for a power cannot increase from zero'))
+            raise ValidationError({'count': _(u'SC count for a power cannot increase from zero')})
         if self.count > 2 * prev.count:
-            raise ValidationError(_(u'SC count for a power cannot more than double in a year'))
+            raise ValidationError({'count': _(u'SC count for a power cannot more than double in a year')})
 
     def __str__(self):
         return f'{self.game} {self.year} {_(self.power.abbreviation)}'

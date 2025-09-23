@@ -437,8 +437,8 @@ def sc_counts(request, tournament_id, game_name):
                                 try:
                                     i.full_clean()
                                 except ValidationError as e:
-                                    #form.add_error(name, e)
-                                    form.add_error(None, e)
+                                    # Associate the error with the appropriate field
+                                    form.add_error(name, e.messages)
                                     raise e
                                 i.save()
 
