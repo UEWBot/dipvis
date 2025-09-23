@@ -5082,15 +5082,16 @@ class RoundTests(TestCase):
                                  scoring_system=s,
                                  dias=False,
                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
-        self.assertRaises(IntegrityError,
-                          Round.objects.create,
-                          tournament=t,
-                          scoring_system=s,
-                          dias=False,
-                          start=r.start)
+        r2 = Round(tournament=t,
+                   scoring_system=s,
+                   dias=False,
+                   start=r.start)
+        with self.assertRaises(IntegrityError):
+            r2.save()
         # Clean up
         # For some reason, this gives an error
-        #t.delete()
+        # django.db.transaction.TransactionManagementError: An error occurred in the current transaction. You can't execute queries until the end of the 'atomic' block.
+        # t.delete()
 
     # Round.scores()
     def test_round_scores_finished(self):

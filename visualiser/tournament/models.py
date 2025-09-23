@@ -447,7 +447,7 @@ class TScoringWDC2025(TournamentScoringSystem):
                             if score < best_dropped_score:
                                 del tied_gps[p]
                         # If we still have a tie, pick a single player at random to make the cut
-                        # TODO supposed to be distnace from home
+                        # TODO supposed to be distance from home
                         p = random.choice(list(tied_gps.keys()))
                         retval.append(p)
                         del tied_gps[p]
