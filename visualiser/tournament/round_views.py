@@ -495,9 +495,10 @@ def create_games(request, tournament_id, round_num, game_name=None):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     if game_name is not None:
+        # Get a QuerySet containing the one game of interest
         games = r.game_set.filter(name=game_name)
-        if not games.exists():
-            raise Http404
+        # Caller should ensure that the game name is valid
+        assert games.exists()
     else:
         # Do any games already exist for the round ?
         games = r.game_set.all()
