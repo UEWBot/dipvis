@@ -304,6 +304,7 @@ def _blank_row_num(queryset, final_year):
     return years_to_go
 
 
+@permission_required('tournament.change_game')
 def change_game(request, tournament_id, game_name):
     """Provide a form to change a single game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
