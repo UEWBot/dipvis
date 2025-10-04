@@ -217,7 +217,7 @@ def team_scores(request,
                     show_page = True
                     break
     elif not t.team_size:
-        raise Http404
+        raise Http404('Not a team tournament')
     if not show_page:
         # Redirect immediately
         return HttpResponseRedirect(reverse(redirect_url_name, args=(tournament_id,)))
@@ -519,7 +519,7 @@ def enter_prefs(request, tournament_id):
     """Provide a form to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if not t.powers_assigned_from_prefs():
-        raise Http404
+        raise Http404('Tournament does not use power preferences')
     PrefsFormset = formset_factory(PrefsForm,
                                    extra=0,
                                    formset=BasePrefsFormset)
@@ -545,7 +545,7 @@ def upload_prefs(request, tournament_id):
     """Upload a CSV file to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if not t.powers_assigned_from_prefs():
-        raise Http404
+        raise Http404('Tournament does not use power preferences')
     if request.method == 'GET':
         return render(request,
                       'tournaments/upload_prefs.html',
@@ -646,7 +646,7 @@ def seeder_bias(request, tournament_id):
                           tournament=t)
     if request.method == 'POST':
         if t.is_finished or not t.editable:
-            raise Http404
+            raise Http404('Tournament is finished or not editable')
         for k in request.POST.keys():
             if k.startswith('delete_'):
                 # Extract the SeederBias pk from the button name
@@ -700,7 +700,7 @@ def enter_handicaps(request, tournament_id):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     # Only valid for Tournaments with handicaps
     if not t.handicaps:
-        raise Http404
+        raise Http404('Tournament does not use handicaps')
     HandicapsFormset = formset_factory(HandicapForm,
                                        extra=0,
                                        formset=BaseHandicapsFormset)
@@ -724,7 +724,7 @@ def teams(request, tournament_id):
     """Show the registered teams"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     if not t.team_size:
-        raise Http404
+        raise Http404('Tournament does not use teams')
     context = {'tournament': t}
     return render(request, 'tournaments/teams.html', context)
 
@@ -735,7 +735,7 @@ def enter_teams(request, tournament_id):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     # Only valid for Tournaments with teams
     if not t.team_size:
-        raise Http404
+        raise Http404('Tournament does not use teams')
     # Calculate a sensible number of teams
     expected_teams = t.tournamentplayer_set.count() // t.team_size
     TeamsFormset = formset_factory(TeamForm,

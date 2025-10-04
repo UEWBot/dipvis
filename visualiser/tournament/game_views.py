@@ -631,7 +631,7 @@ def game_image(request,
     if turn == '':
         # With the URLs as they stand, turn='' only occurs with timelapse=True
         if not timelapse:
-            raise Http404
+            raise Http404('No turn specified for non-timelapse view')
         # No point in refreshing the page if the Game is over
         if g.is_finished and (redirect_url_name == 'current_game_image'):
             timelapse = False
@@ -664,7 +664,7 @@ def game_image(request,
                 next_image_str = i.turn_str()
                 break
     if not this_image:
-        raise Http404
+        raise Http404('Image for specified turn not found')
     context = {'tournament': t, 'image': this_image}
     if timelapse:
         context['refresh'] = True
@@ -775,7 +775,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     elif bg.season == backstabbr.WINTER:
         year = bg.year
     else:
-        raise Http404
+        raise Http404(f'Unrecognised season {bg.season}')
     # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
     _bs_ownerships_to_sco(game, year, bg.sc_ownership)
     if len(bg.sc_ownership):
@@ -804,7 +804,7 @@ def _scrape_webdip(request, tournament, game, webdip_game):
     elif wg.season == webdip.FALL:
         year = wg.year
     else:
-        raise Http404
+        raise Http404(f'Unrecognised season {wg.season}')
     # Add the appropriate CentreCounts
     _sc_counts_to_cc(game, year, wg.sc_counts)
     game.set_is_finished(year)
@@ -843,4 +843,4 @@ def scrape_external_site(request, tournament_id, game_name):
             pass
         else:
             return _scrape_webdip(request, t, g, wg)
-    raise Http404
+    raise Http404('External site is not backstabbr or webdiplomacy')

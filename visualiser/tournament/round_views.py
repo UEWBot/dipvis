@@ -662,7 +662,7 @@ def game_cycle(request, tournament_id, round_num, template, game_name=None):
     r = get_round_or_404(t, round_num)
     games = r.game_set.all()
     if (len(games)) == 0:
-        raise Http404
+        raise Http404('No games in round')
     if game_name:
         # Find the game in the list
         g = None
@@ -672,7 +672,7 @@ def game_cycle(request, tournament_id, round_num, template, game_name=None):
                 g = g1
                 break
         if not g:
-            raise Http404
+            raise Http404('Specified game not found in specified round')
     else:
         g = games.first()
         n = 0

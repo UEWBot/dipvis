@@ -50,7 +50,7 @@ def index(request, tournament_id):
     formset = PlayerFormset(request.POST or None)
     if request.method == 'POST':
         if t.is_finished or not t.editable:
-            raise Http404
+            raise Http404('Cannot POST to uneditable or finished tournament')
         redirect = False
         for k in request.POST.keys():
             # Send preferences email to the specified TournamentPlayer
@@ -155,11 +155,11 @@ def player_prefs(request, tournament_id, uuid):
     t = get_object_or_404(Tournament, pk=tournament_id)
     # But don't allow modification of archived tournaments
     if not t.editable:
-        raise Http404
+        raise Http404('Tournament is not editable')
     # Fail if the last round already has Games (too late)
     r = t.round_set.last()
     if r and r.game_set.exists():
-        raise Http404
+        raise Http404('Games exist in final round')
     # Find the TournamentPlayer in question
     try:
         tp = t.tournamentplayer_set.get(uuid_str=str(uuid))
