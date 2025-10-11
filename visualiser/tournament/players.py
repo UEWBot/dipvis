@@ -487,7 +487,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
     # Boards
     for b in bg.boards():
         # Skip variant boards because they don't factor well into the statistics
-        if b['board_variant'] != 'Standard (7)':
+        if b['board_variant'] not in ['Classic', 'Standard (7)']:
             print('Skipping variant board')
             print(b)
             continue
