@@ -25,7 +25,7 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.game_views import _graph_end_year
 from tournament.models import DrawProposal, Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership

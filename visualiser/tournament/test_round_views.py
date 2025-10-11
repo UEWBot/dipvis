@@ -23,7 +23,7 @@ from django.urls import reverse
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
 from tournament.models import Tournament, TournamentPlayer
 from tournament.models import Round, RoundPlayer, Team

@@ -27,8 +27,8 @@ from django.utils.translation import ngettext
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
-from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.game_scoring import GameState, DotCountUnknown
+from tournament.game_scoring.base import GameState, DotCountUnknown
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 
 
 class InvalidState(Exception):
