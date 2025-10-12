@@ -1,0 +1,244 @@
+# Diplomacy Tournament Visualiser
+# Copyright (C) 2014, 2016-2025 Chris Brand
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from django.test import TestCase
+
+from tournament.diplomacy.models.great_power import GreatPower
+from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring_system_views import SimpleGameState
+from tournament.models import find_game_scoring_system
+
+
+class SouthernSunGameScoringTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # Easy access to all the GreatPowers
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
+
+    def test_g_scoring_southern_sun_no_solo1(self):
+        EXPECT={self.austria: 310, # 30 + 15 * 10 + 130
+                self.england: 250, # 30 + 14 * 10 + 80
+                self.france: 120, # 30 + 4 * 10 + 50
+                self.germany: 70, # 30 + 1 * 10 + 30
+                self.italy: 6,
+                self.russia: 12,
+                self.turkey: 21}
+        sgs = SimpleGameState(sc_counts={self.austria: 15,
+                                         self.england: 14,
+                                         self.france: 4,
+                                         self.germany: 1,
+                                         self.italy: 0,
+                                         self.russia: 0,
+                                         self.turkey: 0},
+                              final_year=1909,
+                              elimination_years={self.italy: 1902,
+                                                 self.russia: 1904,
+                                                 self.turkey: 1907})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_no_solo2(self):
+        EXPECT={self.austria: 280, # 30 + 12 * 10 + 130
+                self.england: 220, # 30 + 11 * 10 + 80
+                self.france: 120, # 30 + 5 * 10 + floor((50 + 30) / 2)
+                self.germany: 120, # 30 + 5 * 10 + floor((50 + 30) / 2)
+                self.italy: 60, # 30 + 1 * 10 + 20
+                self.russia: 9,
+                self.turkey: 18}
+        sgs = SimpleGameState(sc_counts={self.austria: 12,
+                                         self.england: 11,
+                                         self.france: 5,
+                                         self.germany: 5,
+                                         self.italy: 1,
+                                         self.russia: 0,
+                                         self.turkey: 0},
+                              final_year=1909,
+                              elimination_years={self.russia: 1903,
+                                                 self.turkey: 1906})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_no_solo3(self):
+        EXPECT={self.austria: 270, # 30 + 11 * 10 + 130
+                self.england: 210, # 30 + 10 * 10 + 80
+                self.france: 150, # 30 + 7 * 10 + 50
+                self.germany: 90, # 30 + 3 * 10 + 30
+                self.italy: 70, # 30 + 2 * 10 + 20
+                self.russia: 50, # 30 + 1 * 10 + 10
+                self.turkey: 12}
+        sgs = SimpleGameState(sc_counts={self.austria: 11,
+                                         self.england: 10,
+                                         self.france: 7,
+                                         self.germany: 3,
+                                         self.italy: 2,
+                                         self.russia: 1,
+                                         self.turkey: 0},
+                              final_year=1909,
+                              elimination_years={self.turkey: 1904})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_no_solo4(self):
+        EXPECT={self.austria: 260, # 30 + 10 * 10 + 130
+                self.england: 200, # 30 + 9 * 10 + 80
+                self.france: 120, # 30 + 5 * 10 + floor((50 + 30)/2)
+                self.germany: 120, # 30 + 5 * 10 + floor((50 + 30)/2)
+                self.italy: 90, # 30 + 4 * 10 + 20
+                self.russia: 50, # 30 + 1 * 10 + 10
+                self.turkey: 21}
+        sgs = SimpleGameState(sc_counts={self.austria: 10,
+                                         self.england: 9,
+                                         self.france: 5,
+                                         self.germany: 5,
+                                         self.italy: 4,
+                                         self.russia: 1,
+                                         self.turkey: 0},
+                              final_year=1909,
+                              elimination_years={self.turkey: 1907})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_no_solo5(self):
+        EXPECT={self.austria: 240, # 30 + 8 * 10 + 130
+                self.england: 180, # 30 + 7 * 10 + 80
+                self.france: 130, # 30 + 6 * 10 + floor((50 + 30)/2)
+                self.germany: 130, # 30 + 6 * 10 + floor((50 + 30)/2)
+                self.italy: 75, # 30 + 3 * 10 + floor((20 + 10)/2)
+                self.russia: 75, # 30 + 3 * 10 + floor((20 + 10)/2)
+                self.turkey: 50} # 30 + 1 * 10 + 10
+        sgs = SimpleGameState(sc_counts={self.austria: 8,
+                                         self.england: 7,
+                                         self.france: 6,
+                                         self.germany: 6,
+                                         self.italy: 3,
+                                         self.russia: 3,
+                                         self.turkey: 1},
+                              final_year=1909,
+                              elimination_years={})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_no_solo6(self):
+        EXPECT={self.austria: 227, # 30 + 11 * 10 + floor((130 + 80 + 50)/3)
+                self.england: 227, # 30 + 11 * 10 + floor((130 + 80 + 50)/3)
+                self.france: 227, # 30 + 11 * 10 + floor((130 + 80 + 50)/3)
+                self.germany: 70, # 30 + 1 * 10 + 30
+                self.italy: 12,
+                self.russia: 27,
+                self.turkey: 9}
+        sgs = SimpleGameState(sc_counts={self.austria: 11,
+                                         self.england: 11,
+                                         self.france: 11,
+                                         self.germany: 1,
+                                         self.italy: 0,
+                                         self.russia: 0,
+                                         self.turkey: 0},
+                              final_year=1909,
+                              elimination_years={self.italy: 1904,
+                                                 self.russia: 1909,
+                                                 self.turkey: 1903})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_no_solo7(self):
+        EXPECT={self.austria: 305, # 30 + 17 * 10 + floor((130 + 80)/2)
+                self.england: 305, # 30 + 17 * 10 + floor((130 + 80)/2)
+                self.france: 9,
+                self.germany: 18,
+                self.italy: 12,
+                self.russia: 27,
+                self.turkey: 9}
+        sgs = SimpleGameState(sc_counts={self.austria: 17,
+                                         self.england: 17,
+                                         self.france: 0,
+                                         self.germany: 0,
+                                         self.italy: 0,
+                                         self.russia: 0,
+                                         self.turkey: 0},
+                              final_year=1909,
+                              elimination_years={self.france: 1903,
+                                                 self.germany: 1906,
+                                                 self.italy: 1904,
+                                                 self.russia: 1909,
+                                                 self.turkey: 1903})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                self.assertAlmostEqual(s, EXPECT[p])
+        check_score_order(self, scores)
+
+    def test_g_scoring_southern_sun_solo(self):
+        sgs = SimpleGameState(sc_counts={self.austria: 0,
+                                         self.england: 4,
+                                         self.france: 0,
+                                         self.germany: 18,
+                                         self.italy: 0,
+                                         self.russia: 5,
+                                         self.turkey: 7},
+                              final_year=1910,
+                              elimination_years={self.austria: 1904,
+                                                 self.france: 1909,
+                                                 self.italy: 1909})
+        system = find_game_scoring_system('Southern Sun')
+        scores = system.scores(sgs)
+        self.assertEqual(7, len(scores))
+        for p,s in scores.items():
+            with self.subTest(power=p):
+                if sgs.sc_counts[p] == 18:
+                    self.assertEqual(s, 500)
+                else:
+                    self.assertAlmostEqual(s, 0)
+        check_score_order(self, scores)

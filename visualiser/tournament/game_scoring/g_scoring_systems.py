@@ -33,6 +33,7 @@ from tournament.game_scoring.open_mind_the_gap import GScoringOMG
 from tournament.game_scoring.open_tribute import GScoringOpenTribute
 from tournament.game_scoring.ranked_classic import GScoringRankedClassic
 from tournament.game_scoring.solos import GScoringSolos
+from tournament.game_scoring.southern_sun import GScoringSouthernSun
 from tournament.game_scoring.sum_of_squares import GScoringSumOfSquares
 from tournament.game_scoring.tribute import GScoringTribute
 from tournament.game_scoring.whipping import GScoringWhipping
@@ -74,6 +75,7 @@ G_SCORING_SYSTEMS = [
     GScoringRankedClassic(),
     GScoringSolos(),
     GScoringSumOfSquares(),
+    GScoringSouthernSun(),
     GScoringTribute(),
     GScoringOpenTribute(),
     GScoringWhipping(_('Whipping'), 468),
