@@ -350,6 +350,23 @@ class GameScoringTests(TestCase):
     def test_sgs_solo_year_none(self):
         self.assertIsNone(self.three_survivors.solo_year())
 
+    def test_dot_count_for_final_year(self):
+        sc_counts={self.austria: 1,
+                   self.england: 10,
+                   self.france: 0,
+                   self.germany: 2,
+                   self.italy: 10,
+                   self.russia: 10,
+                   self.turkey: 1}
+        sgs = SimpleGameState(sc_counts=sc_counts,
+                              final_year=1907,
+                              elimination_years={self.france: 1906},
+                              draw=[self.italy])
+        for p, c in sc_counts.items():
+            with self.subTest(power=p):
+                # Should not raise DotCountUnknown
+                self.assertEqual(c, sgs.dot_count(p, year=1907))
+
     # Some tests of _adjust_rank_score_lower_special
     def test_adjust_rank_score_lower_special_2_way_ties(self):
         POS_PTS = [70, 60, 50, 40, 30, 20, 10]

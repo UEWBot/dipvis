@@ -120,8 +120,8 @@ class SimpleGameState(GameState):
 
     def dot_count(self, power, year=None):
         """Returns the number of supply centres owned by the specified power."""
-        if year is not None:
-            raise DotCountUnknown
+        if (year is not None) and (year != self.final_year):
+            raise DotCountUnknown(f'{power} in {year}')
         return self.sc_counts[power]
 
     def year_eliminated(self, power):
