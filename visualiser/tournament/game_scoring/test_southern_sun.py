@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring_system_views import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class SouthernSunGameScoringTests(TestCase):
@@ -55,13 +54,7 @@ class SouthernSunGameScoringTests(TestCase):
                               elimination_years={self.italy: 1902,
                                                  self.russia: 1904,
                                                  self.austria: 1907})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_no_solo2(self):
         EXPECT={self.austria: 30 + 12 * 10 + 130,
@@ -81,13 +74,7 @@ class SouthernSunGameScoringTests(TestCase):
                               final_year=1909,
                               elimination_years={self.russia: 1903,
                                                  self.turkey: 1906})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_no_solo3(self):
         EXPECT={self.austria: 30 + 11 * 10 + 130,
@@ -106,13 +93,7 @@ class SouthernSunGameScoringTests(TestCase):
                                          self.turkey: 0},
                               final_year=1909,
                               elimination_years={self.turkey: 1904})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_no_solo4(self):
         EXPECT={self.austria: 30 + 10 * 10 + 130,
@@ -131,13 +112,7 @@ class SouthernSunGameScoringTests(TestCase):
                                          self.turkey: 0},
                               final_year=1909,
                               elimination_years={self.turkey: 1907})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_no_solo5(self):
         EXPECT={self.austria: 30 + 8 * 10 + 130,
@@ -156,13 +131,7 @@ class SouthernSunGameScoringTests(TestCase):
                                          self.turkey: 1},
                               final_year=1909,
                               elimination_years={})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_no_solo6(self):
         EXPECT={self.austria: 30 + 11 * 10 + round((130 + 80 + 50)/3),
@@ -183,13 +152,7 @@ class SouthernSunGameScoringTests(TestCase):
                               elimination_years={self.italy: 1904,
                                                  self.russia: 1909,
                                                  self.turkey: 1903})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_no_solo7(self):
         EXPECT={self.austria: 30 + 17 * 10 + round((130 + 80)/2),
@@ -212,15 +175,16 @@ class SouthernSunGameScoringTests(TestCase):
                                                  self.italy: 1904,
                                                  self.russia: 1909,
                                                  self.turkey: 1903})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                self.assertAlmostEqual(s, EXPECT[p])
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
 
     def test_g_scoring_southern_sun_solo(self):
+        EXPECT={self.austria: 0,
+                self.england: 0,
+                self.france: 0,
+                self.germany: 500,
+                self.italy: 0,
+                self.russia: 0,
+                self.turkey: 0}
         sgs = SimpleGameState(sc_counts={self.austria: 0,
                                          self.england: 4,
                                          self.france: 0,
@@ -232,13 +196,4 @@ class SouthernSunGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1909,
                                                  self.italy: 1909})
-        system = find_game_scoring_system('Southern Sun')
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 18:
-                    self.assertEqual(s, 500)
-                else:
-                    self.assertAlmostEqual(s, 0)
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)

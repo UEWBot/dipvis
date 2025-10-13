@@ -41,6 +41,21 @@ def check_score_order(self, scores):
     self.assertEqual(EXPECT, order)
 
 
+def check_score_for_state(self, state, system_name, expected_scores):
+    """
+    Generic test for a scoring system
+
+    Checks the scores produced by the specified scoring system for the specifed game state.
+    """
+    system = find_game_scoring_system(system_name)
+    scores = system.scores(state)
+    self.assertEqual(7, len(scores))
+    for p,s in scores.items():
+        with self.subTest(power=p):
+            self.assertAlmostEqual(s, expected_scores[p])
+    check_score_order(self, scores)
+
+
 class GameScoringTests(TestCase):
     """
     Tests that aren't specific to one scoring system
