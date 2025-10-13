@@ -37,10 +37,10 @@ class SouthernSunGameScoringTests(TestCase):
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
     def test_g_scoring_southern_sun_no_solo1(self):
-        EXPECT={self.austria: 310, # 30 + 15 * 10 + 130
-                self.england: 250, # 30 + 14 * 10 + 80
-                self.france: 120, # 30 + 4 * 10 + 50
-                self.germany: 70, # 30 + 1 * 10 + 30
+        EXPECT={self.austria: 30 + 15 * 10 + 130,
+                self.england: 30 + 14 * 10 + 80,
+                self.france: 30 + 4 * 10 + 50,
+                self.germany: 30 + 1 * 10 + 30,
                 self.italy: 6,
                 self.russia: 12,
                 self.turkey: 21}
@@ -64,11 +64,11 @@ class SouthernSunGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_southern_sun_no_solo2(self):
-        EXPECT={self.austria: 280, # 30 + 12 * 10 + 130
-                self.england: 220, # 30 + 11 * 10 + 80
-                self.france: 120, # 30 + 5 * 10 + floor((50 + 30) / 2)
-                self.germany: 120, # 30 + 5 * 10 + floor((50 + 30) / 2)
-                self.italy: 60, # 30 + 1 * 10 + 20
+        EXPECT={self.austria: 30 + 12 * 10 + 130,
+                self.england: 30 + 11 * 10 + 80,
+                self.france: 30 + 5 * 10 + round((50 + 30) / 2),
+                self.germany: 30 + 5 * 10 + round((50 + 30) / 2),
+                self.italy: 30 + 1 * 10 + 20,
                 self.russia: 9,
                 self.turkey: 18}
         sgs = SimpleGameState(sc_counts={self.austria: 12,
@@ -90,12 +90,12 @@ class SouthernSunGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_southern_sun_no_solo3(self):
-        EXPECT={self.austria: 270, # 30 + 11 * 10 + 130
-                self.england: 210, # 30 + 10 * 10 + 80
-                self.france: 150, # 30 + 7 * 10 + 50
-                self.germany: 90, # 30 + 3 * 10 + 30
-                self.italy: 70, # 30 + 2 * 10 + 20
-                self.russia: 50, # 30 + 1 * 10 + 10
+        EXPECT={self.austria: 30 + 11 * 10 + 130,
+                self.england: 30 + 10 * 10 + 80,
+                self.france: 30 + 7 * 10 + 50,
+                self.germany: 30 + 3 * 10 + 30,
+                self.italy: 30 + 2 * 10 + 20,
+                self.russia: 30 + 1 * 10 + 10,
                 self.turkey: 12}
         sgs = SimpleGameState(sc_counts={self.austria: 11,
                                          self.england: 10,
@@ -115,12 +115,12 @@ class SouthernSunGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_southern_sun_no_solo4(self):
-        EXPECT={self.austria: 260, # 30 + 10 * 10 + 130
-                self.england: 200, # 30 + 9 * 10 + 80
-                self.france: 120, # 30 + 5 * 10 + floor((50 + 30)/2)
-                self.germany: 120, # 30 + 5 * 10 + floor((50 + 30)/2)
-                self.italy: 90, # 30 + 4 * 10 + 20
-                self.russia: 50, # 30 + 1 * 10 + 10
+        EXPECT={self.austria: 30 + 10 * 10 + 130,
+                self.england: 30 + 9 * 10 + 80,
+                self.france: 30 + 5 * 10 + round((50 + 30)/2),
+                self.germany: 30 + 5 * 10 + round((50 + 30)/2),
+                self.italy: 30 + 4 * 10 + 20,
+                self.russia: 30 + 1 * 10 + 10,
                 self.turkey: 21}
         sgs = SimpleGameState(sc_counts={self.austria: 10,
                                          self.england: 9,
@@ -140,13 +140,13 @@ class SouthernSunGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_southern_sun_no_solo5(self):
-        EXPECT={self.austria: 240, # 30 + 8 * 10 + 130
-                self.england: 180, # 30 + 7 * 10 + 80
-                self.france: 130, # 30 + 6 * 10 + floor((50 + 30)/2)
-                self.germany: 130, # 30 + 6 * 10 + floor((50 + 30)/2)
-                self.italy: 75, # 30 + 3 * 10 + floor((20 + 10)/2)
-                self.russia: 75, # 30 + 3 * 10 + floor((20 + 10)/2)
-                self.turkey: 50} # 30 + 1 * 10 + 10
+        EXPECT={self.austria: 30 + 8 * 10 + 130,
+                self.england: 30 + 7 * 10 + 80,
+                self.france: 30 + 6 * 10 + round((50 + 30)/2),
+                self.germany: 30 + 6 * 10 + round((50 + 30)/2),
+                self.italy: 30 + 3 * 10 + round((20 + 10)/2),
+                self.russia: 30 + 3 * 10 + round((20 + 10)/2),
+                self.turkey: 30 + 1 * 10 + 10}
         sgs = SimpleGameState(sc_counts={self.austria: 8,
                                          self.england: 7,
                                          self.france: 6,
@@ -165,10 +165,10 @@ class SouthernSunGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_southern_sun_no_solo6(self):
-        EXPECT={self.austria: 227, # 30 + 11 * 10 + floor((130 + 80 + 50)/3)
-                self.england: 227, # 30 + 11 * 10 + floor((130 + 80 + 50)/3)
-                self.france: 227, # 30 + 11 * 10 + floor((130 + 80 + 50)/3)
-                self.germany: 70, # 30 + 1 * 10 + 30
+        EXPECT={self.austria: 30 + 11 * 10 + round((130 + 80 + 50)/3),
+                self.england: 30 + 11 * 10 + round((130 + 80 + 50)/3),
+                self.france: 30 + 11 * 10 + round((130 + 80 + 50)/3),
+                self.germany: 30 + 1 * 10 + 30,
                 self.italy: 12,
                 self.russia: 27,
                 self.turkey: 9}
@@ -192,8 +192,8 @@ class SouthernSunGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_southern_sun_no_solo7(self):
-        EXPECT={self.austria: 305, # 30 + 17 * 10 + floor((130 + 80)/2)
-                self.england: 305, # 30 + 17 * 10 + floor((130 + 80)/2)
+        EXPECT={self.austria: 30 + 17 * 10 + round((130 + 80)/2),
+                self.england: 30 + 17 * 10 + round((130 + 80)/2),
                 self.france: 9,
                 self.germany: 18,
                 self.italy: 12,
