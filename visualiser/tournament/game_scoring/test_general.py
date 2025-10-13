@@ -23,7 +23,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.game_scoring.base import InvalidYear
 from tournament.game_scoring.utils import _adjust_rank_score_lower_special
-from tournament.game_scoring_system_views import SimpleGameState
+from tournament.game_scoring.simple_game_state import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Seasons
@@ -331,41 +331,6 @@ class GameScoringTests(TestCase):
         self.assertIn(self.turkey, powers)
         # Clean up
         dp.delete()
-
-    # Some tests of SimpleGameState
-    def test_sgs_concession_is_solo(self):
-        sgs = SimpleGameState(sc_counts={self.austria: 1,
-                                         self.england: 10,
-                                         self.france: 1,
-                                         self.germany: 1,
-                                         self.italy: 10,
-                                         self.russia: 10,
-                                         self.turkey: 1},
-                              final_year=1907,
-                              elimination_years={},
-                              draw=[self.italy])
-        self.assertEqual(sgs.soloer(), self.italy)
-        self.assertEqual(sgs.powers_in_draw(), [self.italy])
-
-    def test_sgs_solo_year_none(self):
-        self.assertIsNone(self.three_survivors.solo_year())
-
-    def test_dot_count_for_final_year(self):
-        sc_counts={self.austria: 1,
-                   self.england: 10,
-                   self.france: 0,
-                   self.germany: 2,
-                   self.italy: 10,
-                   self.russia: 10,
-                   self.turkey: 1}
-        sgs = SimpleGameState(sc_counts=sc_counts,
-                              final_year=1907,
-                              elimination_years={self.france: 1906},
-                              draw=[self.italy])
-        for p, c in sc_counts.items():
-            with self.subTest(power=p):
-                # Should not raise DotCountUnknown
-                self.assertEqual(c, sgs.dot_count(p, year=1907))
 
     # Some tests of _adjust_rank_score_lower_special
     def test_adjust_rank_score_lower_special_2_way_ties(self):

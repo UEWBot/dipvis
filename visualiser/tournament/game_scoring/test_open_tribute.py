@@ -20,7 +20,7 @@ from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.test_general import check_score_order
-from tournament.game_scoring_system_views import SimpleGameState
+from tournament.game_scoring.simple_game_state import SimpleGameState
 from tournament.models import find_game_scoring_system
 
 
