@@ -22,6 +22,7 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.game_scoring.base import InvalidYear
+from tournament.game_scoring.utils import _adjust_rank_score_lower_special
 from tournament.game_scoring_system_views import SimpleGameState
 from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -333,3 +334,38 @@ class GameScoringTests(TestCase):
 
     def test_sgs_solo_year_none(self):
         self.assertIsNone(self.three_survivors.solo_year())
+
+    # Some tests of _adjust_rank_score_lower_special
+    def test_adjust_rank_score_lower_special_2_way_ties(self):
+        POS_PTS = [70, 60, 50, 40, 30, 20, 10]
+        POS_PTS_2_TIED = [30, 20, 10]
+        dots = [(self.austria, 14),
+                (self.england, 8),
+                (self.france, 8),
+                (self.germany, 2),
+                (self.italy, 2),
+                (self.russia, 0),
+                (self.turkey, 0)]
+        # 1st from POS_PTS, then 2 from POS_PTS_2_TIED, rest are beyond the end of POS_PTS_2_TIED
+        EXPECT = [70, 20, 20, 0, 0, 0, 0]
+        result = _adjust_rank_score_lower_special(dots,
+                                                  POS_PTS,
+                                                  POS_PTS_2_TIED)
+        self.assertEqual(result, EXPECT)
+
+    def test_adjust_rank_score_lower_special_short_rank_pts(self):
+        POS_PTS = [70, 60, 50, 40, 30]
+        POS_PTS_2_TIED = [30, 20, 10]
+        dots = [(self.austria, 14),
+                (self.england, 8),
+                (self.france, 7),
+                (self.germany, 2),
+                (self.italy, 1),
+                (self.russia, 1),
+                (self.turkey, 0)]
+        # 1st from POS_PTS, then 2 from POS_PTS_2_TIED, rest are beyond the end of POS_PTS_2_TIED
+        EXPECT = [70, 60, 50, 40, 0, 0, 0]
+        result = _adjust_rank_score_lower_special(dots,
+                                                  POS_PTS,
+                                                  POS_PTS_2_TIED)
+        self.assertEqual(result, EXPECT)

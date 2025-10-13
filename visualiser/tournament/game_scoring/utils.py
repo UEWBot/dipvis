@@ -148,7 +148,10 @@ def _adjust_rank_score_lower_special(centre_counts, rank_points, two_way_rank_po
         i += 1
     # If exactly two players are tied for the rank, use the alternate table
     if i == 2:
-        points = two_way_rank_pts[0]
+        if len(two_way_rank_pts):
+            points = two_way_rank_pts[0]
+        else:
+            points = 0
     # Now give the points to those tied players
     for j in range(0, i):
         if j < len(rank_pts):
