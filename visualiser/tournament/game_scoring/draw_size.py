@@ -19,7 +19,7 @@ This module contains a class that implements the draw size scoring system.
 """
 from django.utils.translation import gettext as _
 
-from tournament.game_scoring.base import GameScoringSystem
+from tournament.game_scoring.game_scoring_system import GameScoringSystem
 
 
 class GScoringDrawSize(GameScoringSystem):

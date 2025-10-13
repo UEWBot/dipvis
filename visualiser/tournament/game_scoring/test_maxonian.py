@@ -18,8 +18,8 @@ from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
-from tournament.game_scoring.base import DotCountUnknown
-from tournament.game_scoring.base import GameState
+from tournament.game_scoring.game_state import DotCountUnknown
+from tournament.game_scoring.game_state import GameState
 from tournament.game_scoring.test_general import check_score_order
 from tournament.models import find_game_scoring_system
 

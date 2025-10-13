@@ -20,7 +20,7 @@ This module contains a class that implements the Manorcon scoring systems.
 from django.utils.translation import gettext as _
 
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
-from tournament.game_scoring.base import GameScoringSystem
+from tournament.game_scoring.game_scoring_system import GameScoringSystem
 
 
 class GScoringManorCon(GameScoringSystem):

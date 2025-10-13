@@ -19,7 +19,7 @@ This module contains a class that implements the Base 3 scoring system.
 """
 from django.utils.translation import gettext as _
 
-from tournament.game_scoring.base import GameScoringSystem
+from tournament.game_scoring.game_scoring_system import GameScoringSystem
 
 
 class GScoringBase3(GameScoringSystem):

@@ -22,7 +22,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
-from tournament.game_scoring.base import GameState, DotCountUnknown
+from tournament.game_scoring.game_state import GameState, DotCountUnknown
 
 
 class InvalidState(Exception):

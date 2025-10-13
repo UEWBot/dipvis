@@ -56,7 +56,7 @@ from tournament.diplomacy.tasks.validate_year import validate_year
 from tournament.diplomacy.tasks.validate_year_including_start import validate_year_including_start
 
 from tournament.email import send_prefs_email
-from tournament.game_scoring.base import GameScoringSystem
+from tournament.game_scoring.game_scoring_system import GameScoringSystem
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.players import Player, add_player_bg
 from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WINS
