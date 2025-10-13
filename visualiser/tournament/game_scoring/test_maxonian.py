@@ -14,54 +14,111 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
-
 from django.test import TestCase
 
-from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
+from tournament.game_scoring.base import DotCountUnknown
+from tournament.game_scoring.base import GameState
 from tournament.game_scoring.test_general import check_score_order
-from tournament.models import Tournament, Round, Game, DrawProposal, CentreCount
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Seasons
 from tournament.models import find_game_scoring_system
-from tournament.tournament_game_state import TournamentGameState
 
-HOURS_24 = timedelta(hours=24)
 
-# TODO: Migrate away from TournamentGameState
-#       SimpleGameState is too simple, unfortunately, but we should be
-#       able to use our own class derived from GameState instead.
+class InvalidState(Exception):
+    """The game state is invalid"""
+    pass
+
+
+class SCChartGameState(GameState):
+    """
+    State of a single Game
+    """
+
+    def __init__(self, powers, sc_counts):
+        """
+        Create a SCChartGameState from a supply centre chart.
+
+        powers should be an iterable representing the Great Powers.
+        sc_counts should be a dict, keyed by year, of dicts, keyed by power, of ints.
+        """
+        # Note that we use a reference to the parameters
+        self.powers = powers
+        self.sc_counts = sc_counts
+        self.final_year = FIRST_YEAR
+        # Minimal sanity-check of the parameter
+        for year, counts in sc_counts.items():
+            if year > self.final_year:
+                self.final_year = year
+            total = sum(counts.values())
+            if total > TOTAL_SCS:
+                raise InvalidState(f'(Total SC count in {year} is {total}')
+
+    def all_powers(self):
+        return self.powers
+
+    def soloer(self):
+        for year, counts in self.sc_counts.items():
+            for power, count in counts.items():
+                if count >= WINNING_SCS:
+                    return power
+        return None
+
+    def survivors(self):
+        counts = self.sc_counts[self.final_year]
+        return [p for p, c in counts.items() if c > 0]
+
+    def powers_in_draw(self):
+        return self.survivors()
+
+    def solo_year(self):
+        counts = self.sc_counts[self.final_year]
+        for power, count in counts.items():
+            if count >= WINNING_SCS:
+                return self.final_year
+        return None
+
+    def num_powers_with(self, centres):
+        counts = self.sc_counts[self.final_year]
+        return len([c for c in counts.values() if c == centres])
+
+    def highest_dot_count(self):
+        counts = self.sc_counts[self.final_year]
+        return max(counts.values())
+
+    def dot_count(self, power, year=None):
+        if year is None:
+            year = self.final_year
+        try:
+            counts = self.sc_counts[year]
+        except KeyError:
+            raise DotCountUnknown(f'{power} for year {year}')
+        return counts[power]
+
+    def year_eliminated(self, power):
+        for year in sorted(self.sc_counts.keys()):
+            if self.sc_counts[year][power] == 0:
+                return year
+        return None
+
+    def elimination_year_list(self):
+        retval = []
+        counts = self.sc_counts[self.final_year]
+        for p in self.powers:
+            if counts[p]:
+                retval.append[None]
+            else:
+                retval.append(self.year_eliminated(p))
+        return retval
+
+    def last_full_year(self):
+        return self.final_year
 
 
 class MaxonianGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
 
     @classmethod
     def setUpTestData(cls):
-        set1 = GameSet.objects.get(name='Avalon Hill')
-
-        s1 = G_SCORING_SYSTEMS[0].name
-
-        today = date.today()
-
-        t1 = Tournament.objects.create(name='t1',
-                                       start_date=today,
-                                       end_date=today + HOURS_24,
-                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=DrawSecrecy.SECRET)
-
-        # Add Rounds to t1
-        r11 = Round.objects.create(tournament=t1,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
-
-        # Add Games to r11
-        g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)
-
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
         cls.england = GreatPower.objects.get(abbreviation='E')
@@ -71,68 +128,64 @@ class MaxonianGameScoringTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
-        # Add CentreCounts to g11
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1901, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1901, count=4)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1901, count=5)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1901, count=4)
+        cls.powers = [cls.austria, cls.england, cls.france, cls.germany, cls.italy, cls.russia, cls.turkey]
 
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1902, count=4)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1902, count=4)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1902, count=4)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1902, count=6)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1902, count=4)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1902, count=6)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1902, count=6)
-
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1904, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1904, count=5)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1904, count=8)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1904, count=4)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1904, count=5)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1904, count=8)
-
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1905, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1905, count=5)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1905, count=3)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1905, count=13)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1905, count=3)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1905, count=4)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1905, count=6)
-
+        cls.year1901 = {cls.austria: 5,
+                        cls.england: 4,
+                        cls.france: 5,
+                        cls.germany: 5,
+                        cls.italy: 4,
+                        cls.russia: 5,
+                        cls.turkey: 4}
+        cls.year1902 = {cls.austria: 4,
+                        cls.england: 4,
+                        cls.france: 4,
+                        cls.germany: 6,
+                        cls.italy: 4,
+                        cls.russia: 6,
+                        cls.turkey: 6}
+        # Missing counts for 1903
+        cls.year1904 = {cls.austria: 0,
+                        cls.england: 5,
+                        cls.france: 4,
+                        cls.germany: 8,
+                        cls.italy: 4,
+                        cls.russia: 5,
+                        cls.turkey: 8}
+        cls.year1905 = {cls.austria: 0,
+                        cls.england: 5,
+                        cls.france: 3,
+                        cls.germany: 13,
+                        cls.italy: 3,
+                        cls.russia: 4,
+                        cls.turkey: 6}
         # Two powers over the bonus threshold
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1906, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1906, count=2)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1906, count=0)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1906, count=17)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1906, count=0)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1906, count=1)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1906, count=14)
-
+        cls.year1906 = {cls.austria: 0,
+                        cls.england: 2,
+                        cls.france: 0,
+                        cls.germany: 17,
+                        cls.italy: 0,
+                        cls.russia: 1,
+                        cls.turkey: 14}
         # Two powers over the bonus threshold
-        CentreCount.objects.create(power=cls.austria, game=g11, year=1907, count=0)
-        CentreCount.objects.create(power=cls.england, game=g11, year=1907, count=1)
-        CentreCount.objects.create(power=cls.france, game=g11, year=1907, count=0)
-        CentreCount.objects.create(power=cls.germany, game=g11, year=1907, count=18)
-        CentreCount.objects.create(power=cls.italy, game=g11, year=1907, count=0)
-        CentreCount.objects.create(power=cls.russia, game=g11, year=1907, count=1)
-        CentreCount.objects.create(power=cls.turkey, game=g11, year=1907, count=14)
+        cls.year1907 = {cls.austria: 0,
+                        cls.england: 1,
+                        cls.france: 0,
+                        cls.germany: 18,
+                        cls.italy: 0,
+                        cls.russia: 1,
+                        cls.turkey: 14}
 
     def test_g_scoring_maxonian_no_solo1(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1904)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902,
+                     1904: self.year1904}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('Maxonian')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
                 if p == self.austria:
                     # 7th
                     self.assertAlmostEqual(s, 1)
@@ -157,16 +210,16 @@ class MaxonianGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_maxonian_no_solo2(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1905)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902,
+                     1904: self.year1904,
+                     1905: self.year1905}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('Maxonian')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
                 if p == self.austria:
                     # 7th
                     self.assertAlmostEqual(s, 1)
@@ -191,16 +244,17 @@ class MaxonianGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_maxonian_no_solo3(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1906)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902,
+                     1904: self.year1904,
+                     1905: self.year1905,
+                     1906: self.year1906}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('Maxonian')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
                 if p == self.austria:
                     # 7th
                     self.assertAlmostEqual(s, 1)
@@ -225,16 +279,17 @@ class MaxonianGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_7eleven_no_solo3(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1906)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902,
+                     1904: self.year1904,
+                     1905: self.year1905,
+                     1906: self.year1906}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('7Eleven')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
                 if p == self.austria:
                     # 7th
                     self.assertAlmostEqual(s, 1)
@@ -259,16 +314,18 @@ class MaxonianGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_maxonian_solo(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1907)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902,
+                     1904: self.year1904,
+                     1905: self.year1905,
+                     1906: self.year1906,
+                     1907: self.year1907}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('Maxonian')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
                 if p == self.austria:
                     # 7th
                     self.assertAlmostEqual(s, 1)
@@ -293,16 +350,14 @@ class MaxonianGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_maxonian_3_equal_top(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1902)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('Maxonian')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
                 if (p == self.austria) or (p == self.france):
                     # Joint 4th
                     self.assertAlmostEqual(s, (4 + 3) / 2)
@@ -318,17 +373,15 @@ class MaxonianGameScoringTests(TestCase):
         check_score_order(self, scores)
 
     def test_g_scoring_maxonian_4_equal_top(self):
-        t = Tournament.objects.get(name='t1')
-        g = t.round_numbered(1).game_set.get(name='g11')
-        scs = g.centrecount_set.filter(year__lte=1901)
-        tgs = TournamentGameState(scs)
+        sc_counts = {1901: self.year1901}
+        tgs = SCChartGameState(self.powers, sc_counts)
         system = find_game_scoring_system('Maxonian')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
             with self.subTest(power=p):
-                sc = scs.filter(power=p).last()
-                if sc.count == 5:
+                count = self.year1901[p]
+                if count == 5:
                     # Joint 1st
                     self.assertAlmostEqual(s, (7 + 6 + 5 + 4) / 4)
                 else:
