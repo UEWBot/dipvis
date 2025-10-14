@@ -17,6 +17,8 @@
 """
 This module contains a class that implements the Southern Sun scoring system.
 """
+from operator import itemgetter
+
 from django.utils.translation import gettext as _
 
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
@@ -68,6 +70,7 @@ class GScoringSouthernSun(GameScoringSystem):
                     retval[p] = 0
         else:
             dots = [(p, state.dot_count(p)) for p in all_powers]
+            dots.sort(key = itemgetter(1), reverse=True)
             # Allow for tied positions
             rank_pts = _adjust_rank_score(dots, self.position_points[:len(state.survivors())])
             for i, (p, c) in enumerate(dots):

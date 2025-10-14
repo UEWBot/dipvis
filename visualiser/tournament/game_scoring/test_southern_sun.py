@@ -37,24 +37,24 @@ class SouthernSunGameScoringTests(TestCase):
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
     def test_g_scoring_southern_sun_no_solo1(self):
-        EXPECT={self.austria: 30 + 15 * 10 + 130,
+        EXPECT={self.austria: 21,
                 self.england: 30 + 14 * 10 + 80,
                 self.france: 30 + 4 * 10 + 50,
                 self.germany: 30 + 1 * 10 + 30,
                 self.italy: 6,
                 self.russia: 12,
-                self.turkey: 21}
-        sgs = SimpleGameState(sc_counts={self.austria: 15,
+                self.turkey: 30 + 15 * 10 + 130}
+        sgs = SimpleGameState(sc_counts={self.austria: 0,
                                          self.england: 14,
                                          self.france: 4,
                                          self.germany: 1,
                                          self.italy: 0,
                                          self.russia: 0,
-                                         self.turkey: 0},
+                                         self.turkey: 15},
                               final_year=1909,
                               elimination_years={self.italy: 1902,
                                                  self.russia: 1904,
-                                                 self.turkey: 1907})
+                                                 self.austria: 1907})
         system = find_game_scoring_system('Southern Sun')
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
