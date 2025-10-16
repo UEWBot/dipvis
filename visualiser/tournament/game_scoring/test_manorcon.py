@@ -23,7 +23,12 @@ from tournament.models import find_game_scoring_system
 
 
 class ManorConGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    # Scoring systems tested
+    MANORCON = 'ManorCon'
+    ORIGINAL_MANORCON = 'Original ManorCon'
+    MANORCON_V2 = 'ManorCon v2'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +51,7 @@ class ManorConGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('ManorCon')
+        system = find_game_scoring_system(self.MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -71,7 +76,7 @@ class ManorConGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('ManorCon')
+        system = find_game_scoring_system(self.MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -102,7 +107,7 @@ class ManorConGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('ManorCon')
+        system = find_game_scoring_system(self.MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -135,7 +140,7 @@ class ManorConGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('ManorCon')
+        system = find_game_scoring_system(self.MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -163,7 +168,7 @@ class ManorConGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Original ManorCon')
+        system = find_game_scoring_system(self.ORIGINAL_MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -188,7 +193,7 @@ class ManorConGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Original ManorCon')
+        system = find_game_scoring_system(self.ORIGINAL_MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -219,7 +224,7 @@ class ManorConGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Original ManorCon')
+        system = find_game_scoring_system(self.ORIGINAL_MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -252,7 +257,7 @@ class ManorConGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Original ManorCon')
+        system = find_game_scoring_system(self.ORIGINAL_MANORCON)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -280,7 +285,7 @@ class ManorConGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('ManorCon v2')
+        system = find_game_scoring_system(self.MANORCON_V2)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -305,7 +310,7 @@ class ManorConGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('ManorCon v2')
+        system = find_game_scoring_system(self.MANORCON_V2)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -336,7 +341,7 @@ class ManorConGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('ManorCon v2')
+        system = find_game_scoring_system(self.MANORCON_V2)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -369,7 +374,7 @@ class ManorConGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('ManorCon v2')
+        system = find_game_scoring_system(self.MANORCON_V2)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

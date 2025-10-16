@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class SolosGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    SOLOS = 'Solo or bust'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +48,7 @@ class SolosGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Solo or bust')
+        system = find_game_scoring_system(self.SOLOS)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for s in scores.values():
@@ -65,7 +67,7 @@ class SolosGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Solo or bust')
+        system = find_game_scoring_system(self.SOLOS)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

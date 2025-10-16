@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class WhippingGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    WHIPPING = 'Whipping'
 
     @classmethod
     def setUpTestData(cls):
@@ -48,7 +50,7 @@ class WhippingGameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Whipping')
+        system = find_game_scoring_system(self.WHIPPING)
         scores = system.scores(example_a)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -82,7 +84,7 @@ class WhippingGameScoringTests(TestCase):
                                                        self.italy: 1906,
                                                        self.turkey: 1905},
                                     draw=None)
-        system = find_game_scoring_system('Whipping')
+        system = find_game_scoring_system(self.WHIPPING)
         scores = system.scores(example_b)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -116,7 +118,7 @@ class WhippingGameScoringTests(TestCase):
                                                        self.italy: 1905,
                                                        self.turkey: 1904},
                                     draw=None)
-        system = find_game_scoring_system('Whipping')
+        system = find_game_scoring_system(self.WHIPPING)
         scores = system.scores(example_c)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -150,7 +152,7 @@ class WhippingGameScoringTests(TestCase):
                                                        self.italy: 1907,
                                                        self.russia: 1906},
                                     draw=None)
-        system = find_game_scoring_system('Whipping')
+        system = find_game_scoring_system(self.WHIPPING)
         scores = system.scores(example_d)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

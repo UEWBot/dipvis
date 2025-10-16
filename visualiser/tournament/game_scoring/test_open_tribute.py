@@ -25,7 +25,9 @@ from tournament.models import find_game_scoring_system
 
 
 class OpenTributeGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    OPEN_TRIBUTE = 'OpenTribute'
 
     @classmethod
     def setUpTestData(cls):
@@ -48,7 +50,7 @@ class OpenTributeGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('OpenTribute')
+        system = find_game_scoring_system(self.OPEN_TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -70,7 +72,7 @@ class OpenTributeGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('OpenTribute')
+        system = find_game_scoring_system(self.OPEN_TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -95,7 +97,7 @@ class OpenTributeGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('OpenTribute')
+        system = find_game_scoring_system(self.OPEN_TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -129,7 +131,7 @@ class OpenTributeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('OpenTribute')
+        system = find_game_scoring_system(self.OPEN_TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -159,7 +161,7 @@ class OpenTributeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('OpenTribute')
+        system = find_game_scoring_system(self.OPEN_TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

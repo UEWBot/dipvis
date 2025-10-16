@@ -24,7 +24,13 @@ from tournament.models import find_game_scoring_system
 
 
 class CarnageGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    # Scoring systems tested
+    CARNAGE_DEAD_EQUAL = 'Carnage with dead equal'
+    CARNAGE_ELIM_ORDER = 'Carnage with elimination order'
+    CARNAGE_2023 = 'Carnage 2023'
+    CENTER_COUNT_CARNAGE = 'Center-count Carnage'
 
     @classmethod
     def setUpTestData(cls):
@@ -48,7 +54,7 @@ class CarnageGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Carnage with dead equal')
+        system = find_game_scoring_system(self.CARNAGE_DEAD_EQUAL)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -73,7 +79,7 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Carnage with dead equal')
+        system = find_game_scoring_system(self.CARNAGE_DEAD_EQUAL)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -96,7 +102,7 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Carnage with dead equal')
+        system = find_game_scoring_system(self.CARNAGE_DEAD_EQUAL)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
@@ -124,7 +130,7 @@ class CarnageGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Carnage with elimination order')
+        system = find_game_scoring_system(self.CARNAGE_ELIM_ORDER)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -148,7 +154,7 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Carnage with elimination order')
+        system = find_game_scoring_system(self.CARNAGE_ELIM_ORDER)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -171,7 +177,7 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Carnage with elimination order')
+        system = find_game_scoring_system(self.CARNAGE_ELIM_ORDER)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -202,7 +208,7 @@ class CarnageGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Carnage 2023')
+        system = find_game_scoring_system(self.CARNAGE_2023)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -227,7 +233,7 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Carnage 2023')
+        system = find_game_scoring_system(self.CARNAGE_2023)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -251,7 +257,7 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Carnage 2023')
+        system = find_game_scoring_system(self.CARNAGE_2023)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -285,7 +291,7 @@ class CarnageGameScoringTests(TestCase):
                                     final_year=1908,
                                     elimination_years={self.turkey: 1904},
                                     draw=None)
-        system = find_game_scoring_system('Center-count Carnage')
+        system = find_game_scoring_system(self.CENTER_COUNT_CARNAGE)
         scores = system.scores(example_1)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -319,7 +325,7 @@ class CarnageGameScoringTests(TestCase):
                                     elimination_years={self.russia: 1905,
                                                        self.turkey: 1904},
                                     draw=None)
-        system = find_game_scoring_system('Center-count Carnage')
+        system = find_game_scoring_system(self.CENTER_COUNT_CARNAGE)
         scores = system.scores(example_2)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

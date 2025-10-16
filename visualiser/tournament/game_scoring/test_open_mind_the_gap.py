@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class OMGGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    OMG = 'OMG'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +48,7 @@ class OMGGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('OMG')
+        system = find_game_scoring_system(self.OMG)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -68,7 +70,7 @@ class OMGGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('OMG')
+        system = find_game_scoring_system(self.OMG)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -93,7 +95,7 @@ class OMGGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('OMG')
+        system = find_game_scoring_system(self.OMG)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -124,7 +126,7 @@ class OMGGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('OMG')
+        system = find_game_scoring_system(self.OMG)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -151,7 +153,7 @@ class OMGGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('OMG')
+        system = find_game_scoring_system(self.OMG)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

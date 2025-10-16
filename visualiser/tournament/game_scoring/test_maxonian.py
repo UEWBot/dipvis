@@ -25,6 +25,10 @@ from tournament.models import find_game_scoring_system
 class MaxonianGameScoringTests(TestCase):
     fixtures = ['game_sets.json']
 
+    # Scoring systems tested
+    MAXONIAN = 'Maxonian'
+    SEVEN_ELEVEN = '7Eleven'
+
     @classmethod
     def setUpTestData(cls):
         # Easy access to all the GreatPowers
@@ -89,7 +93,7 @@ class MaxonianGameScoringTests(TestCase):
                      1902: self.year1902,
                      1904: self.year1904}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('Maxonian')
+        system = find_game_scoring_system(self.MAXONIAN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -123,7 +127,7 @@ class MaxonianGameScoringTests(TestCase):
                      1904: self.year1904,
                      1905: self.year1905}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('Maxonian')
+        system = find_game_scoring_system(self.MAXONIAN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -158,7 +162,7 @@ class MaxonianGameScoringTests(TestCase):
                      1905: self.year1905,
                      1906: self.year1906}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('Maxonian')
+        system = find_game_scoring_system(self.MAXONIAN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -193,7 +197,7 @@ class MaxonianGameScoringTests(TestCase):
                      1905: self.year1905,
                      1906: self.year1906}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('7Eleven')
+        system = find_game_scoring_system(self.SEVEN_ELEVEN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -229,7 +233,7 @@ class MaxonianGameScoringTests(TestCase):
                      1906: self.year1906,
                      1907: self.year1907}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('Maxonian')
+        system = find_game_scoring_system(self.MAXONIAN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -261,7 +265,7 @@ class MaxonianGameScoringTests(TestCase):
         sc_counts = {1901: self.year1901,
                      1902: self.year1902}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('Maxonian')
+        system = find_game_scoring_system(self.MAXONIAN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -283,7 +287,7 @@ class MaxonianGameScoringTests(TestCase):
     def test_g_scoring_maxonian_4_equal_top(self):
         sc_counts = {1901: self.year1901}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system('Maxonian')
+        system = find_game_scoring_system(self.MAXONIAN)
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

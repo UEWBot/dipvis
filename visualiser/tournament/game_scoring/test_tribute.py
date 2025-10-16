@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class TributeGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    TRIBUTE = 'Tribute'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +48,7 @@ class TributeGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Tribute')
+        system = find_game_scoring_system(self.TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -70,7 +72,7 @@ class TributeGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Tribute')
+        system = find_game_scoring_system(self.TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -97,7 +99,7 @@ class TributeGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Tribute')
+        system = find_game_scoring_system(self.TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -130,7 +132,7 @@ class TributeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Tribute')
+        system = find_game_scoring_system(self.TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -159,7 +161,7 @@ class TributeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Tribute')
+        system = find_game_scoring_system(self.TRIBUTE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class DrawSizeGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    DRAW_SIZE = 'Draw size'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +48,7 @@ class DrawSizeGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Draw size')
+        system = find_game_scoring_system(self.DRAW_SIZE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for s in scores.values():
@@ -71,7 +73,7 @@ class DrawSizeGameScoringTests(TestCase):
                                     self.italy,
                                     self.russia,
                                     self.turkey})
-        system = find_game_scoring_system('Draw size')
+        system = find_game_scoring_system(self.DRAW_SIZE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for s in scores.values():
@@ -93,7 +95,7 @@ class DrawSizeGameScoringTests(TestCase):
                                     self.england,
                                     self.germany,
                                     self.russia})
-        system = find_game_scoring_system('Draw size')
+        system = find_game_scoring_system(self.DRAW_SIZE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p in GreatPower.objects.all():
@@ -116,7 +118,7 @@ class DrawSizeGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Draw size')
+        system = find_game_scoring_system(self.DRAW_SIZE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p in GreatPower.objects.all():
@@ -139,7 +141,7 @@ class DrawSizeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('Draw size')
+        system = find_game_scoring_system(self.DRAW_SIZE)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

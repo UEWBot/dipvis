@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class HaightGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    HAIGHT = 'Haight v1.0'
 
     @classmethod
     def setUpTestData(cls):
@@ -48,7 +50,7 @@ class HaightGameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Haight v1.0')
+        system = find_game_scoring_system(self.HAIGHT)
         scores = system.scores(example_a)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -83,7 +85,7 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Haight v1.0')
+        system = find_game_scoring_system(self.HAIGHT)
         scores = system.scores(example_b)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -118,7 +120,7 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Haight v1.0')
+        system = find_game_scoring_system(self.HAIGHT)
         scores = system.scores(example_c)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -154,7 +156,7 @@ class HaightGameScoringTests(TestCase):
                                                        self.russia: 1907,
                                                        self.turkey: 1907},
                                     draw=None)
-        system = find_game_scoring_system('Haight v1.0')
+        system = find_game_scoring_system(self.HAIGHT)
         scores = system.scores(example_d)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -189,7 +191,7 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Haight v1.0')
+        system = find_game_scoring_system(self.HAIGHT)
         scores = system.scores(example_e)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -224,7 +226,7 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Haight v1.0')
+        system = find_game_scoring_system(self.HAIGHT)
         scores = system.scores(example_f)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

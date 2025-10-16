@@ -25,6 +25,8 @@ from tournament.models import find_game_scoring_system
 class RankedClassicGameScoringTests(TestCase):
     fixtures = ['game_sets.json']
 
+    RANKED_CLASSIC = 'Ranked Classic'
+
     @classmethod
     def setUpTestData(cls):
         # Easy access to all the GreatPowers
@@ -48,7 +50,7 @@ class RankedClassicGameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Ranked Classic')
+        system = find_game_scoring_system(self.RANKED_CLASSIC)
         scores = system.scores(example_a)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -83,7 +85,7 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Ranked Classic')
+        system = find_game_scoring_system(self.RANKED_CLASSIC)
         scores = system.scores(example_b)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -118,7 +120,7 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Ranked Classic')
+        system = find_game_scoring_system(self.RANKED_CLASSIC)
         scores = system.scores(example_c)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -154,7 +156,7 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.russia: 1907,
                                                        self.turkey: 1907},
                                     draw=None)
-        system = find_game_scoring_system('Ranked Classic')
+        system = find_game_scoring_system(self.RANKED_CLASSIC)
         scores = system.scores(example_d)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -189,7 +191,7 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Ranked Classic')
+        system = find_game_scoring_system(self.RANKED_CLASSIC)
         scores = system.scores(example_e)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -224,7 +226,7 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system('Ranked Classic')
+        system = find_game_scoring_system(self.RANKED_CLASSIC)
         scores = system.scores(example_f)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

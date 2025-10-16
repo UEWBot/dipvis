@@ -23,7 +23,11 @@ from tournament.models import find_game_scoring_system
 
 
 class CDiploGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    # Scoring systems tested
+    C_DIPLO_100 = 'CDiplo 100'
+    C_DIPLO_80 = 'CDiplo 80'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +50,7 @@ class CDiploGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('CDiplo 100')
+        system = find_game_scoring_system(self.C_DIPLO_100)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -71,7 +75,7 @@ class CDiploGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('CDiplo 100')
+        system = find_game_scoring_system(self.C_DIPLO_100)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -92,7 +96,7 @@ class CDiploGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('CDiplo 80')
+        system = find_game_scoring_system(self.C_DIPLO_80)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -117,7 +121,7 @@ class CDiploGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system('CDiplo 80')
+        system = find_game_scoring_system(self.C_DIPLO_80)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():

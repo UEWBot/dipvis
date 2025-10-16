@@ -22,7 +22,9 @@ from tournament.game_scoring.simple_game_state import SimpleGameState
 
 
 class SouthernSunGameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    SOUTHERN_SUN = 'Southern Sun'
 
     @classmethod
     def setUpTestData(cls):
@@ -54,7 +56,7 @@ class SouthernSunGameScoringTests(TestCase):
                               elimination_years={self.italy: 1902,
                                                  self.russia: 1904,
                                                  self.austria: 1907})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_no_solo2(self):
         EXPECT={self.austria: 30 + 12 * 10 + 130,
@@ -74,7 +76,7 @@ class SouthernSunGameScoringTests(TestCase):
                               final_year=1909,
                               elimination_years={self.russia: 1903,
                                                  self.turkey: 1906})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_no_solo3(self):
         EXPECT={self.austria: 30 + 11 * 10 + 130,
@@ -93,7 +95,7 @@ class SouthernSunGameScoringTests(TestCase):
                                          self.turkey: 0},
                               final_year=1909,
                               elimination_years={self.turkey: 1904})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_no_solo4(self):
         EXPECT={self.austria: 30 + 10 * 10 + 130,
@@ -112,7 +114,7 @@ class SouthernSunGameScoringTests(TestCase):
                                          self.turkey: 0},
                               final_year=1909,
                               elimination_years={self.turkey: 1907})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_no_solo5(self):
         EXPECT={self.austria: 30 + 8 * 10 + 130,
@@ -131,7 +133,7 @@ class SouthernSunGameScoringTests(TestCase):
                                          self.turkey: 1},
                               final_year=1909,
                               elimination_years={})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_no_solo6(self):
         EXPECT={self.austria: 30 + 11 * 10 + round((130 + 80 + 50)/3),
@@ -152,7 +154,7 @@ class SouthernSunGameScoringTests(TestCase):
                               elimination_years={self.italy: 1904,
                                                  self.russia: 1909,
                                                  self.turkey: 1903})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_no_solo7(self):
         EXPECT={self.austria: 30 + 17 * 10 + round((130 + 80)/2),
@@ -175,7 +177,7 @@ class SouthernSunGameScoringTests(TestCase):
                                                  self.italy: 1904,
                                                  self.russia: 1909,
                                                  self.turkey: 1903})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)
 
     def test_g_scoring_southern_sun_solo(self):
         EXPECT={self.austria: 0,
@@ -196,4 +198,4 @@ class SouthernSunGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1909,
                                                  self.italy: 1909})
-        check_score_for_state(self, sgs, 'Southern Sun', EXPECT)
+        check_score_for_state(self, sgs, self.SOUTHERN_SUN, EXPECT)

@@ -23,7 +23,9 @@ from tournament.models import find_game_scoring_system
 
 
 class Detour09GameScoringTests(TestCase):
-    fixtures = ['game_sets.json', 'players.json']
+    fixtures = ['game_sets.json']
+
+    DETOUR_09 = 'Detour09'
 
     @classmethod
     def setUpTestData(cls):
@@ -46,7 +48,7 @@ class Detour09GameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -74,7 +76,7 @@ class Detour09GameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -110,7 +112,7 @@ class Detour09GameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1909,
                                                  self.italy: 1909})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -146,7 +148,7 @@ class Detour09GameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1909,
                                                  self.italy: 1909})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -171,7 +173,7 @@ class Detour09GameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1902,
                               elimination_years={})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -195,7 +197,7 @@ class Detour09GameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -219,7 +221,7 @@ class Detour09GameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1907,
                               elimination_years={})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
@@ -260,7 +262,7 @@ class Detour09GameScoringTests(TestCase):
                                          self.turkey: 7},
                               final_year=1907,
                               elimination_years={})
-        system = find_game_scoring_system('Detour09')
+        system = find_game_scoring_system(self.DETOUR_09)
         scores = system.scores(sgs)
         self.assertEqual(7, len(scores))
         for p,s in scores.items():
