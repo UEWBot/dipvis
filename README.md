@@ -1,7 +1,7 @@
 # Diplomacy Tournament Visualiser
 
 Inspired by the TV coverage for sports events, Dipvis was originally designed to
-provide something analagous for Diplomacy tournaments. The goal of Dipvis is to
+provide something analogous for Diplomacy tournaments. The goal of Dipvis is to
 allow spectators (and players) to follow the tournament. However, Dipvis has evolved 
 to be mostly a Tournament Director aid - seeding boards, scoring tournaments,
 etc. The live tracking of scores is also used a lot by players at tournaments.
