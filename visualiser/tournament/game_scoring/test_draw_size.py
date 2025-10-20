@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class DrawSizeGameScoringTests(TestCase):
@@ -48,13 +47,14 @@ class DrawSizeGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.DRAW_SIZE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for s in scores.values():
-            self.assertEqual(s, 100.0/7)
-        self.assertAlmostEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 100.0/7,
+                  self.england: 100.0/7,
+                  self.france: 100.0/7,
+                  self.germany: 100.0/7,
+                  self.italy: 100.0/7,
+                  self.russia: 100.0/7,
+                  self.turkey: 100.0/7}
+        check_score_for_state(self, sgs, self.DRAW_SIZE, EXPECT, 100.0)
 
     def test_g_scoring_draws_7way_draw(self):
         sgs = SimpleGameState(sc_counts={self.austria: 5,
@@ -73,13 +73,14 @@ class DrawSizeGameScoringTests(TestCase):
                                     self.italy,
                                     self.russia,
                                     self.turkey})
-        system = find_game_scoring_system(self.DRAW_SIZE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for s in scores.values():
-            self.assertEqual(s, 100.0/7)
-        self.assertAlmostEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 100.0/7,
+                  self.england: 100.0/7,
+                  self.france: 100.0/7,
+                  self.germany: 100.0/7,
+                  self.italy: 100.0/7,
+                  self.russia: 100.0/7,
+                  self.turkey: 100.0/7}
+        check_score_for_state(self, sgs, self.DRAW_SIZE, EXPECT, 100.0)
 
     def test_g_scoring_draws_4way_draw(self):
         sgs = SimpleGameState(sc_counts={self.austria: 5,
@@ -95,17 +96,14 @@ class DrawSizeGameScoringTests(TestCase):
                                     self.england,
                                     self.germany,
                                     self.russia})
-        system = find_game_scoring_system(self.DRAW_SIZE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p in GreatPower.objects.all():
-            if p in sgs.draw:
-                self.assertEqual(scores[p], 100.0/4)
-            else:
-                self.assertEqual(scores[p], 0.0)
-        # 2 neutrals don't matter
-        self.assertEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 100.0/4,
+                  self.england: 100.0/4,
+                  self.france: 0,
+                  self.germany: 100.0/4,
+                  self.italy: 0,
+                  self.russia: 100.0/4,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.DRAW_SIZE, EXPECT, 100.0)
 
     def test_g_scoring_draws_eliminations(self):
         """No draw, no solo, but with powers eliminated"""
@@ -118,16 +116,14 @@ class DrawSizeGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.DRAW_SIZE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p in GreatPower.objects.all():
-            if p == self.austria:
-                self.assertEqual(scores[p], 0.0)
-            else:
-                self.assertEqual(scores[p], 100.0/6)
-        self.assertAlmostEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 100.0/6,
+                  self.france: 100.0/6,
+                  self.germany: 100.0/6,
+                  self.italy: 100.0/6,
+                  self.russia: 100.0/6,
+                  self.turkey: 100.0/6}
+        check_score_for_state(self, sgs, self.DRAW_SIZE, EXPECT, 100.0)
 
     def test_g_scoring_draws_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -141,13 +137,11 @@ class DrawSizeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.DRAW_SIZE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 100,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.DRAW_SIZE, EXPECT, 100.0)

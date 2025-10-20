@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class OMGGameScoringTests(TestCase):
@@ -48,17 +47,14 @@ class OMGGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.OMG)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-                if sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, (4 * 1.5) + 9 + 0)
-                else:
-                    self.assertEqual(s, (5 * 1.5) + 9 + (4.5 + 3 + 1.5) / 4)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: (5 * 1.5) + 9 + (4.5 + 3 + 1.5) / 4,
+                  self.england: (4 * 1.5) + 9 + 0,
+                  self.france: (5 * 1.5) + 9 + (4.5 + 3 + 1.5) / 4,
+                  self.germany: (5 * 1.5) + 9 + (4.5 + 3 + 1.5) / 4,
+                  self.italy: (4 * 1.5) + 9 + 0,
+                  self.russia: (5 * 1.5) + 9 + (4.5 + 3 + 1.5) / 4,
+                  self.turkey: (4 * 1.5) + 9 + 0}
+        check_score_for_state(self, sgs, self.OMG, EXPECT)
 
     def test_g_scoring_omg_tied_top(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -70,20 +66,14 @@ class OMGGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.OMG)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 0)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, (4 * 1.5) + 9 + 0)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, (5 * 1.5) + 9 + (1.5 + 0) / 2)
-                else:
-                    self.assertEqual(s, (8 * 1.5) + 9 + (4.5 + 3) / 2)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: (5 * 1.5) + 9 + (1.5 + 0) / 2,
+                  self.france: (4 * 1.5) + 9 + 0,
+                  self.germany: (8 * 1.5) + 9 + (4.5 + 3) / 2,
+                  self.italy: (4 * 1.5) + 9 + 0,
+                  self.russia: (5 * 1.5) + 9 + (1.5 + 0) / 2,
+                  self.turkey: (8 * 1.5) + 9 + (4.5 + 3) / 2}
+        check_score_for_state(self, sgs, self.OMG, EXPECT)
 
     def test_g_scoring_omg_no_solo_2(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -95,24 +85,14 @@ class OMGGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.OMG)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 0)
-                elif sgs.sc_counts[p] == 3:
-                    self.assertEqual(s, ((3 * 1.5) + 9 + 0) / 2)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, (4 * 1.5) + 9 + 0 - 7)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, (5 * 1.5) + 9 + 1.5 - 7)
-                elif sgs.sc_counts[p] == 6:
-                    self.assertEqual(s, (6 * 1.5) + 9 + 3 - 7)
-                else:
-                    self.assertEqual(s, (13 * 1.5) + 9 + 4.5 + (7 * 3) + (6.75 * 2))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: (5 * 1.5) + 9 + 1.5 - 7,
+                  self.france: ((3 * 1.5) + 9 + 0) / 2,
+                  self.germany: (13 * 1.5) + 9 + 4.5 + (7 * 3) + (6.75 * 2),
+                  self.italy: ((3 * 1.5) + 9 + 0) / 2,
+                  self.russia: (4 * 1.5) + 9 + 0 - 7,
+                  self.turkey: (6 * 1.5) + 9 + 3 - 7}
+        check_score_for_state(self, sgs, self.OMG, EXPECT)
 
     def test_g_scoring_omg_no_solo_3(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -126,20 +106,14 @@ class OMGGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.OMG)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 0)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, ((5 * 1.5) + 9 + (1.5 + 0) / 2) / 2)
-                elif sgs.sc_counts[p] == 7:
-                    self.assertEqual(s, (7 * 1.5) + 9 + 3 - 10)
-                else:
-                    self.assertEqual(s, (17 * 1.5) + 9 + 4.5 + (10  + 8.625 * 2))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: ((5 * 1.5) + 9 + (1.5 + 0) / 2) / 2,
+                  self.france: 0,
+                  self.germany: (17 * 1.5) + 9 + 4.5 + (10  + 8.625 * 2),
+                  self.italy: 0,
+                  self.russia: ((5 * 1.5) + 9 + (1.5 + 0) / 2) / 2,
+                  self.turkey: (7 * 1.5) + 9 + 3 - 10}
+        check_score_for_state(self, sgs, self.OMG, EXPECT)
 
     def test_g_scoring_omg_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -153,14 +127,11 @@ class OMGGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.OMG)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 18:
-                    self.assertEqual(s, 100)
-                else:
-                    self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 100,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.OMG, EXPECT)

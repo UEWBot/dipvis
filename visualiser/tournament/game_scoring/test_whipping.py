@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class WhippingGameScoringTests(TestCase):
@@ -50,26 +49,14 @@ class WhippingGameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.WHIPPING)
-        scores = system.scores(example_a)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, 4)
-            elif p == self.england:
-                self.assertEqual(s, (120 + 12 + 24))
-            elif p == self.france:
-                self.assertEqual(s, (30 + 12))
-            elif p == self.germany:
-                self.assertEqual(s, (60 + 12))
-            elif p == self.italy:
-                self.assertEqual(s, (90 + 12))
-            elif p == self.russia:
-                self.assertEqual(s, 8)
-            else:
-                # Turkey
-                self.assertEqual(s, (40 + 12))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 120 + 12 + 24,
+                  self.france: 30 + 12,
+                  self.germany: 60 + 12,
+                  self.italy: 90 + 12,
+                  self.russia: 8,
+                  self.turkey: 40 + 12}
+        check_score_for_state(self, example_a, self.WHIPPING, EXPECT)
 
     def test_g_scoring_whipping_example_b(self):
         example_b = SimpleGameState(sc_counts={self.austria: 17,
@@ -84,26 +71,14 @@ class WhippingGameScoringTests(TestCase):
                                                        self.italy: 1906,
                                                        self.turkey: 1905},
                                     draw=None)
-        system = find_game_scoring_system(self.WHIPPING)
-        scores = system.scores(example_b)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, (170 + 15 + 34))
-            elif p == self.england:
-                self.assertEqual(s, 11)
-            elif p == self.france:
-                self.assertEqual(s, (10 + 15))
-            elif p == self.germany:
-                self.assertEqual(s, (120 + 15))
-            elif p == self.italy:
-                self.assertEqual(s, 6)
-            elif p == self.russia:
-                self.assertEqual(s, (40 + 15))
-            else:
-                # Turkey
-                self.assertEqual(s, 5)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 170 + 15 + 34,
+                  self.england: 11,
+                  self.france: 10 + 15,
+                  self.germany: 120 + 15,
+                  self.italy: 6,
+                  self.russia: 40 + 15,
+                  self.turkey: 5}
+        check_score_for_state(self, example_b, self.WHIPPING, EXPECT)
 
     def test_g_scoring_whipping_example_c(self):
         example_c = SimpleGameState(sc_counts={self.austria: 18,
@@ -118,26 +93,14 @@ class WhippingGameScoringTests(TestCase):
                                                        self.italy: 1905,
                                                        self.turkey: 1904},
                                     draw=None)
-        system = find_game_scoring_system(self.WHIPPING)
-        scores = system.scores(example_c)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, (340 + 60 + 68))
-            elif p == self.england:
-                self.assertEqual(s, 11)
-            elif p == self.france:
-                self.assertEqual(s, 11)
-            elif p == self.germany:
-                self.assertEqual(s, 8)
-            elif p == self.italy:
-                self.assertEqual(s, 5)
-            elif p == self.russia:
-                self.assertEqual(s, 11)
-            else:
-                # Turkey
-                self.assertEqual(s, 4)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 340 + 60 + 68,
+                  self.england: 11,
+                  self.france: 11,
+                  self.germany: 8,
+                  self.italy: 5,
+                  self.russia: 11,
+                  self.turkey: 4}
+        check_score_for_state(self, example_c, self.WHIPPING, EXPECT)
 
     def test_g_scoring_whipping_example_d(self):
         example_d = SimpleGameState(sc_counts={self.austria: 4,
@@ -152,23 +115,11 @@ class WhippingGameScoringTests(TestCase):
                                                        self.italy: 1907,
                                                        self.russia: 1906},
                                     draw=None)
-        system = find_game_scoring_system(self.WHIPPING)
-        scores = system.scores(example_d)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, (40 + 15))
-            elif p == self.england:
-                self.assertEqual(s, (110 + 15 + 0))
-            elif p == self.france:
-                self.assertEqual(s, (110 + 15 + 0))
-            elif p == self.germany:
-                self.assertEqual(s, 4)
-            elif p == self.italy:
-                self.assertEqual(s, 7)
-            elif p == self.russia:
-                self.assertEqual(s, 6)
-            else:
-                # Turkey
-                self.assertEqual(s, (80 + 15))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 40 + 15,
+                  self.england: 110 + 15 + 0,
+                  self.france: 110 + 15 + 0,
+                  self.germany: 4,
+                  self.italy: 7,
+                  self.russia: 6,
+                  self.turkey: 80 + 15}
+        check_score_for_state(self, example_d, self.WHIPPING, EXPECT)

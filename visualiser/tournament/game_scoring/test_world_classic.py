@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class WorldClassicGameScoringTests(TestCase):
@@ -50,18 +49,14 @@ class WorldClassicGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.WORLD_CLASSIC)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 3)
-                elif sgs.sc_counts[p] == 8:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p] + 48/2)
-                else:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p])
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 10 * 5,
+                  self.france: 30 + 10 * 4,
+                  self.germany: 30 + 10 * 8 + 48/2,
+                  self.italy: 30 + 10 * 4,
+                  self.russia: 30 + 10 * 5,
+                  self.turkey: 30 + 10 * 8 + 48/2}
+        check_score_for_state(self, sgs, self.WORLD_CLASSIC, EXPECT)
 
     def test_g_scoring_world_classic_no_solo2(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -73,18 +68,14 @@ class WorldClassicGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.WORLD_CLASSIC)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 3)
-                elif sgs.sc_counts[p] == 13:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p] + 48)
-                else:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p])
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 10 * 5,
+                  self.france: 30 + 10 * 3,
+                  self.germany: 30 + 10 * 13 + 48,
+                  self.italy: 30 + 10 * 3,
+                  self.russia: 30 + 10 * 4,
+                  self.turkey: 30 + 10 * 6}
+        check_score_for_state(self, sgs, self.WORLD_CLASSIC, EXPECT)
 
     def test_g_scoring_world_classic_no_solo3(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -98,21 +89,14 @@ class WorldClassicGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.WORLD_CLASSIC)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    if p == self.austria:
-                        self.assertEqual(s, 3)
-                    else:
-                        self.assertEqual(s, 5)
-                elif sgs.sc_counts[p] == 17:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p] + 48)
-                else:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p])
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 10 * 5,
+                  self.france: 5,
+                  self.germany: 30 + 10 * 17 + 48,
+                  self.italy: 5,
+                  self.russia: 30 + 10 * 5,
+                  self.turkey: 30 + 10 * 7}
+        check_score_for_state(self, sgs, self.WORLD_CLASSIC, EXPECT)
 
     def test_g_scoring_world_classic_3way(self):
         sgs = SimpleGameState(sc_counts={self.austria: 4,
@@ -124,16 +108,14 @@ class WorldClassicGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1902,
                               elimination_years={})
-        system = find_game_scoring_system(self.WORLD_CLASSIC)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 6:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p] + 48/3)
-                else:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p])
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 30 + 10 * 4,
+                  self.england: 30 + 10 * 4,
+                  self.france: 30 + 10 * 4,
+                  self.germany: 30 + 10 * 6 + 48/3,
+                  self.italy: 30 + 10 * 4,
+                  self.russia: 30 + 10 * 6 + 48/3,
+                  self.turkey: 30 + 10 * 6 + 48/3}
+        check_score_for_state(self, sgs, self.WORLD_CLASSIC, EXPECT)
 
     def test_g_scoring_summer_classic_3way(self):
         sgs = SimpleGameState(sc_counts={self.austria: 4,
@@ -145,16 +127,14 @@ class WorldClassicGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1902,
                               elimination_years={})
-        system = find_game_scoring_system(self.SUMMER_CLASSIC)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 6:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p])
-                else:
-                    self.assertEqual(s, 30 + 10 * sgs.sc_counts[p])
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 30 + 10 * 4,
+                  self.england: 30 + 10 * 4,
+                  self.france: 30 + 10 * 4,
+                  self.germany: 30 + 10 * 6,
+                  self.italy: 30 + 10 * 4,
+                  self.russia: 30 + 10 * 6,
+                  self.turkey: 30 + 10 * 6}
+        check_score_for_state(self, sgs, self.SUMMER_CLASSIC, EXPECT)
 
     def test_g_scoring_world_classic_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -168,20 +148,11 @@ class WorldClassicGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.WORLD_CLASSIC)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 18:
-                    self.assertEqual(s, 420)
-                else:
-                    if p == self.austria:
-                        self.assertEqual(s, 3)
-                    elif p == self.france:
-                        self.assertEqual(s, 5)
-                    elif p == self.italy:
-                        self.assertEqual(s, 5)
-                    else:
-                        self.assertEqual(s, 6)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 6,
+                  self.france: 5,
+                  self.germany: 420,
+                  self.italy: 5,
+                  self.russia: 6,
+                  self.turkey: 6}
+        check_score_for_state(self, sgs, self.WORLD_CLASSIC, EXPECT)

@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class BangkokGameScoringTests(TestCase):
@@ -48,20 +47,14 @@ class BangkokGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.BANGKOK)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 4:
-                    self.assertAlmostEqual(s, 4 + 0 + 3)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertAlmostEqual(s, 5 + 0 + 3)
-                elif sgs.sc_counts[p] == 8:
-                    self.assertAlmostEqual(s, 8 + 6 + 3)
-                else:
-                    self.assertAlmostEqual(s, 0.9)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0.9,
+                  self.england: 5 + 0 + 3,
+                  self.france: 4 + 0 + 3,
+                  self.germany: 8 + 6 + 3,
+                  self.italy: 4 + 0 + 3,
+                  self.russia: 5 + 0 + 3,
+                  self.turkey: 8 + 6 + 3}
+        check_score_for_state(self, sgs, self.BANGKOK, EXPECT)
 
     def test_g_scoring_bangkok_no_solo2(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -73,24 +66,14 @@ class BangkokGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.BANGKOK)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 3:
-                    self.assertAlmostEqual(s, 3 + 0 + 3)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertAlmostEqual(s, 4 + 0 + 3)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertAlmostEqual(s, 5 + 0 + 3)
-                elif sgs.sc_counts[p] == 6:
-                    self.assertAlmostEqual(s, 6 + 0 + 3)
-                elif sgs.sc_counts[p] == 13:
-                    self.assertAlmostEqual(s, 13 + 12 + 3)
-                else:
-                    self.assertAlmostEqual(s, 0.9)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0.9,
+                  self.england: 5 + 0 + 3,
+                  self.france: 3 + 0 + 3,
+                  self.germany: 13 + 12 + 3,
+                  self.italy: 3 + 0 + 3,
+                  self.russia: 4 + 0 + 3,
+                  self.turkey: 6 + 0 + 3}
+        check_score_for_state(self, sgs, self.BANGKOK, EXPECT)
 
     def test_g_scoring_bangkok_no_solo3(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -104,26 +87,14 @@ class BangkokGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.BANGKOK)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 5:
-                    self.assertAlmostEqual(s, 5 + 0 + 3)
-                elif sgs.sc_counts[p] == 7:
-                    self.assertAlmostEqual(s, 7 + 0 + 3)
-                elif sgs.sc_counts[p] == 17:
-                    self.assertAlmostEqual(s, 17 + 12 + 3)
-                else:
-                    if p == self.austria:
-                        self.assertAlmostEqual(s, 0.9)
-                    elif p == self.france:
-                        self.assertAlmostEqual(s, 1.5)
-                    else:
-                        # Italy
-                        self.assertAlmostEqual(s, 1.5)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0.9,
+                  self.england: 5 + 0 + 3,
+                  self.france: 1.5,
+                  self.germany: 17 + 12 + 3,
+                  self.italy: 1.5,
+                  self.russia: 5 + 0 + 3,
+                  self.turkey: 7 + 0 + 3}
+        check_score_for_state(self, sgs, self.BANGKOK, EXPECT)
 
     def test_g_scoring_bangkok_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -137,13 +108,11 @@ class BangkokGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.BANGKOK)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 18:
-                    self.assertEqual(s, 41)
-                else:
-                    self.assertAlmostEqual(s, 0.5 * sgs.sc_counts[p])
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0.5 * 4,
+                  self.france: 0,
+                  self.germany: 41,
+                  self.italy: 0,
+                  self.russia: 0.5 * 5,
+                  self.turkey: 0.5 * 7}
+        check_score_for_state(self, sgs, self.BANGKOK, EXPECT)

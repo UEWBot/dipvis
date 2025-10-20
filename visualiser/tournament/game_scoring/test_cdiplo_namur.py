@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class CDiploNamurGameScoringTests(TestCase):
@@ -48,22 +47,14 @@ class CDiploNamurGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.C_DIPLO_NAMUR)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 1)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, 1 + 14)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, 1 + 16 + 7/2)
-                elif sgs.sc_counts[p] == 8:
-                    self.assertEqual(s, 1 + 20 + (38 + 14)/2)
-                else:
-                    raise AssertionError(f'Unexpected SC count {sc.count}')
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 1,
+                  self.england: 1 + 16 + 7/2,
+                  self.france: 1 + 14,
+                  self.germany: 1 + 20 + (38 + 14)/2,
+                  self.italy: 1 + 14,
+                  self.russia: 1 + 16 + 7/2,
+                  self.turkey: 1 + 20 + (38 + 14)/2}
+        check_score_for_state(self, sgs, self.C_DIPLO_NAMUR, EXPECT)
 
     def test_g_scoring_cdiplo_namur_no_solo2(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -75,26 +66,14 @@ class CDiploNamurGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.C_DIPLO_NAMUR)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 1)
-                elif sgs.sc_counts[p] == 3:
-                    self.assertEqual(s, 1 + 12)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, 1 + 14)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, 1 + 16 + 7)
-                elif sgs.sc_counts[p] == 6:
-                    self.assertEqual(s, 1 + 18 + 14)
-                elif sgs.sc_counts[p] == 13:
-                    self.assertEqual(s, 1 + (18 + 7) + 38)
-                else:
-                    raise AssertionError(f'Unexpected SC count {sc.count}')
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 1,
+                  self.england: 1 + 16 + 7,
+                  self.france: 1 + 12,
+                  self.germany: 1 + (18 + 7) + 38,
+                  self.italy: 1 + 12,
+                  self.russia: 1 + 14,
+                  self.turkey: 1 + 18 + 14}
+        check_score_for_state(self, sgs, self.C_DIPLO_NAMUR, EXPECT)
 
     def test_g_scoring_cdiplo_namur_no_solo3(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -108,22 +87,14 @@ class CDiploNamurGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.C_DIPLO_NAMUR)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 1)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, 1 + 16 + 7/2)
-                elif sgs.sc_counts[p] == 7:
-                    self.assertEqual(s, 1 + (18 + 1) + 14)
-                elif sgs.sc_counts[p] == 17:
-                    self.assertEqual(s, 1 + (18 + 11) + 38)
-                else:
-                    raise AssertionError(f'Unexpected SC count {sc.count}')
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 1,
+                  self.england: 1 + 16 + 7/2,
+                  self.france: 1,
+                  self.germany: 1 + (18 + 11) + 38,
+                  self.italy: 1,
+                  self.russia: 1 + 16 + 7/2,
+                  self.turkey: 1 + (18 + 1) + 14}
+        check_score_for_state(self, sgs, self.C_DIPLO_NAMUR, EXPECT)
 
     def test_g_scoring_cdiplo_namur_3way(self):
         sgs = SimpleGameState(sc_counts={self.austria: 4,
@@ -135,18 +106,14 @@ class CDiploNamurGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1902,
                               elimination_years={})
-        system = find_game_scoring_system(self.C_DIPLO_NAMUR)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, 1 + 14)
-                elif sgs.sc_counts[p] == 6:
-                    self.assertEqual(s, 1 + 18 + (38 + 14 + 7)/3)
-                else:
-                    raise AssertionError(f'Unexpected SC count {sc.count}')
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 1 + 14,
+                  self.england: 1 + 14,
+                  self.france: 1 + 14,
+                  self.germany: 1 + 18 + (38 + 14 + 7)/3,
+                  self.italy: 1 + 14,
+                  self.russia: 1 + 18 + (38 + 14 + 7)/3,
+                  self.turkey: 1 + 18 + (38 + 14 + 7)/3}
+        check_score_for_state(self, sgs, self.C_DIPLO_NAMUR, EXPECT)
 
     def test_g_scoring_cdiplo_namur_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -160,13 +127,11 @@ class CDiploNamurGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.C_DIPLO_NAMUR)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 18:
-                    self.assertEqual(s, 85)
-                else:
-                    self.assertEqual(s, 0)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 85,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.C_DIPLO_NAMUR, EXPECT)

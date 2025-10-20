@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class SolosGameScoringTests(TestCase):
@@ -48,12 +47,14 @@ class SolosGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.SOLOS)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for s in scores.values():
-            self.assertEqual(s, 0)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 0,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.SOLOS, EXPECT)
 
     def test_g_scoring_solos_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -67,12 +68,11 @@ class SolosGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.SOLOS)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 100,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.SOLOS, EXPECT)

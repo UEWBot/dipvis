@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class SumOfSquaresGameScoringTests(TestCase):
@@ -48,18 +47,14 @@ class SumOfSquaresGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.SUM_OF_SQUARES)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sgs.sc_counts[p] == 4:
-                self.assertEqual(s, 100.0 * 16 / 148)
-            else:
-                self.assertEqual(s, 100.0 * 25 / 148)
-        # Total of all scores should always be very close to 100
-        self.assertAlmostEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 100.0 * 25 / 148,
+                  self.england: 100.0 * 16 / 148,
+                  self.france: 100.0 * 25 / 148,
+                  self.germany: 100.0 * 25 / 148,
+                  self.italy: 100.0 * 16 / 148,
+                  self.russia: 100.0 * 25 / 148,
+                  self.turkey: 100.0 * 16 / 148}
+        check_score_for_state(self, sgs, self.SUM_OF_SQUARES, EXPECT, 100.0)
 
     def test_g_scoring_squares_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -73,13 +68,11 @@ class SumOfSquaresGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.SUM_OF_SQUARES)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 100,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.SUM_OF_SQUARES, EXPECT, 100.0)

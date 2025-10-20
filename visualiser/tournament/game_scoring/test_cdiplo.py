@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class CDiploGameScoringTests(TestCase):
@@ -50,18 +49,15 @@ class CDiploGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.C_DIPLO_100)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sgs.sc_counts[p] == 4:
-                self.assertEqual(s, 1 + 4)
-            else:
-                self.assertEqual(s, 1 + (38 + 14 + 7) / 4 + 5)
+        EXPECT = {self.austria: 1 + (38 + 14 + 7) / 4 + 5,
+                  self.england: 1 + 4,
+                  self.france: 1 + (38 + 14 + 7) / 4 + 5,
+                  self.germany: 1 + (38 + 14 + 7) / 4 + 5,
+                  self.italy: 1 + 4,
+                  self.russia: 1 + (38 + 14 + 7) / 4 + 5,
+                  self.turkey: 1 + 4}
         # With 2 neutrals, the total of all scores should be 100-2=98
-        self.assertEqual(sum(scores.values()), 100 - 2)
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, self.C_DIPLO_100, EXPECT, 100 - 2)
 
     def test_g_scoring_cdiplo_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -75,16 +71,14 @@ class CDiploGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.C_DIPLO_100)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 100)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 100)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 100,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.C_DIPLO_100, EXPECT, 100)
 
     def test_g_scoring_cdiplo80_no_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 5,
@@ -96,18 +90,15 @@ class CDiploGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.C_DIPLO_80)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sgs.sc_counts[p] == 4:
-                self.assertEqual(s, 4)
-            else:
-                self.assertEqual(s, (25 + 14 + 7) / 4 + 5)
+        EXPECT = {self.austria: (25 + 14 + 7) / 4 + 5,
+                  self.england: 4,
+                  self.france: (25 + 14 + 7) / 4 + 5,
+                  self.germany: (25 + 14 + 7) / 4 + 5,
+                  self.italy: 4,
+                  self.russia: (25 + 14 + 7) / 4 + 5,
+                  self.turkey: 4}
         # With 2 neutrals, the total of all scores should be 80-2=78
-        self.assertEqual(sum(scores.values()), 80 - 2)
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, self.C_DIPLO_80, EXPECT, 80 - 2)
 
     def test_g_scoring_cdiplo80_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -121,13 +112,11 @@ class CDiploGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.C_DIPLO_80)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 80)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 80)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 80,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.C_DIPLO_80, EXPECT, 80)

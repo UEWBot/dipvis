@@ -18,8 +18,7 @@ from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.sc_chart_game_state import SCChartGameState
-from tournament.game_scoring.test_general import check_score_order
-from tournament.models import find_game_scoring_system
+from tournament.game_scoring.test_general import check_score_for_state
 
 
 class MaxonianGameScoringTests(TestCase):
@@ -92,68 +91,30 @@ class MaxonianGameScoringTests(TestCase):
         sc_counts = {1901: self.year1901,
                      1902: self.year1902,
                      1904: self.year1904}
+        EXPECT = {self.austria: 1,
+                  self.england: 4,
+                  self.france: 3,
+                  self.germany: 7,
+                  self.italy: 2,
+                  self.russia: 5,
+                  self.turkey: 6}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.MAXONIAN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    # 7th
-                    self.assertAlmostEqual(s, 1)
-                elif p == self.england:
-                    # 4th
-                    self.assertAlmostEqual(s, 4)
-                elif p == self.france:
-                    # 5th
-                    self.assertAlmostEqual(s, 3)
-                elif p == self.germany:
-                    # 1st
-                    self.assertAlmostEqual(s, 7)
-                elif p == self.italy:
-                    # 6th
-                    self.assertAlmostEqual(s, 2)
-                elif p == self.russia:
-                    # 3rd
-                    self.assertAlmostEqual(s, 5)
-                else:
-                    # 2nd
-                    self.assertAlmostEqual(s, 6)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)
 
     def test_g_scoring_maxonian_no_solo2(self):
         sc_counts = {1901: self.year1901,
                      1902: self.year1902,
                      1904: self.year1904,
                      1905: self.year1905}
+        EXPECT = {self.austria: 1,
+                  self.england: 5,
+                  self.france: 3,
+                  self.germany: 7,
+                  self.italy: 2,
+                  self.russia: 4,
+                  self.turkey: 6}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.MAXONIAN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    # 7th
-                    self.assertAlmostEqual(s, 1)
-                elif p == self.england:
-                    # 3rd
-                    self.assertAlmostEqual(s, 5)
-                elif p == self.france:
-                    # 5th
-                    self.assertAlmostEqual(s, 3)
-                elif p == self.germany:
-                    # 1st
-                    self.assertAlmostEqual(s, 7)
-                elif p == self.italy:
-                    # 6th
-                    self.assertAlmostEqual(s, 2)
-                elif p == self.russia:
-                    # 4th
-                    self.assertAlmostEqual(s, 4)
-                else:
-                    # 2nd
-                    self.assertAlmostEqual(s, 6)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)
 
     def test_g_scoring_maxonian_no_solo3(self):
         sc_counts = {1901: self.year1901,
@@ -161,34 +122,15 @@ class MaxonianGameScoringTests(TestCase):
                      1904: self.year1904,
                      1905: self.year1905,
                      1906: self.year1906}
+        EXPECT = {self.austria: 1,
+                  self.england: 5,
+                  self.france: 3,
+                  self.germany: 7+4,
+                  self.italy: 2,
+                  self.russia: 4,
+                  self.turkey: 6+1}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.MAXONIAN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    # 7th
-                    self.assertAlmostEqual(s, 1)
-                elif p == self.england:
-                    # 3rd
-                    self.assertAlmostEqual(s, 5)
-                elif p == self.france:
-                    # 5th
-                    self.assertAlmostEqual(s, 3)
-                elif p == self.germany:
-                    # 1st, 4 over threshold
-                    self.assertAlmostEqual(s, 7+4)
-                elif p == self.italy:
-                    # 6th
-                    self.assertAlmostEqual(s, 2)
-                elif p == self.russia:
-                    # 4th
-                    self.assertAlmostEqual(s, 4)
-                else:
-                    # 2nd, 1 over threshold
-                    self.assertAlmostEqual(s, 6+1)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)
 
     def test_g_scoring_7eleven_no_solo3(self):
         sc_counts = {1901: self.year1901,
@@ -196,34 +138,15 @@ class MaxonianGameScoringTests(TestCase):
                      1904: self.year1904,
                      1905: self.year1905,
                      1906: self.year1906}
+        EXPECT = {self.austria: 1,
+                  self.england: 5,
+                  self.france: 3,
+                  self.germany: 7+6,
+                  self.italy: 2,
+                  self.russia: 4,
+                  self.turkey: 6+3}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.SEVEN_ELEVEN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    # 7th
-                    self.assertAlmostEqual(s, 1)
-                elif p == self.england:
-                    # 3rd
-                    self.assertAlmostEqual(s, 5)
-                elif p == self.france:
-                    # 5th
-                    self.assertAlmostEqual(s, 3)
-                elif p == self.germany:
-                    # 1st, 6 over threshold
-                    self.assertAlmostEqual(s, 7+6)
-                elif p == self.italy:
-                    # 6th
-                    self.assertAlmostEqual(s, 2)
-                elif p == self.russia:
-                    # 4th
-                    self.assertAlmostEqual(s, 4)
-                else:
-                    # 2nd, 3 over threshold
-                    self.assertAlmostEqual(s, 6+3)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.SEVEN_ELEVEN, EXPECT)
 
     def test_g_scoring_maxonian_solo(self):
         sc_counts = {1901: self.year1901,
@@ -232,71 +155,37 @@ class MaxonianGameScoringTests(TestCase):
                      1905: self.year1905,
                      1906: self.year1906,
                      1907: self.year1907}
+        EXPECT = {self.austria: 1,
+                  self.england: 5,
+                  self.france: 3,
+                  self.germany: 7+5,
+                  self.italy: 2,
+                  self.russia: 4,
+                  self.turkey: 6}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.MAXONIAN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    # 7th
-                    self.assertAlmostEqual(s, 1)
-                elif p == self.england:
-                    # 3rd
-                    self.assertAlmostEqual(s, 5)
-                elif p == self.france:
-                    # 5th
-                    self.assertAlmostEqual(s, 3)
-                elif p == self.germany:
-                    # 1st, 5 over threshold
-                    self.assertAlmostEqual(s, 7+5)
-                elif p == self.italy:
-                    # 6th
-                    self.assertAlmostEqual(s, 2)
-                elif p == self.russia:
-                    # 4th
-                    self.assertAlmostEqual(s, 4)
-                else:
-                    # 2nd
-                    self.assertAlmostEqual(s, 6)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)
 
     def test_g_scoring_maxonian_3_equal_top(self):
         sc_counts = {1901: self.year1901,
                      1902: self.year1902}
+        EXPECT = {self.austria: (4 + 3) / 2,
+                  self.england: (2 + 1) / 2,
+                  self.france: (4 + 3) / 2,
+                  self.germany: (7 + 6) / 2,
+                  self.italy: (2 + 1) / 2,
+                  self.russia: (7 + 6) / 2,
+                  self.turkey: 5}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.MAXONIAN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if (p == self.austria) or (p == self.france):
-                    # Joint 4th
-                    self.assertAlmostEqual(s, (4 + 3) / 2)
-                elif (p == self.england) or (p == self.italy):
-                    # Joint 6th
-                    self.assertAlmostEqual(s, (2 + 1) / 2)
-                elif (p == self.germany) or (p == self.russia):
-                    # Joint 1st
-                    self.assertAlmostEqual(s, (7 + 6) / 2)
-                else:
-                    # 3rd
-                    self.assertAlmostEqual(s, 5)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)
 
     def test_g_scoring_maxonian_4_equal_top(self):
         sc_counts = {1901: self.year1901}
+        EXPECT = {self.austria: (7 + 6 + 5 + 4) / 4,
+                  self.england: (3 + 2 + 1) / 3,
+                  self.france: (7 + 6 + 5 + 4) / 4,
+                  self.germany: (7 + 6 + 5 + 4) / 4,
+                  self.italy: (3 + 2 + 1) / 3,
+                  self.russia: (7 + 6 + 5 + 4) / 4,
+                  self.turkey: (3 + 2 + 1) / 3}
         tgs = SCChartGameState(self.powers, sc_counts)
-        system = find_game_scoring_system(self.MAXONIAN)
-        scores = system.scores(tgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                count = self.year1901[p]
-                if count == 5:
-                    # Joint 1st
-                    self.assertAlmostEqual(s, (7 + 6 + 5 + 4) / 4)
-                else:
-                    # Joint 5th
-                    self.assertAlmostEqual(s, (3 + 2 + 1) / 3)
-        check_score_order(self, scores)
+        check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)

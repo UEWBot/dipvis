@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class HaightGameScoringTests(TestCase):
@@ -50,27 +49,14 @@ class HaightGameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.HAIGHT)
-        scores = system.scores(example_a)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 4)
-                elif p == self.england:
-                    self.assertEqual(s, 171)
-                elif p == self.france:
-                    self.assertEqual(s, 145)
-                elif p == self.germany:
-                    self.assertEqual(s, 124)
-                elif p == self.italy:
-                    self.assertEqual(s, 83)
-                elif p == self.russia:
-                    self.assertEqual(s, (8 + 11))
-                else:
-                    # Turkey
-                    self.assertEqual(s, 42)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 171,
+                  self.france: 145,
+                  self.germany: 124,
+                  self.italy: 83,
+                  self.russia: (8 + 11),
+                  self.turkey: 42}
+        check_score_for_state(self, example_a, self.HAIGHT, EXPECT)
 
     def test_g_scoring_haight_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -85,27 +71,14 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.HAIGHT)
-        scores = system.scores(example_b)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 4)
-                elif p == self.england:
-                    self.assertEqual(s, 271)
-                elif p == self.france:
-                    self.assertEqual(s, (8 + 11))
-                elif p == self.germany:
-                    self.assertEqual(s, 155)
-                elif p == self.italy:
-                    self.assertEqual(s, 84)
-                elif p == self.russia:
-                    self.assertEqual(s, (8 + 11))
-                else:
-                    # Turkey
-                    self.assertEqual(s, 63)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 271,
+                  self.france: (8 + 11),
+                  self.germany: 155,
+                  self.italy: 84,
+                  self.russia: (8 + 11),
+                  self.turkey: 63}
+        check_score_for_state(self, example_b, self.HAIGHT, EXPECT)
 
     def test_g_scoring_haight_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -120,27 +93,14 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.HAIGHT)
-        scores = system.scores(example_c)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 4)
-                elif p == self.england:
-                    self.assertEqual(s, 154)
-                elif p == self.france:
-                    self.assertEqual(s, (8 + 11))
-                elif p == self.germany:
-                    self.assertEqual(s, 154)
-                elif p == self.italy:
-                    self.assertEqual(s, 154)
-                elif p == self.russia:
-                    self.assertEqual(s, (8 + 11))
-                else:
-                    # Turkey
-                    self.assertEqual(s, 43)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 154,
+                  self.france: (8 + 11),
+                  self.germany: 154,
+                  self.italy: 154,
+                  self.russia: (8 + 11),
+                  self.turkey: 43}
+        check_score_for_state(self, example_c, self.HAIGHT, EXPECT)
 
     def test_g_scoring_haight_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -156,27 +116,14 @@ class HaightGameScoringTests(TestCase):
                                                        self.russia: 1907,
                                                        self.turkey: 1907},
                                     draw=None)
-        system = find_game_scoring_system(self.HAIGHT)
-        scores = system.scores(example_d)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 4)
-                elif p == self.england:
-                    self.assertEqual(s, 191)
-                elif p == self.france:
-                    self.assertEqual(s, (8 + 33))
-                elif p == self.germany:
-                    self.assertEqual(s, 154)
-                elif p == self.italy:
-                    self.assertEqual(s, 154)
-                elif p == self.russia:
-                    self.assertEqual(s, (7 + 11))
-                else:
-                    # Turkey
-                    self.assertEqual(s, (7 + 11))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 191,
+                  self.france: (8 + 33),
+                  self.germany: 154,
+                  self.italy: 154,
+                  self.russia: (7 + 11),
+                  self.turkey: (7 + 11)}
+        check_score_for_state(self, example_d, self.HAIGHT, EXPECT)
 
     def test_g_scoring_haight_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -191,27 +138,14 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.HAIGHT)
-        scores = system.scores(example_e)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 4)
-                elif p == self.england:
-                    self.assertEqual(s, 196)
-                elif p == self.france:
-                    self.assertEqual(s, (8 + 11))
-                elif p == self.germany:
-                    self.assertEqual(s, 144)
-                elif p == self.italy:
-                    self.assertEqual(s, 144)
-                elif p == self.russia:
-                    self.assertEqual(s, (8 + 11))
-                else:
-                    # Turkey
-                    self.assertEqual(s, 53)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 196,
+                  self.france: (8 + 11),
+                  self.germany: 144,
+                  self.italy: 144,
+                  self.russia: (8 + 11),
+                  self.turkey: 53}
+        check_score_for_state(self, example_e, self.HAIGHT, EXPECT)
 
     def test_g_scoring_haight_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -226,27 +160,14 @@ class HaightGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.HAIGHT)
-        scores = system.scores(example_f)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 4)
-                elif p == self.england:
-                    self.assertEqual(s, 451)
-                elif p == self.france:
-                    self.assertEqual(s, 8)
-                elif p == self.germany:
-                    self.assertEqual(s, 50)
-                elif p == self.italy:
-                    self.assertEqual(s, 20)
-                elif p == self.russia:
-                    self.assertEqual(s, 8)
-                else:
-                    # Turkey
-                    # Note that this differs from the document because the document
-                    # assumes the game end in 1910 or earlier but I want to test the
-                    # "or number of years played, if greater" part
-                    self.assertEqual(s, 11)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 4,
+                  self.england: 451,
+                  self.france: 8,
+                  self.germany: 50,
+                  self.italy: 20,
+                  self.russia: 8,
+                  # Note that this differs from the document because the document
+                  # assumes the game ends in 1910 or earlier but I want to test the
+                  # "or number of years played, if greater" part
+                  self.turkey: 11}
+        check_score_for_state(self, example_f, self.HAIGHT, EXPECT)

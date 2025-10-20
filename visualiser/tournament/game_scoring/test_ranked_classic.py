@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class RankedClassicGameScoringTests(TestCase):
@@ -50,27 +49,14 @@ class RankedClassicGameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.RANKED_CLASSIC)
-        scores = system.scores(example_a)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 3)
-                elif p == self.england:
-                    self.assertEqual(s, 30 + 10 * 10 + 200)
-                elif p == self.france:
-                    self.assertEqual(s, 30 + 9 * 10 + 90)
-                elif p == self.germany:
-                    self.assertEqual(s, 30 + 8 * 10 + 60)
-                elif p == self.italy:
-                    self.assertEqual(s, 30 + 5 * 10 + 40)
-                elif p == self.russia:
-                    self.assertEqual(s, 7)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 30 + 2 * 10 + 30)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 10 * 10 + 200,
+                  self.france: 30 + 9 * 10 + 90,
+                  self.germany: 30 + 8 * 10 + 60,
+                  self.italy: 30 + 5 * 10 + 40,
+                  self.russia: 7,
+                  self.turkey: 30 + 2 * 10 + 30}
+        check_score_for_state(self, example_a, self.RANKED_CLASSIC, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -85,27 +71,14 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.RANKED_CLASSIC)
-        scores = system.scores(example_b)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 3)
-                elif p == self.england:
-                    self.assertEqual(s, 30 + 17 * 10 + 200)
-                elif p == self.france:
-                    self.assertEqual(s, 7)
-                elif p == self.germany:
-                    self.assertEqual(s, 30 + 10 * 10 + 90)
-                elif p == self.italy:
-                    self.assertEqual(s, 30 + 4 * 10 + 60)
-                elif p == self.russia:
-                    self.assertEqual(s, 7)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 30 + 3 * 10 + 40)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 17 * 10 + 200,
+                  self.france: 7,
+                  self.germany: 30 + 10 * 10 + 90,
+                  self.italy: 30 + 4 * 10 + 60,
+                  self.russia: 7,
+                  self.turkey: 30 + 3 * 10 + 40}
+        check_score_for_state(self, example_b, self.RANKED_CLASSIC, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -120,27 +93,14 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.RANKED_CLASSIC)
-        scores = system.scores(example_c)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 3)
-                elif p == self.england:
-                    self.assertEqual(s, 30 + 11 * 10 + 60)
-                elif p == self.france:
-                    self.assertEqual(s, 7)
-                elif p == self.germany:
-                    self.assertEqual(s, 30 + 11 * 10 + 60)
-                elif p == self.italy:
-                    self.assertEqual(s, 30 + 11 * 10 + 60)
-                elif p == self.russia:
-                    self.assertEqual(s, 7)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 30 + 1 * 10 + 40)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 11 * 10 + 60,
+                  self.france: 7,
+                  self.germany: 30 + 11 * 10 + 60,
+                  self.italy: 30 + 11 * 10 + 60,
+                  self.russia: 7,
+                  self.turkey: 30 + 1 * 10 + 40}
+        check_score_for_state(self, example_c, self.RANKED_CLASSIC, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -156,27 +116,14 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.russia: 1907,
                                                        self.turkey: 1907},
                                     draw=None)
-        system = find_game_scoring_system(self.RANKED_CLASSIC)
-        scores = system.scores(example_d)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 3)
-                elif p == self.england:
-                    self.assertEqual(s, 30 + 12 * 10 + 200)
-                elif p == self.france:
-                    self.assertEqual(s, 7)
-                elif p == self.germany:
-                    self.assertEqual(s, 30 + 11 * 10 + 70)
-                elif p == self.italy:
-                    self.assertEqual(s, 30 + 11 * 10 + 70)
-                elif p == self.russia:
-                    self.assertEqual(s, 6)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 6)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 12 * 10 + 200,
+                  self.france: 7,
+                  self.germany: 30 + 11 * 10 + 70,
+                  self.italy: 30 + 11 * 10 + 70,
+                  self.russia: 6,
+                  self.turkey: 6}
+        check_score_for_state(self, example_d, self.RANKED_CLASSIC, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -191,27 +138,14 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.RANKED_CLASSIC)
-        scores = system.scores(example_e)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 3)
-                elif p == self.england:
-                    self.assertEqual(s, 30 + 12 * 10 + 200)
-                elif p == self.france:
-                    self.assertEqual(s, 7)
-                elif p == self.germany:
-                    self.assertEqual(s, 30 + 10 * 10 + 70)
-                elif p == self.italy:
-                    self.assertEqual(s, 30 + 10 * 10 + 70)
-                elif p == self.russia:
-                    self.assertEqual(s, 7)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 30 + 2 * 10 + 40)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 30 + 12 * 10 + 200,
+                  self.france: 7,
+                  self.germany: 30 + 10 * 10 + 70,
+                  self.italy: 30 + 10 * 10 + 70,
+                  self.russia: 7,
+                  self.turkey: 30 + 2 * 10 + 40}
+        check_score_for_state(self, example_e, self.RANKED_CLASSIC, EXPECT)
 
     def test_g_scoring_rankedclassic_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -226,24 +160,11 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.RANKED_CLASSIC)
-        scores = system.scores(example_f)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 3)
-                elif p == self.england:
-                    self.assertEqual(s, 550)
-                elif p == self.france:
-                    self.assertEqual(s, 7)
-                elif p == self.germany:
-                    self.assertEqual(s, 10)
-                elif p == self.italy:
-                    self.assertEqual(s, 10)
-                elif p == self.russia:
-                    self.assertEqual(s, 7)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 10)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 3,
+                  self.england: 550,
+                  self.france: 7,
+                  self.germany: 10,
+                  self.italy: 10,
+                  self.russia: 7,
+                  self.turkey: 10}
+        check_score_for_state(self, example_f, self.RANKED_CLASSIC, EXPECT)

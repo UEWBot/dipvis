@@ -17,9 +17,8 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class Base3GameScoringTests(TestCase):
@@ -50,27 +49,14 @@ class Base3GameScoringTests(TestCase):
                                     elimination_years={self.austria: 1904,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.BASE_3)
-        scores = system.scores(example_a)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 0)
-                elif p == self.england:
-                    self.assertEqual(s, 10 + 3 + 9)
-                elif p == self.france:
-                    self.assertEqual(s, 9 + 3)
-                elif p == self.germany:
-                    self.assertEqual(s, 8 + 3)
-                elif p == self.italy:
-                    self.assertEqual(s, 5 + 3)
-                elif p == self.russia:
-                    self.assertEqual(s, 0)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 2 + 3)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 10 + 3 + 9,
+                  self.france: 9 + 3,
+                  self.germany: 8 + 3,
+                  self.italy: 5 + 3,
+                  self.russia: 0,
+                  self.turkey: 2 + 3}
+        check_score_for_state(self, example_a, self.BASE_3, EXPECT)
 
     def test_g_scoring_base3_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -85,27 +71,14 @@ class Base3GameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.BASE_3)
-        scores = system.scores(example_b)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 0)
-                elif p == self.england:
-                    self.assertEqual(s, 17 + 3 + 9)
-                elif p == self.france:
-                    self.assertEqual(s, 0)
-                elif p == self.germany:
-                    self.assertEqual(s, 10 + 3)
-                elif p == self.italy:
-                    self.assertEqual(s, 4 + 3)
-                elif p == self.russia:
-                    self.assertEqual(s, 0)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 3 + 3)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 17 + 3 + 9,
+                  self.france: 0,
+                  self.germany: 10 + 3,
+                  self.italy: 4 + 3,
+                  self.russia: 0,
+                  self.turkey: 3 + 3}
+        check_score_for_state(self, example_b, self.BASE_3, EXPECT)
 
     def test_g_scoring_base3_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -120,27 +93,14 @@ class Base3GameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.BASE_3)
-        scores = system.scores(example_c)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 0)
-                elif p == self.england:
-                    self.assertEqual(s, 11 + 3 + 1)
-                elif p == self.france:
-                    self.assertEqual(s, 0)
-                elif p == self.germany:
-                    self.assertEqual(s, 11 + 3 + 1)
-                elif p == self.italy:
-                    self.assertEqual(s, 11 + 3 + 1)
-                elif p == self.russia:
-                    self.assertEqual(s, 0)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 1 + 3)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 11 + 3 + 1,
+                  self.france: 0,
+                  self.germany: 11 + 3 + 1,
+                  self.italy: 11 + 3 + 1,
+                  self.russia: 0,
+                  self.turkey: 1 + 3}
+        check_score_for_state(self, example_c, self.BASE_3, EXPECT)
 
     def test_g_scoring_base3_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -156,27 +116,14 @@ class Base3GameScoringTests(TestCase):
                                                        self.russia: 1907,
                                                        self.turkey: 1907},
                                     draw=None)
-        system = find_game_scoring_system(self.BASE_3)
-        scores = system.scores(example_d)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 0)
-                elif p == self.england:
-                    self.assertEqual(s, 12 + 3 + 9)
-                elif p == self.france:
-                    self.assertEqual(s, 0)
-                elif p == self.germany:
-                    self.assertEqual(s, 11 + 3)
-                elif p == self.italy:
-                    self.assertEqual(s, 11 + 3)
-                elif p == self.russia:
-                    self.assertEqual(s, 0)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 0)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 12 + 3 + 9,
+                  self.france: 0,
+                  self.germany: 11 + 3,
+                  self.italy: 11 + 3,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, example_d, self.BASE_3, EXPECT)
 
     def test_g_scoring_base3_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -191,27 +138,14 @@ class Base3GameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.BASE_3)
-        scores = system.scores(example_e)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 0)
-                elif p == self.england:
-                    self.assertEqual(s, 12 + 3 + 9)
-                elif p == self.france:
-                    self.assertEqual(s, 0)
-                elif p == self.germany:
-                    self.assertEqual(s, 10 + 3)
-                elif p == self.italy:
-                    self.assertEqual(s, 10 + 3)
-                elif p == self.russia:
-                    self.assertEqual(s, 0)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 2 + 3)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 12 + 3 + 9,
+                  self.france: 0,
+                  self.germany: 10 + 3,
+                  self.italy: 10 + 3,
+                  self.russia: 0,
+                  self.turkey: 2 + 3}
+        check_score_for_state(self, example_e, self.BASE_3, EXPECT)
 
     def test_g_scoring_base3_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -226,24 +160,11 @@ class Base3GameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        system = find_game_scoring_system(self.BASE_3)
-        scores = system.scores(example_f)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if p == self.austria:
-                    self.assertEqual(s, 0)
-                elif p == self.england:
-                    self.assertEqual(s, 46)
-                elif p == self.france:
-                    self.assertEqual(s, 0)
-                elif p == self.germany:
-                    self.assertEqual(s, 0)
-                elif p == self.italy:
-                    self.assertEqual(s, 0)
-                elif p == self.russia:
-                    self.assertEqual(s, 0)
-                else:
-                    # Turkey
-                    self.assertEqual(s, 0)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 46,
+                  self.france: 0,
+                  self.germany: 0,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, example_f, self.BASE_3, EXPECT)

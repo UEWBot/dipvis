@@ -19,9 +19,8 @@ from math import floor
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class OpenTributeGameScoringTests(TestCase):
@@ -50,17 +49,14 @@ class OpenTributeGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.OPEN_TRIBUTE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-                if sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, 34 + 3 * 4 - 1)
-                else:
-                    self.assertEqual(s, 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2),
+                  self.england: 34 + 3 * 4 - 1,
+                  self.france: 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2),
+                  self.germany: 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2),
+                  self.italy: 34 + 3 * 4 - 1,
+                  self.russia: 34 + 3 * 5 + floor((1 + 1 + 1) / 4 ** 2),
+                  self.turkey: 34 + 3 * 4 - 1}
+        check_score_for_state(self, sgs, self.OPEN_TRIBUTE, EXPECT)
 
     def test_g_scoring_opentribute_tied_top(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -72,20 +68,14 @@ class OpenTributeGameScoringTests(TestCase):
                                          self.turkey: 8},
                               final_year=1904,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.OPEN_TRIBUTE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 0)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, 34 + 3 * 4 - 4)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, 34 + 3 * 5 - 3)
-                else:
-                    self.assertEqual(s, 34 + 3 * 8 + floor((8 + 4 + 4 + 3 + 3) / 2 ** 2))
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 34 + 3 * 5 - 3,
+                  self.france: 34 + 3 * 4 - 4,
+                  self.germany: 34 + 3 * 8 + floor((8 + 4 + 4 + 3 + 3) / 2 ** 2),
+                  self.italy: 34 + 3 * 4 - 4,
+                  self.russia: 34 + 3 * 5 - 3,
+                  self.turkey: 34 + 3 * 8 + floor((8 + 4 + 4 + 3 + 3) / 2 ** 2)}
+        check_score_for_state(self, sgs, self.OPEN_TRIBUTE, EXPECT)
 
     def test_g_scoring_opentribute_no_solo_2(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -97,27 +87,16 @@ class OpenTributeGameScoringTests(TestCase):
                                          self.turkey: 6},
                               final_year=1905,
                               elimination_years={self.austria: 1904})
-        system = find_game_scoring_system(self.OPEN_TRIBUTE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 0)
-                elif sgs.sc_counts[p] == 3:
-                    self.assertEqual(s, 34 + 3 * 3 - 10)
-                elif sgs.sc_counts[p] == 4:
-                    self.assertEqual(s, 34 + 3 * 4 - 9)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, 34 + 3 * 5 - 8)
-                elif sgs.sc_counts[p] == 6:
-                    self.assertEqual(s, 34 + 3 * 6 - 7)
-                else:
-                    self.assertEqual(s, 34 + 3 * 13 + (13 + 10 + 10 + 9 + 8 + 7))
+        EXPECT = {self.austria: 0,
+                  self.england: 34 + 3 * 5 - 8,
+                  self.france: 34 + 3 * 3 - 10,
+                  self.germany: 34 + 3 * 13 + (13 + 10 + 10 + 9 + 8 + 7),
+                  self.italy: 34 + 3 * 3 - 10,
+                  self.russia: 34 + 3 * 4 - 9,
+                  self.turkey: 34 + 3 * 6 - 7}
         # 6 players alive, with a total of 34 dots. Tribute of 57, unshared
         # one power eliminated contributes tribute of 13
-        self.assertAlmostEqual(sum(scores.values()), 34 * 6 + 34 * 3 - 57 + 57 + 13)
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, self.OPEN_TRIBUTE, EXPECT, 34 * 6 + 34 * 3 - 57 + 57 + 13)
 
     def test_g_scoring_opentribute_no_solo_3(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -131,23 +110,16 @@ class OpenTributeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.OPEN_TRIBUTE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 0:
-                    self.assertEqual(s, 0)
-                elif sgs.sc_counts[p] == 5:
-                    self.assertEqual(s, 34 + 3 * 5 - 12)
-                elif sgs.sc_counts[p] == 7:
-                    self.assertEqual(s, 34 + 3 * 7 - 10)
-                else:
-                    self.assertEqual(s, 34 + 3 * 17 + (17 + 17 + 17 + 12 + 12 + 10))
+        EXPECT = {self.austria: 0,
+                  self.england: 34 + 3 * 5 - 12,
+                  self.france: 0,
+                  self.germany: 34 + 3 * 17 + (17 + 17 + 17 + 12 + 12 + 10),
+                  self.italy: 0,
+                  self.russia: 34 + 3 * 5 - 12,
+                  self.turkey: 34 + 3 * 7 - 10}
         # 4 players alive, with a total of 34 dots. Tribute of 85, unshared
         # Three powers eliminated contribute tribute of 17 each
-        self.assertAlmostEqual(sum(scores.values()), 34 * 4 + 34 * 3 - 85 + 85 + 3 * 17)
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, self.OPEN_TRIBUTE, EXPECT, 34 * 4 + 34 * 3 - 85 + 85 + 3 * 17)
 
     def test_g_scoring_opentribute_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -161,14 +133,11 @@ class OpenTributeGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.OPEN_TRIBUTE)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            with self.subTest(power=p):
-                if sgs.sc_counts[p] == 18:
-                    self.assertEqual(s, 340)
-                else:
-                    self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 340)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 340,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.OPEN_TRIBUTE, EXPECT, 340)

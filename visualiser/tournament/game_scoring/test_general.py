@@ -34,7 +34,7 @@ def check_score_order(self, scores):
     self.assertEqual(EXPECT, order)
 
 
-def check_score_for_state(self, state, system_name, expected_scores):
+def check_score_for_state(self, state, system_name, expected_scores, expected_total=None):
     """
     Generic test for a scoring system
 
@@ -46,6 +46,8 @@ def check_score_for_state(self, state, system_name, expected_scores):
     for p,s in scores.items():
         with self.subTest(power=p):
             self.assertAlmostEqual(s, expected_scores[p])
+    if expected_total is not None:
+        self.assertAlmostEqual(sum(scores.values()), expected_total)
     check_score_order(self, scores)
 
 

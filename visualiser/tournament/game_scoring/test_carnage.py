@@ -18,9 +18,8 @@ from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS
-from tournament.game_scoring.test_general import check_score_order
+from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
-from tournament.models import find_game_scoring_system
 
 
 class CarnageGameScoringTests(TestCase):
@@ -31,6 +30,9 @@ class CarnageGameScoringTests(TestCase):
     CARNAGE_ELIM_ORDER = 'Carnage with elimination order'
     CARNAGE_2023 = 'Carnage 2023'
     CENTER_COUNT_CARNAGE = 'Center-count Carnage'
+
+    # For most Carnage scoring, the sum of all scores is known
+    EXPECTED_TOTAL = 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS
 
     @classmethod
     def setUpTestData(cls):
@@ -54,18 +56,15 @@ class CarnageGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.CARNAGE_DEAD_EQUAL)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sgs.sc_counts[p] == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sgs.sc_counts[p])
-            else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sgs.sc_counts[p])
+        EXPECT = {self.austria: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.england: (3000 + 2000 + 1000) / 3 + 4,
+                  self.france: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.germany: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.italy: (3000 + 2000 + 1000) / 3 + 4,
+                  self.russia: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.turkey: (3000 + 2000 + 1000) / 3 + 4}
         # 2 SCs are still neutral
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-        check_score_order(self, scores)
+        check_score_for_state(self, sgs, self.CARNAGE_DEAD_EQUAL, EXPECT, self.EXPECTED_TOTAL - 2)
 
     def test_g_scoring_carnage1_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -79,16 +78,14 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.CARNAGE_DEAD_EQUAL)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: self.EXPECTED_TOTAL,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.CARNAGE_DEAD_EQUAL, EXPECT, self.EXPECTED_TOTAL)
 
     def test_g_scoring_carnage1_eliminations(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -102,22 +99,14 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.CARNAGE_DEAD_EQUAL)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        for p,s in scores.items():
-            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
-            if sgs.sc_counts[p] == 17:
-                self.assertEqual(s, 7000 + sgs.sc_counts[p])
-            elif sgs.sc_counts[p] == 7:
-                self.assertEqual(s, 6000 + sgs.sc_counts[p])
-            elif sgs.sc_counts[p] == 5:
-                self.assertEqual(s, (5000 + 4000) / 2 + sgs.sc_counts[p])
-            else:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sgs.sc_counts[p])
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: (3000 + 2000 + 1000) / 3 + 0,
+                  self.england: (5000 + 4000) / 2 + 5,
+                  self.france: (3000 + 2000 + 1000) / 3 + 0,
+                  self.germany: 7000 + 17,
+                  self.italy: (3000 + 2000 + 1000) / 3 + 0,
+                  self.russia: (5000 + 4000) / 2 + 5,
+                  self.turkey: 6000 + 7}
+        check_score_for_state(self, sgs, self.CARNAGE_DEAD_EQUAL, EXPECT, self.EXPECTED_TOTAL)
 
     # Carnage with elimination order
     def test_g_scoring_carnage2_simple(self):
@@ -130,17 +119,15 @@ class CarnageGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.CARNAGE_ELIM_ORDER)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sgs.sc_counts[p] == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sgs.sc_counts[p])
-            else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sgs.sc_counts[p])
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.england: (3000 + 2000 + 1000) / 3 + 4,
+                  self.france: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.germany: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.italy: (3000 + 2000 + 1000) / 3 + 4,
+                  self.russia: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.turkey: (3000 + 2000 + 1000) / 3 + 4}
+        # 2 SCs are still neutral
+        check_score_for_state(self, sgs, self.CARNAGE_ELIM_ORDER, EXPECT, self.EXPECTED_TOTAL - 2)
 
     def test_g_scoring_carnage2_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -154,16 +141,14 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.CARNAGE_ELIM_ORDER)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-            else:
-                self.assertEqual(s, 0)
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: self.EXPECTED_TOTAL,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.CARNAGE_ELIM_ORDER, EXPECT, self.EXPECTED_TOTAL)
 
     def test_g_scoring_carnage2_eliminations(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -177,25 +162,14 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.CARNAGE_ELIM_ORDER)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
-            if sgs.sc_counts[p] == 17:
-                self.assertEqual(s, 7000 + sgs.sc_counts[p])
-            elif sgs.sc_counts[p] == 7:
-                self.assertEqual(s, 6000 + sgs.sc_counts[p])
-            elif sgs.sc_counts[p] == 5:
-                self.assertEqual(s, (5000 + 4000) / 2 + sgs.sc_counts[p])
-            else:
-                # Austria died in 1904, France and Italy in 1906
-                if p in [self.france, self.italy]:
-                    self.assertEqual(s, (3000 + 2000) / 2 + sgs.sc_counts[p])
-                else:
-                    self.assertEqual(s, 1000 + sgs.sc_counts[p])
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 1000 + 0,
+                  self.england: (5000 + 4000) / 2 + 5,
+                  self.france: (3000 + 2000) / 2 + 0,
+                  self.germany: 7000 + 17,
+                  self.italy: (3000 + 2000) / 2 + 0,
+                  self.russia: (5000 + 4000) / 2 + 5,
+                  self.turkey: 6000 + 7}
+        check_score_for_state(self, sgs, self.CARNAGE_ELIM_ORDER, EXPECT, self.EXPECTED_TOTAL)
 
     # Carnage 2023 (elimination order and leader gap bonus)
     def test_g_scoring_carnage2023_simple(self):
@@ -208,18 +182,14 @@ class CarnageGameScoringTests(TestCase):
                                          self.turkey: 4},
                               final_year=1901,
                               elimination_years={})
-        system = find_game_scoring_system(self.CARNAGE_2023)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 4 powers equal on 5 SCs, and 3 equal on 4 SCs
-            if sgs.sc_counts[p] == 4:
-                self.assertEqual(s, (3000 + 2000 + 1000) / 3 + sgs.sc_counts[p])
-            else:
-                self.assertEqual(s, (7000 + 6000 + 5000 + 4000) / 4 + sgs.sc_counts[p])
-        # With tied lead, we know the total score
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS - 2)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.england: (3000 + 2000 + 1000) / 3 + 4,
+                  self.france: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.germany: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.italy: (3000 + 2000 + 1000) / 3 + 4,
+                  self.russia: (7000 + 6000 + 5000 + 4000) / 4 + 5,
+                  self.turkey: (3000 + 2000 + 1000) / 3 + 4}
+        check_score_for_state(self, sgs, self.CARNAGE_2023, EXPECT, self.EXPECTED_TOTAL - 2)
 
     def test_g_scoring_carnage2023_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -233,17 +203,14 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.CARNAGE_2023)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if sgs.sc_counts[p] == 18:
-                self.assertEqual(s, 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-            else:
-                self.assertEqual(s, 0)
-        # With a solo, we know the total score
-        self.assertEqual(sum(scores.values()), 7000 + 6000 + 5000 + 4000 + 3000 + 2000 + 1000 + TOTAL_SCS)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: self.EXPECTED_TOTAL,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0}
+        check_score_for_state(self, sgs, self.CARNAGE_2023, EXPECT, self.EXPECTED_TOTAL)
 
     def test_g_scoring_carnage2023_eliminations(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
@@ -257,26 +224,15 @@ class CarnageGameScoringTests(TestCase):
                               elimination_years={self.austria: 1904,
                                                  self.france: 1906,
                                                  self.italy: 1906})
-        system = find_game_scoring_system(self.CARNAGE_2023)
-        scores = system.scores(sgs)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            # 1 at 17, 1 at 7, 2 at 5, and 3 eliminated
-            if sgs.sc_counts[p] == 17:
-                # Bonus 300 points per dot ahead of second place
-                self.assertEqual(s, 7000 + sgs.sc_counts[p] + (17 - 7) * 300)
-            elif sgs.sc_counts[p] == 7:
-                self.assertEqual(s, 6000 + sgs.sc_counts[p])
-            elif sgs.sc_counts[p] == 5:
-                self.assertEqual(s, (5000 + 4000) / 2 + sgs.sc_counts[p])
-            else:
-                # Austria died in 1904, France and Italy in 1906
-                if p in [self.france, self.italy]:
-                    self.assertEqual(s, (3000 + 2000) / 2 + sgs.sc_counts[p])
-                else:
-                    self.assertEqual(s, 1000 + sgs.sc_counts[p])
-        check_score_order(self, scores)
-        # Total score now varies depending on the lead the leader has
+        EXPECT = {self.austria: 1000 + 0,
+                  self.england: (5000 + 4000) / 2 + 5,
+                  self.france: (3000 + 2000) / 2 + 0,
+                  # Bonus 300 points per dot ahead of second place
+                  self.germany: 7000 + 17 + (17 - 7) * 300,
+                  self.italy: (3000 + 2000) / 2 + 0,
+                  self.russia: (5000 + 4000) / 2 + 5,
+                  self.turkey: 6000 + 7}
+        check_score_for_state(self, sgs, self.CARNAGE_2023, EXPECT)
 
     # GScoringCentreCarnage
     def test_g_scoring_centrecarnage_1(self):
@@ -291,26 +247,14 @@ class CarnageGameScoringTests(TestCase):
                                     final_year=1908,
                                     elimination_years={self.turkey: 1904},
                                     draw=None)
-        system = find_game_scoring_system(self.CENTER_COUNT_CARNAGE)
-        scores = system.scores(example_1)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, 11 * 500 + 7007)
-            elif p == self.england:
-                self.assertEqual(s, 10 * 500 + 6006)
-            elif p == self.france:
-                self.assertEqual(s, 8 * 500 + 5005)
-            elif p == self.germany:
-                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
-            elif p == self.italy:
-                self.assertEqual(s,  2 * 500 + (4004 + 3003) / 2)
-            elif p == self.russia:
-                self.assertEqual(s, 1 * 500 + 2002)
-            else:
-                # Turkey:
-                self.assertEqual(s, 1001)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 11 * 500 + 7007,
+                  self.england: 10 * 500 + 6006,
+                  self.france: 8 * 500 + 5005,
+                  self.germany: 2 * 500 + (4004 + 3003) / 2,
+                  self.italy: 2 * 500 + (4004 + 3003) / 2,
+                  self.russia: 1 * 500 + 2002,
+                  self.turkey: 1001}
+        check_score_for_state(self, example_1, self.CENTER_COUNT_CARNAGE, EXPECT)
 
     def test_g_scoring_centrecarnage_2(self):
         # There used to be an "example 1" and "example 2" in the doc, but no more :-(
@@ -325,23 +269,11 @@ class CarnageGameScoringTests(TestCase):
                                     elimination_years={self.russia: 1905,
                                                        self.turkey: 1904},
                                     draw=None)
-        system = find_game_scoring_system(self.CENTER_COUNT_CARNAGE)
-        scores = system.scores(example_2)
-        self.assertEqual(7, len(scores))
-        for p,s in scores.items():
-            if p == self.austria:
-                self.assertEqual(s, 13 * 500 + 7007)
-            elif p == self.england:
-                self.assertEqual(s, 7 * 500 + 6006)
-            elif p == self.france:
-                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
-            elif p == self.germany:
-                self.assertEqual(s, 5 * 500 + (5005 + 4004) / 2)
-            elif p == self.italy:
-                self.assertEqual(s, 4 * 500 + 3003)
-            elif p == self.russia:
-                self.assertEqual(s, 2002)
-            else:
-                # Turkey:
-                self.assertEqual(s, 1001)
-        check_score_order(self, scores)
+        EXPECT = {self.austria: 13 * 500 + 7007,
+                  self.england: 7 * 500 + 6006,
+                  self.france: 5 * 500 + (5005 + 4004) / 2,
+                  self.germany: 5 * 500 + (5005 + 4004) / 2,
+                  self.italy: 4 * 500 + 3003,
+                  self.russia: 2002,
+                  self.turkey: 1001}
+        check_score_for_state(self, example_2, self.CENTER_COUNT_CARNAGE, EXPECT)
