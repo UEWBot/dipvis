@@ -64,6 +64,19 @@ how Dipvis should be used.
 
 Can be found [here](https://github.com/UEWBot/dipvis/blob/master/TESTING)
 
+## Contributions
+
+Contributions are very welcome. There's a list of issues at https://github.com/UEWBot/dipvis/issues
+The vast majority are enhancement ideas rather than bugfixes. The test suite is quite extensive with
+good coverage, so you can be fairly confident that breaking changes will be picked up by the tests.
+The code does need quite a lot of cleanup. It started out as a small project but has grown sigificantly.
+Issues are mostly catagorised by type of issue (bug, question, enhancement), part of the codebase
+(scoring, user interface, board seeding, player background), and others (techical debt, good first
+issue). For a lot of issues, experience of a Diplomacy tournament or at least having played the game
+would be useful, but there are a lot of issues where knowledge of Django or python are more significant.
+As with most open source projects, there's plenty of room for improvement in documentation and testing,
+too. Feel free to comment on existing issues, or to volunteer to work to address one.
+
 ## Licensing
 
 [License](https://github.com/UEWBot/dipvis/blob/master/LICENSE)
