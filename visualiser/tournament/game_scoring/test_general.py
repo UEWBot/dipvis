@@ -39,6 +39,12 @@ def check_score_for_state(self, state, system_name, expected_scores, expected_to
     Generic test for a scoring system
 
     Checks the scores produced by the specified scoring system for the specifed game state.
+
+    self - TestCase class
+    state - game state to test
+    system_name - game scoring system to test
+    expected_scores - expected results (dict, indexed by GreatPower, of scores)
+    expected_total - None, or expected sum of all the scores
     """
     system = find_game_scoring_system(system_name)
     scores = system.scores(state)
@@ -175,6 +181,7 @@ class GameScoringTests(TestCase):
 
     # description for all G_SCORING_SYSTEMS
     def test_description(self):
+        """Description of every system in G_SCORING_SYSTEMS"""
         for system in G_SCORING_SYSTEMS:
             with self.subTest(system=system.name):
                 desc = system.description

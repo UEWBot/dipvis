@@ -65,7 +65,7 @@ class UtilsTests(TestCase):
                 (self.italy, 1),
                 (self.russia, 1),
                 (self.turkey, 0)]
-        # 1st from POS_PTS, then 2 from POS_PTS_2_TIED, rest are beyond the end of POS_PTS_2_TIED
+        # Four from POS_PTS, then a tie, then one more
         EXPECT = [70, 60, 50, 40, 0, 0, 0]
         result = _adjust_rank_score_lower_special(dots,
                                                   POS_PTS,
