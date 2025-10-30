@@ -261,10 +261,14 @@ tournament_patterns = [
     path('games/<str:game_name>/', include(game_patterns)),
 ]
 
+api_patterns = [
+    path('tournament/<int:tournament_id>/', tournament_views.api,
+         name='api_tournament'),
+]
+
 urlpatterns = [
     path('', tournament_views.tournament_index, name='index'),
     path('series/', include(series_patterns)),
+    path('api/v<int:version>/', include(api_patterns)),
     path('<int:tournament_id>/', include(tournament_patterns)),
-    path('api/v<int:version>/tournament/<int:tournament_id>/', tournament_views.api,
-         name='api_tournament'),
 ]
