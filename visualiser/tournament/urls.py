@@ -264,6 +264,8 @@ tournament_patterns = [
 api_patterns = [
     path('tournament/<int:tournament_id>/', tournament_views.api,
          name='api_tournament'),
+    path('tournament/<int:tournament_id>/game/<str:game_name>/', game_views.api,
+         name='api_game'),
 ]
 
 urlpatterns = [

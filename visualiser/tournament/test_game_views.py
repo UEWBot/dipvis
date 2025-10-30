@@ -1935,3 +1935,22 @@ class GameViewTests(TestCase):
         ccs.delete()
         self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()
+
+    def test_api(self):
+        self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
+        for power in GreatPower.objects.all():
+            CentreCount.objects.create(game=self.g1,
+                                       power=power,
+                                       year=1903,
+                                       count=4)
+        response = self.client.get(reverse('api_game', args=(1, self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        # Cleanup
+        self.g1.centrecount_set.filter(year=1903).delete()
+
+    def test_api_invalid_version(self):
+        response = self.client.get(reverse('api_game', args=(7, self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)

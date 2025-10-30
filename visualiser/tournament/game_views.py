@@ -27,7 +27,7 @@ from django.db.models.query import QuerySet
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -844,3 +844,25 @@ def scrape_external_site(request, tournament_id, game_name):
         else:
             return _scrape_webdip(request, t, g, wg)
     raise Http404('External site is not backstabbr or webdiplomacy')
+
+def api(request, version, tournament_id, game_name):
+    """JSON API to retrieve data"""
+    if version != 1:
+        raise Http404(f'Invalid API version {version}')
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    scs = g.centrecount_set.all()
+    sc_chart = {}
+    for year in g.years_played():
+        sc_chart[year] = {}
+        for sc in scs.filter(year=year):
+            sc_chart[year][sc.power.name] = sc.count
+    # TODO add DrawProposals and SupplyCentreOwnerships
+    data = {'round_number': g.the_round.number(),
+            'started_at': g.started_at,
+            'is_finished': g.is_finished,
+            'is_top_board': g.is_top_board,
+            'external_url': g.external_url,
+            'notes': g.notes,
+            'sc_chart': sc_chart}
+    return JsonResponse(data)
