@@ -1937,17 +1937,20 @@ class GameViewTests(TestCase):
         self.g1.refresh_from_db()
 
     def test_api(self):
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1903).count(), 0)
         self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
-        for power in GreatPower.objects.all():
-            CentreCount.objects.create(game=self.g1,
-                                       power=power,
-                                       year=1903,
-                                       count=4)
+        for sc, p in self.default_owners.items():
+            SupplyCentreOwnership.objects.create(game=self.g1,
+                                                 sc=SupplyCentre.objects.get(name=sc),
+                                                 owner=p,
+                                                 year=1903)
+        self.g1.create_or_update_sc_counts_from_ownerships(1903)
         response = self.client.get(reverse('api_game', args=(1, self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
         # Cleanup
+        self.g1.supplycentreownership_set.filter(year=1903).delete()
         self.g1.centrecount_set.filter(year=1903).delete()
 
     def test_api_invalid_version(self):

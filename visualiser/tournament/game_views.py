@@ -851,18 +851,24 @@ def api(request, version, tournament_id, game_name):
         raise Http404(f'Invalid API version {version}')
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    scs = g.centrecount_set.all()
     sc_chart = {}
+    sc_owners = {}
     for year in g.years_played():
         sc_chart[year] = {}
-        for sc in scs.filter(year=year):
+        for sc in g.centrecount_set.filter(year=year):
             sc_chart[year][sc.power.name] = sc.count
-    # TODO add DrawProposals and SupplyCentreOwnerships
+        sc_owners[year] = {}
+        for power in GreatPower.objects.all():
+            sc_owners[year][power.name] = []
+        for sco in g.supplycentreownership_set.filter(year=year):
+            sc_owners[year][sco.owner.name].append(sco.sc.name)
+    # TODO add DrawProposals
     data = {'round_number': g.the_round.number(),
             'started_at': g.started_at,
             'is_finished': g.is_finished,
             'is_top_board': g.is_top_board,
             'external_url': g.external_url,
             'notes': g.notes,
-            'sc_chart': sc_chart}
+            'sc_chart': sc_chart,
+            'sc_owners': sc_owners}
     return JsonResponse(data)
