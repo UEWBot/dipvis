@@ -2798,7 +2798,7 @@ class PlayerRoundFormTest(TestCase):
         self.assertTrue(form.is_valid())
 
     def test_round_fields(self):
-        """Check that the correct round fields are created"""
+        """Check that the correct fields are created"""
         form = PlayerRoundForm()
         # We should have five fields - player, present, standby, sandboxer, and rounds_played
         self.assertEqual(len(form.fields), 5)
@@ -2828,6 +2828,29 @@ class PlayerRoundFormTest(TestCase):
                    'rounds_played': 1}
         form = PlayerRoundForm(data=data, initial=initial)
         self.assertFalse(form.has_changed())
+
+    def test_validation(self):
+        initial = {'player': self.p1,
+                   'present': True,
+                   'standby': True,
+                   'sandboxer': True,
+                   'rounds_played': 1}
+        data = {'player': str(self.p1.pk),
+                'sandboxer': 'ok',
+                'rounds_played': '1'}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.is_valid())
+        data = {'player': str(self.p1.pk),
+                'standby': 'ok',
+                'rounds_played': '1'}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.is_valid())
+        data = {'player': str(self.p1.pk),
+                'standby': 'ok',
+                'sandboxer': 'ok',
+                'rounds_played': '1'}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.is_valid())
 
 
 class BasePlayerRoundFormsetTest(TestCase):

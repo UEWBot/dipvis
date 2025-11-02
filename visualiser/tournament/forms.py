@@ -1024,6 +1024,13 @@ class PlayerRoundForm(forms.Form):
                                        max_value=10,
                                        min_value=0)
 
+    def clean(self):
+        """Checks that standby players and sandboxers are present"""
+        cleaned_data = super().clean()
+        if (cleaned_data['standby'] or cleaned_data['sandboxer']) and not cleaned_data['present']:
+            raise ValidationError(_('Standbys/sandboxers should be flagged as present'))
+        return cleaned_data
+
 
 class BasePlayerRoundFormset(BaseFormSet):
     """Form to specify which players are playing in a round"""
