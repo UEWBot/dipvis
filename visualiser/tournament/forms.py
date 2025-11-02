@@ -778,8 +778,7 @@ class BaseSCOwnerFormset(BaseFormSet):
         if any(self.errors):
             return
         years = []
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+        for form in self.forms:
             year = form.cleaned_data.get('year')
             if not year:
                 # Blank form
@@ -793,8 +792,7 @@ class BaseSCOwnerFormset(BaseFormSet):
         for sc in SupplyCentre.objects.all():
             # Find all the listed owners for this dot
             owners = {}
-            for i in range(0, self.total_form_count()):
-                form = self.forms[i]
+            for form in self.forms:
                 year = form.cleaned_data.get('year')
                 owner = form.cleaned_data.get(sc.name)
                 owners[year] = (owner, form)
@@ -934,10 +932,9 @@ class BaseSCCountFormset(BaseFormSet):
         """
         if any(self.errors):
             return
-        years = []
+        years = set()
         neutrals = {}
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+        for form in self.forms:
             try:
                 year = form.cleaned_data['year']
             except KeyError:
@@ -946,7 +943,7 @@ class BaseSCCountFormset(BaseFormSet):
             if year in years:
                 raise forms.ValidationError(_('Year %(year)s appears more than once')
                                             % {'year': year})
-            years.append(year)
+            years.add(year)
             # Remember the number of neutrals left
             try:
                 neutrals[year] = form.cleaned_data['neutral']
@@ -1035,16 +1032,15 @@ class BasePlayerRoundFormset(BaseFormSet):
         """Checks that no player appears more than once"""
         if any(self.errors):
             return
-        players = []
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+        players = set()
+        for form in self.forms:
             player = form.cleaned_data.get('player')
             if not player:
                 continue
             if player in players:
                 raise forms.ValidationError(_('Player %(player)s appears more than once')
                                             % {'player': player})
-            players.append(player)
+            players.add(player)
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
