@@ -75,7 +75,8 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         # Cleanup
-        self.p1.nationalities.clear()
+        self.p1.nationalities = []
+        self.p1.save(update_fields=['nationalities'])
 
     @tag('wdd')
     def test_detail_wddplayers(self):
