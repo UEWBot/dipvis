@@ -644,6 +644,7 @@ def add_player_bg(player, include_wpe=False):
         try:
             fields += _add_player_bg_from_wdr(player, wdr)
         except WDRNotAccessible:
+            print('Unable to read from WDR')
             wdr = None
     if not wdr:
         # Do we have any WDD ids for this player?
@@ -1069,6 +1070,7 @@ class WDDPlayer(models.Model):
                 self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
                 self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
             except WDDNotAccessible:
+                print('Unable to read name from WDD')
                 # Nothing we can do
                 pass
             except InvalidWDDId as e:

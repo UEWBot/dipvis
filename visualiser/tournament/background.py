@@ -163,6 +163,7 @@ class WikipediaBackground():
         try:
             soup = cache.soup()
         except WikipediaNotAccessible:
+            print('Unable to read wikipedia')
             return []
         main = soup
         results = []
