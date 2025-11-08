@@ -38,7 +38,7 @@ class GScoringCDiploNamur(GameScoringSystem):
     - Participants gets one point
     - Everyone who owns centre(s) gets some points:
       1 SC = 5pts, 2 SCs = 9 pts, 3 SCs = 12 pts, 4 SCs = 14 pts, 5 SCs = 16 pts,
-      6 SCs = 18 pts, _1 pt per additional SC
+      6 SCs = 18 pts, +1 pt per additional SC
     - Power with the most points gets 38 points
     - Power in second place gets 14 points
     - Power in third place gets 7 points
