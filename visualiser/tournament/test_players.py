@@ -638,12 +638,11 @@ class PlayerTests(TestCase):
 
         t1 = Tournament.objects.create(name='t1',
                                        start_date=today,
-                                       end_date=today + timedelta(hours=24),
+                                       end_date=today + timedelta(hours=72),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        is_published=True)
-        t1.save()
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
                                        end_date=today + timedelta(hours=24),
@@ -651,23 +650,30 @@ class PlayerTests(TestCase):
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
                                        is_published=False)
-        t2.save()
-        # Now we need a player that played in both tournaments
+        t3 = Tournament.objects.create(name='t3',
+                                       start_date=today,
+                                       end_date=today + timedelta(hours=48),
+                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                       draw_secrecy=DrawSecrecy.SECRET,
+                                       is_published=True)
+        # Now we need a player that played in all three tournaments
         p = Player.objects.create(first_name='Joe',
                                   last_name='Schmoe')
-        p.save()
         tp1 = TournamentPlayer.objects.create(tournament=t1,
                                               player=p)
-        tp1.save()
         tp2 = TournamentPlayer.objects.create(tournament=t2,
                                               player=p)
-        tp2.save()
-        self.assertEqual(1, p.tournamentplayers(including_unpublished=False).count())
-        self.assertEqual(2, p.tournamentplayers(including_unpublished=True).count())
+        tp3 = TournamentPlayer.objects.create(tournament=t3,
+                                              player=p)
+        # Latest-ending tournament should be listed first
+        tps = p.tournamentplayers(including_unpublished=False)
+        self.assertEqual(list(tps), [tp1, tp3])
+        tps = p.tournamentplayers(including_unpublished=True)
+        self.assertEqual(list(tps), [tp1, tp3, tp2])
         # Cleanup
-        tp2.delete()
-        tp1.delete()
         p.delete()
+        t3.delete()
         t2.delete()
         t1.delete()
 

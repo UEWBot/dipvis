@@ -785,7 +785,7 @@ class Player(models.Model):
 
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""
-        tps = self.tournamentplayer_set.prefetch_related('tournament')
+        tps = self.tournamentplayer_set.prefetch_related('tournament').order_by('-tournament__end_date')
         if including_unpublished:
             return tps
         return tps.filter(tournament__is_published=True)
