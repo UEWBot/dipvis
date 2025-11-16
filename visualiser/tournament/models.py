@@ -1237,6 +1237,7 @@ class Tournament(models.Model):
         If after_round_num is None, determines the best countries if all games
         ended now. Otherwise, returns best countries after the specified round
         had completed.
+        Note that this does not consider who was given any "best country" awards.
         """
         tuples = {}
         # If no Games exist, return a dict of empty lists

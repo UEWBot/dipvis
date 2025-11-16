@@ -113,9 +113,9 @@ class TournamentViewTests(TestCase):
                                       description='Player whose hair is longer than the rest')
         cls.a2 = Award.objects.create(name='Greenest Shirt',
                                       description='Player with the greenest shirt')
-        cls.a3 = Award.objects.create(name='Best Italy',
-                                      description='Player who got the best result playing Italy',
-                                      power=cls.italy)
+        cls.a3 = Award.objects.create(name='Best Russia',
+                                      description='Player who got the best result playing Russia',
+                                      power=cls.russia)
         # This one should not be associated with any Tournament
         cls.a4 = Award.objects.create(name='Whitest Teeth',
                                       description='Player whose teeth are whiter than the rest')
@@ -971,6 +971,36 @@ class TournamentViewTests(TestCase):
         # Cleanup
         t.is_finished = False
         t.save()
+
+    def test_best_countries_with_awards(self):
+        self.assertFalse(self.a3.tournament_set.contains(self.t4))
+        self.assertEqual(self.t4.awards.count(), 0)
+        self.t4.awards.add(self.a3)
+        gps = []
+        for r in self.t4.round_set.all():
+            for g in r.game_set.all():
+                for gp in g.gameplayer_set.filter(power=self.a3.power):
+                    gps.append(gp)
+        gps.sort(key=lambda gp: gp.score)
+        # Add the best country award to the player with the lowest score
+        gps[0].tournamentplayer().awards.add(self.a3)
+        response = self.client.get(reverse('tournament_best_countries',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # Verify that the player with the award gets listed at the top
+        rows = response.context['rows']
+        found = False
+        for row in rows:
+            for gameplayers in row:
+                for gp in gameplayers:
+                    if gp.power == self.a3.power:
+                        if not found:
+                            # This is the first listed player for the power of interest
+                            self.assertEqual(gp, gps[0])
+                            found = True
+        # Cleanup
+        gps[0].tournamentplayer().awards.clear()
+        self.t4.awards.clear()
 
     def test_enter_scores_not_logged_in(self):
         response = self.client.get(reverse('enter_scores',

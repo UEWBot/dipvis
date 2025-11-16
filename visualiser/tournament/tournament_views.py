@@ -347,7 +347,13 @@ def tournament_best_countries(request,
                               tournament_id,
                               refresh=False,
                               redirect_url_name='tournament_best_countries_refresh'):
-    """Display best countries of a tournament"""
+    """
+    Display best countries of a tournament
+
+    If the tournament is ongoing, this will be based one "if all games ended now".
+    If the tournament is complete, it always puts any players with "best country"
+    awards at the top.
+    """
     t = get_visible_tournament_or_404(tournament_id, request.user)
     # No point refreshing if nothing can change
     if t.is_finished and (redirect_url_name == 'tournament_best_countries_refresh'):
@@ -363,11 +369,27 @@ def tournament_best_countries(request,
             gps = t.best_countries(whole_list=True, after_round_num=r.number())
         else:
             gps = t.best_countries(whole_list=True, after_round_num=0)
+    # Move players with "best country" awards to the head of their respective list
+    awards = t.awards.exclude(power=None)
+    for p in GreatPower.objects.all():
+        # Find the GamePlayers for the Players given this award at this Tournament
+        for award in t.awards.filter(power=p):
+            gameplayers = []
+            for tp in award.tournamentplayer_set.all():
+                for rp in tp.roundplayers().all():
+                    for gp in rp.gameplayers().filter(power=p):
+                        gameplayers.append(gp)
+                        for x in gps[p]:
+                            try:
+                                x.remove(gp)
+                            except ValueError:
+                                pass
+            gps[p].insert(0, gameplayers)
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').prefetch_related('power')
+    # TODO Sort set_powers alphabetically by translated power.name
     # How many rows do we need?
     row_count = max((len(l) for l in (gps[power] for power in GreatPower.objects.all())))
-    # TODO Sort set_powers alphabetically by translated power.name
     rows = []
     # Add a row at a time, containing the best remaining results for each power
     for i in range(row_count):
