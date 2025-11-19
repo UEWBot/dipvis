@@ -375,7 +375,7 @@ def tournament_best_countries(request,
         # Find the GamePlayers for the Players given this award at this Tournament
         for award in t.awards.filter(power=p):
             gameplayers = []
-            for tp in award.tournamentplayer_set.all():
+            for tp in award.tournamentplayer_set.filter(tournament=t):
                 for rp in tp.roundplayers().all():
                     for gp in rp.gameplayers().filter(power=p):
                         gameplayers.append(gp)
@@ -385,6 +385,8 @@ def tournament_best_countries(request,
                             except ValueError:
                                 pass
             gps[p].insert(0, gameplayers)
+        # Remove any now-empty lists
+        gps[p].remove([])
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').prefetch_related('power')
     # TODO Sort set_powers alphabetically by translated power.name
