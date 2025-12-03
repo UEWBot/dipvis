@@ -831,15 +831,26 @@ def api(request, tournament_id, version):
                  'player_wdr_id': player.wdr_player_id,
                  'ranking': res[0],
                  'score': res[1],
-                 'round_scores': []}
+                 'score_breakdown': []}
         if entry['ranking'] == Tournament.UNRANKED:
             entry['ranking'] = None
+        rps = player.roundplayer_set.all()
         for r in t.round_set.all():
             try:
-                rp = player.roundplayer_set.get(the_round=r)
-                entry['round_scores'].append({'score': rp.score})
+                rp = rps.get(the_round=r)
             except RoundPlayer.DoesNotExist:
-                entry['round_scores'].append({'score': 0.0})
+                # Skip rounds they didn't show up for
+                continue
+            if t.tournament_scoring_system_obj().uses_round_scores:
+                entry['score_breakdown'].append({'round': r.number(),
+                                                 'score': rp.score,
+                                                 'dropped': rp.score_dropped})
+            else:
+                for gp in rp.gameplayers():
+                    entry['score_breakdown'].append({'round': r.number(),
+                                                     'game': gp.game.name,
+                                                     'score': gp.score,
+                                                     'dropped': gp.score_dropped})
         results.append(entry)
     data = {'name': t.name,
             'year': t.start_date.year,

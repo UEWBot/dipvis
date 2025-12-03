@@ -1735,6 +1735,10 @@ class TournamentViewTests(TestCase):
         self.assertTrue(g.is_finished)
         g.is_finished = False
         g.save()
+        # Add an unranked TournamentPlayer who didn't play
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=self.t4,
+                                             unranked=True)
         response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1743,6 +1747,31 @@ class TournamentViewTests(TestCase):
         g.is_finished = True
         g.save()
         tp.delete()
+
+
+    def test_api2(self):
+        # Change one of the games to not be finished
+        r = self.t4.round_numbered(1)
+        g = r.game_set.first()
+        self.assertTrue(g.is_finished)
+        g.is_finished = False
+        g.save()
+        # Change to non-round-based scoring systems
+        tss = self.t4.tournament_scoring_system
+        rss = self.t4.round_scoring_system
+        self.t4.tournament_scoring_system = 'Sum best 3 games in any rounds'
+        self.t4.round_scoring_system = ''
+        self.t4.save()
+        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        # Cleanup
+        g.is_finished = True
+        g.save()
+        self.t4.tournament_scoring_system = tss
+        self.t4.round_scoring_system = rss
+        self.t4.save()
 
 
     def test_api_invalid_version(self):
