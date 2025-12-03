@@ -58,7 +58,11 @@ def send_board_call_email(the_round):
     messages = []
     for game_text, recipients in games:
         if recipients:
-            msg_text = 'Your game:\n' + game_text + '\n' + all_games
+            # If there's only one game, keep it simple
+            if len(games) == 1:
+                msg_text = 'The game:\n' + game_text
+            else:
+                msg_text = 'Your game:\n' + game_text + '\n' + all_games
             email = EmailMessage(subject=subject,
                                  body=msg_text,
                                  from_email=email_from,
