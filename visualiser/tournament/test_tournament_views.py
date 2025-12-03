@@ -1742,6 +1742,7 @@ class TournamentViewTests(TestCase):
         # Cleanup
         g.is_finished = True
         g.save()
+        tp.delete()
 
 
     def test_api_invalid_version(self):
