@@ -24,6 +24,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from tournament.email import send_prefs_email
 from tournament.forms import PlayerForm
@@ -36,6 +37,7 @@ from tournament.tournament_views import get_visible_tournament_or_404, get_modif
 # Tournament Player views
 
 
+@xframe_options_exempt
 def index(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
