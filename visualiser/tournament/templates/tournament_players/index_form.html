@@ -15,7 +15,9 @@
       {% if tournament.handicaps %}
         <th>{% trans "Handicap" %}</th>
       {% endif %}
-      <th>{% trans "Paid?" %}</th>
+      {% if tournament.any_players_paid %}
+        <th>{% trans "Paid?" %}</th>
+      {% endif %}
       <th>{% trans "Location" %}</th>
       <th>{% trans "Nationalities" %}</th>
       {% if tournament.is_virtual %}
@@ -39,7 +41,9 @@
           {% if tournament.handicaps %}
             <td>{{ tp.handicap|floatformat:2 }}</td>
           {% endif %}
-          <td>{% if tp.paid %}{% trans "Yes" %}{% endif %}</td>
+          {% if tournament.any_players_paid %}
+            <td>{% if tp.paid %}{% trans "Yes" %}{% endif %}</td>
+          {% endif %}
           <td>{% if tp.location %} {{ tp.location }}{% endif %}</td>
           <td>{% for country in tp.player.nationalities %}<img src="{{ country.flag }}" alt="{{ country.name }}"> {% endfor %}</td>
           {% if tournament.is_virtual %}

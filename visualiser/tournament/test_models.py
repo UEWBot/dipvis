@@ -2932,6 +2932,19 @@ class TournamentTests(TestCase):
         t.end_date = end
         t.save(update_fields=['delay_game_url_publication', 'start_date', 'end_date'])
 
+    # Tournament.any_players_paid()
+    def test_tournament_any_players_paid(self):
+        t = Tournament.objects.first()
+        self.assertTrue(t.tournamentplayer_set.exists())
+        self.assertFalse(t.tournamentplayer_set.filter(paid=True).exists())
+        tp = t.tournamentplayer_set.first()
+        tp.paid = True
+        tp.save()
+        self.assertTrue(t.any_players_paid())
+        # Cleanup
+        tp.paid = False
+        tp.save()
+
     # Tournament._calculated_scores()
     def test_tournament_calculated_scores_invalid(self):
         today = date.today()

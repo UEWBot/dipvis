@@ -969,6 +969,14 @@ class Tournament(models.Model):
             return (date.today() > self.end_date + timedelta(hours=24))
         return True
 
+    def any_players_paid(self):
+        """
+        Return a boolean indicating whether any registered players are flagged as having paid.
+
+        A return value of False may indicate that the TD is not using the paid flag.
+        """
+        return self.tournamentplayer_set.filter(paid=True).exists()
+
     def tournament_scoring_system_obj(self):
         """
         Return the TournamentScoringSystem object for the Tournament.
