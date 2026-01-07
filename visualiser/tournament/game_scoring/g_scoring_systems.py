@@ -38,6 +38,7 @@ from tournament.game_scoring.sum_of_squares import GScoringSumOfSquares
 from tournament.game_scoring.tribute import GScoringTribute
 from tournament.game_scoring.whipping import GScoringWhipping
 from tournament.game_scoring.world_classic import GScoringWorldClassic
+from tournament.game_scoring.your_draw_size import GScoringYourDrawSize
 
 
 # All the game scoring systems we support
@@ -81,4 +82,6 @@ G_SCORING_SYSTEMS = [
     GScoringWhipping(_('Whipping'), 468),
     GScoringWorldClassic('World Classic'),
     GScoringWorldClassic('Summer Classic', no_3ways=True),
+    GScoringYourDrawSize('Your Draw Size (short games)', 300),
+    GScoringYourDrawSize('Your Draw Size (unlimited games)', 320),
 ]
