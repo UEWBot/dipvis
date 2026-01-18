@@ -17,8 +17,6 @@
 """
 This module contains a class that implements the Your Draw Size scoring system.
 """
-from operator import itemgetter
-
 from django.utils.translation import gettext as _
 
 from tournament.game_scoring.game_scoring_system import GameScoringSystem
