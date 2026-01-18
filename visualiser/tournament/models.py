@@ -876,7 +876,7 @@ class Tournament(models.Model):
     non_player_round_score_once = models.BooleanField(default=False,
                                                       help_text='Can a player only get the sitting out score for one round?')
     show_current_scores = models.BooleanField(default=True,
-                                              help_text=_('Whether to show up-to-date after-last-round scores'))
+                                              help_text=_('Show "if all games ended now" scores rather than after-last-round scores'))
     draw_secrecy = models.CharField(max_length=1,
                                     verbose_name=_(u'What players are told about failed draw votes'),
                                     choices=DrawSecrecy.choices,
