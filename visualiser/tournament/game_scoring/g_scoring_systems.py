@@ -36,6 +36,7 @@ from tournament.game_scoring.solos import GScoringSolos
 from tournament.game_scoring.southern_sun import GScoringSouthernSun
 from tournament.game_scoring.sum_of_squares import GScoringSumOfSquares
 from tournament.game_scoring.tribute import GScoringTribute
+from tournament.game_scoring.vulcan import GScoringVulcan
 from tournament.game_scoring.whipping import GScoringWhipping
 from tournament.game_scoring.world_classic import GScoringWorldClassic
 from tournament.game_scoring.your_draw_size import GScoringYourDrawSize
@@ -79,6 +80,7 @@ G_SCORING_SYSTEMS = [
     GScoringSouthernSun(),
     GScoringTribute(),
     GScoringOpenTribute(),
+    GScoringVulcan(),
     GScoringWhipping(_('Whipping'), 468),
     GScoringWorldClassic('World Classic'),
     GScoringWorldClassic('Summer Classic', no_3ways=True),
