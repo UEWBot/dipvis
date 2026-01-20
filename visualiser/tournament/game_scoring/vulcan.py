@@ -36,7 +36,7 @@ class GScoringVulcan(GameScoringSystem):
     - Losers to a solo get 5 points if they survived.
     Otherwise, players score as follows:
     1 point per centre
-    1 point for each centre between you and everyone below you (including eliminate players)
+    1 point for each centre between you and everyone below you (including eliminated players)
     10 point bonus for topping, split between topping players if there's a joint top.
     5 points for suriving the game
     """
