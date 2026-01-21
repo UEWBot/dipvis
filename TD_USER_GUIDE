@@ -17,6 +17,8 @@ Things will be more obvious if you have a good understanding of these concepts.
 A Player is a person who plays Diplomacy.
 A Tournament is an event where people play Diplomacy competitively.
 A Tournament consists of a number of Rounds, each of which has a number of Games.
+A Round may optionally be divided into two Pools, one with a set number of Games
+(for example, a beginner pool or a top board pool).
 Each Game is played with a GameSet (e.g. the Avalon Hill edition).
 Tournaments may be part of a Series, for example an annual tournament or an
 event like DipCon that is hosted by different tournaments in different years.
@@ -118,6 +120,11 @@ Scroll all the way to the bottom to find the "Save" button.
 Now your Tournament has its own page on the site. Let's assume it's
 https://example.com/tournaments/42/.
 
+If any of your Rounds need to sub-divided into Pools, create those Pools now by going
+to https://example.com/admin/tournament/pool/add/ Note that only Rounds with exactly
+two Pools (one with a fixed board count) are currently supported, so create both Pools
+now.
+
 Registering Players
 -------------------
 
@@ -176,7 +183,7 @@ https://example.com/tournaments/42/prefs. Preferences are entered as a string of
 characters, for example "FGIRT" meaning "France, then Germany, then Italy, then
 Russia, then Turkey, with England and Austria joint last".
 
-Roll Call and Game Seeding
+Roll Call, Pool Population, and Game Seeding
 --------------------------
 
 Note: the software has the concept of "the current round", which is determined
@@ -194,6 +201,8 @@ but are willing to play if needed, and as "Sandboxer" if they are willing to rec
 game in Backstabbr as it progresses. "Rounds played" is for TD information, in case
 you want to enforce that players don't play every round.
 Once you have everyone entered, press "Submit".
+If the Round has Pools, you will go to a page to specify which players are in the fixed-size
+Pool. Select the appropriate players and click Submit.
 This will take you to the "get seven" page. If you have an exact multiple of seven
 players (possibly including standby players), you can just seed the games from here.
 Otherwise, the system will prompt you to either have players sit out the round or to
@@ -201,11 +210,11 @@ have players play multiple games. Just select them from the dropdown lists and h
 The system will go ahead and seed the boards. This page annotates players willing to
 record their game with an asterisk so that you can ensure that every board has somebody
 recording it if needed. Note that you can refresh this page to re-do the seeding if needed.
-You can also make changes manually. For a vFTF tournament with games on Backstabbr, you
-can enter links to the games on backstabbr on this page to make it easier to import
-centre-count information. Once you're happy, press "Submit" and the Games will be created,
-including sending out emails to the players (unless your Tournament has the "no email"
-option selected) and posting to the Discord webhook (if any).
+You can also make changes manually. For a vFTF tournament with games on Backstabbr or a
+tournament with games captured in sandboxes, you can enter links to the games on backstabbr
+on this page to make it easier to import centre-count information. Once you're happy, press
+"Submit" and the Games will be created, including sending out emails to the players (unless
+your Tournament has the "no email" option selected) and posting to the Discord webhook (if any).
 
 Team Entry
 ----------
