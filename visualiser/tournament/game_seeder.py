@@ -427,7 +427,9 @@ class GameSeeder:
             for _ in range(iterations):
                 # Try swapping a random player between two random games
                 g1, g2 = random.sample(games,2)
-                # Pick a player from each game that isn't also playing the other
+                # # Pick a player from each game that isn't also playing the other
+                # print("g1 ", g1)
+                # print("g2 ", g2)
                 p1 = random.choice(list(g1 - g2))
                 p2 = random.choice(list(g2 - g1))
                 g1.remove(p1)
@@ -565,6 +567,8 @@ class GameSeeder:
         """
         result = []
         games = self.seed_games(omitting_players, players_doubling_up)
+        print("games ", games)
+        print("players doubling up ", players_doubling_up)
         for game in games:
             result.append(self._assign_powers(game))
         return result
@@ -576,7 +580,7 @@ class GameSeeder:
         player_ids = [player.id for player in players]
 
         n = len(players)
-        n_games = int(len(players)/7)+int(len(players_doubling_up))
+        n_games = int((len(players) + len(players_doubling_up))/7)
         
         games_matrix_np = np.zeros((n,n), dtype=int)
         games_matrix_pd = pd.DataFrame(games_matrix_np, index=player_ids, columns=player_ids)
@@ -608,7 +612,7 @@ class GameSeeder:
         #assign the multi-boarders and blocked player pairs first
         if players_doubling_up != ():
             for player in players_doubling_up:
-                print(games)
+                #print(games)
                 g1, g2 = random.sample(games,2)
 
                 g1.add(players_to_index[player])
@@ -768,6 +772,9 @@ class GameSeeder:
                 # print(type(players[5].id))
                 s = self._matrix_assignment(players, players_doubling_up)
                 # print("s :", s)
+
+                for index, entry in enumerate(s):
+                    print(f"s {index} ", len(entry), entry)
 
                 print("fitness before swaps ", self._set_fitness(s))
                 
