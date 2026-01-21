@@ -567,8 +567,7 @@ class GameSeeder:
         """
         result = []
         games = self.seed_games(omitting_players, players_doubling_up)
-        print("games ", games)
-        print("players doubling up ", players_doubling_up)
+
         for game in games:
             result.append(self._assign_powers(game))
         return result
@@ -758,30 +757,16 @@ class GameSeeder:
 
                 players = self._player_pool(omitting_players, ())
 
-                # print(len(players), " players")
-                # print("!!! ", type(players))
-                # print("!!! ", players[0].player, type(players[0]))
-
-                # print("player attributes")
-                all_fields = players[0]._meta.get_fields()
-                # for field in all_fields:
-                #     print(field.name)
-                # print(players[5].player)
-                # print(type(players[5].player))
-                # print(players[5].id)
-                # print(type(players[5].id))
                 s = self._matrix_assignment(players, players_doubling_up)
-                # print("s :", s)
 
-                for index, entry in enumerate(s):
-                    print(f"s {index} ", len(entry), entry)
-
-                print("fitness before swaps ", self._set_fitness(s))
+                #print("fitness before swaps ", self._set_fitness(s))
                 
                 if self.games_played:
                     s, fitness = self._improve_fitness(s)
+                else:
+                    fitness = 0
 
-                print("fitness after swaps ", fitness)
+                #print("fitness after swaps ", self._set_fitness(s))
 
                 seedings.append((s, fitness))
             elif ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
