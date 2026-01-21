@@ -697,7 +697,8 @@ class WDRBackground():
     """
 
     # timeout in seconds for read requests to WDR
-    TIMEOUT=4.0
+    # Some players have a long history
+    TIMEOUT=10.0
 
     def __init__(self, wdr_id):
         self.wdr_id = wdr_id
