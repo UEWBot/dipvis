@@ -39,7 +39,7 @@ class TooManyAwards(Exception):
 
 def _centrecount_year_to_wdd(year):
     """Map a year to a WDD centrecount column name"""
-    return 'CT_%02d' % (year % (FIRST_YEAR-1))
+    return f'CT_{year % (FIRST_YEAR-1):02d}'
 
 
 def _game_to_wdd_id(game):
@@ -98,12 +98,7 @@ def _location_country(location):
         location = location[comma+1:]
         location = location.lstrip()
     # Handle special cases (commonly-abbreviated country names)
-    try:
-        return SPECIAL_CASE_COUNTRIES[location]
-    except KeyError:
-        pass
-    # Hope we're left with a country name
-    return location
+    return SPECIAL_CASE_COUNTRIES.get(location, location)
 
 
 def view_classification_csv(request, tournament_id):
@@ -260,7 +255,7 @@ def view_boards_csv(request, tournament_id):
               ]
     # Centre count for each year (extras don't matter)
     for i in range(1, WDD_MAX_YEAR + 1):
-        headers.append('CT_%02d' % i)
+        headers.append(f'CT_{i:02d}')
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{t.name}{t.start_date.year}boards.csv"'

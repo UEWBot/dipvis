@@ -35,20 +35,23 @@ class SeriesViewTests(TestCase):
                                        end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=DrawSecrecy.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET,
+                                       is_published=True)
         t2 = Tournament.objects.create(name='t2',
                                        start_date=today,
                                        end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                        draw_secrecy=DrawSecrecy.SECRET,
-                                       format=Formats.VFTF)
+                                       format=Formats.VFTF,
+                                       is_published=True)
         t3 = Tournament.objects.create(name='t3',
                                        start_date=today,
                                        end_date=today + timedelta(hours=24),
                                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                        tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
-                                       draw_secrecy=DrawSecrecy.SECRET)
+                                       draw_secrecy=DrawSecrecy.SECRET,
+                                       is_published=True)
         # And a series they all belong to
         cls.s1 = Series.objects.create(name='Test series')
         cls.s1.tournaments.add(t1)

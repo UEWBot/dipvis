@@ -8,11 +8,11 @@
 
 <p>{{ tournament.start_date }} - {{tournament.end_date }}</p>
 
-{% if tournament.wdd_tournament_id %}
-  <p><a href="{{ tournament.wdd_url }}">{% trans "View on WDD" %}</a></p>
-{% endif %}
 {% if tournament.wdr_tournament_id %}
   <p><a href="{{ tournament.wdr_url }}">{% trans "View on WDR" %}</a></p>
+{% endif %}
+{% if tournament.wdd_tournament_id %}
+  <p><a href="{{ tournament.wdd_url }}">{% trans "View on WDD" %}</a></p>
 {% endif %}
 
 {% if tournament.series_set.exists %}
@@ -67,6 +67,7 @@
     <li><a href="{% url 'framesets' tournament.id %}">{% trans "Multi-frame view" %}</a></li>
     <li><a href="{% url 'tournament_scores' tournament.id %}">{% trans "Current Standings" %}</a></li>
   {% endif %}
+  <li><a href="{% url 'tournament_score_graph' tournament.id %}">{% trans "Score Graph" %}</a></li>
   {% if tournament.team_size %}
     <li><a href="{% url 'team_scores' tournament.id %}">{% trans "Team Scores" %}</a></li>
   {% endif %}

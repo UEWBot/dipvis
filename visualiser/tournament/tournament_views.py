@@ -19,7 +19,11 @@ Tournament Views for the Diplomacy Tournament Visualiser.
 """
 
 import csv
+import io
 from io import StringIO
+import matplotlib.figure as figure
+import matplotlib.ticker as ticker
+import matplotlib.pyplot as plt
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -36,7 +40,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 
 from tournament.email import send_roll_call_emails
 
-from tournament.forms import AwardsForm
+from tournament.forms import AwardForm
 from tournament.forms import BaseAwardsFormset
 from tournament.forms import BaseHandicapsFormset
 from tournament.forms import BasePlayerRoundScoreFormset
@@ -137,6 +141,9 @@ def tournament_scores(request,
                       redirect_url_name='tournament_scores_refresh'):
     """Display scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'tournament_scores_refresh'):
+        refresh = False
     tps = t.tournamentplayer_set.order_by('-score',
                                           'player__last_name',
                                           'player__first_name').prefetch_related('player')
@@ -192,6 +199,9 @@ def team_scores(request,
                 redirect_url_name='team_scores_refresh'):
     """Display team scores of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'team_scores_refresh'):
+        refresh = False
     # If we're showing this as part of the tournament overview,
     # skip it if either there's no team round or the first team round
     # hasn't started
@@ -207,7 +217,7 @@ def team_scores(request,
                     show_page = True
                     break
     elif not t.team_size:
-        raise Http404
+        raise Http404('Not a team tournament')
     if not show_page:
         # Redirect immediately
         return HttpResponseRedirect(reverse(redirect_url_name, args=(tournament_id,)))
@@ -236,12 +246,74 @@ def team_scores(request,
     return render(request, 'tournaments/team_scores.html', context)
 
 
+def graph(request, tournament_id):
+    """Score graph for the specified tournament, as a PNG image"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    with io.BytesIO() as f:
+        # plot the scores
+        fig = figure.Figure()
+        ax = fig.subplots()
+        rounds = t.round_set.all()
+        # Get scores for each round in a suitable format
+        all_scores = {}
+        for tp in t.tournamentplayer_set.all():
+            all_scores[tp.player] = []
+        max_score = 0.0
+        for n, r in enumerate(rounds, start=1):
+            if r.show_scores():
+                for p, (rank, score) in t.positions_and_scores(after_round_num=n).items():
+                    all_scores[p].append((n, score))
+                    if rank == 1:
+                        max_score = score
+        # This gives us 40 distinct colors
+        ax.set_prop_cycle('color', plt.get_cmap('tab20b').colors + plt.get_cmap('tab20c').colors)
+        # Add a line for each player
+        for player in all_scores.keys():
+            player_scores = all_scores[player]
+            ax.plot([r for r,s in player_scores],
+                    [s for r,s in player_scores],
+                    label=str(player),
+                    linewidth=2)
+        ax.axis([1, n, 0.0, max_score])
+        # Ticks at whole numbers of rounds
+        ax.xaxis.set_major_locator(ticker.MultipleLocator(1))
+        ax.set_xlabel(_('Round'))
+        ax.set_ylabel(_('Score'))
+        # Place the legend to the right of the graph
+        ax.legend(bbox_to_anchor=(1.04, 1), borderaxespad=0)
+        # Save it, auto-expanding the area to include the legend
+        fig.savefig(f, format='png', bbox_inches="tight")
+        graphic = f.getvalue()
+    return HttpResponse(graphic, content_type="image/png")
+
+
+def tournament_score_graph(request,
+                           tournament_id,
+                           refresh=False,
+                           redirect_url_name='tournament_score_graph_refresh'):
+    """Display the score graph for a tournament"""
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    if t.is_finished and (redirect_url_name == 'tournament_score_graph_refresh'):
+        # Don't bother refreshing if nothing can change
+        refresh = False
+    context = {'tournament': t}
+    if refresh:
+        context['refresh'] = True
+        context['redirect_time'] = REFRESH_TIME
+        context['redirect_url'] = reverse(redirect_url_name,
+                                          args=(tournament_id, ))
+    return render(request, 'tournaments/score_graph.html', context)
+
+
 def tournament_game_results(request,
                             tournament_id,
                             refresh=False,
                             redirect_url_name='tournament_game_results_refresh'):
     """Display the results of all the games of a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'tournament_game_results_refresh'):
+        refresh = False
     tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name').prefetch_related('player__gameplayer_set')
     rds = t.round_set.prefetch_related('game_set')
     rounds = [r.number() for r in rds]
@@ -275,8 +347,17 @@ def tournament_best_countries(request,
                               tournament_id,
                               refresh=False,
                               redirect_url_name='tournament_best_countries_refresh'):
-    """Display best countries of a tournament"""
+    """
+    Display best countries of a tournament
+
+    If the tournament is ongoing, this will be based one "if all games ended now".
+    If the tournament is complete, it always puts any players with "best country"
+    awards at the top.
+    """
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    # No point refreshing if nothing can change
+    if t.is_finished and (redirect_url_name == 'tournament_best_countries_refresh'):
+        refresh = False
     # gps is a dict, keyed by power, of lists of lists of gameplayers,
     # sorted by best country criterion
     if t.show_current_scores:
@@ -288,11 +369,32 @@ def tournament_best_countries(request,
             gps = t.best_countries(whole_list=True, after_round_num=r.number())
         else:
             gps = t.best_countries(whole_list=True, after_round_num=0)
+    # Move players with "best country" awards to the head of their respective list
+    awards = t.awards.exclude(power=None)
+    for p in GreatPower.objects.all():
+        # Find the GamePlayers for the Players given this award at this Tournament
+        for award in t.awards.filter(power=p):
+            gameplayers = []
+            for tp in award.tournamentplayer_set.filter(tournament=t):
+                for rp in tp.roundplayers().all():
+                    for gp in rp.gameplayers().filter(power=p):
+                        gameplayers.append(gp)
+                        for x in gps[p]:
+                            try:
+                                x.remove(gp)
+                            except ValueError:
+                                pass
+            gps[p].insert(0, gameplayers)
+        # Remove any now-empty lists
+        try:
+            gps[p].remove([])
+        except ValueError:
+            pass
     # We have to just pick a set here. Avalon Hill is most common in North America
     set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').prefetch_related('power')
+    # TODO Sort set_powers alphabetically by translated power.name
     # How many rows do we need?
     row_count = max((len(l) for l in (gps[power] for power in GreatPower.objects.all())))
-    # TODO Sort set_powers alphabetically by translated power.name
     rows = []
     # Add a row at a time, containing the best remaining results for each power
     for i in range(row_count):
@@ -347,9 +449,8 @@ def tournament_round(request, tournament_id):
     return HttpResponse("No round currently being played")
 
 
-# TODO Name is confusing - sounds like it takes a round_num
 @permission_required('tournament.change_roundplayer')
-def round_scores(request, tournament_id):
+def enter_scores(request, tournament_id):
     """Provide a form to enter each player's score for each round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     PlayerRoundScoreFormset = formset_factory(PlayerRoundScoreForm,
@@ -445,7 +546,7 @@ def enter_prefs(request, tournament_id):
     """Provide a form to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if not t.powers_assigned_from_prefs():
-        raise Http404
+        raise Http404('Tournament does not use power preferences')
     PrefsFormset = formset_factory(PrefsForm,
                                    extra=0,
                                    formset=BasePrefsFormset)
@@ -471,7 +572,7 @@ def upload_prefs(request, tournament_id):
     """Upload a CSV file to enter player country preferences"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if not t.powers_assigned_from_prefs():
-        raise Http404
+        raise Http404('Tournament does not use power preferences')
     if request.method == 'GET':
         return render(request,
                       'tournaments/upload_prefs.html',
@@ -480,7 +581,7 @@ def upload_prefs(request, tournament_id):
         csv_file = request.FILES['csv_file']
         if csv_file.multiple_chunks():
             messages.error(request,
-                           'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
+                           f'Uploaded file is too big ({csv_file.size / (1024 * 1024):.2f} MB)')
             return HttpResponseRedirect(reverse('upload_prefs',
                                                 args=(tournament_id,)))
         # TODO How do I know what charset to use?
@@ -572,7 +673,7 @@ def seeder_bias(request, tournament_id):
                           tournament=t)
     if request.method == 'POST':
         if t.is_finished or not t.editable:
-            raise Http404
+            raise Http404('Tournament is finished or not editable')
         for k in request.POST.keys():
             if k.startswith('delete_'):
                 # Extract the SeederBias pk from the button name
@@ -596,7 +697,7 @@ def seeder_bias(request, tournament_id):
 def enter_awards(request, tournament_id):
     """Enter awards for the Tournament"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    AwardsFormset = formset_factory(AwardsForm,
+    AwardsFormset = formset_factory(AwardForm,
                                     extra=0,
                                     formset=BaseAwardsFormset)
     formset = AwardsFormset(request.POST or None, tournament=t)
@@ -626,7 +727,7 @@ def enter_handicaps(request, tournament_id):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     # Only valid for Tournaments with handicaps
     if not t.handicaps:
-        raise Http404
+        raise Http404('Tournament does not use handicaps')
     HandicapsFormset = formset_factory(HandicapForm,
                                        extra=0,
                                        formset=BaseHandicapsFormset)
@@ -650,7 +751,7 @@ def teams(request, tournament_id):
     """Show the registered teams"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     if not t.team_size:
-        raise Http404
+        raise Http404('Tournament does not use teams')
     context = {'tournament': t}
     return render(request, 'tournaments/teams.html', context)
 
@@ -661,7 +762,7 @@ def enter_teams(request, tournament_id):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     # Only valid for Tournaments with teams
     if not t.team_size:
-        raise Http404
+        raise Http404('Tournament does not use teams')
     # Calculate a sensible number of teams
     expected_teams = t.tournamentplayer_set.count() // t.team_size
     TeamsFormset = formset_factory(TeamForm,
@@ -723,9 +824,42 @@ def api(request, tournament_id, version):
                              'players': players}
         rounds[r.number()] = {'scoring_system': r.scoring_system,
                               'games': games}
+    results = []
+    p_and_s = t.positions_and_scores()
+    for player, res in p_and_s.items():
+        entry = {'player_name': str(player),
+                 'player_wdr_id': player.wdr_player_id,
+                 'ranking': res[0],
+                 'score': res[1],
+                 'score_breakdown': []}
+        if entry['ranking'] == Tournament.UNRANKED:
+            entry['ranking'] = None
+        rps = player.roundplayer_set.all()
+        for r in t.round_set.all():
+            try:
+                rp = rps.get(the_round=r)
+            except RoundPlayer.DoesNotExist:
+                # Skip rounds they didn't show up for
+                continue
+            if t.tournament_scoring_system_obj().uses_round_scores:
+                entry['score_breakdown'].append({'round': r.number(),
+                                                 'score': rp.score,
+                                                 'dropped': rp.score_dropped})
+            else:
+                for gp in rp.gameplayers():
+                    entry['score_breakdown'].append({'round': r.number(),
+                                                     'game': gp.game.name,
+                                                     'score': gp.score,
+                                                     'dropped': gp.score_dropped})
+        results.append(entry)
     data = {'name': t.name,
             'year': t.start_date.year,
-            'rounds': rounds}
+            'url': request.build_absolute_uri(t.get_absolute_url()),
+            'wdr_id': t.wdr_tournament_id,
+            'wdd_id': t.wdd_tournament_id,
+            'dbn_coverage': [d.dbn_url for d in t.dbncoverage_set.all()],
+            'rounds': rounds,
+            'results': results}
     return JsonResponse(data)
 
 

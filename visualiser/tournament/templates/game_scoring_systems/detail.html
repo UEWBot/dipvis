@@ -37,5 +37,7 @@
     </tbody>
   </table>
   </p>
-{%endfor %}
+{% empty %}
+  <p>{% trans "No examples available" %}</p>
+{% endfor %}
 {% endblock content %}

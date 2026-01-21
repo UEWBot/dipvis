@@ -113,9 +113,9 @@ class TournamentViewTests(TestCase):
                                       description='Player whose hair is longer than the rest')
         cls.a2 = Award.objects.create(name='Greenest Shirt',
                                       description='Player with the greenest shirt')
-        cls.a3 = Award.objects.create(name='Best Italy',
-                                      description='Player who got the best result playing Italy',
-                                      power=cls.italy)
+        cls.a3 = Award.objects.create(name='Best Russia',
+                                      description='Player who got the best result playing Russia',
+                                      power=cls.russia)
         # This one should not be associated with any Tournament
         cls.a4 = Award.objects.create(name='Whitest Teeth',
                                       description='Player whose teeth are whiter than the rest')
@@ -487,6 +487,18 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_views_team(self):
+        self.assertIsNone(self.t4.team_size)
+        self.t4.team_size = 3
+        self.t4.save()
+        response = self.client.get(reverse('tournament_views',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t4.team_size = None
+        self.t4.save()
+
     def test_overview(self):
         response = self.client.get(reverse('tournament_overview',
                                            args=(self.t1.pk,)),
@@ -631,6 +643,19 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
 
+    def test_scores_refresh_after_finish(self):
+        t = Tournament.objects.get(pk=self.t1.pk)
+        self.assertFalse(t.is_finished)
+        t.is_finished = True
+        t.save()
+        response = self.client.get(reverse('tournament_scores_refresh',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        t.is_finished = False
+        t.save()
+
     def test_team_scores(self):
         """No refresh, team tournament, showing current scores"""
         self.t4.team_size = 2
@@ -665,8 +690,35 @@ class TournamentViewTests(TestCase):
 
     def test_team_scores_old(self):
         """Refresh, team tournament, showing scores after last finished round"""
+        t = self.t4
+        self.assertTrue(t.is_finished)
+        t.team_size = 2
+        t.show_current_scores = False
+        t.save()
+        TEAM_NAME = 'Spam, eggs, and spam'
+        tm = Team.objects.create(tournament=self.t4,
+                                 score=123.4,
+                                 name=TEAM_NAME)
+        tm.players.add(self.p1)
+        response = self.client.get(reverse('team_scores_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # TODO Check result
+        self.assertContains(response, TEAM_NAME)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        tm.delete()
+        t.team_size = None
+        t.show_current_scores = True
+        t.save()
+
+    def test_team_scores_refresh(self):
+        """Refresh, team tournament, after Tournament completion"""
+        t = self.t4
+        self.assertTrue(t.is_finished)
         self.t4.team_size = 2
         self.t4.show_current_scores = False
+        self.t4.is_finished = False
         self.t4.save()
         TEAM_NAME = 'Spam, eggs, and spam'
         tm = Team.objects.create(tournament=self.t4,
@@ -678,8 +730,10 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         # TODO Check result
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
+        self.t4.is_finished = True
         self.t4.team_size = None
         self.t4.show_current_scores = True
         self.t4.save()
@@ -704,6 +758,7 @@ class TournamentViewTests(TestCase):
         # TODO Check result
         self.assertContains(response, TEAM_NAME)
         self.assertNotContains(response, '123.4')
+        self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
         self.r41.is_finished = True
@@ -743,6 +798,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         # TODO Check result
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
         self.r41.is_team_round = False
@@ -794,6 +850,42 @@ class TournamentViewTests(TestCase):
         self.t4.team_size = None
         self.t4.save()
 
+    def test_score_graph(self):
+        response = self.client.get(reverse('tournament_score_graph',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_score_graph_refresh(self):
+        self.assertTrue(self.t4.is_finished)
+        self.t4.is_finished = False
+        self.t4.save()
+        response = self.client.get(reverse('tournament_score_graph_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        self.t4.is_finished = True
+        self.t4.save()
+
+    def test_score_graph_refresh_after_end(self):
+        self.assertTrue(self.t4.is_finished)
+        response = self.client.get(reverse('tournament_score_graph_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+
+    def test_graph(self):
+        """Just the graph itself"""
+        response = self.client.get(reverse('graph_img_score',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Should be a PNG image
+        self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
+
     def test_game_results(self):
         response = self.client.get(reverse('tournament_game_results',
                                            args=(self.t4.pk,)),
@@ -807,6 +899,29 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_game_results_refresh_after_finish(self):
+        t = self.t4
+        self.assertTrue(t.is_finished)
+        response = self.client.get(reverse('tournament_game_results_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+
+    def test_game_results_refresh(self):
+        t = self.t4
+        self.assertTrue(t.is_finished)
+        t.is_finished = False
+        t.save()
+        response = self.client.get(reverse('tournament_game_results_refresh',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        t.is_finished = True
+        t.save()
 
     def test_best_countries(self):
         response = self.client.get(reverse('tournament_best_countries',
@@ -843,6 +958,49 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
+
+    def test_best_countries_refresh_after_finish(self):
+        t = self.t1
+        self.assertFalse(t.is_finished)
+        t.is_finished = True
+        t.save()
+        response = self.client.get(reverse('tournament_best_countries_refresh',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Cleanup
+        t.is_finished = False
+        t.save()
+
+    def test_best_countries_with_awards(self):
+        self.assertFalse(self.a3.tournament_set.contains(self.t4))
+        self.assertEqual(self.t4.awards.count(), 0)
+        self.t4.awards.add(self.a3)
+        gps = []
+        for r in self.t4.round_set.all():
+            for g in r.game_set.all():
+                for gp in g.gameplayer_set.filter(power=self.a3.power):
+                    gps.append(gp)
+        gps.sort(key=lambda gp: gp.score)
+        # Add the best country award to the player with the lowest score
+        gps[0].tournamentplayer().awards.add(self.a3)
+        response = self.client.get(reverse('tournament_best_countries',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        # Verify that the player with the award gets listed at the top
+        rows = response.context['rows']
+        found = False
+        for row in rows:
+            for gameplayers in row:
+                for gp in gameplayers:
+                    if gp.power == self.a3.power:
+                        if not found:
+                            # This is the first listed player for the power of interest
+                            self.assertEqual(gp, gps[0])
+                            found = True
+        # Cleanup
+        gps[0].tournamentplayer().awards.clear()
+        self.t4.awards.clear()
 
     def test_enter_scores_not_logged_in(self):
         response = self.client.get(reverse('enter_scores',
@@ -902,24 +1060,24 @@ class TournamentViewTests(TestCase):
             old_tp_scores[tp] = tp.score
             rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
             old_rp_scores[rp] = rp.score
-            data['form-%d-tp' % i] = str(tp.pk)
-            data['form-%d-game_scores_1' % i] = '0.0'
+            data[f'form-{i}-tp'] = str(tp.pk)
+            data[f'form-{i}-game_scores_1'] = '0.0'
             if i == 0:
                 # Give a unique value to the first TournamentPlayer
-                data['form-%d-round_1' % i] = '73.5'
-                data['form-%d-overall_score' % i] = '142.8'
+                data[f'form-{i}-round_1'] = '73.5'
+                data[f'form-{i}-overall_score'] = '142.8'
             elif i == 1:
                 # And don't change the second
                 unchanged_rp = rp
-                data['form-%d-round_1' % i] = str(rp.score)
+                data[f'form-{i}-round_1'] = str(rp.score)
                 unchanged_tp = tp
-                data['form-%d-overall_score' % i] = str(tp.score)
+                data[f'form-{i}-overall_score'] = str(tp.score)
             else:
-                data['form-%d-round_1' % i] = '37.5'
-                data['form-%d-overall_score' % i] = '124.8'
+                data[f'form-{i}-round_1'] = '37.5'
+                data[f'form-{i}-overall_score'] = '124.8'
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
         response = self.client.post(reverse('enter_scores', args=(self.t2.pk,)),
                                     data,
@@ -1055,12 +1213,12 @@ class TournamentViewTests(TestCase):
         # Update most handicaps to a different value
         for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
             if i == 1:
-                data['form-%d-handicap' % i] = '0.0'
+                data[f'form-{i}-handicap'] = '0.0'
             else:
-                data['form-%d-handicap' % i] = '%f' % float(i)
+                data[f'form-{i}-handicap'] = f'{float(i)}'
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
         response = self.client.post(reverse('enter_handicaps', args=(self.t2.pk,)),
                                     data,
@@ -1425,10 +1583,10 @@ class TournamentViewTests(TestCase):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
-            data['form-%d-prefs' % i] = 'FART'
+            data[f'form-{i}-prefs'] = 'FART'
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
 
         response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
@@ -1540,7 +1698,7 @@ class TournamentViewTests(TestCase):
         # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         url = reverse('seeder_bias', args=(self.t2.pk,))
-        data = urlencode({'delete_%d' % sb2.pk: 'Remove Bias'})
+        data = urlencode({f'delete_{sb2.pk}': 'Remove Bias'})
         response = self.client.post(url,
                                     data,
                                     secure=True,
@@ -1577,6 +1735,10 @@ class TournamentViewTests(TestCase):
         self.assertTrue(g.is_finished)
         g.is_finished = False
         g.save()
+        # Add an unranked TournamentPlayer who didn't play
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=self.t4,
+                                             unranked=True)
         response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1584,6 +1746,32 @@ class TournamentViewTests(TestCase):
         # Cleanup
         g.is_finished = True
         g.save()
+        tp.delete()
+
+
+    def test_api2(self):
+        # Change one of the games to not be finished
+        r = self.t4.round_numbered(1)
+        g = r.game_set.first()
+        self.assertTrue(g.is_finished)
+        g.is_finished = False
+        g.save()
+        # Change to non-round-based scoring systems
+        tss = self.t4.tournament_scoring_system
+        rss = self.t4.round_scoring_system
+        self.t4.tournament_scoring_system = 'Sum best 3 games in any rounds'
+        self.t4.round_scoring_system = ''
+        self.t4.save()
+        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        # Cleanup
+        g.is_finished = True
+        g.save()
+        self.t4.tournament_scoring_system = tss
+        self.t4.round_scoring_system = rss
+        self.t4.save()
 
 
     def test_api_invalid_version(self):
@@ -1663,11 +1851,11 @@ class TournamentViewTests(TestCase):
         tp = self.t1.tournamentplayer_set.first()
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, a in enumerate(self.t1.awards.all()):
-            data['form-%d-award' % i] = str(a.id)
-            data['form-%d-players' % i] = [str(tp.id)]
+            data[f'form-{i}-award'] = str(a.id)
+            data[f'form-{i}-players'] = [str(tp.id)]
         i += 1
-        data['form-TOTAL_FORMS'] = '%d' % i
-        data['form-INITIAL_FORMS'] = '%d' % i
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data, doseq=True)
         response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
                                     data,

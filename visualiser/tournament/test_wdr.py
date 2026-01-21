@@ -18,6 +18,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
 from tournament.wdr import validate_wdr_player_id, validate_wdr_tournament_id
+from tournament.wdr import wdr_tournament_as_json
 
 
 class WDRTests(TestCase):
@@ -46,3 +47,8 @@ class WDRTests(TestCase):
         # Note that this test will fail if the WDR can't be reached
         # (in that case, we assume the id is valid)
         self.assertRaises(ValidationError, validate_wdr_tournament_id, 0)
+
+    @tag('wdr')
+    def test_wdr_tournament_as_json(self):
+        json = wdr_tournament_as_json(1545)
+        # TODO Validate result

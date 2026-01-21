@@ -24,6 +24,7 @@ from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
 from django.utils.translation import gettext as _
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 from tournament.email import send_prefs_email
 from tournament.forms import PlayerForm
@@ -36,6 +37,7 @@ from tournament.tournament_views import get_visible_tournament_or_404, get_modif
 # Tournament Player views
 
 
+@xframe_options_exempt
 def index(request, tournament_id):
     """Display a list of registered players for a tournament"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
@@ -50,7 +52,7 @@ def index(request, tournament_id):
     formset = PlayerFormset(request.POST or None)
     if request.method == 'POST':
         if t.is_finished or not t.editable:
-            raise Http404
+            raise Http404('Cannot POST to uneditable or finished tournament')
         redirect = False
         for k in request.POST.keys():
             # Send preferences email to the specified TournamentPlayer
@@ -155,11 +157,11 @@ def player_prefs(request, tournament_id, uuid):
     t = get_object_or_404(Tournament, pk=tournament_id)
     # But don't allow modification of archived tournaments
     if not t.editable:
-        raise Http404
+        raise Http404('Tournament is not editable')
     # Fail if the last round already has Games (too late)
     r = t.round_set.last()
     if r and r.game_set.exists():
-        raise Http404
+        raise Http404('Games exist in final round')
     # Find the TournamentPlayer in question
     try:
         tp = t.tournamentplayer_set.get(uuid_str=str(uuid))

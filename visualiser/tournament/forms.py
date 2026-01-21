@@ -69,7 +69,7 @@ class TournamentPlayerMultipleChoiceField(forms.ModelMultipleChoiceField):
 
 # Awards
 
-class AwardsForm(forms.Form):
+class AwardForm(forms.Form):
     """Form to give one Award to TournamentPlayers"""
     award = forms.ModelChoiceField(queryset=Award.objects.all(),
                                    widget=forms.HiddenInput())
@@ -183,7 +183,7 @@ class HandicapForm(forms.Form):
     handicap = forms.FloatField()
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.tp = kwargs.pop('tp')
         # Overridable default initial value, like ModelForm
         if 'initial' not in kwargs.keys():
@@ -227,10 +227,7 @@ class TeamForm(forms.Form):
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
-        try:
-            self.team = kwargs.pop('team')
-        except KeyError:
-            self.team = None
+        self.team = kwargs.pop('team', None)
         # Create an appropriate number of player fields
         queryset = Player.objects.filter(tournamentplayer__in=self.tournament.tournamentplayer_set.all()).distinct()
         # Overridable default initial value, like ModelForm
@@ -403,24 +400,21 @@ class GameScoreForm(forms.Form):
     """Form for score for a single game"""
     name = forms.CharField(label=_(u'Game Name'),
                            max_length=Game.MAX_NAME_LENGTH,
-                           disabled=True)
+                           disabled=True,
+                           widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one score field per Great Power"""
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['name'].widget.attrs
-        attrs['size'] = attrs['maxlength']
-
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
             # Don't require a score for every player
-            self.fields[c] = forms.FloatField(required=False)
-            self.fields[c].label = _(c)
-            attrs = self.fields[c].widget.attrs
-            attrs['size'] = 10
-            attrs['maxlength'] = 10
+            self.fields[c] = forms.FloatField(label=_(c),
+                                              required=False,
+                                              widget=forms.TextInput(attrs={'size': '10',
+                                                                            'maxlength': '10'}))
 
 
 # Game seeding
@@ -431,7 +425,8 @@ class GamePlayersForm(forms.Form):
                                  widget=forms.HiddenInput())
     name = forms.CharField(label=_(u'Game Name'),
                            max_length=Game.MAX_NAME_LENGTH,
-                           validators=[validate_game_name])
+                           validators=[validate_game_name],
+                           widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
     external_url = forms.URLField(label=_('URL'),
@@ -445,9 +440,6 @@ class GamePlayersForm(forms.Form):
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
 
-        attrs = self.fields['name'].widget.attrs
-        attrs['size'] = attrs['maxlength']
-
         queryset = self.the_round.roundplayer_set.prefetch_related('player')
 
         field_order = ['name', 'the_set', 'external_url']
@@ -455,8 +447,8 @@ class GamePlayersForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            self.fields[c] = RoundPlayerChoiceField(queryset)
-            self.fields[c].label = _(c)
+            self.fields[c] = RoundPlayerChoiceField(label=_(c),
+                                                    queryset=queryset)
             field_order.append(c)
 
         # Put notes at the end
@@ -546,19 +538,16 @@ class PowerAssignForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one GreatPower field per RoundPlayer"""
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.game = kwargs.pop('game')
         super().__init__(*args, **kwargs)
 
         queryset = GreatPower.objects.all()
 
-        # We want to insert the new fields after these three
         field_order = ['name', 'the_set', 'external_url']
 
         # Create the right player fields
         for gp in self.game.gameplayer_set.order_by('power__abbreviation'):
-            # Find the initial GreatPower provided for this GamePlayer
-            init = self.initial.get(gp.id)
             c = str(gp.id)
             # flag if they are able to sandbox
             suffix = ''
@@ -566,8 +555,7 @@ class PowerAssignForm(forms.Form):
                 suffix = '*'
             label = str(gp.player) + suffix
             self.fields[c] = forms.ModelChoiceField(label=label,
-                                                    queryset=queryset,
-                                                    initial=init)
+                                                    queryset=queryset)
             field_order.append(c)
 
         # Put notes and issues at the end
@@ -597,7 +585,7 @@ class BasePowerAssignFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # This formset only makes sense if the Games already exist and have GamePlayers assigned
         assert self.extra == 0
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
         self.games = self.the_round.game_set.all()
@@ -630,13 +618,13 @@ class GetSevenPlayersForm(forms.Form):
     def __create_player_fields(self, queryset, prefix, count):
         """Do the actual field creation"""
         for i in range(count):
-            self.fields[f'{prefix}_{i}'] = RoundPlayerChoiceField(queryset,
+            self.fields[f'{prefix}_{i}'] = RoundPlayerChoiceField(queryset=queryset,
                                                                   required=False,
                                                                   label=self.LABELS[prefix])
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates the appropriate number of player fields"""
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
 
         present = self.the_round.roundplayer_set.prefetch_related('player')
@@ -655,6 +643,10 @@ class GetSevenPlayersForm(forms.Form):
                 if rp.game_count == 2:
                     initial[f'double_{doublers}'] = rp
                     doublers += 1
+            standing = 0
+            for rp in standbys:
+                initial[f'standby_{standing}'] = rp
+                standing += 1
             kwargs['initial'] = initial
 
         super().__init__(*args, **kwargs)
@@ -763,13 +755,13 @@ class GetSevenPlayersForm(forms.Form):
 class SCOwnerForm(forms.Form):
     """Form for Supply Centre ownership for one year"""
     # Allow for an initial game-start SC ownership
-    year = forms.IntegerField(min_value=FIRST_YEAR-1, required=False)
+    year = forms.IntegerField(min_value=FIRST_YEAR-1,
+                              required=False,
+                              widget=forms.TextInput(attrs={'size': '4'}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one owner field per SupplyCentre"""
         super().__init__(*args, **kwargs)
-
-        self.fields['year'].widget.attrs['size'] = 4
 
         # Create the right country fields
         for sc in SupplyCentre.objects.all():
@@ -786,8 +778,7 @@ class BaseSCOwnerFormset(BaseFormSet):
         if any(self.errors):
             return
         years = []
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+        for form in self.forms:
             year = form.cleaned_data.get('year')
             if not year:
                 # Blank form
@@ -801,8 +792,7 @@ class BaseSCOwnerFormset(BaseFormSet):
         for sc in SupplyCentre.objects.all():
             # Find all the listed owners for this dot
             owners = {}
-            for i in range(0, self.total_form_count()):
-                form = self.forms[i]
+            for form in self.forms:
                 year = form.cleaned_data.get('year')
                 owner = form.cleaned_data.get(sc.name)
                 owners[year] = (owner, form)
@@ -878,10 +868,10 @@ class DeathYearForm(forms.Form):
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            self.fields[c] = forms.IntegerField(min_value=FIRST_YEAR)
-            self.fields[c].required = False
-            self.fields[c].widget.attrs['size'] = 4
-            self.fields[c].widget.attrs['maxlength'] = 4
+            self.fields[c] = forms.IntegerField(min_value=FIRST_YEAR,
+                                                required=False,
+                                                widget=forms.TextInput(attrs={'size': '4',
+                                                                              'maxlength': '4'}))
 
 
 # Supply Centre count
@@ -889,25 +879,24 @@ class DeathYearForm(forms.Form):
 class SCCountForm(forms.Form):
     """Form for a Supply Centre count"""
     # Allow for an initial game-start SC count
-    year = forms.IntegerField(min_value=FIRST_YEAR-1)
+    year = forms.IntegerField(min_value=FIRST_YEAR-1,
+                              widget=forms.TextInput(attrs={'size': '4'}))
 
     def __init__(self, *args, **kwargs):
         """Dynamically creates one count field per Great Power"""
         super().__init__(*args, **kwargs)
 
-        self.fields['year'].widget.attrs['size'] = 4
-
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
             # Support just providing counts for some powers (e.g. eliminations)
-            self.fields[c] = forms.IntegerField(min_value=0,
-                                                max_value=TOTAL_SCS,
-                                                required=False)
             # We don't want the default capitalisation
-            self.fields[c].label = _(c)
-            self.fields[c].widget.attrs['size'] = 2
-            self.fields[c].widget.attrs['maxlength'] = 2
+            self.fields[c] = forms.IntegerField(label=_(c),
+                                                min_value=0,
+                                                max_value=TOTAL_SCS,
+                                                required=False,
+                                                widget=forms.TextInput(attrs={'size': '2',
+                                                                              'maxlength': '2'}))
 
     def clean(self):
         """Checks that the total SC count is reasonable"""
@@ -943,10 +932,9 @@ class BaseSCCountFormset(BaseFormSet):
         """
         if any(self.errors):
             return
-        years = []
+        years = set()
         neutrals = {}
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+        for form in self.forms:
             try:
                 year = form.cleaned_data['year']
             except KeyError:
@@ -955,7 +943,7 @@ class BaseSCCountFormset(BaseFormSet):
             if year in years:
                 raise forms.ValidationError(_('Year %(year)s appears more than once')
                                             % {'year': year})
-            years.append(year)
+            years.add(year)
             # Remember the number of neutrals left
             try:
                 neutrals[year] = form.cleaned_data['neutral']
@@ -1014,11 +1002,7 @@ class PlayerForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         # Optional Tournament parameter
-        t = None
-        try:
-            t = kwargs.pop('tournament')
-        except KeyError:
-            pass
+        t = kwargs.pop('tournament', None)
         super().__init__(*args, **kwargs)
         if t is not None:
             self.fields['player'].queryset = Player.objects.filter(tournamentplayer__in=t.tournamentplayer_set.all()).distinct()
@@ -1028,6 +1012,7 @@ class PlayerForm(forms.Form):
 
 class PlayerRoundForm(forms.Form):
     """Form to specify whether a player is available to play a specific round"""
+
     # We want all Players to be available to be chosen,
     # as this provides an easy way to add TournamentPlayers
     player = PlayerChoiceField(queryset=Player.objects.all())
@@ -1039,41 +1024,35 @@ class PlayerRoundForm(forms.Form):
                                        max_value=10,
                                        min_value=0)
 
-    def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
-        self.round_num = kwargs.pop('round_num')
-        super().__init__(*args, **kwargs)
+    def clean(self):
+        """Checks that standby players and sandboxers are present"""
+        cleaned_data = super().clean()
+        if (cleaned_data['standby'] or cleaned_data['sandboxer']) and not cleaned_data['present']:
+            raise ValidationError(_('Standbys/sandboxers should be flagged as present'))
+        return cleaned_data
 
 
 class BasePlayerRoundFormset(BaseFormSet):
     """Form to specify which players are playing in a round"""
+
     def clean(self):
         """Checks that no player appears more than once"""
         if any(self.errors):
             return
-        players = []
-        for i in range(0, self.total_form_count()):
-            form = self.forms[i]
+        players = set()
+        for form in self.forms:
             player = form.cleaned_data.get('player')
             if not player:
                 continue
             if player in players:
                 raise forms.ValidationError(_('Player %(player)s appears more than once')
                                             % {'player': player})
-            players.append(player)
+            players.add(player)
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
-        round_num = kwargs.pop('round_num')
         super().__init__(*args, **kwargs)
-        # Cache parameters we'll pass to each form's constructor
-        self.round_num = round_num
-
-    def _construct_form(self, index, **kwargs):
-        # Pass the special args down to the form itself
-        kwargs['round_num'] = self.round_num
-        return super()._construct_form(index, **kwargs)
 
 
 # Round scoring
@@ -1083,11 +1062,11 @@ class PlayerRoundScoreForm(forms.Form):
     tp = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none(),
                                      widget=forms.HiddenInput())
     player = forms.CharField(max_length=Player._meta.get_field('first_name').max_length + Player._meta.get_field('last_name').max_length + 1,
-                             disabled=True)
-    player.widget.attrs.update(size='20')
+                             disabled=True,
+                             widget=forms.TextInput(attrs={'size': '20'}))
 
     def __init__(self, *args, **kwargs):
-        # Remove our three special kwargs from the list
+        # Remove our special kwargs from the list
         self.tournament = kwargs.pop('tournament')
         self.last_round_num = kwargs.pop('last_round_num')
         super().__init__(*args, **kwargs)
@@ -1102,22 +1081,20 @@ class PlayerRoundScoreForm(forms.Form):
             self.fields[game_scores_name] = forms.CharField(max_length=10,
                                                             required=False,
                                                             disabled=True)
-            self.fields[name] = forms.FloatField(required=False)
-            attrs = self.fields[name].widget.attrs
-            attrs['size'] = 10
-            attrs['maxlength'] = 40
+            self.fields[name] = forms.FloatField(required=False,
+                                                 widget=forms.TextInput(attrs={'size': '10',
+                                                                               'maxlength': '40'}))
 
         # Last field is for the overall tournament score
-        self.fields['overall_score'] = forms.FloatField(required=False)
-        attrs = self.fields['overall_score'].widget.attrs
-        attrs['size'] = 10
-        attrs['maxlength'] = 20
+        self.fields['overall_score'] = forms.FloatField(required=False,
+                                                        widget=forms.TextInput(attrs={'size': '10',
+                                                                                      'maxlength': '20'}))
 
 
 class BasePlayerRoundScoreFormset(BaseFormSet):
     """Form to enter round scores for all players"""
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
         # Cache value we'll pass to each form's constructor
@@ -1158,7 +1135,7 @@ class GameImageForm(ModelForm):
         fields = ('game', 'year', 'season', 'phase', 'image')
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
+        # Remove our special kwarg from the list
         tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
         self.fields['game'].queryset = Game.objects.filter(the_round__tournament=tournament).distinct()

@@ -23,6 +23,7 @@ import requests
 
 from django_countries.fields import Country
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
@@ -165,6 +166,7 @@ def _validate_wdd_id(url, param, value):
     try:
         r = requests.head(url,
                           params={param: value},
+                          headers={'User-Agent': settings.USER_AGENT},
                           allow_redirects=False,
                           timeout=1.0)
     except requests.exceptions.Timeout:
@@ -230,8 +232,8 @@ def wdd_nation_to_country(country_code):
     """
     try:
         c = Country(WDD_COUNTRY_TO_ISO_CODE[country_code])
-    except KeyError:
-        raise UnrecognisedCountry(country_code)
+    except KeyError as e:
+        raise UnrecognisedCountry(country_code) from e
     assert len(c) > 0
     return c
 

@@ -36,7 +36,7 @@ register_converter(BackstabbrTypeConverter, 'bs_type')
 
 backstabbr_patterns = [
     # This is just the graph image
-    path('graph/<bs_type:game_type>/<int:game_number>/', backstabbr_views.graph, name='graph'),
+    path('graph/<bs_type:game_type>/<int:game_number>/', backstabbr_views.graph, name='graph_img_bs'),
     # This is the page showing the graph
     path('sc_graph/game/<int:game_number>/', backstabbr_views.game_sc_graph,
         {'sandbox': False}, name='game_sc_graph'),

@@ -57,8 +57,12 @@ def send_board_call_email(the_round):
     # Create one message per game
     messages = []
     for game_text, recipients in games:
-        msg_text = 'Your game:\n' + game_text + '\n' + all_games
         if recipients:
+            # If there's only one game, keep it simple
+            if len(games) == 1:
+                msg_text = 'The game:\n' + game_text
+            else:
+                msg_text = 'Your game:\n' + game_text + '\n' + all_games
             email = EmailMessage(subject=subject,
                                  body=msg_text,
                                  from_email=email_from,
@@ -104,7 +108,6 @@ def send_prefs_email(tournamentplayer, force=False):
 
     body = PREFS_EMAIL
     subject = PREFS_SUBJECT
-    rule = None
     addr = tournamentplayer.player.email
     # Can't do anything unless we have an email address for the player
     if not addr:
@@ -120,8 +123,7 @@ def send_prefs_email(tournamentplayer, force=False):
         return
     # Create the email and send it
     msg_body = body % {'tourney': t,
-                       'url': tournamentplayer.get_prefs_url(),
-                       'rule': rule}
+                       'url': tournamentplayer.get_prefs_url()}
     send_mail(subject % t,
               msg_body,
               settings.EMAIL_HOST_USER,

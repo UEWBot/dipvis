@@ -27,7 +27,7 @@ from tournament import backstabbr, webdip
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.models import Tournament, Round, Game, DrawProposal, GameImage
 from tournament.models import SupplyCentreOwnership, CentreCount, Preference
 from tournament.models import Award, SeederBias, Series, DBNCoverage, Team
@@ -687,6 +687,7 @@ class TournamentScoringWDC2025Tests(TestCase):
         for p in players:
             TournamentPlayer.objects.create(tournament=cls.t, player=p)
         # Create RoundPlayers
+        # TODO skip players that don't play in a Round
         for r in [cls.r1, cls.r2, cls.r3, cls.r4]:
             for p in players:
                 RoundPlayer.objects.create(player=p, the_round=r)
@@ -2931,6 +2932,19 @@ class TournamentTests(TestCase):
         t.end_date = end
         t.save(update_fields=['delay_game_url_publication', 'start_date', 'end_date'])
 
+    # Tournament.any_players_paid()
+    def test_tournament_any_players_paid(self):
+        t = Tournament.objects.first()
+        self.assertTrue(t.tournamentplayer_set.exists())
+        self.assertFalse(t.tournamentplayer_set.filter(paid=True).exists())
+        tp = t.tournamentplayer_set.first()
+        tp.paid = True
+        tp.save()
+        self.assertTrue(t.any_players_paid())
+        # Cleanup
+        tp.paid = False
+        tp.save()
+
     # Tournament._calculated_scores()
     def test_tournament_calculated_scores_invalid(self):
         today = date.today()
@@ -4076,11 +4090,11 @@ class TournamentTests(TestCase):
         for i in range(1, r.number()):
             with self.subTest(round_number=i):
                 self.assertTrue(t.round_numbered(i).is_finished or t.round_numbered(i).in_progress(),
-                                'round %d' % i)
+                                f'round {i}')
         # All later rounds should be not in progress
         for i in range(r.number() + 1, rounds + 1):
             with self.subTest(round_number=i):
-                self.assertFalse(t.round_numbered(i).in_progress(), 'round %d' % i)
+                self.assertFalse(t.round_numbered(i).in_progress(), f'round {i}')
         # This round should be unfinished
         self.assertFalse(r.is_finished)
 
@@ -5082,15 +5096,16 @@ class RoundTests(TestCase):
                                  scoring_system=s,
                                  dias=False,
                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
-        self.assertRaises(IntegrityError,
-                          Round.objects.create,
-                          tournament=t,
-                          scoring_system=s,
-                          dias=False,
-                          start=r.start)
+        r2 = Round(tournament=t,
+                   scoring_system=s,
+                   dias=False,
+                   start=r.start)
+        with self.assertRaises(IntegrityError):
+            r2.save()
         # Clean up
         # For some reason, this gives an error
-        #t.delete()
+        # django.db.transaction.TransactionManagementError: An error occurred in the current transaction. You can't execute queries until the end of the 'atomic' block.
+        # t.delete()
 
     # Round.scores()
     def test_round_scores_finished(self):
@@ -7282,7 +7297,16 @@ class DrawProposalTests(TestCase):
     # DrawProposal.votes_against()
     def test_draw_proposal_votes_against_none(self):
         t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.draw_secrecy, DrawSecrecy.COUNTS)
         g = t.round_numbered(1).game_set.get(name='g31')
+        self.assertEqual(0, g.centrecount_set.filter(year=1903).count())
+        CentreCount.objects.create(power=self.austria, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.england, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.france, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.germany, game=g, year=1903, count=9)
+        CentreCount.objects.create(power=self.italy, game=g, year=1903, count=1)
+        CentreCount.objects.create(power=self.russia, game=g, year=1903, count=5)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1903, count=4)
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
                                          season=Seasons.FALL,
@@ -7296,10 +7320,13 @@ class DrawProposalTests(TestCase):
         dp.drawing_powers.add(self.russia)
         dp.drawing_powers.add(self.turkey)
         self.assertEqual(dp.votes_against(), 0)
+        # Cleanup
+        g.centrecount_set.filter(year=1903).delete()
         dp.delete()
 
     def test_draw_proposal_votes_against_some(self):
         t = Tournament.objects.get(name='t3')
+        self.assertEqual(t.draw_secrecy, DrawSecrecy.COUNTS)
         g = t.round_numbered(1).game_set.get(name='g31')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,
@@ -7318,6 +7345,7 @@ class DrawProposalTests(TestCase):
 
     def test_draw_proposal_votes_against_exception(self):
         t = Tournament.objects.get(name='t1')
+        self.assertEqual(t.draw_secrecy, DrawSecrecy.SECRET)
         g = t.round_numbered(1).game_set.get(name='g11')
         dp = DrawProposal.objects.create(game=g,
                                          year=1910,

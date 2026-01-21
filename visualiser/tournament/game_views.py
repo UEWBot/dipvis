@@ -27,7 +27,7 @@ from django.db.models.query import QuerySet
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
-from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -43,6 +43,8 @@ from tournament.forms import DeathYearForm
 from tournament.forms import GameImageForm
 from tournament.forms import SCCountForm
 from tournament.forms import SCOwnerForm
+
+from tournament.round_views import create_games
 
 from tournament.tournament_views import get_modifiable_tournament_or_404
 from tournament.tournament_views import get_visible_tournament_or_404
@@ -106,6 +108,9 @@ def game_sc_owners(request,
     """Display the SupplyCentre ownership for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # No point in refreshing the page if the Game is over
+    if g.is_finished and (redirect_url_name == 'game_sc_owners_refresh'):
+        refresh = False
     scs = SupplyCentre.objects.all()
     scos = g.supplycentreownership_set.prefetch_related('owner')
     # Create a list of years that have been played, starting with the most recent
@@ -175,6 +180,9 @@ def game_sc_chart(request,
     """Display the SupplyCentre chart for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # No point in refreshing the page if the Game is over
+    if g.is_finished and (redirect_url_name == 'game_sc_chart_refresh'):
+        refresh = False
     # Template relies on set_powers and ps having the same ordering
     # TODO Sort alphabetically by translated power.name
     set_powers = g.the_set.setpower_set.order_by('power__name').prefetch_related('power')
@@ -219,10 +227,7 @@ def _map_to_fg(colour):
     """
     MAP = {'grey': 'black',
            'white': 'grey'}
-    try:
-        return MAP[colour]
-    except KeyError:
-        return colour
+    return MAP.get(colour, colour)
 
 
 def _graph_end_year(game):
@@ -274,6 +279,9 @@ def game_sc_graph(request,
     """Display the SupplyCentre graph for a game"""
     t = get_visible_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
+    # No point in refreshing the page if the Game is over
+    if g.is_finished and (redirect_url_name == 'game_sc_graph_refresh'):
+        refresh = False
     context = {'game': g}
     if refresh:
         context['refresh'] = True
@@ -294,6 +302,14 @@ def _blank_row_num(queryset, final_year):
         # So how many years are missing?
         years_to_go = 2 + final_year - FIRST_YEAR - years
     return years_to_go
+
+
+@permission_required('tournament.change_game')
+def change_game(request, tournament_id, game_name):
+    """Provide a form to change a single game"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    return create_games(request, tournament_id, g.the_round.number(), game_name)
 
 
 @permission_required('tournament.add_centrecount')
@@ -422,8 +438,8 @@ def sc_counts(request, tournament_id, game_name):
                                 try:
                                     i.full_clean()
                                 except ValidationError as e:
-                                    #form.add_error(name, e)
-                                    form.add_error(None, e)
+                                    # Associate the error with the appropriate field
+                                    form.add_error(name, e.messages)
                                     raise e
                                 i.save()
 
@@ -615,7 +631,10 @@ def game_image(request,
     if turn == '':
         # With the URLs as they stand, turn='' only occurs with timelapse=True
         if not timelapse:
-            raise Http404
+            raise Http404('No turn specified for non-timelapse view')
+        # No point in refreshing the page if the Game is over
+        if g.is_finished and (redirect_url_name == 'current_game_image'):
+            timelapse = False
         # If we're just showing the current position, use the standard refresh time
         refresh_time = REFRESH_TIME
         # Always display the latest image
@@ -645,7 +664,7 @@ def game_image(request,
                 next_image_str = i.turn_str()
                 break
     if not this_image:
-        raise Http404
+        raise Http404('Image for specified turn not found')
     context = {'tournament': t, 'image': this_image}
     if timelapse:
         context['refresh'] = True
@@ -756,7 +775,7 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     elif bg.season == backstabbr.WINTER:
         year = bg.year
     else:
-        raise Http404
+        raise Http404(f'Unrecognised season {bg.season}')
     # Add the appropriate SupplyCentreOwnerships and/or CentreCounts
     _bs_ownerships_to_sco(game, year, bg.sc_ownership)
     if len(bg.sc_ownership):
@@ -764,8 +783,11 @@ def _scrape_backstabbr(request, tournament, game, backstabbr_game):
     else:
         _sc_counts_to_cc(game, year, bg.sc_counts)
     game.set_is_finished(year)
+    # If Backstabbr reports that the game is over, flag it as finished
+    if not bg.ongoing:
+        game.is_finished = True
+        game.save(update_fields=['is_finished'])
     game.update_scores()
-    # TODO There's more information in bg - like whether the game is over...
     # Report what was done
     return render(request,
                   'games/scrape_external_site.html',
@@ -785,7 +807,7 @@ def _scrape_webdip(request, tournament, game, webdip_game):
     elif wg.season == webdip.FALL:
         year = wg.year
     else:
-        raise Http404
+        raise Http404(f'Unrecognised season {wg.season}')
     # Add the appropriate CentreCounts
     _sc_counts_to_cc(game, year, wg.sc_counts)
     game.set_is_finished(year)
@@ -810,6 +832,8 @@ def scrape_external_site(request, tournament_id, game_name):
     if backstabbr.is_backstabbr_url(g.external_url):
         try:
             bg = g.backstabbr_game()
+        except backstabbr.BackstabbrNotAccessible:
+            pass
         except backstabbr.InvalidGameUrl:
             pass
         else:
@@ -822,4 +846,32 @@ def scrape_external_site(request, tournament_id, game_name):
             pass
         else:
             return _scrape_webdip(request, t, g, wg)
-    raise Http404
+    raise Http404('External site is not backstabbr or webdiplomacy')
+
+def api(request, version, tournament_id, game_name):
+    """JSON API to retrieve data"""
+    if version != 1:
+        raise Http404(f'Invalid API version {version}')
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    g = get_game_or_404(t, game_name)
+    sc_chart = {}
+    sc_owners = {}
+    for year in g.years_played():
+        sc_chart[year] = {}
+        for sc in g.centrecount_set.filter(year=year):
+            sc_chart[year][sc.power.name] = sc.count
+        sc_owners[year] = {}
+        for power in GreatPower.objects.all():
+            sc_owners[year][power.name] = []
+        for sco in g.supplycentreownership_set.filter(year=year):
+            sc_owners[year][sco.owner.name].append(sco.sc.name)
+    # TODO add DrawProposals
+    data = {'round_number': g.the_round.number(),
+            'started_at': g.started_at,
+            'is_finished': g.is_finished,
+            'is_top_board': g.is_top_board,
+            'external_url': g.external_url,
+            'notes': g.notes,
+            'sc_chart': sc_chart,
+            'sc_owners': sc_owners}
+    return JsonResponse(data)

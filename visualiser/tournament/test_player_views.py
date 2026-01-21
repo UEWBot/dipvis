@@ -20,11 +20,11 @@ from urllib.parse import urlencode
 from django_countries import countries
 
 from django.contrib.auth.models import User
-from django.test import TestCase
+from django.test import TestCase, tag
 from django.urls import reverse
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.players import Player, PlayerGameResult
+from tournament.players import Player, PlayerGameResult, WDDPlayer
 
 class PlayerViewTests(TestCase):
     fixtures = ['game_sets.json']
@@ -75,7 +75,24 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         # Cleanup
-        self.p1.nationalities.clear()
+        self.p1.nationalities = []
+        self.p1.save(update_fields=['nationalities'])
+
+    @tag('wdd')
+    def test_detail_wddplayers(self):
+        """Test a Player with multiple WDDPlayers"""
+        self.assertFalse(self.p1.wddplayer_set.exists())
+        wdd1 = WDDPlayer.objects.create(wdd_player_id=912,
+                                        player=self.p1)
+        wdd2 = WDDPlayer.objects.create(wdd_player_id=15045,
+                                        player=self.p1)
+        # Don't have to be logged in to see a player
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.p1.wddplayer_set.all().delete()
 
     def test_detail_refresh_wdd(self):
         """Test the 'Refresh From WDD' button"""

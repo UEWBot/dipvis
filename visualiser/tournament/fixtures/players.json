@@ -4,8 +4,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Chris", 
-        "last_name": "Brand", 
-        "wdd_player_id": 4173
+        "last_name": "Brand"
+    }
+},
+{
+    "pk": 1, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 4173, 
+        "player": 1
     }
 },
 {
@@ -13,8 +20,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "John", 
-        "last_name": "Jamieson", 
-        "wdd_player_id": 353
+        "last_name": "Jamieson"
+    }
+},
+{
+    "pk": 2, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 353, 
+        "player": 2
     }
 },
 {
@@ -22,8 +36,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Christian", 
-        "last_name": "MacDonald", 
-        "wdd_player_id": 11161
+        "last_name": "MacDonald"
+    }
+},
+{
+    "pk": 3, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 11161,
+        "player": 3
     }
 },
 {
@@ -31,8 +52,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Andrew", 
-        "last_name": "Goff", 
-        "wdd_player_id": 1326
+        "last_name": "Goff"
+    }
+},
+{
+    "pk": 4, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 1326,
+        "player": 4
     }
 },
 {
@@ -40,8 +68,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Edi", 
-        "last_name": "Birsan", 
-        "wdd_player_id": 912
+        "last_name": "Birsan"
+    }
+},
+{
+    "pk": 5, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 912,
+        "player": 5
     }
 },
 {
@@ -49,8 +84,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Nathan", 
-        "last_name": "Barnes", 
-        "wdd_player_id": 3595
+        "last_name": "Barnes"
+    }
+},
+{
+    "pk": 6, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 3595,
+        "player": 6
     }
 },
 {
@@ -58,8 +100,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Dan", 
-        "last_name": "Lester", 
-        "wdd_player_id": 2016
+        "last_name": "Lester"
+    }
+},
+{
+    "pk": 7, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 2016,
+        "player": 7
     }
 },
 {
@@ -67,8 +116,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Eric", 
-        "last_name": "Mead", 
-        "wdd_player_id": 3650
+        "last_name": "Mead"
+    }
+},
+{
+    "pk": 8, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 3650,
+        "player": 8
     }
 },
 {
@@ -76,8 +132,15 @@
     "model": "tournament.player", 
     "fields": {
         "first_name": "Doc", 
-        "last_name": "Binder", 
-        "wdd_player_id": 9638
+        "last_name": "Binder"
+    }
+},
+{
+    "pk": 9, 
+    "model": "tournament.wddplayer", 
+    "fields": {
+        "wdd_player_id": 9638,
+        "player": 9
     }
 }
 ]

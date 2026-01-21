@@ -29,14 +29,20 @@ Database or World Diplomacy Reference for everything else.
 import requests
 from bs4 import BeautifulSoup
 
+from django.conf import settings
+
+from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 from tournament.wdd import wdd_img_to_country, WDD_BASE_RANKING_URL, WDD_BASE_RESULTS_URL
 from tournament.wdr import WDR_BASE_URL
 
 
-WIKIPEDIA_URL = 'https://en.wikipedia.org/wiki/International_prize_list_of_Diplomacy'
-
 MAP = {'Name of the tournament': 'Tournament',
       }
+
+
+class WikipediaNotAccessible(Exception):
+    """Wikipedia cannot currently be accessed."""
+    pass
 
 
 class InvalidWDDId(Exception):
@@ -64,13 +70,78 @@ class WDRNotAccessible(Exception):
     pass
 
 
+class WikipediaCache():
+    """
+    Cache of the International Prize List of Diplomacy wikipedia page
+    """
+
+    # Use the wikipedia REST API to retrieve the page
+    TEMPLATE_URL = 'https://en.wikipedia.org/api/rest_v1/page/{}/International_prize_list_of_Diplomacy'
+    PAGE_URL = TEMPLATE_URL.format('html')
+    TITLE_URL = TEMPLATE_URL.format('title')
+
+    # Timeout for retrieving wikipedia pages
+    TIMEOUT = 1.5
+
+    def __init__(self):
+        self.the_soup = None
+        self.revision = ''
+        self._read_page()
+
+    def _read_page(self):
+        """Read the page. Store the soup in self.the_soup and the revision string in self.revision"""
+        url = self.PAGE_URL
+        try:
+            page = requests.get(url,
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
+                                timeout=self.TIMEOUT)
+        except requests.exceptions.Timeout:
+            return
+        self.the_soup = BeautifulSoup(page.text)
+        try:
+            etag = page.headers["ETag"]
+        except KeyError as e:
+            print(page.headers)
+            self.revision = None
+            raise e
+        # ETag format is 'W/"1298445974/e23c2e85-8215-11f0-a785-1d77f87c9956/view/html"'
+        # Store the revision
+        s = etag.split('"')
+        s = s[1].split('/')
+        self.revision = s[0]
+
+    def _latest_revision(self):
+        """Return the latest revision of the page, as a string"""
+        url = self.TITLE_URL
+        try:
+            page = requests.get(url,
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
+                                timeout=self.TIMEOUT)
+        except requests.exceptions.Timeout:
+            return ''
+        json = page.json()
+        return json['items'][0]['rev']
+
+    def soup(self):
+        """Get the soup of the wikipedia page"""
+        # Check the current revision and re-read the page if the cache is out-of-date
+        if self.revision != self._latest_revision():
+            self._read_page()
+        if self.the_soup is None:
+            raise WikipediaNotAccessible
+        return self.the_soup
+
+
+# Singleton
+cache = WikipediaCache()
+
+
 class WikipediaBackground():
     """
     Get background on a player from wikipedia.
     """
-
-    # Timeout for retrieving wikipedia pages
-    TIMEOUT = 1.5
 
     def __init__(self, name):
         self.name = name
@@ -89,13 +160,12 @@ class WikipediaBackground():
         Returns a list of dicts.
         Keys are 'Tournament' and position.
         """
-        url = WIKIPEDIA_URL
         try:
-            page = requests.get(url, timeout=self.TIMEOUT)
-        except requests.exceptions.Timeout:
+            soup = cache.soup()
+        except WikipediaNotAccessible:
+            print('Unable to read wikipedia')
             return []
-        soup = BeautifulSoup(page.text)
-        main = soup.find('main')
+        main = soup
         results = []
         last_hdr = None
         for table in main.find_all('table'):
@@ -156,6 +226,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -203,6 +275,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -240,6 +314,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -298,6 +374,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -369,6 +447,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -433,7 +513,7 @@ class WDDBackground():
                                 n = int(td.string[:-2])
                                 result[u'Final SCs'] = n
                                 # Not all solos are flagged as such
-                                if n > 17:
+                                if n >= WINNING_SCS:
                                     result[u'Game end'] = u'W'
                         else:
                             # It's a year of elimination
@@ -466,6 +546,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -539,6 +621,8 @@ class WDDBackground():
         try:
             page = requests.get(url,
                                 params={'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -571,6 +655,8 @@ class WDDBackground():
             page = requests.get(url,
                                 params={'id_ranking': 2,
                                         'id_player': self.wdd_id},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept-Encoding': 'gzip'},
                                 allow_redirects=False,
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
@@ -611,7 +697,8 @@ class WDRBackground():
     """
 
     # timeout in seconds for read requests to WDR
-    TIMEOUT=3.0
+    # Some players have a long history
+    TIMEOUT=10.0
 
     def __init__(self, wdr_id):
         self.wdr_id = wdr_id
@@ -623,7 +710,9 @@ class WDRBackground():
         url = f'{WDR_BASE_URL}api/v1/players/{self.wdr_id}'
         try:
             page = requests.get(url,
-                                headers={'Accept': 'application/json'},
+                                headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept': 'application/json',
+                                         'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout as e:
             raise WDRNotAccessible from e
@@ -663,6 +752,7 @@ class WDRBackground():
 
         list of dicts. Dict keys are:
             "tournament_id"
+            "tournament_wdd_id"
             "tournament_name"
             "tournament_start_date"
             "tournament_end_date"
@@ -686,6 +776,7 @@ class WDRBackground():
             "board_rank"
             "board_year_of_elimination"
             "board_url"
+            "board_variant"
         """
         return self.data['player_boards_played']
 

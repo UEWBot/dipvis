@@ -25,7 +25,7 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.game_views import _graph_end_year
 from tournament.models import DrawProposal, Tournament, Round, Game
 from tournament.models import CentreCount, SupplyCentreOwnership
@@ -465,6 +465,42 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_chart_refresh_after_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('game_sc_chart_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
+
+    def test_change_game_not_logged_in(self):
+        response = self.client.get(reverse('change_game',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+
+    def test_change_game(self):
+        r = self.g1.the_round
+        self.assertEqual(r.game_set.count(), 1)
+        # Add another Game
+        g = Game.objects.create(name='Game2',
+                                started_at=r.start,
+                                the_round=r,
+                                the_set=GameSet.objects.first())
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('change_game',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'form-1')
+        # Clean up
+        g.delete()
+
     def test_enter_scs_not_logged_in(self):
         response = self.client.get(reverse('enter_scs',
                                            args=(self.t1.pk, self.g1.name)),
@@ -514,18 +550,18 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): '1908',
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': '1908',
                 'end-is_finished': 'ok'}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -575,18 +611,18 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): '1908',
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': '1908',
                 'end-is_finished': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -660,17 +696,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '2',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '1908',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '1908',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -733,17 +769,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -776,17 +812,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '1908',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '1908',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -822,17 +858,17 @@ class GameViewTests(TestCase):
                 'scs-INITIAL_FORMS': '0',
                 'scs-MAX_NUM_FORMS': '1000',
                 'scs-MIN_NUM_FORMS': '0',
-                'death-%s' % str(self.austria): '',
-                'death-%s' % str(self.england): '',
-                'death-%s' % str(self.france): '',
-                'death-%s' % str(self.germany): '',
-                'death-%s' % str(self.italy): '',
-                'death-%s' % str(self.russia): '',
-                'death-%s' % str(self.turkey): ''}
+                f'death-{str(self.austria)}': '',
+                f'death-{str(self.england)}': '',
+                f'death-{str(self.france)}': '',
+                f'death-{str(self.germany)}': '',
+                f'death-{str(self.italy)}': '',
+                f'death-{str(self.russia)}': '',
+                f'death-{str(self.turkey)}': ''}
         for n, (y, dots) in enumerate(counts.items()):
-            data['scs-%d-year' % n] = str(y)
+            data[f'scs-{n}-year'] = str(y)
             for p, c in dots.items():
-                data['scs-%d-%s' % (n, str(p))] = str(c)
+                data[f'scs-{n}-{str(p)}'] = str(c)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_scs', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -856,6 +892,19 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_sc_owners_refresh_after_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('game_sc_owners_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
 
     def test_sc_owners_redirect(self):
         # TODO assert that overview 2 is SC owners
@@ -942,9 +991,9 @@ class GameViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         for n, year in enumerate([1907]):
-            data['form-%d-year' % n] = str(year)
+            data[f'form-{n}-year'] = str(year)
             for sc, p in self.default_owners.items():
-                data['form-%d-%s' % (n, sc)] = str(p.id)
+                data[f'form-{n}-{sc}'] = str(p.id)
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -977,14 +1026,14 @@ class GameViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         for n, year in enumerate([1907]):
-            data['form-%d-year' % n] = str(year)
+            data[f'form-{n}-year'] = str(year)
             for sc, p in self.default_owners.items():
-                data['form-%d-%s' % (n, sc)] = str(p.id)
+                data[f'form-{n}-{sc}'] = str(p.id)
         # Include a blank row
         n += 1
-        data['form-%d-year' % n] = ''
+        data[f'form-{n}-year'] = ''
         for sc, p in self.default_owners.items():
-            data['form-%d-%s' % (n, sc)] = ''
+            data[f'form-{n}-{sc}'] = ''
         # Now change the ownership of Trieste
         data['form-0-Trieste'] = str(self.italy.id)
         # And make Greece and Rumania neutral
@@ -1037,9 +1086,9 @@ class GameViewTests(TestCase):
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0'}
         for n, year in enumerate([1907]):
-            data['form-%d-year' % n] = str(year)
+            data[f'form-{n}-year'] = str(year)
             for sc, p in self.default_owners.items():
-                data['form-%d-%s' % (n, sc)] = ''
+                data[f'form-{n}-{sc}'] = ''
         data_enc = urlencode(data)
         response = self.client.post(reverse('enter_sc_owners', args=(self.t1.pk, self.g1.name)),
                                     data_enc,
@@ -1061,6 +1110,19 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_current_game_image_after_end(self):
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('current_game_image',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
 
     def test_game_image(self):
         response = self.client.get(reverse('game_image',
@@ -1736,9 +1798,23 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_sc_graph_refresh_after_end(self):
+        """Test the page that holds the graph image"""
+        self.assertFalse(self.g1.is_finished)
+        self.g1.is_finished = True
+        self.g1.save()
+        response = self.client.get(reverse('game_sc_graph_refresh',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
+        # Clean up
+        self.g1.is_finished = False
+        self.g1.save()
+
     def test_graph(self):
         """This is the actual graph image"""
-        response = self.client.get(reverse('graph',
+        response = self.client.get(reverse('graph_img_scs',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1756,7 +1832,7 @@ class GameViewTests(TestCase):
                                          year=1904,
                                          power=self.austria,
                                          count=0)
-        response = self.client.get(reverse('graph',
+        response = self.client.get(reverse('graph_img_scs',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
@@ -1859,3 +1935,25 @@ class GameViewTests(TestCase):
         ccs.delete()
         self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()
+
+    def test_api(self):
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1903).count(), 0)
+        self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
+        for sc, p in self.default_owners.items():
+            SupplyCentreOwnership.objects.create(game=self.g1,
+                                                 sc=SupplyCentre.objects.get(name=sc),
+                                                 owner=p,
+                                                 year=1903)
+        self.g1.create_or_update_sc_counts_from_ownerships(1903)
+        response = self.client.get(reverse('api_game', args=(1, self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        # Cleanup
+        self.g1.supplycentreownership_set.filter(year=1903).delete()
+        self.g1.centrecount_set.filter(year=1903).delete()
+
+    def test_api_invalid_version(self):
+        response = self.client.get(reverse('api_game', args=(7, self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)

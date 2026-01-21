@@ -81,12 +81,11 @@ def player_versus(request, pk1, pk2):
                                                                            'tournament_name',
                                                                            'round_number',
                                                                            'game_number'):
-        if r1:
-            if r1.for_same_game(r):
-                if r.player == p1:
-                    matches.append((r, r1))
-                else:
-                    matches.append((r1, r))
+        if r1 and r1.for_same_game(r):
+            if r.player == p1:
+                matches.append((r, r1))
+            else:
+                matches.append((r1, r))
         r1 = r
 
     return render(request,
@@ -126,7 +125,7 @@ def upload_players(request):
         csv_file = request.FILES['csv_file']
         if csv_file.multiple_chunks():
             messages.error(request,
-                           'Uploaded file is too big (%.2f MB)' % csv_file.size / (1024 * 1024))
+                           f'Uploaded file is too big ({csv_file.size / (1024 * 1024):.2f} MB)')
             return HttpResponseRedirect(reverse('upload_players'))
         # TODO How do I know what charset to use?
         fp = StringIO(csv_file.read().decode('utf8'))
@@ -200,8 +199,9 @@ def upload_players(request):
             p, created = Player.objects.update_or_create(first_name=first_name,
                                                          last_name=last_name,
                                                          defaults={'email': email,
-                                                                   'backstabbr_username': bs_un,
-                                                                   'wdd_player_id': wdd_id})
+                                                                   'backstabbr_username': bs_un})
+            if wdd_id:
+                WDDPlayer.get_or_create(wdd_player_id=wdd_id, player=p)
             if created:
                 messages.info(request, f'Player {first_name} {last_name} added')
                 count += 1
@@ -227,15 +227,6 @@ def upload_players(request):
                         p.backstabbr_username = bs_un
                         new_info.append('Backstabbr username')
                         fields.append('backstabbr_username')
-                if wdd_id is not None:
-                    if p.wdd_player_id:
-                        if p.wdd_player_id != wdd_id:
-                            messages.warning(request, f'Player {first_name} {last_name} already exists with a different WDD Id')
-                    else:
-                        # Add the WDD id
-                        p.wdd_player_id = wdd_id
-                        new_info.append('WDD id')
-                        fields.append('wdd_player_id')
                 if len(new_info):
                     p.save(update_fields=fields)
                     messages.info(request, f'Player {first_name} {last_name} already exists - added {", ".join(new_info)}')

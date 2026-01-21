@@ -245,10 +245,7 @@ def _update_or_create_playergameresult(player, b):
         defaults = {'position': b['Position'],
                     'tournament_name': b['Name of the tournament']}
         # If there's no 'Position sharing', they were alone at that position
-        try:
-            defaults['position_equals'] = b['Position sharing']
-        except KeyError:
-            defaults['position_equals'] = 1
+        defaults['position_equals'] = b.get('Position sharing', 1)
         # Ignore any of these that aren't present
         try:
             defaults['score'] = b['Score']
@@ -437,6 +434,40 @@ def _find_wdr_tournament(wdr_id, tournaments_list):
             return t
 
 
+def _wdr_tournament_should_be_included(t):
+    """
+    Is the WDR tournament actually a tournament?
+
+    WDR tournaments include several events that are not tournaments per se.
+
+    t should be the dict representing the tournament in the WDR.
+    Return True if t is an actual tournament that we want to include.
+    """
+    kind = t['tournament_kind']
+    if kind in ['EDC', # European Championship
+                'DIPCON', # North American Championship
+                'APAC', # Asia-Pacific Championship
+                'NDC', # National Championship
+                'MASTERS', # Invitational
+                'DBNI', # DBN Invitational
+                'VDC', # Virtual Championship
+                'CUP',
+                'NCUP', # National Cup
+                'OPEN',
+                'WDC']: # World Championship
+        return True
+    elif kind in ['LEAGUE',
+                  'EGP', # European Grand Prix
+                  'NAGP', # North American Grand Prix
+                  'BIC', # Bismark Cup
+                  'nCIR', # National Circuit
+                  'CIR']: # Circuit
+        return False
+    else:
+        print(f'Unrecognised tournament_kind {kind} in {t}')
+        return False
+
+
 def _add_player_bg_from_wdr(player, wdr_id):
     """
     Add or update player background information from the WDR
@@ -455,6 +486,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             continue
         elif t['tournament_player_rank'] == -1:
             print(f"Skipping {t['tournament_name']} for {player} with -1 ranking")
+            continue
+        if not _wdr_tournament_should_be_included(t):
             continue
         defaults = {'position': t['tournament_player_rank'],
                     'tournament': t['tournament_name']}
@@ -489,6 +522,11 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 traceback.print_exc()
     # Boards
     for b in bg.boards():
+        # Skip variant boards because they don't factor well into the statistics
+        if b['board_variant'] not in ['Classic', 'Standard (7)', 'Standard']:
+            print('Skipping variant board')
+            print(b)
+            continue
         # What was the tournament?
         t_id = b['board_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
@@ -642,12 +680,12 @@ def add_player_bg(player, include_wpe=False):
         try:
             fields += _add_player_bg_from_wdr(player, wdr)
         except WDRNotAccessible:
+            print('Unable to read from WDR')
             wdr = None
     if not wdr:
-        # Do we have a WDD id for this player?
-        wdd = player.wdd_player_id
-        if wdd:
-            fields += _add_player_bg_from_wdd(player, wdd, include_wpe)
+        # Do we have any WDD ids for this player?
+        for wdd in player.wddplayer_set.all():
+            fields += _add_player_bg_from_wdd(player, wdd.wdd_player_id, include_wpe)
     if fields:
         player.save(update_fields=fields)
     # TODO Set PlayerTitle.ranking to cross-reference
@@ -673,24 +711,6 @@ def position_str(position):
     return _(result)
 
 
-class WDDPlayerIdField(models.PositiveIntegerField):
-    """A field that represents the unique id for a player in the WDD"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._old_val = None
-
-    def pre_save(self, model_instance, add):
-        # Clear cached WDD Name if WDD id has changed
-        model_instance._wdd_firstname = ''
-        model_instance._wdd_lastname = ''
-        val = super().pre_save(model_instance, add)
-        if (val != self._old_val) and not add:
-            # Background data is presumably wrong
-            model_instance._clear_background()
-            self._old_val = val
-        return val
-
-
 class Player(models.Model):
     """
     A person who played Diplomacy
@@ -698,11 +718,6 @@ class Player(models.Model):
     first_name = models.CharField(max_length=40)
     last_name = models.CharField(max_length=40)
     email = models.EmailField(blank=True)
-    wdd_player_id = WDDPlayerIdField(unique=True,
-                                     validators=[validate_wdd_player_id],
-                                     verbose_name=_(u'WDD player id'),
-                                     blank=True,
-                                     null=True)
     wdr_player_id = models.PositiveIntegerField(unique=True,
                                                 validators=[validate_wdr_player_id],
                                                 verbose_name=_(u'WDR player id'),
@@ -716,8 +731,6 @@ class Player(models.Model):
     location = models.CharField(max_length=60, blank=True)
     nationalities = CountryField(multiple=True, blank=True)
     # Cache of the player's name in the WDD
-    _wdd_firstname = models.CharField(max_length=40, blank=True)
-    _wdd_lastname = models.CharField(max_length=40, blank=True)
     user = models.OneToOneField(User,
                                 blank=True,
                                 null=True,
@@ -738,6 +751,7 @@ class Player(models.Model):
 
         This undoes add_player_bg()
         """
+        self.playertitle_set.all().delete()
         self.playerranking_set.all().delete()
         self.playeraward_set.all().delete()
         self.playertournamentranking_set.all().delete()
@@ -769,13 +783,13 @@ class Player(models.Model):
         elif latest is not None:
             result = max(result, latest)
 
-        return result
+        latest = self.playertitle_set.aggregate(Max('updated'))['updated__max']
+        if result is None:
+            result = latest
+        elif latest is not None:
+            result = max(result, latest)
 
-    def wdd_url(self):
-        """URL for this player in the World Diplomacy Database."""
-        if self.wdd_player_id:
-            return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
-        return ''
+        return result
 
     def wdr_url(self):
         """URL for this player in the World Diplomacy Reference."""
@@ -787,25 +801,14 @@ class Player(models.Model):
         """
         Name for this player as a 2-tuple, as in the WDD.
 
-        If the player has no WDD id, returns the name used locally.
-        If the name in the WDD cannot be determined, returns ('', '').
+        If the name in the WDD cannot be determined, returns the name used locally.
         """
-        if not self.wdd_player_id:
+        qs = self.wddplayer_set.all()
+        try:
+           wdd = qs[0]
+        except IndexError:
             return (self.first_name, self.last_name)
-        # Read from the WDD if we haven't cached it
-        if not self._wdd_firstname and not self._wdd_lastname:
-            bg = WDDBackground(self.wdd_player_id)
-            try:
-                self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
-                self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
-            except WDDNotAccessible:
-                # Nothing we can do
-                pass
-            except InvalidWDDId as e:
-                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
-                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                      params={'wdd_id': self.wdd_player_id}) from e
-        return (self._wdd_firstname, self._wdd_lastname)
+        return wdd.wdd_firstname_lastname()
 
     def wdr_name(self):
         """Returns the name of the player in the WDR as a string"""
@@ -818,7 +821,7 @@ class Player(models.Model):
 
     def tournamentplayers(self, including_unpublished=False):
         """Returns the set of TournamentPlayers for this Player."""
-        tps = self.tournamentplayer_set.prefetch_related('tournament')
+        tps = self.tournamentplayer_set.prefetch_related('tournament').order_by('-tournament__end_date')
         if including_unpublished:
             return tps
         return tps.filter(tournament__is_published=True)
@@ -851,14 +854,13 @@ class Player(models.Model):
                     results.append(_('%(name)s has never won Best %(power)s.')
                                    % {'name': self, 'power': p})
                     continue
-                elif award_count == 1:
-                    count_str = _('once')
                 else:
-                    count_str = _('%(count)d times') % {'count': award_count}
-                results.append(_('%(name)s has won Best %(power)s %(count_str)s.')
-                               % {'name': self,
-                                  'power': p,
-                                  'count_str': count_str})
+                    msg = ngettext('%(name)s has won Best %(power)s once.',
+                                   '%(name)s has won Best %(power)s %(count)d times.',
+                                   award_count)
+                    results.append(msg % {'name': self,
+                                          'power': p,
+                                          'count': award_count})
                 a = power_award_set.first()
                 s = _('%(name)s first won %(award)s in %(year)d at %(tourney)s') % {'name': self,
                                                                                     'award': a.name,
@@ -972,15 +974,13 @@ class Player(models.Model):
                                % {'name': self,
                                   'power': c_str})
             return results
-        games_word = _('games')
-        if games == 1:
-            games_word = _('game')
         if (mask & MASK_GAMES_PLAYED) != 0:
-            results.append(_(u'%(name)s has played %(games)d tournament %(games_word)s%(power)s.')
-                           % {'name': self,
-                              'games': games,
-                              'games_word': games_word,
-                              'power': c_str})
+            msg = ngettext('%(name)s has played %(games)d tournament game%(power)s.',
+                           '%(name)s has played %(games)d tournament games%(power)s.',
+                           games)
+            results.append(msg % {'name': self,
+                                  'games': games,
+                                  'power': c_str})
         if (mask & MASK_BEST_SC_COUNT) != 0:
             best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
             # SC count is optional
@@ -992,13 +992,14 @@ class Player(models.Model):
         if (mask & MASK_SOLO_COUNT) != 0:
             solos = results_set.filter(final_sc_count__gte=WINNING_SCS).count()
             if solos > 0:
-                results.append(_(u'%(name)s has soloed %(solos)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'solos': solos,
-                                  'games': games,
-                                  'games_word': games_word,
-                                  'power': c_str,
-                                  'percentage': 100.0 * float(solos) / float(games)})
+                msg = ngettext('%(name)s has soloed %(solos)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s has soloed %(solos)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                               games)
+                results.append(msg % {'name': self,
+                                      'solos': solos,
+                                      'games': games,
+                                      'power': c_str,
+                                      'percentage': 100.0 * float(solos) / float(games)})
             else:
                 results.append(_(u'%(name)s has yet to solo%(power)s at a tournament.')
                                % {'name': self,
@@ -1008,13 +1009,14 @@ class Player(models.Model):
             eliminations_set = results_set.filter(query)
             eliminations = eliminations_set.count()
             if eliminations > 0:
-                results.append(_(u'%(name)s was eliminated in %(deaths)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'deaths': eliminations,
-                                  'games': games,
-                                  'games_word': games_word,
-                                  'power': c_str,
-                                  'percentage': 100.0 * float(eliminations) / float(games)})
+                msg = ngettext('%(name)s was eliminated in %(deaths)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s was eliminated in %(deaths)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                               games)
+                results.append(msg % {'name': self,
+                                      'deaths': eliminations,
+                                      'games': games,
+                                      'power': c_str,
+                                      'percentage': 100.0 * float(eliminations) / float(games)})
             else:
                 results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.')
                                % {'name': self,
@@ -1023,13 +1025,14 @@ class Player(models.Model):
             query = Q(result=GameResults.WIN) | Q(position=1)
             board_tops = results_set.filter(query).count()
             if board_tops > 0:
-                results.append(_(u'%(name)s topped the board in %(tops)d of %(games)d tournament %(games_word)s played%(power)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'tops': board_tops,
-                                  'games': games,
-                                  'games_word': games_word,
-                                  'power': c_str,
-                                  'percentage': 100.0 * float(board_tops) / float(games)})
+                msg = ngettext('%(name)s topped the board in %(tops)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s topped the board in %(tops)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                               games)
+                results.append(msg % {'name': self,
+                                      'tops': board_tops,
+                                      'games': games,
+                                      'power': c_str,
+                                      'percentage': 100.0 * float(board_tops) / float(games)})
             else:
                 results.append(_(u'%(name)s has yet to top the board%(power)s at a tournament.')
                                % {'name': self,
@@ -1047,6 +1050,78 @@ class Player(models.Model):
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
         return reverse('player_detail', args=[str(self.id)])
+
+
+class WDDPlayerIdField(models.PositiveIntegerField):
+    """A field that represents the unique id for a player in the WDD"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._old_val = None
+
+    def pre_save(self, model_instance, add):
+        # Clear cached WDD Name if WDD id has changed
+        model_instance._wdd_firstname = ''
+        model_instance._wdd_lastname = ''
+        val = super().pre_save(model_instance, add)
+        if (val != self._old_val) and not add:
+            # Background data is presumably wrong
+            model_instance._clear_background()
+            self._old_val = val
+        return val
+
+
+class WDDPlayer(models.Model):
+    """
+    A Single Diplomacy player on the World Diplomacy Database
+
+    A separate model because some players have multiple entries on the WDD
+    """
+    wdd_player_id = WDDPlayerIdField(unique=True,
+                                     validators=[validate_wdd_player_id],
+                                     verbose_name=_(u'WDD player id'))
+    _wdd_firstname = models.CharField(max_length=40, blank=True)
+    _wdd_lastname = models.CharField(max_length=40, blank=True)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = 'WDD player'
+
+    def _clear_background(self):
+        self.player._clear_background()
+
+    def wdd_url(self):
+        """URL for this player in the World Diplomacy Database."""
+        return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
+
+    def wdd_firstname_lastname(self):
+        """
+        Name for this player as a 2-tuple, as in the WDD.
+
+        If the name in the WDD cannot be determined, returns ('', '').
+        """
+        # Read from the WDD if we haven't cached it
+        if not self._wdd_firstname and not self._wdd_lastname:
+            bg = WDDBackground(self.wdd_player_id)
+            try:
+                self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
+                self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
+            except WDDNotAccessible:
+                print('Unable to read name from WDD')
+                # Nothing we can do
+                pass
+            except InvalidWDDId as e:
+                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
+                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
+                                      params={'wdd_id': self.wdd_player_id}) from e
+        return (self._wdd_firstname, self._wdd_lastname)
+
+    def delete(self, *args, **kwargs):
+        # Nuke any background that may have been from this WDDPlayer
+        self.player._clear_background()
+        return super().delete(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.player} {self.wdd_player_id}'
 
 
 class PlayerTournamentRanking(models.Model):
@@ -1081,10 +1156,14 @@ class PlayerTournamentRanking(models.Model):
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
-        if (not self.wdd_tournament_id) or (not self.player.wdd_player_id):
+        if not self.wdd_tournament_id:
+            return ''
+        try:
+            wdd = WDDPlayer.objects.get(player=self.player)
+        except (WDDPlayer.DoesNotExist, WDDPlayer.MultipleObjectsReturned):
             return ''
         query = {'id_tournament': self.wdd_tournament_id,
-                 'id_player': self.player.wdd_player_id}
+                 'id_player': wdd.wdd_player_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
                           f'{WDD_BASE_RESULTS_PATH}tournament_player.php',
@@ -1203,6 +1282,10 @@ class PlayerGameResult(models.Model):
                 (self.game_number == pgr.game_number) and
                 (self.date == pgr.date))
 
+    def game_name(self):
+        """Returns a string representing the round and board numbers"""
+        return f'R {self.round_number} B {self.game_number}'
+
     def wdd_url(self):
         """WDD URL where this result can be seen"""
         if not self.wdd_tournament_id:
@@ -1317,7 +1400,9 @@ class PlayerRanking(models.Model):
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
-        if not self.player.wdd_player_id:
+        try:
+            wdd = WDDPlayer.objects.get(player=self.player)
+        except (WDDPlayer.DoesNotExist, WDDPlayer.MultipleObjectsReturned):
             return ''
         if self.system == 'World Performance Evaluation':
             wdd_system_id = 2
@@ -1328,7 +1413,7 @@ class PlayerRanking(models.Model):
         else:
             return ''
         query = {'id_ranking': wdd_system_id,
-                 'id_player': self.player.wdd_player_id}
+                 'id_player': wdd.wdd_player_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
                           f'{WDD_BASE_RANKING_PATH}ranking_player.php',

@@ -22,7 +22,7 @@ from django.urls import reverse
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy
 from tournament.models import Tournament, Round, Game, Team
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
@@ -269,7 +269,7 @@ class WddViewTests(TestCase):
         # for a power that they actually played
         played = [gp.power for gp in GamePlayer.objects.filter(player=cls.tp8.player)]
         if a2.power not in played:
-            raise AssertionError("%s didn't play %s" % (str(cls.tp8.player), str(a2.power)))
+            raise AssertionError(f"{str(cls.tp8.player)} didn't play {str(a2.power)}")
         cls.tp8.awards.add(a2)
         # CentreCounts and DrawProposals
         # One game ends in a solo

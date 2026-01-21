@@ -27,15 +27,15 @@ from tournament.backstabbr import BACKSTABBR_NETLOC
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.game_scoring import G_SCORING_SYSTEMS
+from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy
+from tournament.models import DrawSecrecy, Seasons
 from tournament.models import Award, Tournament, Round, Game, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
 from tournament.forms import BackstabbrUrlForm
-from tournament.forms import AwardsForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
+from tournament.forms import AwardForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
 from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
 from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
 from tournament.forms import PaidForm, BasePaidFormset
@@ -49,7 +49,7 @@ from tournament.forms import SeederBiasForm
 from tournament.forms import TeamForm, BaseTeamsFormset
 
 
-class AwardsFormTest(TestCase):
+class AwardFormTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
@@ -75,18 +75,18 @@ class AwardsFormTest(TestCase):
 
     def test_init_needs_tournament(self):
         with self.assertRaises(KeyError):
-            AwardsForm(award_name=str(self.a1))
+            AwardForm(award_name=str(self.a1))
 
     def test_init_needs_award_name(self):
         with self.assertRaises(KeyError):
-            AwardsForm(tournament=self.t)
+            AwardForm(tournament=self.t)
 
     def test_awards_form_player_field_label(self):
-        form = AwardsForm(tournament=self.t, award_name=str(self.a1))
+        form = AwardForm(tournament=self.t, award_name=str(self.a1))
         self.assertEqual(form.fields['players'].label, str(self.a1))
 
     def test_awards_form_player_choices(self):
-        form = AwardsForm(tournament=self.t, award_name=str(self.a1))
+        form = AwardForm(tournament=self.t, award_name=str(self.a1))
         the_choices = list(form.fields['players'].choices)
         # We should have one per TournamentPlayer
         self.assertEqual(len(the_choices), self.t.tournamentplayer_set.filter(unranked=False).count())
@@ -95,6 +95,18 @@ class AwardsFormTest(TestCase):
         # and the values should be the Player names, in alphabetical order
         self.assertEqual(the_choices[0][1], self.tp3.player.sortable_str())
         self.assertEqual(the_choices[1][1], self.tp1.player.sortable_str())
+
+    def test_award_form_has_changed(self):
+        self.tp3.awards.add(self.a1)
+        form = AwardForm(tournament=self.t,
+                         award_name=str(self.a1),
+                         initial={'award': self.a1.id,
+                                  'players': [self.tp3.id]},
+                         data={'award': str(self.a1.id),
+                               'players': [str(self.tp3.id)]})
+        self.assertFalse(form.has_changed())
+        # Cleanup
+        self.tp3.awards.remove(self.a1)
 
 
 class AwardsFormsetTest(TestCase):
@@ -130,7 +142,7 @@ class AwardsFormsetTest(TestCase):
         cls.tp2.awards.add(cls.a2)
         cls.tp3.awards.add(cls.a2)
 
-        cls.AwardsFormset = formset_factory(AwardsForm, extra=0, formset=BaseAwardsFormset)
+        cls.AwardsFormset = formset_factory(AwardForm, extra=0, formset=BaseAwardsFormset)
 
     def test_awards_formset_creation(self):
         formset = self.AwardsFormset(tournament=self.t)
@@ -205,6 +217,16 @@ class PaidFormTest(TestCase):
         form = PaidForm(tp=self.tp, initial={'paid': True})
         # Explicit initial should override implicit
         self.assertEqual(form['paid'].initial, True)
+
+    def test_has_changed(self):
+        initial = {'paid': True}
+        data = {'paid': 'ok'}
+        form = PaidForm(tp=self.tp, initial=initial, data=data)
+        self.assertFalse(form.has_changed())
+        initial = {'paid': False}
+        data = {}
+        form = PaidForm(tp=self.tp, initial=initial, data=data)
+        self.assertFalse(form.has_changed())
 
 
 class PaidFormsetTest(TestCase):
@@ -298,6 +320,19 @@ class PrefsFormTest(TestCase):
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data['prefs'], 'EFG')
 
+    def test_prefs_form_has_changed_implicit_initial(self):
+        self.tp.create_preferences_from_string('AEF')
+        form = PrefsForm(tp=self.tp, data={'prefs': 'AEF'})
+        self.assertFalse(form.has_changed())
+        # Cleanup
+        self.tp.preference_set.all().delete()
+
+    def test_prefs_form_has_changed_explicit_initial(self):
+        form = PrefsForm(tp=self.tp,
+                         data={'prefs': 'EFG'},
+                         initial={'prefs': 'EFG'})
+        self.assertFalse(form.has_changed())
+
 
 class PrefsFormsetTest(TestCase):
 
@@ -386,6 +421,16 @@ class HandicapFormTest(TestCase):
         # Cleanup
         self.tp.handicap = 0.0
         self.tp.save()
+
+    def test_handicap_form_has_changed_implicit_initial(self):
+        form = HandicapForm(tp=self.tp, data={'handicap': '0.0'})
+        self.assertFalse(form.has_changed())
+
+    def test_handicap_form_has_changed_explicit_initial(self):
+        form = HandicapForm(tp=self.tp,
+                            data={'handicap': '5.0'},
+                            initial={'handicap': 5.0})
+        self.assertFalse(form.has_changed())
 
 
 class HandicapsFormsetTest(TestCase):
@@ -486,6 +531,28 @@ class TeamFormTest(TestCase):
         self.assertFormError(form,
                              'player_2',
                              'Select a valid choice. That choice is not one of the available choices.')
+
+    def test_team_form_has_changed_implicit_initial_1(self):
+        form = TeamForm(tournament=self.t,
+                        team=self.tm,
+                        data={'name': 'The Team',
+                              'player_0': str(self.p2.id)})
+        self.assertFalse(form.has_changed())
+
+    def test_team_form_has_changed_implicit_initial_2(self):
+        form = TeamForm(tournament=self.t,
+                        data={})
+        self.assertFalse(form.has_changed())
+
+    def test_team_form_has_changed_explicit_initial(self):
+        form = TeamForm(tournament=self.t,
+                        data={'name': 'Another Team',
+                              'player_0': str(self.p2.id),
+                              'player_1': str(self.p1.id)},
+                        initial={'name': 'Another Team',
+                                 'player_0': self.p2.id,
+                                 'player_1': self.p1.id})
+        self.assertFalse(form.has_changed())
 
 
 class TeamsFormsetTest(TestCase):
@@ -590,6 +657,17 @@ class TeamsFormsetTest(TestCase):
 
 
 class DrawFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.austria = GreatPower.objects.get(abbreviation='A')
+        cls.england = GreatPower.objects.get(abbreviation='E')
+        cls.france = GreatPower.objects.get(abbreviation='F')
+        cls.germany = GreatPower.objects.get(abbreviation='G')
+        cls.italy = GreatPower.objects.get(abbreviation='I')
+        cls.russia = GreatPower.objects.get(abbreviation='R')
+        cls.turkey = GreatPower.objects.get(abbreviation='T')
 
     # Common validation method
     def check_common_fields(self, form):
@@ -711,6 +789,92 @@ class DrawFormTest(TestCase):
                         concession=False)
         self.assertFalse(form.fields['proposer'].required)
 
+    def test_concession_secret_has_changed(self):
+        form = DrawForm(dias=False,
+                        secrecy=DrawSecrecy.SECRET,
+                        player_count=7,
+                        concession=True,
+                        initial={'year': 1902,
+                                 'season': Seasons.FALL,
+                                 'powers': self.england,
+                                 'passed': True},
+                        data={'year': '1902',
+                              'season': 'F',
+                              'powers': str(self.england.name),
+                              'passed': 'ok'})
+        self.assertFalse(form.has_changed())
+
+    def test_concession_counts_has_changed(self):
+        form = DrawForm(dias=False,
+                        secrecy=DrawSecrecy.COUNTS,
+                        player_count=7,
+                        concession=True,
+                        initial={'year': 1902,
+                                 'season': Seasons.FALL,
+                                 'powers': self.england,
+                                 'votes_in_favour': 3},
+                        data={'year': '1902',
+                              'season': 'F',
+                              'powers': str(self.england.name),
+                              'votes_in_favour': '3'})
+        self.assertFalse(form.has_changed())
+
+    def test_dias_secret_has_changed(self):
+        form = DrawForm(dias=True,
+                        secrecy=DrawSecrecy.SECRET,
+                        player_count=7,
+                        concession=False,
+                        initial={'year': 1902,
+                                 'season': Seasons.FALL,
+                                 'passed': True},
+                        data={'year': '1902',
+                              'season': 'F',
+                              'passed': 'ok'})
+        self.assertFalse(form.has_changed())
+
+    def test_dias_counts_has_changed(self):
+        form = DrawForm(dias=True,
+                        secrecy=DrawSecrecy.COUNTS,
+                        player_count=7,
+                        concession=False,
+                        initial={'year': 1902,
+                                 'season': Seasons.FALL,
+                                 'votes_in_favour': 3},
+                        data={'year': '1902',
+                              'season': 'F',
+                              'votes_in_favour': '3'})
+        self.assertFalse(form.has_changed())
+
+    def test_non_dias_secret_has_changed(self):
+        form = DrawForm(dias=False,
+                        secrecy=DrawSecrecy.SECRET,
+                        player_count=7,
+                        concession=False,
+                        initial={'year': 1902,
+                                 'season': Seasons.FALL,
+                                 'powers': [self.england, self.turkey],
+                                 'passed': True},
+                        data={'year': '1902',
+                              'season': 'F',
+                              'powers': [str(self.england.name), str(self.turkey.name)],
+                              'passed': 'ok'})
+        self.assertFalse(form.has_changed())
+
+    def test_non_dias_counts_has_changed(self):
+        form = DrawForm(dias=False,
+                        secrecy=DrawSecrecy.COUNTS,
+                        player_count=7,
+                        concession=False,
+                        initial={'year': 1902,
+                                 'season': Seasons.FALL,
+                                 'powers': [self.england, self.turkey],
+                                 'votes_in_favour': 3},
+                        data={'year': '1902',
+                              'season': 'F',
+                              'powers': [str(self.england.name), str(self.turkey.name)],
+                              'votes_in_favour': '3'})
+        self.assertFalse(form.has_changed())
+
 
 class GameScoreFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -718,18 +882,33 @@ class GameScoreFormTest(TestCase):
     def test_name_field_disabled(self):
         form = GameScoreForm()
         self.assertTrue(form.fields['name'].disabled)
+        attrs = form.fields['name'].widget.attrs
+        self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_power_fields_exist(self):
         form = GameScoreForm()
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
                 self.assertIn(power.name, form.fields)
+                attrs = form.fields[power.name].widget.attrs
+                self.assertEqual(attrs['maxlength'], '10')
+                self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_power_fields_optional(self):
         form = GameScoreForm()
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
                 self.assertFalse(form.fields[power.name].required)
+
+    def test_has_changed(self):
+        initial={'name': 'Only Game'}
+        data={'name': 'Only Game'}
+        for gp in GreatPower.objects.all():
+            initial[gp.name] = gp.id
+            data[gp.name] = str(gp.id)
+        form = GameScoreForm(initial=initial,
+                             data=data)
+        self.assertFalse(form.has_changed())
 
 
 class GamePlayersFormTest(TestCase):
@@ -797,6 +976,8 @@ class GamePlayersFormTest(TestCase):
     def test_name_field(self):
         form = GamePlayersForm(the_round=self.r1)
         self.assertIn('name', form.fields)
+        attrs = form.fields['name'].widget.attrs
+        self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_set_field(self):
         form = GamePlayersForm(the_round=self.r1)
@@ -861,6 +1042,31 @@ class GamePlayersFormTest(TestCase):
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1)
         self.assertTrue(form.is_valid())
+
+    def test_has_changed(self):
+        initial = {'name': 'Only Game',
+                   'game_id': 17,
+                   'the_set': GameSet.objects.first(),
+                   'external_url': '',
+                   'notes': '',
+                   'Austria-Hungary': self.rp1,
+                   'England': self.rp2,
+                   'France': self.rp3,
+                   'Germany': self.rp4,
+                   'Italy': self.rp5,
+                   'Russia': self.rp6,
+                   'Turkey': self.rp7}
+        data = {'name': 'Only Game',
+                'game_id': '17',
+                'the_set': str(GameSet.objects.first().id),
+                'external_url': '',
+                'notes': ''}
+        for power in GreatPower.objects.all():
+            data[power.name] = str(initial[power.name].pk)
+        form = GamePlayersForm(data=data,
+                               the_round=self.r1,
+                               initial=initial)
+        self.assertFalse(form.has_changed())
 
     def test_name_error1(self):
         data = {'name': 'R1 G1',
@@ -1290,6 +1496,31 @@ class PowerAssignFormTest(TestCase):
         form = PowerAssignForm(data, game=self.g)
         self.assertTrue(form.is_valid())
 
+    def test_has_changed(self):
+        data = {'name': 'R1G1',
+                'the_set': str(GameSet.objects.first().pk),
+                str(self.gp1.pk): str(self.turkey.pk),
+                str(self.gp2.pk): str(self.austria.pk),
+                str(self.gp3.pk): str(self.england.pk),
+                str(self.gp4.pk): str(self.france.pk),
+                str(self.gp5.pk): str(self.germany.pk),
+                str(self.gp6.pk): str(self.italy.pk),
+                str(self.gp7.pk): str(self.russia.pk),
+                'issues': ''}
+        form = PowerAssignForm(data,
+                               game=self.g,
+                               initial={'name': 'R1G1',
+                                        'the_set': GameSet.objects.first(),
+                                        str(self.gp1.pk): self.turkey,
+                                        str(self.gp2.pk): self.austria,
+                                        str(self.gp3.pk): self.england,
+                                        str(self.gp4.pk): self.france,
+                                        str(self.gp5.pk): self.germany,
+                                        str(self.gp6.pk): self.italy,
+                                        str(self.gp7.pk): self.russia,
+                                        'issues': ''})
+        self.assertFalse(form.has_changed())
+
     def test_name_error1(self):
         data = {'name': 'R1 G1',
                 'the_set': str(GameSet.objects.first().pk),
@@ -1487,23 +1718,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
-        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
-        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
-        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
-        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
-        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
-        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = 'Game2'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
-        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
-        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
-        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
-        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
-        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
-        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertTrue(formset.is_valid())
@@ -1513,23 +1744,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
-        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
-        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
-        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
-        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
-        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
-        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = 'RidiculouslyLongGameName'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
-        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
-        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
-        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
-        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
-        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
-        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertFalse(formset.is_valid())
@@ -1543,23 +1774,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = GAME_NAME
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data['form-0-%d' % self.gp1.pk] = str(self.austria.pk)
-        data['form-0-%d' % self.gp2.pk] = str(self.england.pk)
-        data['form-0-%d' % self.gp3.pk] = str(self.france.pk)
-        data['form-0-%d' % self.gp4.pk] = str(self.germany.pk)
-        data['form-0-%d' % self.gp5.pk] = str(self.italy.pk)
-        data['form-0-%d' % self.gp6.pk] = str(self.russia.pk)
-        data['form-0-%d' % self.gp7.pk] = str(self.turkey.pk)
+        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = GAME_NAME
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data['form-1-%d' % self.gp8.pk] = str(self.austria.pk)
-        data['form-1-%d' % self.gp9.pk] = str(self.england.pk)
-        data['form-1-%d' % self.gp10.pk] = str(self.france.pk)
-        data['form-1-%d' % self.gp11.pk] = str(self.germany.pk)
-        data['form-1-%d' % self.gp12.pk] = str(self.italy.pk)
-        data['form-1-%d' % self.gp13.pk] = str(self.russia.pk)
-        data['form-1-%d' % self.gp14.pk] = str(self.turkey.pk)
+        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertFalse(formset.is_valid())
@@ -1573,10 +1804,11 @@ class GetSevenPlayersFormTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        # We need a Tournament, with 4 Rounds, one with an exact multiple of 7 (round 2),
-        # one that needs all standby players plus some to play two boards (round 1),
-        # one that needs all the standby players to play (round 4),
-        # and one that needs a subset of the standby players to play (round 3)
+        # We need a Tournament, with 4 Rounds:
+        # - one that needs all standby players plus some to play two boards (round 1),
+        # - one with an exact multiple of 7 (round 2),
+        # - one that needs a subset of the standby players to play (round 3)
+        # - one that needs all the standby players to play (round 4),
         today = date.today()
         t = Tournament.objects.create(name='t1',
                                       start_date=today,
@@ -1670,12 +1902,12 @@ class GetSevenPlayersFormTest(TestCase):
             GetSevenPlayersForm()
 
     def test_sitters_fields(self):
-        """We should have 2 fields for players sitting out"""
+        """Check fields for players sitting out"""
         prefix='sitter'
         form = GetSevenPlayersForm(the_round=self.r1)
         for i in range(0, 2):
             with self.subTest(i=i):
-                name = '%s_%d' % (prefix, i)
+                name = f'{prefix}_{i}'
                 self.assertIn(name, form.fields)
                 the_choices = list(form.fields[name].choices)
                 # We should have one choice per non-standby RoundPlayer, plus the initial empty choice
@@ -1692,14 +1924,15 @@ class GetSevenPlayersFormTest(TestCase):
                 self.assertEqual(the_choices[7][1], self.rp1_8.player.sortable_str())
                 self.assertEqual(the_choices[8][1], self.rp1_9.player.sortable_str())
                 self.assertEqual(the_choices[9][1], self.rp1_10.player.sortable_str())
+        self.assertNotIn(f'{prefix}_2', form.fields)
 
     def test_doubles_fields(self):
-        """We should have 4 fields for players playing two games"""
+        """Check fields for players playing two games"""
         prefix='double'
         form = GetSevenPlayersForm(the_round=self.r1)
         for i in range(0, 4):
             with self.subTest(i=i):
-                name = '%s_%d' % (prefix, i)
+                name = f'{prefix}_{i}'
                 self.assertIn(name, form.fields)
                 the_choices = list(form.fields[name].choices)
                 # We should have one choice per RoundPlayer, plus the initial empty choice
@@ -1717,6 +1950,7 @@ class GetSevenPlayersFormTest(TestCase):
                 self.assertEqual(the_choices[8][1], self.rp1_8.player.sortable_str())
                 self.assertEqual(the_choices[9][1], self.rp1_9.player.sortable_str())
                 self.assertEqual(the_choices[10][1], self.rp1_10.player.sortable_str())
+        self.assertNotIn(f'{prefix}_4', form.fields)
 
     def test_no_standbys_fields(self):
         """We should have no standby fields if all standby players are needed"""
@@ -1850,7 +2084,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(the_round=self.r3)
         for i in range(0, 2):
             with self.subTest(i=i):
-                name = '%s_%d' % (prefix, i)
+                name = f'{prefix}_{i}'
                 self.assertIn(name, form.fields)
                 the_choices = list(form.fields[name].choices)
                 # We should have one choice per standby RoundPlayer, plus the initial empty choice
@@ -1879,6 +2113,74 @@ class GetSevenPlayersFormTest(TestCase):
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, None, 'Too few standby players selected to play. Got 1, expected 2')
 
+    def test_has_changed_standbys_implicit_initial(self):
+        data = {}
+        for n, rp in enumerate(self.r3.roundplayer_set.filter(standby=True)):
+            data[f'standby_{n}'] = str(rp.pk)
+        form = GetSevenPlayersForm(data=data,
+                                   the_round=self.r3)
+        self.assertFalse(form.has_changed())
+
+    def test_has_changed_no_standbys_implicit_initial(self):
+        # Set some players already sitting out
+        self.rp1_3.game_count = 0
+        self.rp1_3.save(update_fields=['game_count'])
+        self.rp1_4.game_count = 0
+        self.rp1_4.save(update_fields=['game_count'])
+        data = {'sitter_0': str(self.rp1_3.pk),
+                'sitter_1': str(self.rp1_4.pk)}
+        form = GetSevenPlayersForm(data=data,
+                                   the_round=self.r1)
+        self.assertFalse(form.has_changed())
+        # Now set some to be playing two games
+        self.rp1_3.game_count = 2
+        self.rp1_3.save(update_fields=['game_count'])
+        self.rp1_4.game_count = 2
+        self.rp1_4.save(update_fields=['game_count'])
+        data = {'double_0': str(self.rp1_3.pk),
+                'double_1': str(self.rp1_4.pk)}
+        form = GetSevenPlayersForm(data=data,
+                                   the_round=self.r1)
+        self.assertFalse(form.has_changed())
+        # Clean up changes made
+        self.rp1_3.game_count = 1
+        self.rp1_3.save(update_fields=['game_count'])
+        self.rp1_4.game_count = 1
+        self.rp1_4.save(update_fields=['game_count'])
+
+    def test_has_changed_standbys_explicit_initial(self):
+        initial = {'standby_0': self.rp3_10,
+                   'standby_1': self.rp3_7}
+        data = {}
+        for k, v in initial.items():
+            data[k] = str(v.pk)
+        form = GetSevenPlayersForm(data=data,
+                                   initial=initial,
+                                   the_round=self.r3)
+        self.assertFalse(form.has_changed())
+
+    def test_has_changed_no_standbys_explicit_initial(self):
+        initial = {'sitter_0': self.rp1_10,
+                   'sitter_1': self.rp1_7}
+        data = {}
+        for k, v in initial.items():
+            data[k] = str(v.pk)
+        form = GetSevenPlayersForm(data=data,
+                                   initial=initial,
+                                   the_round=self.r1)
+        self.assertFalse(form.has_changed())
+        initial = {'double_0': self.rp1_10,
+                   'double_1': self.rp1_7,
+                   'double_2': self.rp1_3,
+                   'double_3': self.rp1_4}
+        data = {}
+        for k, v in initial.items():
+            data[k] = str(v.pk)
+        form = GetSevenPlayersForm(data=data,
+                                   initial=initial,
+                                   the_round=self.r1)
+        self.assertFalse(form.has_changed())
+
 
 class SCOwnerFormTest(TestCase):
     fixtures = ['game_sets.json']
@@ -1886,6 +2188,11 @@ class SCOwnerFormTest(TestCase):
     def test_field_count(self):
         form = SCOwnerForm()
         self.assertEqual(len(form.fields), 1 + SupplyCentre.objects.count())
+
+    def test_year(self):
+        form = SCOwnerForm()
+        attrs = form.fields['year'].widget.attrs
+        self.assertEqual(attrs['size'], '4')
 
     def test_required(self):
         form = SCOwnerForm()
@@ -1905,6 +2212,16 @@ class SCOwnerFormTest(TestCase):
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'year', 'Ensure this value is greater than or equal to 1900.')
+
+    def test_has_changed(self):
+        initial = {'year': 1903}
+        data = {'year': '1903'}
+        for sc in SupplyCentre.objects.all():
+            if sc.initial_owner:
+                initial[sc.name] = sc.initial_owner
+                data[sc.name] = str(sc.initial_owner_id)
+        form = SCOwnerForm(data=data, initial=initial)
+        self.assertFalse(form.has_changed())
 
 
 class BaseSCOwnerFormsetTest(TestCase):
@@ -1939,8 +2256,8 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
-            data['form-%d-year' % i] = 1902 + i
+                    data[f'form-{i}-{key}'] = val.pk
+            data[f'form-{i}-year'] = 1902 + i
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
@@ -1951,7 +2268,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data = self.data.copy()
         for key, val in self.row_data.items():
             if val:
-                data['form-0-%s' % key] = val.pk
+                data[f'form-0-{key}'] = val.pk
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
@@ -1966,7 +2283,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data = self.data.copy()
         for key, val in self.row_data.items():
             if val:
-                data['form-0-%s' % key] = val.pk
+                data[f'form-0-{key}'] = val.pk
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         initial = []
@@ -1984,9 +2301,9 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
+                    data[f'form-{i}-{key}'] = val.pk
             # First year will be 1899, which is invalid
-            data['form-%d-year' % i] = 1899 + i
+            data[f'form-{i}-year'] = 1899 + i
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
@@ -2001,8 +2318,8 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
-            data['form-%d-year' % i] = 1902
+                    data[f'form-{i}-{key}'] = val.pk
+            data[f'form-{i}-year'] = 1902
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
@@ -2018,8 +2335,8 @@ class BaseSCOwnerFormsetTest(TestCase):
         for i in range(2):
             for key, val in self.row_data.items():
                 if val:
-                    data['form-%d-%s' % (i, key)] = val.pk
-            data['form-%d-year' % i] = 1902 + i
+                    data[f'form-{i}-{key}'] = val.pk
+            data[f'form-{i}-year'] = 1902 + i
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
         self.assertFalse(formset.is_valid())
@@ -2048,6 +2365,9 @@ class DeathYearFormTest(TestCase):
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
                 self.assertFalse(form.fields[power.name].required)
+                attrs = form.fields[power.name].widget.attrs
+                self.assertEqual(attrs['size'], '4')
+                self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_year_1900(self):
         data = {'France': 1900,
@@ -2061,9 +2381,29 @@ class DeathYearFormTest(TestCase):
         form = DeathYearForm(data=data)
         self.assertTrue(form.is_valid())
 
+    def test_has_changed(self):
+        data = {'Germany': '1905'}
+        initial = {'Germany': 1905}
+        form = DeathYearForm(data=data, initial=initial)
+        self.assertFalse(form.has_changed())
+
 
 class SCCountFormTest(TestCase):
     fixtures = ['game_sets.json']
+
+    def test_year_field(self):
+        form = SCCountForm()
+        attrs = form.fields['year'].widget.attrs
+        self.assertEqual(attrs['size'], '4')
+
+    def test_power_fields(self):
+        form = SCCountForm()
+        for power in GreatPower.objects.all():
+            with self.subTest(power=power):
+                self.assertFalse(form.fields[power.name].required)
+                attrs = form.fields[power.name].widget.attrs
+                self.assertEqual(attrs['size'], '2')
+                self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_success(self):
         """Everything is ok"""
@@ -2185,6 +2525,14 @@ class SCCountFormTest(TestCase):
         # In this case, the neutrals count should not be generated
         self.assertNotIn('neutral', form.cleaned_data)
 
+    def test_has_changed(self):
+        data = {'year': '1903',
+                'England': '5'}
+        initial = {'year': 1903,
+                   'England': 5}
+        form = SCCountForm(data=data, initial=initial)
+        self.assertFalse(form.has_changed())
+
 
 class BaseSCCountFormsetTest(TestCase):
     fixtures = ['game_sets.json']
@@ -2213,14 +2561,14 @@ class BaseSCCountFormsetTest(TestCase):
         """Everything is ok"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4 + i
-            data['form-%d-England' % i] = 4 + i
-            data['form-%d-France' % i] = 4 + i
-            data['form-%d-Germany' % i] = 4 + i
-            data['form-%d-Italy' % i] = 4 + i
-            data['form-%d-Russia' % i] = 3 + i
-            data['form-%d-Turkey' % i] = 4 + i
-            data['form-%d-year' % i] = 1902 + i
+            data[f'form-{i}-Austria-Hungary'] = 4 + i
+            data[f'form-{i}-England'] = 4 + i
+            data[f'form-{i}-France'] = 4 + i
+            data[f'form-{i}-Germany'] = 4 + i
+            data[f'form-{i}-Italy'] = 4 + i
+            data[f'form-{i}-Russia'] = 3 + i
+            data[f'form-{i}-Turkey'] = 4 + i
+            data[f'form-{i}-year'] = 1902 + i
         formset = self.SCCountFormset(data)
         self.assertTrue(formset.is_valid())
 
@@ -2258,15 +2606,15 @@ class BaseSCCountFormsetTest(TestCase):
         """Something wrong in one of the forms"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4 + i
-            data['form-%d-England' % i] = 4 + i
-            data['form-%d-France' % i] = 4 + i
-            data['form-%d-Germany' % i] = 4 + i
-            data['form-%d-Italy' % i] = 4 + i
-            data['form-%d-Russia' % i] = 3 + i
+            data[f'form-{i}-Austria-Hungary'] = 4 + i
+            data[f'form-{i}-England'] = 4 + i
+            data[f'form-{i}-France'] = 4 + i
+            data[f'form-{i}-Germany'] = 4 + i
+            data[f'form-{i}-Italy'] = 4 + i
+            data[f'form-{i}-Russia'] = 3 + i
             # Negative SC counts are not allowed
-            data['form-%d-Turkey' % i] = i - 1
-            data['form-%d-year' % i] = 1902 + i
+            data[f'form-{i}-Turkey'] = i - 1
+            data[f'form-{i}-year'] = 1902 + i
         formset = self.SCCountFormset(data)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
@@ -2277,14 +2625,14 @@ class BaseSCCountFormsetTest(TestCase):
         """One year is repeated"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4 + i
-            data['form-%d-England' % i] = 4 + i
-            data['form-%d-France' % i] = 4 + i
-            data['form-%d-Germany' % i] = 4 + i
-            data['form-%d-Italy' % i] = 4 + i
-            data['form-%d-Russia' % i] = 3 + i
-            data['form-%d-Turkey' % i] = 4 + i
-            data['form-%d-year' % i] = 1902
+            data[f'form-{i}-Austria-Hungary'] = 4 + i
+            data[f'form-{i}-England'] = 4 + i
+            data[f'form-{i}-France'] = 4 + i
+            data[f'form-{i}-Germany'] = 4 + i
+            data[f'form-{i}-Italy'] = 4 + i
+            data[f'form-{i}-Russia'] = 3 + i
+            data[f'form-{i}-Turkey'] = 4 + i
+            data[f'form-{i}-year'] = 1902
         formset = self.SCCountFormset(data)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error
@@ -2342,13 +2690,13 @@ class BaseSCCountFormsetTest(TestCase):
         """SupplyCentres become neutral"""
         data = self.data.copy()
         for i in range(2):
-            data['form-%d-Austria-Hungary' % i] = 4
-            data['form-%d-England' % i] = 4
-            data['form-%d-France' % i] = 4
-            data['form-%d-Germany' % i] = 4
-            data['form-%d-Italy' % i] = 4
-            data['form-%d-Russia' % i] = 3
-            data['form-%d-year' % i] = 1902 + i
+            data[f'form-{i}-Austria-Hungary'] = 4
+            data[f'form-{i}-England'] = 4
+            data[f'form-{i}-France'] = 4
+            data[f'form-{i}-Germany'] = 4
+            data[f'form-{i}-Italy'] = 4
+            data[f'form-{i}-Russia'] = 3
+            data[f'form-{i}-year'] = 1902 + i
         data['form-0-Turkey'] = 5
         data['form-1-Turkey'] = 3
         formset = self.SCCountFormset(data)
@@ -2399,6 +2747,12 @@ class PlayerFormTest(TestCase):
         # and the values should be the Player names
         self.assertEqual(the_choices[1][1], self.p2.sortable_str())
 
+    def test_has_changed(self):
+        data = {'player': str(self.p2.pk)}
+        initial = {'player': self.p2}
+        form = PlayerForm(tournament=self.t, data=data, initial=initial)
+        self.assertFalse(form.has_changed())
+
 
 class PlayerRoundFormTest(TestCase):
 
@@ -2416,11 +2770,6 @@ class PlayerRoundFormTest(TestCase):
         cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
 
-    def test_form_needs_round_num(self):
-        """Omit round_num constructor parameter"""
-        with self.assertRaises(KeyError):
-            PlayerRoundForm()
-
     def test_success(self):
         """Do everything right"""
         data = {'player': str(self.p1.pk),
@@ -2433,8 +2782,7 @@ class PlayerRoundFormTest(TestCase):
                    'sandboxer': False,
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
-                               initial=initial,
-                               round_num=1)
+                               initial=initial)
         self.assertTrue(form.is_valid())
 
     def test_success2(self):
@@ -2446,19 +2794,18 @@ class PlayerRoundFormTest(TestCase):
                    'sandboxer': False,
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
-                               initial=initial,
-                               round_num=1)
+                               initial=initial)
         self.assertTrue(form.is_valid())
 
     def test_round_fields(self):
-        """Check that the correct round fields are created"""
-        form = PlayerRoundForm(round_num=2)
+        """Check that the correct fields are created"""
+        form = PlayerRoundForm()
         # We should have five fields - player, present, standby, sandboxer, and rounds_played
         self.assertEqual(len(form.fields), 5)
 
     def test_player_labels(self):
         """Check the player names"""
-        form = PlayerRoundForm(round_num=2)
+        form = PlayerRoundForm()
         the_choices = list(form.fields['player'].choices)
         # We should have one per Player, plus the initial empty choice
         self.assertEqual(len(the_choices), Player.objects.count() + 1)
@@ -2467,6 +2814,43 @@ class PlayerRoundFormTest(TestCase):
         # and the values should be the Player names, in alphabetical order
         self.assertEqual(the_choices[1][1], self.p1.sortable_str())
         self.assertEqual(the_choices[2][1], self.p2.sortable_str())
+
+    def test_has_changed(self):
+        data = {'player': str(self.p1.pk),
+                'present': 'ok',
+                'standby': 'ok',
+                'sandboxer': 'ok',
+                'rounds_played': '1'}
+        initial = {'player': self.p1,
+                   'present': True,
+                   'standby': True,
+                   'sandboxer': True,
+                   'rounds_played': 1}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.has_changed())
+
+    def test_validation(self):
+        initial = {'player': self.p1,
+                   'present': True,
+                   'standby': True,
+                   'sandboxer': True,
+                   'rounds_played': 1}
+        data = {'player': str(self.p1.pk),
+                'sandboxer': 'ok',
+                'rounds_played': '1'}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.is_valid())
+        data = {'player': str(self.p1.pk),
+                'standby': 'ok',
+                'rounds_played': '1'}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.is_valid())
+        data = {'player': str(self.p1.pk),
+                'standby': 'ok',
+                'sandboxer': 'ok',
+                'rounds_played': '1'}
+        form = PlayerRoundForm(data=data, initial=initial)
+        self.assertFalse(form.is_valid())
 
 
 class BasePlayerRoundFormsetTest(TestCase):
@@ -2531,12 +2915,7 @@ class BasePlayerRoundFormsetTest(TestCase):
 
     def test_formset_needs_tournament(self):
         with self.assertRaises(KeyError):
-            self.PlayerRoundFormset(round_num=2)
-
-    def test_formset_needs_round_num(self):
-        """Omit round_num constructor parameter"""
-        with self.assertRaises(KeyError):
-            self.PlayerRoundFormset(tournament=self.t2)
+            self.PlayerRoundFormset()
 
     def test_success(self):
         data = self.data.copy()
@@ -2544,9 +2923,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-0-present'] = 'ok'
         data['form-0-standby'] = 'ok'
         data['form-1-player'] = str(self.p2.pk)
-        ROUND_NUM = 2
         formset = self.PlayerRoundFormset(self.data,
-                                          round_num=ROUND_NUM,
                                           tournament=self.t1)
         self.assertTrue(formset.is_valid())
         for form in formset:
@@ -2560,12 +2937,12 @@ class BasePlayerRoundFormsetTest(TestCase):
 
     def test_no_players(self):
         """Should be fine for a Tournament with no TournamentPlayers"""
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t2, round_num=1)
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t2)
         self.assertTrue(formset.is_valid())
 
     def test_tournament_over(self):
         """Should be fine for a Tournament that is finished"""
-        formset = self.PlayerRoundFormset(self.data, tournament=self.t3, round_num=1)
+        formset = self.PlayerRoundFormset(self.data, tournament=self.t3)
         self.assertTrue(formset.is_valid())
 
     def test_duplicate_players(self):
@@ -2574,7 +2951,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-0-player'] = str(self.p1.pk)
         data['form-0-present'] = 'ok'
         data['form-1-player'] = str(self.p1.pk)
-        formset = self.PlayerRoundFormset(data, tournament=self.t2, round_num=1)
+        formset = self.PlayerRoundFormset(data, tournament=self.t2)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
@@ -2586,7 +2963,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-player'] = str(self.p1.pk)
         data['form-1-player'] = 'Aardvark'
-        formset = self.PlayerRoundFormset(data, tournament=self.t2, round_num=1)
+        formset = self.PlayerRoundFormset(data, tournament=self.t2)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
@@ -2622,6 +2999,47 @@ class PlayerRoundScoreFormTest(TestCase):
         with self.assertRaises(KeyError):
             PlayerRoundScoreForm(tournament=self.t)
 
+    def test_player_field(self):
+        form = PlayerRoundScoreForm(tournament=self.t,
+                                    last_round_num=2)
+        self.assertTrue(form.fields['player'].disabled)
+        attrs = form.fields['player'].widget.attrs
+        self.assertEqual(attrs['size'], '20')
+
+    def test_game_scores_fields(self):
+        """Many fields should be disabled"""
+        initial = {'tp': self.tp1,
+                   'player': self.tp1.player,
+                  }
+        form = PlayerRoundScoreForm(initial=initial,
+                                    tournament=self.t,
+                                    last_round_num=3)
+        for field in ['game_scores_1', 'game_scores_2', 'game_scores_3']:
+            with self.subTest(field=field):
+                self.assertTrue(form.fields[field].disabled)
+                self.assertFalse(form.fields[field].required)
+                attrs = form.fields[field].widget.attrs
+                self.assertEqual(attrs['maxlength'], '10')
+
+    def test_round_fields(self):
+        form = PlayerRoundScoreForm(tournament=self.t,
+                                    last_round_num=2)
+        for n in range(1, 3):
+            with self.subTest(round_number=n):
+                name = f'round_{n}'
+                self.assertFalse(form.fields[name].required)
+                attrs = form.fields[name].widget.attrs
+                self.assertEqual(attrs['size'], '10')
+                self.assertEqual(attrs['maxlength'], '40')
+
+    def test_overall_score_field(self):
+        form = PlayerRoundScoreForm(tournament=self.t,
+                                    last_round_num=2)
+        self.assertFalse(form.fields['overall_score'].required)
+        attrs = form.fields['overall_score'].widget.attrs
+        self.assertEqual(attrs['size'], '10')
+        self.assertEqual(attrs['maxlength'], '20')
+
     def test_success(self):
         """Everything is ok"""
         initial = {'tp': self.tp1,
@@ -2644,17 +3062,20 @@ class PlayerRoundScoreFormTest(TestCase):
                                     last_round_num=2)
         self.assertTrue(form.is_valid())
 
-    def test_fields_disabled(self):
-        """Many fields should be disabled"""
-        initial = {'tp': self.tp1,
-                   'player': self.tp1.player,
-                  }
-        form = PlayerRoundScoreForm(initial=initial,
+    def test_has_changed(self):
+        data = {'tp': str(self.tp2.pk),
+                'overall_score': '47.3'}
+        initial = {'tp': self.tp2,
+                   'player': self.tp2.player,
+                   'overall_score': 47.3}
+        for n in range(0, 2):
+            data[f'round_{n}'] = str(n)
+            initial[f'round_{n}'] = n
+        form = PlayerRoundScoreForm(data=data,
+                                    initial=initial,
                                     tournament=self.t,
-                                    last_round_num=3)
-        for field in ['player', 'game_scores_1', 'game_scores_2', 'game_scores_3']:
-            with self.subTest(field=field):
-                self.assertTrue(form.fields[field].disabled)
+                                    last_round_num=2)
+        self.assertFalse(form.has_changed())
 
 
 class BasePlayerRoundScoreFormsetTest(TestCase):
@@ -2827,3 +3248,13 @@ class SeederBiasFormTest(TestCase):
             # and the values should be the Player names, in alphabetical order
             self.assertEqual(the_choices[1][1], self.tp2.player.sortable_str())
             self.assertEqual(the_choices[2][1], self.tp1.player.sortable_str())
+
+    def test_has_changed(self):
+        data = {'player1': str(self.tp1.pk),
+                'player2': str(self.tp2.pk)}
+        initial = {'player1': self.tp1,
+                   'player2': self.tp2}
+        form = SeederBiasForm(tournament=self.t,
+                              data=data,
+                              initial=initial)
+        self.assertFalse(form.has_changed())

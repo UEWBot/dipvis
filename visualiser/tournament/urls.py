@@ -80,11 +80,12 @@ round_patterns = [
 game_patterns = [
     path('', game_views.game_simple,
          {'template': 'detail'}, name='game_detail'),
+    path('change_game/', game_views.change_game, name='change_game'),
     path('sc_chart/', game_views.game_sc_chart, name='game_sc_chart'),
     path('sc_chart_refresh/', game_views.game_sc_chart,
          {'refresh': True}, name='game_sc_chart_refresh'),
     # This is just the graph image
-    path('graph/', game_views.graph, name='graph'),
+    path('graph/', game_views.graph, name='graph_img_scs'),
     # This is the page showing the graph
     path('sc_graph/', game_views.game_sc_graph, name='game_sc_graph'),
     path('sc_graph_refresh/', game_views.game_sc_graph,
@@ -203,6 +204,13 @@ tournament_patterns = [
     path('team_scores/', tournament_views.team_scores, name='team_scores'),
     path('team_scores_refresh/', tournament_views.team_scores,
          {'refresh': True}, name='team_scores_refresh'),
+    # This is just the graph image
+    path('graph/', tournament_views.graph, name='graph_img_score'),
+    # This is the page showing the graph
+    path('score_graph/', tournament_views.tournament_score_graph,
+         name='tournament_score_graph'),
+    path('score_graph_refresh/', tournament_views.tournament_score_graph,
+         {'refresh': True}, name='tournament_score_graph_refresh'),
     path('game_results/', tournament_views.tournament_game_results,
          name='tournament_game_results'),
     path('game_results_refresh/', tournament_views.tournament_game_results,
@@ -213,7 +221,7 @@ tournament_patterns = [
          {'refresh': True}, name='tournament_best_countries_refresh'),
     path('game_links/', tournament_views.tournament_simple,
          {'template': 'game_links'}, name='tournament_game_links'),
-    path('enter_scores/', tournament_views.round_scores, name='enter_scores'),
+    path('enter_scores/', tournament_views.enter_scores, name='enter_scores'),
     path('self_check_in/', tournament_views.self_check_in_control,
          name='self_check_in_control'),
     path('current_round/', tournament_views.tournament_round, name='tournament_round'),
@@ -253,10 +261,16 @@ tournament_patterns = [
     path('games/<str:game_name>/', include(game_patterns)),
 ]
 
+api_patterns = [
+    path('tournament/<int:tournament_id>/', tournament_views.api,
+         name='api_tournament'),
+    path('tournament/<int:tournament_id>/game/<str:game_name>/', game_views.api,
+         name='api_game'),
+]
+
 urlpatterns = [
     path('', tournament_views.tournament_index, name='index'),
     path('series/', include(series_patterns)),
+    path('api/v<int:version>/', include(api_patterns)),
     path('<int:tournament_id>/', include(tournament_patterns)),
-    path('api/v<int:version>/tournament/<int:tournament_id>/', tournament_views.api,
-         name='api_tournament'),
 ]

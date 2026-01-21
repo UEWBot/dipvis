@@ -61,13 +61,13 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('F')
         seeder.add_player('G')
         seeder.add_player('H')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
 
     def test_add_played_game_invalid_player1(self):
         seeder = GameSeeder(self.powers)
@@ -79,13 +79,13 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('F')
         self.assertRaises(InvalidPlayer,
                           seeder.add_played_game,
-                          set([('G', '1'),
-                               ('H', '2'),
-                               ('I', '3'),
-                               ('J', '4'),
-                               ('K', '5'),
-                               ('L', '6'),
-                               ('M', '7')]))
+                          {('G', '1'),
+                           ('H', '2'),
+                           ('I', '3'),
+                           ('J', '4'),
+                           ('K', '5'),
+                           ('L', '6'),
+                           ('M', '7')})
 
     def test_add_played_game_invalid_player2(self):
         seeder = GameSeeder(self.powers)
@@ -97,13 +97,13 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('F')
         self.assertRaises(InvalidPlayer,
                           seeder.add_played_game,
-                          set([('A', '1'),
-                               ('B', '2'),
-                               ('C', '3'),
-                               ('D', '4'),
-                               ('E', '5'),
-                               ('F', '6'),
-                               ('G', '7')]))
+                          {('A', '1'),
+                           ('B', '2'),
+                           ('C', '3'),
+                           ('D', '4'),
+                           ('E', '5'),
+                           ('F', '6'),
+                           ('G', '7')})
 
     def test_add_played_game_player_too_few_players(self):
         seeder = GameSeeder(self.powers)
@@ -115,12 +115,12 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('F')
         self.assertRaises(InvalidPlayerCount,
                           seeder.add_played_game,
-                          set([('A', '1'),
-                               ('B', '2'),
-                               ('C', '3'),
-                               ('D', '4'),
-                               ('E', '5'),
-                               ('F', '6')]))
+                          {('A', '1'),
+                           ('B', '2'),
+                           ('C', '3'),
+                           ('D', '4'),
+                           ('E', '5'),
+                           ('F', '6')})
 
     def test_add_played_game_player_too_many_players(self):
         seeder = GameSeeder(self.powers)
@@ -134,14 +134,14 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('H')
         self.assertRaises(InvalidPlayerCount,
                           seeder.add_played_game,
-                          set([('A', '1'),
-                               ('B', '2'),
-                               ('C', '3'),
-                               ('D', '4'),
-                               ('E', '5'),
-                               ('F', '6'),
-                               ('G', '7'),
-                               ('H', '1')]))
+                          {('A', '1'),
+                           ('B', '2'),
+                           ('C', '3'),
+                           ('D', '4'),
+                           ('E', '5'),
+                           ('F', '6'),
+                           ('G', '7'),
+                           ('H', '1')})
 
     def test_add_played_game_bad_powers(self):
         seeder = GameSeeder(self.powers)
@@ -154,13 +154,13 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('G')
         self.assertRaises(PowersNotUnique,
                           seeder.add_played_game,
-                          set([('A', '1'),
-                               ('B', '2'),
-                               ('C', '3'),
-                               ('D', '4'),
-                               ('E', '2'),
-                               ('F', '6'),
-                               ('G', '7')]))
+                          {('A', '1'),
+                           ('B', '2'),
+                           ('C', '3'),
+                           ('D', '4'),
+                           ('E', '2'),
+                           ('F', '6'),
+                           ('G', '7')})
 
     # _add_bias()
     def test_add_bias_invalid_weight(self):
@@ -231,7 +231,7 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('G')
         seeder.add_bias('A', 'B')
         self.assertEqual(2 * seeder._BIAS_WEIGHT ** 2,
-                         seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
+                         seeder._fitness_score({'A', 'B', 'C', 'D', 'E', 'F', 'G'}))
 
     # _power_fitness()
     def test_power_fitness_no_games(self):
@@ -243,13 +243,13 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        self.assertEqual(0, seeder._power_fitness(set([('A', '1'),
-                                                       ('B', '2'),
-                                                       ('C', '3'),
-                                                       ('D', '4'),
-                                                       ('E', '5'),
-                                                       ('F', '6'),
-                                                       ('G', '7')])))
+        self.assertEqual(0, seeder._power_fitness({('A', '1'),
+                                                   ('B', '2'),
+                                                   ('C', '3'),
+                                                   ('D', '4'),
+                                                   ('E', '5'),
+                                                   ('F', '6'),
+                                                   ('G', '7')}))
 
     def test_power_fitness_exact_match(self):
         seeder = GameSeeder(self.powers)
@@ -260,20 +260,20 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        self.assertEqual(7, seeder._power_fitness(set([('A', '1'),
-                                                       ('B', '2'),
-                                                       ('C', '3'),
-                                                       ('D', '4'),
-                                                       ('E', '5'),
-                                                       ('F', '6'),
-                                                       ('G', '7')])))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        self.assertEqual(7, seeder._power_fitness({('A', '1'),
+                                                   ('B', '2'),
+                                                   ('C', '3'),
+                                                   ('D', '4'),
+                                                   ('E', '5'),
+                                                   ('F', '6'),
+                                                   ('G', '7')}))
 
     # _assign_some_powers()
     def test_assign_some_powers(self):
@@ -302,49 +302,49 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('G')
         # Add games so that every player has played six powers once each,
         # leaving just one ideal game where they each play the unplayed power
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        seeder.add_played_game(set([('A', '2'),
-                                    ('B', '3'),
-                                    ('C', '4'),
-                                    ('D', '5'),
-                                    ('E', '6'),
-                                    ('F', '7'),
-                                    ('G', '1')]))
-        seeder.add_played_game(set([('A', '3'),
-                                    ('B', '4'),
-                                    ('C', '5'),
-                                    ('D', '6'),
-                                    ('E', '7'),
-                                    ('F', '1'),
-                                    ('G', '2')]))
-        seeder.add_played_game(set([('A', '4'),
-                                    ('B', '5'),
-                                    ('C', '6'),
-                                    ('D', '7'),
-                                    ('E', '1'),
-                                    ('F', '2'),
-                                    ('G', '3')]))
-        seeder.add_played_game(set([('A', '5'),
-                                    ('B', '6'),
-                                    ('C', '7'),
-                                    ('D', '1'),
-                                    ('E', '2'),
-                                    ('F', '3'),
-                                    ('G', '4')]))
-        seeder.add_played_game(set([('A', '6'),
-                                    ('B', '7'),
-                                    ('C', '1'),
-                                    ('D', '2'),
-                                    ('E', '3'),
-                                    ('F', '4'),
-                                    ('G', '5')]))
-        game, issues = seeder._assign_powers(set(['A', 'B', 'C', 'D', 'E', 'F', 'G']))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        seeder.add_played_game({('A', '2'),
+                                ('B', '3'),
+                                ('C', '4'),
+                                ('D', '5'),
+                                ('E', '6'),
+                                ('F', '7'),
+                                ('G', '1')})
+        seeder.add_played_game({('A', '3'),
+                                ('B', '4'),
+                                ('C', '5'),
+                                ('D', '6'),
+                                ('E', '7'),
+                                ('F', '1'),
+                                ('G', '2')})
+        seeder.add_played_game({('A', '4'),
+                                ('B', '5'),
+                                ('C', '6'),
+                                ('D', '7'),
+                                ('E', '1'),
+                                ('F', '2'),
+                                ('G', '3')})
+        seeder.add_played_game({('A', '5'),
+                                ('B', '6'),
+                                ('C', '7'),
+                                ('D', '1'),
+                                ('E', '2'),
+                                ('F', '3'),
+                                ('G', '4')})
+        seeder.add_played_game({('A', '6'),
+                                ('B', '7'),
+                                ('C', '1'),
+                                ('D', '2'),
+                                ('E', '3'),
+                                ('F', '4'),
+                                ('G', '5')})
+        game, issues = seeder._assign_powers({'A', 'B', 'C', 'D', 'E', 'F', 'G'})
         self.assertIn(('A', '7'), game)
         self.assertIn(('B', '1'), game)
         self.assertIn(('C', '2'), game)
@@ -364,7 +364,7 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        self.assertEqual(0, seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
+        self.assertEqual(0, seeder._fitness_score({'A', 'B', 'C', 'D', 'E', 'F', 'G'}))
 
     def test_fitness_score_one_pair_played(self):
         seeder = GameSeeder(self.powers)
@@ -380,14 +380,14 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('J')
         seeder.add_player('K')
         seeder.add_player('L')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        self.assertEqual(2, seeder._fitness_score(set(['A', 'B', 'H', 'I', 'J', 'K', 'L'])))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        self.assertEqual(2, seeder._fitness_score({'A', 'B', 'H', 'I', 'J', 'K', 'L'}))
 
     def test_fitness_score_worst_case(self):
         seeder = GameSeeder(self.powers)
@@ -398,14 +398,14 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        self.assertEqual(42, seeder._fitness_score(set(['A', 'B', 'C', 'D', 'E', 'F', 'G'])))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        self.assertEqual(42, seeder._fitness_score({'A', 'B', 'C', 'D', 'E', 'F', 'G'}))
 
     def test_fitness_score_two_pairs(self):
         seeder = GameSeeder(self.powers)
@@ -427,22 +427,22 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('P')
         seeder.add_player('Q')
         # Two previous non-overlapping games
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        seeder.add_played_game(set([('H', '1'),
-                                    ('I', '2'),
-                                    ('J', '3'),
-                                    ('K', '4'),
-                                    ('L', '5'),
-                                    ('M', '6'),
-                                    ('N', '7')]))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        seeder.add_played_game({('H', '1'),
+                                ('I', '2'),
+                                ('J', '3'),
+                                ('K', '4'),
+                                ('L', '5'),
+                                ('M', '6'),
+                                ('N', '7')})
         # Game with two pairs from each earlier game
-        game = set(['A', 'B', 'M', 'N', 'O', 'P', 'Q'])
+        game = {'A', 'B', 'M', 'N', 'O', 'P', 'Q'}
         self.assertEqual(4, seeder._fitness_score(game))
 
     def test_fitness_score_one_triple(self):
@@ -458,15 +458,15 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('I')
         seeder.add_player('J')
         seeder.add_player('K')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
         # Game with two pairs from each earlier game
-        game = set(['A', 'C', 'D', 'H', 'I', 'J', 'K'])
+        game = {'A', 'C', 'D', 'H', 'I', 'J', 'K'}
         self.assertEqual(6, seeder._fitness_score(game))
 
     def test_fitness_score_third_round(self):
@@ -488,21 +488,21 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('O')
         seeder.add_player('P')
         seeder.add_player('Q')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('H', '3'),
-                                    ('I', '4'),
-                                    ('J', '5'),
-                                    ('K', '6'),
-                                    ('L', '7')]))
-        game = set(['A', 'B', 'M', 'N', 'O', 'P', 'Q'])
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('H', '3'),
+                                ('I', '4'),
+                                ('J', '5'),
+                                ('K', '6'),
+                                ('L', '7')})
+        game = {'A', 'B', 'M', 'N', 'O', 'P', 'Q'}
         self.assertEqual(8, seeder._fitness_score(game))
 
     # seed_games() errors
@@ -522,14 +522,14 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        self.assertRaises(InvalidPlayerCount, seeder.seed_games, set(['E']))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games, {'E'})
 
     def test_seed_games_impossible(self):
         """
@@ -545,7 +545,7 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('D')
         seeder.add_player('E')
         seeder.add_player('F')
-        self.assertRaises(ImpossibleToSeed, seeder.seed_games, set(), set(['E']))
+        self.assertRaises(ImpossibleToSeed, seeder.seed_games, set(), {'E'})
 
     def test_seed_games_impossible_round_2(self):
         """
@@ -562,14 +562,14 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        self.assertRaises(ImpossibleToSeed, seeder.seed_games, set(['E']), set(['B']))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        self.assertRaises(ImpossibleToSeed, seeder.seed_games, {'E'}, {'B'})
 
     # seed_games_and_powers() issues
     def test_seed_games_and_powers_issues(self):
@@ -582,56 +582,56 @@ class GameSeederSetupTest(unittest.TestCase):
         seeder.add_player('E')
         seeder.add_player('F')
         seeder.add_player('G')
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '2'),
-                                    ('C', '3'),
-                                    ('D', '4'),
-                                    ('E', '5'),
-                                    ('F', '6'),
-                                    ('G', '7')]))
-        seeder.add_played_game(set([('A', '2'),
-                                    ('B', '3'),
-                                    ('C', '4'),
-                                    ('D', '5'),
-                                    ('E', '6'),
-                                    ('F', '7'),
-                                    ('G', '1')]))
-        seeder.add_played_game(set([('A', '3'),
-                                    ('B', '4'),
-                                    ('C', '5'),
-                                    ('D', '6'),
-                                    ('E', '7'),
-                                    ('F', '1'),
-                                    ('G', '2')]))
-        seeder.add_played_game(set([('A', '4'),
-                                    ('B', '5'),
-                                    ('C', '6'),
-                                    ('D', '7'),
-                                    ('E', '1'),
-                                    ('F', '2'),
-                                    ('G', '3')]))
-        seeder.add_played_game(set([('A', '5'),
-                                    ('B', '6'),
-                                    ('C', '7'),
-                                    ('D', '1'),
-                                    ('E', '2'),
-                                    ('F', '3'),
-                                    ('G', '4')]))
-        seeder.add_played_game(set([('A', '6'),
-                                    ('B', '7'),
-                                    ('C', '1'),
-                                    ('D', '2'),
-                                    ('E', '3'),
-                                    ('F', '4'),
-                                    ('G', '5')]))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        seeder.add_played_game({('A', '2'),
+                                ('B', '3'),
+                                ('C', '4'),
+                                ('D', '5'),
+                                ('E', '6'),
+                                ('F', '7'),
+                                ('G', '1')})
+        seeder.add_played_game({('A', '3'),
+                                ('B', '4'),
+                                ('C', '5'),
+                                ('D', '6'),
+                                ('E', '7'),
+                                ('F', '1'),
+                                ('G', '2')})
+        seeder.add_played_game({('A', '4'),
+                                ('B', '5'),
+                                ('C', '6'),
+                                ('D', '7'),
+                                ('E', '1'),
+                                ('F', '2'),
+                                ('G', '3')})
+        seeder.add_played_game({('A', '5'),
+                                ('B', '6'),
+                                ('C', '7'),
+                                ('D', '1'),
+                                ('E', '2'),
+                                ('F', '3'),
+                                ('G', '4')})
+        seeder.add_played_game({('A', '6'),
+                                ('B', '7'),
+                                ('C', '1'),
+                                ('D', '2'),
+                                ('E', '3'),
+                                ('F', '4'),
+                                ('G', '5')})
         # Note that two of these are powers they have already played
-        seeder.add_played_game(set([('A', '1'),
-                                    ('B', '7'),
-                                    ('C', '2'),
-                                    ('D', '3'),
-                                    ('E', '4'),
-                                    ('F', '5'),
-                                    ('G', '6')]))
+        seeder.add_played_game({('A', '1'),
+                                ('B', '7'),
+                                ('C', '2'),
+                                ('D', '3'),
+                                ('E', '4'),
+                                ('F', '5'),
+                                ('G', '6')})
         r = seeder.seed_games_and_powers()
         self.assertEqual(1, len(r))
         g, i = r[0]
@@ -692,7 +692,7 @@ class GameSeederSeedingTest(unittest.TestCase):
             for g in game_set:
                 if p in g:
                     count += 1
-            self.assertEqual(count, 2, "Player %s should be playing 2 games but is actually playing %d" % (p, count))
+            self.assertEqual(count, 2, f'Player {p} should be playing 2 games but is actually playing {count}')
 
     def check_no_games_played(self, seeder):
         for p1 in seeder.games_played_matrix.values():
@@ -708,27 +708,27 @@ class GameSeederSeedingTest(unittest.TestCase):
     def test_seed_games_second_round(self):
         s = create_seeder(num_players=21)
         # Add some previously-played games
-        s.add_played_game(set([('A', '1'),
-                               ('B', '2'),
-                               ('C', '3'),
-                               ('D', '4'),
-                               ('E', '5'),
-                               ('F', '6'),
-                               ('G', '7')]))
-        s.add_played_game(set([('H', '1'),
-                               ('I', '2'),
-                               ('J', '3'),
-                               ('K', '4'),
-                               ('L', '5'),
-                               ('M', '6'),
-                               ('N', '7')]))
-        s.add_played_game(set([('O', '1'),
-                               ('P', '2'),
-                               ('Q', '3'),
-                               ('R', '4'),
-                               ('S', '5'),
-                               ('T', '6'),
-                               ('U', '7')]))
+        s.add_played_game({('A', '1'),
+                           ('B', '2'),
+                           ('C', '3'),
+                           ('D', '4'),
+                           ('E', '5'),
+                           ('F', '6'),
+                           ('G', '7')})
+        s.add_played_game({('H', '1'),
+                           ('I', '2'),
+                           ('J', '3'),
+                           ('K', '4'),
+                           ('L', '5'),
+                           ('M', '6'),
+                           ('N', '7')})
+        s.add_played_game({('O', '1'),
+                           ('P', '2'),
+                           ('Q', '3'),
+                           ('R', '4'),
+                           ('S', '5'),
+                           ('T', '6'),
+                           ('U', '7')})
         r = s.seed_games()
         self.check_game_set(r, 21)
         # Check that game_set has a "good" fitness score
@@ -740,7 +740,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         """Two rounds of a 49-player tournament"""
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
         for i in range(49):
-            seeder.add_player('%dp' % i)
+            seeder.add_player(f'{i}p')
         r = seeder.seed_games()
         self.check_game_set(r, 49)
         # First round by definition should have a fitness of zero
@@ -772,46 +772,46 @@ class GameSeederSeedingTest(unittest.TestCase):
     def test_seed_games_wrong_number_of_players_2(self):
         """Multiple of 7 players, minus one not playing"""
         s = create_seeder(num_players=21)
-        self.assertRaises(InvalidPlayerCount, s.seed_games, set(['U']))
+        self.assertRaises(InvalidPlayerCount, s.seed_games, {'U'})
 
     def test_seed_games_wrong_number_of_players_3(self):
         """Multiple of 7 players, plus one playing two games"""
         s = create_seeder(num_players=21)
-        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['U']))
+        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), {'U'})
 
     def test_seed_games_wrong_number_of_players_4(self):
         """Multiple of 7 players, plus two playing two games"""
         s = create_seeder(num_players=21)
-        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), set(['T', 'U']))
+        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), {'T', 'U'})
         self.check_no_games_played(s)
 
     def test_seed_games_with_omission(self):
         """Multiple of 7 players plus one, minus one not playing"""
         s = create_seeder(num_players=22)
-        omits = set(['U'])
+        omits = {'U'}
         r = s.seed_games(omits)
         self.check_game_set(r, 21, omits)
 
     def test_seed_games_with_multiples(self):
         """Multiple of 7 players minus one, minus one playing two games"""
         s = create_seeder()
-        dups = set(['T'])
+        dups = {'T'}
         r = s.seed_games(players_doubling_up=dups)
         self.check_game_set(r, 21, duplicates=dups)
 
     def test_seed_games_invalid_dup(self):
         s = create_seeder()
-        dups = set(['X'])
+        dups = {'X'}
         self.assertRaises(InvalidPlayer, s.seed_games, players_doubling_up=dups)
 
     def test_seed_games_invalid_sit(self):
         s = create_seeder()
-        sits = set(['X'])
+        sits = {'X'}
         self.assertRaises(InvalidPlayer, s.seed_games, omitting_players=sits)
 
     def test_seed_games_separate_dups_1(self):
         s = create_seeder(num_players=26)
-        dups = set(['A', 'B'])
+        dups = {'A', 'B'}
         r = s.seed_games(players_doubling_up=dups)
         self.check_game_set(r, 28, duplicates=dups)
         # Check that no game has both the players playing two games
@@ -821,7 +821,7 @@ class GameSeederSeedingTest(unittest.TestCase):
 
     def test_seed_games_separate_dups_2(self):
         s = create_seeder(num_players=18)
-        dups = set(['A', 'B', 'C'])
+        dups = {'A', 'B', 'C'}
         r = s.seed_games(players_doubling_up=dups)
         self.check_game_set(r, 21, duplicates=dups)
         # Check that no game has all the players playing two games
@@ -871,7 +871,7 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
                 seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                                     seed_method=SeedMethod.EXHAUSTIVE)
                 for i in range(count):
-                    seeder.add_player('%dp' % i)
+                    seeder.add_player(f'{i}p')
                 r = seeder.seed_games()
                 self.check_game_set(r, count)
                 # First round by definition should have a fitness of zero
@@ -888,9 +888,9 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                             seed_method=SeedMethod.EXHAUSTIVE)
         for i in range(13):
-            seeder.add_player('%dp' %i)
-        dup = '%dp' % 2
-        r = seeder.seed_games(players_doubling_up=set([dup]))
+            seeder.add_player(f'{i}p')
+        dup = '2p'
+        r = seeder.seed_games(players_doubling_up={dup})
         # We should have two valid games, with player <dup> in both
         self.assertEqual(len(r), 2)
         for g in r:
@@ -900,8 +900,8 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         # Add those games as played
         for g in r:
             seeder.add_played_game(with_powers(g))
-        dup = '%dp' % 3
-        r = seeder.seed_games(players_doubling_up=set([dup]))
+        dup = '3p'
+        r = seeder.seed_games(players_doubling_up={dup})
         # We should again have two valid games, again with (different) player <dup> in both
         self.assertEqual(len(r), 2)
         for g in r:
@@ -914,5 +914,5 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
                             seed_method=SeedMethod.EXHAUSTIVE)
         for i in range(13):
-            seeder.add_player('%dp' %i)
+            seeder.add_player(f'{i}p')
         self.assertRaises(InvalidPlayerCount, seeder.seed_games)

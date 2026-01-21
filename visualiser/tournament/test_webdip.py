@@ -47,14 +47,14 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_invalid_game_id(self):
         """Invalid game id."""
         path = 'board.php'
-        query = {'gameID': '%s' % INVALID_GAME_ID}
+        query = {'gameID': f'{INVALID_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
     def test_webdip_variant_game(self):
         """Variant game id."""
         path = 'board.php'
-        query = {'gameID': '%s' % VARIANT_GAME_ID}
+        query = {'gameID': f'{VARIANT_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         self.assertRaises(UnsupportedVariant, Game, url)
 
@@ -83,7 +83,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_solo(self):
         """Solo victory. Also validates FALL"""
         path = 'board.php'
-        query = {'gameID': '%d' % SOLO_GAME_ID}
+        query = {'gameID': f'{SOLO_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (4, 'FreedomPanda'),
@@ -113,7 +113,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_3way(self):
         """3-way draw. Also validates SPRING"""
         path = 'board.php'
-        query = {'gameID': '%s' % DRAW_3_GAME_ID}
+        query = {'gameID': f'{DRAW_3_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (17, 'Thrawn369'),
@@ -139,7 +139,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_4way(self):
         """4-way draw. Also validates URL with trailing garbage"""
         path = 'board.php'
-        query = {'gameID': '%sgarbage' % DRAW_4_GAME_ID}
+        query = {'gameID': f'{DRAW_4_GAME_ID}garbage'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (9, 'Talby2'),
@@ -165,7 +165,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_5way(self):
         """5-way draw. Also validates game with resigned player"""
         path = 'board.php'
-        query = {'gameID': '%s' % DRAW_5_GAME_ID}
+        query = {'gameID': f'{DRAW_5_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'clanger165'),
@@ -191,7 +191,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_6way(self):
         """6-way draw. Also validates games with CD"""
         path = 'board.php'
-        query = {'gameID': '%s' % DRAW_6_GAME_ID}
+        query = {'gameID': f'{DRAW_6_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (0, 'Sploack'),
@@ -217,7 +217,7 @@ class WebDiplomacyTests(TestCase):
     def test_webdip_game_7way(self):
         """7-way draw."""
         path = 'board.php'
-        query = {'gameID': '%s' % DRAW_7_GAME_ID}
+        query = {'gameID': f'{DRAW_7_GAME_ID}'}
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         g = Game(url)
         RESULTS = {POWERS[0]: (2, 'Mikhail'),

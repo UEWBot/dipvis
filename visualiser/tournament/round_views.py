@@ -22,6 +22,7 @@ import csv
 import requests
 from itertools import combinations
 
+from django.conf import settings
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -134,7 +135,6 @@ def roll_call(request, tournament_id, round_num):
         player_data.append(current)
     formset = PlayerRoundFormset(request.POST or None,
                                  tournament=t,
-                                 round_num=int(round_num),
                                  initial=player_data)
     if formset.is_valid():
         errors_added = False
@@ -364,7 +364,9 @@ def _send_board_call_to_discord(the_round):
         "content": text,
         "username": "Diplomacy TV"
            }
-    requests.post(the_round.tournament.discord_url, json=data)
+    requests.post(the_round.tournament.discord_url,
+                  json=data,
+                  headers={'User-Agent': settings.USER_AGENT})
 
 
 @permission_required('tournament.add_game')
@@ -380,7 +382,7 @@ def seed_games(request, tournament_id, round_num):
                        'external_url': g.external_url,
                        'notes': g.notes}
             for gp in g.gameplayer_set.all():
-                current[gp.id] = gp.power
+                current[str(gp.id)] = gp.power
             data.append(current)
         PowerAssignFormset = formset_factory(PowerAssignForm,
                                              formset=BasePowerAssignFormset,
@@ -467,14 +469,14 @@ def seed_games(request, tournament_id, round_num):
                 gp = GamePlayer.objects.create(player=tp.player,
                                                game=new_game,
                                                power=power)
-                current[gp.id] = power
+                current[str(gp.id)] = power
             # If we're assigning powers from preferences, do so now
             if t.power_assignment == PowerAssignMethods.PREFERENCES:
                 new_game.assign_powers_from_prefs()
                 for tp, _ in g:
                     gp = GamePlayer.objects.get(player=tp.player,
                                                 game=new_game)
-                    current[gp.id] = gp.power
+                    current[str(gp.id)] = gp.power
             data.append(current)
         # Create a form for each of the resulting games
         PowerAssignFormset = formset_factory(PowerAssignForm,
@@ -486,13 +488,20 @@ def seed_games(request, tournament_id, round_num):
     return render(request, 'rounds/seeded_games.html', context)
 
 
+# TODO: Name is misleading - also used to modify existing game(s)
 @permission_required('tournament.add_game')
-def create_games(request, tournament_id, round_num):
-    """Provide a form to create the games for a round"""
+def create_games(request, tournament_id, round_num, game_name=None):
+    """Form to create games for a round or to modify existing game(s)"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    # Do any games already exist for the round ?
-    games = r.game_set.all()
+    if game_name is not None:
+        # Get a QuerySet containing the one game of interest
+        games = r.game_set.filter(name=game_name)
+        # Caller should ensure that the game name is valid
+        assert games.exists()
+    else:
+        # Do any games already exist for the round ?
+        games = r.game_set.all()
     data = []
     for g in games:
         current = {'game_id': g.id,
@@ -504,12 +513,15 @@ def create_games(request, tournament_id, round_num):
             if gp.power:
                 current[gp.power.name] = gp.roundplayer()
         data.append(current)
-    # Estimate the number of games for the round
-    round_players = r.roundplayer_set.count()
-    expected_games = (round_players + 6) // 7
-    # This can happen if there are no RoundPlayers for this round
-    if expected_games < 1:
+    if game_name is not None:
         expected_games = 1
+    else:
+        # Estimate the number of games for the round
+        round_players = r.roundplayer_set.count()
+        expected_games = (round_players + 6) // 7
+        # This can happen if there are no RoundPlayers for this round
+        if expected_games < 1:
+            expected_games = 1
     GamePlayersFormset = formset_factory(GamePlayersForm,
                                          extra=expected_games - games.count(),
                                          formset=BaseGamePlayersFormset)
@@ -521,6 +533,9 @@ def create_games(request, tournament_id, round_num):
         players_changed = False
         for f in formset:
             if f.has_changed():
+                if f.cleaned_data['game_id'] is not None:
+                    # Game should exist
+                    g = Game.objects.get(pk=f.cleaned_data['game_id'])
                 # Have any non-player fields changed?
                 if set(f.changed_data) & non_player_fields:
                     try:
@@ -647,7 +662,7 @@ def game_cycle(request, tournament_id, round_num, template, game_name=None):
     r = get_round_or_404(t, round_num)
     games = r.game_set.all()
     if (len(games)) == 0:
-        raise Http404
+        raise Http404('No games in round')
     if game_name:
         # Find the game in the list
         g = None
@@ -657,7 +672,7 @@ def game_cycle(request, tournament_id, round_num, template, game_name=None):
                 g = g1
                 break
         if not g:
-            raise Http404
+            raise Http404('Specified game not found in specified round')
     else:
         g = games.first()
         n = 0
