@@ -434,6 +434,40 @@ def _find_wdr_tournament(wdr_id, tournaments_list):
             return t
 
 
+def _wdr_tournament_should_be_included(t):
+    """
+    Is the WDR tournament actually a tournament?
+
+    WDR tournaments include several events that are not tournaments per se.
+
+    t should be the dict representing the tournament in the WDR.
+    Return True if t is an actual tournament that we want to include.
+    """
+    kind = t['tournament_kind']
+    if kind in ['EDC', # European Championship
+                'DIPCON', # North American Championship
+                'APAC', # Asia-Pacific Championship
+                'NDC', # National Championship
+                'MASTERS', # Invitational
+                'DBNI', # DBN Invitational
+                'VDC', # Virtual Championship
+                'CUP',
+                'NCUP', # National Cup
+                'OPEN',
+                'WDC']: # World Championship
+        return True
+    elif kind in ['LEAGUE',
+                  'EGP', # European Grand Prix
+                  'NAGP', # North American Grand Prix
+                  'BIC', # Bismark Cup
+                  'nCIR', # National Circuit
+                  'CIR']: # Circuit
+        return False
+    else:
+        print(f'Unrecognised tournament_kind {kind} in {t}')
+        return False
+
+
 def _add_player_bg_from_wdr(player, wdr_id):
     """
     Add or update player background information from the WDR
@@ -452,6 +486,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             continue
         elif t['tournament_player_rank'] == -1:
             print(f"Skipping {t['tournament_name']} for {player} with -1 ranking")
+            continue
+        if not _wdr_tournament_should_be_included(t):
             continue
         defaults = {'position': t['tournament_player_rank'],
                     'tournament': t['tournament_name']}
