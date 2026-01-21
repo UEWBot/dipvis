@@ -611,11 +611,7 @@ class GameSeeder:
         upper_triang = [u for u in zip(upper_triang[0], upper_triang[1])]
 
         # assign the multi-boarders first
-        # need to get the blocked player code block working, which
-        # would create an initial seeding that has them on different boards
-        # *however*,
-        # blocked player pairs should just get sorted away from each other during
-        # swapping since their fitness score is super high
+        # then assigned blocked player pairs to different games
         if players_doubling_up != ():
             for player in players_doubling_up:
                 #print(games)
@@ -624,20 +620,24 @@ class GameSeeder:
                 g1.add(player)
                 g2.add(player)
 
-        # blocked_rows, blocked_columns = np.where(games_matrix_np > 20)
-        # blocked_indices = list(zip(blocked_rows, blocked_columns))    
-        # if blocked_indices != []:
-        #     blocked_indices = [b for b in blocked_indices if b in upper_triang]
-        #     for b in blocked_indices:
-        #         print(b)
-        #         print(b[0])
-        #         print(b[1])
-        #         b0 = index_to_players[b[0]]
-        #         b1 = index_to_players[b[1]]
+        blocked_rows, blocked_columns = np.where(games_matrix_np > 20)
+        blocked_indices = list(zip(blocked_rows, blocked_columns))
+        blocked_players = []
 
-        #         g1, g2 = random.sample(games,2)
-        #         g1.add(players_to_index[b0])
-        #         g2.add(players_to_index[b1])
+        if blocked_indices != []:
+            blocked_indices = [b for b in blocked_indices if b in upper_triang]
+            for b in blocked_indices:
+                b0 = index_to_players[b[0]]
+                b1 = index_to_players[b[1]]
+
+                blocked_players.append(b0)
+                blocked_players.append(b1)
+
+                g1, g2 = random.sample(games,2)
+                g1.add(b0)
+                g2.add(b1)
+
+        blocked_players = list(set(blocked_players))
 
         bins = np.unique(games_matrix_np)
         print(f"bins {bins}")
@@ -660,6 +660,10 @@ class GameSeeder:
                     doubler_index = players_to_index[player]
                     if doubler_index in bin_entry:
                         bin_entries = bin_entries - {bin_entry}
+                for player in blocked_players:
+                    blocked_index = players_to_index[player]
+                    if blocked_index in bin_entry:
+                        bin_entries = bin_entries - {bin_entry}
             
             while len(bin_entries) > 0:
                 bin_entry = random.choice(list(bin_entries))
@@ -674,7 +678,7 @@ class GameSeeder:
                 #print("adding ", str(row), " and ", str(col))
 
                 if len(games[i%n_games]) + 2 > 7:
-                    print("games: ", games)
+                    print("games: ", [len(g) for g in games])
                     print("switching from pairs of players to individuals, all games have six or seven players")
                     stop_adding_pairs = True
                     break
@@ -742,8 +746,8 @@ class GameSeeder:
         #     for player in game:
         #         print(player)
 
-        for i in index_to_players:
-            print(i, index_to_players[i])
+        # for i in index_to_players:
+        #     print(i, index_to_players[i])
 
         for game_index, game in enumerate(games):
             # print("game index ", game_index)
@@ -752,16 +756,16 @@ class GameSeeder:
                 # print(player)
                 games_with_names[game_index].add(player)
 
-        print("number of games ", len(games_with_names))
-        print([len(g) for g in games_with_names])
-        p = set(players).copy()
-        for g in games_with_names:
-            print(f"len game is {len(g)}")
-            p = set(p)-g
-            print(p)
-            print()
-        print(players_to_assign)
-        print(len(players_to_assign))
+        # print("number of games ", len(games_with_names))
+        # print([len(g) for g in games_with_names])
+        # p = set(players).copy()
+        # for g in games_with_names:
+        #     print(f"len game is {len(g)}")
+        #     p = set(p)-g
+        #     print(p)
+        #     print()
+        # print(players_to_assign)
+        # print(len(players_to_assign))
         #input("! ")
 
         return games_with_names
