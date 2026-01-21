@@ -282,6 +282,8 @@ class GameSeeder:
 
         This is the set of all possible games with that player and power list.
         """
+        #print("players ", players)
+        #print("number of players ", len(players))
         assert len(players) == len(powers)
         # If there's just one player left, there's only one possible game
         if len(players) == 1:
@@ -591,13 +593,13 @@ class GameSeeder:
             for other_player in players:
                 if player != other_player:
                     try:
-                        games_matrix_pd.loc[player.id, other_player.id] = self.games_played_matrix[player.id][other_player.id]
+                        games_matrix_pd.loc[player.id, other_player.id] = self.games_played_matrix[player][other_player]
                     except:
                         games_matrix_pd.loc[player.id, other_player.id] = 0
         # print("pd matrix cols ", len(games_matrix_pd.columns), "\n")
         games_matrix_np = games_matrix_pd.to_numpy()
         # print(games_matrix_pd)
-        # print(games_matrix_np)
+        print(games_matrix_np)
 
         games = [set() for _ in range(int(n_games))]
 
@@ -608,23 +610,37 @@ class GameSeeder:
         #turn this into a list of (row, col)
         upper_triang = [u for u in zip(upper_triang[0], upper_triang[1])]
 
-        #assign the multi-boarders and blocked player pairs first
+        # assign the multi-boarders first
+        # need to get the blocked player code block working, which
+        # would create an initial seeding that has them on different boards
+        # *however*,
+        # blocked player pairs should just get sorted away from each other during
+        # swapping since their fitness score is super high
         if players_doubling_up != ():
             for player in players_doubling_up:
                 #print(games)
                 g1, g2 = random.sample(games,2)
 
-                g1.add(players_to_index[player])
-                g2.add(players_to_index[player])
+                g1.add(player)
+                g2.add(player)
 
-        # print("games after doublers")
-        # print(games[0])
-        # print(games[1])
-        # blocked_rows, blocked_columns = np.where(games_matrix_np == 9999)
-        # blocked_indices = list(zip(blocked_rows, blocked_columns))
-        # blocked_indices = [b for b in blocked_indices if b in upper_triang]
+        # blocked_rows, blocked_columns = np.where(games_matrix_np > 20)
+        # blocked_indices = list(zip(blocked_rows, blocked_columns))    
+        # if blocked_indices != []:
+        #     blocked_indices = [b for b in blocked_indices if b in upper_triang]
+        #     for b in blocked_indices:
+        #         print(b)
+        #         print(b[0])
+        #         print(b[1])
+        #         b0 = index_to_players[b[0]]
+        #         b1 = index_to_players[b[1]]
+
+        #         g1, g2 = random.sample(games,2)
+        #         g1.add(players_to_index[b0])
+        #         g2.add(players_to_index[b1])
 
         bins = np.unique(games_matrix_np)
+        print(f"bins {bins}")
         current_bin = 0
         for b in bins:
             current_bin = b
@@ -650,10 +666,10 @@ class GameSeeder:
                 row = bin_entry[0]
                 col = bin_entry[1]
 
-                if row > 12:
-                    print("row ", row)
-                if col > 12:
-                    print("col ", col)
+                # if row > 12:
+                #     print("row ", row)
+                # if col > 12:
+                #     print("col ", col)
                 #print("\ngame "+str(i%n_games))
                 #print("adding ", str(row), " and ", str(col))
 
@@ -662,8 +678,8 @@ class GameSeeder:
                     print("switching from pairs of players to individuals, all games have six or seven players")
                     stop_adding_pairs = True
                     break
-                games[i%n_games].add(row)
-                games[i%n_games].add(col)
+                games[i%n_games].add(index_to_players[row])
+                games[i%n_games].add(index_to_players[col])
                 i += 1
                 for bin_entry in bin_entries:
                     if (row in bin_entry) or (col in bin_entry):
@@ -676,39 +692,47 @@ class GameSeeder:
                 break
 
         min_game_players = min([len(g) for g in games])
+        for g in games:
+            print(g)
+        print("min game players ", min_game_players)
         if min_game_players < 7:        
             assigned_players = []
             for game in games:
                 for player in game:
-                    assigned_players.append(player)
+                    if player not in assigned_players:
+                        assigned_players.append(player)
 
-            print("assigned players ", assigned_players)
+            players_to_assign = list( set(players) - set(assigned_players))
+            print(players_to_assign)
+            print(len(players_to_assign))
+            #input("players to assign")
 
-            rows, columns = np.where(games_matrix_np == current_bin)
-            # print("games_matrix_np_size ", games_matrix_np.size)
-            # print("rows ", rows)
-            # print("columns ", columns, "\n")
-            bin_indices = list(zip(rows, columns))
-            # print("b i", bin_indices, "\n")
-            bin_entries = set([ (int(bin_index[0]), int(bin_index[1])) for bin_index in bin_indices])
-            valid_entries = set()
-            # print("b ", b)
-            for entry in bin_entries:
-                if (entry[0] not in assigned_players) and (entry[1] not in assigned_players):
-                    valid_entries.add(entry)
-            # print("valid entries ", valid_entries)
-            players_to_assign = []
-            for entry in valid_entries:
-                for subentry in entry:
-                    # print("subentry", subentry)
-                    players_to_assign.append(subentry)
+            # rows, columns = np.where(games_matrix_np == current_bin)
+            # # print("games_matrix_np_size ", games_matrix_np.size)
+            # # print("rows ", rows)
+            # # print("columns ", columns, "\n")
+            # bin_indices = list(zip(rows, columns))
+            # # print("b i", bin_indices, "\n")
+            # bin_entries = set([ (int(bin_index[0]), int(bin_index[1])) for bin_index in bin_indices])
+            # valid_entries = set()
+            # # print("b ", b)
+            # for entry in bin_entries:
+            #     if (entry[0] not in assigned_players) and (entry[1] not in assigned_players):
+            #         valid_entries.add(entry)
+            # # print("valid entries ", valid_entries)
+            # players_to_assign = []
+            # for entry in valid_entries:
+            #     for subentry in entry:
+            #         print("subentry", index_to_players[subentry])
+            #         players_to_assign.append(index_to_players[subentry])
 
             while len(players_to_assign) > 0:
                 player = random.choice(list(players_to_assign))
                 remaining_games = [game for game in games if len(game) < 7]
                 if remaining_games == []:
+                    print("breaking\n")
                     break
-                game = random.choice([game for game in games if len(game) < 7])
+                game = random.choice([game for game in remaining_games if len(game) < 7])
                 game.add(player)
                 players_to_assign.remove(player)
 
@@ -723,10 +747,22 @@ class GameSeeder:
 
         for game_index, game in enumerate(games):
             # print("game index ", game_index)
-            for player_index in game:
+            for player in game:
                 # print(game)
                 # print(player)
-                games_with_names[game_index].add(index_to_players[player_index])
+                games_with_names[game_index].add(player)
+
+        print("number of games ", len(games_with_names))
+        print([len(g) for g in games_with_names])
+        p = set(players).copy()
+        for g in games_with_names:
+            print(f"len game is {len(g)}")
+            p = set(p)-g
+            print(p)
+            print()
+        print(players_to_assign)
+        print(len(players_to_assign))
+        #input("! ")
 
         return games_with_names
 
@@ -759,14 +795,14 @@ class GameSeeder:
 
                 s = self._matrix_assignment(players, players_doubling_up)
 
-                #print("fitness before swaps ", self._set_fitness(s))
+                print("fitness before swaps ", self._set_fitness(s))
                 
                 if self.games_played:
                     s, fitness = self._improve_fitness(s)
                 else:
                     fitness = 0
 
-                #print("fitness after swaps ", self._set_fitness(s))
+                print("fitness after swaps ", self._set_fitness(s))
 
                 seedings.append((s, fitness))
             elif ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
