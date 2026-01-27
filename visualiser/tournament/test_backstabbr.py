@@ -20,6 +20,7 @@ from django.test import TestCase, tag
 
 from tournament.backstabbr import Game, is_backstabbr_url
 from tournament.backstabbr import NoSuchSeason, InvalidGameUrl
+from tournament.backstabbr import BACKSTABBR_NETLOCS
 from tournament.backstabbr import BACKSTABBR_NETLOC
 from tournament.backstabbr import POWERS, SPRING, FALL, WINTER
 
@@ -41,9 +42,14 @@ SANDBOX_3_GAME_NUMBER = 6238301148020736
 
 @tag('backstabbr')
 class BackstabbrTests(TestCase):
-    def test_is_backstabbr_url_true(self):
+    def test_is_backstabbr_url_true1(self):
         path = f'game/{INVALID_GAME_NUMBER}'
-        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        url = urlunparse(('https', BACKSTABBR_NETLOCS[0], path, '', '', ''))
+        self.assertTrue(is_backstabbr_url(url))
+
+    def test_is_backstabbr_url_true1(self):
+        path = f'game/{INVALID_GAME_NUMBER}'
+        url = urlunparse(('https', BACKSTABBR_NETLOCS[1], path, '', '', ''))
         self.assertTrue(is_backstabbr_url(url))
 
     def test_is_backstabbr_url_false(self):

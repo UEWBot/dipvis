@@ -25,7 +25,8 @@ from bs4 import BeautifulSoup
 
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
 
-BACKSTABBR_NETLOC = 'www.backstabbr.com'
+BACKSTABBR_NETLOCS = ['backstabbr.com', 'www.backstabbr.com']
+BACKSTABBR_NETLOC = BACKSTABBR_NETLOCS[1]
 
 # Names used for the Great Powers on Backstabbr
 POWERS = ['Austria',
@@ -104,7 +105,7 @@ class NoSuchSeason(Exception):
 def is_backstabbr_url(url):
     """Returns True if the specified URL points to the backstabbr domain"""
     parsed_url = urlparse(url)
-    return parsed_url.netloc == BACKSTABBR_NETLOC
+    return parsed_url.netloc in BACKSTABBR_NETLOCS
 
 
 class Game():
@@ -127,7 +128,7 @@ class Game():
         """
         self.url = url
         self.parsed_url = urlparse(url)
-        if self.parsed_url.netloc != BACKSTABBR_NETLOC:
+        if self.parsed_url.netloc not in BACKSTABBR_NETLOCS:
             raise InvalidGameUrl(self.url)
         self.regular_game = ('game/' in self.parsed_url.path)
         self.sandbox_game = ('sandbox/' in self.parsed_url.path)
