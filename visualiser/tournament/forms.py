@@ -1016,12 +1016,18 @@ class PlayerRoundForm(forms.Form):
     # We want all Players to be available to be chosen,
     # as this provides an easy way to add TournamentPlayers
     player = PlayerChoiceField(queryset=Player.objects.all())
-    present = forms.BooleanField(required=False, initial=False)
-    standby = forms.BooleanField(required=False, initial=False)
-    sandboxer = forms.BooleanField(required=False, initial=False)
+    present = forms.BooleanField(required=False,
+                                 initial=False,
+                                 widget=forms.CheckboxInput(attrs={'class': 'center-checkbox'}))
+    standby = forms.BooleanField(required=False,
+                                 initial=False,
+                                 widget=forms.CheckboxInput(attrs={'class': 'center-checkbox'}))
+    sandboxer = forms.BooleanField(required=False,
+                                   initial=False,
+                                   widget=forms.CheckboxInput(attrs={'class': 'center-checkbox'}))
     rounds_played = forms.IntegerField(required=False,
                                        disabled=True,
-                                       max_value=10,
+                                       widget=forms.TextInput(attrs={'class': 'readonly-look'}),
                                        min_value=0)
 
     def clean(self):
