@@ -943,6 +943,44 @@ class Tournament(models.Model):
                                     name='unique_name_date'),
         ]
 
+    def __str__(self):
+        return f'{self.name} {self.start_date.year}'
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object to the database.
+
+        If round_scoring_system may have changed, updates score attributes of any RoundPlayers
+        If tournament_scoring_system or handicap may have changed, updates score attributes of any TournamentPlayers.
+        """
+        super().save(*args, **kwargs)
+
+        if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['round_scoring_system',
+                                                                                                 'non_player_round_score',
+                                                                                                 'non_player_round_score_once']):
+            # Change may affect the scoring
+            try:
+                validate_round_scoring_system(self.round_scoring_system)
+            except ValidationError:
+                pass
+            else:
+                # Update all round scores. This will also call self.update_scores()
+                for r in self.round_set.all():
+                    r.update_scores()
+        if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['tournament_scoring_system',
+                                                                                                 'handicap']):
+            # Change may affect the scoring
+            try:
+                validate_tournament_scoring_system(self.tournament_scoring_system)
+            except ValidationError:
+                pass
+            else:
+                self.update_scores()
+
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('tournament_detail', args=[str(self.id)])
+
     def powers_assigned_from_prefs(self):
         """
         Returns True if power_assignment is PREFERENCES.
@@ -1378,10 +1416,6 @@ class Tournament(models.Model):
             return WDR_BASE_URL + f'tournaments/{self.wdr_tournament_id}'
         return u''
 
-    def get_absolute_url(self):
-        """Returns the canonical URL for the object."""
-        return reverse('tournament_detail', args=[str(self.id)])
-
     def clean(self):
         """
         Validate the object.
@@ -1391,40 +1425,6 @@ class Tournament(models.Model):
         if not scoring_systems_are_compatible(self.round_scoring_system,
                                               self.tournament_scoring_system):
             raise ValidationError(_('The scoring systems are not compatible'))
-
-    def save(self, *args, **kwargs):
-        """
-        Save the object to the database.
-
-        If round_scoring_system may have changed, updates score attributes of any RoundPlayers
-        If tournament_scoring_system or handicap may have changed, updates score attributes of any TournamentPlayers.
-        """
-        super().save(*args, **kwargs)
-
-        if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['round_scoring_system',
-                                                                                                 'non_player_round_score',
-                                                                                                 'non_player_round_score_once']):
-            # Change may affect the scoring
-            try:
-                validate_round_scoring_system(self.round_scoring_system)
-            except ValidationError:
-                pass
-            else:
-                # Update all round scores. This will also call self.update_scores()
-                for r in self.round_set.all():
-                    r.update_scores()
-        if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['tournament_scoring_system',
-                                                                                                 'handicap']):
-            # Change may affect the scoring
-            try:
-                validate_tournament_scoring_system(self.tournament_scoring_system)
-            except ValidationError:
-                pass
-            else:
-                self.update_scores()
-
-    def __str__(self):
-        return f'{self.name} {self.start_date.year}'
 
 
 class DBNCoverage(models.Model):
@@ -1474,12 +1474,12 @@ class Series(models.Model):
         ordering = ['name']
         verbose_name_plural = 'Series'
 
+    def __str__(self):
+        return f'{self.name}'
+
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
         return reverse('series_detail', args=[self.slug])
-
-    def __str__(self):
-        return f'{self.name}'
 
 
 class TPPlayerField(models.CharField):
@@ -1526,6 +1526,10 @@ class Team(models.Model):
             models.UniqueConstraint(fields=['tournament', 'name'],
                                     name='unique_tournament_name'),
         ]
+
+    def __str__(self):
+        return _("%(team)s at %(tourney)s") % {'team': self.name,
+                                               'tourney': self.tournament}
 
     def gameplayers(self):
         """
@@ -1582,10 +1586,6 @@ class Team(models.Model):
         if not self.tournament.team_size:
             raise ValidationError(_("Tournament doesn't use teams"))
 
-    def __str__(self):
-        return _("%(team)s at %(tourney)s") % {'team': self.name,
-                                               'tourney': self.tournament}
-
 
 class TournamentPlayer(models.Model):
     """
@@ -1617,6 +1617,30 @@ class TournamentPlayer(models.Model):
             models.UniqueConstraint(fields=['player', 'tournament'],
                                     name='unique_player_tournament'),
         ]
+
+    def __str__(self):
+        return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
+                                                 'player': self.player}
+
+    def save(self, *args, **kwargs):
+        """Store the TournamentPlayer in the database"""
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+        # Update Player if things have changed
+        if ((self.location != self.player.location) or
+            (self.backstabbr_username != self.player.backstabbr_username)):
+            self.player.location = self.location
+            self.player.backstabbr_username = self.backstabbr_username
+            self.player.save(update_fields=['location', 'backstabbr_username'])
+        # Update background info when a player is added to the Tournament (only)
+        if is_new:
+            send_prefs_email(self)
+            add_player_bg(self.player, include_wpe=False)
+
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('tournament_player_detail', args=[str(self.tournament_id),
+                                                         str(self.id)])
 
     def team(self):
         """
@@ -1766,30 +1790,6 @@ class TournamentPlayer(models.Model):
         self.uuid_str = str(uuid.uuid4())
         self.save(update_fields=['uuid_str'])
 
-    def get_absolute_url(self):
-        """Returns the canonical URL for the object."""
-        return reverse('tournament_player_detail', args=[str(self.tournament_id),
-                                                         str(self.id)])
-
-    def __str__(self):
-        return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
-                                                 'player': self.player}
-
-    def save(self, *args, **kwargs):
-        """Store the TournamentPlayer in the database"""
-        is_new = self.pk is None
-        super().save(*args, **kwargs)
-        # Update Player if things have changed
-        if ((self.location != self.player.location) or
-            (self.backstabbr_username != self.player.backstabbr_username)):
-            self.player.location = self.location
-            self.player.backstabbr_username = self.backstabbr_username
-            self.player.save(update_fields=['location', 'backstabbr_username'])
-        # Update background info when a player is added to the Tournament (only)
-        if is_new:
-            send_prefs_email(self)
-            add_player_bg(self.player, include_wpe=False)
-
 
 class SeederBias(models.Model):
     """
@@ -1811,6 +1811,11 @@ class SeederBias(models.Model):
                                    name='players_must_differ'),
         ]
 
+    def __str__(self):
+        return _("%(p1)s and %(p2)s at %(tourney)s") % {'p1': self.player1.player,
+                                                        'p2': self.player2.player,
+                                                        'tourney': self.player1.tournament}
+
     def clean(self):
         """
         Validate the object.
@@ -1819,11 +1824,6 @@ class SeederBias(models.Model):
         """
         if self.player1.tournament != self.player2.tournament:
             raise ValidationError(_('The players must be playing the same tournament'))
-
-    def __str__(self):
-        return _("%(p1)s and %(p2)s at %(tourney)s") % {'p1': self.player1.player,
-                                                        'p2': self.player2.player,
-                                                        'tourney': self.player1.tournament}
 
 
 class Preference(models.Model):
@@ -1890,6 +1890,43 @@ class Round(models.Model):
             models.UniqueConstraint(fields=['tournament', 'start'],
                                     name='unique_tournament_start'),
         ]
+
+    def __str__(self):
+        return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament,
+                                                       'round': self.number()}
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object to the database.
+
+        If scoring_system attribute may have changed, updates score attributes of any
+        GamePlayers and corresponding RoundPlayers and TournamentPlayers.
+        If is_finished may have changed, calls Tournament.set_is_finished().
+        """
+        super().save(*args, **kwargs)
+
+        if ('update_fields' not in kwargs) or ('scoring_system' in kwargs['update_fields']) :
+            # Change may affect the scoring
+            try:
+                validate_game_scoring_system(self.scoring_system)
+            except ValidationError:
+                pass
+            else:
+                # Re-score all Games. This will call self.update_scores()
+                for g in self.game_set.all():
+                    g.update_scores()
+
+        if ('update_fields' not in kwargs) or ('is_team_round' in kwargs['update_fields']) :
+            self.tournament.update_team_scores()
+
+        # Some change may affect the is_finished attribute of the Tournament
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+            self.tournament.set_is_finished()
+
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('round_detail',
+                       args=[str(self.tournament_id), str(self.number())])
 
     def game_scoring_system_obj(self):
         """
@@ -2092,43 +2129,6 @@ class Round(models.Model):
         if self.is_team_round and not self.tournament.team_size:
             raise ValidationError({'is_team_round': _('Team rounds can only happen in tournaments with teams')})
 
-    def save(self, *args, **kwargs):
-        """
-        Save the object to the database.
-
-        If scoring_system attribute may have changed, updates score attributes of any
-        GamePlayers and corresponding RoundPlayers and TournamentPlayers.
-        If is_finished may have changed, calls Tournament.set_is_finished().
-        """
-        super().save(*args, **kwargs)
-
-        if ('update_fields' not in kwargs) or ('scoring_system' in kwargs['update_fields']) :
-            # Change may affect the scoring
-            try:
-                validate_game_scoring_system(self.scoring_system)
-            except ValidationError:
-                pass
-            else:
-                # Re-score all Games. This will call self.update_scores()
-                for g in self.game_set.all():
-                    g.update_scores()
-
-        if ('update_fields' not in kwargs) or ('is_team_round' in kwargs['update_fields']) :
-            self.tournament.update_team_scores()
-
-        # Some change may affect the is_finished attribute of the Tournament
-        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
-            self.tournament.set_is_finished()
-
-    def get_absolute_url(self):
-        """Returns the canonical URL for the object."""
-        return reverse('round_detail',
-                       args=[str(self.tournament_id), str(self.number())])
-
-    def __str__(self):
-        return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament,
-                                                       'round': self.number()}
-
 
 class Pool(models.Model):
     """
@@ -2198,6 +2198,50 @@ class Game(models.Model):
 
     class Meta:
         ordering = ['name']
+
+    def __str__(self):
+        return _('%(game)s at %(tourney)s') % {'game': self.name,
+                                               'tourney': self.the_round.tournament}
+
+    def save(self, *args, **kwargs):
+        """
+        Save the object to the database.
+
+        Ensures that 1901 SC counts and ownership info exists.
+        Ensures that S1901M image exists.
+        If is_finished attribute may be changed, called Round.set_is_finished().
+        """
+        super().save(*args, **kwargs)
+
+        # Auto-create 1900 SC counts (unless they already exist)
+        # Auto-create SC Ownership (unless they already exist)
+        with transaction.atomic():
+            for power in GreatPower.objects.all():
+                CentreCount.objects.update_or_create(power=power,
+                                                     game=self,
+                                                     year=FIRST_YEAR - 1,
+                                                     defaults={'count': power.starting_centres})
+                for sc in SupplyCentre.objects.filter(initial_owner=power):
+                    SupplyCentreOwnership.objects.get_or_create(owner=power,
+                                                                game=self,
+                                                                year=FIRST_YEAR - 1,
+                                                                sc=sc)
+
+        # Auto-create S1901M image (if it doesn't exist)
+        GameImage.objects.update_or_create(game=self,
+                                           year=FIRST_YEAR,
+                                           season=Seasons.SPRING,
+                                           phase=Phases.MOVEMENT,
+                                           defaults={'image': self.the_set.initial_image})
+
+        # Some change may affect the is_finished attribute of the Round
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+            self.the_round.set_is_finished()
+
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('game_detail',
+                       args=[str(self.the_round.tournament.id), self.name])
 
     def backstabbr_game(self):
         """
@@ -2550,50 +2594,6 @@ class Game(models.Model):
         if (self.pool is not None) and (self.pool.the_round != self.the_round):
             raise ValidationError({'pool': _('Game pool is in the wrong round')})
 
-    def save(self, *args, **kwargs):
-        """
-        Save the object to the database.
-
-        Ensures that 1901 SC counts and ownership info exists.
-        Ensures that S1901M image exists.
-        If is_finished attribute may be changed, called Round.set_is_finished().
-        """
-        super().save(*args, **kwargs)
-
-        # Auto-create 1900 SC counts (unless they already exist)
-        # Auto-create SC Ownership (unless they already exist)
-        with transaction.atomic():
-            for power in GreatPower.objects.all():
-                CentreCount.objects.update_or_create(power=power,
-                                                     game=self,
-                                                     year=FIRST_YEAR - 1,
-                                                     defaults={'count': power.starting_centres})
-                for sc in SupplyCentre.objects.filter(initial_owner=power):
-                    SupplyCentreOwnership.objects.get_or_create(owner=power,
-                                                                game=self,
-                                                                year=FIRST_YEAR - 1,
-                                                                sc=sc)
-
-        # Auto-create S1901M image (if it doesn't exist)
-        GameImage.objects.update_or_create(game=self,
-                                           year=FIRST_YEAR,
-                                           season=Seasons.SPRING,
-                                           phase=Phases.MOVEMENT,
-                                           defaults={'image': self.the_set.initial_image})
-
-        # Some change may affect the is_finished attribute of the Round
-        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
-            self.the_round.set_is_finished()
-
-    def get_absolute_url(self):
-        """Returns the canonical URL for the object."""
-        return reverse('game_detail',
-                       args=[str(self.the_round.tournament.id), self.name])
-
-    def __str__(self):
-        return _('%(game)s at %(tourney)s') % {'game': self.name,
-                                               'tourney': self.the_round.tournament}
-
 
 class SupplyCentreOwnership(models.Model):
     """
@@ -2665,6 +2665,18 @@ class DrawProposal(models.Model):
                                     condition=models.Q(passed=True),
                                     name='only one passed'),
         ]
+
+    def __str__(self):
+        return f'{self.game} {self.year}{self.season}'
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Does this complete the game ?
+        if self.passed:
+            self.game.is_finished = True
+            self.game.save(update_fields=['is_finished'])
+            # That could change the scoring
+            self.game.update_scores()
 
     def draw_size(self):
         """
@@ -2762,18 +2774,6 @@ class DrawProposal(models.Model):
         else:
             raise AssertionError(f'Tournament draw secrecy has an unexpected value {self.game.the_round.tournament.draw_secrecy}')
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Does this complete the game ?
-        if self.passed:
-            self.game.is_finished = True
-            self.game.save(update_fields=['is_finished'])
-            # That could change the scoring
-            self.game.update_scores()
-
-    def __str__(self):
-        return f'{self.game} {self.year}{self.season}'
-
 
 class RoundPlayer(models.Model):
     """
@@ -2806,6 +2806,17 @@ class RoundPlayer(models.Model):
             models.UniqueConstraint(fields=['player', 'the_round'],
                                     name='unique_player_round'),
         ]
+
+    def __str__(self):
+        return _(u'%(player)s in %(round)s') % {'player': self.player,
+                                                'round': self.the_round}
+
+    def delete(self, *args, **kwargs):
+        ret = super().delete(*args, **kwargs)
+        # Force a recalculation of scores, if necessary
+        if self.score != 0.0:
+            self.the_round.tournament.update_scores([self.player])
+        return ret
 
     def score_is_final(self):
         """
@@ -2852,17 +2863,6 @@ class RoundPlayer(models.Model):
         if (self.pool is not None) and (self.pool.the_round != self.the_round):
             raise ValidationError({'pool': _('RoundPlayer pool is in the wrong round')})
 
-    def delete(self, *args, **kwargs):
-        ret = super().delete(*args, **kwargs)
-        # Force a recalculation of scores, if necessary
-        if self.score != 0.0:
-            self.the_round.tournament.update_scores([self.player])
-        return ret
-
-    def __str__(self):
-        return _(u'%(player)s in %(round)s') % {'player': self.player,
-                                                'round': self.the_round}
-
 
 class GamePlayer(models.Model):
     """
@@ -2889,6 +2889,14 @@ class GamePlayer(models.Model):
             models.UniqueConstraint(fields=['power', 'game'],
                                     name='unique_power_game'),
         ]
+
+    def __str__(self):
+        if self.power:
+            return _('%(player)s as %(power)s in %(game)s') % {'game': self.game,
+                                                               'player': self.player,
+                                                               'power': self.power}
+        return _('%(player)s in %(game)s Power TBD') % {'game': self.game,
+                                                        'player': self.player}
 
     def team(self):
         """
@@ -3149,14 +3157,6 @@ class GamePlayer(models.Model):
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError({'player': _(u'Player is not yet in the tournament')})
 
-    def __str__(self):
-        if self.power:
-            return _('%(player)s as %(power)s in %(game)s') % {'game': self.game,
-                                                               'player': self.player,
-                                                               'power': self.power}
-        return _('%(player)s in %(game)s Power TBD') % {'game': self.game,
-                                                        'player': self.player}
-
     def get_aar_url(self):
         """Returns the canonical URL for the object."""
         return reverse('aar', args=[str(self.game.the_round.tournament.id),
@@ -3192,13 +3192,9 @@ class GameImage(models.Model):
         ]
         ordering = ['game', 'year', '-season', 'phase']
 
-    def turn_str(self):
-        """
-        Short string version of season/year/phase
-
-        e.g. 'S1901M'
-        """
-        return f'{self.season}{self.year}{PHASE_STR[self.phase]}'
+    def __str__(self):
+        return _(u'%(game)s %(turn)s image') % {'game': self.game,
+                                                'turn': self.turn_str()}
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""
@@ -3206,9 +3202,13 @@ class GameImage(models.Model):
                                            self.game.name,
                                            self.turn_str()])
 
-    def __str__(self):
-        return _(u'%(game)s %(turn)s image') % {'game': self.game,
-                                                'turn': self.turn_str()}
+    def turn_str(self):
+        """
+        Short string version of season/year/phase
+
+        e.g. 'S1901M'
+        """
+        return f'{self.season}{self.year}{PHASE_STR[self.phase]}'
 
 
 class CentreCount(models.Model):
@@ -3230,6 +3230,9 @@ class CentreCount(models.Model):
                                     name='unique_power_game_year'),
         ]
         ordering = ['game', 'year']
+
+    def __str__(self):
+        return f'{self.game} {self.year} {_(self.power.abbreviation)}'
 
     def clean(self):
         """
@@ -3260,6 +3263,3 @@ class CentreCount(models.Model):
             raise ValidationError({'count': _(u'SC count for a power cannot increase from zero')})
         if self.count > 2 * prev.count:
             raise ValidationError({'count': _(u'SC count for a power cannot more than double in a year')})
-
-    def __str__(self):
-        return f'{self.game} {self.year} {_(self.power.abbreviation)}'

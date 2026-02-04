@@ -742,6 +742,10 @@ class Player(models.Model):
     def __str__(self):
         return f'{self.first_name} {self.last_name}'
 
+    def get_absolute_url(self):
+        """Returns the canonical URL for the object."""
+        return reverse('player_detail', args=[str(self.id)])
+
     def sortable_str(self):
         return f'{self.last_name}, {self.first_name}'
 
@@ -1047,10 +1051,6 @@ class Player(models.Model):
             return self._titles(mask=mask) + self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
         return self._results(power, mask=mask) + self._awards(power, mask=mask)
 
-    def get_absolute_url(self):
-        """Returns the canonical URL for the object."""
-        return reverse('player_detail', args=[str(self.id)])
-
 
 class WDDPlayerIdField(models.PositiveIntegerField):
     """A field that represents the unique id for a player in the WDD"""
@@ -1086,6 +1086,14 @@ class WDDPlayer(models.Model):
     class Meta:
         verbose_name = 'WDD player'
 
+    def __str__(self):
+        return f'{self.player} {self.wdd_player_id}'
+
+    def delete(self, *args, **kwargs):
+        # Nuke any background that may have been from this WDDPlayer
+        self.player._clear_background()
+        return super().delete(*args, **kwargs)
+
     def _clear_background(self):
         self.player._clear_background()
 
@@ -1114,14 +1122,6 @@ class WDDPlayer(models.Model):
                 raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
                                       params={'wdd_id': self.wdd_player_id}) from e
         return (self._wdd_firstname, self._wdd_lastname)
-
-    def delete(self, *args, **kwargs):
-        # Nuke any background that may have been from this WDDPlayer
-        self.player._clear_background()
-        return super().delete(*args, **kwargs)
-
-    def __str__(self):
-        return f'{self.player} {self.wdd_player_id}'
 
 
 class PlayerTournamentRanking(models.Model):
@@ -1154,6 +1154,15 @@ class PlayerTournamentRanking(models.Model):
                                     name='unique_player_tournament_year'),
         ]
 
+    def __str__(self):
+        pos = position_str(self.position)
+        s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
+                                                                    'position': pos,
+                                                                    'tournament': self.tournament}
+        if self.tournament[-4:] != str(self.year):
+            s += _(u' in %(year)d') % {'year': self.year}
+        return s
+
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
         if not self.wdd_tournament_id:
@@ -1177,15 +1186,6 @@ class PlayerTournamentRanking(models.Model):
         if not self.wdr_tournament_id:
             return ''
         return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}'
-
-    def __str__(self):
-        pos = position_str(self.position)
-        s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
-                                                                    'position': pos,
-                                                                    'tournament': self.tournament}
-        if self.tournament[-4:] != str(self.year):
-            s += _(u' in %(year)d') % {'year': self.year}
-        return s
 
 
 class PlayerTitle(models.Model):
@@ -1275,6 +1275,13 @@ class PlayerGameResult(models.Model):
                                     name='unique_names_player_power'),
         ]
 
+    def __str__(self):
+        return _(u'%(player)s played %(power)s in R %(r_num)d B %(g_num)d at %(tourney)s') % {'player': self.player,
+                                                                                              'power': self.power,
+                                                                                              'r_num': self.round_number,
+                                                                                              'g_num': self.game_number,
+                                                                                              'tourney': self.tournament_name}
+
     def for_same_game(self, pgr):
         """Returns True if the two PlayerGameResults are for the same game"""
         return ((self.tournament_name == pgr.tournament_name) and
@@ -1306,13 +1313,6 @@ class PlayerGameResult(models.Model):
         if not self.wdr_tournament_id:
             return ''
         return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}/boards'
-
-    def __str__(self):
-        return _(u'%(player)s played %(power)s in R %(r_num)d B %(g_num)d at %(tourney)s') % {'player': self.player,
-                                                                                              'power': self.power,
-                                                                                              'r_num': self.round_number,
-                                                                                              'g_num': self.game_number,
-                                                                                              'tourney': self.tournament_name}
 
 
 class PlayerAward(models.Model):
@@ -1350,6 +1350,11 @@ class PlayerAward(models.Model):
                                     name='unique_player_tournament_date_name'),
         ]
 
+    def __str__(self):
+        return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
+                                                               'award': self.name,
+                                                               'tourney': self.tournament}
+
     def wdd_url(self):
         """WDD URL where this award can be seen"""
         if not self.wdd_tournament_id:
@@ -1373,11 +1378,6 @@ class PlayerAward(models.Model):
             return ''
         return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}'
 
-    def __str__(self):
-        return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
-                                                               'award': self.name,
-                                                               'tourney': self.tournament}
-
 
 class PlayerRanking(models.Model):
     """
@@ -1397,6 +1397,12 @@ class PlayerRanking(models.Model):
             models.UniqueConstraint(fields=['player', 'system'],
                                     name='unique_player_system'),
         ]
+
+    def __str__(self):
+        s = _('%(player)s is ranked %(ranking)s internationally in the %(system)s') % {'player': self.player,
+                                                                                       'ranking': self.international_rank,
+                                                                                       'system': self.system}
+        return s
 
     def wdd_url(self):
         """WDD URL where this ranking can be seen"""
@@ -1433,10 +1439,4 @@ class PlayerRanking(models.Model):
         s = _('%(player)s is ranked %(ranking)s in their country in the %(system)s') % {'player': self.player,
                                                                                         'ranking': self.national_rank,
                                                                                         'system': self.system}
-        return s
-
-    def __str__(self):
-        s = _('%(player)s is ranked %(ranking)s internationally in the %(system)s') % {'player': self.player,
-                                                                                       'ranking': self.international_rank,
-                                                                                       'system': self.system}
         return s
