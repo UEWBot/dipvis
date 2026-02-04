@@ -981,6 +981,16 @@ class Tournament(models.Model):
         """Returns the canonical URL for the object."""
         return reverse('tournament_detail', args=[str(self.id)])
 
+    def clean(self):
+        """
+        Validate the object.
+
+        round_scoring_system and tournament_scoring_system are camptible.
+        """
+        if not scoring_systems_are_compatible(self.round_scoring_system,
+                                              self.tournament_scoring_system):
+            raise ValidationError(_('The scoring systems are not compatible'))
+
     def powers_assigned_from_prefs(self):
         """
         Returns True if power_assignment is PREFERENCES.
@@ -1416,16 +1426,6 @@ class Tournament(models.Model):
             return WDR_BASE_URL + f'tournaments/{self.wdr_tournament_id}'
         return u''
 
-    def clean(self):
-        """
-        Validate the object.
-
-        round_scoring_system and tournament_scoring_system are camptible.
-        """
-        if not scoring_systems_are_compatible(self.round_scoring_system,
-                                              self.tournament_scoring_system):
-            raise ValidationError(_('The scoring systems are not compatible'))
-
 
 class DBNCoverage(models.Model):
     """
@@ -1531,6 +1531,20 @@ class Team(models.Model):
         return _("%(team)s at %(tourney)s") % {'team': self.name,
                                                'tourney': self.tournament}
 
+    def clean(self):
+        """
+        Validate the object.
+
+        Tournament uses teams.
+
+        Note that it doesn't check for any of the following:
+        - Too many players in the Team.
+        - Players are registered in the Tournament.
+        - One player in multiple Teams
+        """
+        if not self.tournament.team_size:
+            raise ValidationError(_("Tournament doesn't use teams"))
+
     def gameplayers(self):
         """
         Returns a QuerySet of the Team's GamePlayers for the team round(s).
@@ -1571,20 +1585,6 @@ class Team(models.Model):
             if not r.in_progress():
                 return False
         return True
-
-    def clean(self):
-        """
-        Validate the object.
-
-        Tournament uses teams.
-
-        Note that it doesn't check for any of the following:
-        - Too many players in the Team.
-        - Players are registered in the Tournament.
-        - One player in multiple Teams
-        """
-        if not self.tournament.team_size:
-            raise ValidationError(_("Tournament doesn't use teams"))
 
 
 class TournamentPlayer(models.Model):
@@ -1928,6 +1928,15 @@ class Round(models.Model):
         return reverse('round_detail',
                        args=[str(self.tournament_id), str(self.number())])
 
+    def clean(self):
+        """
+        Validate the object.
+
+        Can't be a team round in a tournament without teams.
+        """
+        if self.is_team_round and not self.tournament.team_size:
+            raise ValidationError({'is_team_round': _('Team rounds can only happen in tournaments with teams')})
+
     def game_scoring_system_obj(self):
         """
         Return the GameScoringSystem for the Round.
@@ -2120,15 +2129,6 @@ class Round(models.Model):
         random.shuffle(results)
         return results
 
-    def clean(self):
-        """
-        Validate the object.
-
-        Can't be a team round in a tournament without teams.
-        """
-        if self.is_team_round and not self.tournament.team_size:
-            raise ValidationError({'is_team_round': _('Team rounds can only happen in tournaments with teams')})
-
 
 class Pool(models.Model):
     """
@@ -2242,6 +2242,20 @@ class Game(models.Model):
         """Returns the canonical URL for the object."""
         return reverse('game_detail',
                        args=[str(self.the_round.tournament.id), self.name])
+
+    def clean(self):
+        """
+        Validate the object.
+
+        Game names must be unique within the tournament.
+        Game pool must be a Pool within the Round.
+        """
+        if Game.objects.filter(the_round__tournament=self.the_round.tournament).exclude(pk=self.pk).filter(name=self.name).exists():
+            raise ValidationError({'name': _('Game names must be unique within the tournament')})
+        if (self.pool is None) and self.the_round.pool_set.exists():
+            raise ValidationError({'pool': _("Game must be assigned to one of the round's pools")})
+        if (self.pool is not None) and (self.pool.the_round != self.the_round):
+            raise ValidationError({'pool': _('Game pool is in the wrong round')})
 
     def backstabbr_game(self):
         """
@@ -2580,20 +2594,6 @@ class Game(models.Model):
         # Then it seems to be ongoing
         return None
 
-    def clean(self):
-        """
-        Validate the object.
-
-        Game names must be unique within the tournament.
-        Game pool must be a Pool within the Round.
-        """
-        if Game.objects.filter(the_round__tournament=self.the_round.tournament).exclude(pk=self.pk).filter(name=self.name).exists():
-            raise ValidationError({'name': _('Game names must be unique within the tournament')})
-        if (self.pool is None) and self.the_round.pool_set.exists():
-            raise ValidationError({'pool': _("Game must be assigned to one of the round's pools")})
-        if (self.pool is not None) and (self.pool.the_round != self.the_round):
-            raise ValidationError({'pool': _('Game pool is in the wrong round')})
-
 
 class SupplyCentreOwnership(models.Model):
     """
@@ -2678,35 +2678,6 @@ class DrawProposal(models.Model):
             # That could change the scoring
             self.game.update_scores()
 
-    def draw_size(self):
-        """
-        Returns the number of powers included in the DrawProposal.
-        """
-        return self.drawing_powers.count()
-
-    def powers(self):
-        """
-        Returns a list of powers included in the draw proposal.
-        """
-        return list(self.drawing_powers.all())
-
-    def power_is_part(self, power):
-        """
-        Returns a Boolean indicating whether the specified power is included.
-        """
-        return self.drawing_powers.filter(pk=power.pk).exists()
-
-    def votes_against(self):
-        """
-        Returns the number of votes against the draw proposal.
-        """
-        # Get the most recent CentreCounts before the DrawProposal
-        survivors = len(self.game.survivors(year=self.year - 1))
-        try:
-            return survivors - self.votes_in_favour
-        except TypeError as e:
-            raise TypeError(_('This DrawProposal only has pass/fail, not vote counts')) from e
-
     def clean(self):
         """
         Validate the object.
@@ -2774,6 +2745,35 @@ class DrawProposal(models.Model):
         else:
             raise AssertionError(f'Tournament draw secrecy has an unexpected value {self.game.the_round.tournament.draw_secrecy}')
 
+    def draw_size(self):
+        """
+        Returns the number of powers included in the DrawProposal.
+        """
+        return self.drawing_powers.count()
+
+    def powers(self):
+        """
+        Returns a list of powers included in the draw proposal.
+        """
+        return list(self.drawing_powers.all())
+
+    def power_is_part(self, power):
+        """
+        Returns a Boolean indicating whether the specified power is included.
+        """
+        return self.drawing_powers.filter(pk=power.pk).exists()
+
+    def votes_against(self):
+        """
+        Returns the number of votes against the draw proposal.
+        """
+        # Get the most recent CentreCounts before the DrawProposal
+        survivors = len(self.game.survivors(year=self.year - 1))
+        try:
+            return survivors - self.votes_in_favour
+        except TypeError as e:
+            raise TypeError(_('This DrawProposal only has pass/fail, not vote counts')) from e
+
 
 class RoundPlayer(models.Model):
     """
@@ -2818,6 +2818,21 @@ class RoundPlayer(models.Model):
             self.the_round.tournament.update_scores([self.player])
         return ret
 
+    def clean(self):
+        """
+        Validate the object.
+
+        There must already be a corresponding TournamentPlayer.
+        RoundPlayer pool must be a Pool within the Round.
+        """
+        t = self.the_round.tournament
+        if not self.player.tournamentplayer_set.filter(tournament=t).exists():
+            raise ValidationError({'player': _(u'Player is not yet in the tournament')})
+        if (self.pool is None) and self.the_round.pool_set.exists():
+            raise ValidationError({'pool': _("RoundPlayer must be assigned to one of the round's pools")})
+        if (self.pool is not None) and (self.pool.the_round != self.the_round):
+            raise ValidationError({'pool': _('RoundPlayer pool is in the wrong round')})
+
     def score_is_final(self):
         """
         Can self.score change?
@@ -2847,21 +2862,6 @@ class RoundPlayer(models.Model):
         Returns a QuerySet for the corresponding GamePlayers.
         """
         return self.player.gameplayer_set.filter(game__the_round=self.the_round).distinct()
-
-    def clean(self):
-        """
-        Validate the object.
-
-        There must already be a corresponding TournamentPlayer.
-        RoundPlayer pool must be a Pool within the Round.
-        """
-        t = self.the_round.tournament
-        if not self.player.tournamentplayer_set.filter(tournament=t).exists():
-            raise ValidationError({'player': _(u'Player is not yet in the tournament')})
-        if (self.pool is None) and self.the_round.pool_set.exists():
-            raise ValidationError({'pool': _("RoundPlayer must be assigned to one of the round's pools")})
-        if (self.pool is not None) and (self.pool.the_round != self.the_round):
-            raise ValidationError({'pool': _('RoundPlayer pool is in the wrong round')})
 
 
 class GamePlayer(models.Model):
@@ -2897,6 +2897,17 @@ class GamePlayer(models.Model):
                                                                'power': self.power}
         return _('%(player)s in %(game)s Power TBD') % {'game': self.game,
                                                         'player': self.player}
+
+    def clean(self):
+        """
+        Validate the object.
+
+        There must already be a corresponding TournamentPlayer.
+        """
+        # Player should already be in the tournament
+        t = self.game.the_round.tournament
+        if not self.player.tournamentplayer_set.filter(tournament=t).exists():
+            raise ValidationError({'player': _(u'Player is not yet in the tournament')})
 
     def team(self):
         """
@@ -3145,17 +3156,6 @@ class GamePlayer(models.Model):
             if not g.is_finished:
                 gs += _(' [Ongoing]')
         return gs
-
-    def clean(self):
-        """
-        Validate the object.
-
-        There must already be a corresponding TournamentPlayer.
-        """
-        # Player should already be in the tournament
-        t = self.game.the_round.tournament
-        if not self.player.tournamentplayer_set.filter(tournament=t).exists():
-            raise ValidationError({'player': _(u'Player is not yet in the tournament')})
 
     def get_aar_url(self):
         """Returns the canonical URL for the object."""
