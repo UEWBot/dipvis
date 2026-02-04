@@ -1444,7 +1444,7 @@ class DBNCoverage(models.Model):
         return f'{self.tournament} {self.description}'
 
 
-class SeriesSlugField(models.SlugField):
+class NameSlugField(models.SlugField):
     """Auto-generate a slug from the model's name field """
     def pre_save(self, model_instance, add):
         slug = super().pre_save(model_instance, add)
@@ -1452,6 +1452,9 @@ class SeriesSlugField(models.SlugField):
             slug = slugify(model_instance.name)
             setattr(model_instance, self.attname, slug)
         return slug
+
+# Deprecated original name, for migrations
+SeriesSlugField = NameSlugField
 
 
 class Series(models.Model):
@@ -1465,7 +1468,7 @@ class Series(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH)
     description = models.TextField(blank=True)
     tournaments = models.ManyToManyField(Tournament)
-    slug = SeriesSlugField(unique=True)
+    slug = NameSlugField(unique=True)
 
     class Meta:
         ordering = ['name']
@@ -2050,6 +2053,13 @@ class Round(models.Model):
         suitable for sending by email or posting to discord.
         """
         text = _('Round %(number)d Board Call\n\n') % {'number': self.number()}
+        pool_set = list(self.pool_set.all())
+        # Group by Pool if the Round has Pools
+        if pool_set:
+            retval = text
+            for pool in pool_set:
+                retval += '\n'.join([g.board_call_msg() for g in pool.game_set.all()])
+            return retval
         return text + '\n'.join([g.board_call_msg() for g in self.game_set.all()])
 
     def background(self, mask=MASK_ALL_BG):
@@ -2120,6 +2130,48 @@ class Round(models.Model):
                                                        'round': self.number()}
 
 
+class Pool(models.Model):
+    """
+    Rounds can optionally be divided into Pools
+    """
+    MAX_NAME_LENGTH=20
+
+    the_round = models.ForeignKey(Round, on_delete=models.CASCADE)
+    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    slug = NameSlugField()
+    board_count = models.PositiveSmallIntegerField(null=True,
+                                                   blank=True,
+                                                   validators=[MinValueValidator(1)],
+                                                   help_text=_('number of games to be played in this pool. Must be set for all pools except one in a round'))
+    # TODO Add more attributes, possibly including:
+    # - score_multiplier
+    # - seeding_ignores_previous_rounds
+    # - top_board_pool or determines_winner (must be final round)
+    # - power_assignment_ignores_previous_rounds
+    # - seed_games (override Tournament setting) ?
+    # - power_assignment (override Tournament setting)
+
+    class Meta:
+        ordering = ['-board_count']
+        constraints = [
+            models.UniqueConstraint(fields=['the_round', 'name'],
+                                    name='unique_round_name'),
+            models.UniqueConstraint(fields=['the_round', 'slug'],
+                                    name='unique_round_slug'),
+        ]
+
+    # TODO get_absolute_url() ?
+
+    def __str__(self):
+        return _(f'{self.the_round} {self.name}')
+
+    def clean(self):
+        """At most one Pool per Round with no board_count"""
+        if self.board_count is None:
+            if self.the_round.pool_set.filter(board_count__isnull=True).exclude(pk=self.pk).exists():
+                raise ValidationError({'board_count': _('A round may not have more than one pool without board_count set')})
+
+
 class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
@@ -2134,6 +2186,7 @@ class Game(models.Model):
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
+    pool = models.ForeignKey(Pool, blank=True, null=True, on_delete=models.SET_NULL)
     the_set = models.ForeignKey(GameSet, verbose_name=_(u'set'), on_delete=models.CASCADE)
     # Note that we don't check for a URL we can parse - any valid URL is fine
     external_url = models.URLField(blank=True,
@@ -2488,9 +2541,14 @@ class Game(models.Model):
         Validate the object.
 
         Game names must be unique within the tournament.
+        Game pool must be a Pool within the Round.
         """
         if Game.objects.filter(the_round__tournament=self.the_round.tournament).exclude(pk=self.pk).filter(name=self.name).exists():
             raise ValidationError({'name': _('Game names must be unique within the tournament')})
+        if (self.pool is None) and self.the_round.pool_set.exists():
+            raise ValidationError({'pool': _("Game must be assigned to one of the round's pools")})
+        if (self.pool is not None) and (self.pool.the_round != self.the_round):
+            raise ValidationError({'pool': _('Game pool is in the wrong round')})
 
     def save(self, *args, **kwargs):
         """
@@ -2723,6 +2781,7 @@ class RoundPlayer(models.Model):
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)
+    pool = models.ForeignKey(Pool, blank=True, null=True, on_delete=models.SET_NULL)
     standby = models.BooleanField(default=False,
                                   help_text=_('check if the player would prefer not to play this round'))
     # This score is only used if either:
@@ -2783,10 +2842,15 @@ class RoundPlayer(models.Model):
         Validate the object.
 
         There must already be a corresponding TournamentPlayer.
+        RoundPlayer pool must be a Pool within the Round.
         """
         t = self.the_round.tournament
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError({'player': _(u'Player is not yet in the tournament')})
+        if (self.pool is None) and self.the_round.pool_set.exists():
+            raise ValidationError({'pool': _("RoundPlayer must be assigned to one of the round's pools")})
+        if (self.pool is not None) and (self.pool.the_round != self.the_round):
+            raise ValidationError({'pool': _('RoundPlayer pool is in the wrong round')})
 
     def delete(self, *args, **kwargs):
         ret = super().delete(*args, **kwargs)

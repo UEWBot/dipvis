@@ -30,7 +30,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
 from tournament.models import DrawSecrecy, Seasons
-from tournament.models import Award, Tournament, Round, Game, Team
+from tournament.models import Award, Tournament, Round, Pool, Game, Team
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 from tournament.players import Player
 
@@ -42,7 +42,7 @@ from tournament.forms import PaidForm, BasePaidFormset
 from tournament.forms import PowerAssignForm, BasePowerAssignFormset
 from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
 from tournament.forms import SCCountForm, BaseSCCountFormset, GameEndedForm
-from tournament.forms import PlayerForm
+from tournament.forms import PoolForm, PlayerForm
 from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
 from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
 from tournament.forms import SeederBiasForm
@@ -967,38 +967,42 @@ class GamePlayersFormTest(TestCase):
 
     def test_init_needs_round(self):
         with self.assertRaises(KeyError):
-            GamePlayersForm()
+            GamePlayersForm(pool=None)
+
+    def test_init_needs_pool(self):
+        with self.assertRaises(KeyError):
+            GamePlayersForm(the_round=self.r1)
 
     def test_game_id_field(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('game_id', form.fields)
 
     def test_name_field(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('name', form.fields)
         attrs = form.fields['name'].widget.attrs
         self.assertEqual(attrs['size'], attrs['maxlength'])
 
     def test_set_field(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('the_set', form.fields)
 
     def test_url_field(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('external_url', form.fields)
 
     def test_notes_field(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('notes', form.fields)
 
     def test_power_fields(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
                 self.assertTrue(form.fields[power.name].required)
 
     def test_power_choices(self):
-        form = GamePlayersForm(the_round=self.r1)
+        form = GamePlayersForm(the_round=self.r1, pool=None)
         # Pick a GreatPower at random - they will all be the same
         the_choices = list(form.fields['England'].choices)
         # We should have one per RoundPlayer, plus the initial empty choice
@@ -1016,6 +1020,30 @@ class GamePlayersFormTest(TestCase):
         self.assertEqual(the_choices[7][1], self.rp7.player.sortable_str())
         self.assertEqual(the_choices[8][1], self.rp8.player.sortable_str())
 
+    def test_power_choices_with_pool(self):
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        pool_rps = [self.rp1, self.rp4, self.rp5]
+        for rp in pool_rps:
+            rp.pool = pool1
+            rp.save()
+        for rp in [self.rp2, self.rp3, self.rp6, self.rp7, self.rp8]:
+            rp.pool = pool2
+            rp.save()
+        form = GamePlayersForm(the_round=self.r1, pool=pool1)
+        # Pick a GreatPower at random - they will all be the same
+        the_choices = list(form.fields['England'].choices)
+        # We should have one per RoundPlayer in the Pool, plus the initial empty choice
+        self.assertEqual(len(the_choices), len(pool_rps) + 1)
+        # Cleanup
+        for rp in self.r1.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        self.r1.pool_set.all().delete()
+
     def test_success(self):
         data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
@@ -1026,7 +1054,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertTrue(form.is_valid())
 
     def test_success_with_id(self):
@@ -1040,13 +1068,96 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertTrue(form.is_valid())
 
+    def test_success_with_pool1(self):
+        """Form pool matches Game pool"""
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
+            rp.pool = pool1
+            rp.save()
+        g = Game.objects.create(name='R1G1',
+                                the_round=self.r1,
+                                pool=pool1,
+                                the_set=GameSet.objects.first())
+        initial = {'name': g.name,
+                   'game_id': g.pk,
+                   'the_set': g.the_set,
+                   'external_url': '',
+                   'notes': ''}
+        data = {'name': g.name,
+                'game_id': str(g.pk),
+                'the_set': str(g.the_set.pk),
+                'external_url': '',
+                'notes': '',
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=pool1)
+        self.assertTrue(form.is_valid())
+        # Cleanup
+        g.delete()
+        for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
+            rp.pool = None
+            rp.save()
+        self.r1.pool_set.all().delete()
+
+    def test_success_with_pool2(self):
+        """Game pool set, Form pool not"""
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
+            rp.pool = pool1
+            rp.save()
+        g = Game.objects.create(name='R1G1',
+                                the_round=self.r1,
+                                pool=pool1,
+                                the_set=GameSet.objects.first())
+        initial = {'name': g.name,
+                   'game_id': g.pk,
+                   'the_set': g.the_set,
+                   'external_url': '',
+                   'notes': ''}
+        data = {'name': g.name,
+                'game_id': str(g.pk),
+                'the_set': str(g.the_set.pk),
+                'external_url': '',
+                'notes': '',
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=None)
+        self.assertTrue(form.is_valid())
+        # Cleanup
+        g.delete()
+        for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
+            rp.pool = None
+            rp.save()
+        self.r1.pool_set.all().delete()
+
     def test_has_changed(self):
-        initial = {'name': 'Only Game',
-                   'game_id': 17,
-                   'the_set': GameSet.objects.first(),
+        g = Game.objects.create(name='OnlyGame',
+                                the_round=self.r1,
+                                the_set=GameSet.objects.first())
+        initial = {'name': g.name,
+                   'game_id': g.pk,
+                   'the_set': g.the_set,
                    'external_url': '',
                    'notes': '',
                    'Austria-Hungary': self.rp1,
@@ -1056,17 +1167,75 @@ class GamePlayersFormTest(TestCase):
                    'Italy': self.rp5,
                    'Russia': self.rp6,
                    'Turkey': self.rp7}
-        data = {'name': 'Only Game',
-                'game_id': '17',
-                'the_set': str(GameSet.objects.first().id),
+        data = {'name': g.name,
+                'game_id': str(g.pk),
+                'the_set': str(g.the_set.pk),
                 'external_url': '',
                 'notes': ''}
         for power in GreatPower.objects.all():
             data[power.name] = str(initial[power.name].pk)
         form = GamePlayersForm(data=data,
                                the_round=self.r1,
+                               pool=None,
                                initial=initial)
         self.assertFalse(form.has_changed())
+        # Cleanup
+        g.delete()
+
+    def test_create_with_wrong_pool1(self):
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        g = Game.objects.create(name='R1G1',
+                                the_round=self.r1,
+                                the_set=GameSet.objects.first())
+        initial = {'name': g.name,
+                   'game_id': g.pk,
+                   'the_set': g.the_set,
+                   'external_url': '',
+                   'notes': '',
+                   'Austria-Hungary': self.rp1,
+                   'England': self.rp2,
+                   'France': self.rp3,
+                   'Germany': self.rp4,
+                   'Italy': self.rp5,
+                   'Russia': self.rp6,
+                   'Turkey': self.rp7}
+        with self.assertRaises(AssertionError):
+            form = GamePlayersForm(initial=initial, the_round=self.r1, pool=pool2)
+        # Cleanup
+        g.delete()
+        self.r1.pool_set.all().delete()
+
+    def test_create_with_wrong_pool2(self):
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        g = Game.objects.create(name='R1G1',
+                                the_round=self.r1,
+                                pool=pool1,
+                                the_set=GameSet.objects.first())
+        initial = {'name': g.name,
+                   'game_id': g.pk,
+                   'the_set': g.the_set,
+                   'external_url': '',
+                   'notes': '',
+                   'Austria-Hungary': self.rp1,
+                   'England': self.rp2,
+                   'France': self.rp3,
+                   'Germany': self.rp4,
+                   'Italy': self.rp5,
+                   'Russia': self.rp6,
+                   'Turkey': self.rp7}
+        with self.assertRaises(AssertionError):
+            form = GamePlayersForm(initial=initial, the_round=self.r1, pool=pool2)
+        # Cleanup
+        g.delete()
+        self.r1.pool_set.all().delete()
 
     def test_name_error1(self):
         data = {'name': 'R1 G1',
@@ -1078,7 +1247,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
@@ -1094,13 +1263,13 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'name', 'Game names cannot contain "/"')
 
-    def test_field_error(self):
+    def test_set_error(self):
         data = {'name': 'R1G1',
                 'the_set': 'Non-existent set',
                 'Austria-Hungary': str(self.rp1.pk),
@@ -1110,7 +1279,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
@@ -1126,7 +1295,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
@@ -1142,7 +1311,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp1.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -1169,7 +1338,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -1203,7 +1372,7 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertTrue(form.is_valid())
         # Cleanup
         tm1.delete()
@@ -1230,12 +1399,63 @@ class GamePlayersFormTest(TestCase):
                 'Italy': str(self.rp5.pk),
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
-        form = GamePlayersForm(data, the_round=self.r1)
+        form = GamePlayersForm(data, the_round=self.r1, pool=None)
         self.assertTrue(form.is_valid())
         # Cleanup
         tm.delete()
         self.t.team_size = None
         self.t.save()
+
+    def test_player_from_wrong_pool(self):
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        for rp in self.r1.roundplayer_set.all():
+            if rp == self.rp3:
+                rp.pool = pool2
+            else:
+                rp.pool = pool1
+            rp.save()
+        g = Game.objects.create(name='R1G1',
+                                the_round=self.r1,
+                                pool=pool1,
+                                the_set=GameSet.objects.first())
+        initial = {'name': g.name,
+                   'game_id': g.pk,
+                   'the_set': g.the_set,
+                   'external_url': '',
+                   'notes': ''}
+        data = {'name': g.name,
+                'game_id': str(g.pk),
+                'the_set': str(g.the_set.pk),
+                'external_url': '',
+                'notes': '',
+                'Austria-Hungary': str(self.rp1.pk),
+                'England': str(self.rp2.pk),
+                'France': str(self.rp3.pk),
+                'Germany': str(self.rp4.pk),
+                'Italy': str(self.rp5.pk),
+                'Russia': str(self.rp6.pk),
+                'Turkey': str(self.rp7.pk)}
+        form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=pool1)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertFormError(form, 'France', 'Select a valid choice. That choice is not one of the available choices.')
+        # Form should also 'inherit' pool from Game, if an existing Game is passed in initial
+        form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=None)
+        self.assertFalse(form.is_valid())
+        self.assertEqual(len(form.non_field_errors()), 0)
+        self.assertEqual(len(form.errors), 1)
+        self.assertFormError(form, 'France', 'Select a valid choice. That choice is not one of the available choices.')
+        # Cleanup
+        g.delete()
+        for rp in self.r1.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        self.r1.pool_set.all().delete()
 
 
 class BaseGamePlayersFormsetTest(TestCase):
@@ -1291,11 +1511,16 @@ class BaseGamePlayersFormsetTest(TestCase):
     def test_formset_needs_round(self):
         """Omit the_round constructor parameter"""
         with self.assertRaises(KeyError):
-            self.GamePlayersFormset()
+            self.GamePlayersFormset(pool=None)
+
+    def test_formset_needs_pool(self):
+        """Omit pool constructor parameter"""
+        with self.assertRaises(KeyError):
+            self.GamePlayersFormset(the_round=self.r)
 
     def test_formset_empty(self):
         """Leave the formset blank"""
-        formset = self.GamePlayersFormset(self.data, the_round=self.r)
+        formset = self.GamePlayersFormset(self.data, the_round=self.r, pool=None)
         self.assertTrue(formset.is_valid())
 
     def test_formset_add_one_game(self):
@@ -1310,8 +1535,43 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-0-Italy'] = str(self.rp5.pk)
         data['form-0-Russia'] = str(self.rp6.pk)
         data['form-0-Turkey'] = str(self.rp7.pk)
-        formset = self.GamePlayersFormset(data, the_round=self.r)
+        formset = self.GamePlayersFormset(data, the_round=self.r, pool=None)
         self.assertTrue(formset.is_valid())
+
+    def test_formset_pool(self):
+        """Formset for a Pool should pass the Pool down"""
+        pool1 = Pool.objects.create(the_round=self.r,
+                                    name="Fixed",
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r,
+                                    name="Variable")
+        # All except one RoundPlayer in pool1
+        for rp in self.r.roundplayer_set.all():
+            if rp == self.rp6:
+                rp.pool = pool2
+            else:
+                rp.pool = pool1
+            rp.save()
+        data = self.data.copy()
+        data['form-0-name'] = 'OnlyGame'
+        data['form-0-the_set'] = str(GameSet.objects.first().pk)
+        data['form-0-Austria-Hungary'] = str(self.rp1.pk)
+        data['form-0-England'] = str(self.rp2.pk)
+        data['form-0-France'] = str(self.rp3.pk)
+        data['form-0-Germany'] = str(self.rp4.pk)
+        data['form-0-Italy'] = str(self.rp5.pk)
+        data['form-0-Russia'] = str(self.rp6.pk)
+        data['form-0-Turkey'] = str(self.rp7.pk)
+        formset = self.GamePlayersFormset(data, the_round=self.r, pool=pool1)
+        self.assertFalse(formset.is_valid())
+        # rp6 should be invalid
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertFormSetError(formset, 0, 'Russia', 'Select a valid choice. That choice is not one of the available choices.')
+        # Cleanup
+        for rp in self.r.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        self.r.pool_set.all().delete()
 
     def test_formset_form_error(self):
         """Add one Game with an error, leave the other form blank"""
@@ -1325,7 +1585,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-0-Italy'] = str(self.rp5.pk)
         data['form-0-Russia'] = str(self.rp6.pk)
         data['form-0-Turkey'] = str(self.rp7.pk)
-        formset = self.GamePlayersFormset(data, the_round=self.r)
+        formset = self.GamePlayersFormset(data, the_round=self.r, pool=None)
         self.assertFalse(formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
@@ -1353,7 +1613,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-1-Italy'] = str(self.rp3.pk)
         data['form-1-Russia'] = str(self.rp2.pk)
         data['form-1-Turkey'] = str(self.rp1.pk)
-        formset = self.GamePlayersFormset(data, the_round=self.r)
+        formset = self.GamePlayersFormset(data, the_round=self.r, pool=None)
         self.assertFalse(formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
@@ -1713,6 +1973,8 @@ class BasePowerAssignFormsetTest(TestCase):
         with self.assertRaises(AssertionError):
             self.PowerAssignFormset(the_round=self.r2)
 
+    # TODO Check ordering of games when the Round has Pools
+
     def test_formset_success(self):
         """Complete the form correctly"""
         data = self.data.copy()
@@ -1899,12 +2161,29 @@ class GetSevenPlayersFormTest(TestCase):
     def test_form_needs_round(self):
         """Omit the_round constructor parameter"""
         with self.assertRaises(KeyError):
-            GetSevenPlayersForm()
+            GetSevenPlayersForm(pool=None)
+
+    def test_form_needs_pool(self):
+        """Omit pool constructor parameter"""
+        with self.assertRaises(KeyError):
+            GetSevenPlayersForm(the_round=self.r1)
+
+    def test_wrong_pool(self):
+        """Only variable-sized pool is valid"""
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        with self.assertRaises(AssertionError):
+            form = GetSevenPlayersForm(the_round=self.r1, pool=pool1)
+        # Cleanup
+        self.r1.pool_set.all().delete()
 
     def test_sitters_fields(self):
         """Check fields for players sitting out"""
         prefix='sitter'
-        form = GetSevenPlayersForm(the_round=self.r1)
+        form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         for i in range(0, 2):
             with self.subTest(i=i):
                 name = f'{prefix}_{i}'
@@ -1929,7 +2208,7 @@ class GetSevenPlayersFormTest(TestCase):
     def test_doubles_fields(self):
         """Check fields for players playing two games"""
         prefix='double'
-        form = GetSevenPlayersForm(the_round=self.r1)
+        form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         for i in range(0, 4):
             with self.subTest(i=i):
                 name = f'{prefix}_{i}'
@@ -1954,16 +2233,42 @@ class GetSevenPlayersFormTest(TestCase):
 
     def test_no_standbys_fields(self):
         """We should have no standby fields if all standby players are needed"""
-        form = GetSevenPlayersForm(the_round=self.r1)
+        form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         name = 'standby_0'
         self.assertNotIn(name, form.fields)
+
+    def test_pool(self):
+        """If we pass a Pool, other pools should be ignored"""
+        pool1 = Pool.objects.create(the_round=self.r1,
+                                    name='Fixed',
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=self.r1,
+                                    name='Variable')
+        for rp in self.r1.roundplayer_set.all():
+            if rp == self.rp1_3:
+                rp.pool = pool1
+            else:
+                rp.pool = pool2
+            rp.save()
+        form = GetSevenPlayersForm(the_round=self.r1, pool=pool2)
+        # With 9 players, we need 1 sitter in addition to the standby
+        self.assertIn('sitter_0', form.fields)
+        self.assertNotIn('sitter_1', form.fields)
+        # Player 3 should not be an option
+        the_choices = list(form.fields['sitter_0'].choices)
+        self.assertNotIn(self.rp1_3.pk, [pk for pk, name in the_choices])
+        # Cleanup
+        for rp in self.r1.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        self.r1.pool_set.all().delete()
 
     def test_success_sitters(self):
         """Valid form with people sitting out"""
         data = {'sitter_0': str(self.rp1_10.pk),
                 'sitter_1': str(self.rp1_7.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertTrue(form.is_valid())
 
     def test_success_doublers(self):
@@ -1973,7 +2278,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_2': str(self.rp1_3.pk),
                 'double_3': str(self.rp1_4.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertTrue(form.is_valid())
 
     def test_existing_sitters(self):
@@ -1982,7 +2287,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.rp1_3.save(update_fields=['game_count'])
         self.rp1_4.game_count = 0
         self.rp1_4.save(update_fields=['game_count'])
-        form = GetSevenPlayersForm(the_round=self.r1)
+        form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         # They should be listed as a sitter
         self.assertEqual(form['sitter_0'].initial, self.rp1_3)
         self.assertEqual(form['sitter_1'].initial, self.rp1_4)
@@ -1998,7 +2303,7 @@ class GetSevenPlayersFormTest(TestCase):
         self.rp1_3.save(update_fields=['game_count'])
         self.rp1_4.game_count = 2
         self.rp1_4.save(update_fields=['game_count'])
-        form = GetSevenPlayersForm(the_round=self.r1)
+        form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         # They should be listed as a doubler
         self.assertEqual(form['double_0'].initial, self.rp1_3)
         self.assertEqual(form['double_1'].initial, self.rp1_4)
@@ -2013,7 +2318,7 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'sitter_0': str(self.rp1_3.pk),
                 'sitter_1': str(self.rp1_3.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -2027,7 +2332,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_2': str(self.rp1_10.pk),
                 'double_3': str(self.rp1_4.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -2043,7 +2348,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_2': str(self.rp1_6.pk),
                 'double_3': str(self.rp1_7.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -2053,7 +2358,7 @@ class GetSevenPlayersFormTest(TestCase):
     def test_too_few_sitters(self):
         data = {'sitter_0': str(self.rp1_10.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -2065,7 +2370,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_1': str(self.rp1_7.pk),
                 'double_2': str(self.rp1_3.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r1)
+        form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -2074,14 +2379,14 @@ class GetSevenPlayersFormTest(TestCase):
 
     def test_none_needed(self):
         """Exact multiple of seven already"""
-        form = GetSevenPlayersForm(the_round=self.r2)
+        form = GetSevenPlayersForm(the_round=self.r2, pool=None)
         # Nothing needed
         self.assertEqual(len(form.fields), 0)
 
     def test_standby_fields(self):
         """We should have 2 fields for standby players needed to play in Round 3"""
         prefix='standby'
-        form = GetSevenPlayersForm(the_round=self.r3)
+        form = GetSevenPlayersForm(the_round=self.r3, pool=None)
         for i in range(0, 2):
             with self.subTest(i=i):
                 name = f'{prefix}_{i}'
@@ -2100,13 +2405,13 @@ class GetSevenPlayersFormTest(TestCase):
 
     def test_no_choices_needed(self):
         """If we need all standbys to play, no choices needed"""
-        form = GetSevenPlayersForm(the_round=self.r4)
+        form = GetSevenPlayersForm(the_round=self.r4, pool=None)
         self.assertEqual(0, len(form.fields))
 
     def test_too_few_standbys(self):
         data = {'standby_0': str(self.rp3_1.pk),
                }
-        form = GetSevenPlayersForm(data, the_round=self.r3)
+        form = GetSevenPlayersForm(data, the_round=self.r3, pool=None)
         self.assertFalse(form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
@@ -2118,7 +2423,8 @@ class GetSevenPlayersFormTest(TestCase):
         for n, rp in enumerate(self.r3.roundplayer_set.filter(standby=True)):
             data[f'standby_{n}'] = str(rp.pk)
         form = GetSevenPlayersForm(data=data,
-                                   the_round=self.r3)
+                                   the_round=self.r3,
+                                   pool=None)
         self.assertFalse(form.has_changed())
 
     def test_has_changed_no_standbys_implicit_initial(self):
@@ -2130,7 +2436,8 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'sitter_0': str(self.rp1_3.pk),
                 'sitter_1': str(self.rp1_4.pk)}
         form = GetSevenPlayersForm(data=data,
-                                   the_round=self.r1)
+                                   the_round=self.r1,
+                                   pool=None)
         self.assertFalse(form.has_changed())
         # Now set some to be playing two games
         self.rp1_3.game_count = 2
@@ -2140,7 +2447,8 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'double_0': str(self.rp1_3.pk),
                 'double_1': str(self.rp1_4.pk)}
         form = GetSevenPlayersForm(data=data,
-                                   the_round=self.r1)
+                                   the_round=self.r1,
+                                   pool=None)
         self.assertFalse(form.has_changed())
         # Clean up changes made
         self.rp1_3.game_count = 1
@@ -2156,7 +2464,8 @@ class GetSevenPlayersFormTest(TestCase):
             data[k] = str(v.pk)
         form = GetSevenPlayersForm(data=data,
                                    initial=initial,
-                                   the_round=self.r3)
+                                   the_round=self.r3,
+                                   pool=None)
         self.assertFalse(form.has_changed())
 
     def test_has_changed_no_standbys_explicit_initial(self):
@@ -2167,7 +2476,8 @@ class GetSevenPlayersFormTest(TestCase):
             data[k] = str(v.pk)
         form = GetSevenPlayersForm(data=data,
                                    initial=initial,
-                                   the_round=self.r1)
+                                   the_round=self.r1,
+                                   pool=None)
         self.assertFalse(form.has_changed())
         initial = {'double_0': self.rp1_10,
                    'double_1': self.rp1_7,
@@ -2178,7 +2488,8 @@ class GetSevenPlayersFormTest(TestCase):
             data[k] = str(v.pk)
         form = GetSevenPlayersForm(data=data,
                                    initial=initial,
-                                   the_round=self.r1)
+                                   the_round=self.r1,
+                                   pool=None)
         self.assertFalse(form.has_changed())
 
 
@@ -2705,6 +3016,119 @@ class BaseSCCountFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
         self.assertFormSetError(formset, None, None, 'Neutrals increases from 6 to 8 in 1903')
+
+
+class PoolFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        # We need a Tournament with a Round with two Pools
+        # and at least seven TournamentPlayers and RoundPlayers
+        today = date.today()
+        cls.t = Tournament.objects.create(name='tourney',
+                                          start_date=today,
+                                          end_date=today + timedelta(hours=24),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.r = Round.objects.create(tournament=cls.t,
+                                     scoring_system=G_SCORING_SYSTEMS[0].name,
+                                     dias=True,
+                                     start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+        cls.pool1 = Pool.objects.create(the_round=cls.r,
+                                        name='Fixed',
+                                        board_count=1)
+        cls.pool2 = Pool.objects.create(the_round=cls.r,
+                                        name='Variable')
+
+        cls.p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
+        cls.p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
+        cls.p3 = Player.objects.create(first_name='Charlie', last_name='Celiac')
+        cls.p4 = Player.objects.create(first_name='Dorothy', last_name='Deathstar')
+        cls.p5 = Player.objects.create(first_name='Edward', last_name='Egalitarian')
+        cls.p6 = Player.objects.create(first_name='Francine', last_name='Francophone')
+        cls.p7 = Player.objects.create(first_name='Gerald', last_name='Geranium')
+        cls.p8 = Player.objects.create(first_name='Hetty', last_name='Heffalump')
+        cls.p9 = Player.objects.create(first_name='Ian', last_name='Inkstain')
+
+        cls.tp1 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p1)
+        cls.tp2 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p2)
+        cls.tp3 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p3)
+        cls.tp4 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p4)
+        cls.tp5 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p5)
+        cls.tp6 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p6)
+        cls.tp7 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p7)
+        cls.tp8 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p8)
+        cls.tp9 = TournamentPlayer.objects.create(tournament=cls.t, player=cls.p9)
+
+        cls.rp1 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p1, sandboxer=True)
+        cls.rp2 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p2)
+        cls.rp3 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p3)
+        cls.rp4 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p4)
+        cls.rp5 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p5)
+        cls.rp6 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p6)
+        cls.rp7 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p7)
+        cls.rp8 = RoundPlayer.objects.create(the_round=cls.r, player=cls.p8)
+
+    def test_form_needs_pool(self):
+        """Omit pool constructor parameter"""
+        with self.assertRaises(KeyError):
+            PoolForm()
+
+    def test_player_fields(self):
+        """Check that we have the right number of fields, with the right QuerySet"""
+        form = PoolForm(None, pool=self.pool1)
+        self.assertEqual(len(form.fields), 7)
+        # One empty choice, plus one per RoundPlayer
+        the_choices = list(form.fields['player_1'].choices)
+        self.assertEqual(len(the_choices), self.r.roundplayer_set.count() + 1)
+        # The keys should be the RoundPlayer pks
+        self.assertEqual(the_choices[1][0], self.rp1.pk)
+        # and the values should be the Player names, in alphabetical order
+        # Sandboxers should not be flagged
+        self.assertEqual(the_choices[1][1], self.rp1.player.sortable_str())
+        self.assertEqual(the_choices[2][1], self.rp2.player.sortable_str())
+
+    def test_success(self):
+        data = {'player_1': str(self.rp1.pk),
+                'player_2': str(self.rp2.pk),
+                'player_3': str(self.rp3.pk),
+                'player_4': str(self.rp5.pk),
+                'player_5': str(self.rp6.pk),
+                'player_6': str(self.rp7.pk),
+                'player_7': str(self.rp8.pk)}
+        form = PoolForm(data, pool=self.pool1)
+        self.assertTrue(form.is_valid())
+
+    def test_duplicate_player(self):
+        """Pick the same player more than once"""
+        data = {'player_1': str(self.rp1.pk),
+                'player_2': str(self.rp2.pk),
+                'player_3': str(self.rp3.pk),
+                'player_4': str(self.rp5.pk),
+                'player_5': str(self.rp5.pk),
+                'player_6': str(self.rp7.pk),
+                'player_7': str(self.rp8.pk)}
+        form = PoolForm(data, pool=self.pool1)
+        self.assertFalse(form.is_valid())
+        self.assertFormError(form, None, 'Player Edward Egalitarian appears more than once')
+
+    def test_invalid_player(self):
+        """Pool includes an invalid choice"""
+        self.assertFalse(self.pool1.roundplayer_set.filter(pk=0).exists())
+        data = {'player_1': str(self.rp1.pk),
+                'player_2': '0',
+                'player_3': str(self.rp3.pk),
+                'player_4': str(self.rp5.pk),
+                'player_5': str(self.rp5.pk),
+                'player_6': str(self.rp7.pk),
+                'player_7': str(self.rp8.pk)}
+        form = PoolForm(data, pool=self.pool1)
+        self.assertFalse(form.is_valid())
+        self.assertFormError(form,
+                             'player_2',
+                             'Select a valid choice. That choice is not one of the available choices.')
 
 
 class PlayerFormTest(TestCase):

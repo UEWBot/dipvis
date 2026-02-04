@@ -40,6 +40,7 @@ from tournament.forms import GamePlayersForm
 from tournament.forms import GameScoreForm
 from tournament.forms import GetSevenPlayersForm
 from tournament.forms import PlayerRoundForm
+from tournament.forms import PoolForm
 from tournament.forms import PowerAssignForm
 
 from tournament.tournament_views import get_modifiable_tournament_or_404
@@ -50,7 +51,7 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call_email
 from tournament.game_seeder import GameSeeder
 from tournament.models import PowerAssignMethods
-from tournament.models import Round, Game
+from tournament.models import Round, Pool, Game
 from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
 
 # Round views
@@ -64,6 +65,14 @@ def get_round_or_404(tournament, round_num):
     try:
         return tournament.round_numbered(round_num)
     except Round.DoesNotExist as e:
+        raise Http404 from e
+
+
+def get_pool_or_404(the_round, pool_slug):
+    """Return the specified Pool in the Round, or raise Http404"""
+    try:
+        return the_round.pool_set.get(slug=pool_slug)
+    except Pool.DoesNotExist as e:
         raise Http404 from e
 
 
@@ -171,7 +180,12 @@ def roll_call(request, tournament_id, round_num):
                     except RoundPlayer.DoesNotExist:
                         pass
         if not errors_added:
-            if t.seed_games:
+            if r.pool_set.exists():
+                # Split players between pools
+                return HttpResponseRedirect(reverse('populate_pools',
+                                            args=(tournament_id,
+                                                  round_num)))
+            elif t.seed_games:
                 # Ensure that we have the right number of players
                 return HttpResponseRedirect(reverse('get_seven',
                                             args=(tournament_id,
@@ -196,12 +210,65 @@ def roll_call(request, tournament_id, round_num):
                    'formset': formset})
 
 
+@permission_required('tournament.change_roundplayer')
+def populate_pools(request, tournament_id, round_num):
+    """Assign RoundPlayers to the Pools for the Round"""
+    t = get_modifiable_tournament_or_404(tournament_id, request.user)
+    r = get_round_or_404(t, round_num)
+    pool_set = list(r.pool_set.all())
+    if not pool_set:
+        raise Http404
+    rps = r.roundplayer_set.all()
+    # We currently only support populating a single Pool
+    pool = r.pool_set.get(board_count__isnull=False)
+    context = {'tournament': t,
+               'round': r,
+               'pool': pool}
+    form = PoolForm(request.POST or None,
+                    pool=pool)
+    if form.is_valid():
+        # Assign RoundPlayers to Pools
+        # First the constrained pool
+        for rp in form.cleaned_data.values():
+            rp.pool = pool
+            rp.game_count = 1
+            rp.save(update_fields=['pool', 'game_count'])
+        # Everyone else goes in the unconstrained pool
+        pool = r.pool_set.get(board_count__isnull=True)
+        for rp in rps:
+            if rp.pool is None:
+                rp.pool = pool
+                rp.save(update_fields=['pool'])
+        # Next we have to get a whole number of boards in the variable Pool
+        return HttpResponseRedirect(reverse('get_seven',
+                                            args=(tournament_id,
+                                                  round_num)))
+    context['form'] = form
+    return render(request,
+                  'rounds/populate_pools.html',
+                  context)
+
+
 @permission_required('tournament.add_game')
 def get_seven(request, tournament_id, round_num):
     """Provide a form to get a multiple of seven players for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    rps = r.roundplayer_set.all()
+    rps = full_rps = r.roundplayer_set.all()
+    pool = None
+    pool_set = r.pool_set.all()
+    if pool_set:
+        # Check that we have the right number of players in fixed-size pools
+        for pool in pool_set.filter(board_count__isnull=False):
+            rps = full_rps.filter(pool=pool)
+            if rps.count() != (pool.board_count * GreatPower.objects.count()):
+                # Fixed-size pools need to be sorted first
+                return HttpResponseRedirect(reverse('populate_pools',
+                                            args=(tournament_id,
+                                                  round_num)))
+        # Set pool to the variable-sized pool
+        pool = pool_set.get(board_count__isnull=True)
+        rps = full_rps.filter(pool=pool)
     present = rps.count()
     # If we have fewer than seven players in total, we're stuffed
     if present < 7:
@@ -213,7 +280,8 @@ def get_seven(request, tournament_id, round_num):
                'playing': playing,
                'standbys': present - playing}
     form = GetSevenPlayersForm(request.POST or None,
-                               the_round=r)
+                               the_round=r,
+                               pool=pool)
     if form.is_valid():
         # Update RoundPlayers to indicate number of games they're playing
         # First clear any old game_counts
@@ -246,10 +314,10 @@ def get_seven(request, tournament_id, round_num):
                   context)
 
 
-def _sitters_and_two_gamers(tournament, the_round):
+def _sitters_and_two_gamers(tournament, the_round, pool):
     """Return a (sitters, two_gamers) 2-tuple"""
     tourney_players = tournament.tournamentplayer_set.prefetch_related('player')
-    round_players = the_round.roundplayer_set.prefetch_related('player')
+    round_players = the_round.roundplayer_set.filter(pool=pool).prefetch_related('player')
     # Get the set of players that haven't already been assigned to games for this round
     rps = []
     sitters = set()
@@ -316,14 +384,14 @@ def _create_game_seeder(tournament, the_round):
     return seeder
 
 
-def _seed_games(tournament, the_round):
+def _seed_games_for_pool(seeder, tournament, the_round, pool):
     """
-    Wrapper round GameSeeder to do the actual seeding for a round
+    Wrapper round GameSeeder to do the actual seeding for a round or pool within a round
 
-    Return value is the same format as _seed_games_and_powers()
+    Returns a list of games, where each game is a 3-tuple containing a pool (may be None),
+    a set of (player, power) 2-tuples and a list of issues.
     """
-    seeder = _create_game_seeder(tournament, the_round)
-    sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
+    sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round, pool)
     # Generate the games
     games = seeder.seed_games(omitting_players=sitters,
                               players_doubling_up=two_gamers)
@@ -335,23 +403,60 @@ def _seed_games(tournament, the_round):
         for player in players:
             tup = (player, None)
             game.add(tup)
-        retval.append((game, []))
+        retval.append((pool, game, []))
+    return retval
+
+
+def _seed_games(tournament, the_round):
+    """
+    Wrapper round GameSeeder to do the actual seeding for a round
+
+    Return value is the same format as _seed_games_and_powers()
+    """
+    seeder = _create_game_seeder(tournament, the_round)
+    pool_set = list(the_round.pool_set.all())
+    if pool_set:
+        retval = []
+        for pool in pool_set:
+            retval += _seed_games_for_pool(seeder, tournament, the_round, pool)
+        return retval
+    return _seed_games_for_pool(seeder, tournament, the_round, None)
+
+
+def _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool):
+    """
+    Seed games and assign powers for a single pool (may be None)
+    """
+    retval = []
+    sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round, pool)
+    games = seeder.seed_games_and_powers(omitting_players=sitters,
+                                         players_doubling_up=two_gamers)
+    for g in games:
+        retval.append((pool, g[0], g[1]))
     return retval
 
 
 def _seed_games_and_powers(tournament, the_round):
     """
     Wrapper round GameSeeder to do the actual seeding for a round
+
+    Returns a list of games, where each game is a 3-tuple containing a pool (possibly None),
+    a set of (player, power) 2-tuples and a list of issues.
     """
     seeder = _create_game_seeder(tournament, the_round)
-    sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round)
     # Generate the games
-    return seeder.seed_games_and_powers(omitting_players=sitters,
-                                        players_doubling_up=two_gamers)
+    pool_set = list(the_round.pool_set.all())
+    if pool_set:
+        retval = []
+        for pool in pool_set:
+            retval += _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool)
+        return retval
+    return _seed_games_and_powers_for_pool(seeder, tournament, the_round, None)
 
 
-def _generate_game_name(round_num, i):
-    """Generate a default name for Game n in round round_num"""
+def _generate_game_name(round_num, pool, i):
+    """Generate a default name for Game n in pool pool of round round_num"""
+    # TODO incorporate pool.slug into game name
     return f'R{round_num}G{chr(ord("A") + i - 1)}'
 
 
@@ -458,9 +563,10 @@ def seed_games(request, tournament_id, round_num):
         else:
             games = _seed_games(t, r)
         # Add the Games and GamePlayers to the database
-        for n, (g, i) in enumerate(games, start=1):
-            new_game = Game.objects.create(name=_generate_game_name(round_num, n),
+        for n, (pool, g, i) in enumerate(games, start=1):
+            new_game = Game.objects.create(name=_generate_game_name(round_num, pool, n),
                                            the_round=r,
+                                           pool=pool,
                                            the_set=default_set)
             current = {'name': new_game.name,
                        'the_set': new_game.the_set,
@@ -490,18 +596,24 @@ def seed_games(request, tournament_id, round_num):
 
 # TODO: Name is misleading - also used to modify existing game(s)
 @permission_required('tournament.add_game')
-def create_games(request, tournament_id, round_num, game_name=None):
-    """Form to create games for a round or to modify existing game(s)"""
+def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''):
+    """Form to create games for a round or pool within a round, or to modify existing game(s)"""
+    # Options are Round or Pool or single Game, so optional params are mutually exclusive
+    assert (game_name is None) or (pool_slug == '')
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
+    if pool_slug:
+        pool = get_pool_or_404(r, pool_slug)
+    else:
+        pool = None
     if game_name is not None:
         # Get a QuerySet containing the one game of interest
         games = r.game_set.filter(name=game_name)
         # Caller should ensure that the game name is valid
         assert games.exists()
     else:
-        # Do any games already exist for the round ?
-        games = r.game_set.all()
+        # Do any games already exist for the round/pool ?
+        games = r.game_set.filter(pool=pool)
     data = []
     for g in games:
         current = {'game_id': g.id,
@@ -527,6 +639,7 @@ def create_games(request, tournament_id, round_num, game_name=None):
                                          formset=BaseGamePlayersFormset)
     formset = GamePlayersFormset(request.POST or None,
                                  the_round=r,
+                                 pool=pool,
                                  initial=data)
     if formset.is_valid():
         non_player_fields = {'the_set', 'name', 'external_url', 'notes'}
@@ -549,6 +662,7 @@ def create_games(request, tournament_id, round_num, game_name=None):
                         else:
                             g = Game(name=f.cleaned_data['name'],
                                      the_round=r,
+                                     pool=pool,
                                      the_set=f.cleaned_data['the_set'],
                                      external_url=f.cleaned_data['external_url'],
                                      notes=f.cleaned_data['notes'])

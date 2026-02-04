@@ -31,7 +31,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
 from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
 from tournament.models import Award, Game, GameImage, SeederBias
-from tournament.models import DrawSecrecy, Seasons
+from tournament.models import DrawSecrecy, Pool, Seasons
 from tournament.models import Team, TournamentPlayer
 from tournament.models import validate_game_name
 from tournament.players import Player
@@ -47,10 +47,14 @@ class PlayerChoiceField(forms.ModelChoiceField):
 
 class RoundPlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a RoundPlayer"""
+    def __init__(self, *args, **kwargs):
+        self.flag_sandboxers = kwargs.pop('flag_sandboxers', False)
+        super().__init__(*args, **kwargs)
+
     def label_from_instance(self, obj):
-        # flag if they are willing to sandbox
+        # optionally flag if they are willing to sandbox
         suffix = ''
-        if obj.sandboxer:
+        if self.flag_sandboxers and obj.sandboxer:
             suffix = '*'
         return obj.player.sortable_str() + suffix
 
@@ -435,19 +439,36 @@ class GamePlayersForm(forms.Form):
                             max_length=Game.MAX_NOTES_LENGTH)
 
     def __init__(self, *args, **kwargs):
-        """Dynamically creates one player field per Great Power"""
-        # Remove our special kwarg from the list
+        """
+        Dynamically creates one player field per Great Power
+
+        Only RoundPlayers in the specified Round and Pool (which may be None) can be picked.
+        """
+        # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
+        self.pool = kwargs.pop('pool')
         super().__init__(*args, **kwargs)
 
-        queryset = self.the_round.roundplayer_set.prefetch_related('player')
+        try:
+            game_id = kwargs['initial']['game_id']
+        except KeyError:
+            pass
+        else:
+            game = Game.objects.get(pk=game_id)
+            assert (game.pool == self.pool) or (self.pool is None)
+            # We may have a form with games for the whole round, some for each pool
+            # This form should be restricted to the pool the game is for
+            self.pool = game.pool
+        # Restrict to players from the relevant Pool
+        queryset = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player')
 
         field_order = ['name', 'the_set', 'external_url']
 
         # Create the right country fields
         for power in GreatPower.objects.all():
             c = power.name
-            self.fields[c] = RoundPlayerChoiceField(label=_(c),
+            self.fields[c] = RoundPlayerChoiceField(flag_sandboxers=True,
+                                                    label=_(c),
                                                     queryset=queryset)
             field_order.append(c)
 
@@ -490,15 +511,17 @@ class GamePlayersForm(forms.Form):
 
 
 class BaseGamePlayersFormset(BaseFormSet):
-    """Form to specify GamePlayers for a single Round"""
+    """Form to specify GamePlayers for a single Round, or single Pool within a Round"""
     def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
+        # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
+        self.pool = kwargs.pop('pool') # May be None
         super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
-        # Pass the special arg down to the form itself
+        # Pass the special args down to the form itself
         kwargs['the_round'] = self.the_round
+        kwargs['pool'] = self.pool
         return super()._construct_form(index, **kwargs)
 
     def clean(self):
@@ -588,7 +611,7 @@ class BasePowerAssignFormset(BaseFormSet):
         # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
-        self.games = self.the_round.game_set.all()
+        self.games = self.the_round.game_set.order_by('pool')
         assert self.games
 
     def _construct_form(self, index, **kwargs):
@@ -623,11 +646,18 @@ class GetSevenPlayersForm(forms.Form):
                                                                   label=self.LABELS[prefix])
 
     def __init__(self, *args, **kwargs):
-        """Dynamically creates the appropriate number of player fields"""
-        # Remove our special kwarg from the list
-        self.the_round = kwargs.pop('the_round')
+        """
+        Dynamically creates the appropriate number of player fields
 
-        present = self.the_round.roundplayer_set.prefetch_related('player')
+        Only RoundPlayers in the specified Round and Pool (which may be None) can be picked.
+        """
+        # Remove our special kwargs from the list
+        self.the_round = kwargs.pop('the_round')
+        self.pool = kwargs.pop('pool') # May be None
+
+        assert (self.pool is None) or (self.pool.board_count is None)
+
+        present = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player')
         playing = present.filter(standby=False)
         standbys = present.filter(standby=True)
 
@@ -992,6 +1022,40 @@ class EnableCheckInForm(forms.Form):
             self.fields[name] = forms.BooleanField(required=False, initial=False)
             if readonly:
                 self.fields[name].disabled = True
+
+
+# Pool population
+
+class PoolForm(forms.Form):
+    """Form to populate a Pool"""
+
+    def __init__(self, *args, **kwargs):
+        # Remove our kwarg from the list
+        self.pool = kwargs.pop('pool')
+        super().__init__(*args, **kwargs)
+        # Create the right number of player fields
+        r = self.pool.the_round
+        queryset = r.roundplayer_set.all()
+        for n in range(self.pool.board_count * GreatPower.objects.count()):
+            self.fields[f'player_{n+1}'] = RoundPlayerChoiceField(queryset=queryset)
+
+    def clean(self):
+        """
+        Checks for the same player appearing multiple times
+        """
+        cleaned_data = super().clean()
+        r_players = []
+        for n in range(self.pool.board_count * GreatPower.objects.count()):
+            try:
+                r_players.append(cleaned_data[f'player_{n+1}'])
+            except KeyError:
+                # If there are already errors, cleaned_data may not include all fields
+                continue
+        for rp in r_players:
+            if rp and (r_players.count(rp) > 1):
+                raise forms.ValidationError(_('Player %(player)s appears more than once')
+                                            % {'player': rp.player})
+        return cleaned_data
 
 
 # Pick a Player
