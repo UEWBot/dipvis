@@ -47,7 +47,7 @@ class BackstabbrTests(TestCase):
         url = urlunparse(('https', BACKSTABBR_NETLOCS[0], path, '', '', ''))
         self.assertTrue(is_backstabbr_url(url))
 
-    def test_is_backstabbr_url_true1(self):
+    def test_is_backstabbr_url_true2(self):
         path = f'game/{INVALID_GAME_NUMBER}'
         url = urlunparse(('https', BACKSTABBR_NETLOCS[1], path, '', '', ''))
         self.assertTrue(is_backstabbr_url(url))
