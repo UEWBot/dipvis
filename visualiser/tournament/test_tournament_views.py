@@ -52,8 +52,8 @@ class TournamentViewTests(TestCase):
         # A regular user with no special permissions or ownership
         cls.USERNAME1 = 'regular'
         cls.PWORD1 = 'CleverPassword'
-        u1 = User.objects.create_user(username=cls.USERNAME1, password=cls.PWORD1)
-        u1.save()
+        cls.u1 = User.objects.create_user(username=cls.USERNAME1, password=cls.PWORD1)
+        cls.u1.save()
 
         # A superuser
         cls.USERNAME2 = 'superuser'
@@ -92,8 +92,8 @@ class TournamentViewTests(TestCase):
         cls.p2 = Player.objects.create(first_name='Bobby',
                                        last_name='Bandersnatch')
         # One with a really long name
-        p3 = Player.objects.create(first_name='Cassandra'.ljust(Player._meta.get_field('first_name').max_length, '.'),
-                                   last_name='Cucumber'.ljust(Player._meta.get_field('last_name').max_length, '.'))
+        cls.p3 = Player.objects.create(first_name='Cassandra'.ljust(Player._meta.get_field('first_name').max_length, '.'),
+                                       last_name='Cucumber'.ljust(Player._meta.get_field('last_name').max_length, '.'))
         p4 = Player.objects.create(first_name='Derek',
                                    last_name='Dromedary')
         p5 = Player.objects.create(first_name='Ethel',
@@ -147,7 +147,7 @@ class TournamentViewTests(TestCase):
         cls.tp11 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t1,
                                                    uuid_str=str(uuid.uuid4()))
-        tp = TournamentPlayer.objects.create(player=p3,
+        tp = TournamentPlayer.objects.create(player=cls.p3,
                                              tournament=cls.t1)
 
         # Unpublished Tournament, with a manager (u3)
@@ -173,7 +173,7 @@ class TournamentViewTests(TestCase):
                                              tournament=cls.t2)
         # Explicitly call get_prefs_url() to generate a UUID
         tp.get_prefs_url()
-        tp = TournamentPlayer.objects.create(player=p3,
+        tp = TournamentPlayer.objects.create(player=cls.p3,
                                              tournament=cls.t2)
         tp = TournamentPlayer.objects.create(player=p4,
                                              tournament=cls.t2)
@@ -190,7 +190,7 @@ class TournamentViewTests(TestCase):
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t2)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r21)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r21)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r21)
         RoundPlayer.objects.create(player=p4, the_round=cls.r21)
         RoundPlayer.objects.create(player=p5, the_round=cls.r21)
         RoundPlayer.objects.create(player=p6, the_round=cls.r21)
@@ -199,7 +199,7 @@ class TournamentViewTests(TestCase):
         RoundPlayer.objects.create(player=p9, the_round=cls.r21)
         RoundPlayer.objects.create(player=p10, the_round=cls.r21)
         GamePlayer.objects.create(player=cls.p1, game=g21, power=cls.austria)
-        GamePlayer.objects.create(player=p3, game=g21, power=cls.england)
+        GamePlayer.objects.create(player=cls.p3, game=g21, power=cls.england)
         GamePlayer.objects.create(player=p4, game=g21, power=cls.france)
         GamePlayer.objects.create(player=p5, game=g21, power=cls.germany)
         GamePlayer.objects.create(player=p6, game=g21, power=cls.italy)
@@ -252,7 +252,7 @@ class TournamentViewTests(TestCase):
         cls.tp41 = TournamentPlayer.objects.create(player=cls.p1,
                                                    tournament=cls.t4,
                                                    uuid_str=str(uuid.uuid4()))
-        tp = TournamentPlayer.objects.create(player=p3,
+        tp = TournamentPlayer.objects.create(player=cls.p3,
                                              tournament=cls.t4)
         tp = TournamentPlayer.objects.create(player=p4,
                                              tournament=cls.t4)
@@ -269,7 +269,7 @@ class TournamentViewTests(TestCase):
         tp = TournamentPlayer.objects.create(player=p10,
                                              tournament=cls.t4)
         RoundPlayer.objects.create(player=cls.p1, the_round=cls.r41)
-        RoundPlayer.objects.create(player=p3, the_round=cls.r41)
+        RoundPlayer.objects.create(player=cls.p3, the_round=cls.r41)
         RoundPlayer.objects.create(player=p4, the_round=cls.r41)
         RoundPlayer.objects.create(player=p5, the_round=cls.r41)
         RoundPlayer.objects.create(player=p6, the_round=cls.r41)
@@ -278,7 +278,7 @@ class TournamentViewTests(TestCase):
         RoundPlayer.objects.create(player=p9, the_round=cls.r41)
         RoundPlayer.objects.create(player=p10, the_round=cls.r41)
         GamePlayer.objects.create(player=cls.p1, game=g41, power=cls.austria)
-        GamePlayer.objects.create(player=p3, game=g41, power=cls.england)
+        GamePlayer.objects.create(player=cls.p3, game=g41, power=cls.england)
         GamePlayer.objects.create(player=p4, game=g41, power=cls.france)
         GamePlayer.objects.create(player=p5, game=g41, power=cls.germany)
         GamePlayer.objects.create(player=p6, game=g41, power=cls.italy)
@@ -1648,6 +1648,37 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Clean up
         SeederBias.objects.filter(player1__tournament=self.t1).delete()
+
+    def test_seeder_bias_suggestions(self):
+        """List of suggested SeederBiases is correct"""
+        # Add u1 as a manager of t1 so they can edit it but can't see t2
+        self.t1.managers.add(self.u1)
+        # and give them the appropriate permission
+        perm = Permission.objects.get(name='Can add seeder bias')
+        self.u1.user_permissions.add(perm)
+        # Add a SeederBias for p1 and p3 for previous tournaments,
+        # both visible (t4) and not visible (t2)
+        for t in [self.t4, self.t2]:
+            tp1 = t.tournamentplayer_set.get(player=self.p1)
+            tp2 = t.tournamentplayer_set.get(player=self.p3)
+            SeederBias.objects.create(player1=tp1, player2=tp2)
+        # Log in as someone who can edit t1 and can't see t2
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # Retrieve the page for t1 (which has p1 and p3, and is editable)
+        response = self.client.get(reverse('seeder_bias',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Check that the right suggestions appear in the list
+        sb = SeederBias.objects.get(player1__tournament=self.t2)
+        self.assertNotContains(response, str(sb))
+        sb = SeederBias.objects.get(player1__tournament=self.t4)
+        self.assertContains(response, str())
+        # Clean up
+        for t in [self.t4, self.t2]:
+            SeederBias.objects.filter(player1__tournament=t).delete()
+        self.u1.user_permissions.remove(perm)
+        self.t1.managers.remove(self.u1)
 
     def test_seeder_bias_add(self):
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)

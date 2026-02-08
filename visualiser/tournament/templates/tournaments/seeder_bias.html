@@ -44,6 +44,15 @@
     {{ form }}
     <input type="submit" value="{% trans "Submit"%}" />
   </form>
+  <h2>{% trans "Biases for registered players in previous tournaments" %}</h2>
+  <p>{% trans "You may want to add some of these same biases" %}</p>
+  <ul>
+  {% for bias in previous_biases %}
+    <li>{{ bias }}</li>
+  {% empty %}
+    <li>{% trans "None" %}</li>
+  {% endfor %}
+  </ul>
 {% endif %}
 
 {% endblock content %}

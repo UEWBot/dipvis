@@ -654,6 +654,23 @@ def prefs_csv(request, tournament_id):
     return response
 
 
+def _previous_bias(tournament, user):
+    """
+    Find bias in other visible Tournaments for players in this one.
+
+    Returns a set of SeederBias objects
+    """
+    players = [tp.player for tp in tournament.tournamentplayer_set.all()]
+    # Start with all SeederBiases except any from this tournament
+    sb_set = SeederBias.objects.exclude(player1__tournament=tournament)
+    # Look for any where both players are in this tournament
+    sb_set = sb_set.filter(player1__player__in=players).filter(player2__player__in=players)
+    # Remove any from tournaments the user can't see
+    sb_list = [sb for sb in sb_set if tournament_is_visible(sb.player1.tournament, user)]
+    # TODO remove any that are also in the current tournament ?
+    return sb_list
+
+
 @permission_required('tournament.add_seederbias')
 def seeder_bias(request, tournament_id):
     """Display or add SeederBias objects for the Tournament"""
@@ -679,7 +696,8 @@ def seeder_bias(request, tournament_id):
                                                 args=(tournament_id,)))
     context = {'tournament': t,
                'biases': sb_set,
-               'form': form}
+               'form': form,
+               'previous_biases': _previous_bias(t, request.user)}
     return render(request, 'tournaments/seeder_bias.html', context)
 
 
