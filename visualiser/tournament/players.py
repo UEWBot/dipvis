@@ -461,6 +461,7 @@ def _wdr_tournament_should_be_included(t):
                   'NAGP', # North American Grand Prix
                   'BIC', # Bismark Cup
                   'nCIR', # National Circuit
+                  'NCIR', # National Circuit
                   'CIR']: # Circuit
         return False
     else:
