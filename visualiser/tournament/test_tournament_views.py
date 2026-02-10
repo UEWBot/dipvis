@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 import uuid
 from urllib.parse import urlencode
 
@@ -135,7 +136,7 @@ class TournamentViewTests(TestCase):
         cls.t1.awards.add(cls.a3)
         cls.t1.save()
         Round.objects.create(tournament=cls.t1,
-                             start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)),
+                             start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
@@ -155,7 +156,7 @@ class TournamentViewTests(TestCase):
                                            power_assignment=PowerAssignMethods.PREFERENCES,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
-                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=timezone.utc)),
+                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g21 = Game.objects.create(name='Game1',
@@ -230,7 +231,7 @@ class TournamentViewTests(TestCase):
                                            editable=False)
         cls.r41 = Round.objects.create(tournament=cls.t4,
                                        start=datetime.combine(cls.t4.start_date,
-                                                              time(hour=16, tzinfo=timezone.utc)),
+                                                              time(hour=16, tzinfo=datetime_timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        is_finished=True,
                                        dias=False)
@@ -814,7 +815,7 @@ class TournamentViewTests(TestCase):
         r42 = Round.objects.create(tournament=self.t4,
                                    start=datetime.combine(self.t4.start_date,
                                                           time(hour=8,
-                                                               tzinfo=timezone.utc)),
+                                                               tzinfo=datetime_timezone.utc)),
                                    scoring_system=G_SCORING_SYSTEMS[0].name,
                                    is_team_round=True,
                                    dias=False)

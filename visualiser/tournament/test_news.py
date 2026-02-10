@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 
 from django.test import TestCase
 
@@ -68,7 +69,7 @@ class NewsTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=9, tzinfo=timezone.utc)))
+                                   start=datetime.combine(t1.start_date, time(hour=9, tzinfo=datetime_timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -85,7 +86,7 @@ class NewsTests(TestCase):
         r31 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t3.start_date, time(hour=9, tzinfo=timezone.utc)),
+                                   start=datetime.combine(t3.start_date, time(hour=9, tzinfo=datetime_timezone.utc)),
                                    final_year=1907)
         r32 = Round.objects.create(tournament=t3,
                                    scoring_system=s1,

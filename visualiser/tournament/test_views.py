@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 
 from django.test import TestCase
 from django.urls import reverse
@@ -77,7 +78,7 @@ class ViewIndexTests(TestCase):
         Round.objects.create(tournament=t,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=False,
-                             start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                             start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         response = self.client.get(reverse('game_index',
                                            args=(t.id, 1)),
                                    secure=True)

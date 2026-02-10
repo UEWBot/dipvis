@@ -15,10 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import date, datetime, timedelta
+from datetime import timezone as datetime_timezone
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
-from django.utils import timezone
 
 from django_countries.fields import Country
 
@@ -388,11 +388,11 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -411,7 +411,7 @@ class PlayerTests(TestCase):
     # TODO test when some background objects are missing
     def test_player_background_updated_playertournamentranking(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(timezone.utc)
+        start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerTournamentRanking last
         pt = PlayerTitle.objects.create(player=p,
                                         title='Canadian Beaver',
@@ -421,11 +421,11 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -435,7 +435,7 @@ class PlayerTests(TestCase):
                                                      tournament='Some tournament',
                                                      position=3,
                                                      year=1974)
-        end = datetime.now(timezone.utc)
+        end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -445,7 +445,7 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playertitle(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(timezone.utc)
+        start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerTitle last
         ptr = PlayerTournamentRanking.objects.create(player=p,
                                                      tournament='Some tournament',
@@ -456,11 +456,11 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -469,7 +469,7 @@ class PlayerTests(TestCase):
         pt = PlayerTitle.objects.create(player=p,
                                         title='Canadian Beaver',
                                         year=1976)
-        end = datetime.now(timezone.utc)
+        end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -479,7 +479,7 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playergameresult(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(timezone.utc)
+        start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerGameResult last
         ptr = PlayerTournamentRanking.objects.create(player=p,
                                                      tournament='Some tournament',
@@ -490,7 +490,7 @@ class PlayerTests(TestCase):
                                         year=1976)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -501,9 +501,9 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
-        end = datetime.now(timezone.utc)
+        end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -513,7 +513,7 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playeraward(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(timezone.utc)
+        start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerAward last
         ptr = PlayerTournamentRanking.objects.create(player=p,
                                                      tournament='Some tournament',
@@ -527,7 +527,7 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -535,9 +535,9 @@ class PlayerTests(TestCase):
                                           national_rank='3')
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
-        end = datetime.now(timezone.utc)
+        end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -547,7 +547,7 @@ class PlayerTests(TestCase):
 
     def test_player_background_updated_playerranking(self):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
-        start = datetime.now(timezone.utc)
+        start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerRanking last
         ptr = PlayerTournamentRanking.objects.create(player=p,
                                                      tournament='Some tournament',
@@ -561,17 +561,17 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
                                           international_rank='8',
                                           national_rank='3')
-        end = datetime.now(timezone.utc)
+        end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
         self.assertLess(updated, end)
@@ -699,11 +699,11 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -734,11 +734,11 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -775,11 +775,11 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -1006,11 +1006,11 @@ class WDDPlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -1051,11 +1051,11 @@ class WDDPlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(timezone.utc),
+                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         pa = PlayerAward.objects.create(player=p,
                                         tournament='Some tournament',
-                                        date=datetime.now(timezone.utc),
+                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -1378,7 +1378,7 @@ class PlayerAwardTests(TestCase):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          tournament='Some tournament',
-                         date=datetime.now(timezone.utc),
+                         date=datetime.now(datetime_timezone.utc),
                          name='Nicest Player of France',
                          wdd_tournament_id=369,
                          power=self.france)
@@ -1391,7 +1391,7 @@ class PlayerAwardTests(TestCase):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          tournament='Some tournament',
-                         date=datetime.now(timezone.utc),
+                         date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person',
                          wdd_tournament_id=369)
         url = pa.wdd_url()
@@ -1402,7 +1402,7 @@ class PlayerAwardTests(TestCase):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          tournament='Some tournament',
-                         date=datetime.now(timezone.utc),
+                         date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person',
                          wdr_tournament_id=369)
         url = pa.wdr_url()
@@ -1415,7 +1415,7 @@ class PlayerAwardTests(TestCase):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          tournament='Some tournament',
-                         date=datetime.now(timezone.utc),
+                         date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person')
         p_str = str(pa)
         # We expect to find player name, award name, and tournament name

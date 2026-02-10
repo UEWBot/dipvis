@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 
 from django_countries.fields import Country
 from django.test import TestCase
@@ -69,7 +70,7 @@ class WddViewTests(TestCase):
         r1 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=False,
-                                  start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                  start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r2 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,

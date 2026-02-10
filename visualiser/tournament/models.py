@@ -34,7 +34,7 @@ from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum, Max, F, Q
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
@@ -2182,7 +2182,7 @@ class Game(models.Model):
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_game_name],
                             help_text=_(u'Must be unique within the tournament. No spaces'))
-    started_at = models.DateTimeField(default=timezone.now)
+    started_at = models.DateTimeField(default=django_timezone.now)
     is_finished = models.BooleanField(default=False)
     is_top_board = models.BooleanField(default=False)
     the_round = models.ForeignKey(Round, verbose_name=_(u'round'), on_delete=models.CASCADE)

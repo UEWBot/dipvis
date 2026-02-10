@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 
 from django.core import mail
 from django.test import TestCase, override_settings
@@ -66,12 +67,12 @@ class EmailTests(TestCase):
         r1 = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                 start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
 
         r2 = Round.objects.create(tournament=cls.t1,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=timezone.utc)))
+                                 start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
 
         g1 = Game.objects.create(name='g1',
                                  started_at=r1.start,

@@ -17,7 +17,8 @@
 """
 Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 from urllib.parse import urlunparse
 
 from django.forms.formsets import formset_factory
@@ -929,11 +930,11 @@ class GamePlayersFormTest(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                      start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r2 = Round.objects.create(tournament=cls.t,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=datetime.combine(cls.t.start_date, time(hour=17, tzinfo=timezone.utc)))
+                                  start=datetime.combine(cls.t.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
         p3 = Player.objects.create(first_name='Christina', last_name='Calculus')
@@ -1473,7 +1474,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         cls.r = Round.objects.create(tournament=t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                     start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         # Seven Players, all of whom are playing this Round
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
@@ -1646,7 +1647,7 @@ class PowerAssignFormTest(TestCase):
         r = Round.objects.create(tournament=t,
                                  scoring_system=G_SCORING_SYSTEMS[0].name,
                                  dias=True,
-                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.g = Game.objects.create(name='Test Game',
                                     the_round=r,
                                     the_set=GameSet.objects.first())
@@ -1892,11 +1893,11 @@ class BasePowerAssignFormsetTest(TestCase):
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                      start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.r2 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=17, tzinfo=timezone.utc)))
+                                      start=datetime.combine(t.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
         g1 = Game.objects.create(name='Test Game 1',
                                  the_round=cls.r1,
                                  the_set=GameSet.objects.first())
@@ -2081,19 +2082,19 @@ class GetSevenPlayersFormTest(TestCase):
         cls.r1 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                      start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.r2 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=12, tzinfo=timezone.utc)))
+                                      start=datetime.combine(t.start_date, time(hour=12, tzinfo=datetime_timezone.utc)))
         cls.r3 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=16, tzinfo=timezone.utc)))
+                                      start=datetime.combine(t.start_date, time(hour=16, tzinfo=datetime_timezone.utc)))
         cls.r4 = Round.objects.create(tournament=t,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(t.start_date, time(hour=20, tzinfo=timezone.utc)))
+                                      start=datetime.combine(t.start_date, time(hour=20, tzinfo=datetime_timezone.utc)))
 
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
         p2 = Player.objects.create(first_name='Beatrice', last_name='Brontosaurus')
@@ -3035,7 +3036,7 @@ class PoolFormTest(TestCase):
         cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
-                                     start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                     start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.pool1 = Pool.objects.create(the_round=cls.r,
                                         name='Fixed',
                                         board_count=1)
@@ -3295,11 +3296,11 @@ class BasePlayerRoundFormsetTest(TestCase):
         cls.r1 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                      start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.r2 = Round.objects.create(tournament=cls.t1,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=timezone.utc)))
+                                      start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
         cls.t2 = Tournament.objects.create(name='t2',
                                            start_date=today,
                                            end_date=today + timedelta(hours=24),
@@ -3321,7 +3322,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         cls.r3 = Round.objects.create(tournament=cls.t3,
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
-                                      start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                      start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.g = Game.objects.create(name='Test Game',
                                     the_round=cls.r3,
                                     the_set=GameSet.objects.first(),
@@ -3521,11 +3522,11 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
         r1 = Round.objects.create(tournament=cls.t1,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                  start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         Round.objects.create(tournament=cls.t1,
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True,
-                             start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=timezone.utc)))
+                             start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
         TournamentPlayer.objects.create(player=p1, tournament=cls.t1)
         TournamentPlayer.objects.create(player=p2, tournament=cls.t1)
         RoundPlayer.objects.create(player=p1, the_round=r1)
@@ -3544,7 +3545,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
         r3 = Round.objects.create(tournament=cls.t3,
                                   scoring_system=G_SCORING_SYSTEMS[0].name,
                                   dias=True,
-                                  start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                  start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         Game.objects.create(name='Test Game',
                             the_round=r3,
                             the_set=GameSet.objects.first(),

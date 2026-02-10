@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 
 from django.test import TestCase
 
@@ -56,19 +57,19 @@ class TournamentGameStateTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=timezone.utc)))
+                                   start=datetime.combine(t1.start_date, time(hour=12, tzinfo=datetime_timezone.utc)))
         r13 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=timezone.utc)))
+                                   start=datetime.combine(t1.start_date, time(hour=16, tzinfo=datetime_timezone.utc)))
         Round.objects.create(tournament=t1,
                              scoring_system=s1,
                              dias=True,
-                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=timezone.utc)))
+                             start=datetime.combine(t1.start_date, time(hour=20, tzinfo=datetime_timezone.utc)))
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11', started_at=r11.start, the_round=r11, the_set=set1)

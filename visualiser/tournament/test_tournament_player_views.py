@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 import uuid
 from urllib.parse import urlencode
 
@@ -125,7 +126,7 @@ class TournamentPlayerViewTests(TestCase):
                                   description='They cook a great Christmas dinner',
                                   power=cls.turkey)
         Round.objects.create(tournament=cls.t1,
-                             start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)),
+                             start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,
                              dias=True)
         # Pre-generate a UUID for player prefs
@@ -150,7 +151,7 @@ class TournamentPlayerViewTests(TestCase):
                                            format=Formats.VFTF,
                                            is_published=False)
         cls.r21 = Round.objects.create(tournament=cls.t2,
-                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=timezone.utc)),
+                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g21 = Game.objects.create(name='Game1',
@@ -225,7 +226,7 @@ class TournamentPlayerViewTests(TestCase):
                                            is_published=True,
                                            editable=False)
         cls.r41 = Round.objects.create(tournament=cls.t4,
-                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=timezone.utc)),
+                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=False)
         g41 = Game.objects.create(name='Game1',
@@ -345,7 +346,7 @@ class TournamentPlayerViewTests(TestCase):
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
         cls.r51 = Round.objects.create(tournament=cls.t5,
-                                       start=datetime.combine(cls.t5.start_date, time(hour=8, tzinfo=timezone.utc)),
+                                       start=datetime.combine(cls.t5.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True)
         # Pre-generate a UUID for player prefs

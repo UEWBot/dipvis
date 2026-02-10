@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
@@ -100,7 +101,7 @@ class RoundViewTests(TestCase):
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                       start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         # Add TournamentPlayers
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t1)
@@ -155,7 +156,7 @@ class RoundViewTests(TestCase):
         cls.r21 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                       start=datetime.combine(cls.t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.r22 = Round.objects.create(tournament=cls.t2,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
@@ -212,7 +213,7 @@ class RoundViewTests(TestCase):
         cls.r31 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                       start=datetime.combine(cls.t3.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         cls.r32 = Round.objects.create(tournament=cls.t3,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
@@ -282,7 +283,7 @@ class RoundViewTests(TestCase):
         cls.r41 = Round.objects.create(tournament=cls.t4,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
-                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=timezone.utc)))
+                                       start=datetime.combine(cls.t4.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         TournamentPlayer.objects.create(player=cls.p1,
                                         tournament=cls.t4)
         TournamentPlayer.objects.create(player=cls.p2,

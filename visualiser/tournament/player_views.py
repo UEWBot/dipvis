@@ -28,7 +28,7 @@ from django.core.validators import validate_email
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 from django.views import generic
 
 from tournament.forms import PlayerForm
@@ -102,7 +102,7 @@ def wpe(request, pk, years=7, count=7):
     Displays the best <count> WPE numbers from the previous <years> years.
     """
     player = get_object_or_404(Player, pk=pk)
-    now = timezone.now()
+    now = django_timezone.now()
     start_date = now.replace(year=now.year - years)
     # TODO If I append [:count] here, the template doesn't work properly
     rankings = player.playertournamentranking_set.filter(date__gte=start_date).order_by('-wpe_score')

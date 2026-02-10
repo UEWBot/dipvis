@@ -26,12 +26,13 @@ import csv
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 from time import sleep
 
 from django_countries.fields import Country
 
 from django.conf import settings
-from django.utils import timezone
+from django.utils import timezone as django_timezone
 
 from tournament import backstabbr
 from tournament.background import WDDBackground, WDRBackground, WDRNotAccessible, InvalidWDRId
@@ -102,7 +103,9 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
             r = Round.objects.create(tournament=t,
                                      scoring_system='Dixie',
                                      dias=False,
-                                     start=datetime.combine(t.start_date, time(hour=r_num, tzinfo=timezone.utc)))
+                                     start=datetime.combine(t.start_date,
+                                                            time(hour=r_num,
+                                                                 tzinfo=datetime_timezone.utc)))
             # Create 4 Games
             for g_num in range(1,5):
                 g = Game.objects.create(name=_generate_game_name(r_num, g_num),
@@ -134,7 +137,7 @@ def archive_tournaments(dry_run=False):
     """
     Clear the editable flag in all published tournaments that are over
     """
-    for t in Tournament.objects.filter(editable=True).filter(is_published=True).filter(end_date__lte=timezone.now()):
+    for t in Tournament.objects.filter(editable=True).filter(is_published=True).filter(end_date__lte=django_timezone.now()):
         print(f'Archiving {t}')
         if not dry_run:
             t.editable = False
@@ -392,8 +395,8 @@ def upcoming_rounds(num_days=45, include_unpublished=False):
     num_days specifies how many days ahead to look
     include_unpublished says whether to include unpublished tournaments
     """
-    current_tz = timezone.get_current_timezone()
-    today = timezone.now()
+    current_tz = django_timezone.get_current_timezone()
+    today = django_timezone.now()
     end_date = today + timedelta(days=num_days)
     for r in Round.objects.filter(is_finished=False).filter(start__range=[today, end_date]):
         if include_unpublished or r.tournament.is_published:
