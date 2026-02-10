@@ -234,7 +234,7 @@ class Game():
                                 timeout=self.TIMEOUT)
             tries += 1
             if page.status_code == requests.codes.ok:
-                return BeautifulSoup(page.text)
+                return BeautifulSoup(page.text, "html.parser")
             elif page.status_code == requests.codes.not_found:
                 raise InvalidGameUrl(url)
             elif page.status_code != requests.codes.internal_server_error:

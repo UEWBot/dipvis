@@ -98,7 +98,7 @@ class WikipediaCache():
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return
-        self.the_soup = BeautifulSoup(page.text)
+        self.the_soup = BeautifulSoup(page.text, "html.parser")
         try:
             etag = page.headers["ETag"]
         except KeyError as e:
@@ -236,7 +236,7 @@ class WDDBackground():
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
         if not len(page.text):
             raise WDDNotAccessible("Got a response with no content")
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         return soup.title.string[6:]
 
     def wdd_firstname_lastname(self):
@@ -283,7 +283,7 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         table = soup.find('table', bgcolor='black')
         if not table:
             return []
@@ -322,7 +322,7 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         table = soup.find('table', width='65%')
         if not table:
             return []
@@ -382,7 +382,7 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         results = []
         # This page really confuses BeautifulSoup. Have to just find all th and td tags
         for row in soup.find_all('tr'):
@@ -455,7 +455,7 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         results = []
         # This page really confuses BeautifulSoup. Have to just find all th and td tags
         for row in soup.find_all('tr'):
@@ -554,7 +554,7 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         results = {}
         for table in soup.find_all('table', width='65%'):
             for th in table.find_all('th'):
@@ -629,7 +629,7 @@ class WDDBackground():
             raise WDDNotAccessible from e
         if page.status_code != requests.codes.ok:
             raise InvalidWDDId(self.wdd_id, url, page.status_code)
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         results = []
         for table in soup.find_all('table', width='70%'):
             columns = []
@@ -664,7 +664,7 @@ class WDDBackground():
         if page.status_code != requests.codes.ok:
             # Unranked players don't get a WDD page at all
             return {}
-        soup = BeautifulSoup(page.text)
+        soup = BeautifulSoup(page.text, "html.parser")
         # Find the table we need to parse
         tr = None
         for th in soup.find_all('th'):

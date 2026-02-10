@@ -159,7 +159,7 @@ def add_missing_player_wdd_ids(dry_run=False):
                                 headers={'User-Agent': settings.USER_AGENT,
                                          'Accept-Encoding': 'gzip'},
                                 timeout=1.0)
-            soup = BeautifulSoup(page.text)
+            soup = BeautifulSoup(page.text, "html.parser")
             for a in soup.find_all('a'):
                 if not a.string:
                     continue
