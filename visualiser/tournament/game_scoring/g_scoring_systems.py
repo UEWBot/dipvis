@@ -20,6 +20,7 @@ This module contains the G_SCORING_SYSTEMS array.
 from django.utils.translation import gettext as _
 
 from tournament.game_scoring.bangkok import GScoringBangkok
+from tournament.game_scoring.bangkok_pike import GScoringBangkokPike
 from tournament.game_scoring.base3 import GScoringBase3
 from tournament.game_scoring.carnage import GScoringCarnage
 from tournament.game_scoring.cdiplo import GScoringCDiplo
@@ -45,6 +46,7 @@ from tournament.game_scoring.your_draw_size import GScoringYourDrawSize
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
     GScoringBangkok(),
+    GScoringBangkokPike(),
     GScoringBase3(),
     GScoringCarnage(_('Carnage with dead equal'),
                     centre_based=False,
