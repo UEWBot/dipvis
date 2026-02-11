@@ -37,7 +37,7 @@ class BangkokGameScoringTests(TestCase):
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
 
-    def test_g_Scoring_bangkok_no_solo1(self):
+    def test_g_scoring_bangkok_no_solo1(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
                                          self.england: 5,
                                          self.france: 4,
