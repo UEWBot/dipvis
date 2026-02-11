@@ -11,6 +11,35 @@
       <meta http-equiv="refresh" content="{{ redirect_time }}; url={{ redirect_url }}"/>
     {% endif %}
     <title>{% block title %}{% trans "DipTV - Diplomacy Tournament Visualiser" %}{% endblock title %}</title>
+    
+    {% comment %}
+    readonly-look is to make the rounds_played count,
+    from PlayerRoundForm in forms.py, now formatted as text,
+    not look editable
+
+    TODO: everything inside this block extra_header
+          should really be in templates/rounds/board_call.html,
+          but when I tried to do a {% block %}{% endblock %} in
+          this file and then put everything in <style></style>
+          it didn't work and I'm not sure why.
+
+          in the meantime, these will only affect form fields
+          where they are explicitly set as an attribute. 
+    {% endcomment %}
+    <style>
+    .readonly-look:disabled {
+        border: none !important;
+        background: transparent !important;
+        padding-left: 0 !important;
+        color: inherit !important;
+        text-align: center !important;
+    }
+    .center-checkbox {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+   </style>
 </head>
 
 {% block style %}{% endblock style %}
