@@ -415,7 +415,7 @@ class TournamentViewTests(TestCase):
 
     def test_detail_handicap(self):
         """Check for link to handicaps page"""
-        self.assertFalse(self.t2.handicaps)
+        self.assertIs(False, self.t2.handicaps)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('tournament_detail',
                                            args=(self.t2.pk,)),
@@ -482,7 +482,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_views_finished(self):
-        self.assertTrue(self.t4.is_finished)
+        self.assertIs(True, self.t4.is_finished)
         response = self.client.get(reverse('tournament_views',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -520,9 +520,9 @@ class TournamentViewTests(TestCase):
 
     def test_scores(self):
         """Scores page for an in-progress Tournament"""
-        self.assertFalse(self.t1.handicaps)
-        self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
-        self.assertTrue(self.t1.show_current_scores)
+        self.assertIs(False, self.t1.handicaps)
+        self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
+        self.assertIs(True, self.t1.show_current_scores)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t1.pk,)),
                                    secure=True)
@@ -532,8 +532,8 @@ class TournamentViewTests(TestCase):
 
     def test_scores_old(self):
         """Scores page for an in-progress Tournament"""
-        self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
-        self.assertTrue(self.t1.show_current_scores)
+        self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
+        self.assertIs(True, self.t1.show_current_scores)
         self.t1.show_current_scores = False
         self.t1.save()
         response = self.client.get(reverse('tournament_scores',
@@ -546,8 +546,8 @@ class TournamentViewTests(TestCase):
 
     def test_scores_old2(self):
         """Scores page for an in-progress Tournament"""
-        self.assertTrue(self.t4.tournament_scoring_system_obj().uses_round_scores)
-        self.assertTrue(self.t4.show_current_scores)
+        self.assertIs(True, self.t4.tournament_scoring_system_obj().uses_round_scores)
+        self.assertIs(True, self.t4.show_current_scores)
         self.t4.show_current_scores = False
         self.t4.save()
         response = self.client.get(reverse('tournament_scores',
@@ -560,7 +560,7 @@ class TournamentViewTests(TestCase):
 
     def test_scores_no_rounds(self):
         """Scores page for an in-progress Tournament that doesn't use Rounds"""
-        self.assertTrue(self.t1.tournament_scoring_system_obj().uses_round_scores)
+        self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
         rss = self.t1.round_scoring_system
         tss = self.t1.tournament_scoring_system
         self.t1.round_scoring_system = 'None'
@@ -578,7 +578,7 @@ class TournamentViewTests(TestCase):
 
     def test_scores_completed(self):
         """Scores page for a completed Tournament"""
-        self.assertFalse(self.t4.handicaps)
+        self.assertIs(False, self.t4.handicaps)
         response = self.client.get(reverse('tournament_scores',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -600,7 +600,7 @@ class TournamentViewTests(TestCase):
 
     def test_scores_handicap(self):
         """Scores page for an in-progress Tournament with handicaps"""
-        self.assertFalse(self.t1.handicaps)
+        self.assertIs(False, self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
         tp = self.t1.tournamentplayer_set.first()
@@ -620,7 +620,7 @@ class TournamentViewTests(TestCase):
 
     def test_scores_completed_handicap(self):
         """Scores page for a completed Tournament with handicaps"""
-        self.assertFalse(self.t4.handicaps)
+        self.assertIs(False, self.t4.handicaps)
         self.t4.handicaps = True
         self.t4.save()
         tp = self.t4.tournamentplayer_set.first()
@@ -646,7 +646,7 @@ class TournamentViewTests(TestCase):
 
     def test_scores_refresh_after_finish(self):
         t = Tournament.objects.get(pk=self.t1.pk)
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, t.is_finished)
         t.is_finished = True
         t.save()
         response = self.client.get(reverse('tournament_scores_refresh',
@@ -665,7 +665,7 @@ class TournamentViewTests(TestCase):
         self.r41.is_finished = False
         self.r41.save()
         for g in self.r41.game_set.all():
-            self.assertTrue(g.is_finished)
+            self.assertIs(True, g.is_finished)
             g.is_finished = False
             g.save()
         TEAM_NAME = 'Spam, eggs, and spam'
@@ -692,7 +692,7 @@ class TournamentViewTests(TestCase):
     def test_team_scores_old(self):
         """Refresh, team tournament, showing scores after last finished round"""
         t = self.t4
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, t.is_finished)
         t.team_size = 2
         t.show_current_scores = False
         t.save()
@@ -716,7 +716,7 @@ class TournamentViewTests(TestCase):
     def test_team_scores_refresh(self):
         """Refresh, team tournament, after Tournament completion"""
         t = self.t4
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, t.is_finished)
         self.t4.team_size = 2
         self.t4.show_current_scores = False
         self.t4.is_finished = False
@@ -858,7 +858,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_score_graph_refresh(self):
-        self.assertTrue(self.t4.is_finished)
+        self.assertIs(True, self.t4.is_finished)
         self.t4.is_finished = False
         self.t4.save()
         response = self.client.get(reverse('tournament_score_graph_refresh',
@@ -871,7 +871,7 @@ class TournamentViewTests(TestCase):
         self.t4.save()
 
     def test_score_graph_refresh_after_end(self):
-        self.assertTrue(self.t4.is_finished)
+        self.assertIs(True, self.t4.is_finished)
         response = self.client.get(reverse('tournament_score_graph_refresh',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -903,7 +903,7 @@ class TournamentViewTests(TestCase):
 
     def test_game_results_refresh_after_finish(self):
         t = self.t4
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, t.is_finished)
         response = self.client.get(reverse('tournament_game_results_refresh',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -912,7 +912,7 @@ class TournamentViewTests(TestCase):
 
     def test_game_results_refresh(self):
         t = self.t4
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, t.is_finished)
         t.is_finished = False
         t.save()
         response = self.client.get(reverse('tournament_game_results_refresh',
@@ -931,7 +931,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_best_countries_old(self):
-        self.assertTrue(self.t4.show_current_scores)
+        self.assertIs(True, self.t4.show_current_scores)
         self.t4.show_current_scores = False
         self.t4.save()
         response = self.client.get(reverse('tournament_best_countries',
@@ -943,7 +943,7 @@ class TournamentViewTests(TestCase):
         self.t4.save()
 
     def test_best_countries_old2(self):
-        self.assertTrue(self.t1.show_current_scores)
+        self.assertIs(True, self.t1.show_current_scores)
         self.t1.show_current_scores = False
         self.t1.save()
         response = self.client.get(reverse('tournament_best_countries',
@@ -962,7 +962,7 @@ class TournamentViewTests(TestCase):
 
     def test_best_countries_refresh_after_finish(self):
         t = self.t1
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, t.is_finished)
         t.is_finished = True
         t.save()
         response = self.client.get(reverse('tournament_best_countries_refresh',
@@ -1110,7 +1110,7 @@ class TournamentViewTests(TestCase):
             rp.save(update_fields=['score'])
 
     def test_enter_handicaps_not_logged_in(self):
-        self.assertFalse(self.t1.handicaps)
+        self.assertIs(False, self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
         response = self.client.get(reverse('enter_handicaps',
@@ -1124,7 +1124,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_regular_user(self):
         """A regular user can't enter handicaps for any old tournament"""
-        self.assertFalse(self.t1.handicaps)
+        self.assertIs(False, self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1139,7 +1139,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_manager_wrong_tournament(self):
         """A manager can't enter handicaps for a tournament that isn't theirs"""
-        self.assertFalse(self.t3.handicaps)
+        self.assertIs(False, self.t3.handicaps)
         self.t3.handicaps = True
         self.t3.save()
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -1153,7 +1153,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_archived(self):
         """Nobody can enter handicaps for an archived tournament"""
-        self.assertFalse(self.t4.handicaps)
+        self.assertIs(False, self.t4.handicaps)
         self.t4.handicaps = True
         self.t4.save()
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
@@ -1167,7 +1167,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_superuser(self):
         """A superuser can enter handicaps for any tournament"""
-        self.assertFalse(self.t1.handicaps)
+        self.assertIs(False, self.t1.handicaps)
         self.t1.handicaps = True
         self.t1.save()
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
@@ -1181,7 +1181,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_manager(self):
         """A manager can enter handicaps for their tournament"""
-        self.assertFalse(self.t2.handicaps)
+        self.assertIs(False, self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -1195,7 +1195,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_not_applicable(self):
         """Nobody can enter handicaps if the tournament doesn't use them"""
-        self.assertFalse(self.t2.handicaps)
+        self.assertIs(False, self.t2.handicaps)
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('enter_handicaps',
                                            args=(self.t2.pk,)),
@@ -1206,7 +1206,7 @@ class TournamentViewTests(TestCase):
         """A manager can enter handicaps for their tournament"""
         for tp in self.t2.tournamentplayer_set.all():
             self.assertEqual(tp.handicap, 0.0)
-        self.assertFalse(self.t2.handicaps)
+        self.assertIs(False, self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
@@ -1733,7 +1733,7 @@ class TournamentViewTests(TestCase):
         # Change one of the games to not be finished
         r = self.t4.round_numbered(1)
         g = r.game_set.first()
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, g.is_finished)
         g.is_finished = False
         g.save()
         # Add an unranked TournamentPlayer who didn't play
@@ -1754,7 +1754,7 @@ class TournamentViewTests(TestCase):
         # Change one of the games to not be finished
         r = self.t4.round_numbered(1)
         g = r.game_set.first()
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, g.is_finished)
         g.is_finished = False
         g.save()
         # Change to non-round-based scoring systems

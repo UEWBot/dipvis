@@ -275,7 +275,7 @@ class GameViewTests(TestCase):
         self.g1.save(update_fields=['external_url'])
 
     def test_detail_show_url(self):
-        self.assertFalse(self.t1.delay_game_url_publication)
+        self.assertIs(False, self.t1.delay_game_url_publication)
         self.assertEqual(self.g1.external_url, '')
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
@@ -291,7 +291,7 @@ class GameViewTests(TestCase):
         self.g1.save(update_fields=['external_url'])
 
     def test_detail_dont_show_url(self):
-        self.assertFalse(self.t1.delay_game_url_publication)
+        self.assertIs(False, self.t1.delay_game_url_publication)
         self.assertEqual(self.g1.external_url, '')
         # Give g1 a backstabbr URL
         self.g1.external_url = VALID_BS_URL
@@ -467,7 +467,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_sc_chart_refresh_after_end(self):
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
         response = self.client.get(reverse('game_sc_chart_refresh',
@@ -516,7 +516,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_post_enter_scs(self):
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         counts = {1907: {self.austria: 5,
                          self.england: 5,
                          self.france: 5,
@@ -587,7 +587,7 @@ class GameViewTests(TestCase):
         self.assertEqual(cc.count, 0)
         # Game should now be finished
         self.g1.refresh_from_db()
-        self.assertTrue(self.g1.is_finished)
+        self.assertIs(True, self.g1.is_finished)
         # Clean up
         for year in counts.keys():
             ccs = CentreCount.objects.filter(game=self.g1, year=year)
@@ -597,7 +597,7 @@ class GameViewTests(TestCase):
         self.g1.save(update_fields=['is_finished'])
 
     def test_post_un_end(self):
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save(update_fields=['is_finished'])
         counts = {1912: {self.austria: 9,
@@ -645,7 +645,7 @@ class GameViewTests(TestCase):
         self.assertEqual(cc.count, 0)
         # Game should now not be finished
         self.g1.refresh_from_db()
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         # Clean up
         for year in counts.keys():
             ccs = CentreCount.objects.filter(game=self.g1, year=year)
@@ -895,7 +895,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_sc_owners_refresh_after_end(self):
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
         response = self.client.get(reverse('game_sc_owners_refresh',
@@ -968,7 +968,7 @@ class GameViewTests(TestCase):
 
     def test_enter_sc_owners_fixed_end(self):
         r = self.g1.the_round
-        self.assertFalse(r.final_year)
+        self.assertIsNone(r.final_year)
         r.final_year = 1905
         r.save(update_fields=['final_year'])
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1113,7 +1113,7 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_current_game_image_after_end(self):
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
         response = self.client.get(reverse('current_game_image',
@@ -1288,7 +1288,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g1)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertFalse(dp.passed)
+        self.assertIs(False, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
         self.assertEqual(dp.draw_size(), 7)
@@ -1298,7 +1298,7 @@ class GameViewTests(TestCase):
                 self.assertIn(power, powers)
         # Draws in this tournament are secret
         self.assertIsNone(dp.votes_in_favour)
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         # Clean up
         dp.delete()
 
@@ -1323,7 +1323,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g2)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertFalse(dp.passed)
+        self.assertIs(False, dp.passed)
         self.assertEqual(dp.proposer, self.england)
         # Draws in this round are non-DIAS
         self.assertEqual(dp.draw_size(), 2)
@@ -1336,7 +1336,7 @@ class GameViewTests(TestCase):
                 self.assertNotIn(power, powers)
         # Draws in this tournament are secret
         self.assertIsNone(dp.votes_in_favour)
-        self.assertFalse(self.g2.is_finished)
+        self.assertIs(False, self.g2.is_finished)
         # Clean up
         dp.delete()
 
@@ -1360,7 +1360,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g1)
         self.assertEqual(dp.year, 1903)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertTrue(dp.passed)
+        self.assertIs(True, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
         self.assertEqual(dp.draw_size(), 7)
@@ -1371,7 +1371,7 @@ class GameViewTests(TestCase):
         # Draws in this tournament are secret
         self.assertIsNone(dp.votes_in_favour)
         self.g1.refresh_from_db()
-        self.assertTrue(self.g1.is_finished)
+        self.assertIs(True, self.g1.is_finished)
         # Clean up
         dp.delete()
         self.g1.is_finished = False
@@ -1399,7 +1399,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g2)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertTrue(dp.passed)
+        self.assertIs(True, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are non-DIAS, and all powers are still alive
         self.assertEqual(dp.draw_size(), 2)
@@ -1413,7 +1413,7 @@ class GameViewTests(TestCase):
         # Draws in this tournament are secret
         self.assertIsNone(dp.votes_in_favour)
         self.g2.refresh_from_db()
-        self.assertTrue(self.g2.is_finished)
+        self.assertIs(True, self.g2.is_finished)
         # Clean up
         dp.delete()
         self.g2.is_finished = False
@@ -1440,7 +1440,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g3)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertFalse(dp.passed)
+        self.assertIs(False, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
         self.assertEqual(dp.draw_size(), 7)
@@ -1450,7 +1450,7 @@ class GameViewTests(TestCase):
                 self.assertIn(power, powers)
         # Draws in this tournament reveal the for/against counts
         self.assertEqual(dp.votes_in_favour, 4)
-        self.assertFalse(self.g3.is_finished)
+        self.assertIs(False, self.g3.is_finished)
         # Clean up
         dp.delete()
 
@@ -1475,7 +1475,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g4)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertFalse(dp.passed)
+        self.assertIs(False, dp.passed)
         self.assertEqual(dp.proposer, self.england)
         # Draws in this round are non-DIAS
         self.assertEqual(dp.draw_size(), 2)
@@ -1488,7 +1488,7 @@ class GameViewTests(TestCase):
                 self.assertNotIn(power, powers)
         # Draws in this tournament reveal the for/against counts
         self.assertEqual(dp.votes_in_favour, 4)
-        self.assertFalse(self.g4.is_finished)
+        self.assertIs(False, self.g4.is_finished)
         # Clean up
         dp.delete()
 
@@ -1512,7 +1512,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g3)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertTrue(dp.passed)
+        self.assertIs(True, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are DIAS, and all powers are still alive
         self.assertEqual(dp.draw_size(), 7)
@@ -1523,7 +1523,7 @@ class GameViewTests(TestCase):
         # Draws in this tournament reveal the for/against counts
         self.assertEqual(dp.votes_in_favour, 7)
         self.g3.refresh_from_db()
-        self.assertTrue(self.g3.is_finished)
+        self.assertIs(True, self.g3.is_finished)
         # Clean up
         dp.delete()
         self.g3.is_finished = False
@@ -1551,7 +1551,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g4)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertTrue(dp.passed)
+        self.assertIs(True, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         # Draws in this round are non-DIAS, and all powers are still alive
         self.assertEqual(dp.draw_size(), 2)
@@ -1565,7 +1565,7 @@ class GameViewTests(TestCase):
         # Draws in this tournament reveal the for/against counts
         self.assertEqual(dp.votes_in_favour, 7)
         self.g4.refresh_from_db()
-        self.assertTrue(self.g4.is_finished)
+        self.assertIs(True, self.g4.is_finished)
         # Clean up
         dp.delete()
         self.g4.is_finished = False
@@ -1600,7 +1600,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g2)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertFalse(dp.passed)
+        self.assertIs(False, dp.passed)
         self.assertEqual(dp.proposer, self.england)
         self.assertEqual(dp.draw_size(), 1)
         powers = dp.powers()
@@ -1612,7 +1612,7 @@ class GameViewTests(TestCase):
                     self.assertNotIn(power, powers)
         # Draws in this tournament are secret
         self.assertIsNone(dp.votes_in_favour)
-        self.assertFalse(self.g2.is_finished)
+        self.assertIs(False, self.g2.is_finished)
         # Clean up
         dp.delete()
 
@@ -1637,7 +1637,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g2)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertTrue(dp.passed)
+        self.assertIs(True, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         self.assertEqual(dp.draw_size(), 1)
         powers = dp.powers()
@@ -1650,7 +1650,7 @@ class GameViewTests(TestCase):
         # Draws in this tournament are secret
         self.assertIsNone(dp.votes_in_favour)
         self.g2.refresh_from_db()
-        self.assertTrue(self.g2.is_finished)
+        self.assertIs(True, self.g2.is_finished)
         # Clean up
         dp.delete()
         self.g2.is_finished = False
@@ -1678,7 +1678,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g4)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertFalse(dp.passed)
+        self.assertIs(False, dp.passed)
         self.assertEqual(dp.proposer, self.england)
         self.assertEqual(dp.draw_size(), 1)
         powers = dp.powers()
@@ -1690,7 +1690,7 @@ class GameViewTests(TestCase):
                     self.assertNotIn(power, powers)
         # Draws in this tournament reveal the for/against counts
         self.assertEqual(dp.votes_in_favour, 4)
-        self.assertFalse(self.g4.is_finished)
+        self.assertIs(False, self.g4.is_finished)
         # Clean up
         dp.delete()
 
@@ -1715,7 +1715,7 @@ class GameViewTests(TestCase):
         self.assertEqual(dp.game, self.g4)
         self.assertEqual(dp.year, 1902)
         self.assertEqual(dp.season, Seasons.SPRING)
-        self.assertTrue(dp.passed)
+        self.assertIs(True, dp.passed)
         self.assertEqual(dp.proposer, self.austria)
         self.assertEqual(dp.draw_size(), 1)
         powers = dp.powers()
@@ -1728,7 +1728,7 @@ class GameViewTests(TestCase):
         # Draws in this tournament reveal the for/against counts
         self.assertEqual(dp.votes_in_favour, 7)
         self.g4.refresh_from_db()
-        self.assertTrue(self.g4.is_finished)
+        self.assertIs(True, self.g4.is_finished)
         # Clean up
         dp.delete()
         self.g4.is_finished = False
@@ -1745,7 +1745,7 @@ class GameViewTests(TestCase):
     # test game_views._graph_end_year()
     def test_graph_end_year_finished(self):
         self.assertEqual(self.g1.centrecount_set.filter(year=1905).count(), 0)
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         # Flag the game as finished in 1905
         CentreCount.objects.create(game=self.g1, year=1905, power=self.austria, count=0)
         CentreCount.objects.create(game=self.g1, year=1905, power=self.england, count=0)
@@ -1801,7 +1801,7 @@ class GameViewTests(TestCase):
 
     def test_sc_graph_refresh_after_end(self):
         """Test the page that holds the graph image"""
-        self.assertFalse(self.g1.is_finished)
+        self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
         response = self.client.get(reverse('game_sc_graph_refresh',

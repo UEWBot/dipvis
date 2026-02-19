@@ -671,7 +671,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         # Game should have exactly 7 players
         self.assertEqual(len(game), 7)
         # Games should always be sets (and hence have no duplicate players)
-        self.assertTrue(isinstance(game, set))
+        self.assertIsInstance(game, set)
 
     def check_game_set(self, game_set, players, omissions=set(), duplicates=set()):
         game_count = len(game_set)
@@ -755,7 +755,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         # With 49 players, there is a solution with a fitness of zero.
         # In practice, with 1000 iterations I see 14..22
         # In practice, with 10000 iterations I see 12..16
-        self.assertTrue(seeder._set_fitness(r) < 24)
+        self.assertLess(seeder._set_fitness(r), 24)
         print(seeder._set_fitness(r))
 
     def test_seed_games_bigger_tournament(self):
@@ -849,7 +849,7 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         # Game should have exactly 7 players
         self.assertEqual(len(game), 7)
         # Games should always be sets (and hence have no duplicate players)
-        self.assertTrue(isinstance(game, set))
+        self.assertIsInstance(game, set)
 
     # TODO This is a copy-paste from the class above, then modified. Should share code
     def check_game_set(self, game_set, players):

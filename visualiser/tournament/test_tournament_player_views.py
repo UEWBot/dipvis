@@ -403,7 +403,7 @@ class TournamentPlayerViewTests(TestCase):
 
     def test_index_editable_handicaps(self):
         """A tournament that can be edited, that uses handicaps"""
-        self.assertFalse(self.t2.handicaps)
+        self.assertIs(False, self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
         tp = self.t2.tournamentplayer_set.first()
@@ -425,7 +425,7 @@ class TournamentPlayerViewTests(TestCase):
 
     def test_index_editable_no_handicaps(self):
         """A tournament that can be edited, that doesn't use handicaps"""
-        self.assertFalse(self.t2.handicaps)
+        self.assertIs(False, self.t2.handicaps)
         tp = self.t2.tournamentplayer_set.first()
         self.assertEqual(tp.handicap, 0.0)
         tp.handicap = 100.0
@@ -500,7 +500,7 @@ class TournamentPlayerViewTests(TestCase):
     def test_index_unregister_from_finished(self):
         """A tournament that the user could edit, except that it is finished"""
         # TODO: Why does this not behave the same as when it's not editable?
-        self.assertFalse(self.t4.editable)
+        self.assertIs(False, self.t4.editable)
         self.t4.editable = True
         self.t4.save(update_fields=['editable'])
         # Use an existing TournamentPlayer
@@ -544,7 +544,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(tp_qs.exists())
         # new TournamentPlayer should not be unranked
         tp = tp_qs.get()
-        self.assertFalse(tp.unranked)
+        self.assertIs(False, tp.unranked)
         # Clean up
         tp_qs.delete()
 
@@ -623,7 +623,7 @@ class TournamentPlayerViewTests(TestCase):
         self.assertTrue(tp_qs.exists())
         # new TournamentPlayer should be unranked
         tp = tp_qs.get()
-        self.assertTrue(tp.unranked)
+        self.assertIs(True, tp.unranked)
         # Clean up
         tp_qs.delete()
 
@@ -701,9 +701,9 @@ class TournamentPlayerViewTests(TestCase):
         for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
             with self.subTest(tp.player):
                 if i in [1, 4]:
-                    self.assertFalse(tp.paid)
+                    self.assertIs(False, tp.paid)
                 else:
-                    self.assertTrue(tp.paid)
+                    self.assertIs(True, tp.paid)
         # Cleanup
         for tp in self.t2.tournamentplayer_set.all():
             tp.paid = paid[tp]

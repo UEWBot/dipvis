@@ -351,7 +351,7 @@ class NewsTests(TestCase):
     def test_round_news_unfinished(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_set.all()[0]
-        self.assertFalse(r.is_finished)
+        self.assertIs(False, r.is_finished)
         res = _round_news(r)
         self.assertIn('8 players are registered to play in the round.', res)
         self.assertIn('0 of the 2 games in round 1 have ended.', res)
@@ -383,7 +383,7 @@ class NewsTests(TestCase):
     def test_round_news_finished(self):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
-        self.assertTrue(r.is_finished)
+        self.assertIs(True, r.is_finished)
         res = _round_news(r)
         self.assertIn('Round 1 has ended.', res)
         self.assertIn('Highest centre count in round 1 was 4 for R in g31.', res)

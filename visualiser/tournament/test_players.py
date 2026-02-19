@@ -1211,7 +1211,7 @@ class PlayerGameResultTests(TestCase):
                                 power=self.russia,
                                 date=pgr1.date,
                                 position=4)
-        self.assertTrue(pgr1.for_same_game(pgr2))
+        self.assertIs(True, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_tournament(self):
         p1 = Player.objects.first()
@@ -1231,7 +1231,7 @@ class PlayerGameResultTests(TestCase):
                                 power=self.russia,
                                 date=pgr1.date,
                                 position=4)
-        self.assertFalse(pgr1.for_same_game(pgr2))
+        self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_round(self):
         p1 = Player.objects.first()
@@ -1251,7 +1251,7 @@ class PlayerGameResultTests(TestCase):
                                 power=self.russia,
                                 date=pgr1.date,
                                 position=4)
-        self.assertFalse(pgr1.for_same_game(pgr2))
+        self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_game(self):
         p1 = Player.objects.first()
@@ -1271,7 +1271,7 @@ class PlayerGameResultTests(TestCase):
                                 power=self.russia,
                                 date=pgr1.date,
                                 position=4)
-        self.assertFalse(pgr1.for_same_game(pgr2))
+        self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_date(self):
         p1 = Player.objects.first()
@@ -1291,7 +1291,7 @@ class PlayerGameResultTests(TestCase):
                                 power=self.russia,
                                 date=date.today() + timedelta(hours=24),
                                 position=4)
-        self.assertFalse(pgr1.for_same_game(pgr2))
+        self.assertIs(False, pgr1.for_same_game(pgr2))
 
     # PlayeGameResult.game_name()
     def test_playergameresult_game_name(self):

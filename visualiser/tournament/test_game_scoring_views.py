@@ -35,7 +35,7 @@ class GameScoringViewTests(TestCase):
         for name in sorted(names):
             with self.subTest(previous=last_name, current=name):
                 i = response.content.find(str.encode('>'+name+'<'))
-                self.assertTrue(i > last_i)
+                self.assertGreater(i, last_i)
             last_i = i
             last_name = name
 

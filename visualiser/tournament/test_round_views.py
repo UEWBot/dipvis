@@ -423,7 +423,7 @@ class RoundViewTests(TestCase):
     def test_roll_call_post_current_round_no_seeding(self):
         """roll_call() POST for t1, which only has a single Round"""
         self.assertEqual(self.t1.current_round().number(), 1)
-        self.assertFalse(self.t1.seed_games)
+        self.assertIs(False, self.t1.seed_games)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # These are the existing 13 RoundPlayers, plus one new one and one blank
         data = urlencode({'form-TOTAL_FORMS': '15',
@@ -562,7 +562,7 @@ class RoundViewTests(TestCase):
 
     def test_roll_call_post_old_round(self):
         """POST of roll_call() for a Round that is finished"""
-        self.assertTrue(self.t3.round_numbered(1).is_finished)
+        self.assertIs(True, self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '9',
@@ -603,7 +603,7 @@ class RoundViewTests(TestCase):
     def test_roll_call_post_old_round_refuse_delete(self):
         """POST of roll_call() for a Round that is finished, trying to delete a player who played a game"""
         r = self.t3.round_numbered(1)
-        self.assertTrue(r.is_finished)
+        self.assertIs(True, r.is_finished)
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
@@ -641,7 +641,7 @@ class RoundViewTests(TestCase):
 
     def test_roll_call_post_add_duplicate_player(self):
         """POST of roll_call() where we add a TournamentPlayer who's already playing"""
-        self.assertTrue(self.t3.round_numbered(1).is_finished)
+        self.assertIs(True, self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '9',

@@ -105,7 +105,7 @@ class AwardFormTest(TestCase):
                                   'players': [self.tp3.id]},
                          data={'award': str(self.a1.id),
                                'players': [str(self.tp3.id)]})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         # Cleanup
         self.tp3.awards.remove(self.a1)
 
@@ -181,13 +181,13 @@ class BackstabbrUrlFormTest(TestCase):
     def test_invalid_url(self):
         url = 'monkey'
         form = BackstabbrUrlForm(data={'url': url})
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
 
     def test_valid_url(self):
         path = 'game/4917371326693376'
         url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         form = BackstabbrUrlForm(data={'url': url})
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         self.assertEqual(form.cleaned_data['url'], url)
 
 
@@ -223,11 +223,11 @@ class PaidFormTest(TestCase):
         initial = {'paid': True}
         data = {'paid': 'ok'}
         form = PaidForm(tp=self.tp, initial=initial, data=data)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         initial = {'paid': False}
         data = {}
         form = PaidForm(tp=self.tp, initial=initial, data=data)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class PaidFormsetTest(TestCase):
@@ -312,19 +312,19 @@ class PrefsFormTest(TestCase):
         """Remove preferences for the TournamentPlayer"""
         self.tp.create_preferences_from_string('AEF')
         form = PrefsForm(tp=self.tp, data={'prefs': ''})
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         self.assertEqual(form.cleaned_data['prefs'], '')
         self.tp.preference_set.all().delete()
 
     def test_prefs_form_prefs_enter_some(self):
         form = PrefsForm(tp=self.tp, data={'prefs': 'EFG'})
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         self.assertEqual(form.cleaned_data['prefs'], 'EFG')
 
     def test_prefs_form_has_changed_implicit_initial(self):
         self.tp.create_preferences_from_string('AEF')
         form = PrefsForm(tp=self.tp, data={'prefs': 'AEF'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         # Cleanup
         self.tp.preference_set.all().delete()
 
@@ -332,7 +332,7 @@ class PrefsFormTest(TestCase):
         form = PrefsForm(tp=self.tp,
                          data={'prefs': 'EFG'},
                          initial={'prefs': 'EFG'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class PrefsFormsetTest(TestCase):
@@ -417,7 +417,7 @@ class HandicapFormTest(TestCase):
         self.tp.handicap = 72.0
         self.tp.save()
         form = HandicapForm(tp=self.tp, data={'handicap': '5.0'})
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         self.assertAlmostEqual(form.cleaned_data['handicap'], 5.0)
         # Cleanup
         self.tp.handicap = 0.0
@@ -425,13 +425,13 @@ class HandicapFormTest(TestCase):
 
     def test_handicap_form_has_changed_implicit_initial(self):
         form = HandicapForm(tp=self.tp, data={'handicap': '0.0'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_handicap_form_has_changed_explicit_initial(self):
         form = HandicapForm(tp=self.tp,
                             data={'handicap': '5.0'},
                             initial={'handicap': 5.0})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class HandicapsFormsetTest(TestCase):
@@ -499,15 +499,15 @@ class TeamFormTest(TestCase):
     def test_team_form_player_fields_required(self):
         """One player should be required, others optional"""
         form = TeamForm(tournament=self.t)
-        self.assertTrue(form.fields['player_0'].required)
+        self.assertIs(True, form.fields['player_0'].required)
         for i in range(1,self.t.team_size):
-            self.assertFalse(form.fields[f'player_{i}'].required)
+            self.assertIs(False, form.fields[f'player_{i}'].required)
 
     def test_team_form_players_optional(self):
         """One player should be required, others optional"""
         form = TeamForm(tournament=self.t, data={'name': 'Sausages',
                                                  'player_0': str(self.p1.pk)})
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_team_form_existing_team(self):
         """team kwarg should be supported"""
@@ -519,7 +519,7 @@ class TeamFormTest(TestCase):
                                                  'player_0': str(self.p2.pk),
                                                  'player_1': str(self.p1.pk),
                                                  'player_2': str(self.p1.pk)})
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertFormError(form, None, 'Player Arthur Bottom appears more than once')
 
     def test_team_invalid_player(self):
@@ -528,7 +528,7 @@ class TeamFormTest(TestCase):
                                                  'player_0': str(self.p2.pk),
                                                  'player_1': str(self.p1.pk),
                                                  'player_2': str(self.p4.pk)})
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertFormError(form,
                              'player_2',
                              'Select a valid choice. That choice is not one of the available choices.')
@@ -538,12 +538,12 @@ class TeamFormTest(TestCase):
                         team=self.tm,
                         data={'name': 'The Team',
                               'player_0': str(self.p2.id)})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_team_form_has_changed_implicit_initial_2(self):
         form = TeamForm(tournament=self.t,
                         data={})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_team_form_has_changed_explicit_initial(self):
         form = TeamForm(tournament=self.t,
@@ -553,7 +553,7 @@ class TeamFormTest(TestCase):
                         initial={'name': 'Another Team',
                                  'player_0': self.p2.id,
                                  'player_1': self.p1.id})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class TeamsFormsetTest(TestCase):
@@ -596,7 +596,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_1': str(self.p4.pk),
                }
         formset = self.TeamsFormset(data, tournament=self.t)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_teams_invalid_form(self):
         """One form fails validation"""
@@ -612,7 +612,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_1': str(self.p2.pk),
                }
         formset = self.TeamsFormset(data, tournament=self.t)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have one form error, and that's it
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -631,7 +631,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_1': str(self.p2.pk),
                }
         formset = self.TeamsFormset(data, tournament=self.t)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have one form error, and that's it
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -650,7 +650,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_1': str(self.p1.pk),
                }
         formset = self.TeamsFormset(data, tournament=self.t)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -788,7 +788,7 @@ class DrawFormTest(TestCase):
                         secrecy=DrawSecrecy.COUNTS,
                         player_count=7,
                         concession=False)
-        self.assertFalse(form.fields['proposer'].required)
+        self.assertIs(False, form.fields['proposer'].required)
 
     def test_concession_secret_has_changed(self):
         form = DrawForm(dias=False,
@@ -803,7 +803,7 @@ class DrawFormTest(TestCase):
                               'season': 'F',
                               'powers': str(self.england.name),
                               'passed': 'ok'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_concession_counts_has_changed(self):
         form = DrawForm(dias=False,
@@ -818,7 +818,7 @@ class DrawFormTest(TestCase):
                               'season': 'F',
                               'powers': str(self.england.name),
                               'votes_in_favour': '3'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_dias_secret_has_changed(self):
         form = DrawForm(dias=True,
@@ -831,7 +831,7 @@ class DrawFormTest(TestCase):
                         data={'year': '1902',
                               'season': 'F',
                               'passed': 'ok'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_dias_counts_has_changed(self):
         form = DrawForm(dias=True,
@@ -844,7 +844,7 @@ class DrawFormTest(TestCase):
                         data={'year': '1902',
                               'season': 'F',
                               'votes_in_favour': '3'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_non_dias_secret_has_changed(self):
         form = DrawForm(dias=False,
@@ -859,7 +859,7 @@ class DrawFormTest(TestCase):
                               'season': 'F',
                               'powers': [str(self.england.name), str(self.turkey.name)],
                               'passed': 'ok'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_non_dias_counts_has_changed(self):
         form = DrawForm(dias=False,
@@ -874,7 +874,7 @@ class DrawFormTest(TestCase):
                               'season': 'F',
                               'powers': [str(self.england.name), str(self.turkey.name)],
                               'votes_in_favour': '3'})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class GameScoreFormTest(TestCase):
@@ -882,7 +882,7 @@ class GameScoreFormTest(TestCase):
 
     def test_name_field_disabled(self):
         form = GameScoreForm()
-        self.assertTrue(form.fields['name'].disabled)
+        self.assertIs(True, form.fields['name'].disabled)
         attrs = form.fields['name'].widget.attrs
         self.assertEqual(attrs['size'], attrs['maxlength'])
 
@@ -899,7 +899,7 @@ class GameScoreFormTest(TestCase):
         form = GameScoreForm()
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
-                self.assertFalse(form.fields[power.name].required)
+                self.assertIs(False, form.fields[power.name].required)
 
     def test_has_changed(self):
         initial={'name': 'Only Game'}
@@ -909,7 +909,7 @@ class GameScoreFormTest(TestCase):
             data[gp.name] = str(gp.id)
         form = GameScoreForm(initial=initial,
                              data=data)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class GamePlayersFormTest(TestCase):
@@ -1000,7 +1000,7 @@ class GamePlayersFormTest(TestCase):
         form = GamePlayersForm(the_round=self.r1, pool=None)
         for power in GreatPower.objects.all():
             with self.subTest(power=power.name):
-                self.assertTrue(form.fields[power.name].required)
+                self.assertIs(True, form.fields[power.name].required)
 
     def test_power_choices(self):
         form = GamePlayersForm(the_round=self.r1, pool=None)
@@ -1056,7 +1056,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_success_with_id(self):
         data = {'name': 'R1G1',
@@ -1070,7 +1070,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_success_with_pool1(self):
         """Form pool matches Game pool"""
@@ -1104,7 +1104,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=pool1)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         # Cleanup
         g.delete()
         for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
@@ -1144,7 +1144,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         # Cleanup
         g.delete()
         for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
@@ -1179,7 +1179,7 @@ class GamePlayersFormTest(TestCase):
                                the_round=self.r1,
                                pool=None,
                                initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         # Cleanup
         g.delete()
 
@@ -1249,7 +1249,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'name', 'Game names cannot contain " "')
@@ -1265,7 +1265,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'name', 'Game names cannot contain "/"')
@@ -1281,7 +1281,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'the_set', 'Select a valid choice. That choice is not one of the available choices.')
@@ -1297,7 +1297,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'France', 'Select a valid choice. That choice is not one of the available choices.')
@@ -1313,7 +1313,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp1.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -1340,7 +1340,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -1374,7 +1374,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         # Cleanup
         tm1.delete()
         tm2.delete()
@@ -1401,7 +1401,7 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         # Cleanup
         tm.delete()
         self.t.team_size = None
@@ -1441,13 +1441,13 @@ class GamePlayersFormTest(TestCase):
                 'Russia': str(self.rp6.pk),
                 'Turkey': str(self.rp7.pk)}
         form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=pool1)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'France', 'Select a valid choice. That choice is not one of the available choices.')
         # Form should also 'inherit' pool from Game, if an existing Game is passed in initial
         form = GamePlayersForm(data=data, initial=initial, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'France', 'Select a valid choice. That choice is not one of the available choices.')
@@ -1522,7 +1522,7 @@ class BaseGamePlayersFormsetTest(TestCase):
     def test_formset_empty(self):
         """Leave the formset blank"""
         formset = self.GamePlayersFormset(self.data, the_round=self.r, pool=None)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_formset_add_one_game(self):
         """Add one Game, leave the other form blank"""
@@ -1537,7 +1537,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-0-Russia'] = str(self.rp6.pk)
         data['form-0-Turkey'] = str(self.rp7.pk)
         formset = self.GamePlayersFormset(data, the_round=self.r, pool=None)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_formset_pool(self):
         """Formset for a Pool should pass the Pool down"""
@@ -1564,7 +1564,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-0-Russia'] = str(self.rp6.pk)
         data['form-0-Turkey'] = str(self.rp7.pk)
         formset = self.GamePlayersFormset(data, the_round=self.r, pool=pool1)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # rp6 should be invalid
         self.assertEqual(formset.total_error_count(), 1)
         self.assertFormSetError(formset, 0, 'Russia', 'Select a valid choice. That choice is not one of the available choices.')
@@ -1587,7 +1587,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-0-Russia'] = str(self.rp6.pk)
         data['form-0-Turkey'] = str(self.rp7.pk)
         formset = self.GamePlayersFormset(data, the_round=self.r, pool=None)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -1615,7 +1615,7 @@ class BaseGamePlayersFormsetTest(TestCase):
         data['form-1-Russia'] = str(self.rp2.pk)
         data['form-1-Turkey'] = str(self.rp1.pk)
         formset = self.GamePlayersFormset(data, the_round=self.r, pool=None)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -1710,14 +1710,14 @@ class PowerAssignFormTest(TestCase):
         form = PowerAssignForm(game=self.g)
         for gp in self.g.gameplayer_set.all():
             with self.subTest(gp=str(gp)):
-                self.assertTrue(form.fields[str(gp.pk)].required)
+                self.assertIs(True, form.fields[str(gp.pk)].required)
                 # TODO verify sandboxer annotation
 
     def test_issues_field(self):
         form = PowerAssignForm(game=self.g)
         self.assertIn('issues', form.fields)
-        self.assertTrue(form.fields['issues'].disabled)
-        self.assertFalse(form.fields['issues'].required)
+        self.assertIs(True, form.fields['issues'].disabled)
+        self.assertIs(False, form.fields['issues'].required)
 
     def test_player_choices(self):
         """Each player should have a choice of all seven GreatPowers"""
@@ -1755,7 +1755,7 @@ class PowerAssignFormTest(TestCase):
                 str(self.gp7.pk): str(self.russia.pk),
                 'issues': ''}
         form = PowerAssignForm(data, game=self.g)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_has_changed(self):
         data = {'name': 'R1G1',
@@ -1780,7 +1780,7 @@ class PowerAssignFormTest(TestCase):
                                         str(self.gp6.pk): self.italy,
                                         str(self.gp7.pk): self.russia,
                                         'issues': ''})
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_name_error1(self):
         data = {'name': 'R1 G1',
@@ -1794,7 +1794,7 @@ class PowerAssignFormTest(TestCase):
                 str(self.gp7.pk): str(self.russia.pk),
                 'issues': ''}
         form = PowerAssignForm(data, game=self.g)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'name', 'Game names cannot contain " "')
@@ -1811,7 +1811,7 @@ class PowerAssignFormTest(TestCase):
                 str(self.gp7.pk): str(self.russia.pk),
                 'issues': ''}
         form = PowerAssignForm(data, game=self.g)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'name', 'Game names cannot contain "/"')
@@ -1828,7 +1828,7 @@ class PowerAssignFormTest(TestCase):
                 str(self.gp7.pk): str(self.russia.pk),
                 'issues': ''}
         form = PowerAssignForm(data, game=self.g)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'the_set', 'Select a valid choice. That choice is not one of the available choices.')
@@ -1845,7 +1845,7 @@ class PowerAssignFormTest(TestCase):
                 str(self.gp7.pk): str(self.russia.pk),
                 'issues': ''}
         form = PowerAssignForm(data, game=self.g)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, str(self.gp3.pk), 'Select a valid choice. That choice is not one of the available choices.')
@@ -1862,7 +1862,7 @@ class PowerAssignFormTest(TestCase):
                 str(self.gp7.pk): str(self.russia.pk),
                 'issues': ''}
         form = PowerAssignForm(data, game=self.g)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2000,7 +2000,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_formset_form_error(self):
         """Complete the form with an error in one field"""
@@ -2026,7 +2026,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2056,7 +2056,7 @@ class BasePowerAssignFormsetTest(TestCase):
         data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2270,7 +2270,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'sitter_1': str(self.rp1_7.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_success_doublers(self):
         """Valid form with people playing two games"""
@@ -2280,7 +2280,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_3': str(self.rp1_4.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_existing_sitters(self):
         """Already two people flagged as sitting out the round"""
@@ -2320,7 +2320,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'sitter_1': str(self.rp1_3.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2334,7 +2334,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_3': str(self.rp1_4.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2350,7 +2350,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_3': str(self.rp1_7.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2360,7 +2360,7 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'sitter_0': str(self.rp1_10.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2372,7 +2372,7 @@ class GetSevenPlayersFormTest(TestCase):
                 'double_2': str(self.rp1_3.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r1, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2413,7 +2413,7 @@ class GetSevenPlayersFormTest(TestCase):
         data = {'standby_0': str(self.rp3_1.pk),
                }
         form = GetSevenPlayersForm(data, the_round=self.r3, pool=None)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         # Non-field errors still count as errors
         self.assertEqual(len(form.errors), 1)
@@ -2426,7 +2426,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(data=data,
                                    the_round=self.r3,
                                    pool=None)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_has_changed_no_standbys_implicit_initial(self):
         # Set some players already sitting out
@@ -2439,7 +2439,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(data=data,
                                    the_round=self.r1,
                                    pool=None)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         # Now set some to be playing two games
         self.rp1_3.game_count = 2
         self.rp1_3.save(update_fields=['game_count'])
@@ -2450,7 +2450,7 @@ class GetSevenPlayersFormTest(TestCase):
         form = GetSevenPlayersForm(data=data,
                                    the_round=self.r1,
                                    pool=None)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         # Clean up changes made
         self.rp1_3.game_count = 1
         self.rp1_3.save(update_fields=['game_count'])
@@ -2467,7 +2467,7 @@ class GetSevenPlayersFormTest(TestCase):
                                    initial=initial,
                                    the_round=self.r3,
                                    pool=None)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_has_changed_no_standbys_explicit_initial(self):
         initial = {'sitter_0': self.rp1_10,
@@ -2479,7 +2479,7 @@ class GetSevenPlayersFormTest(TestCase):
                                    initial=initial,
                                    the_round=self.r1,
                                    pool=None)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
         initial = {'double_0': self.rp1_10,
                    'double_1': self.rp1_7,
                    'double_2': self.rp1_3,
@@ -2491,7 +2491,7 @@ class GetSevenPlayersFormTest(TestCase):
                                    initial=initial,
                                    the_round=self.r1,
                                    pool=None)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class SCOwnerFormTest(TestCase):
@@ -2510,17 +2510,17 @@ class SCOwnerFormTest(TestCase):
         form = SCOwnerForm()
         for field in form.fields:
             with self.subTest(field=field):
-                self.assertFalse(form.fields[field].required)
+                self.assertIs(False, form.fields[field].required)
 
     def test_year_1900(self):
         """1900 should be accepted"""
         form = SCOwnerForm(data={'year': 1900})
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_year_1899(self):
         """1899 should not be accepted"""
         form = SCOwnerForm(data={'year': 1899})
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'year', 'Ensure this value is greater than or equal to 1900.')
@@ -2533,7 +2533,7 @@ class SCOwnerFormTest(TestCase):
                 initial[sc.name] = sc.initial_owner
                 data[sc.name] = str(sc.initial_owner_id)
         form = SCOwnerForm(data=data, initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class BaseSCOwnerFormsetTest(TestCase):
@@ -2573,7 +2573,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_leave_one_form_blank(self):
         """Everything is ok, one form left blank"""
@@ -2584,7 +2584,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data['form-0-year'] = 1904
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_blank_one_form(self):
         """
@@ -2605,7 +2605,7 @@ class BaseSCOwnerFormsetTest(TestCase):
                 scs[str(sc)] = sc.initial_owner
             initial.append(scs)
         formset = self.SCOwnerFormset(data, initial=initial)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_form_error(self):
         """Error in one of the forms"""
@@ -2619,7 +2619,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2635,7 +2635,7 @@ class BaseSCOwnerFormsetTest(TestCase):
         data['form-0-Belgium'] = self.france.pk
         data['form-1-Belgium'] = self.germany.pk
         formset = self.SCOwnerFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2651,7 +2651,7 @@ class BaseSCOwnerFormsetTest(TestCase):
             data[f'form-{i}-year'] = 1902 + i
         data['form-0-Belgium'] = self.france.pk
         formset = self.SCOwnerFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2662,7 +2662,7 @@ class GameEndedFormTest(TestCase):
 
     def test_is_finished_not_required(self):
         form = GameEndedForm()
-        self.assertFalse(form.fields['is_finished'].required)
+        self.assertIs(False, form.fields['is_finished'].required)
 
 
 class DeathYearFormTest(TestCase):
@@ -2670,13 +2670,13 @@ class DeathYearFormTest(TestCase):
 
     def test_label_field_disabled(self):
         form = DeathYearForm()
-        self.assertTrue(form.fields['label'].disabled)
+        self.assertIs(True, form.fields['label'].disabled)
 
     def test_all_power_fields_not_required(self):
         form = DeathYearForm()
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
-                self.assertFalse(form.fields[power.name].required)
+                self.assertIs(False, form.fields[power.name].required)
                 attrs = form.fields[power.name].widget.attrs
                 self.assertEqual(attrs['size'], '4')
                 self.assertEqual(attrs['size'], attrs['maxlength'])
@@ -2685,19 +2685,19 @@ class DeathYearFormTest(TestCase):
         data = {'France': 1900,
                }
         form = DeathYearForm(data=data)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
 
     def test_year_1901(self):
         data = {'Austria-Hungary': 1901,
                }
         form = DeathYearForm(data=data)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_has_changed(self):
         data = {'Germany': '1905'}
         initial = {'Germany': 1905}
         form = DeathYearForm(data=data, initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class SCCountFormTest(TestCase):
@@ -2712,7 +2712,7 @@ class SCCountFormTest(TestCase):
         form = SCCountForm()
         for power in GreatPower.objects.all():
             with self.subTest(power=power):
-                self.assertFalse(form.fields[power.name].required)
+                self.assertIs(False, form.fields[power.name].required)
                 attrs = form.fields[power.name].widget.attrs
                 self.assertEqual(attrs['size'], '2')
                 self.assertEqual(attrs['size'], attrs['maxlength'])
@@ -2729,7 +2729,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 5,
                }
         form = SCCountForm(data=data)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_year_1900(self):
         """1900 should be accepted"""
@@ -2743,7 +2743,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 5,
                }
         form = SCCountForm(data=data)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_year_1899(self):
         """1899 should not be accepted"""
@@ -2757,7 +2757,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 5,
                }
         form = SCCountForm(data=data)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'year', 'Ensure this value is greater than or equal to 1900.')
@@ -2774,7 +2774,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 4,
                }
         form = SCCountForm(data=data)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'France', 'Ensure this value is greater than or equal to 0.')
@@ -2791,7 +2791,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 0,
                }
         form = SCCountForm(data=data)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 0)
         self.assertEqual(len(form.errors), 1)
         self.assertFormError(form, 'Italy', 'Ensure this value is less than or equal to 34.')
@@ -2808,7 +2808,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 5,
                }
         form = SCCountForm(data=data)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertEqual(len(form.non_field_errors()), 1)
         self.assertFormError(form, None, 'Total SC count for 1920 is 35, more than 34')
 
@@ -2824,7 +2824,7 @@ class SCCountFormTest(TestCase):
                 'Turkey': 5,
                }
         form = SCCountForm(data=data)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         self.assertEqual(form.cleaned_data['neutral'], 1)
 
     def test_missing_powers(self):
@@ -2833,7 +2833,7 @@ class SCCountFormTest(TestCase):
                 'England': 0,
                }
         form = SCCountForm(data=data)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
         # In this case, the neutrals count should not be generated
         self.assertNotIn('neutral', form.cleaned_data)
 
@@ -2843,7 +2843,7 @@ class SCCountFormTest(TestCase):
         initial = {'year': 1903,
                    'England': 5}
         form = SCCountForm(data=data, initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class BaseSCCountFormsetTest(TestCase):
@@ -2882,7 +2882,7 @@ class BaseSCCountFormsetTest(TestCase):
             data[f'form-{i}-Turkey'] = 4 + i
             data[f'form-{i}-year'] = 1902 + i
         formset = self.SCCountFormset(data)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_one_form_blank(self):
         """One form left empty"""
@@ -2896,7 +2896,7 @@ class BaseSCCountFormsetTest(TestCase):
         data['form-0-Turkey'] = 4
         data['form-0-year'] = 1902
         formset = self.SCCountFormset(data)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_elimination_year(self):
         """Year with just an elimination"""
@@ -2912,7 +2912,7 @@ class BaseSCCountFormsetTest(TestCase):
         data['form-1-Italy'] = 0
         data['form-1-year'] = 1904
         formset = self.SCCountFormset(data)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_form_error(self):
         """Something wrong in one of the forms"""
@@ -2928,7 +2928,7 @@ class BaseSCCountFormsetTest(TestCase):
             data[f'form-{i}-Turkey'] = i - 1
             data[f'form-{i}-year'] = 1902 + i
         formset = self.SCCountFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2946,7 +2946,7 @@ class BaseSCCountFormsetTest(TestCase):
             data[f'form-{i}-Turkey'] = 4 + i
             data[f'form-{i}-year'] = 1902
         formset = self.SCCountFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2962,7 +2962,7 @@ class BaseSCCountFormsetTest(TestCase):
         data['form-1-Italy'] = 0
         data['form-1-year'] = 1904
         formset = self.SCCountFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2978,7 +2978,7 @@ class BaseSCCountFormsetTest(TestCase):
         data['form-1-Italy'] = 6
         data['form-1-year'] = 1904
         formset = self.SCCountFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -2992,7 +2992,7 @@ class BaseSCCountFormsetTest(TestCase):
         data['form-1-England'] = 6
         data['form-1-year'] = 1904
         formset = self.SCCountFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -3012,7 +3012,7 @@ class BaseSCCountFormsetTest(TestCase):
         data['form-0-Turkey'] = 5
         data['form-1-Turkey'] = 3
         formset = self.SCCountFormset(data)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -3100,7 +3100,7 @@ class PoolFormTest(TestCase):
                 'player_6': str(self.rp7.pk),
                 'player_7': str(self.rp8.pk)}
         form = PoolForm(data, pool=self.pool1)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_duplicate_player(self):
         """Pick the same player more than once"""
@@ -3112,7 +3112,7 @@ class PoolFormTest(TestCase):
                 'player_6': str(self.rp7.pk),
                 'player_7': str(self.rp8.pk)}
         form = PoolForm(data, pool=self.pool1)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertFormError(form, None, 'Player Edward Egalitarian appears more than once')
 
     def test_invalid_player(self):
@@ -3126,7 +3126,7 @@ class PoolFormTest(TestCase):
                 'player_6': str(self.rp7.pk),
                 'player_7': str(self.rp8.pk)}
         form = PoolForm(data, pool=self.pool1)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         self.assertFormError(form,
                              'player_2',
                              'Select a valid choice. That choice is not one of the available choices.')
@@ -3176,7 +3176,7 @@ class PlayerFormTest(TestCase):
         data = {'player': str(self.p2.pk)}
         initial = {'player': self.p2}
         form = PlayerForm(tournament=self.t, data=data, initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class PlayerRoundFormTest(TestCase):
@@ -3208,7 +3208,7 @@ class PlayerRoundFormTest(TestCase):
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
                                initial=initial)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_success2(self):
         """Do everything right"""
@@ -3220,7 +3220,7 @@ class PlayerRoundFormTest(TestCase):
                    'rounds_played': 0}
         form = PlayerRoundForm(data,
                                initial=initial)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_round_fields(self):
         """Check that the correct fields are created"""
@@ -3252,7 +3252,7 @@ class PlayerRoundFormTest(TestCase):
                    'sandboxer': True,
                    'rounds_played': 1}
         form = PlayerRoundForm(data=data, initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
     def test_validation(self):
         initial = {'player': self.p1,
@@ -3264,18 +3264,18 @@ class PlayerRoundFormTest(TestCase):
                 'sandboxer': 'ok',
                 'rounds_played': '1'}
         form = PlayerRoundForm(data=data, initial=initial)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         data = {'player': str(self.p1.pk),
                 'standby': 'ok',
                 'rounds_played': '1'}
         form = PlayerRoundForm(data=data, initial=initial)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
         data = {'player': str(self.p1.pk),
                 'standby': 'ok',
                 'sandboxer': 'ok',
                 'rounds_played': '1'}
         form = PlayerRoundForm(data=data, initial=initial)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
 
 
 class BasePlayerRoundFormsetTest(TestCase):
@@ -3350,7 +3350,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-1-player'] = str(self.p2.pk)
         formset = self.PlayerRoundFormset(self.data,
                                           tournament=self.t1)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
         for form in formset:
             with self.subTest(form=form):
                 for field in form.fields:
@@ -3363,12 +3363,12 @@ class BasePlayerRoundFormsetTest(TestCase):
     def test_no_players(self):
         """Should be fine for a Tournament with no TournamentPlayers"""
         formset = self.PlayerRoundFormset(self.data, tournament=self.t2)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_tournament_over(self):
         """Should be fine for a Tournament that is finished"""
         formset = self.PlayerRoundFormset(self.data, tournament=self.t3)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_duplicate_players(self):
         """Don't allow the same player to be listed more than once"""
@@ -3377,7 +3377,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-0-present'] = 'ok'
         data['form-1-player'] = str(self.p1.pk)
         formset = self.PlayerRoundFormset(data, tournament=self.t2)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
@@ -3389,7 +3389,7 @@ class BasePlayerRoundFormsetTest(TestCase):
         data['form-0-player'] = str(self.p1.pk)
         data['form-1-player'] = 'Aardvark'
         formset = self.PlayerRoundFormset(data, tournament=self.t2)
-        self.assertFalse(formset.is_valid())
+        self.assertIs(False, formset.is_valid())
         # Should have just one form error, no formset errors
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
         self.assertEqual(formset.total_error_count(), 1)
@@ -3427,7 +3427,7 @@ class PlayerRoundScoreFormTest(TestCase):
     def test_player_field(self):
         form = PlayerRoundScoreForm(tournament=self.t,
                                     last_round_num=2)
-        self.assertTrue(form.fields['player'].disabled)
+        self.assertIs(True, form.fields['player'].disabled)
         attrs = form.fields['player'].widget.attrs
         self.assertEqual(attrs['size'], '20')
 
@@ -3441,8 +3441,8 @@ class PlayerRoundScoreFormTest(TestCase):
                                     last_round_num=3)
         for field in ['game_scores_1', 'game_scores_2', 'game_scores_3']:
             with self.subTest(field=field):
-                self.assertTrue(form.fields[field].disabled)
-                self.assertFalse(form.fields[field].required)
+                self.assertIs(True, form.fields[field].disabled)
+                self.assertIs(False, form.fields[field].required)
                 attrs = form.fields[field].widget.attrs
                 self.assertEqual(attrs['maxlength'], '10')
 
@@ -3452,7 +3452,7 @@ class PlayerRoundScoreFormTest(TestCase):
         for n in range(1, 3):
             with self.subTest(round_number=n):
                 name = f'round_{n}'
-                self.assertFalse(form.fields[name].required)
+                self.assertIs(False, form.fields[name].required)
                 attrs = form.fields[name].widget.attrs
                 self.assertEqual(attrs['size'], '10')
                 self.assertEqual(attrs['maxlength'], '40')
@@ -3460,7 +3460,7 @@ class PlayerRoundScoreFormTest(TestCase):
     def test_overall_score_field(self):
         form = PlayerRoundScoreForm(tournament=self.t,
                                     last_round_num=2)
-        self.assertFalse(form.fields['overall_score'].required)
+        self.assertIs(False, form.fields['overall_score'].required)
         attrs = form.fields['overall_score'].widget.attrs
         self.assertEqual(attrs['size'], '10')
         self.assertEqual(attrs['maxlength'], '20')
@@ -3474,7 +3474,7 @@ class PlayerRoundScoreFormTest(TestCase):
                                     initial=initial,
                                     tournament=self.t,
                                     last_round_num=2)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_long_name(self):
         initial = {'tp': self.tp2,
@@ -3485,7 +3485,7 @@ class PlayerRoundScoreFormTest(TestCase):
                                     initial=initial,
                                     tournament=self.t,
                                     last_round_num=2)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_has_changed(self):
         data = {'tp': str(self.tp2.pk),
@@ -3500,7 +3500,7 @@ class PlayerRoundScoreFormTest(TestCase):
                                     initial=initial,
                                     tournament=self.t,
                                     last_round_num=2)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())
 
 
 class BasePlayerRoundScoreFormsetTest(TestCase):
@@ -3584,7 +3584,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
                             'overall_score': 3.5,
                            })
         formset = self.PlayerRoundScoreFormset(data, initial=initial, tournament=self.t1)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_no_players(self):
         """Should be fine for a Tournament with no TournamentPlayers"""
@@ -3595,7 +3595,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
             'form-MIN_NUM_FORMS': '0',
         }
         formset = self.PlayerRoundScoreFormset(data, tournament=self.t2)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
     def test_finished(self):
         """Should be fine for a completed Tournament"""
@@ -3612,7 +3612,7 @@ class BasePlayerRoundScoreFormsetTest(TestCase):
                             'overall_score': 3.5,
                            })
         formset = self.PlayerRoundScoreFormset(data, initial=initial, tournament=self.t3)
-        self.assertTrue(formset.is_valid())
+        self.assertIs(True, formset.is_valid())
 
 
 class SeederBiasFormTest(TestCase):
@@ -3652,14 +3652,14 @@ class SeederBiasFormTest(TestCase):
         form = SeederBiasForm({'player1': str(self.tp1.pk),
                                'player2': str(self.tp2.pk)},
                               tournament=self.t)
-        self.assertTrue(form.is_valid())
+        self.assertIs(True, form.is_valid())
 
     def test_self_bias(self):
         """Can't keep a player away from themselves"""
         form = SeederBiasForm({'player1': str(self.tp1.pk),
                                'player2': str(self.tp1.pk)},
                               tournament=self.t)
-        self.assertFalse(form.is_valid())
+        self.assertIs(False, form.is_valid())
 
     def test_player_choices(self):
         form = SeederBiasForm(tournament=self.t)
@@ -3682,4 +3682,4 @@ class SeederBiasFormTest(TestCase):
         form = SeederBiasForm(tournament=self.t,
                               data=data,
                               initial=initial)
-        self.assertFalse(form.has_changed())
+        self.assertIs(False, form.has_changed())

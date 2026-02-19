@@ -218,14 +218,14 @@ class RoundScoringTests(TestCase):
         # Check the score_dropped attribute of each GamePlayer
         for gp in g1.gameplayer_set.all():
             if gp.score == 5:
-                self.assertTrue(gp.score_dropped)
+                self.assertIs(True, gp.score_dropped)
             else:
-                self.assertFalse(gp.score_dropped)
+                self.assertIs(False, gp.score_dropped)
         for gp in g2.gameplayer_set.all():
             if gp.score == 5:
-                self.assertTrue(gp.score_dropped)
+                self.assertIs(True, gp.score_dropped)
             else:
-                self.assertFalse(gp.score_dropped)
+                self.assertIs(False, gp.score_dropped)
         # Clean up
         t.delete()
 
@@ -394,9 +394,9 @@ class RoundScoringTests(TestCase):
                 self.assertEqual(scores[p], s)
         # Check the score_dropped attribute of each GamePlayer
         for gp in g1.gameplayer_set.all():
-            self.assertFalse(gp.score_dropped)
+            self.assertIs(False, gp.score_dropped)
         for gp in g2.gameplayer_set.all():
-            self.assertFalse(gp.score_dropped)
+            self.assertIs(False, gp.score_dropped)
         # Clean up
         t.delete()
 
@@ -493,9 +493,9 @@ class RoundScoringTests(TestCase):
                 self.assertEqual(scores[p], s)
         # Check the score_dropped attribute of each GamePlayer
         for gp in g1.gameplayer_set.all():
-            self.assertFalse(gp.score_dropped)
+            self.assertIs(False, gp.score_dropped)
         for gp in g2.gameplayer_set.all():
-            self.assertFalse(gp.score_dropped)
+            self.assertIs(False, gp.score_dropped)
         # Clean up
         t.delete()
 
@@ -1431,11 +1431,11 @@ class TournamentScoringTests(TestCase):
                             if (score1 < 10) and (score2 < 10):
                                 # Neither score counts.
                                 # Round is dropped
-                                self.assertTrue(rp.score_dropped)
+                                self.assertIs(True, rp.score_dropped)
                             else:
                                 # One or both scores count.
                                 # Round not dropped
-                                self.assertFalse(rp.score_dropped)
+                                self.assertIs(False, rp.score_dropped)
 
     def test_tscoringsumgames_scores2(self):
         """Test TScoringSumGames with residual_multiplier"""
@@ -1658,7 +1658,7 @@ class TournamentScoringTests(TestCase):
                     with self.subTest(player=p):
                         gp = GamePlayer.objects.get(player=p, game=g)
                         # All scores are used
-                        self.assertFalse(gp.score_dropped)
+                        self.assertIs(False, gp.score_dropped)
 
         # Check round scores and score_dropped flags
         for r in t.round_set.all():
@@ -1667,7 +1667,7 @@ class TournamentScoringTests(TestCase):
                     with self.subTest(player=rp.player):
                         # With no sitting-out bonus, we don't get a round score at all
                         self.assertEqual(rp.score, 0.0)
-                        self.assertFalse(rp.score_dropped)
+                        self.assertIs(False, rp.score_dropped)
 
     def test_tscoringsumgames_scores3(self):
         """ TScoringSumGames with sitting out bonus"""
@@ -1922,11 +1922,11 @@ class TournamentScoringTests(TestCase):
                             if (score1 < 10) and (score2 < 10):
                                 # Neither score counts.
                                 # Round is dropped
-                                self.assertTrue(rp.score_dropped)
+                                self.assertIs(True, rp.score_dropped)
                             else:
                                 # One or both scores count.
                                 # Round not dropped
-                                self.assertFalse(rp.score_dropped)
+                                self.assertIs(False, rp.score_dropped)
 
     def test_tscoringsumgames_scores4(self):
         """Test TScoringSumGames with residual_multiplier and residual_count"""
@@ -2149,7 +2149,7 @@ class TournamentScoringTests(TestCase):
                     with self.subTest(player=p):
                         gp = GamePlayer.objects.get(player=p, game=g)
                         # All scores are used
-                        self.assertFalse(gp.score_dropped)
+                        self.assertIs(False, gp.score_dropped)
 
         # Check round scores and score_dropped flags
         for r in t.round_set.all():
@@ -2158,7 +2158,7 @@ class TournamentScoringTests(TestCase):
                     with self.subTest(player=rp.player):
                         # With no sitting-out bonus, we don't get a round score at all
                         self.assertEqual(rp.score, 0.0)
-                        self.assertFalse(rp.score_dropped)
+                        self.assertIs(False, rp.score_dropped)
 
 
 class ModelTests(TestCase):
@@ -2223,20 +2223,20 @@ class ModelTests(TestCase):
 
     # scoring_systems_are_compatible()
     def test_scoring_systems_compatible_sum_1(self):
-        self.assertFalse(scoring_systems_are_compatible("None", "Sum best 2 rounds"))
+        self.assertIs(False, scoring_systems_are_compatible("None", "Sum best 2 rounds"))
 
     def test_scoring_systems_compatible_sum_2(self):
         for rss in R_SCORING_SYSTEMS:
             with self.subTest(system=rss.name):
-                self.assertTrue(scoring_systems_are_compatible(rss.name, "Sum best 2 rounds"))
+                self.assertIs(True, scoring_systems_are_compatible(rss.name, "Sum best 2 rounds"))
 
     def test_scoring_systems_compatible_sum_games_1(self):
-        self.assertTrue(scoring_systems_are_compatible("None", "Best single game result"))
+        self.assertIs(True, scoring_systems_are_compatible("None", "Best single game result"))
 
     def test_scoring_systems_compatible_sum_games_2(self):
         for rss in R_SCORING_SYSTEMS:
             with self.subTest(system=rss.name):
-                self.assertFalse(scoring_systems_are_compatible(rss.name, "Best single game result"))
+                self.assertIs(False, scoring_systems_are_compatible(rss.name, "Best single game result"))
 
 
 class AwardTests(TestCase):
@@ -2454,7 +2454,7 @@ class TeamTests(TestCase):
         self.assertEqual(len(gps), 4)
         for gp in gps:
             self.assertIn(gp.player, [self.p3, self.p4])
-            self.assertTrue(gp.game.the_round.is_team_round)
+            self.assertIs(True, gp.game.the_round.is_team_round)
         # Cleanup
         self.tm.players.remove(self.p3)
         self.tm.players.remove(self.p4)
@@ -2478,11 +2478,11 @@ class TeamTests(TestCase):
         self.tm.players.add(self.p3)
         self.tm.players.add(self.p4)
         r = self.t.round_set.first()
-        self.assertTrue(r.is_team_round)
+        self.assertIs(True, r.is_team_round)
         g = r.game_set.first()
         g.is_finished = True
         g.save()
-        self.assertFalse(self.tm.score_is_final())
+        self.assertIs(False, self.tm.score_is_final())
         # Cleanup
         g.is_finished = False
         g.save()
@@ -2503,7 +2503,7 @@ class TeamTests(TestCase):
                                   is_team_round=True,
                                   start=r2.start + HOURS_8)
         r3.save()
-        self.assertFalse(self.tm.score_is_final())
+        self.assertIs(False, self.tm.score_is_final())
         # Cleanup
         r1.is_team_round = True
         r1.save()
@@ -2525,7 +2525,7 @@ class TeamTests(TestCase):
                                   dias=True,
                                   is_team_round=True,
                                   start=r2.start + HOURS_8)
-        self.assertFalse(self.tm.score_is_final())
+        self.assertIs(False, self.tm.score_is_final())
         # Cleanup
         for g in r1.game_set.all():
             g.is_finished = False
@@ -2539,11 +2539,11 @@ class TeamTests(TestCase):
         self.tm.players.add(self.p3)
         self.tm.players.add(self.p4)
         r = self.t.round_set.first()
-        self.assertTrue(r.is_team_round)
+        self.assertIs(True, r.is_team_round)
         for g in r.game_set.all():
             g.is_finished = True
             g.save()
-        self.assertTrue(self.tm.score_is_final())
+        self.assertIs(True, self.tm.score_is_final())
         # Cleanup
         for g in r.game_set.all():
             g.is_finished = False
@@ -2883,7 +2883,7 @@ class TournamentTests(TestCase):
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_Assigned_from_prefs_false(self):
         t = Tournament.objects.first()
-        self.assertFalse(t.powers_assigned_from_prefs())
+        self.assertIs(False, t.powers_assigned_from_prefs())
 
     def test_tournament_powers_assigned_from_prefs_true(self):
         today = date.today()
@@ -2893,23 +2893,23 @@ class TournamentTests(TestCase):
                        tournament_scoring_system='Sum all round scores',
                        round_scoring_system=R_SCORING_SYSTEMS[0].name,
                        power_assignment=PowerAssignMethods.PREFERENCES)
-        self.assertTrue(t.powers_assigned_from_prefs())
+        self.assertIs(True, t.powers_assigned_from_prefs())
 
     # Tournament.show_game_urls()
     def test_tournament_show_game_urls_flag_unset(self):
         t = Tournament.objects.first()
-        self.assertFalse(t.delay_game_url_publication)
-        self.assertTrue(t.show_game_urls())
+        self.assertIs(False, t.delay_game_url_publication)
+        self.assertIs(True, t.show_game_urls())
 
     def test_tournament_show_game_urls_still_playing(self):
         t = Tournament.objects.first()
-        self.assertFalse(t.delay_game_url_publication)
+        self.assertIs(False, t.delay_game_url_publication)
         end = t.end_date
         # Move the end date of the Tournament and flag as delaying game URL display
         t.delay_game_url_publication = True
         t.end_date = date.today() + HOURS_24
         t.save(update_fields=['delay_game_url_publication', 'end_date'])
-        self.assertFalse(t.show_game_urls())
+        self.assertIs(False, t.show_game_urls())
         # Clean up
         t.delay_game_url_publication = False
         t.end_date = end
@@ -2917,7 +2917,7 @@ class TournamentTests(TestCase):
 
     def test_tournament_show_game_urls_later(self):
         t = Tournament.objects.first()
-        self.assertFalse(t.delay_game_url_publication)
+        self.assertIs(False, t.delay_game_url_publication)
         start = t.start_date
         end = t.end_date
         # Move the end date of the Tournament and flag as delaying game URL display
@@ -2926,7 +2926,7 @@ class TournamentTests(TestCase):
         t.start_date = today - HOURS_72
         t.end_date = today - HOURS_48
         t.save(update_fields=['delay_game_url_publication', 'start_date', 'end_date'])
-        self.assertTrue(t.show_game_urls())
+        self.assertIs(True, t.show_game_urls())
         # Clean up
         t.delay_game_url_publication = False
         t.start_date = start
@@ -2936,12 +2936,12 @@ class TournamentTests(TestCase):
     # Tournament.any_players_paid()
     def test_tournament_any_players_paid(self):
         t = Tournament.objects.first()
-        self.assertTrue(t.tournamentplayer_set.exists())
+        self.assertIs(True, t.tournamentplayer_set.exists())
         self.assertFalse(t.tournamentplayer_set.filter(paid=True).exists())
         tp = t.tournamentplayer_set.first()
         tp.paid = True
         tp.save()
-        self.assertTrue(t.any_players_paid())
+        self.assertIs(True, t.any_players_paid())
         # Cleanup
         tp.paid = False
         tp.save()
@@ -3792,7 +3792,7 @@ class TournamentTests(TestCase):
         rds = t.team_rounds()
         self.assertEqual(len(rds), 2)
         for r in rds:
-            self.assertTrue(r.is_team_round)
+            self.assertIs(True, r.is_team_round)
         # Cleanup
         t.team_size = None
         t.save()
@@ -3812,16 +3812,16 @@ class TournamentTests(TestCase):
         t.team_size = 2
         t.save()
         r1 = t.round_numbered(1)
-        self.assertFalse(r1.is_finished)
+        self.assertIs(False, r1.is_finished)
         r1.is_finished = True
         r1.is_team_round = True
         r1.save()
         r3 = t.round_numbered(3)
-        self.assertTrue(r3.is_finished)
+        self.assertIs(True, r3.is_finished)
         r3.is_team_round = True
         r3.save()
         rds = t.team_rounds()
-        self.assertTrue(t.team_rounds_finished())
+        self.assertIs(True, t.team_rounds_finished())
         # Cleanup
         t.team_size = None
         t.save()
@@ -3836,15 +3836,15 @@ class TournamentTests(TestCase):
         t.team_size = 2
         t.save()
         r1 = t.round_numbered(1)
-        self.assertFalse(r1.is_finished)
+        self.assertIs(False, r1.is_finished)
         r1.is_team_round = True
         r1.save()
         r3 = t.round_numbered(3)
-        self.assertTrue(r3.is_finished)
+        self.assertIs(True, r3.is_finished)
         r3.is_team_round = True
         r3.save()
         rds = t.team_rounds()
-        self.assertFalse(t.team_rounds_finished())
+        self.assertIs(False, t.team_rounds_finished())
         # Cleanup
         t.team_size = None
         t.save()
@@ -3858,16 +3858,16 @@ class TournamentTests(TestCase):
         t.team_size = 2
         t.save()
         r1 = t.round_numbered(1)
-        self.assertFalse(r1.is_finished)
+        self.assertIs(False, r1.is_finished)
         r1.is_team_round = True
         r1.save()
         r3 = t.round_numbered(3)
-        self.assertTrue(r3.is_finished)
+        self.assertIs(True, r3.is_finished)
         r3.is_finished = False
         r3.is_team_round = True
         r3.save()
         rds = t.team_rounds()
-        self.assertFalse(t.team_rounds_finished())
+        self.assertIs(False, t.team_rounds_finished())
         # Cleanup
         t.team_size = None
         t.save()
@@ -3880,7 +3880,7 @@ class TournamentTests(TestCase):
     def test_tournament_team_rounds_finished_none(self):
         """team_round_finished() in non-team tournament"""
         t = Tournament.objects.get(name='t1')
-        self.assertTrue(t.team_rounds_finished())
+        self.assertIs(True, t.team_rounds_finished())
 
     # Tournament.best_countries()
     def validate_best_countries_by_score(self, value):
@@ -3941,7 +3941,7 @@ class TournamentTests(TestCase):
         # The German solo should not be included
         for gp in bc[self.germany]:
             with self.subTest(power=gp.power):
-                self.assertFalse(gp.player == self.p5)
+                self.assertNotEqual(gp.player, self.p5)
 
     def test_best_countries_after_round(self):
         t = Tournament.objects.get(name='t1')
@@ -3953,7 +3953,7 @@ class TournamentTests(TestCase):
                 # We only asked for the best, not the full ranking
                 self.assertEqual(len(best), 1)
                 gp = best[0]
-                self.assertFalse(gp.tournamentplayer().unranked)
+                self.assertIs(False, gp.tournamentplayer().unranked)
                 if power == self.france:
                     self.assertEqual(gp.game.name, 'g11')
                 else:
@@ -4011,9 +4011,9 @@ class TournamentTests(TestCase):
                 gp1 = g12.gameplayer_set.get(power=power)
                 gp2 = g14.gameplayer_set.get(power=power)
                 if gp1.score > gp2.score:
-                    self.assertTrue(self._rank_of(gp1, bc[power]) < self._rank_of(gp2, bc[power]))
+                    self.assertLess(self._rank_of(gp1, bc[power]), self._rank_of(gp2, bc[power]))
                 if gp1.score < gp2.score:
-                    self.assertTrue(self._rank_of(gp1, bc[power]) > self._rank_of(gp2, bc[power]))
+                    self.assertGreater(self._rank_of(gp1, bc[power]), self._rank_of(gp2, bc[power]))
         # Change the Tournament to rank best countries by dot count
         t.best_country_criterion = BestCountryCriteria.DOTS
         t.save(update_fields=['best_country_criterion'])
@@ -4024,9 +4024,9 @@ class TournamentTests(TestCase):
                 gp1 = g12.gameplayer_set.get(power=power)
                 gp2 = g14.gameplayer_set.get(power=power)
                 if gp1.final_sc_count() > gp2.final_sc_count():
-                    self.assertTrue(self._rank_of(gp1, bc[power]) < self._rank_of(gp2, bc[power]))
+                    self.assertLess(self._rank_of(gp1, bc[power]), self._rank_of(gp2, bc[power]))
                 if gp1.final_sc_count() < gp2.final_sc_count():
-                    self.assertTrue(self._rank_of(gp1, bc[power]) > self._rank_of(gp2, bc[power]))
+                    self.assertGreater(self._rank_of(gp1, bc[power]), self._rank_of(gp2, bc[power]))
         # Clean up
         t.best_country_criterion = BestCountryCriteria.SCORE
         t.save(update_fields=['best_country_criterion'])
@@ -4095,25 +4095,25 @@ class TournamentTests(TestCase):
         # All later rounds should be not in progress
         for i in range(r.number() + 1, rounds + 1):
             with self.subTest(round_number=i):
-                self.assertFalse(t.round_numbered(i).in_progress(), f'round {i}')
+                self.assertIs(False, t.round_numbered(i).in_progress(), f'round {i}')
         # This round should be unfinished
-        self.assertFalse(r.is_finished)
+        self.assertIs(False, r.is_finished)
 
     # Tournament.set_is_finished()
     def test_tourney_set_is_finished_some_rounds_over(self):
         t = Tournament.objects.get(name='t1')
         t.set_is_finished()
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, t.is_finished)
 
     def test_tourney_set_is_finished_no_rounds_over(self):
         t = Tournament.objects.get(name='t2')
         t.set_is_finished()
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, t.is_finished)
 
     def test_tourney_set_is_finished_all_rounds_over(self):
         t = Tournament.objects.get(name='t3')
         t.set_is_finished()
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, t.is_finished)
 
     def test_tourney_set_is_finished_no_rounds(self):
         today = date.today()
@@ -4123,20 +4123,20 @@ class TournamentTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system='Sum all round scores')
         t.set_is_finished()
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, t.is_finished)
 
     # Tournament.in_progress()
     def test_tourney_in_progress_some_rounds_over(self):
         t = Tournament.objects.get(name='t1')
-        self.assertTrue(t.in_progress())
+        self.assertIs(True, t.in_progress())
 
     def test_tourney_in_progress_no_rounds_over(self):
         t = Tournament.objects.get(name='t2')
-        self.assertTrue(t.in_progress())
+        self.assertIs(True, t.in_progress())
 
     def test_tourney_in_progress_all_rounds_over(self):
         t = Tournament.objects.get(name='t3')
-        self.assertFalse(t.in_progress())
+        self.assertIs(False, t.in_progress())
 
     def test_tourney_in_progress_no_rounds(self):
         today = date.today()
@@ -4145,7 +4145,7 @@ class TournamentTests(TestCase):
                                       end_date=today + HOURS_24,
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system='Sum all round scores')
-        self.assertFalse(t.in_progress())
+        self.assertIs(False, t.in_progress())
 
     def test_tourney_in_progress_rounds_not_started(self):
         today = date.today()
@@ -4160,7 +4160,7 @@ class TournamentTests(TestCase):
                                  dias=True,
                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r.save()
-        self.assertFalse(t.in_progress())
+        self.assertIs(False, t.in_progress())
         # Clean-up
         t.delete()
 
@@ -4395,9 +4395,9 @@ class TournamentPlayerTests(TestCase):
     # TournamentPlayer.score_is_final()
     def test_tournamentplayer_score_is_final_afterwards(self):
         t = Tournament.objects.get(name='t3')
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, t.is_finished)
         tp = t.tournamentplayer_set.first()
-        self.assertTrue(tp.score_is_final())
+        self.assertIs(True, tp.score_is_final())
 
     def test_tournamentplayer_score_is_final_before_last_round(self):
         # TODO More round(s) to go
@@ -4424,8 +4424,8 @@ class TournamentPlayerTests(TestCase):
     def test_tournamentplayer_score_to_show_finished(self):
         """score_to_show() with finished tournament"""
         t = Tournament.objects.get(name='t3')
-        self.assertTrue(t.is_finished)
-        self.assertTrue(t.show_current_scores)
+        self.assertIs(True, t.is_finished)
+        self.assertIs(True, t.show_current_scores)
         t.show_current_scores = False
         t.save()
         tp = t.tournamentplayer_set.get(player=self.p5)
@@ -4439,8 +4439,8 @@ class TournamentPlayerTests(TestCase):
     def test_tournamentplayer_score_to_show_current(self):
         """score_to_show() with tournament.show_current_scores True"""
         t = Tournament.objects.get(name='t3')
-        self.assertTrue(t.is_finished)
-        self.assertTrue(t.show_current_scores)
+        self.assertIs(True, t.is_finished)
+        self.assertIs(True, t.show_current_scores)
         t.is_finished = False
         t.save()
         tp = t.tournamentplayer_set.get(player=self.p5)
@@ -4454,8 +4454,8 @@ class TournamentPlayerTests(TestCase):
     def test_tournamentplayer_score_to_show_last_round(self):
         """score_to_show() with ongoing Tournament, show_current_scores False"""
         t = Tournament.objects.get(name='t3')
-        self.assertTrue(t.is_finished)
-        self.assertTrue(t.show_current_scores)
+        self.assertIs(True, t.is_finished)
+        self.assertIs(True, t.show_current_scores)
         t.is_finished = False
         t.show_current_scores = False
         t.save()
@@ -5348,42 +5348,42 @@ class RoundTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r1 = t.round_numbered(1)
         r1.set_is_finished()
-        self.assertFalse(r1.is_finished)
+        self.assertIs(False, r1.is_finished)
 
     def test_round_set_is_finished_some_games_over(self):
         t = Tournament.objects.get(name='t1')
         r2 = t.round_numbered(2)
         r2.set_is_finished()
-        self.assertFalse(r2.is_finished)
+        self.assertIs(False, r2.is_finished)
 
     def test_round_set_is_finished_all_games_over(self):
         t = Tournament.objects.get(name='t1')
         r3 = t.round_numbered(3)
         r3.set_is_finished()
-        self.assertTrue(r3.is_finished)
+        self.assertIs(True, r3.is_finished)
 
     def test_round_set_is_finished_no_games(self):
         """Rounds with no games can't have started, let alone finished"""
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
         r4.set_is_finished()
-        self.assertFalse(r4.is_finished)
+        self.assertIs(False, r4.is_finished)
 
     # Round.in_progress()
     def test_round_in_progress_no_games_over(self):
         t = Tournament.objects.get(name='t1')
         r1 = t.round_numbered(1)
-        self.assertTrue(r1.in_progress())
+        self.assertIs(True, r1.in_progress())
 
     def test_round_in_progress_some_games_over(self):
         t = Tournament.objects.get(name='t1')
         r2 = t.round_numbered(2)
-        self.assertTrue(r2.in_progress())
+        self.assertIs(True, r2.in_progress())
 
     def test_round_in_progress_all_games_over(self):
         t = Tournament.objects.get(name='t1')
         r3 = t.round_numbered(3)
-        self.assertFalse(r3.in_progress())
+        self.assertIs(False, r3.in_progress())
 
     def test_round_in_progress_no_games(self):
         """Rounds with round players but no games are just starting, and so are deemed to be 'in progress'"""
@@ -5391,25 +5391,25 @@ class RoundTests(TestCase):
         r4 = t.round_numbered(4)
         rp = RoundPlayer(player=self.p9, the_round=r4)
         rp.save()
-        self.assertTrue(r4.in_progress())
+        self.assertIs(True, r4.in_progress())
         rp.delete()
 
     def test_round_in_progress_no_round_players(self):
         """Rounds with no round players haven't started"""
         t = Tournament.objects.get(name='t1')
         r4 = t.round_numbered(4)
-        self.assertFalse(r4.in_progress())
+        self.assertIs(False, r4.in_progress())
 
     # Round.show_scores()
     def test_round_show_scores_round_finished(self):
         """Return True if the Round is finished"""
         t = Tournament.objects.get(name='t1')
-        self.assertTrue(t.show_current_scores)
+        self.assertIs(True, t.show_current_scores)
         t.show_current_scores = False
         t.save()
         r = t.round_numbered(3)
-        self.assertTrue(r.is_finished)
-        self.assertTrue(r.show_scores())
+        self.assertIs(True, r.is_finished)
+        self.assertIs(True, r.show_scores())
         # Cleanup
         t.show_current_scores = True
         t.save()
@@ -5417,20 +5417,20 @@ class RoundTests(TestCase):
     def test_round_show_scores_show_current_scores(self):
         """Should return True if the Tournament has show_current_scores set"""
         t = Tournament.objects.get(name='t1')
-        self.assertTrue(t.show_current_scores)
+        self.assertIs(True, t.show_current_scores)
         r = t.round_numbered(4)
-        self.assertFalse(r.is_finished)
-        self.assertTrue(r.show_scores())
+        self.assertIs(False, r.is_finished)
+        self.assertIs(True, r.show_scores())
 
     def test_round_show_scores_round_not_finished(self):
         """Return False otherwise"""
         t = Tournament.objects.get(name='t1')
-        self.assertTrue(t.show_current_scores)
+        self.assertIs(True, t.show_current_scores)
         t.show_current_scores = False
         t.save()
         r = t.round_numbered(4)
-        self.assertFalse(r.is_finished)
-        self.assertFalse(r.show_scores())
+        self.assertIs(False, r.is_finished)
+        self.assertIs(False, r.show_scores())
         # Cleanup
         t.show_current_scores = True
         t.save()
@@ -6150,9 +6150,9 @@ class GameTests(TestCase):
         """Game is finished because somebody won"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g11')
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, g.is_finished)
         g.set_is_finished()
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, g.is_finished)
         # Cleanup
         g.is_finished = False
         g.save(update_fields=['is_finished'])
@@ -6163,11 +6163,11 @@ class GameTests(TestCase):
         r = t.round_numbered(1)
         y = r.final_year
         g = r.game_set.get(name='g31')
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, g.is_finished)
         g.is_finished = False
         g.save(update_fields=['is_finished'])
         g.set_is_finished(y)
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, g.is_finished)
         # No cleanup needed
 
     def test_game_set_is_finished_not_reached(self):
@@ -6176,11 +6176,11 @@ class GameTests(TestCase):
         r = t.round_numbered(1)
         y = r.final_year
         g = r.game_set.get(name='g31')
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, g.is_finished)
         g.is_finished = False
         g.save(update_fields=['is_finished'])
         g.set_is_finished(y - 1)
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, g.is_finished)
         # Cleanup
         g.is_finished = True
         g.save(update_fields=['is_finished'])
@@ -6189,9 +6189,9 @@ class GameTests(TestCase):
         """Game not finished because there is no final year"""
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, g.is_finished)
         g.set_is_finished(1999)
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, g.is_finished)
         # No cleanup needed
 
 
@@ -6716,7 +6716,7 @@ class GameTests(TestCase):
     def test_game_board_call_msg_virtual(self):
         # Ensure some, but not all, players have backstabbr usernames
         t = Tournament.objects.get(name='t1')
-        self.assertFalse(t.is_virtual())
+        self.assertIs(False, t.is_virtual())
         t.format = Formats.VFTF
         t.save(update_fields=['format'])
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -6731,7 +6731,7 @@ class GameTests(TestCase):
 
     def test_game_board_call_msg_no_powers(self):
         t = Tournament.objects.get(name='t1')
-        self.assertFalse(t.is_virtual())
+        self.assertIs(False, t.is_virtual())
         g = t.round_numbered(1).game_set.get(name='g11')
         powers = {}
         for gp in g.gameplayer_set.all():
@@ -6969,12 +6969,12 @@ class GameTests(TestCase):
                   is_finished=False,
                   the_set=self.set1)
         g2.save()
-        self.assertFalse(r.is_finished)
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, r.is_finished)
+        self.assertIs(False, t.is_finished)
         g1.is_finished = True
         g1.save(update_fields=['is_finished'])
-        self.assertFalse(r.is_finished)
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, r.is_finished)
+        self.assertIs(False, t.is_finished)
         # Note that this will also delete all associated objects
         t.delete()
 
@@ -7056,13 +7056,13 @@ class GameTests(TestCase):
                   is_finished=False,
                   the_set=self.set1)
         g2.save()
-        self.assertFalse(r1.is_finished)
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, r1.is_finished)
+        self.assertIs(False, t.is_finished)
         g2.is_finished = True
         g2.save(update_fields=['is_finished'])
         # Round but not Tournament should now be flagged as finished
-        self.assertTrue(r1.is_finished)
-        self.assertFalse(t.is_finished)
+        self.assertIs(True, r1.is_finished)
+        self.assertIs(False, t.is_finished)
         # Note that this will also delete all associated objects
         t.delete()
 
@@ -7129,13 +7129,13 @@ class GameTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g1, player=self.p7, power=self.turkey)
         gp.save()
-        self.assertFalse(r.is_finished)
-        self.assertFalse(t.is_finished)
+        self.assertIs(False, r.is_finished)
+        self.assertIs(False, t.is_finished)
         g1.is_finished = True
         g1.save(update_fields=['is_finished'])
         # Round and Tournament should now be flagged as finished
-        self.assertTrue(r.is_finished)
-        self.assertTrue(t.is_finished)
+        self.assertIs(True, r.is_finished)
+        self.assertIs(True, t.is_finished)
         # Note that this will also delete all associated objects
         t.delete()
 
@@ -7793,7 +7793,7 @@ class DrawProposalTests(TestCase):
         dp1.drawing_powers.add(self.russia)
         dp1.drawing_powers.add(self.turkey)
         dp1.drawing_powers.add(self.austria)
-        self.assertTrue(dp1.passed)
+        self.assertIs(True, dp1.passed)
         dp2 = DrawProposal(game=g,
                            year=1902,
                            season=Seasons.FALL,
@@ -7857,8 +7857,8 @@ class DrawProposalTests(TestCase):
         dp.drawing_powers.add(self.russia)
         dp.drawing_powers.add(self.turkey)
         dp.drawing_powers.add(self.austria)
-        self.assertTrue(dp.passed)
-        self.assertTrue(g.is_finished)
+        self.assertIs(True, dp.passed)
+        self.assertIs(True, g.is_finished)
         # Cleanup
         dp.delete()
 
@@ -7880,8 +7880,8 @@ class DrawProposalTests(TestCase):
         dp.drawing_powers.add(self.russia)
         dp.drawing_powers.add(self.turkey)
         dp.drawing_powers.add(self.austria)
-        self.assertFalse(dp.passed)
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, dp.passed)
+        self.assertIs(False, g.is_finished)
         # Cleanup
         dp.delete()
         g.is_finished = True
@@ -8097,37 +8097,37 @@ class RoundPlayerTests(TestCase):
     def test_roundplayer_score_is_final_round_finished(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(3)
-        self.assertTrue(r.is_finished)
+        self.assertIs(True, r.is_finished)
         rp = RoundPlayer(the_round=r,
                          player=self.p1,
                          score=7)
-        self.assertTrue(rp.score_is_final())
+        self.assertIs(True, rp.score_is_final())
 
     def test_roundplayer_score_is_final_round_not_started(self):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
-        self.assertFalse(r.is_finished)
+        self.assertIs(False, r.is_finished)
         rp = r.roundplayer_set.first()
-        self.assertFalse(rp.score_is_final())
+        self.assertIs(False, rp.score_is_final())
 
     def test_roundplayer_score_is_final_round_mixed(self):
         """Player playing two games, one of which is done"""
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(2)
-        self.assertFalse(r.is_finished)
+        self.assertIs(False, r.is_finished)
         rp = r.roundplayer_set.first()
         self.assertEqual(rp.gameplayers().count(), 2)
-        self.assertFalse(rp.score_is_final())
+        self.assertIs(False, rp.score_is_final())
 
     def test_roundplayer_score_is_final_round_mixed_2(self):
         """RoundPlayer.score_is_final() for player whose game(s) are finished, in a round that is still ongoing"""
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(2)
-        self.assertFalse(r.is_finished)
+        self.assertIs(False, r.is_finished)
         rp = r.roundplayer_set.get(player=self.p8)
         for gp in rp.gameplayers():
-            self.assertTrue(gp.score_is_final())
-        self.assertTrue(rp.score_is_final())
+            self.assertIs(True, gp.score_is_final())
+        self.assertIs(True, rp.score_is_final())
 
     def test_roundplayer_score_is_final_sum_games(self):
         # Score can change if there are more rounds that haven't started,
@@ -8138,10 +8138,10 @@ class RoundPlayerTests(TestCase):
         sys = t.tournament_scoring_system
         t.tournament_scoring_system = 'Sum best 4 games in any rounds'
         t.save()
-        self.assertFalse(t.tournament_scoring_system_obj().uses_round_scores)
+        self.assertIs(False, t.tournament_scoring_system_obj().uses_round_scores)
         r = t.round_numbered(1)
         rp = r.roundplayer_set.get(player=self.p8)
-        self.assertTrue(rp.score_is_final())
+        self.assertIs(True, rp.score_is_final())
         # Cleanup
         t.tournament_scoring_system = sys
         t.save()
@@ -8525,22 +8525,22 @@ class GamePlayerTests(TestCase):
     def test_gameplayer_score_is_final_game_over(self):
         g = Game.objects.filter(is_finished=True).first()
         gp = g.gameplayer_set.first()
-        self.assertTrue(gp.score_is_final())
+        self.assertIs(True, gp.score_is_final())
 
     def test_gameplayer_score_is_final_game_ongoing(self):
         """player not eliminated in a game that's still going"""
         g = Game.objects.filter(is_finished=False).first()
         cc = g.survivors()[0]
         gp = g.gameplayer_set.get(power=cc.power)
-        self.assertFalse(gp.score_is_final())
+        self.assertIs(False, gp.score_is_final())
 
     def test_gameplayer_score_is_final_game_eliminated(self):
         """player eliminated in a game that's still going"""
         g = Game.objects.filter(is_finished=False).first()
-        self.assertFalse(g.the_round.game_scoring_system_obj().dead_score_can_change)
+        self.assertIs(False, g.the_round.game_scoring_system_obj().dead_score_can_change)
         cc = g.centrecount_set.filter(count=0).first()
         gp = g.gameplayer_set.get(power=cc.power)
-        self.assertTrue(gp.score_is_final())
+        self.assertIs(True, gp.score_is_final())
 
     # GamePlayer.is_best_country()
     def test_gameplayer_is_best_country_unranked(self):
@@ -8550,14 +8550,14 @@ class GamePlayerTests(TestCase):
         # Check test setup
         for gp in gps:
             tp = gp.tournamentplayer()
-            self.assertTrue(tp.unranked)
-            self.assertTrue(gp.is_best_country())
+            self.assertIs(True, tp.unranked)
+            self.assertIs(True, gp.is_best_country())
         gps = bc[self.germany][-1]
         # Check test setup
         for gp in gps:
             tp = gp.tournamentplayer()
-            self.assertTrue(tp.unranked)
-            self.assertFalse(gp.is_best_country())
+            self.assertIs(True, tp.unranked)
+            self.assertIs(False, gp.is_best_country())
 
     # TODO GamePlayer.is_best_country() for unranked player when they scored
     #      best but a ranked player played the same power
@@ -8568,10 +8568,10 @@ class GamePlayerTests(TestCase):
         bc = t.best_countries(whole_list=True)
         gps = bc[self.austria][0]
         for gp in gps:
-            self.assertTrue(gp.is_best_country())
+            self.assertIs(True, gp.is_best_country())
         gps = bc[self.austria][-1]
         for gp in gps:
-            self.assertFalse(gp.is_best_country())
+            self.assertIs(False, gp.is_best_country())
 
     # TODO GamePlayer.is_best_country() with criteria SCORE where two players
     #      have equal scores and dots are used to tie break
@@ -8584,10 +8584,10 @@ class GamePlayerTests(TestCase):
         bc = t.best_countries(whole_list=True)
         gps = bc[self.austria][0]
         for gp in gps:
-            self.assertTrue(gp.is_best_country())
+            self.assertIs(True, gp.is_best_country())
         gps = bc[self.austria][-1]
         for gp in gps:
-            self.assertFalse(gp.is_best_country())
+            self.assertIs(False, gp.is_best_country())
         # Cleanup
         t.best_country_criterion = BestCountryCriteria.SCORE
         t.save(update_fields=['best_country_criterion'])
@@ -8974,7 +8974,7 @@ class CentreCountTests(TestCase):
         cc = CentreCount(game=g, count=7, power=self.turkey, year=r.final_year)
         cc.save()
         # We no longer expect CentreCount.save() to update Game.is_finished
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, g.is_finished)
         r.delete()
 
     def test_issue_44_2(self):
@@ -9009,7 +9009,7 @@ class CentreCountTests(TestCase):
         cc = CentreCount(game=g, count=0, power=self.turkey, year=r.final_year)
         cc.save()
         # We no longer expect CentreCount.save() to update Game.is_finished
-        self.assertFalse(g.is_finished)
+        self.assertIs(False, g.is_finished)
         # Clean up
         r.delete()
 
