@@ -21,43 +21,34 @@ Tournament Views for the Diplomacy Tournament Visualiser.
 import csv
 import io
 from io import StringIO
+
 import matplotlib.figure as figure
-import matplotlib.ticker as ticker
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import transaction
 from django.forms.formsets import formset_factory
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
-from django.utils.translation import gettext as _
+from django.http import (Http404, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-
 from tournament.email import send_roll_call_emails
-
-from tournament.forms import AwardForm
-from tournament.forms import BaseAwardsFormset
-from tournament.forms import BaseHandicapsFormset
-from tournament.forms import BasePlayerRoundScoreFormset
-from tournament.forms import BasePrefsFormset
-from tournament.forms import BaseTeamsFormset
-from tournament.forms import EnableCheckInForm
-from tournament.forms import HandicapForm
-from tournament.forms import PlayerRoundScoreForm
-from tournament.forms import PrefsForm
-from tournament.forms import SeederBiasForm
-from tournament.forms import TeamForm
-
-from tournament.models import Tournament, SeederBias, Team
-from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import InvalidPreferenceList
-
+from tournament.forms import (AwardForm, BaseAwardsFormset,
+                              BaseHandicapsFormset,
+                              BasePlayerRoundScoreFormset, BasePrefsFormset,
+                              BaseTeamsFormset, EnableCheckInForm,
+                              HandicapForm, PlayerRoundScoreForm, PrefsForm,
+                              SeederBiasForm, TeamForm)
+from tournament.models import (GamePlayer, InvalidPreferenceList, RoundPlayer,
+                               SeederBias, Team, Tournament, TournamentPlayer)
 from tournament.news import news
+
 
 # Redirect times are specified in seconds
 REFRESH_TIME = 60

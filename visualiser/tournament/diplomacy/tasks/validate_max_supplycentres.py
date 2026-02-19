@@ -18,6 +18,7 @@ from django.core.validators import MaxValueValidator
 
 from ..models.supply_centre import SupplyCentre
 
+
 def num_supplycentres():
     return SupplyCentre.objects.count()
 

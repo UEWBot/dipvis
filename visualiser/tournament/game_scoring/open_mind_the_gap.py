@@ -22,8 +22,7 @@ from operator import itemgetter
 from django.utils.translation import gettext as _
 
 from tournament.game_scoring.game_scoring_system import GameScoringSystem
-from tournament.game_scoring.utils import _adjust_rank_score
-from tournament.game_scoring.utils import _sorted_scores
+from tournament.game_scoring.utils import _adjust_rank_score, _sorted_scores
 
 
 class GScoringOMG(GameScoringSystem):

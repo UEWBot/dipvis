@@ -22,34 +22,34 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.db.utils import IntegrityError
-from django.test import TestCase, tag, override_settings
+from django.test import TestCase, override_settings, tag
 
 from tournament import backstabbr, webdip
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.models import Tournament, Round, Pool, Game, DrawProposal, GameImage
-from tournament.models import SupplyCentreOwnership, CentreCount, Preference
-from tournament.models import Award, SeederBias, Series, DBNCoverage, Team
-from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import TScoringSumRounds, TScoringSumGames
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import NO_SCORING_SYSTEM_STR
-from tournament.models import BestCountryCriteria, DrawSecrecy, Formats, Phases
-from tournament.models import PowerAssignMethods, Seasons
-from tournament.models import find_game_scoring_system
-from tournament.models import find_round_scoring_system
-from tournament.models import find_tournament_scoring_system
-from tournament.models import scoring_systems_are_compatible
-from tournament.models import validate_game_name, validate_vote_count
-from tournament.models import validate_game_scoring_system
-from tournament.models import validate_round_scoring_system
-from tournament.models import validate_tournament_scoring_system
-from tournament.models import SCOwnershipsNotFound, InvalidScoringSystem, InvalidYear
-from tournament.models import InvalidPreferenceList, InvalidPowerAssignmentMethod
-from tournament.models import PowerAlreadyAssigned
-from tournament.players import Player, MASK_ALL_BG
+from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
+                               T_SCORING_SYSTEMS, Award, BestCountryCriteria,
+                               CentreCount, DBNCoverage, DrawProposal,
+                               DrawSecrecy, Formats, Game, GameImage,
+                               GamePlayer, InvalidPowerAssignmentMethod,
+                               InvalidPreferenceList, InvalidScoringSystem,
+                               InvalidYear, Phases, Pool, PowerAlreadyAssigned,
+                               PowerAssignMethods, Preference, Round,
+                               RoundPlayer, SCOwnershipsNotFound, Seasons,
+                               SeederBias, Series, SupplyCentreOwnership, Team,
+                               Tournament, TournamentPlayer, TScoringSumGames,
+                               TScoringSumRounds, find_game_scoring_system,
+                               find_round_scoring_system,
+                               find_tournament_scoring_system,
+                               scoring_systems_are_compatible,
+                               validate_game_name,
+                               validate_game_scoring_system,
+                               validate_round_scoring_system,
+                               validate_tournament_scoring_system,
+                               validate_vote_count)
+from tournament.players import MASK_ALL_BG, Player
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)

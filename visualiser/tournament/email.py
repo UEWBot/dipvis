@@ -20,7 +20,7 @@ Email-related functions for the Diplomacy Tournament Visualiser.
 
 from django.conf import settings
 from django.core import mail
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage, send_mail
 
 
 def _filtered_recipients(recipients, tournament):

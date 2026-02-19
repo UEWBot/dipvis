@@ -17,6 +17,7 @@ from django.db import models
 
 from .great_power import GreatPower
 
+
 class SupplyCentre(models.Model):
     """
     A supply centre on the Diplomacy board.

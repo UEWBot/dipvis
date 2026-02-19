@@ -18,7 +18,9 @@ from django.test import TestCase
 from django.urls import reverse
 
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.simple_game_state import SimpleGameState, InvalidState
+from tournament.game_scoring.simple_game_state import (InvalidState,
+                                                       SimpleGameState)
+
 
 class GameScoringViewTests(TestCase):
     fixtures = ['game_sets.json']

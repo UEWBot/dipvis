@@ -14,15 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django.urls import path, include, register_converter
+from django.urls import include, path, register_converter
 
-from tournament import game_views
-from tournament import round_views
-from tournament import series_views
-from tournament import tournament_views
-from tournament import tournament_player_views
-from tournament import wdd_views
+from tournament import (game_views, round_views, series_views,
+                        tournament_player_views, tournament_views, wdd_views)
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
+
 
 class YearConverter:
     """URL converter for a game year (int)"""

@@ -23,31 +23,34 @@ This module provides utility functions for DipVis.
 """
 
 import csv
-import requests
-from bs4 import BeautifulSoup
 from datetime import datetime, time, timedelta
 from datetime import timezone as datetime_timezone
 from time import sleep
 
+import requests
+from bs4 import BeautifulSoup
 from django_countries.fields import Country
 
 from django.conf import settings
 from django.utils import timezone as django_timezone
 
 from tournament import backstabbr
-from tournament.background import WDDBackground, WDRBackground, WDRNotAccessible, InvalidWDRId
+from tournament.background import (InvalidWDRId, WDDBackground, WDRBackground,
+                                   WDRNotAccessible)
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
-from tournament.models import Award, CentreCount, DrawProposal, Game, GameImage
-from tournament.models import GamePlayer, Preference, Round, RoundPlayer, SeederBias
-from tournament.models import SupplyCentreOwnership, Tournament, TournamentPlayer
-from tournament.models import NO_SCORING_SYSTEM_STR
-from tournament.players import Player, WDDPlayer
-from tournament.players import PlayerTournamentRanking, PlayerGameResult, PlayerAward
-from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
-from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
+from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
+                               DrawProposal, Game, GameImage, GamePlayer,
+                               Preference, Round, RoundPlayer, SeederBias,
+                               SupplyCentreOwnership, Tournament,
+                               TournamentPlayer)
+from tournament.players import (Player, PlayerAward, PlayerGameResult,
+                                PlayerTournamentRanking, WDDPlayer)
+from tournament.round_views import _create_game_seeder, _generate_game_name
+from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
+                            wdd_url_to_tournament_id)
 from tournament.wdd_views import _power_award_to_gameplayers
 from tournament.wdr import wdr_tournament_as_json
 

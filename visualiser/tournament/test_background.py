@@ -16,9 +16,8 @@
 
 from django.test import TestCase, tag
 
-from tournament.background import WikipediaBackground
-from tournament.background import WDDBackground, InvalidWDDId
-from tournament.background import WDRBackground, InvalidWDRId
+from tournament.background import (InvalidWDDId, InvalidWDRId, WDDBackground,
+                                   WDRBackground, WikipediaBackground)
 
 
 class WikipediaBackgroundTests(TestCase):

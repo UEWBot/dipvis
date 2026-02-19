@@ -17,15 +17,16 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
-from ..tasks.validate_max_greatpowers import validate_max_greatpowers
-from ..tasks.validate_max_supplycentres import validate_max_supplycentres
-from ..tasks.validate_year import validate_year
-from ..tasks.validate_year_including_start import  validate_year_including_start
 from ..models.game_set import GameSet
 from ..models.great_power import GreatPower
 from ..models.set_power import SetPower
 from ..models.supply_centre import SupplyCentre
+from ..tasks.validate_max_greatpowers import validate_max_greatpowers
+from ..tasks.validate_max_supplycentres import validate_max_supplycentres
+from ..tasks.validate_year import validate_year
+from ..tasks.validate_year_including_start import validate_year_including_start
 from ..values.diplomacy_values import TOTAL_SCS, WINNING_SCS
+
 
 class DiplomacyTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']

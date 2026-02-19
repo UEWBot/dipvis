@@ -15,14 +15,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from unittest import skip
-from urllib.parse import urlunparse, urlencode
+from urllib.parse import urlencode, urlunparse
 
 from django.test import TestCase, tag
 
-from tournament.webdip import Game, InvalidGameUrl, UnsupportedVariant
-from tournament.webdip import WEBDIPLOMACY_NETLOC
-from tournament.webdip import POWERS, SPRING, FALL
-
+from tournament.webdip import (FALL, POWERS, SPRING, WEBDIPLOMACY_NETLOC, Game,
+                               InvalidGameUrl, UnsupportedVariant)
 
 INVALID_GAME_ID = 1
 VARIANT_GAME_ID = 457652

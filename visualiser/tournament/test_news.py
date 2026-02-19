@@ -23,15 +23,14 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.models import Award, DrawProposal, DrawSecrecy, Seasons
-from tournament.models import Tournament, Round, Game
-from tournament.models import SupplyCentreOwnership, CentreCount
-from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
+                               CentreCount, DrawProposal, DrawSecrecy, Game,
+                               GamePlayer, Round, RoundPlayer, Seasons,
+                               SupplyCentreOwnership, Tournament,
+                               TournamentPlayer)
+from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
+                             _round_news, _tournament_news, news)
 from tournament.players import Player
-
-from tournament.news import _tournament_news, _round_leader_str, _round_news, _game_news
-from tournament.news import news, MASK_ALL_NEWS
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)

@@ -28,26 +28,25 @@ from tournament.backstabbr import BACKSTABBR_NETLOC
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
+from tournament.forms import (AwardForm, BackstabbrUrlForm, BaseAwardsFormset,
+                              BaseGamePlayersFormset, BaseHandicapsFormset,
+                              BasePaidFormset, BasePlayerRoundFormset,
+                              BasePlayerRoundScoreFormset,
+                              BasePowerAssignFormset, BasePrefsFormset,
+                              BaseSCCountFormset, BaseSCOwnerFormset,
+                              BaseTeamsFormset, DeathYearForm, DrawForm,
+                              GameEndedForm, GamePlayersForm, GameScoreForm,
+                              GetSevenPlayersForm, HandicapForm, PaidForm,
+                              PlayerForm, PlayerRoundForm,
+                              PlayerRoundScoreForm, PoolForm, PowerAssignForm,
+                              PrefsForm, SCCountForm, SCOwnerForm,
+                              SeederBiasForm, TeamForm)
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.models import T_SCORING_SYSTEMS, R_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Seasons
-from tournament.models import Award, Tournament, Round, Pool, Game, Team
-from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
+                               DrawSecrecy, Game, GamePlayer, Pool, Round,
+                               RoundPlayer, Seasons, Team, Tournament,
+                               TournamentPlayer)
 from tournament.players import Player
-
-from tournament.forms import BackstabbrUrlForm
-from tournament.forms import AwardForm, BaseAwardsFormset, HandicapForm, BaseHandicapsFormset
-from tournament.forms import PrefsForm, BasePrefsFormset, DrawForm, DeathYearForm
-from tournament.forms import GameScoreForm, GamePlayersForm, BaseGamePlayersFormset
-from tournament.forms import PaidForm, BasePaidFormset
-from tournament.forms import PowerAssignForm, BasePowerAssignFormset
-from tournament.forms import GetSevenPlayersForm, SCOwnerForm, BaseSCOwnerFormset
-from tournament.forms import SCCountForm, BaseSCCountFormset, GameEndedForm
-from tournament.forms import PoolForm, PlayerForm
-from tournament.forms import PlayerRoundForm, BasePlayerRoundFormset
-from tournament.forms import PlayerRoundScoreForm, BasePlayerRoundScoreFormset
-from tournament.forms import SeederBiasForm
-from tournament.forms import TeamForm, BaseTeamsFormset
 
 
 class AwardFormTest(TestCase):

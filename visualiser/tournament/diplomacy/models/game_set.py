@@ -19,6 +19,7 @@ from django.db import models
 
 from ..utils.game_image_location import game_image_location
 
+
 class GameSet(models.Model):
     """
     A Diplomacy board game set.

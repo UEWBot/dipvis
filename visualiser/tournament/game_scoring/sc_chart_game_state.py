@@ -14,9 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
-from tournament.game_scoring.game_state import DotCountUnknown
-from tournament.game_scoring.game_state import GameState
+from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
+                                                          TOTAL_SCS,
+                                                          WINNING_SCS)
+from tournament.game_scoring.game_state import DotCountUnknown, GameState
 
 
 class InvalidState(Exception):

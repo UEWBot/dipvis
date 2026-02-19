@@ -17,8 +17,8 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
-from tournament.wdr import validate_wdr_player_id, validate_wdr_tournament_id
-from tournament.wdr import wdr_tournament_as_json
+from tournament.wdr import (validate_wdr_player_id, validate_wdr_tournament_id,
+                            wdr_tournament_as_json)
 
 
 class WDRTests(TestCase):

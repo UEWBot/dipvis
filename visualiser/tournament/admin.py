@@ -21,15 +21,15 @@ from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.set_power import SetPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.models import Award, CentreCount, DrawProposal
-from tournament.models import Game, GameImage, GamePlayer, Pool
-from tournament.models import Round, RoundPlayer, DBNCoverage
-from tournament.models import SeederBias, Series, SupplyCentreOwnership
-from tournament.models import Team, Tournament, TournamentPlayer
-from tournament.players import Player, PlayerAward
-from tournament.players import PlayerGameResult, PlayerRanking
-from tournament.players import PlayerTournamentRanking
-from tournament.players import PlayerTitle, WDDPlayer
+from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
+                               Game, GameImage, GamePlayer, Pool, Round,
+                               RoundPlayer, SeederBias, Series,
+                               SupplyCentreOwnership, Team, Tournament,
+                               TournamentPlayer)
+from tournament.players import (Player, PlayerAward, PlayerGameResult,
+                                PlayerRanking, PlayerTitle,
+                                PlayerTournamentRanking, WDDPlayer)
+
 
 @admin.register(Award)
 class AwardAdmin(admin.ModelAdmin):

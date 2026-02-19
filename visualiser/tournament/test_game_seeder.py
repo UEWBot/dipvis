@@ -19,17 +19,12 @@ Assign powers to players in a Diplomacy game.
 """
 
 import unittest
-
 from string import ascii_uppercase
 
-from tournament.game_seeder import GameSeeder
-from tournament.game_seeder import InvalidPlayer
-from tournament.game_seeder import InvalidPlayerCount
-from tournament.game_seeder import InvalidPlayerPairing
-from tournament.game_seeder import InvalidWeight
-from tournament.game_seeder import PowersNotUnique
-from tournament.game_seeder import ImpossibleToSeed
-from tournament.game_seeder import SeedMethod
+from tournament.game_seeder import (GameSeeder, ImpossibleToSeed,
+                                    InvalidPlayer, InvalidPlayerCount,
+                                    InvalidPlayerPairing, InvalidWeight,
+                                    PowersNotUnique, SeedMethod)
 
 
 class GameSeederSetupTest(unittest.TestCase):

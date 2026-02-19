@@ -18,6 +18,7 @@ from django.core.validators import MaxValueValidator
 
 from ..models.great_power import GreatPower
 
+
 def num_greatpowers():
     return GreatPower.objects.count()
 

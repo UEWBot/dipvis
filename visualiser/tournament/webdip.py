@@ -17,8 +17,9 @@
 Scrape the interesting parts of a Diplomacy game on WebDiplomacy.net.
 """
 
+from urllib.parse import parse_qs, urlparse, urlunparse
+
 import requests
-from urllib.parse import urlparse, parse_qs, urlunparse
 from bs4 import BeautifulSoup
 
 from django.conf import settings

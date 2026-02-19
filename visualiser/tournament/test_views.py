@@ -21,9 +21,10 @@ from django.test import TestCase
 from django.urls import reverse
 
 import tournament
+from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
+                               T_SCORING_SYSTEMS, DrawSecrecy, Round,
+                               Tournament)
 
-from tournament.models import G_SCORING_SYSTEMS, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Round, Tournament
 
 class ViewIndexTests(TestCase):
     """Test the various index views with no objects of that type"""

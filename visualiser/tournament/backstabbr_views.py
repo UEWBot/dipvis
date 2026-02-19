@@ -18,8 +18,9 @@ Show info about a Diplomacy game on Backstabbr.com.
 """
 
 import io
-import matplotlib.pyplot as plt
 from urllib.parse import urlunparse
+
+import matplotlib.pyplot as plt
 
 from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render

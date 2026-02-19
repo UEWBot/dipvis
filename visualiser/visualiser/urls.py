@@ -17,7 +17,8 @@
 from django.contrib import admin
 from django.urls import include, path, register_converter
 
-from tournament import backstabbr_views, game_scoring_system_views, player_views
+from tournament import (backstabbr_views, game_scoring_system_views,
+                        player_views)
 
 admin.autodiscover()
 

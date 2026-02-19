@@ -19,8 +19,8 @@ from math import floor
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.test_general import check_score_for_state
 from tournament.game_scoring.simple_game_state import SimpleGameState
+from tournament.game_scoring.test_general import check_score_for_state
 
 
 class OpenTributeGameScoringTests(TestCase):

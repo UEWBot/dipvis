@@ -25,9 +25,11 @@ from django.shortcuts import render
 from django.utils.translation import gettext as _
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
-from tournament.game_scoring.game_state import GameState, DotCountUnknown
+from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
+                                                          TOTAL_SCS,
+                                                          WINNING_SCS)
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
+from tournament.game_scoring.game_state import DotCountUnknown, GameState
 from tournament.game_scoring.simple_game_state import SimpleGameState
 
 

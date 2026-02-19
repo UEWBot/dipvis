@@ -19,6 +19,7 @@ WDR primitives for the Diplomacy Tournament Visualiser.
 """
 
 import re
+
 import requests
 
 from django.conf import settings

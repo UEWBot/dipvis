@@ -14,9 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import uuid
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
-import uuid
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import Permission, User
@@ -26,14 +26,13 @@ from django.urls import reverse
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.models import DrawSecrecy, PowerAssignMethods, Formats
-from tournament.models import Tournament, TournamentPlayer
-from tournament.models import Round, RoundPlayer, Game, GamePlayer
-from tournament.models import CentreCount, DrawProposal
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import G_SCORING_SYSTEMS
-from tournament.models import Seasons
+from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
+                               T_SCORING_SYSTEMS, CentreCount, DrawProposal,
+                               DrawSecrecy, Formats, Game, GamePlayer,
+                               PowerAssignMethods, Round, RoundPlayer, Seasons,
+                               Tournament, TournamentPlayer)
 from tournament.players import Player
+
 
 @override_settings(HOSTNAME='example.com')
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')

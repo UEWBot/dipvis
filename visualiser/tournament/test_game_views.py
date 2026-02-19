@@ -28,11 +28,11 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
 from tournament.game_views import _graph_end_year
-from tournament.models import DrawProposal, Tournament, Round, Game
-from tournament.models import CentreCount, SupplyCentreOwnership
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Seasons
-from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
+                               CentreCount, DrawProposal, DrawSecrecy, Game,
+                               GamePlayer, Round, RoundPlayer, Seasons,
+                               SupplyCentreOwnership, Tournament,
+                               TournamentPlayer)
 from tournament.players import Player
 
 HOURS_8 = timedelta(hours=8)

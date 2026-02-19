@@ -23,8 +23,7 @@ import random
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from tournament.models import DrawSecrecy
-from tournament.models import Tournament, Round, Game, CentreCount
+from tournament.models import CentreCount, DrawSecrecy, Game, Round, Tournament
 from tournament.players import position_str
 
 # Mask values to choose which news strings to include

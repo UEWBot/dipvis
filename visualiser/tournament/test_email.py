@@ -22,14 +22,12 @@ from django.test import TestCase, override_settings
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.email import send_board_call_email, send_prefs_email
-from tournament.email import send_roll_call_emails
-from tournament.models import DrawSecrecy, PowerAssignMethods
-from tournament.models import Tournament, TournamentPlayer
-from tournament.models import Round, RoundPlayer
-from tournament.models import Game, GamePlayer
-from tournament.models import G_SCORING_SYSTEMS, R_SCORING_SYSTEMS
-from tournament.models import T_SCORING_SYSTEMS
+from tournament.email import (send_board_call_email, send_prefs_email,
+                              send_roll_call_emails)
+from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
+                               T_SCORING_SYSTEMS, DrawSecrecy, Game,
+                               GamePlayer, PowerAssignMethods, Round,
+                               RoundPlayer, Tournament, TournamentPlayer)
 from tournament.players import Player
 
 TD_EMAIL = 'td@example.com'

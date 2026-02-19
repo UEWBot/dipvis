@@ -20,6 +20,7 @@ from django.utils.translation import gettext as _
 from .game_set import GameSet
 from .great_power import GreatPower
 
+
 class SetPower(models.Model):
     """
     A single GreatPower in a given GameSet.

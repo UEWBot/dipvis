@@ -20,11 +20,11 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.wdd import country_to_wdd, country_name_to_wdd, power_name_to_wdd
-from tournament.wdd import wdd_img_to_country
-from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id
-from tournament.wdd import validate_wdd_player_id, validate_wdd_tournament_id
-from tournament.wdd import WDD_UNKNOWN_COUNTRY, UnrecognisedCountry
+from tournament.wdd import (WDD_UNKNOWN_COUNTRY, UnrecognisedCountry,
+                            country_name_to_wdd, country_to_wdd,
+                            power_name_to_wdd, validate_wdd_player_id,
+                            validate_wdd_tournament_id, wdd_img_to_country,
+                            wdd_nation_to_country, wdd_url_to_tournament_id)
 
 
 class WDDTests(TestCase):

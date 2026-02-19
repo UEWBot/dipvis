@@ -18,9 +18,10 @@ Scrape the interesting parts of a Diplomacy game on Backstabbr.com.
 """
 
 import re
-import requests
-from urllib.parse import urljoin, urlparse, urlunparse
 from ast import literal_eval
+from urllib.parse import urljoin, urlparse, urlunparse
+
+import requests
 from bs4 import BeautifulSoup
 
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS

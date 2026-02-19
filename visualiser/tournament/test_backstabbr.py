@@ -18,12 +18,10 @@ from urllib.parse import urlunparse
 
 from django.test import TestCase, tag
 
-from tournament.backstabbr import Game, is_backstabbr_url
-from tournament.backstabbr import NoSuchSeason, InvalidGameUrl
-from tournament.backstabbr import BACKSTABBR_NETLOCS
-from tournament.backstabbr import BACKSTABBR_NETLOC
-from tournament.backstabbr import POWERS, SPRING, FALL, WINTER
-
+from tournament.backstabbr import (BACKSTABBR_NETLOC, BACKSTABBR_NETLOCS, FALL,
+                                   POWERS, SPRING, WINTER, Game,
+                                   InvalidGameUrl, NoSuchSeason,
+                                   is_backstabbr_url)
 
 INVALID_GAME_NUMBER = 1
 SOLO_GAME_NUMBER = 5128998112198656

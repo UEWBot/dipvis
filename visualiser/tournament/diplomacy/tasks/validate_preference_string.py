@@ -19,6 +19,7 @@ from django.utils.translation import gettext as _
 
 from ..models.great_power import GreatPower
 
+
 def validate_preference_string(the_string):
     """
     Checks that the string represents a valid power preference list.

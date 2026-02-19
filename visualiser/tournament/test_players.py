@@ -17,19 +17,19 @@
 from datetime import date, datetime, timedelta
 from datetime import timezone as datetime_timezone
 
+from django_countries.fields import Country
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
-from django_countries.fields import Country
-
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.models import DrawSecrecy
-from tournament.models import Tournament, TournamentPlayer
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.players import Player, PlayerRanking, PlayerAward, PlayerTitle, WDDPlayer
-from tournament.players import PlayerGameResult, PlayerTournamentRanking
-from tournament.players import player_picture_location, add_player_bg, position_str
-from tournament.players import MASK_ALL_BG
+from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
+                               DrawSecrecy, Tournament, TournamentPlayer)
+from tournament.players import (MASK_ALL_BG, Player, PlayerAward,
+                                PlayerGameResult, PlayerRanking, PlayerTitle,
+                                PlayerTournamentRanking, WDDPlayer,
+                                add_player_bg, player_picture_location,
+                                position_str)
 
 CHRIS_BRAND_WDD_ID = 4173
 MATT_SHIELDS_WDD_ID = 588

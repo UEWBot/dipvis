@@ -27,9 +27,11 @@ about a player and retrieving it as needed.
 """
 
 import datetime
-from pathlib import Path
 import traceback
-from urllib.parse import urlunparse, urlencode
+from pathlib import Path
+from urllib.parse import urlencode, urlunparse
+
+from django_countries.fields import Country, CountryField
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -39,22 +41,24 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from django_countries.fields import Country, CountryField
-
-from tournament.background import WikipediaBackground, WDDBackground, WDRBackground
-from tournament.background import InvalidWDDId, WDDNotAccessible, WDRNotAccessible
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
+from tournament.background import (InvalidWDDId, WDDBackground,
+                                   WDDNotAccessible, WDRBackground,
+                                   WDRNotAccessible, WikipediaBackground)
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.tasks.validate_max_supplycentres import validate_max_supplycentres
+from tournament.diplomacy.tasks.validate_max_supplycentres import \
+    validate_max_supplycentres
 from tournament.diplomacy.tasks.validate_year import validate_year
-from tournament.wdd import wdd_nation_to_country, wdd_url_to_tournament_id, UnrecognisedCountry
-from tournament.wdd import validate_wdd_player_id, validate_wdd_tournament_id
-from tournament.wdd import WDD_NETLOC, WDD_BASE_RESULTS_PATH, WDD_BASE_RANKING_PATH
-from tournament.wdd import WDD_BASE_RESULTS_URL
-from tournament.wdr import validate_wdr_player_id, validate_wdr_tournament_id
-from tournament.wdr import WDR_BASE_URL
-from tournament.wdr import wdr_power_name_to_greatpower
-
+from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
+                                                          TOTAL_SCS,
+                                                          WINNING_SCS)
+from tournament.wdd import (WDD_BASE_RANKING_PATH, WDD_BASE_RESULTS_PATH,
+                            WDD_BASE_RESULTS_URL, WDD_NETLOC,
+                            UnrecognisedCountry, validate_wdd_player_id,
+                            validate_wdd_tournament_id, wdd_nation_to_country,
+                            wdd_url_to_tournament_id)
+from tournament.wdr import (WDR_BASE_URL, validate_wdr_player_id,
+                            validate_wdr_tournament_id,
+                            wdr_power_name_to_greatpower)
 
 # Mask values to choose which background strings to include
 MASK_TITLES = 1 << 0

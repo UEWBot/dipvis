@@ -17,54 +17,55 @@
 Django models file for the Diplomacy Tournament Visualiser.
 """
 
-from abc import ABC, abstractmethod
-from datetime import date, timedelta
 import inspect
-from operator import itemgetter, countOf
-from pathlib import Path
 import random
 import string
 import sys
 import uuid
+from abc import ABC, abstractmethod
+from datetime import date, timedelta
+from operator import countOf, itemgetter
+from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError, NON_FIELD_ERRORS
+from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
-from django.db.models import Sum, Max, F, Q
+from django.db.models import F, Max, Q, Sum
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.utils.text import slugify
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from tournament import backstabbr
-from tournament import webdip
-
+from tournament import backstabbr, webdip
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, WINNING_SCS, TOTAL_SCS
-from tournament.diplomacy.tasks.validate_max_greatpowers import validate_max_greatpowers
-from tournament.diplomacy.tasks.validate_max_supplycentres import validate_max_supplycentres
-from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
+from tournament.diplomacy.tasks.validate_max_greatpowers import \
+    validate_max_greatpowers
+from tournament.diplomacy.tasks.validate_max_supplycentres import \
+    validate_max_supplycentres
+from tournament.diplomacy.tasks.validate_preference_string import \
+    validate_preference_string
 # validate_sc_count() and validate_ranking() are no longer used except by migrations
 from tournament.diplomacy.tasks.validate_ranking import validate_ranking
 from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
 from tournament.diplomacy.tasks.validate_year import validate_year
-from tournament.diplomacy.tasks.validate_year_including_start import validate_year_including_start
-
+from tournament.diplomacy.tasks.validate_year_including_start import \
+    validate_year_including_start
+from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
+                                                          TOTAL_SCS,
+                                                          WINNING_SCS)
 from tournament.email import send_prefs_email
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.players import Player, add_player_bg
-from tournament.players import MASK_ALL_BG, MASK_ROUND_ENDPOINTS, MASK_SERIES_WINS
+from tournament.game_scoring.game_scoring_system import GameScoringSystem
+from tournament.players import (MASK_ALL_BG, MASK_ROUND_ENDPOINTS,
+                                MASK_SERIES_WINS, Player, add_player_bg)
 from tournament.tournament_game_state import TournamentGameState
-from tournament.wdd import WDD_BASE_RESULTS_URL
-from tournament.wdd import validate_wdd_tournament_id
-from tournament.wdr import WDR_BASE_URL
-from tournament.wdr import validate_wdr_tournament_id
+from tournament.wdd import WDD_BASE_RESULTS_URL, validate_wdd_tournament_id
+from tournament.wdr import WDR_BASE_URL, validate_wdr_tournament_id
 
 
 class Seasons(models.TextChoices):

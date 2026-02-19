@@ -19,44 +19,35 @@ Game Views for the Diplomacy Tournament Visualiser.
 """
 
 import io
+
 import matplotlib.figure as figure
 
+from django.contrib.auth.decorators import permission_required
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
 from django.db.models.query import QuerySet
-from django.contrib.auth.decorators import permission_required
-from django.core.exceptions import ValidationError
 from django.forms.formsets import formset_factory
-from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import (Http404, HttpResponse, HttpResponseRedirect,
+                         JsonResponse)
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from tournament import backstabbr
-from tournament import webdip
-
-from tournament.forms import BaseSCCountFormset
-from tournament.forms import BaseSCOwnerFormset
-from tournament.forms import DrawForm
-from tournament.forms import GameEndedForm
-from tournament.forms import DeathYearForm
-from tournament.forms import GameImageForm
-from tournament.forms import SCCountForm
-from tournament.forms import SCOwnerForm
-
-from tournament.round_views import create_games
-
-from tournament.tournament_views import get_modifiable_tournament_or_404
-from tournament.tournament_views import get_visible_tournament_or_404
-
+from tournament import backstabbr, webdip
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
-from tournament.models import Game, GamePlayer, DrawProposal
-from tournament.models import SupplyCentreOwnership, CentreCount
-from tournament.models import Seasons
-from tournament.models import SCOwnershipsNotFound
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS
+from tournament.forms import (BaseSCCountFormset, BaseSCOwnerFormset,
+                              DeathYearForm, DrawForm, GameEndedForm,
+                              GameImageForm, SCCountForm, SCOwnerForm)
+from tournament.models import (CentreCount, DrawProposal, Game, GamePlayer,
+                               SCOwnershipsNotFound, Seasons,
+                               SupplyCentreOwnership)
 from tournament.news import news
+from tournament.round_views import create_games
+from tournament.tournament_views import (get_modifiable_tournament_or_404,
+                                         get_visible_tournament_or_404)
 
 # Redirect times are specified in seconds
 INTER_IMAGE_TIME = 15

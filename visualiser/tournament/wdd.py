@@ -19,13 +19,14 @@ WDD primitives for the Diplomacy Tournament Visualiser.
 """
 
 import re
-import requests
 
+import requests
 from django_countries.fields import Country
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
+
 
 WDD_NETLOC = 'world-diplomacy-database.com'
 WDD_BASE_RESULTS_PATH = 'php/results/'

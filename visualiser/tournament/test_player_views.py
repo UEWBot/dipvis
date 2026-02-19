@@ -26,6 +26,7 @@ from django.urls import reverse
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.players import Player, PlayerGameResult, WDDPlayer
 
+
 class PlayerViewTests(TestCase):
     fixtures = ['game_sets.json']
 

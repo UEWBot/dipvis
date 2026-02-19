@@ -19,10 +19,11 @@ from datetime import date, timedelta
 from django.test import TestCase
 from django.urls import reverse
 
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Formats
-from tournament.models import Series, Tournament, TournamentPlayer
+from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
+                               DrawSecrecy, Formats, Series, Tournament,
+                               TournamentPlayer)
 from tournament.players import Player
+
 
 class SeriesViewTests(TestCase):
 

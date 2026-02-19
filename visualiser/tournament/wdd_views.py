@@ -24,12 +24,11 @@ from django.http import HttpResponse
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
-from tournament.models import Game, Tournament
-from tournament.models import GamePlayer
+from tournament.models import Game, GamePlayer, Tournament
 from tournament.tournament_views import get_visible_tournament_or_404
-from tournament.wdd import WDD_MAX_ROUNDS, WDD_MAX_AWARDS, WDD_MAX_YEAR
-from tournament.wdd import country_name_to_wdd, country_to_wdd
-from tournament.wdd import power_name_to_wdd, WDD_UNKNOWN_COUNTRY
+from tournament.wdd import (WDD_MAX_AWARDS, WDD_MAX_ROUNDS, WDD_MAX_YEAR,
+                            WDD_UNKNOWN_COUNTRY, country_name_to_wdd,
+                            country_to_wdd, power_name_to_wdd)
 
 
 class TooManyAwards(Exception):

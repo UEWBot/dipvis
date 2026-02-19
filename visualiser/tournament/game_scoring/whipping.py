@@ -21,7 +21,8 @@ from operator import itemgetter
 
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy.values.diplomacy_values import WINNING_SCS, FIRST_YEAR
+from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
+                                                          WINNING_SCS)
 from tournament.game_scoring.game_scoring_system import GameScoringSystem
 from tournament.game_scoring.utils import _sorted_scores
 

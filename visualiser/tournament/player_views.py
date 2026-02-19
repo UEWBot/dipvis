@@ -26,14 +26,13 @@ from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.views import generic
 
 from tournament.forms import PlayerForm
-from tournament.players import Player, PlayerGameResult
-from tournament.players import add_player_bg
+from tournament.players import Player, PlayerGameResult, add_player_bg
 from tournament.wdd import validate_wdd_player_id
 
 # Player views

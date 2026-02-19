@@ -19,8 +19,9 @@ Round Views for the Diplomacy Tournament Visualiser.
 """
 
 import csv
-import requests
 from itertools import combinations
+
+import requests
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
@@ -28,31 +29,24 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.forms.formsets import formset_factory
-from django.http import Http404, HttpResponseRedirect, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from tournament.forms import BaseGamePlayersFormset
-from tournament.forms import BasePlayerRoundFormset
-from tournament.forms import BasePowerAssignFormset
-from tournament.forms import GamePlayersForm
-from tournament.forms import GameScoreForm
-from tournament.forms import GetSevenPlayersForm
-from tournament.forms import PlayerRoundForm
-from tournament.forms import PoolForm
-from tournament.forms import PowerAssignForm
-
-from tournament.tournament_views import get_modifiable_tournament_or_404
-from tournament.tournament_views import get_visible_tournament_or_404
-
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.email import send_board_call_email
+from tournament.forms import (BaseGamePlayersFormset, BasePlayerRoundFormset,
+                              BasePowerAssignFormset, GamePlayersForm,
+                              GameScoreForm, GetSevenPlayersForm,
+                              PlayerRoundForm, PoolForm, PowerAssignForm)
 from tournament.game_seeder import GameSeeder
-from tournament.models import PowerAssignMethods
-from tournament.models import Round, Pool, Game
-from tournament.models import TournamentPlayer, RoundPlayer, GamePlayer
+from tournament.models import (Game, GamePlayer, Pool, PowerAssignMethods,
+                               Round, RoundPlayer, TournamentPlayer)
+from tournament.tournament_views import (get_modifiable_tournament_or_404,
+                                         get_visible_tournament_or_404)
+
 
 # Round views
 

@@ -25,12 +25,12 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.models import DrawSecrecy, Formats, PowerAssignMethods
-from tournament.models import Tournament, TournamentPlayer
-from tournament.models import Pool, Round, RoundPlayer, Team
-from tournament.models import Game, GamePlayer, SeederBias
-from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS
+from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
+                               DrawSecrecy, Formats, Game, GamePlayer, Pool,
+                               PowerAssignMethods, Round, RoundPlayer,
+                               SeederBias, Team, Tournament, TournamentPlayer)
 from tournament.players import Player
+
 
 class RoundViewTests(TestCase):
     fixtures = ['game_sets.json']

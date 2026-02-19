@@ -21,18 +21,16 @@ Tournament Player Views for the Diplomacy Tournament Visualiser.
 from django.contrib.auth.decorators import permission_required
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 from tournament.email import send_prefs_email
-from tournament.forms import PlayerForm
-from tournament.forms import PrefsForm
-from tournament.forms import PaidForm, BasePaidFormset
+from tournament.forms import BasePaidFormset, PaidForm, PlayerForm, PrefsForm
 from tournament.models import Tournament, TournamentPlayer
-from tournament.tournament_views import get_visible_tournament_or_404, get_modifiable_tournament_or_404
-
+from tournament.tournament_views import (get_modifiable_tournament_or_404,
+                                         get_visible_tournament_or_404)
 
 # Tournament Player views
 

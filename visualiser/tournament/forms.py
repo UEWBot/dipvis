@@ -28,12 +28,12 @@ from tournament import backstabbr
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS, FIRST_YEAR
-from tournament.diplomacy.tasks.validate_preference_string import validate_preference_string
-from tournament.models import Award, Game, GameImage, SeederBias
-from tournament.models import DrawSecrecy, Pool, Seasons
-from tournament.models import Team, TournamentPlayer
-from tournament.models import validate_game_name
+from tournament.diplomacy.tasks.validate_preference_string import \
+    validate_preference_string
+from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS
+from tournament.models import (Award, DrawSecrecy, Game, GameImage, Pool,
+                               Seasons, SeederBias, Team, TournamentPlayer,
+                               validate_game_name)
 from tournament.players import Player
 
 
