@@ -370,15 +370,15 @@ class NewsTests(TestCase):
         # Same as test_round_news_unfinished()
         t = Tournament.objects.get(name='t1')
         r = t.round_set.all()[0]
-        self.assertFalse(r.is_finished)
-        self.assertTrue(r.show_scores)
-        r.show_scores = False
-        r.save()
+        self.assertIs(False, r.is_finished)
+        self.assertIs(True, t.show_current_scores)
+        t.show_current_scores = False
+        t.save()
         res = _round_news(r)
         self.assertNotIn('Current top score for round 1 is 0.00 for Abbey Brown, Charles Dog, Ethel Frankenstein, George Hotel, Iris Jackson, Kevin Lame, Michelle Nobody, Owen Pennies.', res)
         # Note that g12 has no CentreCounts, so we should get background for that game, not news
-        r.show_scores = True
-        r.save()
+        t.show_current_scores = True
+        t.save()
 
     def test_round_news_finished(self):
         t = Tournament.objects.get(name='t3')

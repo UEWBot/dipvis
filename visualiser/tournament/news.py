@@ -162,7 +162,7 @@ def _round_news(r):
     This is the latest news for every game in the round.
     """
     results = []
-    if r.show_scores:
+    if r.show_scores():
         # Include who has done best in the round (so far)
         ls = _round_leader_str(r)
         if ls:
