@@ -38,8 +38,8 @@ class GScoringBangkokPike(GameScoringSystem):
       than them, the board topper also gets this 4-point bonus
       Everyone with exactly 2 centres less than the board topper(s)
       gets a 2 point bonus
-      If there's a lone board topper and nobody has exactly 2 centres less
-      than them, the board topper also gets this 2-point bonus
+      If there's a lone board topper and nobody has exactly 1 or 2 centres
+      less than them, the board topper also gets this 2-point bonus
       Eliminated players get 0.1 points for each game year they played
     In a solo:
       Soloer gets 60 points
@@ -83,9 +83,9 @@ class GScoringBangkokPike(GameScoringSystem):
                         if state.num_powers_with(leader_scs - 1) == 0:
                             # Topper also gets the 4-point bonus
                             retval[p] += 4
-                        if state.num_powers_with(leader_scs - 2) == 0:
-                            # Topper also gets the 2-point bonus
-                            retval[p] += 2
+                            if state.num_powers_with(leader_scs - 2) == 0:
+                                # Topper also gets the 2-point bonus
+                                retval[p] += 2
                     else:
                         retval[p] += 4
                 # Bonus for 1-centre away from topper
