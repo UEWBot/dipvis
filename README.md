@@ -8,6 +8,7 @@ need to do, including:
 - recording how each game ended
 - scoring individual games
 - combining game scores to calculate tournament scores
+
 Dipvis supports all the above.
 
 Inspired by the TV coverage for sports events, Dipvis was originally designed to
@@ -18,7 +19,7 @@ etc. The live tracking of scores is also used a lot by players at tournaments.
 
 This project has been used for several tournaments already at https://diplomacytv.com/
 
-This project was created using [python](https://www.python.org/) code, HTML, 
+This project uses [python](https://www.python.org/) code, HTML, 
 and [Django](https://www.djangoproject.com/) templates.
 
 You can:
@@ -26,10 +27,10 @@ You can:
 - register players and record who is present to play each round
 - add players to games
 - track game, round, and tournament progress
-- it supports many scoring systems, and also team rounds
+- calculate player scores (using many scoring systems) and team scores
 
 Dipvis will automatically generate "commentary" on things related to player history and
-can read from the World Diplomacy Database and/or World Diplomacy Reference if given:
+can read from the World Diplomacy Reference and/or World Diplomacy Database if given:
 - appropriate player id
 - tournament history
 - game progress
@@ -67,7 +68,7 @@ Can be found [here](https://github.com/UEWBot/dipvis/blob/master/TESTING)
 ## Contributions
 
 Contributions are very welcome. There's a list of issues at https://github.com/UEWBot/dipvis/issues
-The vast majority are enhancement ideas rather than bugfixes. The test suite is quite extensive with
+- the vast majority are enhancement ideas rather than bugfixes. The test suite is quite extensive with
 good coverage, so you can be fairly confident that breaking changes will be picked up by the tests.
 The code does need quite a lot of cleanup. It started out as a small project but has grown sigificantly.
 Issues are mostly catagorised by type of issue (bug, question, enhancement), part of the codebase
