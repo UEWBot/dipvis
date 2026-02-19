@@ -986,11 +986,11 @@ class Tournament(models.Model):
         """
         Validate the object.
 
-        round_scoring_system and tournament_scoring_system are camptible.
+        round_scoring_system and tournament_scoring_system are compatible.
         """
         if not scoring_systems_are_compatible(self.round_scoring_system,
                                               self.tournament_scoring_system):
-            raise ValidationError(_('The scoring systems are not compatible'))
+            raise ValidationError(_('The round and tournament scoring systems are not compatible'))
 
     def powers_assigned_from_prefs(self):
         """
