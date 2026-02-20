@@ -31,7 +31,7 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.tasks.validate_preference_string import \
     validate_preference_string
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS
-from tournament.models import (Award, DrawSecrecy, Game, GameImage, Pool,
+from tournament.models import (Award, DrawSecrecy, Game, GameImage,
                                Seasons, SeederBias, Team, TournamentPlayer,
                                validate_game_name)
 from tournament.players import Player
@@ -126,9 +126,9 @@ class BackstabbrUrlForm(forms.Form):
         url = self.cleaned_data['url']
         # Check that it seems to be a backstabbr game
         try:
-            g = backstabbr.Game(url, skip_read=True)
+            backstabbr.Game(url, skip_read=True)
         except backstabbr.InvalidGameUrl as e:
-            raise ValidationError(_('Not a valid backstabbr game URL'))
+            raise ValidationError(_('Not a valid backstabbr game URL')) from e
         return url
 
 
@@ -246,7 +246,7 @@ class TeamForm(forms.Form):
         for n in range(self.tournament.team_size):
             # We allow Teams with as few as one player
             self.fields[f'player_{n}'] = PlayerChoiceField(queryset=queryset,
-                                                           required=n==0)
+                                                           required=(n == 0))
 
     def clean(self):
         """
@@ -314,7 +314,7 @@ class BaseTeamsFormset(BaseFormSet):
         for p in players:
             if p and (players.count(p) > 1):
                 raise forms.ValidationError(_('Player %(player)s appears in multiple teams')
-                                                % {'player': p})
+                                            % {'player': p})
 
 
 # Great Power preferences
@@ -515,7 +515,7 @@ class BaseGamePlayersFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
-        self.pool = kwargs.pop('pool') # May be None
+        self.pool = kwargs.pop('pool')  # May be None
         super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
@@ -653,7 +653,7 @@ class GetSevenPlayersForm(forms.Form):
         """
         # Remove our special kwargs from the list
         self.the_round = kwargs.pop('the_round')
-        self.pool = kwargs.pop('pool') # May be None
+        self.pool = kwargs.pop('pool')  # May be None
 
         assert (self.pool is None) or (self.pool.board_count is None)
 
@@ -870,7 +870,6 @@ class BasePaidFormset(BaseFormSet):
         # Pass the special arg down to the form itself
         kwargs['tp'] = self.tps[index]
         return super()._construct_form(index, **kwargs)
-
 
 
 # Game ended

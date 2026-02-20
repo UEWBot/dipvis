@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016-2020 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -109,7 +109,7 @@ class OMGGameScoringTests(TestCase):
         EXPECT = {self.austria: 0,
                   self.england: ((5 * 1.5) + 9 + (1.5 + 0) / 2) / 2,
                   self.france: 0,
-                  self.germany: (17 * 1.5) + 9 + 4.5 + (10  + 8.625 * 2),
+                  self.germany: (17 * 1.5) + 9 + 4.5 + (10 + 8.625 * 2),
                   self.italy: 0,
                   self.russia: ((5 * 1.5) + 9 + (1.5 + 0) / 2) / 2,
                   self.turkey: (7 * 1.5) + 9 + 3 - 10}

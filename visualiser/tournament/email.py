@@ -34,6 +34,7 @@ def _filtered_recipients(recipients, tournament):
         recipients = list(set(recipients) & managers)
     return recipients
 
+
 def _add_game_to_email(game, tournament, the_list):
     """Add a (game details, recipients list) 2-tuple for the specified Game to the_list"""
     game_text = game.board_call_msg()
@@ -42,6 +43,7 @@ def _add_game_to_email(game, tournament, the_list):
         recipients.append(gp.player.email)
     recipients = _filtered_recipients(recipients, tournament)
     the_list.append((game_text, recipients))
+
 
 def send_board_call_email(the_round):
     """Send an email to all players in the round with the board calls"""
@@ -127,7 +129,7 @@ def send_prefs_email(tournamentplayer, force=False):
     # Check whether the tournament should send email at all
     # Still send if the recipient is a manager
     addr_list = _filtered_recipients(addr_list, t)
-    if not(addr_list):
+    if not (addr_list):
         return
     # Don't send again, unless told to
     if tournamentplayer.uuid_str and not force:
@@ -150,6 +152,7 @@ To check in, go to the following web page:
 Note: this address is unique to you - don't share it with anyone!
 """
 
+
 def send_roll_call_emails(round_num, tournamentplayer_list):
     """
     Email the URL to self-check-in to the list of TournamentPlayers.
@@ -167,7 +170,7 @@ def send_roll_call_emails(round_num, tournamentplayer_list):
         # Create the email and add it to the list
         msg_body = ROLL_CALL_EMAIL % {'tourney': t,
                                       'url': tp.get_prefs_url(),
-                                      'round' : round_num}
+                                      'round': round_num}
         addr_list = [addr]
         addr_list = _filtered_recipients(addr_list, t)
         if not addr_list:

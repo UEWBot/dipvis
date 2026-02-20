@@ -76,7 +76,6 @@ class SeriesViewTests(TestCase):
         # A pk that doesn't correspond to a Series
         cls.INVALID_S_SLUG = 'non_existent_series'
 
-
     def test_index(self):
         response = self.client.get(reverse('series_index'),
                                    secure=True)

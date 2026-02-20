@@ -26,7 +26,6 @@ from tournament.models import Formats, Series, TournamentPlayer
 from tournament.players import Player
 from tournament.tournament_views import tournament_is_visible
 
-# Series views
 
 class SeriesIndexView(ListView):
     """Series index"""

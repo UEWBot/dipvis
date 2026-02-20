@@ -89,7 +89,7 @@ class GScoringDetour09(GameScoringSystem):
                         i += 1
                         p = top_powers[i]
                         retval[p] += bonus
-                elif state.num_powers_with(dots)  == 3:
+                elif state.num_powers_with(dots) == 3:
                     bonus -= 2
                     if bonus > 0:
                         retval[p] += bonus
@@ -99,7 +99,7 @@ class GScoringDetour09(GameScoringSystem):
                         i += 1
                         p = top_powers[i]
                         retval[p] += bonus
-                elif state.num_powers_with(dots)  == 4:
+                elif state.num_powers_with(dots) == 4:
                     bonus -= 3
                     if bonus > 0:
                         retval[p] += bonus

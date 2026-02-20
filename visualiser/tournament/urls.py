@@ -34,6 +34,7 @@ class YearConverter:
     def to_url(self, value):
         return f'{value}'
 
+
 register_converter(YearConverter, 'year')
 
 
@@ -52,6 +53,7 @@ class TurnConverter:
 
     def to_url(self, value):
         return f'{value}'
+
 
 register_converter(TurnConverter, 'turn')
 

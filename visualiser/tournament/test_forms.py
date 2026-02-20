@@ -386,7 +386,7 @@ class HandicapFormTest(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                       draw_secrecy=DrawSecrecy.SECRET)
-        cls.tp = TournamentPlayer.objects.create(player=p, tournament=t, handicap = 0.0)
+        cls.tp = TournamentPlayer.objects.create(player=p, tournament=t, handicap=0.0)
 
     def test_handicap_form_handicap_field_label(self):
         form = HandicapForm(tp=self.tp)
@@ -499,7 +499,7 @@ class TeamFormTest(TestCase):
         """One player should be required, others optional"""
         form = TeamForm(tournament=self.t)
         self.assertIs(True, form.fields['player_0'].required)
-        for i in range(1,self.t.team_size):
+        for i in range(1, self.t.team_size):
             self.assertIs(False, form.fields[f'player_{i}'].required)
 
     def test_team_form_players_optional(self):
@@ -510,7 +510,7 @@ class TeamFormTest(TestCase):
 
     def test_team_form_existing_team(self):
         """team kwarg should be supported"""
-        form = TeamForm(tournament=self.t, team=self.tm)
+        TeamForm(tournament=self.t, team=self.tm)
 
     def test_team_repeated_player(self):
         """Same player can't appear more than once in a team"""
@@ -901,8 +901,8 @@ class GameScoreFormTest(TestCase):
                 self.assertIs(False, form.fields[power.name].required)
 
     def test_has_changed(self):
-        initial={'name': 'Only Game'}
-        data={'name': 'Only Game'}
+        initial = {'name': 'Only Game'}
+        data = {'name': 'Only Game'}
         for gp in GreatPower.objects.all():
             initial[gp.name] = gp.id
             data[gp.name] = str(gp.id)
@@ -1076,8 +1076,8 @@ class GamePlayersFormTest(TestCase):
         pool1 = Pool.objects.create(the_round=self.r1,
                                     name='Fixed',
                                     board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r1,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r1,
+                            name='Variable')
         for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
             rp.pool = pool1
             rp.save()
@@ -1116,8 +1116,8 @@ class GamePlayersFormTest(TestCase):
         pool1 = Pool.objects.create(the_round=self.r1,
                                     name='Fixed',
                                     board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r1,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r1,
+                            name='Variable')
         for rp in [self.rp1, self.rp2, self.rp3, self.rp4, self.rp5, self.rp6, self.rp7]:
             rp.pool = pool1
             rp.save()
@@ -1183,9 +1183,9 @@ class GamePlayersFormTest(TestCase):
         g.delete()
 
     def test_create_with_wrong_pool1(self):
-        pool1 = Pool.objects.create(the_round=self.r1,
-                                    name='Fixed',
-                                    board_count=1)
+        Pool.objects.create(the_round=self.r1,
+                            name='Fixed',
+                            board_count=1)
         pool2 = Pool.objects.create(the_round=self.r1,
                                     name='Variable')
         g = Game.objects.create(name='R1G1',
@@ -1204,7 +1204,7 @@ class GamePlayersFormTest(TestCase):
                    'Russia': self.rp6,
                    'Turkey': self.rp7}
         with self.assertRaises(AssertionError):
-            form = GamePlayersForm(initial=initial, the_round=self.r1, pool=pool2)
+            GamePlayersForm(initial=initial, the_round=self.r1, pool=pool2)
         # Cleanup
         g.delete()
         self.r1.pool_set.all().delete()
@@ -1232,7 +1232,7 @@ class GamePlayersFormTest(TestCase):
                    'Russia': self.rp6,
                    'Turkey': self.rp7}
         with self.assertRaises(AssertionError):
-            form = GamePlayersForm(initial=initial, the_round=self.r1, pool=pool2)
+            GamePlayersForm(initial=initial, the_round=self.r1, pool=pool2)
         # Cleanup
         g.delete()
         self.r1.pool_set.all().delete()
@@ -1358,10 +1358,10 @@ class GamePlayersFormTest(TestCase):
         self.r1.is_team_round = True
         self.r1.save()
         tm1 = Team.objects.create(tournament=self.t,
-                                 name="The test team")
+                                  name="The test team")
         tm1.players.add(self.rp2.player)
         tm2 = Team.objects.create(tournament=self.t,
-                                 name="Another test team")
+                                  name="Another test team")
         tm2.players.add(self.rp4.player)
         data = {'name': 'R1G1',
                 'the_set': str(GameSet.objects.first().pk),
@@ -2173,16 +2173,16 @@ class GetSevenPlayersFormTest(TestCase):
         pool1 = Pool.objects.create(the_round=self.r1,
                                     name='Fixed',
                                     board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r1,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r1,
+                            name='Variable')
         with self.assertRaises(AssertionError):
-            form = GetSevenPlayersForm(the_round=self.r1, pool=pool1)
+            GetSevenPlayersForm(the_round=self.r1, pool=pool1)
         # Cleanup
         self.r1.pool_set.all().delete()
 
     def test_sitters_fields(self):
         """Check fields for players sitting out"""
-        prefix='sitter'
+        prefix = 'sitter'
         form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         for i in range(0, 2):
             with self.subTest(i=i):
@@ -2207,7 +2207,7 @@ class GetSevenPlayersFormTest(TestCase):
 
     def test_doubles_fields(self):
         """Check fields for players playing two games"""
-        prefix='double'
+        prefix = 'double'
         form = GetSevenPlayersForm(the_round=self.r1, pool=None)
         for i in range(0, 4):
             with self.subTest(i=i):

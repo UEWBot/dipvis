@@ -82,7 +82,6 @@ class GScoringCarnage(GameScoringSystem):
         else:
             return base + _('Eliminated powers get position points based on when they were eliminated.')
 
-
     def scores(self, state):
         """
         Return a dict, indexed by power id, of scores.
@@ -100,7 +99,7 @@ class GScoringCarnage(GameScoringSystem):
             return retval
 
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        dots.sort(key = itemgetter(1), reverse=True)
+        dots.sort(key=itemgetter(1), reverse=True)
 
         # Giving all the dead powers equal scores is easy
         if self.dead_equal:
@@ -117,7 +116,7 @@ class GScoringCarnage(GameScoringSystem):
         rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
         for i, (p, c) in enumerate(live_scs):
             retval[p] = self.points_per_dot * c + rank_pts[i]
- 
+
         # Give the leader additional points per centre ahead
         dots_1 = live_scs[0][1]
         dots_2 = live_scs[1][1]

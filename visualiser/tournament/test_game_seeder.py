@@ -635,6 +635,7 @@ class GameSeederSetupTest(unittest.TestCase):
 
     # TODO more tests of seed_games_and_powers() power assignment
 
+
 def create_seeder(starts=1, iterations=1000, num_players=20):
     # As there's no way to remove players, we'll re-create the seeder in each test
     seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
@@ -643,6 +644,7 @@ def create_seeder(starts=1, iterations=1000, num_players=20):
     for p in range(num_players):
         seeder.add_player(ascii_uppercase[p])
     return seeder
+
 
 def with_powers(game):
     """Convert a set of seven players to a set of seven (player, power) 2-tuples"""

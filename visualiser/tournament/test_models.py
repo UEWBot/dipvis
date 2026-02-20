@@ -202,8 +202,8 @@ class RoundScoringTests(TestCase):
                             self.p3: 2,
                             self.p4: 3,
                             self.p5: 4,
-                            self.p6: 6, # Best of 5 and 6
-                            self.p7: 6, # Best of 5 and 6
+                            self.p6: 6,  # Best of 5 and 6
+                            self.p7: 6,  # Best of 5 and 6
                             self.p8: 4,
                             self.p9: 3,
                             self.p10: 2,
@@ -379,10 +379,10 @@ class RoundScoringTests(TestCase):
         # Now we can test the RoundScoringSystem
         expected_results = {self.p1: 10,
                             self.p2: 11,
-                            self.p3: 4005, # First time sitting out
+                            self.p3: 4005,  # First time sitting out
                             self.p4: 12,
                             self.p5: 13,
-                            self.p6: 0, # Already sat out round 1
+                            self.p6: 0,  # Already sat out round 1
                             self.p7: 14,
                             self.p8: 15,
                             self.p9: 16,
@@ -477,8 +477,8 @@ class RoundScoringTests(TestCase):
                             self.p3: 2,
                             self.p4: 3,
                             self.p5: 4,
-                            self.p6: 11, # Sum of 5 and 6
-                            self.p7: 11, # Sum of 5 and 6
+                            self.p6: 11,  # Sum of 5 and 6
+                            self.p7: 11,  # Sum of 5 and 6
                             self.p8: 4,
                             self.p9: 3,
                             self.p10: 2,
@@ -589,84 +589,84 @@ class TournamentScoringWDC2025Tests(TestCase):
                                       scoring_system=s,
                                       dias=False,
                                       start=cls.r3.start + HOURS_8)
-        gps = [[(cls.p1, cls.austria, 10.0), # Round 1 Game 1
+        gps = [[(cls.p1, cls.austria, 10.0),  # Round 1 Game 1
                 (cls.p2, cls.england, 20.0),
                 (cls.p3, cls.russia, 30.0),
                 (cls.p4, cls.germany, 40.0),
                 (cls.p5, cls.italy, 50.0),
                 (cls.p6, cls.france, 60.0),
                 (cls.p7, cls.turkey, 70.0)],
-               [(cls.p8, cls.austria, 10.0), # Round 1 Game 2
+               [(cls.p8, cls.austria, 10.0),  # Round 1 Game 2
                 (cls.p9, cls.england, 20.0),
                 (cls.p10, cls.france, 30.0),
                 (cls.p11, cls.germany, 40.0),
                 (cls.p12, cls.italy, 50.0),
                 (cls.p13, cls.russia, 60.0),
                 (cls.p14, cls.turkey, 70.0)],
-               [(cls.p15, cls.austria, 10.0), # Round 1 Game 3
+               [(cls.p15, cls.austria, 10.0),  # Round 1 Game 3
                 (cls.p16, cls.england, 20.0),
                 (cls.p17, cls.france, 30.0),
                 (cls.p18, cls.germany, 40.0),
                 (cls.p19, cls.italy, 50.0),
                 (cls.p20, cls.russia, 60.0),
                 (cls.p21, cls.turkey, 70.0)],
-               [(cls.p1, cls.austria, 10.0), # Round 2 Game 1
+               [(cls.p1, cls.austria, 10.0),  # Round 2 Game 1
                 (cls.p2, cls.england, 20.0),
                 (cls.p3, cls.france, 30.0),
                 (cls.p4, cls.germany, 40.0),
                 (cls.p5, cls.italy, 50.0),
                 (cls.p6, cls.russia, 60.0),
                 (cls.p7, cls.turkey, 70.0)],
-               [(cls.p8, cls.austria, 10.0), # Round 2 Game 2
+               [(cls.p8, cls.austria, 10.0),  # Round 2 Game 2
                 (cls.p9, cls.england, 20.0),
                 (cls.p10, cls.france, 30.0),
                 (cls.p11, cls.germany, 40.0),
                 (cls.p12, cls.italy, 50.0),
                 (cls.p13, cls.russia, 60.0),
                 (cls.p14, cls.turkey, 70.0)],
-               [(cls.p15, cls.austria, 10.0), # Round 2 Game 3
+               [(cls.p15, cls.austria, 10.0),  # Round 2 Game 3
                 (cls.p16, cls.russia, 20.0),
                 (cls.p17, cls.france, 30.0),
                 (cls.p18, cls.germany, 40.0),
                 (cls.p19, cls.italy, 50.0),
                 (cls.p20, cls.england, 60.0),
                 (cls.p21, cls.turkey, 70.0)],
-               [(cls.p1, cls.austria, 10.0), # Round 3 Game 1
+               [(cls.p1, cls.austria, 10.0),  # Round 3 Game 1
                 (cls.p2, cls.england, 20.0),
                 (cls.p3, cls.france, 30.0),
                 (cls.p4, cls.germany, 40.0),
                 (cls.p5, cls.italy, 50.0),
                 (cls.p6, cls.russia, 60.0),
                 (cls.p7, cls.turkey, 70.0)],
-               [(cls.p9, cls.austria, 10.0), # Round 3 Game 2
+               [(cls.p9, cls.austria, 10.0),  # Round 3 Game 2
                 (cls.p10, cls.england, 20.0),
                 (cls.p11, cls.france, 30.0),
                 (cls.p12, cls.germany, 40.0),
                 (cls.p13, cls.italy, 50.0),
                 (cls.p14, cls.russia, 60.0),
                 (cls.p15, cls.turkey, 70.0)],
-               [(cls.p17, cls.austria, 10.0), # Round 3 Game 3
+               [(cls.p17, cls.austria, 10.0),  # Round 3 Game 3
                 (cls.p18, cls.england, 20.0),
                 (cls.p19, cls.france, 30.0),
                 (cls.p20, cls.germany, 40.0),
                 (cls.p21, cls.italy, 50.0),
                 (cls.p22, cls.russia, 60.0),
                 (cls.p23, cls.turkey, 70.0)],
-               [(cls.p24, cls.austria, 10.0), # Round 4 Game 1
+               [(cls.p24, cls.austria, 10.0),  # Round 4 Game 1
                 (cls.p23, cls.england, 20.0),
                 (cls.p22, cls.france, 30.0),
                 (cls.p21, cls.germany, 40.0),
                 (cls.p20, cls.italy, 50.0),
                 (cls.p19, cls.russia, 60.0),
                 (cls.p18, cls.turkey, 70.0)],
-               [(cls.p17, cls.austria, 10.0), # Round 4 Game 2
+               [(cls.p17, cls.austria, 10.0),  # Round 4 Game 2
                 (cls.p16, cls.england, 20.0),
                 (cls.p15, cls.france, 30.0),
                 (cls.p14, cls.germany, 40.0),
                 (cls.p13, cls.italy, 50.0),
                 (cls.p12, cls.russia, 60.0),
                 (cls.p11, cls.turkey, 70.0)],
-               [(cls.p10, cls.austria, 10.0), # Round 4 Game 3
+               [(cls.p10, cls.austria, 10.0),  # Round 4 Game 3
                 (cls.p9, cls.england, 20.0),
                 (cls.p8, cls.france, 30.0),
                 (cls.p7, cls.germany, 40.0),
@@ -695,7 +695,7 @@ class TournamentScoringWDC2025Tests(TestCase):
         # Create GamePlayers
         for g, players in games.items():
             for player, power, score in players:
-                gp = GamePlayer.objects.create(player=player, game=g, power=power, score=score)
+                GamePlayer.objects.create(player=player, game=g, power=power, score=score)
 
     # TScoringWDC2025.__str__()
     def test_str(self):
@@ -767,14 +767,14 @@ class TournamentScoringWDC2025Tests(TestCase):
                   self.p16: {self.r1: 30, self.r2: 30},
                   self.p17: {self.r1: 30, self.r2: 30, self.r3: 20},
                   self.p22: {self.r3: 60}}
-        tied = {self.p2: 60.0,   # wins first tiebreak (single game score)
-                self.p3: 60.0,   # wins second tiebreak (total SCs in scored games)
-                self.p8: 105.0,  # wins first tiebreak (single game score)
-                self.p9: 80.0,   # loses all three tiebreaks
-                self.p10: 75.0,  # wins first tiebreak (single game score)
-                self.p16: 90.0,  # wins second tiebreak (total SCs in scored games)
-                self.p17: 75.0,  # wins third tiebreak (score in dropped round)
-                self.p22: 105.0, # wins first tiebreak (single game score)
+        tied = {self.p2: 60.0,    # wins first tiebreak (single game score)
+                self.p3: 60.0,    # wins second tiebreak (total SCs in scored games)
+                self.p8: 105.0,   # wins first tiebreak (single game score)
+                self.p9: 80.0,    # loses all three tiebreaks
+                self.p10: 75.0,   # wins first tiebreak (single game score)
+                self.p16: 90.0,   # wins second tiebreak (total SCs in scored games)
+                self.p17: 75.0,   # wins third tiebreak (score in dropped round)
+                self.p22: 105.0,  # wins first tiebreak (single game score)
                }
         old_scores = {}
         for p, res in scores.items():
@@ -893,84 +893,84 @@ class TournamentScoringAverageGamesTests(TestCase):
                                       scoring_system=s,
                                       dias=False,
                                       start=cls.r3.start + HOURS_8)
-        gps = [[(cls.p1, cls.austria, 10.0), # Round 1 Game 1
+        gps = [[(cls.p1, cls.austria, 10.0),  # Round 1 Game 1
                 (cls.p2, cls.england, 20.0),
                 (cls.p3, cls.russia, 30.0),
                 (cls.p4, cls.germany, 40.0),
                 (cls.p5, cls.italy, 50.0),
                 (cls.p6, cls.france, 60.0),
                 (cls.p7, cls.turkey, 70.0)],
-               [(cls.p8, cls.austria, 10.0), # Round 1 Game 2
+               [(cls.p8, cls.austria, 10.0),  # Round 1 Game 2
                 (cls.p9, cls.england, 20.0),
                 (cls.p10, cls.france, 30.0),
                 (cls.p11, cls.germany, 40.0),
                 (cls.p12, cls.italy, 50.0),
                 (cls.p13, cls.russia, 60.0),
                 (cls.p14, cls.turkey, 70.0)],
-               [(cls.p15, cls.austria, 10.0), # Round 1 Game 3
+               [(cls.p15, cls.austria, 10.0),  # Round 1 Game 3
                 (cls.p16, cls.england, 20.0),
                 (cls.p17, cls.france, 30.0),
                 (cls.p18, cls.germany, 40.0),
                 (cls.p19, cls.italy, 50.0),
                 (cls.p20, cls.russia, 60.0),
                 (cls.p21, cls.turkey, 70.0)],
-               [(cls.p1, cls.austria, 10.0), # Round 2 Game 1
+               [(cls.p1, cls.austria, 10.0),  # Round 2 Game 1
                 (cls.p2, cls.england, 20.0),
                 (cls.p3, cls.france, 30.0),
                 (cls.p4, cls.germany, 40.0),
                 (cls.p5, cls.italy, 50.0),
                 (cls.p6, cls.russia, 60.0),
                 (cls.p7, cls.turkey, 70.0)],
-               [(cls.p8, cls.austria, 10.0), # Round 2 Game 2
+               [(cls.p8, cls.austria, 10.0),  # Round 2 Game 2
                 (cls.p9, cls.england, 20.0),
                 (cls.p10, cls.france, 30.0),
                 (cls.p11, cls.germany, 40.0),
                 (cls.p12, cls.italy, 50.0),
                 (cls.p13, cls.russia, 60.0),
                 (cls.p14, cls.turkey, 70.0)],
-               [(cls.p15, cls.austria, 10.0), # Round 2 Game 3
+               [(cls.p15, cls.austria, 10.0),  # Round 2 Game 3
                 (cls.p16, cls.russia, 20.0),
                 (cls.p17, cls.france, 30.0),
                 (cls.p18, cls.germany, 40.0),
                 (cls.p19, cls.italy, 50.0),
                 (cls.p20, cls.england, 60.0),
                 (cls.p21, cls.turkey, 70.0)],
-               [(cls.p1, cls.austria, 10.0), # Round 3 Game 1
+               [(cls.p1, cls.austria, 10.0),  # Round 3 Game 1
                 (cls.p2, cls.england, 20.0),
                 (cls.p3, cls.france, 30.0),
                 (cls.p4, cls.germany, 40.0),
                 (cls.p5, cls.italy, 50.0),
                 (cls.p6, cls.russia, 60.0),
                 (cls.p7, cls.turkey, 70.0)],
-               [(cls.p9, cls.austria, 10.0), # Round 3 Game 2
+               [(cls.p9, cls.austria, 10.0),  # Round 3 Game 2
                 (cls.p10, cls.england, 20.0),
                 (cls.p11, cls.france, 30.0),
                 (cls.p12, cls.germany, 40.0),
                 (cls.p13, cls.italy, 50.0),
                 (cls.p14, cls.russia, 60.0),
                 (cls.p15, cls.turkey, 70.0)],
-               [(cls.p17, cls.austria, 10.0), # Round 3 Game 3
+               [(cls.p17, cls.austria, 10.0),  # Round 3 Game 3
                 (cls.p18, cls.england, 20.0),
                 (cls.p19, cls.france, 30.0),
                 (cls.p20, cls.germany, 40.0),
                 (cls.p21, cls.italy, 50.0),
                 (cls.p22, cls.russia, 60.0),
                 (cls.p23, cls.turkey, 70.0)],
-               [(cls.p24, cls.austria, 10.0), # Round 4 Game 1
+               [(cls.p24, cls.austria, 10.0),  # Round 4 Game 1
                 (cls.p23, cls.england, 20.0),
                 (cls.p22, cls.france, 30.0),
                 (cls.p21, cls.germany, 40.0),
                 (cls.p20, cls.italy, 50.0),
                 (cls.p19, cls.russia, 60.0),
                 (cls.p18, cls.turkey, 70.0)],
-               [(cls.p17, cls.austria, 10.0), # Round 4 Game 2
+               [(cls.p17, cls.austria, 10.0),  # Round 4 Game 2
                 (cls.p16, cls.england, 20.0),
                 (cls.p15, cls.france, 30.0),
                 (cls.p14, cls.germany, 40.0),
                 (cls.p13, cls.italy, 50.0),
                 (cls.p12, cls.russia, 60.0),
                 (cls.p11, cls.turkey, 70.0)],
-               [(cls.p10, cls.austria, 10.0), # Round 4 Game 3
+               [(cls.p10, cls.austria, 10.0),  # Round 4 Game 3
                 (cls.p9, cls.england, 20.0),
                 (cls.p8, cls.france, 30.0),
                 (cls.p7, cls.germany, 40.0),
@@ -998,7 +998,7 @@ class TournamentScoringAverageGamesTests(TestCase):
         # Create GamePlayers
         for g, players in games.items():
             for player, power, score in players:
-                gp = GamePlayer.objects.create(player=player, game=g, power=power, score=score)
+                GamePlayer.objects.create(player=player, game=g, power=power, score=score)
 
     # TScoringAverageGames.__str__()
     def test_str(self):
@@ -1871,12 +1871,12 @@ class TournamentScoringTests(TestCase):
 
         # Check tournament scores
         expected_scores = {self.p1: 97320,
-                           self.p2: 17500, # Sat 2 rounds
-                           self.p3: 35500, # Sat 1 round
+                           self.p2: 17500,  # Sat 2 rounds
+                           self.p3: 35500,  # Sat 1 round
                            self.p4: 47770,
                            self.p5: 0,
-                           self.p6: 2570, # Sat 3 rounds
-                           self.p7: 270, # Sat 3 rounds
+                           self.p6: 2570,  # Sat 3 rounds
+                           self.p7: 270,  # Sat 3 rounds
                            self.p8: 53230,
                            self.p9: 13310,
                            self.p10: 25210,
@@ -3188,7 +3188,7 @@ class TournamentTests(TestCase):
             rp = rps.get(player=tp.player)
             rp.score = r_scores[tp]
             rp.save()
-        p_and_s = t.positions_and_scores(after_round_num=1)
+        t.positions_and_scores(after_round_num=1)
         # TournamentPlayer and RoundPlayer scores should be unchanged
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
@@ -3541,7 +3541,7 @@ class TournamentTests(TestCase):
                     except RoundPlayer.DoesNotExist:
                         self.assertEqual(tp.score, 0.0)
                 else:
-                        self.assertEqual(initial_scores[tp], tp.score)
+                    self.assertEqual(initial_scores[tp], tp.score)
         # Clean up
         t.delete()
 
@@ -3820,7 +3820,6 @@ class TournamentTests(TestCase):
         self.assertIs(True, r3.is_finished)
         r3.is_team_round = True
         r3.save()
-        rds = t.team_rounds()
         self.assertIs(True, t.team_rounds_finished())
         # Cleanup
         t.team_size = None
@@ -3843,7 +3842,6 @@ class TournamentTests(TestCase):
         self.assertIs(True, r3.is_finished)
         r3.is_team_round = True
         r3.save()
-        rds = t.team_rounds()
         self.assertIs(False, t.team_rounds_finished())
         # Cleanup
         t.team_size = None
@@ -3866,7 +3864,6 @@ class TournamentTests(TestCase):
         r3.is_finished = False
         r3.is_team_round = True
         r3.save()
-        rds = t.team_rounds()
         self.assertIs(False, t.team_rounds_finished())
         # Cleanup
         t.team_size = None
@@ -5548,19 +5545,19 @@ class RoundTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r = t.round_set.all()[0]
         # TODO Validate results
-        r.background()
+        bg = r.background()
 
     def test_round_background_final_year(self):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[0]
         # TODO Validate results
-        r.background()
+        bg = r.background()
 
     def test_round_background_timed_end(self):
         t = Tournament.objects.get(name='t3')
         r = t.round_set.all()[1]
         # TODO Validate results
-        r.background()
+        bg = r.background()
 
     def test_round_background_mask(self):
         t = Tournament.objects.get(name='t3')
@@ -5570,7 +5567,7 @@ class RoundTests(TestCase):
         while mask <= MASK_ALL_BG:
             with self.subTest(mask=mask):
                 # TODO Validate results
-                r.background(mask=mask)
+                bg = r.background(mask=mask)
             mask *= 2
 
     # Round.clean()
@@ -5699,7 +5696,6 @@ class PoolTests(TestCase):
                                         board_count=1)
         cls.pool2 = Pool.objects.create(the_round=cls.r,
                                         name='Variable')
-
 
     # Pool.__str__()
     def test_pool_str(self):
@@ -5940,7 +5936,7 @@ class GameTests(TestCase):
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1,
-                 external_url = 'https://www.backstabbr.com/game/4917371326693376')
+                 external_url='https://www.backstabbr.com/game/4917371326693376')
         self.assertNotEqual(g.backstabbr_game(), None)
 
     def test_game_backstabbr_game_empty_external_url(self):
@@ -5985,7 +5981,7 @@ class GameTests(TestCase):
                  the_round=self.r32,
                  is_finished=True,
                  the_set=self.set1,
-                 external_url = 'https://www.backstabbr.com/game/4917371326693376')
+                 external_url='https://www.backstabbr.com/game/4917371326693376')
         self.assertRaises(webdip.InvalidGameUrl, g.webdiplomacy_game)
 
     # Game.assign_powers_from_prefs()
@@ -6194,7 +6190,6 @@ class GameTests(TestCase):
         self.assertIs(False, g.is_finished)
         # No cleanup needed
 
-
     # Game.create_or_update_sc_counts_from_ownerships
     def test_create_sc_count_invalid(self):
         # Arbitrary game
@@ -6223,13 +6218,13 @@ class GameTests(TestCase):
                     }
         # expected results
         res = {
-                  self.austria : 0,
-                  self.england : 0,
-                  self.france : 0,
-                  self.germany : 0,
-                  self.italy : 0,
-                  self.russia : 0,
-                  self.turkey : 0,
+                  self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 0,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0,
               }
         # Add some SC ownerships for a far off year
         for k, v in test_data.items():
@@ -6268,13 +6263,13 @@ class GameTests(TestCase):
                     }
         # expected results
         res = {
-                  self.austria : 0,
-                  self.england : 0,
-                  self.france : 0,
-                  self.germany : 0,
-                  self.italy : 0,
-                  self.russia : 0,
-                  self.turkey : 0,
+                  self.austria: 0,
+                  self.england: 0,
+                  self.france: 0,
+                  self.germany: 0,
+                  self.italy: 0,
+                  self.russia: 0,
+                  self.turkey: 0,
               }
         # Add some SC ownerships for a far off year
         scos = []
@@ -6318,7 +6313,7 @@ class GameTests(TestCase):
                         SupplyCentre.objects.get(abbreviation='Bul'): self.austria,
                     }
         # Add some SC ownerships for a far off year
-        for k,v in test_data.items():
+        for k, v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=YEAR, game=g)
             sco.save()
         g.create_or_update_sc_counts_from_ownerships(YEAR)
@@ -8183,11 +8178,11 @@ class RoundPlayerTests(TestCase):
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
         rp = r.roundplayer_set.first()
-        pool1 = Pool.objects.create(the_round=r,
-                                    name='Fixed',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=r,
-                                    name='Variable')
+        Pool.objects.create(the_round=r,
+                            name='Fixed',
+                            board_count=1)
+        Pool.objects.create(the_round=r,
+                            name='Variable')
         with self.assertRaises(ValidationError):
             rp.clean()
         # Cleanup
@@ -8201,8 +8196,8 @@ class RoundPlayerTests(TestCase):
         pool1 = Pool.objects.create(the_round=r1,
                                     name='Fixed',
                                     board_count=1)
-        pool2 = Pool.objects.create(the_round=r1,
-                                    name='Variable')
+        Pool.objects.create(the_round=r1,
+                            name='Variable')
         rp.pool = pool1
         rp.save()
         with self.assertRaises(ValidationError):

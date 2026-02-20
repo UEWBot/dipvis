@@ -35,11 +35,13 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                TournamentPlayer)
 from tournament.players import Player
 
+
 HOURS_8 = timedelta(hours=8)
 HOURS_24 = timedelta(hours=24)
 VALID_BS_URL = 'https://www.backstabbr.com/game/4917371326693376'
 VALID_WD_URL = 'https://webdiplomacy.net/board.php?gameID=340030'
 NOTE = 'Played on the wooden board'
+
 
 class GameViewTests(TestCase):
     fixtures = ['game_sets.json']
@@ -575,7 +577,7 @@ class GameViewTests(TestCase):
         for year, dots in counts.items():
             with self.subTest(year=year):
                 ccs = CentreCount.objects.filter(game=self.g1, year=year)
-                if year==1911:
+                if year == 1911:
                     self.assertEqual(ccs.count(), 1)
                 else:
                     self.assertEqual(ccs.count(), 7)
@@ -1052,13 +1054,13 @@ class GameViewTests(TestCase):
         # And the appropriate SupplyCentreOwnerships should have been updated/deleted
         self.assertEqual(self.g1.supplycentreownership_set.filter(year=1907).count(), 32)
         self.assertEqual(self.g1.centrecount_set.filter(year=1907).count(), 7)
-        sc=SupplyCentre.objects.get(name='Serbia')
+        sc = SupplyCentre.objects.get(name='Serbia')
         self.assertEqual(self.g1.supplycentreownership_set.get(year=1907, sc=sc).owner, self.austria)
-        sc=SupplyCentre.objects.get(name='Trieste')
+        sc = SupplyCentre.objects.get(name='Trieste')
         self.assertEqual(self.g1.supplycentreownership_set.get(year=1907, sc=sc).owner, self.italy)
-        sc=SupplyCentre.objects.get(name='Greece')
+        sc = SupplyCentre.objects.get(name='Greece')
         self.assertFalse(self.g1.supplycentreownership_set.filter(year=1907, sc=sc).exists())
-        sc=SupplyCentre.objects.get(name='Rumania')
+        sc = SupplyCentre.objects.get(name='Rumania')
         self.assertFalse(self.g1.supplycentreownership_set.filter(year=1907, sc=sc).exists())
         # Clean up
         self.g1.supplycentreownership_set.filter(year=1907).delete()

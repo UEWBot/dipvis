@@ -29,7 +29,6 @@ from time import sleep
 
 import requests
 from bs4 import BeautifulSoup
-from django_countries.fields import Country
 
 from django.conf import settings
 from django.utils import timezone as django_timezone
@@ -72,15 +71,15 @@ def _import_dixie_round(r_num, player, tournament, row):
     if row[f'round{r_num}'] == f'{r_num}':
         # Create a RoundPlayer
         r = tournament.round_numbered(r_num)
-        rp = RoundPlayer.objects.create(player=player,
-                                        the_round=r,
-                                        score=float(row[f'score{r_num}']))
+        RoundPlayer.objects.create(player=player,
+                                   the_round=r,
+                                   score=float(row[f'score{r_num}']))
         # And a GamePlayer
-        gp = GamePlayer.objects.create(player=player,
-                                       game=Game.objects.get(the_round=r,
-                                                             name='R%dG%c' % (r_num, row[f'game{r_num}'])),
-                                       power=GreatPower.objects.get(abbreviation=row[f'power{r_num}']),
-                                       score=float(row[f'score{r_num}']))
+        GamePlayer.objects.create(player=player,
+                                  game=Game.objects.get(the_round=r,
+                                                        name='R%dG%c' % (r_num, row[f'game{r_num}'])),
+                                  power=GreatPower.objects.get(abbreviation=row[f'power{r_num}']),
+                                  score=float(row[f'score{r_num}']))
 
 
 def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
@@ -110,11 +109,11 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
                                                             time(hour=r_num,
                                                                  tzinfo=datetime_timezone.utc)))
             # Create 4 Games
-            for g_num in range(1,5):
-                g = Game.objects.create(name=_generate_game_name(r_num, g_num),
-                                        the_round=r,
-                                        the_set=a_set,
-                                        is_finished=True)
+            for g_num in range(1, 5):
+                Game.objects.create(name=_generate_game_name(r_num, g_num),
+                                    the_round=r,
+                                    the_set=a_set,
+                                    is_finished=True)
         for row in reader:
             # Skip rows with no player name
             if not row['first'].lstrip() or not row['first'].isprintable():
@@ -122,18 +121,18 @@ def import_dixie_csv(csvfilename, start_date, end_date, name='DixieCon'):
             try:
                 p = Player.objects.get(first_name=row['first'], last_name=row['last'])
             except Player.DoesNotExist:
-                first=row['first']
-                last=row['last']
+                first = row['first']
+                last = row['last']
                 print(f'Unable to find player "{first} {last}"')
                 continue
             # Create a TournamentPlayer
-            tp = TournamentPlayer.objects.create(player=p,
-                                                 tournament=t,
-                                                 score=float(row['total']))
+            TournamentPlayer.objects.create(player=p,
+                                            tournament=t,
+                                            score=float(row['total']))
             # Create RoundPlayer and GamePlayer for each applicable Round
             for r_num in range(1, 4):
                 _import_dixie_round(r_num, p, t, row)
-    add_best_country_awards_for_tournament(t, False)
+    add_best_country_awards_to_tournament(t, False)
 
 
 def archive_tournaments(dry_run=False):
@@ -208,7 +207,7 @@ def set_nationalities(dry_run=False):
     """
     Set Player.nationalities as specified in the WDD, unless already set.
     """
-    for wdd in WDDplayer.objects.filter(player__nationalities=''):
+    for wdd in WDDPlayer.objects.filter(player__nationalities=''):
         p = wdd.player
         bg = WDDBackground(wdd.wdd_player_id)
         nats = bg.nationalities()
@@ -546,7 +545,7 @@ def clean_best_country_awards(dry_run=False):
                     for gp in gps:
                         if gp.player == tp.player:
                             tp_gp = gp
-                            break;
+                            break
                     if not tp_gp:
                         print(f"{tp} didn't play {a.power}")
                         if not dry_run:
@@ -727,7 +726,7 @@ def add_best_country_awards(dry_run=False):
     Assumes that the seven "Best Country" awards have been created.
     """
     for t in Tournament.objects.all():
-        add_best_country_awards_for_tournament(t, dry_run)
+        add_best_country_awards_to_tournament(t, dry_run)
 
 
 def add_wdr_player_ids(csv_filename, dry_run=False):

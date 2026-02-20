@@ -18,8 +18,6 @@
 WDR primitives for the Diplomacy Tournament Visualiser.
 """
 
-import re
-
 import requests
 
 from django.conf import settings
@@ -80,6 +78,7 @@ def wdr_tournament_as_json(wdr_tournament_id):
 
 
 _GPCache = {}
+
 
 def wdr_power_name_to_greatpower(name):
     """Map a WDR power name to a GreatPower object"""

@@ -22,6 +22,7 @@ from ..models.great_power import GreatPower
 def num_greatpowers():
     return GreatPower.objects.count()
 
+
 """
 Checks that value doesn't exceed the number of GreatPowers
 """

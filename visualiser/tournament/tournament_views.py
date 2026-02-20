@@ -261,8 +261,8 @@ def graph(request, tournament_id):
         # Add a line for each player
         for player in all_scores.keys():
             player_scores = all_scores[player]
-            ax.plot([r for r,s in player_scores],
-                    [s for r,s in player_scores],
+            ax.plot([r for r, s in player_scores],
+                    [s for r, s in player_scores],
                     label=str(player),
                     linewidth=2)
         ax.axis([1, n, 0.0, max_score])
@@ -361,7 +361,6 @@ def tournament_best_countries(request,
         else:
             gps = t.best_countries(whole_list=True, after_round_num=0)
     # Move players with "best country" awards to the head of their respective list
-    awards = t.awards.exclude(power=None)
     for p in GreatPower.objects.all():
         # Find the GamePlayers for the Players given this award at this Tournament
         for award in t.awards.filter(power=p):
@@ -512,7 +511,7 @@ def self_check_in_control(request, tournament_id):
             i = int(r_name[6:])
             # Find that Round
             rd = t.round_numbered(i)
-            fields=['enable_check_in']
+            fields = ['enable_check_in']
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
                 if not rd.email_sent:
@@ -811,7 +810,7 @@ def api(request, tournament_id, version):
                     players[str(gp.power)]['score'] = gp.score
                     players[str(gp.power)]['final_scs'] = gp.final_sc_count()
             games[g.name] = {'sandbox': g.external_url,
-                             'started' : g.started_at,
+                             'started': g.started_at,
                              'players': players}
         rounds[r.number()] = {'scoring_system': r.scoring_system,
                               'games': games}

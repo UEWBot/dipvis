@@ -68,13 +68,13 @@ class SimpleGameStateTests(TestCase):
         self.assertIsNone(three_survivors.solo_year())
 
     def test_dot_count_for_final_year(self):
-        sc_counts={self.austria: 1,
-                   self.england: 10,
-                   self.france: 0,
-                   self.germany: 2,
-                   self.italy: 10,
-                   self.russia: 10,
-                   self.turkey: 1}
+        sc_counts = {self.austria: 1,
+                     self.england: 10,
+                     self.france: 0,
+                     self.germany: 2,
+                     self.italy: 10,
+                     self.russia: 10,
+                     self.turkey: 1}
         sgs = SimpleGameState(sc_counts=sc_counts,
                               final_year=1907,
                               elimination_years={self.france: 1906},
@@ -83,4 +83,3 @@ class SimpleGameStateTests(TestCase):
             with self.subTest(power=p):
                 # Should not raise DotCountUnknown
                 self.assertEqual(c, sgs.dot_count(p, year=1907))
-

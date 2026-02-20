@@ -87,7 +87,7 @@ class GScoringHaight(GameScoringSystem):
             for i, (p, c) in enumerate(dots):
                 if c == 0:
                     dots[i] = (p, (state.year_eliminated(p) - FIRST_YEAR)/100)
-            dots.sort(key = itemgetter(1), reverse=True)
+            dots.sort(key=itemgetter(1), reverse=True)
             # Tweak the ranking points to allow for ties
             rank_pts = _adjust_rank_score_lower(dots, self.position_points)
             for i, (p, c) in enumerate(dots):

@@ -29,7 +29,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import F, Max, Q, Sum
@@ -80,6 +80,7 @@ class Phases(models.TextChoices):
     RETREATS = 'R', _('retreats')
     # Use X for adjustments to simplify sorting
     ADJUSTMENTS = 'X', _('adjustments')
+
 
 # Map a PHASE to its human-readable form
 PHASE_STR = {
@@ -251,7 +252,7 @@ class TournamentScoringSystem(ABC):
 
     Provides a method to calculate a score for each player of tournament.
     """
-    MAX_NAME_LENGTH=50
+    MAX_NAME_LENGTH = 50
     name = u''
 
     @abstractmethod
@@ -374,7 +375,7 @@ class TScoringWDC2025(TournamentScoringSystem):
         if player21_score > tuples[21][1]:
             return [p for p, s in tuples][:21]
         # Count the number of player with a score higher than the tied score
-        num = sum(s > player21_score for p,s in tuples)
+        num = sum(s > player21_score for p, s in tuples)
         tied_needed = 21 - num
         # They all make the cut
         retval = [p for p, s in tuples][:num]
@@ -567,7 +568,7 @@ class TScoringSumGames(TournamentScoringSystem):
         score contributes towards the overall score (and therefore
         to the Round score, which itself contributes)
         """
-        if type(gp) == GamePlayer:
+        if isinstance(gp, GamePlayer):
             rp = gp.roundplayer()
         else:
             rp = gp
@@ -663,9 +664,11 @@ T_SCORING_SYSTEMS = [
     TScoringWDC2025(),
 ]
 
+
 # Special "name" used to not calculate scores
 # Used for Round scoring when rounds are irrelevant
 NO_SCORING_SYSTEM_STR = _("None")
+
 
 def find_scoring_system(name, the_list):
     """
@@ -782,7 +785,7 @@ def validate_tournament_scoring_system(value):
     Validator for Tournament.tournament_scoring_system
     """
     try:
-        system = find_tournament_scoring_system(value)
+        find_tournament_scoring_system(value)
     except InvalidScoringSystem:
         raise ValidationError(_("%{value} is not a valid tournament scoring system"),
                               params={'value': value})
@@ -793,7 +796,7 @@ def validate_round_scoring_system(value):
     Validator for Tournament.round_scoring_system
     """
     try:
-        system = find_round_scoring_system(value)
+        find_round_scoring_system(value)
     except InvalidScoringSystem:
         raise ValidationError(_("%{value} is not a valid round scoring system"),
                               params={'value': value})
@@ -804,7 +807,7 @@ def validate_game_scoring_system(value):
     Validator for Round.scoring_system.
     """
     try:
-        system = find_game_scoring_system(value)
+        find_game_scoring_system(value)
     except InvalidScoringSystem:
         raise ValidationError(_("%{value} is not a valid game scoring system"),
                               params={'value': value})
@@ -1454,6 +1457,7 @@ class NameSlugField(models.SlugField):
             setattr(model_instance, self.attname, slug)
         return slug
 
+
 # Deprecated original name, for migrations
 SeriesSlugField = NameSlugField
 
@@ -1511,7 +1515,7 @@ class Team(models.Model):
     """
     A team of Players within a Tournament
     """
-    MAX_NAME_LENGTH=20
+    MAX_NAME_LENGTH = 20
 
     tournament = models.ForeignKey(Tournament,
                                    on_delete=models.CASCADE)
@@ -1592,7 +1596,7 @@ class TournamentPlayer(models.Model):
     """
     One player in a tournament
     """
-    MAX_BACKSTABBR_USERNAME_LENGTH=40
+    MAX_BACKSTABBR_USERNAME_LENGTH = 40
 
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -1906,7 +1910,7 @@ class Round(models.Model):
         """
         super().save(*args, **kwargs)
 
-        if ('update_fields' not in kwargs) or ('scoring_system' in kwargs['update_fields']) :
+        if ('update_fields' not in kwargs) or ('scoring_system' in kwargs['update_fields']):
             # Change may affect the scoring
             try:
                 validate_game_scoring_system(self.scoring_system)
@@ -1917,11 +1921,11 @@ class Round(models.Model):
                 for g in self.game_set.all():
                     g.update_scores()
 
-        if ('update_fields' not in kwargs) or ('is_team_round' in kwargs['update_fields']) :
+        if ('update_fields' not in kwargs) or ('is_team_round' in kwargs['update_fields']):
             self.tournament.update_team_scores()
 
         # Some change may affect the is_finished attribute of the Tournament
-        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']):
             self.tournament.set_is_finished()
 
     def get_absolute_url(self):
@@ -2135,7 +2139,7 @@ class Pool(models.Model):
     """
     Rounds can optionally be divided into Pools
     """
-    MAX_NAME_LENGTH=20
+    MAX_NAME_LENGTH = 20
 
     the_round = models.ForeignKey(Round, on_delete=models.CASCADE)
     name = models.CharField(max_length=MAX_NAME_LENGTH)
@@ -2177,8 +2181,8 @@ class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
     """
-    MAX_NAME_LENGTH=20
-    MAX_NOTES_LENGTH=120
+    MAX_NAME_LENGTH = 20
+    MAX_NOTES_LENGTH = 120
 
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_game_name],
@@ -2236,7 +2240,7 @@ class Game(models.Model):
                                            defaults={'image': self.the_set.initial_image})
 
         # Some change may affect the is_finished attribute of the Round
-        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']) :
+        if ('update_fields' not in kwargs) or ('is_finished' in kwargs['update_fields']):
             self.the_round.set_is_finished()
 
     def get_absolute_url(self):
@@ -3161,8 +3165,8 @@ class GamePlayer(models.Model):
     def get_aar_url(self):
         """Returns the canonical URL for the object."""
         return reverse('aar', args=[str(self.game.the_round.tournament.id),
-                                        self.game.name,
-                                        self.player_id])
+                                    self.game.name,
+                                    self.player_id])
 
 
 class GameImage(models.Model):

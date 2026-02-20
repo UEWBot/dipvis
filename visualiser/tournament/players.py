@@ -153,7 +153,7 @@ def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
         defaults = {'position': finish['Position'],
                     'tournament': finish['Tournament']}
         try:
-            defaults['wpe_score']=wpe_scores[wdd_tournament_id]
+            defaults['wpe_score'] = wpe_scores[wdd_tournament_id]
         except KeyError:
             pass
         try:
@@ -448,25 +448,25 @@ def _wdr_tournament_should_be_included(t):
     Return True if t is an actual tournament that we want to include.
     """
     kind = t['tournament_kind']
-    if kind in ['EDC', # European Championship
-                'DIPCON', # North American Championship
-                'APAC', # Asia-Pacific Championship
-                'NDC', # National Championship
-                'MASTERS', # Invitational
-                'DBNI', # DBN Invitational
-                'VDC', # Virtual Championship
+    if kind in ['EDC',      # European Championship
+                'DIPCON',   # North American Championship
+                'APAC',     # Asia-Pacific Championship
+                'NDC',      # National Championship
+                'MASTERS',  # Invitational
+                'DBNI',     # DBN Invitational
+                'VDC',      # Virtual Championship
                 'CUP',
-                'NCUP', # National Cup
+                'NCUP',     # National Cup
                 'OPEN',
-                'WDC']: # World Championship
+                'WDC']:     # World Championship
         return True
     elif kind in ['LEAGUE',
-                  'EGP', # European Grand Prix
-                  'NAGP', # North American Grand Prix
-                  'BIC', # Bismark Cup
-                  'nCIR', # National Circuit
-                  'NCIR', # National Circuit
-                  'CIR']: # Circuit
+                  'EGP',   # European Grand Prix
+                  'NAGP',  # North American Grand Prix
+                  'BIC',   # Bismark Cup
+                  'nCIR',  # National Circuit
+                  'NCIR',  # National Circuit
+                  'CIR']:  # Circuit
         return False
     else:
         print(f'Unrecognised tournament_kind {kind} in {t}')
@@ -597,7 +597,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
         t = _find_wdr_tournament(t_id, tournaments)
         defaults = {'tournament': t['tournament_name']}
         if t['tournament_end_date']:
-            defaults['date']=t['tournament_end_date']
+            defaults['date'] = t['tournament_end_date']
         else:
             defaults['date'] = t['tournament_start_date']
         if t['tournament_wdd_id'] == -1:
@@ -614,7 +614,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 print(f'player={str(player)}, tournament={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
                 traceback.print_exc()
         else:
-            defaults['wdr_tournament_id']=t_id
+            defaults['wdr_tournament_id'] = t_id
             try:
                 PlayerAward.objects.update_or_create(player=player,
                                                      wdd_tournament_id=t['tournament_wdd_id'],
@@ -741,6 +741,7 @@ class Player(models.Model):
                                 null=True,
                                 on_delete=models.CASCADE,
                                 help_text=_('If the Player has an account on the site, record it here'))
+
     class Meta:
         ordering = ['last_name', 'first_name']
 
@@ -814,7 +815,7 @@ class Player(models.Model):
         """
         qs = self.wddplayer_set.all()
         try:
-           wdd = qs[0]
+            wdd = qs[0]
         except IndexError:
             return (self.first_name, self.last_name)
         return wdd.wdd_firstname_lastname()

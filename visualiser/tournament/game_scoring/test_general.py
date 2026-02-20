@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2014, 2016-2020 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -20,7 +20,6 @@ from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.game_state import InvalidYear
 from tournament.game_scoring.sc_chart_game_state import SCChartGameState
 from tournament.game_scoring.simple_game_state import SimpleGameState
 from tournament.models import find_game_scoring_system
@@ -49,7 +48,7 @@ def check_score_for_state(self, state, system_name, expected_scores, expected_to
     system = find_game_scoring_system(system_name)
     scores = system.scores(state)
     self.assertEqual(7, len(scores))
-    for p,s in scores.items():
+    for p, s in scores.items():
         with self.subTest(power=p):
             self.assertAlmostEqual(s, expected_scores[p])
     if expected_total is not None:
@@ -157,7 +156,7 @@ class GameScoringTests(TestCase):
         system = find_game_scoring_system('CDiplo 80')
         scores = system.scores(self.three_way_tie)
         self.assertEqual(7, len(scores))
-        for p,s in scores.items():
+        for p, s in scores.items():
             sc = self.three_way_tie.dot_count(p)
             # 3 powers equal on 10 SCs, and 4 equal on 1 SC
             if sc == 1:
@@ -167,7 +166,7 @@ class GameScoringTests(TestCase):
         self.assertEqual(sum(scores.values()), 80)
         scores = system.scores(self.three_survivors)
         self.assertEqual(7, len(scores))
-        for p,s in scores.items():
+        for p, s in scores.items():
             sc = self.three_survivors.dot_count(p)
             if sc == 17:
                 self.assertEqual(s, 17 + 25)

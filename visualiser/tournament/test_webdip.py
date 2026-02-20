@@ -22,6 +22,7 @@ from django.test import TestCase, tag
 from tournament.webdip import (FALL, POWERS, SPRING, WEBDIPLOMACY_NETLOC, Game,
                                InvalidGameUrl, UnsupportedVariant)
 
+
 INVALID_GAME_ID = 1
 VARIANT_GAME_ID = 457652
 SOLO_GAME_ID = 334382
@@ -32,6 +33,7 @@ DRAW_5_GAME_ID = 21
 DRAW_6_GAME_ID = 404806
 DRAW_7_GAME_ID = 19
 #SANDBOX_GAME_ID = 5766492401172480
+
 
 @skip('WebDip parsing is broken')
 class WebDiplomacyTests(TestCase):

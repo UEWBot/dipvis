@@ -69,7 +69,7 @@ class GScoringSouthernSun(GameScoringSystem):
                     retval[p] = 0
         else:
             dots = [(p, state.dot_count(p)) for p in all_powers]
-            dots.sort(key = itemgetter(1), reverse=True)
+            dots.sort(key=itemgetter(1), reverse=True)
             # Allow for tied positions
             rank_pts = _adjust_rank_score(dots, self.position_points[:len(state.survivors())])
             for i, (p, c) in enumerate(dots):
@@ -80,4 +80,3 @@ class GScoringSouthernSun(GameScoringSystem):
                     # 3 points per game year survived, no place bonus
                     retval[p] = 3 * (1 + state.year_eliminated(p) - FIRST_YEAR)
         return _sorted_scores(retval, state)
-

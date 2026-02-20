@@ -30,7 +30,9 @@ from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
                                RoundPlayer, Tournament, TournamentPlayer)
 from tournament.players import Player
 
+
 TD_EMAIL = 'td@example.com'
+
 
 @override_settings(HOSTNAME='example.com')
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
@@ -63,14 +65,16 @@ class EmailTests(TestCase):
                                            draw_secrecy=DrawSecrecy.SECRET)
 
         r1 = Round.objects.create(tournament=cls.t1,
-                                 scoring_system=G_SCORING_SYSTEMS[0].name,
-                                 dias=True,
-                                 start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=datetime.combine(cls.t1.start_date,
+                                                         time(hour=8, tzinfo=datetime_timezone.utc)))
 
         r2 = Round.objects.create(tournament=cls.t1,
-                                 scoring_system=G_SCORING_SYSTEMS[0].name,
-                                 dias=True,
-                                 start=datetime.combine(cls.t1.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=datetime.combine(cls.t1.start_date,
+                                                         time(hour=17, tzinfo=datetime_timezone.utc)))
 
         g1 = Game.objects.create(name='g1',
                                  started_at=r1.start,
@@ -389,7 +393,7 @@ class EmailTests(TestCase):
         """Call without force for a Player with email in Tournament with prefs when not previously emailed"""
         tp = self.t2.tournamentplayer_set.filter(uuid_str='').first()
         # add an email address
-        tp.player.email='new.email@example.com'
+        tp.player.email = 'new.email@example.com'
         send_prefs_email(tp)
         self.assertEqual(len(mail.outbox), 1)
         # Clean things up back as they were

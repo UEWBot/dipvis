@@ -217,7 +217,7 @@ class TournamentGameStateTests(TestCase):
         system = find_game_scoring_system('Solo or bust')
         scores = system.scores(tgs)
         self.assertEqual(7, len(scores))
-        for p,s in scores.items():
+        for p, s in scores.items():
             if p == self.france:
                 self.assertEqual(s, 100)
             else:

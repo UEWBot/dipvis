@@ -56,7 +56,7 @@ class GScoringCDiploNamur(GameScoringSystem):
         """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        dots.sort(key = itemgetter(1), reverse=True)
+        dots.sort(key=itemgetter(1), reverse=True)
         # Tweak the ranking points to allow for ties
         rank_pts = _adjust_rank_score(dots, self.position_pts)
         for i, (p, c) in enumerate(dots):

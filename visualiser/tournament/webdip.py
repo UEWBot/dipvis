@@ -46,6 +46,7 @@ class InvalidGameUrl(Exception):
     """Expected a WebDiplomacy game URL."""
     pass
 
+
 class UnsupportedVariant(Exception):
     """Only the standard map is supported."""
     pass
@@ -92,7 +93,7 @@ class Game():
         num = qs['gameID'][0]
         # Webdip strips off any characters after the number part
         if not num.isdigit():
-            tmp =[]
+            tmp = []
             for c in num:
                 if c.isdigit():
                     tmp.append(c)

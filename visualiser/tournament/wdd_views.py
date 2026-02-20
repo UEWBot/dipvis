@@ -307,7 +307,7 @@ def view_boards_csv(request, tournament_id):
                 cc = None
                 for cc in dots:
                     row_dict[_centrecount_year_to_wdd(cc.year)] = cc.count
-                    if cc.count == 0 and not 'YEAR_ELIMINATION' in row_dict:
+                    if cc.count == 0 and 'YEAR_ELIMINATION' not in row_dict:
                         row_dict['YEAR_ELIMINATION'] = cc.year % (FIRST_YEAR-1)
                 if cc:
                     row_dict['NB_CENTRE'] = cc.count

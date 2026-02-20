@@ -22,14 +22,10 @@ from operator import attrgetter
 
 from django.http import Http404
 from django.shortcuts import render
-from django.utils.translation import gettext as _
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
-                                                          TOTAL_SCS,
-                                                          WINNING_SCS)
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.game_state import DotCountUnknown, GameState
+from tournament.game_scoring.game_state import DotCountUnknown
 from tournament.game_scoring.simple_game_state import SimpleGameState
 
 
@@ -49,6 +45,7 @@ GAME_4 = {'sc_counts': [11, 1, 0, 11, 11, 0, 0],
 GAME_5 = {'sc_counts': [11, 0, 0, 12, 11, 0, 0],
           'final_year': 1910,
           'elimination_years': [1910, 1905, 1906, 1909]}
+
 
 def _create_state(params):
     """Create a GameState object from the params dict."""

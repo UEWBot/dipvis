@@ -105,7 +105,7 @@ class TournamentPlayerViewTests(TestCase):
         # Player that is also u3 (manager of t2)
         cls.p11 = Player.objects.create(first_name='Kathryn',
                                         last_name='Krispy',
-                                        user = cls.u3)
+                                        user=cls.u3)
 
         today = date.today()
         # Published Tournament, so it's visible to all

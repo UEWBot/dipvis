@@ -47,7 +47,6 @@ class PlayerViewTests(TestCase):
                                      is_superuser=True)
         u.save()
 
-
     def test_index(self):
         response = self.client.get(reverse('player_index'),
                                    secure=True)
@@ -83,10 +82,10 @@ class PlayerViewTests(TestCase):
     def test_detail_wddplayers(self):
         """Test a Player with multiple WDDPlayers"""
         self.assertFalse(self.p1.wddplayer_set.exists())
-        wdd1 = WDDPlayer.objects.create(wdd_player_id=912,
-                                        player=self.p1)
-        wdd2 = WDDPlayer.objects.create(wdd_player_id=15045,
-                                        player=self.p1)
+        WDDPlayer.objects.create(wdd_player_id=912,
+                                 player=self.p1)
+        WDDPlayer.objects.create(wdd_player_id=15045,
+                                 player=self.p1)
         # Don't have to be logged in to see a player
         response = self.client.get(reverse('player_detail',
                                            args=(self.p1.pk,)),
@@ -122,7 +121,8 @@ class PlayerViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect to the versus page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('player_versus', args=(self.p1.pk, p.pk)))
+        self.assertEqual(response.url, reverse('player_versus',
+                                               args=(self.p1.pk, p.pk)))
         # Cleanup
         p.delete()
 

@@ -21,11 +21,13 @@ from django.urls import reverse
 
 from tournament.backstabbr import BACKSTABBR_NETLOC
 
+
 INVALID_GAME_NUMBER = 1
 SOLO_GAME_NUMBER = 5128998112198656
 SANDBOX_1_GAME_NUMBER = 5766492401172480
 SANDBOX_2_GAME_NUMBER = 5412944885972992
 SANDBOX_3_GAME_NUMBER = 5101432468275200
+
 
 class BackstabbrViewTests(TestCase):
     def test_graph_page_game(self):

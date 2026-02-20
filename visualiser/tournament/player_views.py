@@ -32,7 +32,7 @@ from django.utils import timezone as django_timezone
 from django.views import generic
 
 from tournament.forms import PlayerForm
-from tournament.players import Player, PlayerGameResult, add_player_bg
+from tournament.players import Player, PlayerGameResult, add_player_bg, WDDPlayer
 from tournament.wdd import validate_wdd_player_id
 
 # Player views

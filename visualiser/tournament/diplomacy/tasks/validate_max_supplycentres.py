@@ -22,6 +22,7 @@ from ..models.supply_centre import SupplyCentre
 def num_supplycentres():
     return SupplyCentre.objects.count()
 
+
 """
 Checks that value doesn't exceed the number of SupplyCentres
 """

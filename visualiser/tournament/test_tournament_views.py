@@ -26,7 +26,7 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
-                               R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
+                               R_SCORING_SYSTEMS, Award,
                                CentreCount, DrawProposal, DrawSecrecy, Game,
                                GamePlayer, PowerAssignMethods, Preference,
                                Round, RoundPlayer, Seasons, SeederBias, Team,
@@ -88,8 +88,8 @@ class TournamentViewTests(TestCase):
         cls.p2 = Player.objects.create(first_name='Bobby',
                                        last_name='Bandersnatch')
         # One with a really long name
-        p3 = Player.objects.create(first_name='Cassandra'.ljust(Player._meta.get_field('first_name').max_length,'.'),
-                                   last_name='Cucumber'.ljust(Player._meta.get_field('last_name').max_length,'.'))
+        p3 = Player.objects.create(first_name='Cassandra'.ljust(Player._meta.get_field('first_name').max_length, '.'),
+                                   last_name='Cucumber'.ljust(Player._meta.get_field('last_name').max_length, '.'))
         p4 = Player.objects.create(first_name='Derek',
                                    last_name='Dromedary')
         p5 = Player.objects.create(first_name='Ethel',
@@ -107,7 +107,7 @@ class TournamentViewTests(TestCase):
         # Player that is also u3 (manager of t2)
         cls.p11 = Player.objects.create(first_name='Kathryn',
                                         last_name='Krispy',
-                                        user = cls.u3)
+                                        user=cls.u3)
 
         # A few awards
         cls.a1 = Award.objects.create(name='Longest Hair',
@@ -342,30 +342,30 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('index'),
                                    secure=True)
         # Check that we get the right tournaments listed
-        self.assertContains(response, 't1') # Published
-        self.assertNotContains(response, 't2') # Unpublished
-        self.assertNotContains(response, 't3') # Unpublished
-        self.assertContains(response, 't4') # Published
+        self.assertContains(response, 't1')  # Published
+        self.assertNotContains(response, 't2')  # Unpublished
+        self.assertNotContains(response, 't3')  # Unpublished
+        self.assertContains(response, 't4')  # Published
 
     def test_index_superuser(self):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         response = self.client.get(reverse('index'),
                                    secure=True)
         # Check that we get the right tournaments listed
-        self.assertContains(response, 't1') # Published
-        self.assertContains(response, 't2') # Unpublished
-        self.assertContains(response, 't3') # Unpublished
-        self.assertContains(response, 't4') # Published
+        self.assertContains(response, 't1')  # Published
+        self.assertContains(response, 't2')  # Unpublished
+        self.assertContains(response, 't3')  # Unpublished
+        self.assertContains(response, 't4')  # Published
 
     def test_index_manager(self):
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         response = self.client.get(reverse('index'),
                                    secure=True)
         # Check that we get the right tournaments listed
-        self.assertContains(response, 't1') # Published
-        self.assertContains(response, 't2') # Unpublished, manager
-        self.assertNotContains(response, 't3') # Unpublished
-        self.assertContains(response, 't4') # Published
+        self.assertContains(response, 't1')  # Published
+        self.assertContains(response, 't2')  # Unpublished, manager
+        self.assertNotContains(response, 't3')  # Unpublished
+        self.assertContains(response, 't4')  # Published
 
     def test_detail_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
@@ -1728,7 +1728,6 @@ class TournamentViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 404)
 
-
     def test_api(self):
         # Change one of the games to not be finished
         r = self.t4.round_numbered(1)
@@ -1748,7 +1747,6 @@ class TournamentViewTests(TestCase):
         g.is_finished = True
         g.save()
         tp.delete()
-
 
     def test_api2(self):
         # Change one of the games to not be finished
@@ -1774,12 +1772,10 @@ class TournamentViewTests(TestCase):
         self.t4.round_scoring_system = rss
         self.t4.save()
 
-
     def test_api_invalid_version(self):
         response = self.client.get(reverse('api_tournament', args=(7, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
-
 
     def test_tournament_awards(self):
         """Should be viewable without logging in"""
@@ -1787,7 +1783,6 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
-
 
     def test_tournament_awards_afterwards(self):
         """For a finished Tournament, it should show who received the awards"""
@@ -1812,7 +1807,6 @@ class TournamentViewTests(TestCase):
         self.t4.awards.clear()
         self.tp41.awards.clear()
         tp.awards.clear()
-
 
     def test_enter_awards_post_not_logged_in(self):
         response = self.client.get(reverse('enter_awards',
@@ -1870,7 +1864,6 @@ class TournamentViewTests(TestCase):
             self.assertEqual(a.tournamentplayer_set.count(), 1)
         # Cleanup
         tp.awards.clear()
-
 
     def test_tournament_wdd_awards(self):
         """Should be viewable without logging in"""

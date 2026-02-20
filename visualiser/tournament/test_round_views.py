@@ -25,7 +25,7 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
+from tournament.models import (R_SCORING_SYSTEMS,
                                DrawSecrecy, Formats, Game, GamePlayer, Pool,
                                PowerAssignMethods, Round, RoundPlayer,
                                SeederBias, Team, Tournament, TournamentPlayer)
@@ -97,7 +97,7 @@ class RoundViewTests(TestCase):
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True,
                                            seed_games=False,
-                                           format = Formats.VFTF)
+                                           format=Formats.VFTF)
         cls.r11 = Round.objects.create(tournament=cls.t1,
                                        scoring_system=G_SCORING_SYSTEMS[0].name,
                                        dias=True,
@@ -519,11 +519,11 @@ class RoundViewTests(TestCase):
         """roll_call POST for current round of a tournament with pools"""
         r = self.t3.current_round()
         self.assertEqual(r.number(), 2)
-        pool1 = Pool.objects.create(the_round=r,
-                                    name='Fixed',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=r,
-                                    name='Variable')
+        Pool.objects.create(the_round=r,
+                            name='Fixed',
+                            board_count=1)
+        Pool.objects.create(the_round=r,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         # TODO Why doesn't this work?
         #data = urlencode({'form-TOTAL_FORMS': '10',
@@ -958,11 +958,11 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_populate_pools(self):
-        pool1 = Pool.objects.create(the_round=self.r11,
-                                    name='Fixed',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r11,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r11,
+                            name='Fixed',
+                            board_count=1)
+        Pool.objects.create(the_round=self.r11,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('populate_pools',
                                            args=(self.t1.pk, 1)),
@@ -972,30 +972,30 @@ class RoundViewTests(TestCase):
         self.r11.pool_set.all().delete()
 
     def test_populate_too_few_pools(self):
-        pool1 = Pool.objects.create(the_round=self.r11,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r11,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         with self.assertRaises(Pool.DoesNotExist):
-            response = self.client.get(reverse('populate_pools',
-                                               args=(self.t1.pk, 1)),
-                                       secure=True)
+            self.client.get(reverse('populate_pools',
+                                    args=(self.t1.pk, 1)),
+                            secure=True)
         # Cleanup
         self.r11.pool_set.all().delete()
 
     def test_populate_too_many_pools(self):
-        pool1 = Pool.objects.create(the_round=self.r11,
-                                    name='Fixed1',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r11,
-                                    name='Fixed2',
-                                    board_count=1)
-        pool3 = Pool.objects.create(the_round=self.r11,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r11,
+                            name='Fixed1',
+                            board_count=1)
+        Pool.objects.create(the_round=self.r11,
+                            name='Fixed2',
+                            board_count=1)
+        Pool.objects.create(the_round=self.r11,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         with self.assertRaises(Pool.MultipleObjectsReturned):
-            response = self.client.get(reverse('populate_pools',
-                                               args=(self.t1.pk, 1)),
-                                       secure=True)
+            self.client.get(reverse('populate_pools',
+                                     args=(self.t1.pk, 1)),
+                            secure=True)
         # Cleanup
         self.r11.pool_set.all().delete()
 
@@ -1040,11 +1040,11 @@ class RoundViewTests(TestCase):
     def test_populate_pools_post_missing_player(self):
         # Seven players for the fixed pool
         fixed_players = [self.rp12, self.rp13, self.rp16, self.rp17, self.rp19, self.rp110, self.rp113]
-        pool1 = Pool.objects.create(the_round=self.r11,
-                                    name='Fixed',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r11,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r11,
+                            name='Fixed',
+                            board_count=1)
+        Pool.objects.create(the_round=self.r11,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = {}
         for n, rp in enumerate(fixed_players, start=1):
@@ -1066,11 +1066,11 @@ class RoundViewTests(TestCase):
     def test_populate_pools_post_duplicate_player(self):
         # Seven players for the fixed pool
         fixed_players = [self.rp12, self.rp13, self.rp16, self.rp12, self.rp19, self.rp110, self.rp113]
-        pool1 = Pool.objects.create(the_round=self.r11,
-                                    name='Fixed',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=self.r11,
-                                    name='Variable')
+        Pool.objects.create(the_round=self.r11,
+                            name='Fixed',
+                            board_count=1)
+        Pool.objects.create(the_round=self.r11,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         data = {}
         for n, rp in enumerate(fixed_players, start=1):
@@ -1363,13 +1363,13 @@ class RoundViewTests(TestCase):
                                 is_finished=True,
                                 the_round=self.r32,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
-        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
-        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
-        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
-        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
-        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
-        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
-        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
         data = {'form-TOTAL_FORMS': '1',
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
@@ -1451,13 +1451,13 @@ class RoundViewTests(TestCase):
                                 is_finished=True,
                                 the_round=self.r32,
                                 the_set=GameSet.objects.get(name='Avalon Hill'))
-        gp1 = GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
-        gp2 = GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
-        gp3 = GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
-        gp4 = GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
-        gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
-        gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
-        gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
         data = {'form-TOTAL_FORMS': '1',
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
@@ -1644,11 +1644,11 @@ class RoundViewTests(TestCase):
 
     def test_create_games_invalid_pool(self):
         r = self.t3.round_numbered(1)
-        pool1 = Pool.objects.create(the_round=r,
-                                    name='Fixed',
-                                    board_count=1)
-        pool2 = Pool.objects.create(the_round=r,
-                                    name='Variable')
+        Pool.objects.create(the_round=r,
+                            name='Fixed',
+                            board_count=1)
+        Pool.objects.create(the_round=r,
+                            name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('create_games_in_pool',
                                            args=(self.t3.pk, 1, 'invalid-pool-slug')),
@@ -1708,13 +1708,13 @@ class RoundViewTests(TestCase):
     def test_create_games_post(self):
         """Simple case - no pre-existing Games. Create one"""
         self.assertEqual(self.r11.game_set.count(), 0)
-        powers = {self.austria : self.rp11,
-                  self.turkey : self.rp12,
-                  self.england : self.rp13,
-                  self.russia : self.rp15,
-                  self.italy : self.rp16,
-                  self.france : self.rp17,
-                  self.germany : self.rp19}
+        powers = {self.austria: self.rp11,
+                  self.turkey: self.rp12,
+                  self.england: self.rp13,
+                  self.russia: self.rp15,
+                  self.italy: self.rp16,
+                  self.france: self.rp17,
+                  self.germany: self.rp19}
         URL = 'http://example.com/test.html'
         NOTE = 'New Game notes'
         data = {'form-TOTAL_FORMS': '2',
@@ -1761,13 +1761,13 @@ class RoundViewTests(TestCase):
     def test_create_games_post_modify_players(self):
         """Change players or power assignments"""
         self.assertEqual(self.r11.game_set.count(), 0)
-        powers = {self.austria : self.rp11,
-                  self.turkey : self.rp12,
-                  self.england : self.rp13,
-                  self.russia : self.rp15,
-                  self.italy : self.rp16,
-                  self.france : self.rp17,
-                  self.germany : self.rp19}
+        powers = {self.austria: self.rp11,
+                  self.turkey: self.rp12,
+                  self.england: self.rp13,
+                  self.russia: self.rp15,
+                  self.italy: self.rp16,
+                  self.france: self.rp17,
+                  self.germany: self.rp19}
         g = Game.objects.create(the_round=self.r11,
                                 name='Existing',
                                 the_set=self.gibsons,
@@ -1826,13 +1826,13 @@ class RoundViewTests(TestCase):
     def test_create_games_post_modify_non_players(self):
         """Change attributes other than players and power assignments"""
         self.assertEqual(self.r11.game_set.count(), 0)
-        powers = {self.austria : self.rp11,
-                  self.turkey : self.rp12,
-                  self.england : self.rp13,
-                  self.russia : self.rp15,
-                  self.italy : self.rp16,
-                  self.france : self.rp17,
-                  self.germany : self.rp19}
+        powers = {self.austria: self.rp11,
+                  self.turkey: self.rp12,
+                  self.england: self.rp13,
+                  self.russia: self.rp15,
+                  self.italy: self.rp16,
+                  self.france: self.rp17,
+                  self.germany: self.rp19}
         g = Game.objects.create(the_round=self.r11,
                                 name='Existing',
                                 the_set=self.gibsons,
@@ -1887,13 +1887,13 @@ class RoundViewTests(TestCase):
     def test_create_games_modify_two_games(self):
         """Check that multiple games can be changed in different ways"""
         self.assertEqual(self.r11.game_set.count(), 0)
-        powers = {self.austria : self.rp11,
-                  self.turkey : self.rp12,
-                  self.england : self.rp13,
-                  self.russia : self.rp15,
-                  self.italy : self.rp16,
-                  self.france : self.rp17,
-                  self.germany : self.rp19}
+        powers = {self.austria: self.rp11,
+                  self.turkey: self.rp12,
+                  self.england: self.rp13,
+                  self.russia: self.rp15,
+                  self.italy: self.rp16,
+                  self.france: self.rp17,
+                  self.germany: self.rp19}
         g1 = Game.objects.create(the_round=self.r11,
                                  name='Existing1',
                                  the_set=self.gibsons,
@@ -1961,13 +1961,13 @@ class RoundViewTests(TestCase):
         """Duplicate a Game name in another Round of the same Tournament"""
         self.assertEqual(self.r21.game_set.count(), 0)
         self.assertEqual(self.r23.game_set.count(), 0)
-        powers = {self.austria : self.rp21,
-                  self.turkey : self.rp23,
-                  self.england : self.rp24,
-                  self.russia : self.rp25,
-                  self.italy : self.rp26,
-                  self.france : self.rp27,
-                  self.germany : self.rp28}
+        powers = {self.austria: self.rp21,
+                  self.turkey: self.rp23,
+                  self.england: self.rp24,
+                  self.russia: self.rp25,
+                  self.italy: self.rp26,
+                  self.france: self.rp27,
+                  self.germany: self.rp28}
         # Create a Game in round 1
         Game.objects.create(the_round=self.r21,
                             name="Duplicate",

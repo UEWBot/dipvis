@@ -87,10 +87,10 @@ def _tournament_news(t):
                 if a.power:
                     gp = tp.gameplayers().filter(power=a.power).order_by('-score').first()
                     awards_str += _('%(award)s (with %(dots)d centres and a score of %(score).2f in game %(game)s of round %(round)d)') % {'award': a.name,
-                                                                                                                                         'game': gp.game.name,
-                                                                                                                                         'round': gp.game.the_round.number(),
-                                                                                                                                         'score': gp.score,
-                                                                                                                                         'dots': gp.final_sc_count()}
+                                                                                                                                           'game': gp.game.name,
+                                                                                                                                           'round': gp.game.the_round.number(),
+                                                                                                                                           'score': gp.score,
+                                                                                                                                           'dots': gp.final_sc_count()}
                 else:
                     awards_str += a.name
             results.append(_('%(player)s won %(awards)s.') % {'player': tp.player,
@@ -385,7 +385,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
             incl_str = ', '.join(incl)
             if g.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
                 count_str = _(', %(for)d for, %(against)d against') % {'for': d.votes_in_favour,
-                                                                      'against': d.votes_against()}
+                                                                       'against': d.votes_against()}
             else:
                 count_str = ''
             d_str = ngettext('Vote to concede to %(powers)s failed%(game)s%(count)s.',
@@ -410,6 +410,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     # Shuffle the resulting list
     random.shuffle(results)
     return results
+
 
 def news(obj, for_year=None):
     """Return a list of events in obj"""

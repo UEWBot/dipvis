@@ -48,9 +48,8 @@ from tournament.tournament_views import (get_modifiable_tournament_or_404,
                                          get_visible_tournament_or_404)
 
 
-# Round views
-
 REFRESH_TIME = 60
+
 
 def get_round_or_404(tournament, round_num):
     """

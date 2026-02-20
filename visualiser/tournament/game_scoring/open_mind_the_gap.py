@@ -47,7 +47,7 @@ class GScoringOMG(GameScoringSystem):
         """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        dots.sort(key = itemgetter(1), reverse=True)
+        dots.sort(key=itemgetter(1), reverse=True)
         gap = dots[0][1] - dots[1][1]
         num_leaders = state.num_powers_with(dots[0][1])
         rank_pts = _adjust_rank_score(dots, [4.5, 3, 1.5])

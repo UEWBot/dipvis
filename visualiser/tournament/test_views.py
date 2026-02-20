@@ -20,7 +20,6 @@ from datetime import timezone as datetime_timezone
 from django.test import TestCase
 from django.urls import reverse
 
-import tournament
 from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
                                T_SCORING_SYSTEMS, DrawSecrecy, Round,
                                Tournament)

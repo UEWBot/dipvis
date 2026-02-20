@@ -32,11 +32,13 @@ from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
                              _round_news, _tournament_news, news)
 from tournament.players import Player
 
+
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
 HOURS_10 = timedelta(hours=10)
 HOURS_16 = timedelta(hours=16)
 HOURS_24 = timedelta(hours=24)
+
 
 class NewsTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -283,7 +285,6 @@ class NewsTests(TestCase):
         GamePlayer.objects.create(player=cls.p2, game=g31, power=cls.russia)
         GamePlayer.objects.create(player=cls.p1, game=g31, power=cls.turkey)
 
-
     # _tournament_news()
     def test_tournament_news_in_progress(self):
         t = Tournament.objects.get(name='t1')
@@ -322,7 +323,6 @@ class NewsTests(TestCase):
 
     def test_tournament_news_not_started(self):
         # TODO is a Tournament with no rounds the only way to get this message?
-        s1 = G_SCORING_SYSTEMS[0].name
         today = date.today()
         t = Tournament.objects.create(name='t2',
                                       start_date=today,
@@ -546,7 +546,7 @@ class NewsTests(TestCase):
         t = Tournament.objects.get(name='t1')
         g = t.round_numbered(1).game_set.get(name='g12')
         # Add some SC ownerships that give us gains and losses
-        for k,v in test_data.items():
+        for k, v in test_data.items():
             sco = SupplyCentreOwnership(sc=k, owner=v, year=1901, game=g)
             sco.save()
         g.create_or_update_sc_counts_from_ownerships(1901)

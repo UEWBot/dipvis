@@ -450,7 +450,7 @@ class WddViewTests(TestCase):
     def test_classification_no_top_board(self):
         # Switch the top board to a regular board
         g = Game.objects.get(is_top_board=True)
-        g.is_top_board=False
+        g.is_top_board = False
         g.save(update_fields=['is_top_board'])
         response = self.client.get(reverse('csv_classification',
                                            args=(self.t.pk,)),
@@ -458,7 +458,7 @@ class WddViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # TODO Check CSV file content
         # Clean up
-        g.is_top_board=True
+        g.is_top_board = True
         g.save(update_fields=['is_top_board'])
 
     def test_classification_many_awards(self):
@@ -531,4 +531,3 @@ class WddViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         # TODO Check CSV file content
-

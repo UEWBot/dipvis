@@ -76,7 +76,7 @@ class GScoringRankedClassic(GameScoringSystem):
                 else:
                     retval[p] = state.year_eliminated(p) - FIRST_YEAR
         else:
-            dots.sort(key = itemgetter(1), reverse=True)
+            dots.sort(key=itemgetter(1), reverse=True)
             # Tweak the ranking points to allow for ties
             rank_pts = _adjust_rank_score_lower_special(dots,
                                                         self.position_points,

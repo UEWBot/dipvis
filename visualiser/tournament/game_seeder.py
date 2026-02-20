@@ -412,7 +412,7 @@ class GameSeeder:
             # The more iterations, the better the result, but the longer it takes
             for _ in range(self.iterations):
                 # Try swapping a random player between two random games
-                g1, g2 = random.sample(games,2)
+                g1, g2 = random.sample(games, 2)
                 # Pick a player from each game that isn't also playing the other
                 p1 = random.choice(list(g1 - g2))
                 p2 = random.choice(list(g2 - g1))
@@ -598,7 +598,7 @@ class GameSeeder:
                     # This gives us a list of 2-tuples with (seeding, fitness)
                     seedings.append(self._seed_games(omitting_players,
                                                      players_doubling_up))
-            else: # self.seed_method == SeedMethod.EXHAUSTIVE
+            else:  # self.seed_method == SeedMethod.EXHAUSTIVE
                 players = self._player_pool(omitting_players, players_doubling_up)
                 seedings = []
                 try:

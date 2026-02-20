@@ -174,7 +174,7 @@ class WikipediaBackground():
             hdr = table.find_previous('h3')
             # We don't want to find the same header again
             if (not hdr) or (hdr == last_hdr):
-               hdr = table.find_previous('h2')
+                hdr = table.find_previous('h2')
             last_hdr = hdr
             tournament = hdr.get_text()
             # Parse the table itself
@@ -212,7 +212,7 @@ class WDDBackground():
     """
 
     # timeout in seconds for read requests to WDD
-    TIMEOUT=4.0
+    TIMEOUT = 4.0
 
     def __init__(self, wdd_id):
         self.wdd_id = wdd_id
@@ -699,7 +699,7 @@ class WDRBackground():
 
     # timeout in seconds for read requests to WDR
     # Some players have a long history
-    TIMEOUT=10.0
+    TIMEOUT = 10.0
 
     def __init__(self, wdr_id):
         self.wdr_id = wdr_id

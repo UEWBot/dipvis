@@ -90,7 +90,7 @@ class GScoringMaxonian(GameScoringSystem):
             return retval
 
         dots = [(p, state.dot_count(p, year)) for p in power_list]
-        dots.sort(key = itemgetter(1), reverse=True)
+        dots.sort(key=itemgetter(1), reverse=True)
 
         for n, (p, d) in enumerate(dots, start=0):
 
@@ -105,7 +105,7 @@ class GScoringMaxonian(GameScoringSystem):
                 # Recurse with the appropriate subsets
                 power_sublist = [p for p, d2 in dots if d2 == d]
                 yr = year - 1
-                while(True):
+                while True:
                     try:
                         retval.update(self._scores_for_powers(state,
                                                               yr,

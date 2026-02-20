@@ -59,5 +59,5 @@ class GScoringBase3(GameScoringSystem):
                     retval[p] = 3.0 + dots
                 # Bonus points for board toppers
                 if dots == leader_scs:
-                   retval[p] += bonus
+                    retval[p] += bonus
         return retval

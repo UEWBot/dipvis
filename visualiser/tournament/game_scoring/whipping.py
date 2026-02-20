@@ -65,7 +65,7 @@ class GScoringWhipping(GameScoringSystem):
         """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        dots.sort(key = itemgetter(1), reverse=True)
+        dots.sort(key=itemgetter(1), reverse=True)
         topper_scs = dots[0][1]
         for i, (p, c) in enumerate(dots):
             if topper_scs >= WINNING_SCS:

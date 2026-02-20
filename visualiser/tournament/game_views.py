@@ -242,13 +242,12 @@ def graph(request,
         # plot the SC counts
         fig = figure.Figure()
         ax = fig.subplots()
-        years = g.years_played()
         for power in GreatPower.objects.all():
             colour = _map_to_fg(g.the_set.setpower_set.get(power=power).colour)
             year_dots = [(cc.year, cc.count) for cc in g.centrecount_set.filter(power=power)]
             # X-axis is year, y-axis is SC count. Colour by power
-            ax.plot([y for y,c in year_dots],
-                    [c for y,c in year_dots],
+            ax.plot([y for y, c in year_dots],
+                    [c for y, c in year_dots],
                     label=_(power.name),
                     color=colour,
                     linewidth=2)
@@ -570,7 +569,7 @@ def draw_vote(request, tournament_id, game_name, concession):
             # For a concession, countries will be the power being conceded to,
             # whereas for a draw it will be a QuerySet of included powers
             if type(countries) is not QuerySet:
-                countries = [ countries ]
+                countries = [countries]
 
         passed = form.cleaned_data.get('passed')
         votes_in_favour = form.cleaned_data.get('votes_in_favour')
@@ -838,6 +837,7 @@ def scrape_external_site(request, tournament_id, game_name):
         else:
             return _scrape_webdip(request, t, g, wg)
     raise Http404('External site is not backstabbr or webdiplomacy')
+
 
 def api(request, version, tournament_id, game_name):
     """JSON API to retrieve data"""

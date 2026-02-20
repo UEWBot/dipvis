@@ -51,6 +51,7 @@ S1901_dots = {
     'Turkey': 3,
 }
 
+
 def _dots(game):
     """Return a dict, keyed by year, of dicts keyed by power of SC counts"""
     retval = {1900: S1901_dots}
@@ -78,6 +79,7 @@ def _dots(game):
         else:
             retval[y] = sc_counts
     return retval
+
 
 def graph(request, game_type, game_number):
     """
@@ -115,6 +117,7 @@ def graph(request, game_type, game_number):
     response = HttpResponse(graphic, content_type="image/png")
     return response
 
+
 def game_sc_graph(request, game_number, sandbox):
     """Show a Supply Centre chart for a backstabbr game"""
     if sandbox:
@@ -124,6 +127,7 @@ def game_sc_graph(request, game_number, sandbox):
     context = {'game_type': game_type,
                'game_number': str(game_number)}
     return render(request, 'backstabbr/sc_graph.html', context)
+
 
 def url_form(request):
     """Form to enter the URL of a backstabbr game"""

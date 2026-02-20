@@ -1,16 +1,16 @@
 # Diplomacy Tournament Visualiser
 # Copyright (C) 2020 Chris Brand
-# 
+#
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -22,6 +22,7 @@ from tournament.backstabbr import (BACKSTABBR_NETLOC, BACKSTABBR_NETLOCS, FALL,
                                    POWERS, SPRING, WINTER, Game,
                                    InvalidGameUrl, NoSuchSeason,
                                    is_backstabbr_url)
+
 
 INVALID_GAME_NUMBER = 1
 SOLO_GAME_NUMBER = 5128998112198656
@@ -37,6 +38,7 @@ WINTER_GAME_NUMBER = 6287060712161280
 SANDBOX_1_GAME_NUMBER = 5766492401172480
 SANDBOX_2_GAME_NUMBER = 5412944885972992
 SANDBOX_3_GAME_NUMBER = 6238301148020736
+
 
 @tag('backstabbr')
 class BackstabbrTests(TestCase):

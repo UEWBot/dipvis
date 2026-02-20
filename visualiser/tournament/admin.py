@@ -35,17 +35,21 @@ from tournament.players import (Player, PlayerAward, PlayerGameResult,
 class AwardAdmin(admin.ModelAdmin):
     list_filter = ['power']
 
+
 @admin.register(CentreCount)
 class CentreCountAdmin(admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'year']
+
 
 @admin.register(DBNCoverage)
 class DBNCoverageAdmin(admin.ModelAdmin):
     list_filter = ['tournament']
 
+
 @admin.register(DrawProposal)
 class DrawProposalAdmin(admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'passed', 'game', 'year']
+
 
 class GamePlayerInline(admin.TabularInline):
     model = GamePlayer
@@ -56,6 +60,7 @@ class GamePlayerInline(admin.TabularInline):
         }),
     ]
 
+
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
@@ -63,13 +68,16 @@ class GameAdmin(admin.ModelAdmin):
     inlines = [GamePlayerInline]
     list_filter = ['the_round__tournament', 'name', 'is_finished']
 
+
 @admin.register(GameImage)
 class GameImageAdmin(admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'game', 'year', 'season', 'phase']
 
+
 @admin.register(GamePlayer)
 class GamePlayerAdmin(admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'player']
+
 
 class SetPowerInline(admin.TabularInline):
     model = SetPower
@@ -81,45 +89,55 @@ class SetPowerInline(admin.TabularInline):
         # We're going to want 7 set powers
         return 7
 
+
 @admin.register(GameSet)
 class GameSetAdmin(admin.ModelAdmin):
     """Include SetPower as part of GameSet"""
     inlines = [SetPowerInline]
+
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     exclude = ['_wdd_firstname', '_wdd_lastname']
     list_filter = ['first_name', 'last_name']
 
+
 @admin.register(PlayerAward)
 class PlayerAwardAdmin(admin.ModelAdmin):
     list_filter = ['player', 'tournament', 'name', 'power']
+
 
 @admin.register(PlayerGameResult)
 class PlayerGameResultAdmin(admin.ModelAdmin):
     list_filter = ['player', 'tournament_name', 'power', 'position', 'result']
 
+
 @admin.register(PlayerRanking)
 class PlayerRankingAdmin(admin.ModelAdmin):
     list_filter = ['system', 'player']
+
 
 @admin.register(PlayerTitle)
 class PlayerTitleAdmin(admin.ModelAdmin):
     list_filter = ['player', 'title', 'year']
 
+
 @admin.register(PlayerTournamentRanking)
 class PlayerTournamentRankingAdmin(admin.ModelAdmin):
     list_filter = ['player', 'tournament', 'position', 'year']
+
 
 @admin.register(Pool)
 class PoolAdmin(admin.ModelAdmin):
     list_filter = ['the_round__tournament']
     prepopulated_fields = {"slug": ["name"]}
 
+
 @admin.register(Round)
 class RoundAdmin(admin.ModelAdmin):
     list_filter = ['tournament']
     ordering = ['tournament__name', 'start']
+
 
 @admin.register(RoundPlayer)
 class RoundPlayerAdmin(admin.ModelAdmin):
@@ -131,17 +149,21 @@ class RoundPlayerAdmin(admin.ModelAdmin):
             for obj in queryset:
                 obj.delete()
 
+
 @admin.register(SupplyCentreOwnership)
 class SCOwnershipAdmin(admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'game', 'owner', 'year']
+
 
 @admin.register(SeederBias)
 class SeederBiasAdmin(admin.ModelAdmin):
     list_filter = ['player1__tournament']
 
+
 @admin.register(Series)
 class SeriesAdmin(admin.ModelAdmin):
     prepopulated_fields = {"slug": ["name"]}
+
 
 class RoundInline(admin.StackedInline):
     model = Round
@@ -161,9 +183,11 @@ class RoundInline(admin.StackedInline):
             return 0
         return 3
 
+
 @admin.register(Team)
 class TeamAdmin(admin.ModelAdmin):
     list_filter = ['tournament']
+
 
 @admin.register(Tournament)
 class TournamentAdmin(admin.ModelAdmin):
@@ -177,16 +201,19 @@ class TournamentAdmin(admin.ModelAdmin):
               ('show_current_scores', 'draw_secrecy', 'best_country_criterion'),
               ('discord_url', 'is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
-              ('wdd_tournament_id','wdr_tournament_id'),
+              ('wdd_tournament_id', 'wdr_tournament_id'),
               'awards')
+
 
 @admin.register(TournamentPlayer)
 class TournamentPlayerAdmin(admin.ModelAdmin):
     list_filter = ['tournament', 'player', 'location', 'unranked']
 
+
 @admin.register(WDDPlayer)
 class WDDPlayerAdmin(admin.ModelAdmin):
     list_filter = ['player']
+
 
 # Register models
 admin.site.register(GreatPower)
