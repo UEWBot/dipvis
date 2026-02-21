@@ -552,7 +552,6 @@ def draw_vote(request, tournament_id, game_name, concession):
                     concession=concession,
                     dias=g.is_dias(),
                     secrecy=t.draw_secrecy,
-                    player_count=len(g.survivors()),
                     initial={'year': year, 'season': season})
     if form.is_valid():
         year = form.cleaned_data['year']

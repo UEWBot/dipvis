@@ -377,7 +377,6 @@ class DrawForm(forms.Form):
         concession = kwargs.pop('concession')
         is_dias = kwargs.pop('dias')
         secrecy = kwargs.pop('secrecy')
-        player_count = kwargs.pop('player_count')
         super().__init__(*args, **kwargs)
 
         if concession:
@@ -393,7 +392,7 @@ class DrawForm(forms.Form):
                                                        required=False)
         elif secrecy == DrawSecrecy.COUNTS:
             self.fields['votes_in_favour'] = forms.IntegerField(min_value=0,
-                                                                max_value=player_count)
+                                                                max_value=GreatPower.objects.count())
         else:
             raise AssertionError(f'Unexpected draw secrecy value {secrecy}')
 

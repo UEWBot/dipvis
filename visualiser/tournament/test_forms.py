@@ -678,38 +678,27 @@ class DrawFormTest(TestCase):
     def test_init_missing_dias(self):
         with self.assertRaises(KeyError):
             DrawForm(secrecy=DrawSecrecy.SECRET,
-                     player_count=7,
-                     concession=False)
-
-    def test_init_missing_player_count(self):
-        with self.assertRaises(KeyError):
-            DrawForm(secrecy=DrawSecrecy.SECRET,
-                     dias=False,
                      concession=False)
 
     def test_init_missing_concession(self):
         with self.assertRaises(KeyError):
             DrawForm(dias=True,
-                     player_count=6,
                      secrecy=DrawSecrecy.SECRET)
 
     def test_init_missing_secrecy(self):
         with self.assertRaises(KeyError):
             DrawForm(dias=True,
-                     player_count=6,
                      concession=False)
 
     def test_init_invalid_secrecy(self):
         with self.assertRaises(AssertionError):
             DrawForm(dias=True,
                      secrecy='Q',
-                     player_count=7,
                      concession=False)
 
     def test_dias_secret(self):
         form = DrawForm(dias=True,
                         secrecy=DrawSecrecy.SECRET,
-                        player_count=7,
                         concession=False)
         # Form should have year, season, proposer, and passed
         self.check_common_fields(form)
@@ -721,7 +710,6 @@ class DrawFormTest(TestCase):
     def test_non_dias_secret(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.SECRET,
-                        player_count=7,
                         concession=False)
         # Form should have year, season, proposer, powers, and passed
         self.check_common_fields(form)
@@ -733,7 +721,6 @@ class DrawFormTest(TestCase):
     def test_dias_counts(self):
         form = DrawForm(dias=True,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=False)
         # Form should have year, season, proposer, and votes_in_favour
         self.check_common_fields(form)
@@ -745,7 +732,6 @@ class DrawFormTest(TestCase):
     def test_non_dias_counts(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=False)
         # Form should have year, season, proposer, powers, and votes_in_favour
         self.check_common_fields(form)
@@ -757,7 +743,6 @@ class DrawFormTest(TestCase):
     def test_concession_secret(self):
         form = DrawForm(dias=True,
                         secrecy=DrawSecrecy.SECRET,
-                        player_count=7,
                         concession=True)
         # Form should have year, season, proposer, powers, and passed
         self.check_common_fields(form)
@@ -771,7 +756,6 @@ class DrawFormTest(TestCase):
     def test_concession_counts(self):
         form = DrawForm(dias=True,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=True)
         # Form should have year, season, proposer, powers, and votes_in_favour
         self.check_common_fields(form)
@@ -785,14 +769,12 @@ class DrawFormTest(TestCase):
     def test_proposer_optional(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=False)
         self.assertIs(False, form.fields['proposer'].required)
 
     def test_concession_secret_has_changed(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.SECRET,
-                        player_count=7,
                         concession=True,
                         initial={'year': 1902,
                                  'season': Seasons.FALL,
@@ -807,7 +789,6 @@ class DrawFormTest(TestCase):
     def test_concession_counts_has_changed(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=True,
                         initial={'year': 1902,
                                  'season': Seasons.FALL,
@@ -822,7 +803,6 @@ class DrawFormTest(TestCase):
     def test_dias_secret_has_changed(self):
         form = DrawForm(dias=True,
                         secrecy=DrawSecrecy.SECRET,
-                        player_count=7,
                         concession=False,
                         initial={'year': 1902,
                                  'season': Seasons.FALL,
@@ -835,7 +815,6 @@ class DrawFormTest(TestCase):
     def test_dias_counts_has_changed(self):
         form = DrawForm(dias=True,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=False,
                         initial={'year': 1902,
                                  'season': Seasons.FALL,
@@ -848,7 +827,6 @@ class DrawFormTest(TestCase):
     def test_non_dias_secret_has_changed(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.SECRET,
-                        player_count=7,
                         concession=False,
                         initial={'year': 1902,
                                  'season': Seasons.FALL,
@@ -863,7 +841,6 @@ class DrawFormTest(TestCase):
     def test_non_dias_counts_has_changed(self):
         form = DrawForm(dias=False,
                         secrecy=DrawSecrecy.COUNTS,
-                        player_count=7,
                         concession=False,
                         initial={'year': 1902,
                                  'season': Seasons.FALL,
