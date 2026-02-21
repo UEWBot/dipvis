@@ -3001,10 +3001,7 @@ class GamePlayer(models.Model):
         """
         Number of SupplyCentres held at the end of the Game, or currently if the Game is still ongoing.
         """
-        game = self.game
-        final_year = game.final_year()
-        return game.centrecount_set.filter(year__lte=final_year,
-                                           power=self.power).last().count
+        return self.game.centrecount_set.filter(power=self.power).last().count
 
     def set_power_from_prefs(self):
         """
