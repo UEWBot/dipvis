@@ -69,6 +69,8 @@ class TournamentViewTests(TestCase):
         cls.PWORD3 = 'MyPassword'
         cls.u3 = User.objects.create_user(username=cls.USERNAME3,
                                           password=cls.PWORD3)
+        perm = Permission.objects.get(name='Can change round')
+        cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can change round player')
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add preference')
@@ -78,6 +80,8 @@ class TournamentViewTests(TestCase):
         perm = Permission.objects.get(name='Can change tournament player')
         cls.u3.user_permissions.add(perm)
         perm = Permission.objects.get(name='Can add team')
+        cls.u3.user_permissions.add(perm)
+        perm = Permission.objects.get(name='Can add seeder bias')
         cls.u3.user_permissions.add(perm)
         cls.u3.save()
 
@@ -1624,7 +1628,7 @@ class TournamentViewTests(TestCase):
         self.assertIn('login', response.url)
 
     def test_seeder_bias_missing_perm(self):
-        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seeder_bias',
                                            args=(self.t1.pk,)),
                                    secure=True)
@@ -1647,8 +1651,7 @@ class TournamentViewTests(TestCase):
 
     def test_seeder_bias_add(self):
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)
-        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
-        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
         # Pick two suitable TournamentPlayers
         tp1 = self.t2.tournamentplayer_set.first()
         tp2 = self.t2.tournamentplayer_set.last()
@@ -1673,8 +1676,7 @@ class TournamentViewTests(TestCase):
 
     def test_seeder_bias_add_error(self):
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 0)
-        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
-        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
         # Pick two suitable TournamentPlayers
         tp1 = self.t2.tournamentplayer_set.first()
         url = reverse('seeder_bias', args=(self.t2.pk,))
@@ -1696,8 +1698,7 @@ class TournamentViewTests(TestCase):
         sb2 = SeederBias.objects.create(player1=self.t2.tournamentplayer_set.first(),
                                         player2=self.tp29)
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t2).count(), 2)
-        # TODO Should be able to use USERNAME3 and PASSWORD3 here, but it fails the permission check
-        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('seeder_bias', args=(self.t2.pk,))
         data = urlencode({f'delete_{sb2.pk}': 'Remove Bias'})
         response = self.client.post(url,
