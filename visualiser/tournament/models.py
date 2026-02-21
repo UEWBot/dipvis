@@ -2518,11 +2518,9 @@ class Game(models.Model):
         If there is no CentreCount for a GreatPower for the specified year, the most
         recent one for previous years will be returned for that GreatPower.
         """
-        final_year = self.final_year()
-        year = year or final_year
-        if year > final_year:
-            year = final_year
-        scs = self.centrecount_set.filter(year__lte=year)
+        scs = self.centrecount_set.all()
+        if year is not None:
+            scs = scs.filter(year__lte=year)
         result = []
         # Find the most recent CentreCount for each GreatPower
         for power in GreatPower.objects.all():
