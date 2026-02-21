@@ -1635,8 +1635,17 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
 
+    def test_seeder_bias_not_manager(self):
+        """User that can add SeederBias but not to this tournament"""
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('seeder_bias',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
     def test_seeder_bias(self):
         self.assertEqual(SeederBias.objects.filter(player1__tournament=self.t1).count(), 0)
+        self.assertIs(True, self.t1.editable)
         # Add a SeederBias for t1
         tp1 = self.t1.tournamentplayer_set.first()
         tp2 = self.t1.tournamentplayer_set.last()
@@ -1646,8 +1655,17 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        # Shouldn't matter if the tournament is editable
+        self.t1.editable = False
+        self.t1.save()
+        response = self.client.get(reverse('seeder_bias',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
         # Clean up
         SeederBias.objects.filter(player1__tournament=self.t1).delete()
+        self.t1.editable = True
+        self.t1.save()
 
     def test_seeder_bias_suggestions(self):
         """List of suggested SeederBiases is correct"""

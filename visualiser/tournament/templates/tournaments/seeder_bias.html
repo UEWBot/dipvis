@@ -4,11 +4,15 @@
 {% block title %}{% blocktrans with tournament=tournament %}DipTV - {{ tournament }} Seeder Bias{% endblocktrans %}{% endblock title %}
 
 {% block content %}
-<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Seeder Bias" %}</h1>
+<h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {% trans "Game Seeder Bias" %}</h1>
 
-<h2>{% trans "Existing Bias" %}</h2>
+{% if tournament.editable %}
+  <h2>{% trans "Existing Bias" %}</h2>
+{% else %}
+  <h2>{% trans "Game Seeder Bias" %}</h2>
+{% endif %}
 {% if biases.exists %}
-  <p>{% trans "These pairs of players will not be seeded on the same board (if possible)" %}</p>
+  <p>{% trans "Pairs of players that will not be seeded on the same board (if possible):" %}</p>
   <form action="{% url 'seeder_bias' tournament.id %}" method="post">
     {% csrf_token %}
     <table class="form">
@@ -33,7 +37,7 @@
     </table>
   </form>
 {% else %}
-  <p>{% trans "Game seeder is currently unbiased" %}</p>
+  <p>{% trans "Game seeder is unbiased" %}</p>
 {% endif %}
 
 {% if tournament.editable %}

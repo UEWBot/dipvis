@@ -76,6 +76,20 @@ def tournament_index(request):
 
 # Utility functions
 
+def user_can_manage(t, user):
+    """
+    Determine whether the specified user can manage the tournament
+    """
+    # It's easy if the user is a manager for the tournament
+    if user.is_active and t in user.tournament_set.all():
+        return True
+    # Superusers can manage all tournaments
+    if user.is_superuser:
+        return True
+    # Default to no
+    return False
+
+
 def tournament_is_visible(t, user):
     """
     Determine whether the specified user should be allowed to view the tournament
@@ -83,14 +97,8 @@ def tournament_is_visible(t, user):
     # Visible to all if published
     if t.is_published:
         return True
-    # Also visible if the user is a manager for the tournament
-    if user.is_active and t in user.tournament_set.all():
-        return True
-    # Superusers see all
-    if user.is_superuser:
-        return True
-    # Default to not visible
-    return False
+    # and if the user can manage the tournament
+    return user_can_manage(t, user)
 
 
 def get_visible_tournament_or_404(pk, user):
@@ -668,13 +676,22 @@ def _previous_bias(tournament, user):
     # Remove any from tournaments the user can't see
     sb_list = [sb for sb in sb_set if tournament_is_visible(sb.player1.tournament, user)]
     # TODO remove any that are also in the current tournament ?
+    # Note that this list will include SeederBiases that the current user can't
+    # normally see (because they can't manage the tournament). We could
+    # restrict it to just tournaments that they manage, but it's more useful to
+    # be more inclusive, and I don't think the knowledge leak should matter
     return sb_list
 
 
 @permission_required('tournament.add_seederbias')
 def seeder_bias(request, tournament_id):
     """Display or add SeederBias objects for the Tournament"""
-    t = get_visible_tournament_or_404(tournament_id, request.user)
+    user = request.user
+    t = get_visible_tournament_or_404(tournament_id, user)
+    # Only display the page if the user can manage the tournament
+    # (but still display it if the tournament is no longer editable)
+    if not user_can_manage(t, user):
+        raise Http404('User is not a manager of the tournament, or superuser')
     sb_set = SeederBias.objects.filter(player1__tournament=t)
     form = SeederBiasForm(request.POST or None,
                           tournament=t)
@@ -697,7 +714,7 @@ def seeder_bias(request, tournament_id):
     context = {'tournament': t,
                'biases': sb_set,
                'form': form,
-               'previous_biases': _previous_bias(t, request.user)}
+               'previous_biases': _previous_bias(t, user)}
     return render(request, 'tournaments/seeder_bias.html', context)
 
 
