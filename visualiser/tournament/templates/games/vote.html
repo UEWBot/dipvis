@@ -15,6 +15,7 @@
 {% else %}
   <h1>{% blocktrans with game=game %}Game {{ game }} Draw Vote{% endblocktrans %}</h1>
 {% endif %}
+<p>{% blocktrans with year=game.final_year player_count=player_count %}After {{ year }}, there were {{ player_count }} powers still alive{% endblocktrans %}</p>
 {% if concession %}
   <form action={% url 'concession' tournament.id game.name %} method="post">
 {% else %}

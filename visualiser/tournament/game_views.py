@@ -602,6 +602,7 @@ def draw_vote(request, tournament_id, game_name, concession):
                   'games/vote.html',
                   {'tournament': t,
                    'game': g,
+                   'player_count': len(g.survivors()),
                    'concession': concession,
                    'form': form})
 
