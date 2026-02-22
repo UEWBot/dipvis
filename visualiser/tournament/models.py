@@ -2384,7 +2384,7 @@ class Game(models.Model):
         Return value is a dict, indexed by power id, of scores.
         """
         system = self.the_round.game_scoring_system_obj()
-        tgs = TournamentGameState(self.centrecount_set.all())
+        tgs = TournamentGameState(self.centrecount_set.order_by())
         return system.scores(tgs)
 
     def scores(self):
@@ -2451,7 +2451,7 @@ class Game(models.Model):
         """
         Returns a list of years for which there are SC counts for this game
         """
-        scs = self.centrecount_set.all()
+        scs = self.centrecount_set.order_by('year')
         return sorted(list({sc.year for sc in scs}))
 
     def background(self, mask=MASK_ALL_BG):
@@ -2488,7 +2488,7 @@ class Game(models.Model):
     def neutrals(self, year=None):
         """How many neutral SCs are/were there ?"""
         year = year or self.final_year()
-        scs = self.centrecount_set.filter(year=year)
+        scs = self.centrecount_set.filter(year=year).order_by()
         if not scs.exists():
             raise InvalidYear(year)
         return TOTAL_SCS - scs.aggregate(Sum('count'))['count__sum']
@@ -2518,7 +2518,7 @@ class Game(models.Model):
         If there is no CentreCount for a GreatPower for the specified year, the most
         recent one for previous years will be returned for that GreatPower.
         """
-        scs = self.centrecount_set.all()
+        scs = self.centrecount_set.order_by('year')
         if year is not None:
             scs = scs.filter(year__lte=year)
         result = []
@@ -2726,7 +2726,7 @@ class DrawProposal(models.Model):
             # If DIAS, all alive powers must be included
             dias = self.game.is_dias()
             # Get the most recent CentreCounts before the DrawProposal
-            scs = self.game.centrecount_set.filter(year__lt=self.year)
+            scs = self.game.centrecount_set.order_by('year').filter(year__lt=self.year)
             # We will always have at least the 1900 CentreCounts, and DrawProposal.year must be >= 1901
             scs = scs.filter(year=scs.last().year)
             for sc in scs:
@@ -3001,7 +3001,7 @@ class GamePlayer(models.Model):
         """
         Number of SupplyCentres held at the end of the Game, or currently if the Game is still ongoing.
         """
-        return self.game.centrecount_set.filter(power=self.power).last().count
+        return self.game.centrecount_set.filter(power=self.power).order_by('year').last().count
 
     def set_power_from_prefs(self):
         """
@@ -3050,7 +3050,7 @@ class GamePlayer(models.Model):
         if not self.power:
             return ''
         g = self.game
-        cc_set = g.centrecount_set.all()
+        cc_set = g.centrecount_set.order_by()
         power_cc_set = cc_set.filter(power=self.power)
         # Final CentreCount for this player in this game
         final_sc = power_cc_set.order_by('-year').first()

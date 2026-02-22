@@ -182,7 +182,7 @@ def game_sc_chart(request,
     if ps.first() and not ps.first().power:
         # Just pass an empty list to the template
         ps = []
-    scs = g.centrecount_set.all()
+    scs = g.centrecount_set.order_by()
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
@@ -244,7 +244,7 @@ def graph(request,
         ax = fig.subplots()
         for power in GreatPower.objects.all():
             colour = _map_to_fg(g.the_set.setpower_set.get(power=power).colour)
-            year_dots = [(cc.year, cc.count) for cc in g.centrecount_set.filter(power=power)]
+            year_dots = [(cc.year, cc.count) for cc in g.centrecount_set.filter(power=power).order_by('year')]
             # X-axis is year, y-axis is SC count. Colour by power
             ax.plot([y for y, c in year_dots],
                     [c for y, c in year_dots],
@@ -371,7 +371,7 @@ def sc_counts(request, tournament_id, game_name):
     """Provide a form to enter SC counts for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    cc_set = g.centrecount_set.all()
+    cc_set = g.centrecount_set.order_by()
     final_year = g.the_round.final_year
     SCCountFormset = formset_factory(SCCountForm,
                                      extra=_blank_row_num(cc_set, final_year),
@@ -849,7 +849,7 @@ def api(request, version, tournament_id, game_name):
     sc_owners = {}
     for year in g.years_played():
         sc_chart[year] = {}
-        for sc in g.centrecount_set.filter(year=year):
+        for sc in g.centrecount_set.filter(year=year).order_by():
             sc_chart[year][sc.power.name] = sc.count
         sc_owners[year] = {}
         for power in GreatPower.objects.all():

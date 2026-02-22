@@ -111,7 +111,7 @@ def view_classification_csv(request, tournament_id):
         top_board = Game.objects.get(is_top_board=True,
                                      the_round__tournament=t)
         tb_positions = top_board.positions()
-        tb_dots = top_board.centrecount_set.filter(year__gt=1900)
+        tb_dots = top_board.centrecount_set.filter(year__gt=1900).order_by('year')
     except Game.DoesNotExist:
         top_board = None
     # What fields we want to write
@@ -200,7 +200,7 @@ def view_classification_csv(request, tournament_id):
                         #      so ideally we'd also set row_dict['RK_0AU'] = 2 for second-best Austria, etc
                         row_dict[f'RK_{wdd_pwr}'] = 1
                         row_dict[f'PT_{wdd_pwr}'] = gp.score
-                        row_dict[f'CT_{wdd_pwr}'] = gp.game.centrecount_set.filter(power=award.power).last().count
+                        row_dict[f'CT_{wdd_pwr}'] = gp.game.centrecount_set.filter(power=award.power).order_by('year').last().count
                         row_dict[f'HEAT_{wdd_pwr}'] = gp.game.the_round.number()
                         row_dict[f'BOARD_{wdd_pwr}'] = _game_to_wdd_id(gp.game)
             else:
@@ -271,7 +271,7 @@ def view_boards_csv(request, tournament_id):
         for g in r.game_set.prefetch_related('gameplayer_set'):
             g_row_dict['BOARD'] = _game_to_wdd_id(g)
             positions = g.positions()
-            centrecount_set = g.centrecount_set.filter(year__gt=1900)
+            centrecount_set = g.centrecount_set.filter(year__gt=1900).order_by('year')
             draw = g.passed_draw()
             if draw is not None:
                 draw_powers = draw.drawing_powers.all()
