@@ -103,7 +103,7 @@ def game_sc_owners(request,
     if g.is_finished and (redirect_url_name == 'game_sc_owners_refresh'):
         refresh = False
     scs = SupplyCentre.objects.all()
-    scos = g.supplycentreownership_set.prefetch_related('owner')
+    scos = g.supplycentreownership_set.prefetch_related('owner').order_by()
     # Create a list of years that have been played, starting with the most recent
     years = g.years_played()
     years.reverse()
@@ -307,7 +307,7 @@ def sc_owners(request, tournament_id, game_name):
     """Provide a form to enter SC ownership for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    sco_set = g.supplycentreownership_set.all()
+    sco_set = g.supplycentreownership_set.order_by()
     final_year = g.the_round.final_year
     SCOwnerFormset = formset_factory(SCOwnerForm,
                                      extra=_blank_row_num(sco_set, final_year),

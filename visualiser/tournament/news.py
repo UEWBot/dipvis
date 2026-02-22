@@ -270,7 +270,6 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
         return g.background()
     gps = g.gameplayer_set.all()
     current_scs = centres_set.filter(year=last_year)
-    current_scos = g.supplycentreownership_set.filter(year=last_year)
     results = []
     if (mask & MASK_SC_OWNER_COUNTS) != 0:
         # Which dots have had lots of owners?
@@ -295,9 +294,11 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
                           'dots': max_scs,
                           'player': first_str})
     prev_scs = centres_set.filter(year=last_year-1)
-    prev_scos = g.supplycentreownership_set.filter(year=last_year-1)
-    sc_gains, sc_losses = _sc_gains_and_losses(prev_scos, current_scos)
-    if not prev_scos.exists() or not current_scos.exists():
+    current_scos = g.supplycentreownership_set.filter(year=last_year).order_by()
+    prev_scos = g.supplycentreownership_set.filter(year=last_year-1).order_by()
+    if prev_scos.exists() and current_scos.exists():
+        sc_gains, sc_losses = _sc_gains_and_losses(prev_scos, current_scos)
+    else:
         # Filter out stuff that needs supply centre ownership information
         mask &= ~MASK_OWNERSHIP
     for scs in current_scs:

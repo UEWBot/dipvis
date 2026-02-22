@@ -2331,7 +2331,7 @@ class Game(models.Model):
         looking at the SupplyCentreOwnerships for that year.
         Can raise SCOwnershipsNotFound.
         """
-        all_scos = self.supplycentreownership_set.filter(year=year)
+        all_scos = self.supplycentreownership_set.filter(year=year).order_by()
         if not all_scos.exists():
             raise SCOwnershipsNotFound(f'{year} of game {str(self)}')
         with transaction.atomic():
@@ -2350,7 +2350,7 @@ class Game(models.Model):
         Returns a list of strings describing any issues.
         Can raise SCOwnershipsNotFound.
         """
-        all_scos = self.supplycentreownership_set.filter(year=year)
+        all_scos = self.supplycentreownership_set.filter(year=year).order_by()
         if not all_scos.exists():
             raise SCOwnershipsNotFound(f'{year} of game {str(self)}')
         retval = []
