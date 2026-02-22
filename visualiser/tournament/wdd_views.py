@@ -57,7 +57,7 @@ def _power_award_to_gameplayers(tournament, award):
     assert award.power is not None
     ret = []
     # First find the TournamentPlayers who got the specified award at this tournament
-    for tp in award.tournamentplayer_set.filter(tournament=tournament):
+    for tp in award.tournamentplayer_set.filter(tournament=tournament).order_by():
         # Find the corresponding GamePlayer
         for rp in tp.roundplayers().all():
             for gp in rp.gameplayers().filter(power=award.power):

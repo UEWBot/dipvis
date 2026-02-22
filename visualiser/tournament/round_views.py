@@ -309,7 +309,7 @@ def get_seven(request, tournament_id, round_num):
 
 def _sitters_and_two_gamers(tournament, the_round, pool):
     """Return a (sitters, two_gamers) 2-tuple"""
-    tourney_players = tournament.tournamentplayer_set.prefetch_related('player')
+    tourney_players = tournament.tournamentplayer_set.prefetch_related('player').order_by()
     round_players = the_round.roundplayer_set.filter(pool=pool).prefetch_related('player')
     # Get the set of players that haven't already been assigned to games for this round
     rps = []
@@ -344,7 +344,7 @@ def _sitters_and_two_gamers(tournament, the_round, pool):
 
 def _create_game_seeder(tournament, the_round):
     """Return a GameSeeder that knows about the tournament so far"""
-    tourney_players = tournament.tournamentplayer_set.prefetch_related('seederbias_set')
+    tourney_players = tournament.tournamentplayer_set.prefetch_related('seederbias_set').order_by()
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
                         starts=100,

@@ -1087,7 +1087,7 @@ class Tournament(models.Model):
         Returns a dict, keyed by player, of float tournament scores.
         """
         t_scores = {}
-        for tp in self.tournamentplayer_set.prefetch_related('player'):
+        for tp in self.tournamentplayer_set.prefetch_related('player').order_by():
             t_scores[tp.player] = tp.score
         return t_scores
 
@@ -1112,14 +1112,14 @@ class Tournament(models.Model):
                         if rp.player not in t_scores:
                             t_scores[rp.player] = rp.tournament_score
             # Anyone who hadn't yet played scores zero
-            for tp in self.tournamentplayer_set.all():
+            for tp in self.tournamentplayer_set.order_by():
                 if tp.player not in t_scores:
                     t_scores[tp.player] = 0.0
         else:
             t_scores = self.scores_detail()
         result = {}
         # First, deal with any unranked players
-        for tp in self.tournamentplayer_set.filter(unranked=True).prefetch_related('player'):
+        for tp in self.tournamentplayer_set.filter(unranked=True).prefetch_related('player').order_by():
             # Take it out of scores and add it to result
             result[tp.player] = (Tournament.UNRANKED, t_scores.pop(tp.player))
         # Figure out everyone's ranking
@@ -1202,7 +1202,7 @@ class Tournament(models.Model):
                 tp = self.tournamentplayer_set.get(player=p)
                 self._store_score(tp, scores, add_handicap)
         else:
-            for tp in self.tournamentplayer_set.all():
+            for tp in self.tournamentplayer_set.order_by():
                 self._store_score(tp, scores, add_handicap)
         if self.is_finished:
             # Hand out Best Country awards
@@ -1349,7 +1349,7 @@ class Tournament(models.Model):
         Returns a list of background strings for the tournament
         """
         results = []
-        for tp in self.tournamentplayer_set.prefetch_related('player'):
+        for tp in self.tournamentplayer_set.prefetch_related('player').order_by():
             results += tp.player.background(mask=mask)
         if (mask & MASK_SERIES_WINS) != 0:
             # Add in background for any series this Tournament is in
@@ -2950,7 +2950,7 @@ class GamePlayer(models.Model):
             # If there are ranked GamePlayers of the same power,
             # they will rank ahead of this GamePlayer.
             # If they're all unranked, fall through to compare scores/dots
-            tps = t.tournamentplayer_set.filter(unranked=False)
+            tps = t.tournamentplayer_set.filter(unranked=False).order_by()
             for gp in gps:
                 if tps.filter(player=gp.player).exists():
                     return False

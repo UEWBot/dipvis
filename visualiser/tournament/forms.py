@@ -104,7 +104,7 @@ class BaseAwardsFormset(BaseFormSet):
             # __init__() uses len(initial) to decide how many forms to create
             initial = []
             for award in self.awards:
-                tps = [tp.id for tp in self.tournament.tournamentplayer_set.filter(awards=award).all()]
+                tps = [tp.id for tp in award.tournamentplayer_set.filter(tournament=self.tournament).order_by()]
                 initial.append({'award': award.id, 'players': tps})
             kwargs['initial'] = initial
         super().__init__(*args, **kwargs)
@@ -233,7 +233,7 @@ class TeamForm(forms.Form):
         self.tournament = kwargs.pop('tournament')
         self.team = kwargs.pop('team', None)
         # Create an appropriate number of player fields
-        queryset = Player.objects.filter(tournamentplayer__in=self.tournament.tournamentplayer_set.all()).distinct()
+        queryset = Player.objects.filter(tournamentplayer__in=self.tournament.tournamentplayer_set.order_by()).distinct()
         # Overridable default initial value, like ModelForm
         # TODO This is dead code if we only ever use the formset
         if 'initial' not in kwargs.keys():
@@ -856,14 +856,14 @@ class BasePaidFormset(BaseFormSet):
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
+        self.tps = self.tournament.tournamentplayer_set.all()
         # Create initial if not provided
         if 'initial' not in kwargs.keys():
             initial = []
-            for tp in self.tournament.tournamentplayer_set.all():
+            for tp in self.tps:
                 initial.append({'paid': tp.paid})
             kwargs['initial'] = initial
         super().__init__(*args, **kwargs)
-        self.tps = self.tournament.tournamentplayer_set.all()
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself
@@ -1067,7 +1067,7 @@ class PlayerForm(forms.Form):
         t = kwargs.pop('tournament', None)
         super().__init__(*args, **kwargs)
         if t is not None:
-            self.fields['player'].queryset = Player.objects.filter(tournamentplayer__in=t.tournamentplayer_set.all()).distinct()
+            self.fields['player'].queryset = Player.objects.filter(tournamentplayer__in=t.tournamentplayer_set.order_by()).distinct()
 
 
 # Roll call

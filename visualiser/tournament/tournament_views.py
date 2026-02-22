@@ -255,7 +255,7 @@ def graph(request, tournament_id):
         rounds = t.round_set.all()
         # Get scores for each round in a suitable format
         all_scores = {}
-        for tp in t.tournamentplayer_set.all():
+        for tp in t.tournamentplayer_set.order_by('player'):
             all_scores[tp.player] = []
         max_score = 0.0
         for n, r in enumerate(rounds, start=1):
@@ -373,7 +373,7 @@ def tournament_best_countries(request,
         # Find the GamePlayers for the Players given this award at this Tournament
         for award in t.awards.filter(power=p):
             gameplayers = []
-            for tp in award.tournamentplayer_set.filter(tournament=t):
+            for tp in award.tournamentplayer_set.filter(tournament=t).order_by():
                 for rp in tp.roundplayers().all():
                     for gp in rp.gameplayers().filter(power=p):
                         gameplayers.append(gp)
@@ -523,7 +523,7 @@ def self_check_in_control(request, tournament_id):
             if (value is True) and not rd.enable_check_in:
                 # send emails if not already sent
                 if not rd.email_sent:
-                    send_roll_call_emails(i, list(t.tournamentplayer_set.all()))
+                    send_roll_call_emails(i, list(t.tournamentplayer_set.order_by()))
                     rd.email_sent = True
                     fields.append('email_sent')
             rd.enable_check_in = value
@@ -668,7 +668,7 @@ def _previous_bias(tournament, user):
 
     Returns a set of SeederBias objects
     """
-    players = [tp.player for tp in tournament.tournamentplayer_set.all()]
+    players = [tp.player for tp in tournament.tournamentplayer_set.order_by()]
     # Start with all SeederBiases except any from this tournament
     sb_set = SeederBias.objects.exclude(player1__tournament=tournament)
     # Look for any where both players are in this tournament
@@ -729,7 +729,7 @@ def enter_awards(request, tournament_id):
     if formset.is_valid():
         with transaction.atomic():
             # Delete any existing awards
-            for tp in t.tournamentplayer_set.exclude(awards=None).all():
+            for tp in t.tournamentplayer_set.exclude(awards=None).order_by():
                 tp.awards.clear()
                 tp.save()
             for form in formset:

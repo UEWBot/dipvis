@@ -79,7 +79,7 @@ def _tournament_news(t):
                                   'pos':  position_str(rank),
                                   'score':  score})
         # Add all awards
-        for tp in t.tournamentplayer_set.exclude(awards=None):
+        for tp in t.tournamentplayer_set.exclude(awards=None).order_by():
             awards_str = ''
             for a in tp.awards.all():
                 if len(awards_str):
