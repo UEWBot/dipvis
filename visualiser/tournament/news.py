@@ -97,17 +97,15 @@ def _tournament_news(t):
                                                               'awards': awards_str})
     else:
         # which rounds have been played ?
-        played_rounds = 0
-        for r in t.round_set.all():
-            if r.is_finished:
-                played_rounds += 1
+        rds = t.round_set.order_by()
+        played_rounds = rds.filter(is_finished=True).count()
         if played_rounds == 0:
             results.append(_(u'Tournament has yet to start.'))
         else:
             results.append(ngettext('One of %(rounds)d has been played.',
                                     '%(r_num)d of %(rounds)d have been played.',
                                     played_rounds) % {'r_num': played_rounds,
-                                                      'rounds': t.round_set.count()})
+                                                      'rounds': rds.count()})
             # Include who is leading the tournament
             include_leader = True
     if include_leader:
@@ -126,9 +124,8 @@ def _tournament_news(t):
                                         "%(count)d players have at least 90%% of the leader's current tournament score.",
                                         contenders) % {'count': contenders})
         # Include the top score from each previous round (if any)
-        for r in t.round_set.all():
-            if r.is_finished:
-                results.append(_round_leader_str(r))
+        for r in t.round_set.filter(is_finished=True).order_by():
+            results.append(_round_leader_str(r))
     # Shuffle the resulting list
     random.shuffle(results)
     return results
@@ -161,6 +158,7 @@ def _round_news(r):
     This is the latest news for every game in the round.
     """
     results = []
+    r_num = r.number()
     if r.show_scores():
         # Include who has done best in the round (so far)
         ls = _round_leader_str(r)
@@ -189,21 +187,21 @@ def _round_news(r):
         toppers = [cc for cc in toppers if cc.count == max_centres]
         toppers_str = ', '.join([_('%(power)s in %(game)s') % {'power': _(cc.power.abbreviation),
                                                                'game': cc.game.name} for cc in toppers])
-        results.append(_('Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s.') % {'r_num': r.number(),
+        results.append(_('Highest centre count in round %(r_num)d %(is)s %(dots)d for %(players)s.') % {'r_num': r_num,
                                                                                                         'is': singular_tense_str,
                                                                                                         'dots': max_centres,
                                                                                                         'players': toppers_str})
     # Note if the round has finished
     if r.is_finished:
-        results.append(_(u'Round %(r_num)d has ended.') % {'r_num': r.number()})
+        results.append(_(u'Round %(r_num)d has ended.') % {'r_num': r_num})
     elif not r.in_progress():
-        results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': r.number()})
+        results.append(_(u'Round %(r_num)d has not yet started.') % {'r_num': r_num})
     else:
         # Otherwise, add a count of completed games
         results.append(ngettext('One of the %(total_num)d games in round %(r_num)d has ended.',
                                 '%(num_done)d of the %(total_num)d games in round %(r_num)d have ended.',
                                 done_games) % {'num_done': done_games,
-                                               'r_num': r.number(),
+                                               'r_num': r_num,
                                                'total_num': r.game_set.count()})
         # TODO Add time played in the round so far (difficult to internationalise ?)
     # Shuffle the resulting list

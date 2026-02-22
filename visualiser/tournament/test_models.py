@@ -3778,6 +3778,10 @@ class TournamentTests(TestCase):
         t = Tournament.objects.get(name='t1')
         self.assertEqual(t.round_numbered(3).number(), 3)
 
+    def test_tournament_round_numbered_too_big(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertRaises(Round.DoesNotExist, t.round_numbered, 10)
+
     # Tournament.team_rounds()
     def test_tournament_team_rounds(self):
         t = Tournament.objects.get(name='t1')

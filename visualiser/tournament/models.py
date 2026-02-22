@@ -969,7 +969,7 @@ class Tournament(models.Model):
                 pass
             else:
                 # Update all round scores. This will also call self.update_scores()
-                for r in self.round_set.all():
+                for r in self.round_set.order_by():
                     r.update_scores()
         if ('update_fields' not in kwargs) or any(field in kwargs['update_fields'] for field in ['tournament_scoring_system',
                                                                                                  'handicap']):
@@ -1245,9 +1245,10 @@ class Tournament(models.Model):
 
         Can raise Round.DoesNotExist.
         """
-        for r in self.round_set.all():
-            if r.number() == int(number):
-                return r
+        try:
+            return self.round_set.all()[number - 1]
+        except (IndexError, ValueError):
+            pass
         # This allows this function to be used like QuerySet.get()
         raise Round.DoesNotExist
 
@@ -1392,7 +1393,7 @@ class Tournament(models.Model):
         """
         Sets is_finished to True if the tournament has rounds, and they are all finished.
         """
-        rds = self.round_set.all()
+        rds = self.round_set.order_by()
         # If there are no rounds, the tournament can't have started
         if not rds:
             return
@@ -1978,9 +1979,9 @@ class Round(models.Model):
                 for r in rp.the_round.tournament.round_set.all():
                     if r == rp.the_round:
                         break
-                    rps = RoundPlayer.objects.filter(the_round=r).filter(player=rp.player)
-                    gps = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=rp.player)
-                    if rps.exists() and not gps.exists():
+                    rps_exists = RoundPlayer.objects.filter(the_round=r).filter(player=rp.player).exists()
+                    gps_exists = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=rp.player).exists()
+                    if rps_exists and not gps_exists:
                         # Player also didn't play in this earlier round
                         bonus_already_given = True
                         break
@@ -2118,17 +2119,18 @@ class Round(models.Model):
         Returns a list of background strings for the round
         """
         results = []
+        number = self.number()
         if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.earliest_end_time:
             results.append(_(u'Round %(round)d could end as early as %(time)s.')
-                           % {'round': self.number(),
+                           % {'round': number,
                               'time': self.earliest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.latest_end_time:
             results.append(_(u'Round %(round)d could end as late as %(time)s.')
-                           % {'round': self.number(),
+                           % {'round': number,
                               'time': self.latest_end_time.strftime("%H:%M")})
         if (mask & MASK_ROUND_ENDPOINTS) != 0 and self.final_year:
             results.append(_(u'Round %(round)d will end after playing year %(year)d.')
-                           % {'round': self.number(),
+                           % {'round': number,
                               'year': self.final_year})
         # Shuffle the resulting list
         random.shuffle(results)

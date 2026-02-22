@@ -315,7 +315,7 @@ def tournament_game_results(request,
         refresh = False
     tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name').prefetch_related('player__gameplayer_set')
     rds = t.round_set.prefetch_related('game_set')
-    rounds = [r.number() for r in rds]
+    rounds = list(range(1, len(rds) + 1))
     # Grab the games for each round
     round_games = {}
     for r in rds:
@@ -508,8 +508,8 @@ def self_check_in_control(request, tournament_id):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     round_set = t.round_set.all()
     enable_data = {}
-    for r in round_set.all():
-        enable_data[f'round_{r.number()}'] = r.enable_check_in
+    for num, r in enumerate(round_set.all(), 1):
+        enable_data[f'round_{num}'] = r.enable_check_in
     form = EnableCheckInForm(request.POST or None,
                              tournament=t,
                              initial=enable_data)
@@ -832,8 +832,9 @@ def api(request, tournament_id, version):
     if version != 1:
         raise Http404(f'Invalid API version {version}')
     t = get_visible_tournament_or_404(tournament_id, request.user)
+    rds = t.round_set.all()
     rounds = {}
-    for r in t.round_set.all():
+    for num, r in enumerate(rds, 1):
         games = {}
         for g in r.game_set.all():
             players = {}
@@ -847,8 +848,8 @@ def api(request, tournament_id, version):
             games[g.name] = {'sandbox': g.external_url,
                              'started': g.started_at,
                              'players': players}
-        rounds[r.number()] = {'scoring_system': r.scoring_system,
-                              'games': games}
+        rounds[num] = {'scoring_system': r.scoring_system,
+                       'games': games}
     results = []
     p_and_s = t.positions_and_scores()
     for player, res in p_and_s.items():
@@ -860,19 +861,19 @@ def api(request, tournament_id, version):
         if entry['ranking'] == Tournament.UNRANKED:
             entry['ranking'] = None
         rps = player.roundplayer_set.all()
-        for r in t.round_set.all():
+        for num, r in enumerate(rds, 1):
             try:
                 rp = rps.get(the_round=r)
             except RoundPlayer.DoesNotExist:
                 # Skip rounds they didn't show up for
                 continue
             if t.tournament_scoring_system_obj().uses_round_scores:
-                entry['score_breakdown'].append({'round': r.number(),
+                entry['score_breakdown'].append({'round': num,
                                                  'score': rp.score,
                                                  'dropped': rp.score_dropped})
             else:
                 for gp in rp.gameplayers():
-                    entry['score_breakdown'].append({'round': r.number(),
+                    entry['score_breakdown'].append({'round': num,
                                                      'game': gp.game.name,
                                                      'score': gp.score,
                                                      'dropped': gp.score_dropped})

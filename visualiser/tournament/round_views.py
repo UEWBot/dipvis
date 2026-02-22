@@ -354,7 +354,7 @@ def _create_game_seeder(tournament, the_round):
     for tp in tourney_players:
         seeder.add_player(tp)
     # Provide details of games already played this tournament
-    for rnd in tournament.round_set.filter(start__lt=the_round.start):
+    for rnd in tournament.round_set.filter(start__lt=the_round.start).order_by():
         for g in rnd.game_set.prefetch_related('gameplayer_set'):
             game = set()
             for gp in g.gameplayer_set.prefetch_related('power', 'player', 'game__the_round'):
@@ -541,7 +541,7 @@ def seed_games(request, tournament_id, round_num):
             # We need players to sit out or play multiple games
             return HttpResponseRedirect(reverse('get_seven',
                                                 args=(tournament_id,
-                                                      r.number())))
+                                                      round_num)))
         # Delete any existing Games and GamePlayers for this round
         r.game_set.all().delete()
         # TODO It's a bit hokey to have a fixed default GameSet here
@@ -792,5 +792,5 @@ def game_cycle(request, tournament_id, round_num, template, game_name=None):
                'refresh': True,
                'redirect_time': REFRESH_TIME,
                'redirect_url': reverse(game_cycle,
-                                       args=(tournament_id, r.number(), next_game_name))}
+                                       args=(tournament_id, round_num, next_game_name))}
     return render(request, template, context)
