@@ -536,7 +536,7 @@ def draw_vote(request, tournament_id, game_name, concession):
     """Provide a form to enter a draw vote for a game"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     g = get_game_or_404(t, game_name)
-    last_image = g.gameimage_set.last()
+    last_image = g.gameimage_set.order_by('year', '-season', 'phase').last()
     years_played = g.years_played()
     final_year = years_played[-1]
     # Try to put in reasonable defaults for year and season
@@ -628,7 +628,7 @@ def game_image(request,
         # If we're just showing the current position, use the standard refresh time
         refresh_time = REFRESH_TIME
         # Always display the latest image
-        this_image = g.gameimage_set.last()
+        this_image = g.gameimage_set.order_by('year', '-season', 'phase').last()
         next_image_str = ''
         this_year = g.years_played()[-1]
         # If we don't have any image for the current year,
@@ -641,7 +641,7 @@ def game_image(request,
         # And while we're at it, also find the one that follows it
         # TODO There may be a better way than iterating through all of them...
         this_image = None
-        all_images = g.gameimage_set.all()
+        all_images = g.gameimage_set.order_by('year', '-season', 'phase').all()
         if timelapse:
             # If there is no "next turn", timelapse should loop back to the first
             next_image_str = all_images[0].turn_str()
