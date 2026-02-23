@@ -208,12 +208,12 @@ def populate_pools(request, tournament_id, round_num):
     """Assign RoundPlayers to the Pools for the Round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    pool_set = list(r.pool_set.all())
+    pool_set = r.pool_set.order_by()
     if not pool_set:
         raise Http404
     rps = r.roundplayer_set.all()
     # We currently only support populating a single Pool
-    pool = r.pool_set.get(board_count__isnull=False)
+    pool = pool_set.get(board_count__isnull=False)
     context = {'tournament': t,
                'round': r,
                'pool': pool}
@@ -227,7 +227,7 @@ def populate_pools(request, tournament_id, round_num):
             rp.game_count = 1
             rp.save(update_fields=['pool', 'game_count'])
         # Everyone else goes in the unconstrained pool
-        pool = r.pool_set.get(board_count__isnull=True)
+        pool = pool_set.get(board_count__isnull=True)
         for rp in rps:
             if rp.pool is None:
                 rp.pool = pool
@@ -249,7 +249,7 @@ def get_seven(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     rps = full_rps = r.roundplayer_set.all()
     pool = None
-    pool_set = r.pool_set.all()
+    pool_set = r.pool_set.order_by()
     if pool_set:
         # Check that we have the right number of players in fixed-size pools
         for pool in pool_set.filter(board_count__isnull=False):
@@ -407,7 +407,7 @@ def _seed_games(tournament, the_round):
     Return value is the same format as _seed_games_and_powers()
     """
     seeder = _create_game_seeder(tournament, the_round)
-    pool_set = list(the_round.pool_set.all())
+    pool_set = the_round.pool_set.all()
     if pool_set:
         retval = []
         for pool in pool_set:
@@ -438,7 +438,7 @@ def _seed_games_and_powers(tournament, the_round):
     """
     seeder = _create_game_seeder(tournament, the_round)
     # Generate the games
-    pool_set = list(the_round.pool_set.all())
+    pool_set = the_round.pool_set.all()
     if pool_set:
         retval = []
         for pool in pool_set:

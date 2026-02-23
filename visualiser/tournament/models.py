@@ -2105,7 +2105,7 @@ class Round(models.Model):
         suitable for sending by email or posting to discord.
         """
         text = _('Round %(number)d Board Call\n\n') % {'number': self.number()}
-        pool_set = list(self.pool_set.all())
+        pool_set = self.pool_set.prefetch_related('game_set')
         # Group by Pool if the Round has Pools
         if pool_set:
             retval = text
