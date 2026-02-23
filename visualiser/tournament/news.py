@@ -266,7 +266,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
     # If the game just started, there is no news, so return the background instead
     if last_year == 1900:
         return g.background()
-    gps = g.gameplayer_set.all()
+    gps = g.gameplayer_set.order_by()
     current_scs = centres_set.filter(year=last_year)
     results = []
     if (mask & MASK_SC_OWNER_COUNTS) != 0:
@@ -378,7 +378,7 @@ def _game_news(g, include_game_name=False, mask=MASK_ALL_NEWS, for_year=None):
             sz = len(powers)
             incl = []
             for power in powers:
-                game_player = g.gameplayer_set.get(power=power)
+                game_player = gps.get(power=power)
                 incl.append(_(u'%(player)s (%(power)s)') % {'player': game_player.player,
                                                             'power': _(power.abbreviation)})
             incl_str = ', '.join(incl)

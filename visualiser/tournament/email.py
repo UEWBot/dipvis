@@ -39,7 +39,7 @@ def _add_game_to_email(game, tournament, the_list):
     """Add a (game details, recipients list) 2-tuple for the specified Game to the_list"""
     game_text = game.board_call_msg()
     recipients = []
-    for gp in game.gameplayer_set.exclude(player__email=''):
+    for gp in game.gameplayer_set.exclude(player__email='').order_by('power'):
         recipients.append(gp.player.email)
     recipients = _filtered_recipients(recipients, tournament)
     the_list.append((game_text, recipients))

@@ -91,7 +91,7 @@ def board_call_csv(request, tournament_id, round_num):
     writer.writeheader()
 
     for g in r.game_set.all():
-        for gp in g.gameplayer_set.all():
+        for gp in g.gameplayer_set.order_by('power'):
             row_dict = {_('Round'): round_num,
                         _('Board'): g.name,
                         _('Player Name'): str(gp.player),
@@ -357,7 +357,7 @@ def _create_game_seeder(tournament, the_round):
     for rnd in tournament.round_set.filter(start__lt=the_round.start).order_by():
         for g in rnd.game_set.prefetch_related('gameplayer_set').order_by():
             game = set()
-            for gp in g.gameplayer_set.prefetch_related('power', 'player', 'game__the_round'):
+            for gp in g.gameplayer_set.prefetch_related('power', 'player', 'game__the_round').order_by():
                 game.add((gp.tournamentplayer(), gp.power))
             assert len(game) == 7
             seeder.add_played_game(game)
@@ -479,7 +479,7 @@ def seed_games(request, tournament_id, round_num):
                        'the_set': g.the_set,
                        'external_url': g.external_url,
                        'notes': g.notes}
-            for gp in g.gameplayer_set.all():
+            for gp in g.gameplayer_set.order_by():
                 current[str(gp.id)] = gp.power
             data.append(current)
         PowerAssignFormset = formset_factory(PowerAssignForm,
@@ -614,7 +614,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                    'the_set': g.the_set,
                    'external_url': g.external_url,
                    'notes': g.notes}
-        for gp in g.gameplayer_set.all():
+        for gp in g.gameplayer_set.order_by('power'):
             if gp.power:
                 current[gp.power.name] = gp.roundplayer()
         data.append(current)
@@ -720,7 +720,7 @@ def game_scores(request, tournament_id, round_num):
     the_list = r.game_set.all()
     for game in the_list:
         content = {'name': game.name}
-        for gp in game.gameplayer_set.all():
+        for gp in game.gameplayer_set.order_by('power'):
             content[gp.power.name] = gp.score
         data.append(content)
     formset = GameScoreFormset(request.POST or None, initial=data)

@@ -277,7 +277,7 @@ def view_boards_csv(request, tournament_id):
                 draw_powers = draw.drawing_powers.all()
             soloer = g.soloer()
             # TODO This is broken with replacement players
-            for gp in g.gameplayer_set.all():
+            for gp in g.gameplayer_set.order_by('power'):
                 names = gp.player.wdd_firstname_lastname()
                 if not names[0] and not names[1]:
                     names = (gp.player.first_name, gp.player.last_name)

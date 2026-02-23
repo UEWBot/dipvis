@@ -2290,7 +2290,7 @@ class Game(models.Model):
         powers.
         """
         position_to_gps = {}
-        gps = self.gameplayer_set.prefetch_related('player', 'power')
+        gps = self.gameplayer_set.prefetch_related('player', 'power').order_by()
         # Find current tournament positions (and scores)
         ranks = self.the_round.tournament.positions_and_scores()
         # Check for any GamePlayer that already has a power assigned
@@ -2395,7 +2395,7 @@ class Game(models.Model):
         """
         # If we have GamePlayers, and they have assigned powers,
         # we can just retrieve the scores from them
-        gps = self.gameplayer_set.prefetch_related('power')
+        gps = self.gameplayer_set.prefetch_related('power').order_by('power')
         # Assume that if any GamePlayer has a power assigned, they all do
         if gps and gps.first().power:
             retval = {}
@@ -2414,13 +2414,14 @@ class Game(models.Model):
         Then calls the equivalent function for the Round this Game is in, unless update_round is False.
         """
         scores = self._calc_scores()
-        for gp in self.gameplayer_set.prefetch_related('power'):
+        gps = self.gameplayer_set.prefetch_related('power').order_by()
+        for gp in gps:
             if gp.power:
                 gp.score = scores[gp.power]
                 gp.save(update_fields=['score'])
         if update_round:
             # Only the scores for this Game's players can have changed
-            players = [gp.player for gp in self.gameplayer_set.all()]
+            players = [gp.player for gp in gps]
             self.the_round.update_scores(players)
 
     def positions(self):
@@ -2458,7 +2459,7 @@ class Game(models.Model):
         """
         Returns a list of strings that give background for the game
         """
-        gps = self.gameplayer_set.prefetch_related('power')
+        gps = self.gameplayer_set.prefetch_related('power').order_by()
         results = []
         for gp in gps:
             results += gp.player.background(gp.power, mask=mask)
@@ -2587,7 +2588,7 @@ class Game(models.Model):
                                                                                              'dots': soloer.final_sc_count()}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
-            gps = self.gameplayer_set.all()
+            gps = self.gameplayer_set.order_by('power')
             toppers = self.board_toppers()
             first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps.get(power=scs.power).player,
                                                                    'power': _(scs.power.abbreviation)} for scs in list(toppers)])
@@ -3011,7 +3012,7 @@ class GamePlayer(models.Model):
         in the player's priority list for the tournament.
         """
         prefs = self.preferences()
-        gps = self.game.gameplayer_set.all()
+        gps = self.game.gameplayer_set.order_by()
         for p in prefs:
             if gps.filter(power=p.power).exists():
                 # This power is already taken - on to the next

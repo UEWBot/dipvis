@@ -588,7 +588,7 @@ class PowerAssignForm(forms.Form):
         """Checks that no power is played by multiple players"""
         cleaned_data = super().clean()
         powers = []
-        for player in self.game.gameplayer_set.all():
+        for player in self.game.gameplayer_set.order_by():
             c = str(player.id)
             power = cleaned_data.get(c)
             # If the field itself didn't validate, drop out

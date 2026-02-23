@@ -324,7 +324,7 @@ def tournament_game_results(request,
     results = []
     for tp in tps:
         # All the games (in every tournament) this player has played in
-        gps = tp.player.gameplayer_set.prefetch_related('game__the_round', 'power')
+        gps = tp.player.gameplayer_set.prefetch_related('game__the_round', 'power').order_by('game')
         # Create a list of GamePlayers, indexed by Round
         rs = []
         for r in rds:
@@ -838,7 +838,7 @@ def api(request, tournament_id, version):
         games = {}
         for g in r.game_set.all():
             players = {}
-            for gp in g.gameplayer_set.all():
+            for gp in g.gameplayer_set.order_by('power'):
                 players[str(gp.power)] = {'name': str(gp.player),
                                           'location': gp.player.location,
                                           'wdr_id': gp.player.wdr_player_id}
