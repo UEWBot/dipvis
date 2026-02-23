@@ -1108,7 +1108,7 @@ class Tournament(models.Model):
             t_scores = {}
             for r in self.round_set.reverse():
                 if r.number() <= after_round_num:
-                    for rp in r.roundplayer_set.all():
+                    for rp in r.roundplayer_set.order_by():
                         if rp.player not in t_scores:
                             t_scores[rp.player] = rp.tournament_score
             # Anyone who hadn't yet played scores zero
@@ -1959,7 +1959,7 @@ class Round(models.Model):
         Returns a dict, keyed by Player, of floats.
         """
         retval = {}
-        for p in self.roundplayer_set.prefetch_related('player'):
+        for p in self.roundplayer_set.prefetch_related('player').order_by('player'):
             retval[p.player] = p.score
         return retval
 
@@ -2006,7 +2006,7 @@ class Round(models.Model):
         gps = GamePlayer.objects.filter(game__the_round=self).distinct()
         if for_players is not None:
             gps = gps.filter(player__in=for_players)
-        rps = self.roundplayer_set.all()
+        rps = self.roundplayer_set.order_by()
         if for_players is not None:
             rps = rps.filter(player__in=for_players)
         if system:
@@ -2020,9 +2020,7 @@ class Round(models.Model):
                     pass
         # Identify any players who were checked in but didn't play
         gps2 = gps.prefetch_related('player')
-        non_players = self.roundplayer_set.exclude(player__in=[gp.player for gp in gps2])
-        if for_players is not None:
-            non_players = non_players.filter(player__in=for_players)
+        non_players = rps.exclude(player__in=[gp.player for gp in gps2])
         # Figure out scores for non-players
         scores = self._score_non_players(non_players)
         for rp in non_players:
@@ -2042,7 +2040,7 @@ class Round(models.Model):
                 next_one = True
             elif next_one:
                 break
-            rps2 |= next_round.roundplayer_set.all()
+            rps2 |= next_round.roundplayer_set.order_by()
         # Is there a later round, and if so, has it got Games (and thus potentially scores) ?
         if (next_round != self) and (next_round.game_set.exists()):
             # Figure out tournament scores without any later rounds

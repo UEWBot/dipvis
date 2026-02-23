@@ -112,7 +112,7 @@ def roll_call(request, tournament_id, round_num):
                                          extra=2,
                                          formset=BasePlayerRoundFormset)
     r = get_round_or_404(t, round_num)
-    rps = r.roundplayer_set.all()
+    rps = r.roundplayer_set.order_by()
     player_data = []
     # Go through each player in the Tournament
     for tp in t.tournamentplayer_set.prefetch_related('player'):
@@ -211,7 +211,7 @@ def populate_pools(request, tournament_id, round_num):
     pool_set = r.pool_set.order_by()
     if not pool_set:
         raise Http404
-    rps = r.roundplayer_set.all()
+    rps = r.roundplayer_set.order_by()
     # We currently only support populating a single Pool
     pool = pool_set.get(board_count__isnull=False)
     context = {'tournament': t,
@@ -247,7 +247,7 @@ def get_seven(request, tournament_id, round_num):
     """Provide a form to get a multiple of seven players for a round"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
-    rps = full_rps = r.roundplayer_set.all()
+    rps = full_rps = r.roundplayer_set.order_by()
     pool = None
     pool_set = r.pool_set.order_by()
     if pool_set:

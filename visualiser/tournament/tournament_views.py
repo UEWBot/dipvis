@@ -860,7 +860,7 @@ def api(request, tournament_id, version):
                  'score_breakdown': []}
         if entry['ranking'] == Tournament.UNRANKED:
             entry['ranking'] = None
-        rps = player.roundplayer_set.all()
+        rps = player.roundplayer_set.order_by('player')
         for num, r in enumerate(rds, 1):
             try:
                 rp = rps.get(the_round=r)

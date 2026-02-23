@@ -459,7 +459,7 @@ class GamePlayersForm(forms.Form):
             # This form should be restricted to the pool the game is for
             self.pool = game.pool
         # Restrict to players from the relevant Pool
-        queryset = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player')
+        queryset = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player').order_by('player')
 
         field_order = ['name', 'the_set', 'external_url']
 
@@ -656,7 +656,7 @@ class GetSevenPlayersForm(forms.Form):
 
         assert (self.pool is None) or (self.pool.board_count is None)
 
-        present = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player')
+        present = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player').order_by('player')
         playing = present.filter(standby=False)
         standbys = present.filter(standby=True)
 
@@ -1033,7 +1033,7 @@ class PoolForm(forms.Form):
         super().__init__(*args, **kwargs)
         # Create the right number of player fields
         r = self.pool.the_round
-        queryset = r.roundplayer_set.all()
+        queryset = r.roundplayer_set.order_by('player')
         for n in range(self.pool.board_count * GreatPower.objects.count()):
             self.fields[f'player_{n+1}'] = RoundPlayerChoiceField(queryset=queryset)
 
