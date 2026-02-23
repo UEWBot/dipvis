@@ -177,7 +177,7 @@ def _round_news(r):
     # Get the news for every game in the round
     done_games = 0
     toppers = []
-    for g in r.game_set.all():
+    for g in r.game_set.order_by():
         toppers += g.board_toppers()
         if g.is_finished:
             done_games += 1

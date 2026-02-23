@@ -355,7 +355,7 @@ def _create_game_seeder(tournament, the_round):
         seeder.add_player(tp)
     # Provide details of games already played this tournament
     for rnd in tournament.round_set.filter(start__lt=the_round.start).order_by():
-        for g in rnd.game_set.prefetch_related('gameplayer_set'):
+        for g in rnd.game_set.prefetch_related('gameplayer_set').order_by():
             game = set()
             for gp in g.gameplayer_set.prefetch_related('power', 'player', 'game__the_round'):
                 game.add((gp.tournamentplayer(), gp.power))

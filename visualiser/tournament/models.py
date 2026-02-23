@@ -1919,7 +1919,7 @@ class Round(models.Model):
                 pass
             else:
                 # Re-score all Games. This will call self.update_scores()
-                for g in self.game_set.all():
+                for g in self.game_set.order_by():
                     g.update_scores()
 
         if ('update_fields' not in kwargs) or ('is_team_round' in kwargs['update_fields']):
@@ -2063,7 +2063,7 @@ class Round(models.Model):
         Sets self.is_finished to True if the Round has games, and they have all finished.
         Calls self.tournament.set_is_finished() if the round has finished.
         """
-        gs = self.game_set.all()
+        gs = self.game_set.order_by()
         if not gs:
             # Rounds with no games can't have started
             return
