@@ -377,7 +377,7 @@ def _create_game_seeder(tournament, the_round):
     return seeder
 
 
-def _seed_games_for_pool(seeder, tournament, the_round, pool):
+def _seed_games_for_pool(seeder, tournament, the_round, pool=None):
     """
     Wrapper round GameSeeder to do the actual seeding for a round or pool within a round
 
@@ -389,7 +389,7 @@ def _seed_games_for_pool(seeder, tournament, the_round, pool):
     games = seeder.seed_games(omitting_players=sitters,
                               players_doubling_up=two_gamers)
     # Add dummy powers and an empty issues list,
-    # to match _seed_games_and_powers()
+    # to match _seed_games_and_powers_for_pool()
     retval = []
     for players in games:
         game = set()
@@ -400,51 +400,40 @@ def _seed_games_for_pool(seeder, tournament, the_round, pool):
     return retval
 
 
-def _seed_games(tournament, the_round):
+def _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool=None):
     """
-    Wrapper round GameSeeder to do the actual seeding for a round
-
-    Return value is the same format as _seed_games_and_powers()
-    """
-    seeder = _create_game_seeder(tournament, the_round)
-    pool_set = the_round.pool_set.all()
-    if pool_set:
-        retval = []
-        for pool in pool_set:
-            retval += _seed_games_for_pool(seeder, tournament, the_round, pool)
-        return retval
-    return _seed_games_for_pool(seeder, tournament, the_round, None)
-
-
-def _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool):
-    """
-    Seed games and assign powers for a single pool (may be None)
+    Seed games and assign powers for a single round or pool within a round
     """
     retval = []
     sitters, two_gamers = _sitters_and_two_gamers(tournament, the_round, pool)
     games = seeder.seed_games_and_powers(omitting_players=sitters,
                                          players_doubling_up=two_gamers)
-    for g in games:
-        retval.append((pool, g[0], g[1]))
+    for game, issues in games:
+        retval.append((pool, game, issues))
     return retval
 
 
-def _seed_games_and_powers(tournament, the_round):
+def _seed_games(tournament, the_round):
     """
     Wrapper round GameSeeder to do the actual seeding for a round
 
     Returns a list of games, where each game is a 3-tuple containing a pool (possibly None),
     a set of (player, power) 2-tuples and a list of issues.
     """
+    power_assignment = tournament.power_assignment
     seeder = _create_game_seeder(tournament, the_round)
-    # Generate the games
     pool_set = the_round.pool_set.all()
     if pool_set:
         retval = []
         for pool in pool_set:
-            retval += _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool)
+            if power_assignment == PowerAssignMethods.AUTO:
+                retval += _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool)
+            else:
+                retval += _seed_games_for_pool(seeder, tournament, the_round, pool)
         return retval
-    return _seed_games_and_powers_for_pool(seeder, tournament, the_round, None)
+    if power_assignment == PowerAssignMethods.AUTO:
+        return _seed_games_and_powers_for_pool(seeder, tournament, the_round)
+    return _seed_games_for_pool(seeder, tournament, the_round)
 
 
 def _generate_game_name(round_num, pool, i):
@@ -551,10 +540,7 @@ def seed_games(request, tournament_id, round_num):
             default_set = GameSet.objects.get(pk=1)
         data = []
         # Generate a seeding, and assign powers if required
-        if t.power_assignment == PowerAssignMethods.AUTO:
-            games = _seed_games_and_powers(t, r)
-        else:
-            games = _seed_games(t, r)
+        games = _seed_games(t, r)
         # Add the Games and GamePlayers to the database
         for n, (pool, g, i) in enumerate(games, start=1):
             new_game = Game.objects.create(name=_generate_game_name(round_num, pool, n),
