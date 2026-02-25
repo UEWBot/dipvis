@@ -82,7 +82,12 @@ def board_call_csv(request, tournament_id, round_num):
     t = get_visible_tournament_or_404(tournament_id, request.user)
     r = get_round_or_404(t, round_num)
     # Fields to write
-    headers = [_('Round'), _('Board'), _('Power'), _('Player Name'), _('Player Id'), _('Backstabbr Username')]
+    headers = [_('Round'),
+               _('Board'),
+               _('Power'),
+               _('Player Name'),
+               _('Player Id'),
+               _('Backstabbr Username')]
 
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = f'attachment; filename="{t.name}{t.start_date.year}round{round_num}board_call.csv"'
@@ -162,7 +167,8 @@ def roll_call(request, tournament_id, round_num):
                                                                    'sandboxer': sandboxer})
                 elif r.game_set.filter(gameplayer__player=p).exists():
                     # Refuse to delete this one
-                    form.add_error(None, _('%(player)s did play this round') % {'player': p})
+                    form.add_error(None,
+                                   _('%(player)s did play this round') % {'player': p})
                     errors_added = True
                 else:
                     # delete any corresponding RoundPlayer
@@ -357,7 +363,9 @@ def _create_game_seeder(tournament, the_round):
     for rnd in tournament.round_set.filter(start__lt=the_round.start).order_by():
         for g in rnd.game_set.prefetch_related('gameplayer_set').order_by():
             game = set()
-            for gp in g.gameplayer_set.prefetch_related('power', 'player', 'game__the_round').order_by():
+            for gp in g.gameplayer_set.prefetch_related('power',
+                                                        'player',
+                                                        'game__the_round').order_by():
                 game.add((gp.tournamentplayer(), gp.power))
             assert len(game) == 7
             seeder.add_played_game(game)
@@ -427,9 +435,15 @@ def _seed_games(tournament, the_round):
         retval = []
         for pool in pool_set:
             if power_assignment == PowerAssignMethods.AUTO:
-                retval += _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool)
+                retval += _seed_games_and_powers_for_pool(seeder,
+                                                          tournament,
+                                                          the_round,
+                                                          pool)
             else:
-                retval += _seed_games_for_pool(seeder, tournament, the_round, pool)
+                retval += _seed_games_for_pool(seeder,
+                                               tournament,
+                                               the_round,
+                                               pool)
         return retval
     if power_assignment == PowerAssignMethods.AUTO:
         return _seed_games_and_powers_for_pool(seeder, tournament, the_round)
@@ -476,7 +490,11 @@ def seed_games(request, tournament_id, round_num):
                                              extra=0)
         formset = PowerAssignFormset(request.POST, the_round=r, initial=data)
         if formset.is_valid():
-            non_player_fields = {'the_set', 'name', 'external_url', 'notes', 'issues'}
+            non_player_fields = {'the_set',
+                                 'name',
+                                 'external_url',
+                                 'notes',
+                                 'issues'}
             players_changed = False
             for f in formset:
                 g = f.game
@@ -521,7 +539,8 @@ def seed_games(request, tournament_id, round_num):
             _send_board_call_to_discord(r)
             # Redirect to the board call page
             return HttpResponseRedirect(reverse('board_call',
-                                                args=(tournament_id, round_num)))
+                                                args=(tournament_id,
+                                                      round_num)))
     else:
         # Check for a multiple of seven players,
         # allowing for players sitting out or playing multiple games
@@ -543,7 +562,9 @@ def seed_games(request, tournament_id, round_num):
         games = _seed_games(t, r)
         # Add the Games and GamePlayers to the database
         for n, (pool, g, i) in enumerate(games, start=1):
-            new_game = Game.objects.create(name=_generate_game_name(round_num, pool, n),
+            new_game = Game.objects.create(name=_generate_game_name(round_num,
+                                                                    pool,
+                                                                    n),
                                            the_round=r,
                                            pool=pool,
                                            the_set=default_set)
@@ -778,5 +799,7 @@ def game_cycle(request, tournament_id, round_num, template, game_name=None):
                'refresh': True,
                'redirect_time': REFRESH_TIME,
                'redirect_url': reverse(game_cycle,
-                                       args=(tournament_id, round_num, next_game_name))}
+                                       args=(tournament_id,
+                                             round_num,
+                                             next_game_name))}
     return render(request, template, context)
