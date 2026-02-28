@@ -5710,7 +5710,7 @@ class PoolTests(TestCase):
         pool3 = Pool(the_round=self.r,
                      name='Erroneous')
         with self.assertRaises(ValidationError):
-            pool3.full_clean()
+            pool3.clean()
 
     def test_pool_clean_with_board_count(self):
         self.pool1.clean()
@@ -6834,7 +6834,7 @@ class GameTests(TestCase):
         g.pool = pool
         # Should not be able to set pool non-None
         with self.assertRaises(ValidationError):
-            g.full_clean()
+            g.clean()
         # Cleanup
         pool.delete()
 
@@ -6856,15 +6856,15 @@ class GameTests(TestCase):
                                     board_count=1)
         # Pool from correct round should be allowed
         g.pool = pool1
-        g.full_clean()
+        g.clean()
         # Pool from wrong round should be rejected
         g.pool = pool2
         with self.assertRaises(ValidationError):
-            g.full_clean()
+            g.clean()
         # No pool should also be rejected
         g.pool = None
         with self.assertRaises(ValidationError):
-            g.full_clean()
+            g.clean()
         # Cleanup
         pool1.delete()
         pool2.delete()
