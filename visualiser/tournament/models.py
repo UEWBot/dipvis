@@ -602,7 +602,11 @@ class TScoringSumGames(TournamentScoringSystem):
                 rounds.append(rp.the_round)
                 # Treat sitting-out bonuses as pseudo-games
                 if rp.score != 0.0:
-                    player_scores[rp] = rp.score
+                    if rp.gameplayers().exists():
+                        # Something has gone wrong - player has a sitting out bonus but they played
+                        print(f'{rp} has GamePlayers but also a score of {rp.score}')
+                    else:
+                        player_scores[rp] = rp.score
             for gp in GamePlayer.objects.filter(player=p,
                                                 game__the_round__in=rounds):
                 player_scores[gp] = gp.score
@@ -2018,6 +2022,11 @@ class Round(models.Model):
                 except KeyError:
                     # This player didn't actually play in the Round
                     pass
+        else:
+            # Clear out any old scores, in case the scoring system changed
+            for rp in rps:
+                rp.score = 0.0
+                rp.save(update_fields=['score'])
         # Identify any players who were checked in but didn't play
         gps2 = gps.prefetch_related('player')
         non_players = rps.exclude(player__in=[gp.player for gp in gps2])
@@ -2792,7 +2801,8 @@ class RoundPlayer(models.Model):
     #  - the tournament scoring system needs round scores or
     #  - there's a sitting-out bonus
     # Otherwise it will always be zero and should never be used or seen
-    score = models.FloatField(default=0.0)
+    score = models.FloatField(default=0.0,
+                              help_text=_("If the tournament doesn't use round scores, this stores any sitting-out bonus for the round"))
     score_dropped = models.BooleanField(default=False,
                                         help_text=_('Set if this score does not contribute towards the tournament score'))
     game_count = models.PositiveIntegerField(default=1,
