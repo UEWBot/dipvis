@@ -1809,7 +1809,7 @@ class TournamentViewTests(TestCase):
         tss = self.t4.tournament_scoring_system
         rss = self.t4.round_scoring_system
         self.t4.tournament_scoring_system = 'Sum best 3 games in any rounds'
-        self.t4.round_scoring_system = ''
+        self.t4.round_scoring_system = 'None'
         self.t4.save()
         response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
                                    secure=True)
