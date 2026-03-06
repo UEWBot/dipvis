@@ -964,6 +964,10 @@ class GamePlayersFormTest(TestCase):
         form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('the_set', form.fields)
 
+    def test_top_board_field(self):
+        form = GamePlayersForm(the_round=self.r1, pool=None)
+        self.assertIn('top_board', form.fields)
+
     def test_url_field(self):
         form = GamePlayersForm(the_round=self.r1, pool=None)
         self.assertIn('external_url', form.fields)
@@ -1673,6 +1677,10 @@ class PowerAssignFormTest(TestCase):
     def test_set_field(self):
         form = PowerAssignForm(game=self.g)
         self.assertIn('the_set', form.fields)
+
+    def test_top_board_field(self):
+        form = PowerAssignForm(game=self.g)
+        self.assertIn('top_board', form.fields)
 
     def test_url_field(self):
         form = PowerAssignForm(game=self.g)

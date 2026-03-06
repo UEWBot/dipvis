@@ -1352,6 +1352,108 @@ class RoundViewTests(TestCase):
         self.rp113.game_count = 2
         self.rp113.save(update_fields=['game_count'])
 
+    def test_seed_games_override_power_assignment(self):
+        self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
+        r = self.t1.round_numbered(1)
+        self.assertFalse(r.game_set.exists())
+        tp = TournamentPlayer.objects.create(player=self.p14,
+                                             tournament=self.t1)
+        new_rp = RoundPlayer.objects.create(player=self.p14,
+                                            the_round=self.r11)
+        self.assertEqual(self.rp112.game_count, 0)
+        self.rp112.game_count = 1
+        self.rp112.save(update_fields=['game_count'])
+        self.assertEqual(self.rp113.game_count, 2)
+        self.rp113.game_count = 1
+        self.rp113.save(update_fields=['game_count'])
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Fixed',
+                                    power_assignment=PowerAssignMethods.MANUAL,
+                                    board_count=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        for rp in [self.rp11, self.rp13, self.rp15, self.rp17, self.rp19, self.rp111, self.rp113]:
+            rp.pool = pool1
+            rp.save()
+        for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
+            rp.pool = pool2
+            rp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        # 2 Games should be created, 1 in each Pool
+        gs1 = pool1.game_set.all()
+        self.assertEqual(gs1.count(), 1)
+        for gp in gs1.first().gameplayer_set.all():
+            self.assertIsNone(gp.power)
+        gs2 = pool2.game_set.all()
+        self.assertEqual(gs2.count(), 1)
+        for gp in gs2.first().gameplayer_set.all():
+            self.assertIsNotNone(gp.power)
+        # Cleanup
+        new_rp.delete()
+        tp.delete()
+        for rp in r.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        r.game_set.all().delete()
+        r.pool_set.all().delete()
+        self.rp112.game_count = 0
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 2
+        self.rp113.save(update_fields=['game_count'])
+
+    def test_seed_games_set_is_top_board(self):
+        self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
+        r = self.t1.round_numbered(1)
+        self.assertFalse(r.game_set.exists())
+        tp = TournamentPlayer.objects.create(player=self.p14,
+                                             tournament=self.t1)
+        new_rp = RoundPlayer.objects.create(player=self.p14,
+                                            the_round=self.r11)
+        self.assertEqual(self.rp112.game_count, 0)
+        self.rp112.game_count = 1
+        self.rp112.save(update_fields=['game_count'])
+        self.assertEqual(self.rp113.game_count, 2)
+        self.rp113.game_count = 1
+        self.rp113.save(update_fields=['game_count'])
+        pool1 = Pool.objects.create(the_round=r,
+                                    name='Top Board',
+                                    board_count=1,
+                                    determines_top_rankings=1)
+        pool2 = Pool.objects.create(the_round=r,
+                                    name='Variable')
+        for rp in [self.rp11, self.rp13, self.rp15, self.rp17, self.rp19, self.rp111, self.rp113]:
+            rp.pool = pool1
+            rp.save()
+        for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
+            rp.pool = pool2
+            rp.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t1.pk, 1)),
+                                   secure=True)
+        # 2 Games should be created, 1 in each Pool
+        gs1 = pool1.game_set.all()
+        self.assertEqual(gs1.count(), 1)
+        self.assertEqual(gs1.first().is_top_board, True)
+        gs2 = pool2.game_set.all()
+        self.assertEqual(gs2.count(), 1)
+        self.assertEqual(gs2.first().is_top_board, False)
+        # Cleanup
+        new_rp.delete()
+        tp.delete()
+        for rp in r.roundplayer_set.all():
+            rp.pool = None
+            rp.save()
+        r.game_set.all().delete()
+        r.pool_set.all().delete()
+        self.rp112.game_count = 0
+        self.rp112.save(update_fields=['game_count'])
+        self.rp113.game_count = 2
+        self.rp113.save(update_fields=['game_count'])
+
     def test_seed_games_post_no_change(self):
         """Just accept the generated seeding"""
         # Eight players, one sitting out, AUTO power assignment

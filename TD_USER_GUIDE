@@ -123,7 +123,14 @@ https://example.com/tournaments/42/.
 If any of your Rounds need to sub-divided into Pools, create those Pools now by going
 to https://example.com/admin/tournament/pool/add/ Note that only Rounds with exactly
 two Pools (one with a fixed board count) are currently supported, so create both Pools
-now.
+now. Most likely your fixed-size Pool will have one board.
+For each Pool, you can specify a game score multiplier (for example if the top board
+scores double a regular game), you can override the Tournament's power assignment method
+(for example to not have the system assign powers for your top board), and you can
+specify that the Pool determines a number of overall Tournament positions (e.g. that
+the three highest-scoring players on the top board will get first, second, and third
+place in the tournament, even if someone who didn't play the top board got a higher
+tournament score).
 
 Registering Players
 -------------------

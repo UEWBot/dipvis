@@ -432,6 +432,7 @@ class GamePlayersForm(forms.Form):
                            widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
+    top_board = forms.BooleanField(required=False)
     external_url = forms.URLField(label=_('URL'),
                                   required=False)
     notes = forms.CharField(required=False,
@@ -461,7 +462,7 @@ class GamePlayersForm(forms.Form):
         # Restrict to players from the relevant Pool
         queryset = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player').order_by('player')
 
-        field_order = ['name', 'the_set', 'external_url']
+        field_order = ['name', 'the_set', 'top_board', 'external_url']
 
         # Create the right country fields
         for power in GreatPower.objects.all():
@@ -549,6 +550,7 @@ class PowerAssignForm(forms.Form):
                            widget=forms.TextInput(attrs={'size': f'{Game.MAX_NAME_LENGTH}'}))
     the_set = forms.ModelChoiceField(label=_(u'Game Set'),
                                      queryset=GameSet.objects.all())
+    top_board = forms.BooleanField(required=False)
     external_url = forms.URLField(label=_('URL'),
                                   required=False)
     notes = forms.CharField(required=False,
@@ -566,7 +568,7 @@ class PowerAssignForm(forms.Form):
 
         queryset = GreatPower.objects.all()
 
-        field_order = ['name', 'the_set', 'external_url']
+        field_order = ['name', 'the_set', 'top_board', 'external_url']
 
         # Create the right player fields
         for gp in self.game.gameplayer_set.order_by('power__abbreviation'):

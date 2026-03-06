@@ -749,14 +749,18 @@ def scoring_systems_are_compatible(round_scoring_system_name, tournament_scoring
     return rss is None
 
 
-def add_ranks(to_scores):
-    """Takes a dict of scores, returns a dict of (rank, score) 2-tuples"""
+def add_ranks(to_scores, start=1):
+    """
+    Takes a dict of scores, returns a dict of (rank, score) 2-tuples
+
+    highest score is given the rank specified in the start parameter
+    """
     result = {}
     last_score = None
     for i, (k, score) in enumerate(sorted([(k, score) for k, score in to_scores.items()],
                                       key=itemgetter(1),
                                       reverse=True),
-                               start=1):
+                               start=start):
         if score != last_score:
             place, last_score = i, score
         result[k] = (place, score)
@@ -1109,6 +1113,11 @@ class Tournament(models.Model):
             t_scores[tp.player] = tp.score
         return t_scores
 
+    def _top_pool(self):
+        """Returns the Pool with determines_top_rankings set, or None"""
+        # There can be only one Pool per Tournament with determines_top_rankings set
+        return Pool.objects.filter(the_round__tournament=self).filter(determines_top_rankings__isnull=False).first()
+
     def positions_and_scores(self, after_round_num=None):
         """
         Returns the positions and scores of everyone registered, after a specified round ended.
@@ -1142,7 +1151,25 @@ class Tournament(models.Model):
             # Take it out of scores and add it to result
             result[tp.player] = (Tournament.UNRANKED, t_scores.pop(tp.player))
         # Figure out everyone's ranking
-        return result | add_ranks(t_scores)
+        # Start with first place
+        rank = 1
+        top_pool = self._top_pool()
+        if top_pool is not None:
+            # Some number of top board players get the top ranks
+            # Starting with the player with the highest top board score
+            top_gps = GamePlayer.objects.filter(game__pool=top_pool).order_by('-score')
+            last_score = None
+            for i, gp in enumerate([gp for gp in top_gps if not gp.tournamentplayer().unranked],
+                                   start=1):
+                if gp.score != last_score:
+                    rank, last_score = i, gp.score
+                    if rank > top_pool.determines_top_rankings:
+                        # Everyone else, including this player, is just ranked by Tournament score
+                        break
+                # This player gets one of the top ranks
+                player = gp.player
+                result[player] = (rank, t_scores.pop(player))
+        return result | add_ranks(t_scores, rank)
 
     def team_scores(self, after_round_num=None):
         """
@@ -2111,6 +2138,12 @@ class Round(models.Model):
                 return count
         raise AssertionError("Round doesn't exist within its own tournament")
 
+    def is_last(self):
+        """
+        Is this the last round of the tournament ?
+        """
+        return self == self.tournament.round_set.order_by('start').last()
+
     def board_call_msg(self):
         """
         The Games in this Round, formatted as a message
@@ -2164,13 +2197,22 @@ class Pool(models.Model):
                                                    blank=True,
                                                    validators=[MinValueValidator(1)],
                                                    help_text=_('number of games to be played in this pool. Must be set for all pools except one in a round'))
+    power_assignment = models.CharField(max_length=1,
+                                        blank=True,
+                                        verbose_name=_('How powers are assigned'),
+                                        choices=PowerAssignMethods.choices,
+                                        help_text=_('overrides tournament setting if set'))
+    determines_top_rankings = models.PositiveSmallIntegerField(null=True,
+                                                               blank=True,
+                                                               validators=[MinValueValidator(1)],
+                                                               help_text=_('this specifies how many best rankings will come from the pool. For a top board pool where the pool winner wins the tournament, set this'))
+    game_score_multiplier = models.FloatField(null=True,
+                                              blank=True,
+                                              help_text=_('game score in this pool will be multiplied by this value, if specified'))
     # TODO Add more attributes, possibly including:
-    # - score_multiplier
     # - seeding_ignores_previous_rounds
-    # - top_board_pool or determines_winner (must be final round)
     # - power_assignment_ignores_previous_rounds
     # - seed_games (override Tournament setting) ?
-    # - power_assignment (override Tournament setting)
 
     class Meta:
         ordering = ['-board_count']
@@ -2179,6 +2221,8 @@ class Pool(models.Model):
                                     name='unique_round_name'),
             models.UniqueConstraint(fields=['the_round', 'slug'],
                                     name='unique_round_slug'),
+            models.CheckConstraint(check=Q(power_assignment='') | Q(power_assignment__in=PowerAssignMethods.values),
+                                   name='%(class)s_power_assignment_valid'),
         ]
 
     # TODO get_absolute_url() ?
@@ -2187,10 +2231,25 @@ class Pool(models.Model):
         return _(f'{self.the_round} {self.name}')
 
     def clean(self):
-        """At most one Pool per Round with no board_count"""
+        """
+        Checks Pool attributes
+
+        At most one Pool per Round with no board_count
+        determines_top_rankings can only be set in a single Pool in the final Round,
+        with board_count set, and cannot be higher than the number of players in the Pool
+        """
         if self.board_count is None:
             if self.the_round.pool_set.filter(board_count__isnull=True).exclude(pk=self.pk).exists():
                 raise ValidationError({'board_count': _('A round may not have more than one pool without board_count set')})
+        if self.determines_top_rankings:
+            if not self.the_round.is_last():
+                raise ValidationError({'determines_top_rankings': _('Only the final round of a tournament can determine the winner')})
+            if self.the_round.pool_set.filter(determines_top_rankings__isnull=False).exclude(pk=self.pk).exists():
+                raise ValidationError({'determines_top_rankings': _('A round may not have more than one pool with determines_top_rankings set')})
+            if self.board_count is None:
+                raise ValidationError({'determines_top_rankings': _('determines_top_rankings only makes sense if board_count is also set')})
+            elif self.determines_top_rankings > (GreatPower.objects.count() * self.board_count):
+                raise ValidationError({'determines_top_rankings': _('Not enough players in the pool')})
 
 
 class Game(models.Model):
@@ -2401,7 +2460,12 @@ class Game(models.Model):
         """
         system = self.the_round.game_scoring_system_obj()
         tgs = TournamentGameState(self.centrecount_set.order_by())
-        return system.scores(tgs)
+        scores = system.scores(tgs)
+        if (self.pool is None) or (self.pool.game_score_multiplier is None):
+            return scores
+        # Apply the multiplier
+        multiplier = self.pool.game_score_multiplier
+        return {player: score * multiplier for player, score in scores.items()}
 
     def scores(self):
         """

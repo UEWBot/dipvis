@@ -421,6 +421,15 @@ def _seed_games_and_powers_for_pool(seeder, tournament, the_round, pool=None):
     return retval
 
 
+def _pool_power_assignment(tournament_power_assignment, pool):
+    """
+    Returns the PowerAssignmentMethod to use for the pool
+    """
+    if pool.power_assignment != '':
+        return pool.power_assignment
+    return tournament_power_assignment
+
+
 def _seed_games(tournament, the_round):
     """
     Wrapper round GameSeeder to do the actual seeding for a round
@@ -434,7 +443,8 @@ def _seed_games(tournament, the_round):
     if pool_set:
         retval = []
         for pool in pool_set:
-            if power_assignment == PowerAssignMethods.AUTO:
+            if _pool_power_assignment(power_assignment,
+                                      pool) == PowerAssignMethods.AUTO:
                 retval += _seed_games_and_powers_for_pool(seeder,
                                                           tournament,
                                                           the_round,
@@ -480,6 +490,7 @@ def seed_games(request, tournament_id, round_num):
         for g in r.game_set.all():
             current = {'name': g.name,
                        'the_set': g.the_set,
+                       'top_board': g.is_top_board,
                        'external_url': g.external_url,
                        'notes': g.notes}
             for gp in g.gameplayer_set.order_by():
@@ -490,8 +501,9 @@ def seed_games(request, tournament_id, round_num):
                                              extra=0)
         formset = PowerAssignFormset(request.POST, the_round=r, initial=data)
         if formset.is_valid():
-            non_player_fields = {'the_set',
-                                 'name',
+            non_player_fields = {'name',
+                                 'the_set',
+                                 'top_board',
                                  'external_url',
                                  'notes',
                                  'issues'}
@@ -503,6 +515,7 @@ def seed_games(request, tournament_id, round_num):
                         # Update the game
                         g.name = f.cleaned_data['name']
                         g.the_set = f.cleaned_data['the_set']
+                        g.is_top_board = f.cleaned_data['top_board']
                         g.external_url = f.cleaned_data['external_url']
                         g.notes = f.cleaned_data['notes']
                         try:
@@ -565,6 +578,7 @@ def seed_games(request, tournament_id, round_num):
                                                                     n),
                                            the_round=r,
                                            pool=pool,
+                                           is_top_board=(pool is not None) and (pool.determines_top_rankings is not None),
                                            the_set=default_set)
             current = {'name': new_game.name,
                        'the_set': new_game.the_set,
@@ -617,6 +631,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
         current = {'game_id': g.id,
                    'name': g.name,
                    'the_set': g.the_set,
+                   'top_board': g.is_top_board,
                    'external_url': g.external_url,
                    'notes': g.notes}
         for gp in g.gameplayer_set.order_by('power'):
@@ -640,7 +655,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                                  pool=pool,
                                  initial=data)
     if formset.is_valid():
-        non_player_fields = {'the_set', 'name', 'external_url', 'notes'}
+        non_player_fields = {'name', 'the_set', 'top_board', 'external_url', 'notes'}
         players_changed = False
         for f in formset:
             if f.has_changed():
@@ -655,6 +670,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                             g = Game.objects.get(pk=f.cleaned_data['game_id'])
                             g.name = f.cleaned_data['name']
                             g.the_set = f.cleaned_data['the_set']
+                            g.is_top_board = f.cleaned_data['top_board']
                             g.external_url = f.cleaned_data['external_url']
                             g.notes = f.cleaned_data['notes']
                         else:
@@ -662,6 +678,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                                      the_round=r,
                                      pool=pool,
                                      the_set=f.cleaned_data['the_set'],
+                                     is_top_board = f.cleaned_data['top_board'],
                                      external_url=f.cleaned_data['external_url'],
                                      notes=f.cleaned_data['notes'])
                     except KeyError:

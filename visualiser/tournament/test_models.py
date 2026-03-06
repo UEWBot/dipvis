@@ -2762,19 +2762,22 @@ class TournamentTests(TestCase):
 
         # Create some players
         # Avoid hitting the WDD by not providing a WDD id
-        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Brown')
-        cls.p2 = Player.objects.create(first_name='Charles', last_name='Dog')
-        cls.p3 = Player.objects.create(first_name='Ethel', last_name='Frankenstein')
-        cls.p4 = Player.objects.create(first_name='George', last_name='Hotel')
-        cls.p5 = Player.objects.create(first_name='Iris', last_name='Jackson')
-        cls.p6 = Player.objects.create(first_name='Kevin', last_name='Lame')
-        cls.p7 = Player.objects.create(first_name='Michelle', last_name='Nobody')
-        cls.p8 = Player.objects.create(first_name='Owen', last_name='Pennies')
+        cls.p1 = Player.objects.create(first_name='Abbey', last_name='Artichoke')
+        cls.p2 = Player.objects.create(first_name='Brian', last_name='Breakfast')
+        cls.p3 = Player.objects.create(first_name='Charlotte', last_name='Comfortable')
+        cls.p4 = Player.objects.create(first_name='Douglas', last_name='Dracula')
+        cls.p5 = Player.objects.create(first_name='Ethel', last_name='Elephant')
+        cls.p6 = Player.objects.create(first_name='Frank', last_name='Flatulant')
+        cls.p7 = Player.objects.create(first_name='Georgina', last_name='Gearbox')
+        cls.p8 = Player.objects.create(first_name='Harry', last_name='Hotel')
         # These two are deliberately not in any tournaments
-        cls.p9 = Player.objects.create(first_name='Queenie', last_name='Radiation')
-        cls.p10 = Player.objects.create(first_name='Sebastian', last_name='Twinkie')
+        cls.p9 = Player.objects.create(first_name='Isabella', last_name='Isolation')
+        cls.p10 = Player.objects.create(first_name='Justin', last_name='Jerk')
         # The remainder are not used in this method but are available for use in tests
-        cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
+        cls.p11 = Player.objects.create(first_name='Katrina', last_name='Koala')
+        cls.p12 = Player.objects.create(first_name='Lawrence', last_name='Lame')
+        cls.p13 = Player.objects.create(first_name='Madeline', last_name='Muscles')
+        cls.p14 = Player.objects.create(first_name='Nicolas', last_name='Nobody')
 
         # Tournament.news() will call Game.news() for all games in the current round,
         # which will need a player for every country
@@ -3051,6 +3054,23 @@ class TournamentTests(TestCase):
         # Cleanup
         tp.delete()
 
+    # Tournament._top_pool()
+    def test_tournament_top_pool(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.first()
+        p1 = Pool.objects.create(the_round=r,
+                                 name='Fixed',
+                                 board_count=1)
+        p2 = Pool.objects.create(the_round=r,
+                                 name='Variable')
+        self.assertIsNone(t._top_pool())
+        p1.determines_top_rankings=1
+        p1.save()
+        self.assertEqual(t._top_pool(), p1)
+        # Clean up
+        p1.delete()
+        p2.delete()
+
     # Tournament.positions_and_scores()
     def test_tournament_positions_and_scores_finished(self):
         t = Tournament.objects.get(name='t3')
@@ -3162,6 +3182,153 @@ class TournamentTests(TestCase):
         for xp, score in scores.items():
             xp.score = score
             xp.save()
+
+    def test_tournament_positions_and_scores_top_board_played(self):
+        """Tournament with a top board that has been played"""
+        today = date.today()
+        t = Tournament.objects.create(name='testy',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      is_finished=True,
+                                      draw_secrecy=DrawSecrecy.COUNTS)
+        # Round 1 has just 1 game
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date,
+                                                         time(hour=8,
+                                                              tzinfo=datetime_timezone.utc)))
+        g11 = Game.objects.create(the_round=r1,
+                                  name='Round1',
+                                  the_set=self.set1)
+        # Round 2 has a top board and another game
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date,
+                                                         time(hour=16,
+                                                              tzinfo=datetime_timezone.utc)))
+        p1 = Pool.objects.create(the_round=r2,
+                                 name='Top Board',
+                                 board_count=1,
+                                 determines_top_rankings=2)
+        p2 = Pool.objects.create(the_round=r2,
+                                 name='Variable')
+        g21 = Game.objects.create(the_round=r2,
+                                  pool=p1,
+                                  name='Top',
+                                  is_top_board=True,
+                                  the_set=self.set1)
+        g22 = Game.objects.create(the_round=r2,
+                                  pool=p2,
+                                  name='Other',
+                                  the_set=self.set1)
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        TournamentPlayer.objects.create(player=self.p3, tournament=t)
+        TournamentPlayer.objects.create(player=self.p4, tournament=t)
+        TournamentPlayer.objects.create(player=self.p5, tournament=t)
+        TournamentPlayer.objects.create(player=self.p6, tournament=t)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t)
+        TournamentPlayer.objects.create(player=self.p8, tournament=t)
+        TournamentPlayer.objects.create(player=self.p9, tournament=t)
+        TournamentPlayer.objects.create(player=self.p10, tournament=t)
+        TournamentPlayer.objects.create(player=self.p11, tournament=t, unranked=True)
+        TournamentPlayer.objects.create(player=self.p12, tournament=t)
+        TournamentPlayer.objects.create(player=self.p13, tournament=t)
+        TournamentPlayer.objects.create(player=self.p14, tournament=t)
+        RoundPlayer.objects.create(the_round=r1, player=self.p2)
+        RoundPlayer.objects.create(the_round=r1, player=self.p4)
+        RoundPlayer.objects.create(the_round=r1, player=self.p5)
+        RoundPlayer.objects.create(the_round=r1, player=self.p6)
+        RoundPlayer.objects.create(the_round=r1, player=self.p8)
+        RoundPlayer.objects.create(the_round=r1, player=self.p9)
+        RoundPlayer.objects.create(the_round=r1, player=self.p11)
+        RoundPlayer.objects.create(the_round=r2, player=self.p1, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p2, pool=p2)
+        RoundPlayer.objects.create(the_round=r2, player=self.p3, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p4, pool=p2)
+        RoundPlayer.objects.create(the_round=r2, player=self.p5, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p6, pool=p2)
+        RoundPlayer.objects.create(the_round=r2, player=self.p7, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p8, pool=p2)
+        RoundPlayer.objects.create(the_round=r2, player=self.p9, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p10, pool=p2)
+        RoundPlayer.objects.create(the_round=r2, player=self.p11, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p12, pool=p2)
+        RoundPlayer.objects.create(the_round=r2, player=self.p13, pool=p1)
+        RoundPlayer.objects.create(the_round=r2, player=self.p14, pool=p2)
+        # Set the scores so that we have:
+        # - a player on the non-top board with the highest score
+        # - two players tied for second on the top board
+        # - a player on the top board with a higher tournament score than the player
+        #   who topped the top board
+        GamePlayer.objects.create(game=g11, player=self.p2, power=self.germany, score=100)
+        GamePlayer.objects.create(game=g11, player=self.p4, power=self.england, score=120)
+        GamePlayer.objects.create(game=g11, player=self.p5, power=self.austria, score=110)
+        GamePlayer.objects.create(game=g11, player=self.p6, power=self.france, score=110)
+        GamePlayer.objects.create(game=g11, player=self.p8, power=self.italy, score=100)
+        GamePlayer.objects.create(game=g11, player=self.p9, power=self.russia, score=100)
+        GamePlayer.objects.create(game=g11, player=self.p11, power=self.turkey, score=105)
+        GamePlayer.objects.create(game=g21, player=self.p7, power=self.germany, score=30)
+        GamePlayer.objects.create(game=g21, player=self.p11, power=self.england, score=27)
+        GamePlayer.objects.create(game=g21, player=self.p13, power=self.austria, score=24)
+        GamePlayer.objects.create(game=g21, player=self.p9, power=self.france, score=24)
+        GamePlayer.objects.create(game=g21, player=self.p5, power=self.italy, score=21)
+        GamePlayer.objects.create(game=g21, player=self.p3, power=self.russia, score=4)
+        GamePlayer.objects.create(game=g21, player=self.p1, power=self.turkey, score=1)
+        GamePlayer.objects.create(game=g22, player=self.p2, power=self.turkey, score=35)
+        GamePlayer.objects.create(game=g22, player=self.p6, power=self.italy, score=22)
+        GamePlayer.objects.create(game=g22, player=self.p4, power=self.russia, score=12)
+        GamePlayer.objects.create(game=g22, player=self.p8, power=self.germany, score=10)
+        GamePlayer.objects.create(game=g22, player=self.p10, power=self.france, score=3)
+        GamePlayer.objects.create(game=g22, player=self.p12, power=self.england, score=2)
+        GamePlayer.objects.create(game=g22, player=self.p14, power=self.austria, score=1)
+        # Set RoundPlayer and TournamentPlayer scores accordingly
+        r1.update_scores()
+        r2.update_scores()
+        p_and_s = t.positions_and_scores()
+        # Highest score on the top board should get first overall (30)
+        self.assertEqual(p_and_s[self.p7][0], 1)
+        # The two tied for second place on the top board should both get second place overall (24)
+        # (Unranked player should be ignored)
+        self.assertEqual(p_and_s[self.p9][0], 2)
+        self.assertEqual(p_and_s[self.p13][0], 2)
+        # Fourth should go to the highest tournament score (135)
+        self.assertEqual(p_and_s[self.p2][0], 4)
+        # Fifth should go to second highest tournament score (132)
+        self.assertEqual(p_and_s[self.p4][0], 5)
+        self.assertEqual(p_and_s[self.p6][0], 5)
+        # Seventh should go to the next highest tournament score (131)
+        self.assertEqual(p_and_s[self.p5][0], 7)
+        # Cleanup
+        t.delete()
+
+    def test_tournament_positions_and_scores_top_board_not_seeded(self):
+        """Tournament with a top board that has not yet been seeded"""
+        t = Tournament.objects.get(name='t1')
+        p_and_s_before = t.positions_and_scores()
+        r = t.round_numbered(3)
+        p1 = Pool.objects.create(the_round=r,
+                                 name='Top Board',
+                                 board_count=1,
+                                 determines_top_rankings=2)
+        p2 = Pool.objects.create(the_round=r,
+                                 name='Variable')
+        for game, pool in zip(r.game_set.all(), r.pool_set.all()):
+            game.pool = pool
+            game.save()
+        # Addition of pools shouldn't make any difference
+        p_and_s_after = t.positions_and_scores()
+        self.assertEqual(p_and_s_before, p_and_s_after)
+        # Cleanup
+        for g in r.game_set.all():
+            g.pool = None
+            g.save()
+        p1.delete()
+        p2.delete()
 
     def test_tournament_positions_and_scores_tscoringsumgames(self):
         """Check that positions_and_scores() with round specified doesn't break TScoringSumGames"""
@@ -5477,6 +5644,14 @@ class RoundTests(TestCase):
         r22 = t.round_set.all()[1]
         self.assertEqual(r22.number(), 2)
 
+    # Round.is_last()
+    def test_round_is_last(self):
+        t = Tournament.objects.get(name='t1')
+        r14 = t.round_set.all()[3]
+        self.assertIs(True, r14.is_last())
+        r13 = t.round_set.all()[2]
+        self.assertIs(False, r13.is_last())
+
     # Round.board_call_msg()
     def test_round_board_call_msg_no_pools(self):
         t = Tournament.objects.get(name='t1')
@@ -5695,16 +5870,18 @@ class PoolTests(TestCase):
     def setUpTestData(cls):
         today = date.today()
 
-        t = Tournament.objects.create(name='t1',
-                                      start_date=today,
-                                      end_date=today + HOURS_24,
-                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
-                                      tournament_scoring_system='Sum all round scores',
-                                      draw_secrecy=DrawSecrecy.SECRET)
-        cls.r = Round.objects.create(tournament=t,
+        cls.t = Tournament.objects.create(name='t1',
+                                          start_date=today,
+                                          end_date=today + HOURS_24,
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system='Sum all round scores',
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.r = Round.objects.create(tournament=cls.t,
                                      scoring_system=s1,
                                      dias=True,
-                                     start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                     start=datetime.combine(cls.t.start_date,
+                                                            time(hour=8,
+                                                                 tzinfo=datetime_timezone.utc)))
         cls.pool1 = Pool.objects.create(the_round=cls.r,
                                         name='Fixed',
                                         board_count=1)
@@ -5727,6 +5904,57 @@ class PoolTests(TestCase):
 
     def test_pool_clean_no_board_count(self):
         self.pool2.clean()
+
+    def test_pool_clean_top_board(self):
+        self.pool1.determines_top_rankings = 1
+        self.pool1.save()
+        self.pool1.clean()
+        # Cleanup
+        self.pool1.determines_top_rankings = None
+        self.pool1.save()
+
+    def test_pool_clean_determines_winner_not_last_round(self):
+        r = Round.objects.create(tournament=self.t,
+                                 scoring_system=s1,
+                                 dias=True,
+                                 start=datetime.combine(self.t.start_date,
+                                                        time(hour=9,
+                                                             tzinfo=datetime_timezone.utc)))
+        self.pool1.determines_top_rankings = 1
+        with self.assertRaises(ValidationError):
+            self.pool1.clean()
+        # Clean up
+        r.delete()
+
+    def test_pool_clean_determines_winner_in_multiple_pools(self):
+        self.pool1.determines_top_rankings = 1
+        self.pool1.save()
+        pool3 = Pool(the_round=self.r,
+                     name='Erroneous',
+                     board_count=1,
+                     determines_top_rankings=1)
+        with self.assertRaises(ValidationError):
+            pool3.clean()
+        # Clean up
+        self.pool1.determines_top_rankings = None
+        self.pool1.save()
+
+    def test_pool_clean_determines_winner_without_board_count(self):
+        self.pool2.determines_top_rankings = 1
+        self.pool2.save()
+        with self.assertRaises(ValidationError):
+            self.pool2.clean()
+        # Cleanup
+        self.pool2.determines_top_rankings = None
+        self.pool2.save()
+
+    def test_pool_clean_determines_too_many_top_ranks(self):
+        pool3 = Pool(the_round=self.r,
+                     name='Erroneous',
+                     board_count=1,
+                     determines_top_rankings=8)
+        with self.assertRaises(ValidationError):
+            pool3.clean()
 
     # Pool.name must be unique within a Round
     def test_pool_name_constraint(self):
@@ -6348,6 +6576,24 @@ class GameTests(TestCase):
     # TODO Game.compare_sc_counts_and_ownerships() with missing CentreCount
 
     # TODO Game._calc_scores()
+    def test_calc_scores_multiplier(self):
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        g = r.game_set.get(name='g11')
+        gps = g.gameplayer_set.all()
+        self.assertGreater(len(gps), 0)
+        scores1 = g._calc_scores()
+        pool = Pool.objects.create(the_round=r,
+                                   name='Test round',
+                                   game_score_multiplier=2.0)
+        g.pool = pool
+        g.save()
+        scores2 = g._calc_scores()
+        for k, v in scores2.items():
+            self.assertAlmostEqual(v, scores1[k] * 2.0)
+        # Cleanup
+        g.pool = None
+        g.save()
 
     # Game.scores()
     def test_scores_no_powers_assigned(self):
