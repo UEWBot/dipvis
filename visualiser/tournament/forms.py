@@ -840,8 +840,7 @@ class BaseSCOwnerFormset(BaseFormSet):
 
 class PaidForm(forms.Form):
     """Form that just provides a checkbox to indicate that a TournamentPlayer has paid"""
-    paid = forms.BooleanField(label=_('Paid'),
-                              required=False,
+    paid = forms.BooleanField(required=False,
                               initial=False)
 
     def __init__(self, *args, **kwargs):
