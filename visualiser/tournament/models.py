@@ -1455,6 +1455,8 @@ class DBNCoverage(models.Model):
 
 class NameSlugField(models.SlugField):
     """Auto-generate a slug from the model's name field """
+    description = "A SlugField that is auto-populated from the model's name field"
+
     def pre_save(self, model_instance, add):
         slug = super().pre_save(model_instance, add)
         if not slug:
@@ -1494,6 +1496,8 @@ class Series(models.Model):
 
 class TPPlayerField(models.CharField):
     """Default to match the Player if not provided """
+    description = "During model creation, copies the same field from model.player if it wasn't given a value"
+
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         # For new objects with no value set...
@@ -1506,6 +1510,8 @@ class TPPlayerField(models.CharField):
 
 class TPUnrankedField(models.BooleanField):
     """Default from the Player and Tournament """
+    description = "Defaults to True if the player is a manager of the tournament"
+
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         # For new objects with no value set...
@@ -2638,6 +2644,8 @@ class SupplyCentreOwnership(models.Model):
 
 class DPPassedField(models.BooleanField):
     """If counts are recorded, derive passed from votes_in_favour and survivor count """
+    description = "Set to True if the model's votes_in_favour equals the number of surviving powers"
+
     def pre_save(self, model_instance, add):
         val = super().pre_save(model_instance, add)
         if model_instance.game.the_round.tournament.draw_secrecy == DrawSecrecy.COUNTS:
