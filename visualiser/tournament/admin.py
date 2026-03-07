@@ -193,8 +193,9 @@ class TeamAdmin(admin.ModelAdmin):
 class TournamentAdmin(admin.ModelAdmin):
     """Include Round as part of Tournament"""
     inlines = [RoundInline]
-    fields = (('name', 'format', 'location', 'team_size'),
+    fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
+              ('team_size', 'num_games_in_team_score'),
               ('seed_games', 'power_assignment'),
               ('tournament_scoring_system', 'handicaps', 'round_scoring_system',
                'non_player_round_score', 'non_player_round_score_once'),

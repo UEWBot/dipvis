@@ -3518,6 +3518,54 @@ class TournamentTests(TestCase):
         t.team_size = None
         t.save(update_fields=['team_size'])
 
+    def test_tournament_team_scores_between_team_rounds_not_all(self):
+        """num_games_in_team_score combined with after_round_num"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.num_games_in_team_score = 2
+        t.save(update_fields=['team_size', 'num_games_in_team_score'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        r2 = t.round_numbered(2)
+        r2.is_team_round = True
+        r2.save(update_fields=['is_team_round'])
+        tm1 = Team.objects.create(tournament=t,
+                                  score=10.0,
+                                  name='Test team 1')
+        tm1.players.add(self.p3)
+        tm1.players.add(self.p5)
+        tm2 = Team.objects.create(tournament=t,
+                                  score=5.0,
+                                  name='Test team 2')
+        tm2.players.add(self.p1)
+        tm2.players.add(self.p6)
+        scores = t.team_scores(after_round_num=1)
+        self.assertEqual(len(scores), 2)
+        for tm, (rank, score) in scores.items():
+            if tm == tm1:
+                self.assertEqual(rank, 2)
+                #self.assertAlmostEqual(score, 1.1 + 2.1 + 1.3 + 2.2)
+                # Highest two scores count
+                self.assertAlmostEqual(score, 2.1 + 2.2)
+            elif tm == tm2:
+                self.assertEqual(rank, 1)
+                #self.assertAlmostEqual(score, 1.0 + 2.6 + 1.4 + 2.4)
+                # Highest two scores count
+                self.assertAlmostEqual(score, 2.6 + 2.4)
+            else:
+                self.assertTrue(False)
+        # Cleanup
+        tm1.delete()
+        tm2.delete()
+        r1.is_team_round = False
+        r1.save(update_fields=['is_team_round'])
+        r2.is_team_round = False
+        r2.save(update_fields=['is_team_round'])
+        t.num_games_in_team_score = None
+        t.team_size = None
+        t.save(update_fields=['team_size', 'num_games_in_team_score'])
+
     def test_tournament_team_scores_after_team_rounds(self):
         t = Tournament.objects.get(name='t1')
         t.team_size = 2
@@ -3907,10 +3955,70 @@ class TournamentTests(TestCase):
         tm.players.add(self.p4)
         t.update_team_scores()
         tm.refresh_from_db()
+        # Team members played both games in the team round
         self.assertAlmostEqual(tm.score, 1.1 + 1.2 + 2.3 + 2.1)
         # Cleanup
         tm.delete()
         t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+
+    def test_tournament_update_team_scores_no_games(self):
+        """No team members played games"""
+        t = Tournament.objects.get(name='t3')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        tm = Team.objects.create(tournament=t,
+                                 score=10.0,
+                                 name='Test team')
+        tm.players.add(self.p5)
+        tm.players.add(self.p7)
+        t.update_team_scores()
+        tm.refresh_from_db()
+        # No team members played a game, so team score is zero
+        self.assertAlmostEqual(tm.score, 0)
+        # Same again, but with num_games_in_team_score set
+        t.num_games_in_team_score = 2
+        t.save(update_fields=['num_games_in_team_score'])
+        t.update_team_scores()
+        tm.refresh_from_db()
+        # No team members played a game, so team score is zero
+        self.assertAlmostEqual(tm.score, 0)
+        # Cleanup
+        tm.delete()
+        t.team_size = None
+        t.num_games_in_team_score = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+
+    def test_tournament_update_team_scores_not_all_scores(self):
+        """Not all game scores contribute"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.num_games_in_team_score = 2
+        t.save(update_fields=['team_size', 'num_games_in_team_score'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        tm = Team.objects.create(tournament=t,
+                                 score=10.0,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        tm.players.add(self.p4)
+        t.update_team_scores()
+        tm.refresh_from_db()
+        # Team members played both games in the team round
+        # But only the highest two scores should be counted
+        self.assertAlmostEqual(tm.score, 2.3 + 2.1)
+        # Cleanup
+        tm.delete()
+        t.team_size = None
+        t.num_games_in_team_score = None
         t.save()
         r1.is_team_round = False
         r1.save()
@@ -3930,6 +4038,7 @@ class TournamentTests(TestCase):
         tm.players.add(self.p4)
         t.update_team_scores(for_players=[self.p3, self.p6])
         tm.refresh_from_db()
+        # Team members played both games in the team round
         self.assertAlmostEqual(tm.score, 1.1 + 1.2 + 2.3 + 2.1)
         # Cleanup
         tm.delete()

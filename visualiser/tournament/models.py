@@ -951,6 +951,10 @@ class Tournament(models.Model):
                                                  null=True,
                                                  validators=[MinValueValidator(2)],
                                                  help_text=_('If there are teams, number of players per team'))
+    num_games_in_team_score = models.PositiveSmallIntegerField(blank=True,
+                                                               null=True,
+                                                               validators=[MinValueValidator(1)],
+                                                               help_text=_('The number of game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
 
     class Meta:
         ordering = ['-start_date']
@@ -965,6 +969,8 @@ class Tournament(models.Model):
                                    name='%(class)s_format_valid'),
             models.CheckConstraint(check=Q(end_date__gte=F('start_date')),
                                    name='%(class)s_starts_before_end'),
+            models.CheckConstraint(check=Q(team_size__isnull=False) | Q(num_games_in_team_score__isnull=True),
+                                   name='%(class)s_team_scoring_set_only_if_team_size_set'),
             models.UniqueConstraint(fields=['name', 'start_date'],
                                     name='unique_name_date'),
         ]
@@ -1186,12 +1192,27 @@ class Tournament(models.Model):
         t_scores = {}
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
             # Calculate the team scores after the specified round
-            for team in self.team_set.all():
-                t_scores[team] = 0.0
-                for r in self.team_rounds().order_by('start'):
-                    if r.number() > after_round_num:
-                        break
-                    t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
+            if self.num_games_in_team_score is None:
+                # Every team member's score counts
+                for team in self.team_set.all():
+                    t_scores[team] = 0.0
+                    for r in self.team_rounds().order_by('start'):
+                        if r.number() > after_round_num:
+                            break
+                        t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
+            else:
+                # Find all the relevant game scores for each team
+                g_scores = {}
+                for team in self.team_set.all():
+                    for r in self.team_rounds().order_by('start'):
+                        if r.number() > after_round_num:
+                            break
+                        for gp in team.gameplayers().filter(game__the_round=r):
+                            g_scores.setdefault(team, []).append(gp.score)
+                # Now we can calculate the score for each team
+                for team in self.team_set.all():
+                    t_scores[team] = sum(s for s in sorted(g_scores[team],
+                                                           reverse=True)[:self.num_games_in_team_score])
         else:
             for team in self.team_set.all():
                 t_scores[team] = team.score
@@ -1256,11 +1277,12 @@ class Tournament(models.Model):
         if for_players:
             teams = teams.filter(players__in=for_players)
         for team in teams:
-            gps = team.gameplayers()
-            if not gps.count():
-                team.score = 0.0
+            if self.num_games_in_team_score is None:
+                gps = team.gameplayers()
+                team.score = gps.aggregate(Sum('score', default=0))['score__sum']
             else:
-                team.score = gps.aggregate(Sum('score'))['score__sum']
+                gps = team.gameplayers().order_by('-score')
+                team.score = sum(gp.score for gp in gps[:self.num_games_in_team_score])
             team.save(update_fields=['score'])
 
     def winner(self):

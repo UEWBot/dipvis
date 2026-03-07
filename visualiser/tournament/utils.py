@@ -604,7 +604,8 @@ def clone_tournament(t):
                                       no_email=True,
                                       delay_game_url_publication=t.delay_game_url_publication,
                                       discord_url='',
-                                      team_size=t.team_size)
+                                      team_size=t.team_size,
+                                      num_games_in_team_score=t.num_games_in_team_score)
     for m in t.managers.order_by():
         new_t.managers.add(m)
     for a in t.awards.order_by():
