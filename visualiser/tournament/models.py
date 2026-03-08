@@ -1110,11 +1110,12 @@ class Tournament(models.Model):
         # Populate t_scores with a dict keyed by player of scores
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
             t_scores = {}
-            for r in self.round_set.reverse():
-                if r.number() <= after_round_num:
-                    for rp in r.roundplayer_set.order_by():
-                        if rp.player not in t_scores:
-                            t_scores[rp.player] = rp.tournament_score
+            for r in self.round_set.order_by('start'):
+                if r.number() > after_round_num:
+                    break
+                for rp in r.roundplayer_set.order_by():
+                    if rp.player not in t_scores:
+                        t_scores[rp.player] = rp.tournament_score
             # Anyone who hadn't yet played scores zero
             for tp in self.tournamentplayer_set.order_by():
                 if tp.player not in t_scores:
@@ -1152,9 +1153,10 @@ class Tournament(models.Model):
             # Calculate the team scores after the specified round
             for team in self.team_set.all():
                 t_scores[team] = 0.0
-                for r in self.team_rounds().reverse():
-                    if r.number() <= after_round_num:
-                        t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
+                for r in self.team_rounds().order_by('start'):
+                    if r.number() > after_round_num:
+                        break
+                    t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
         else:
             for team in self.team_set.all():
                 t_scores[team] = team.score
