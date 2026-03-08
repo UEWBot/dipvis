@@ -3217,6 +3217,7 @@ class TournamentTests(TestCase):
         r1 = t.round_numbered(1)
         r1.is_team_round = True
         r1.save(update_fields=['is_team_round'])
+        # three teams, two tied for first place
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
                                   name='Test team 1')
@@ -3227,21 +3228,30 @@ class TournamentTests(TestCase):
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
+        tm3 = Team.objects.create(tournament=t,
+                                  score=10.0,
+                                  name='Test team 3')
+        tm3.players.add(self.p2)
+        tm3.players.add(self.p8)
         scores = t.team_scores()
         # This should return the score from the Team objects
-        self.assertEqual(len(scores), 2)
+        self.assertEqual(len(scores), 3)
         for tm, (rank, score) in scores.items():
             if tm == tm1:
                 self.assertEqual(rank, 1)
                 self.assertEqual(score, 10.0)
             elif tm == tm2:
-                self.assertEqual(rank, 2)
+                self.assertEqual(rank, 3)
                 self.assertEqual(score, 5.0)
+            elif tm == tm3:
+                self.assertEqual(rank, 1)
+                self.assertEqual(score, 10.0)
             else:
                 self.assertTrue(False)
         # Cleanup
         tm1.delete()
         tm2.delete()
+        tm3.delete()
         r1.is_team_round = False
         r1.save(update_fields=['is_team_round'])
         t.team_size = None

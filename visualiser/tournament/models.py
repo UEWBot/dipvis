@@ -1161,12 +1161,13 @@ class Tournament(models.Model):
             for team in self.team_set.all():
                 t_scores[team] = team.score
         retval = {}
-        rank = 0
         last_score = None
-        for team, score in sorted(t_scores.items(), key=lambda item: item[1], reverse=True):
+        for i, (team, score) in enumerate(sorted(t_scores.items(),
+                                                 key=lambda item: item[1],
+                                                 reverse=True),
+                                          start=1):
             if score != last_score:
-                rank += 1
-            last_score = score
+                rank, last_score = i, score
             retval[team] = (rank, score)
         return retval
 
