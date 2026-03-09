@@ -1560,6 +1560,7 @@ class Team(models.Model):
         - Too many players in the Team.
         - Players are registered in the Tournament.
         - One player in multiple Teams
+        - Unranked player in a Team
         """
         if not self.tournament.team_size:
             raise ValidationError(_("Tournament doesn't use teams"))
