@@ -1124,8 +1124,8 @@ class Tournament(models.Model):
         # Populate t_scores with a dict keyed by player of scores
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
             t_scores = {}
-            for r in self.round_set.order_by('start'):
-                if r.number() > after_round_num:
+            for n, r in enumerate(self.round_set.order_by('start'), start=1):
+                if n > after_round_num:
                     break
                 for rp in r.roundplayer_set.order_by():
                     if rp.player not in t_scores:
