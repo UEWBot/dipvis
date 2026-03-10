@@ -56,7 +56,7 @@ class GamePlayerInline(admin.TabularInline):
     extra = 7
     fieldsets = [
         (None, {
-            'fields': ['player', 'power', 'score']
+            'fields': ['player', 'power', 'tie_break_rank', 'score']
         }),
     ]
 

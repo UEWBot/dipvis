@@ -3272,13 +3272,13 @@ class TournamentTests(TestCase):
         GamePlayer.objects.create(game=g11, player=self.p8, power=self.italy, score=100)
         GamePlayer.objects.create(game=g11, player=self.p9, power=self.russia, score=100)
         GamePlayer.objects.create(game=g11, player=self.p11, power=self.turkey, score=105)
-        GamePlayer.objects.create(game=g21, player=self.p7, power=self.germany, score=30)
-        GamePlayer.objects.create(game=g21, player=self.p11, power=self.england, score=27)
-        GamePlayer.objects.create(game=g21, player=self.p13, power=self.austria, score=24)
-        GamePlayer.objects.create(game=g21, player=self.p9, power=self.france, score=24)
-        GamePlayer.objects.create(game=g21, player=self.p5, power=self.italy, score=21)
-        GamePlayer.objects.create(game=g21, player=self.p3, power=self.russia, score=4)
-        GamePlayer.objects.create(game=g21, player=self.p1, power=self.turkey, score=1)
+        GamePlayer.objects.create(game=g21, player=self.p7, power=self.germany, score=30, tie_break_rank=6)
+        GamePlayer.objects.create(game=g21, player=self.p11, power=self.england, score=27, tie_break_rank=2)
+        GamePlayer.objects.create(game=g21, player=self.p13, power=self.austria, score=24, tie_break_rank=3)
+        GamePlayer.objects.create(game=g21, player=self.p9, power=self.france, score=24, tie_break_rank=4)
+        GamePlayer.objects.create(game=g21, player=self.p5, power=self.italy, score=21, tie_break_rank=5)
+        GamePlayer.objects.create(game=g21, player=self.p3, power=self.russia, score=4, tie_break_rank=1)
+        GamePlayer.objects.create(game=g21, player=self.p1, power=self.turkey, score=1, tie_break_rank=7)
         GamePlayer.objects.create(game=g22, player=self.p2, power=self.turkey, score=35)
         GamePlayer.objects.create(game=g22, player=self.p6, power=self.italy, score=22)
         GamePlayer.objects.create(game=g22, player=self.p4, power=self.russia, score=12)
@@ -3289,20 +3289,36 @@ class TournamentTests(TestCase):
         # Set RoundPlayer and TournamentPlayer scores accordingly
         r1.update_scores()
         r2.update_scores()
+        # Unranked player should be skipped
+        expected_ranks = {self.p7: 1,  # Highest score on the top board should get first overall (30)
+                          self.p13: 2, # Tie break should give second to p13
+                          self.p2: 3,  # Third should go to the highest tournament score (135)
+                          self.p4: 4,  # Fourth should go to second highest tournament score (132)
+                          self.p6: 4,
+                          self.p5: 6,  # Sixth should go to the next highest tournament score (131)
+                          self.p9: 7,  # Other tied top board player is way down in seventh
+                         }
         p_and_s = t.positions_and_scores()
-        # Highest score on the top board should get first overall (30)
-        self.assertEqual(p_and_s[self.p7][0], 1)
-        # The two tied for second place on the top board should both get second place overall (24)
-        # (Unranked player should be ignored)
-        self.assertEqual(p_and_s[self.p9][0], 2)
-        self.assertEqual(p_and_s[self.p13][0], 2)
-        # Fourth should go to the highest tournament score (135)
-        self.assertEqual(p_and_s[self.p2][0], 4)
-        # Fifth should go to second highest tournament score (132)
-        self.assertEqual(p_and_s[self.p4][0], 5)
-        self.assertEqual(p_and_s[self.p6][0], 5)
-        # Seventh should go to the next highest tournament score (131)
-        self.assertEqual(p_and_s[self.p5][0], 7)
+        for player in expected_ranks.keys():
+            with self.subTest(player=player):
+                self.assertEqual(p_and_s[player][0], expected_ranks[player])
+        # Now unresolve tie breaks and re-check
+        for gp in g21.gameplayer_set.all():
+            gp.tie_break_rank = None
+            gp.save()
+        # Unranked player should be skipped
+        expected_ranks = {self.p7: 1,  # Highest score on the top board should get first overall (30)
+                          self.p9: 2,  # The two tied for second place on the top board should both get second place overall (24)
+                          self.p13: 2,
+                          self.p2: 4,  # Fourth should go to the highest tournament score (135)
+                          self.p4: 5,  # Fifth should go to second highest tournament score (132)
+                          self.p6: 5,
+                          self.p5: 7,  # Seventh should go to the next highest tournament score (131)
+                         }
+        p_and_s = t.positions_and_scores()
+        for player in expected_ranks.keys():
+            with self.subTest(player=player):
+                self.assertEqual(p_and_s[player][0], expected_ranks[player])
         # Cleanup
         t.delete()
 

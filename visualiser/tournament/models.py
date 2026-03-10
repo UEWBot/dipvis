@@ -1157,11 +1157,13 @@ class Tournament(models.Model):
         if top_pool is not None:
             # Some number of top board players get the top ranks
             # Starting with the player with the highest top board score
-            top_gps = GamePlayer.objects.filter(game__pool=top_pool).order_by('-score')
+            top_gps = GamePlayer.objects.filter(game__pool=top_pool).order_by('-score',
+                                                                              'tie_break_rank')
             last_score = None
             for i, gp in enumerate([gp for gp in top_gps if not gp.tournamentplayer().unranked],
                                    start=1):
-                if gp.score != last_score:
+                # Equal tie_break_ranks will mess things up, but that's user error
+                if (gp.score != last_score) or (gp.tie_break_rank is not None):
                     rank, last_score = i, gp.score
                     if rank > top_pool.determines_top_rankings:
                         # Everyone else, including this player, is just ranked by Tournament score
@@ -2954,6 +2956,10 @@ class GamePlayer(models.Model):
                               blank=True,
                               related_name='+',
                               on_delete=models.CASCADE)
+    tie_break_rank = models.PositiveSmallIntegerField(blank=True,
+                                                      null=True,
+                                                      validators=[MinValueValidator(1)],
+                                                      help_text=_("If all players have the same score, what rank does this player get?"))
     score = models.FloatField(default=0.0)
     score_dropped = models.BooleanField(default=False,
                                         help_text=_('Set if this score does not contribute towards the round score'))
@@ -2967,6 +2973,8 @@ class GamePlayer(models.Model):
                                     name='unique_player_game'),
             models.UniqueConstraint(fields=['power', 'game'],
                                     name='unique_power_game'),
+            models.UniqueConstraint(fields=['game', 'tie_break_rank'],
+                                    name='unique_game_tie_break'),
         ]
 
     def __str__(self):
@@ -2982,11 +2990,14 @@ class GamePlayer(models.Model):
         Validate the object.
 
         There must already be a corresponding TournamentPlayer.
+        tie_break_rank only allowed for top boards.
         """
         # Player should already be in the tournament
         t = self.game.the_round.tournament
         if not self.player.tournamentplayer_set.filter(tournament=t).exists():
             raise ValidationError({'player': _(u'Player is not yet in the tournament')})
+        if (self.tie_break_rank is not None) and not self.game.is_top_board:
+            raise ValidationError({'tie_break_rank': _('Game is not a top board')})
 
     def team(self):
         """

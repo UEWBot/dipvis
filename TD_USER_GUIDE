@@ -230,6 +230,16 @@ Before the first team round, you'll need to follow the link to "Add/edit teams" 
 all the teams. Each team needs a name and a set of players (teams can have fewer than the
 specified number of players).
 
+Top Board Tie Breaks
+--------------------
+
+It is common to have some sort of tie break system for top boards. This is supported by setting
+the "tie_break_rank" GamePlayer attribute for all top board players. This currently has to be
+done through the admin. Each top board player should be given a unique number, with the system
+resolving any ties by comparing these attributes. The player with the lower number will be ranked
+above the one with the higher number. If this attribute is not set, the system will give tied
+players equal rank.
+
 Game Tracking
 -------------
 
