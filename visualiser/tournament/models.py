@@ -749,6 +749,20 @@ def scoring_systems_are_compatible(round_scoring_system_name, tournament_scoring
     return rss is None
 
 
+def add_ranks(to_scores):
+    """Takes a dict of scores, returns a dict of (rank, score) 2-tuples"""
+    result = {}
+    last_score = None
+    for i, (k, score) in enumerate(sorted([(k, score) for k, score in to_scores.items()],
+                                      key=itemgetter(1),
+                                      reverse=True),
+                               start=1):
+        if score != last_score:
+            place, last_score = i, score
+        result[k] = (place, score)
+    return result
+
+
 def validate_weight(value):
     """
     No longer used. Retained for migrations.
@@ -1128,15 +1142,7 @@ class Tournament(models.Model):
             # Take it out of scores and add it to result
             result[tp.player] = (Tournament.UNRANKED, t_scores.pop(tp.player))
         # Figure out everyone's ranking
-        last_score = None
-        for i, (k, v) in enumerate(sorted([(k, v) for k, v in t_scores.items()],
-                                          key=itemgetter(1),
-                                          reverse=True),
-                                   start=1):
-            if v != last_score:
-                place, last_score = i, v
-            result[k] = (place, v)
-        return result
+        return result | add_ranks(t_scores)
 
     def team_scores(self, after_round_num=None):
         """
@@ -1160,16 +1166,7 @@ class Tournament(models.Model):
         else:
             for team in self.team_set.all():
                 t_scores[team] = team.score
-        retval = {}
-        last_score = None
-        for i, (team, score) in enumerate(sorted(t_scores.items(),
-                                                 key=lambda item: item[1],
-                                                 reverse=True),
-                                          start=1):
-            if score != last_score:
-                rank, last_score = i, score
-            retval[team] = (rank, score)
-        return retval
+        return add_ranks(t_scores)
 
     def _store_score(self, tp, scores, add_handicap):
         """
@@ -2450,16 +2447,8 @@ class Game(models.Model):
         Dict, keyed by power id, of integer rankings (1 for first place,
         2 for second place, etc)
         """
-        result = {}
-        last_score = None
-        for i, (k, v) in enumerate(sorted([(k, v) for k, v in self.scores().items()],
-                                          key=itemgetter(1),
-                                          reverse=True),
-                                   start=1):
-            if v != last_score:
-                place, last_score = i, v
-            result[k] = place
-        return result
+        ranks_and_scores = add_ranks(self.scores())
+        return {k: r for k, (r, s) in ranks_and_scores.items()}
 
     def is_dias(self):
         """
