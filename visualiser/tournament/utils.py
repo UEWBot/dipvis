@@ -656,7 +656,10 @@ def clone_tournament(t):
             new_p = Pool.objects.create(the_round=new_r,
                                         name=p.name,
                                         slug=p.slug,
-                                        board_count=p.board_count)
+                                        board_count=p.board_count,
+                                        power_assignment=p.power_assignment,
+                                        determines_top_rankings=p.determines_top_rankings,
+                                        game_score_multiplier=p.game_score_multiplier)
         for rp in r.roundplayer_set.order_by():
             pool = None
             if rp.pool:
@@ -687,6 +690,7 @@ def clone_tournament(t):
                 GamePlayer.objects.create(player=gp.player,
                                           game=new_g,
                                           power=gp.power,
+                                          tie_break_rank=gp.tie_break_rank,
                                           score=gp.score,
                                           score_dropped=gp.score_dropped,
                                           after_action_report=gp.after_action_report)
