@@ -576,28 +576,50 @@ def clone_tournament(t):
     - the name will have " Copy" appended
     - editable will be True
     - is_published will be False
-    - wdd_tournament_id will be null
+    - wdd_tournament_id will be None
+    - wdr_tournament_id will be None
+    - no_email will be True
+    - discord_url will be ''
     """
     new_t = Tournament.objects.create(name=t.name + " Copy",
                                       start_date=t.start_date,
                                       end_date=t.end_date,
+                                      location=t.location,
                                       tournament_scoring_system=t.tournament_scoring_system,
+                                      handicaps=t.handicaps,
                                       round_scoring_system=t.round_scoring_system,
+                                      non_player_round_score=t.non_player_round_score,
+                                      non_player_round_score_once=t.non_player_round_score_once,
+                                      show_current_scores=t.show_current_scores,
                                       draw_secrecy=t.draw_secrecy,
+                                      is_finished=t.is_finished,
                                       is_published=False,
+                                      wdd_tournament_id=None,
+                                      wdr_tournament_id=None,
                                       seed_games=t.seed_games,
                                       power_assignment=t.power_assignment,
                                       editable=True,
-                                      best_country_criterion=t.best_country_criterion)
+                                      best_country_criterion=t.best_country_criterion,
+                                      format=t.format,
+                                      no_email=True,
+                                      delay_game_url_publication=t.delay_game_url_publication,
+                                      discord_url='',
+                                      team_size=t.team_size)
     for m in t.managers.all():
         new_t.managers.add(m)
+    for a in t.awards.all():
+        new_t.awards.add(a)
 
     # Copy TournamentPlayers and Preferences
     for tp in t.tournamentplayer_set.all():
         new_tp = TournamentPlayer.objects.create(player=tp.player,
                                                  tournament=new_t,
                                                  score=tp.score,
-                                                 unranked=tp.unranked)
+                                                 handicap=tp.handicap,
+                                                 unranked=tp.unranked,
+                                                 backstabbr_username=tp.backstabbr_username,
+                                                 location=tp.location,
+                                                 paid=tp.paid)
         if tp.uuid_str:
             # Create a different UUID for the new TP
             new_tp._generate_uuid()
@@ -605,8 +627,18 @@ def clone_tournament(t):
             Preference.objects.create(player=new_tp,
                                       power=p.power,
                                       ranking=p.ranking)
+        for a in tp.awards.all():
+            new_tp.awards.add(a)
 
-    # Copy Rounds and RoundPlayers, Games and GamePlayers,
+    # Copy Teams
+    for tm in t.team_set.all():
+        new_tm = Team.objects.create(tournament=new_t,
+                                     name=tm.name,
+                                     score=tm.score)
+        for p in tm.players.all():
+            new_tm.players.add(p)
+
+    # Copy Rounds, Pools and RoundPlayers, Games and GamePlayers,
     # DrawProposals, GameImages, CentreCounts, and SupplyCentreOwnerships
     for r in t.round_set.all():
         new_r = Round.objects.create(tournament=new_t,
@@ -615,24 +647,49 @@ def clone_tournament(t):
                                      start=r.start,
                                      final_year=r.final_year,
                                      earliest_end_time=r.earliest_end_time,
-                                     latest_end_time=r.latest_end_time)
+                                     latest_end_time=r.latest_end_time,
+                                     enable_check_in=r.enable_check_in,
+                                     email_sent=r.email_sent,
+                                     is_finished=r.is_finished,
+                                     is_team_round=r.is_team_round)
+        for p in r.pool_set.all():
+            new_p = Pool.objects.create(the_round=new_r,
+                                        name=p.name,
+                                        slug=p.slug,
+                                        board_count=p.board_count)
         for rp in r.roundplayer_set.all():
+            pool = None
+            if rp.pool:
+                pool = new_r.pool_set.get(name=rp.pool.name)
             RoundPlayer.objects.create(player=rp.player,
                                        the_round=new_r,
+                                       pool=pool,
+                                       standby=rp.standby,
                                        score=rp.score,
-                                       game_count=rp.game_count)
+                                       score_dropped=rp.score_dropped,
+                                       game_count=rp.game_count,
+                                       sandboxer=rp.sandboxer,
+                                       tournament_score=rp.tournament_score)
         for g in r.game_set.all():
+            pool = None
+            if g.pool:
+                pool = new_r.pool_set.get(name=g.pool.name)
             new_g = Game.objects.create(name=g.name,
                                         started_at=g.started_at,
                                         is_finished=g.is_finished,
                                         is_top_board=g.is_top_board,
                                         the_round=new_r,
-                                        the_set=g.the_set)
+                                        pool=pool,
+                                        the_set=g.the_set,
+                                        external_url=g.external_url,
+                                        notes=g.notes)
             for gp in g.gameplayer_set.all():
                 GamePlayer.objects.create(player=gp.player,
                                           game=new_g,
                                           power=gp.power,
-                                          score=gp.score)
+                                          score=gp.score,
+                                          score_dropped=gp.score_dropped,
+                                          after_action_report=gp.after_action_report)
             for dp in g.drawproposal_set.all():
                 new_dp = DrawProposal.objects.create(game=new_g,
                                                      year=dp.year,
