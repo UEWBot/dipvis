@@ -495,7 +495,6 @@ def seed_games(request, tournament_id, round_num):
                                  'external_url',
                                  'notes',
                                  'issues'}
-            players_changed = False
             for f in formset:
                 g = f.game
                 if f.has_changed():
@@ -518,7 +517,6 @@ def seed_games(request, tournament_id, round_num):
                         g.save()
                     # Have any player fields changed?
                     if set(f.changed_data) - non_player_fields:
-                        players_changed = True
                         with transaction.atomic():
                             # Unassign all GreatPowers first,
                             # so we never have two players for one power
