@@ -605,13 +605,13 @@ def clone_tournament(t):
                                       delay_game_url_publication=t.delay_game_url_publication,
                                       discord_url='',
                                       team_size=t.team_size)
-    for m in t.managers.all():
+    for m in t.managers.order_by():
         new_t.managers.add(m)
-    for a in t.awards.all():
+    for a in t.awards.order_by():
         new_t.awards.add(a)
 
     # Copy TournamentPlayers and Preferences
-    for tp in t.tournamentplayer_set.all():
+    for tp in t.tournamentplayer_set.order_by():
         new_tp = TournamentPlayer.objects.create(player=tp.player,
                                                  tournament=new_t,
                                                  score=tp.score,
@@ -627,20 +627,20 @@ def clone_tournament(t):
             Preference.objects.create(player=new_tp,
                                       power=p.power,
                                       ranking=p.ranking)
-        for a in tp.awards.all():
+        for a in tp.awards.order_by():
             new_tp.awards.add(a)
 
     # Copy Teams
-    for tm in t.team_set.all():
+    for tm in t.team_set.order_by():
         new_tm = Team.objects.create(tournament=new_t,
                                      name=tm.name,
                                      score=tm.score)
-        for p in tm.players.all():
+        for p in tm.players.order_by():
             new_tm.players.add(p)
 
     # Copy Rounds, Pools and RoundPlayers, Games and GamePlayers,
     # DrawProposals, GameImages, CentreCounts, and SupplyCentreOwnerships
-    for r in t.round_set.all():
+    for r in t.round_set.order_by():
         new_r = Round.objects.create(tournament=new_t,
                                      scoring_system=r.scoring_system,
                                      dias=r.dias,
@@ -652,12 +652,12 @@ def clone_tournament(t):
                                      email_sent=r.email_sent,
                                      is_finished=r.is_finished,
                                      is_team_round=r.is_team_round)
-        for p in r.pool_set.all():
+        for p in r.pool_set.order_by():
             new_p = Pool.objects.create(the_round=new_r,
                                         name=p.name,
                                         slug=p.slug,
                                         board_count=p.board_count)
-        for rp in r.roundplayer_set.all():
+        for rp in r.roundplayer_set.order_by():
             pool = None
             if rp.pool:
                 pool = new_r.pool_set.get(name=rp.pool.name)
@@ -670,7 +670,7 @@ def clone_tournament(t):
                                        game_count=rp.game_count,
                                        sandboxer=rp.sandboxer,
                                        tournament_score=rp.tournament_score)
-        for g in r.game_set.all():
+        for g in r.game_set.order_by():
             pool = None
             if g.pool:
                 pool = new_r.pool_set.get(name=g.pool.name)
@@ -683,36 +683,36 @@ def clone_tournament(t):
                                         the_set=g.the_set,
                                         external_url=g.external_url,
                                         notes=g.notes)
-            for gp in g.gameplayer_set.all():
+            for gp in g.gameplayer_set.order_by():
                 GamePlayer.objects.create(player=gp.player,
                                           game=new_g,
                                           power=gp.power,
                                           score=gp.score,
                                           score_dropped=gp.score_dropped,
                                           after_action_report=gp.after_action_report)
-            for dp in g.drawproposal_set.all():
+            for dp in g.drawproposal_set.order_by():
                 new_dp = DrawProposal.objects.create(game=new_g,
                                                      year=dp.year,
                                                      season=dp.season,
                                                      passed=dp.passed,
                                                      proposer=dp.proposer,
                                                      votes_in_favour=dp.votes_in_favour)
-                for p in dp.drawing_powers.all():
+                for p in dp.drawing_powers.order_by():
                     new_dp.drawing_powers.add(p)
-            for gi in g.gameimage_set.all():
+            for gi in g.gameimage_set.order_by():
                 # Skip the auto-created image
                 GameImage.objects.get_or_create(game=new_g,
                                                 year=gi.year,
                                                 season=gi.season,
                                                 phase=gi.phase,
                                                 image=gi.image)
-            for cc in g.centrecount_set.all():
+            for cc in g.centrecount_set.order_by():
                 # Skip the auto-created ones
                 CentreCount.objects.get_or_create(power=cc.power,
                                                   game=new_g,
                                                   year=cc.year,
                                                   count=cc.count)
-            for sco in g.supplycentreownership_set.all():
+            for sco in g.supplycentreownership_set.order_by():
                 # Skip the auto-created ones
                 SupplyCentreOwnership.objects.get_or_create(game=new_g,
                                                             year=sco.year,
@@ -720,7 +720,7 @@ def clone_tournament(t):
                                                             owner=sco.owner)
 
     # copy SeederBiases
-    for sb in SeederBias.objects.filter(player1__tournament=t):
+    for sb in SeederBias.objects.filter(player1__tournament=t).order_by():
         p1 = TournamentPlayer.objects.get(tournament=new_t, player=sb.player1.player)
         p2 = TournamentPlayer.objects.get(tournament=new_t, player=sb.player2.player)
         SeederBias.objects.create(player1=p1,
