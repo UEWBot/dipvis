@@ -57,8 +57,8 @@ class GameScoringSystem(ABC):
     @property
     def description(self):
         """Returns a string describing the scoring system"""
-        # By default, use the docstring for the class
-        return _(self.__doc__)
+        # By default, use the docstring for the class, but strip the top two lines
+        return _(self.__doc__.split('\n', 2)[2])
 
     def __str__(self):
         return self.name
