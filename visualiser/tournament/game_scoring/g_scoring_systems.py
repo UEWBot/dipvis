@@ -45,7 +45,8 @@ from tournament.game_scoring.your_draw_size import GScoringYourDrawSize
 
 # All the game scoring systems we support
 G_SCORING_SYSTEMS = [
-    GScoringBangkok(),
+    GScoringBangkok(_('Bangkok'), 41, 0.5, 3, 2,   1),
+    GScoringBangkok(_('Olympic'), 46, 0,   4, 1.5, 0.5),
     GScoringBangkokPike(),
     GScoringBase3(),
     GScoringCarnage(_('Carnage with dead equal'),
@@ -65,16 +66,16 @@ G_SCORING_SYSTEMS = [
                     dead_equal=False,
                     pts_per_dot_lead=300),
     GScoringCDiplo(_('CDiplo 100'), 100.0, 1.0, 38.0, 14.0, 7.0),
-    GScoringCDiplo(_('CDiplo 80'), 80.0, 0.0, 25.0, 14.0, 7.0),
+    GScoringCDiplo(_('CDiplo 80'),   80.0, 0.0, 25.0, 14.0, 7.0),
     GScoringCDiploNamur(),
     GScoringDetour09(),
     GScoringDrawSize(),
     GScoringHaight(),
-    GScoringManorCon(_('ManorCon'), 75, True),
+    GScoringManorCon(_('ManorCon'),           75, True),
     GScoringManorCon(_('Original ManorCon'), 100, True),
-    GScoringManorCon(_('ManorCon v2'), 100, False),
+    GScoringManorCon(_('ManorCon v2'),       100, False),
     GScoringMaxonian(_('Maxonian'), 13),
-    GScoringMaxonian(_('7Eleven'), 11),
+    GScoringMaxonian(_('7Eleven'),  11),
     GScoringOMG(),
     GScoringRankedClassic(),
     GScoringSolos(),
@@ -86,6 +87,6 @@ G_SCORING_SYSTEMS = [
     GScoringWhipping(_('Whipping'), 468),
     GScoringWorldClassic('World Classic'),
     GScoringWorldClassic('Summer Classic', no_3ways=True),
-    GScoringYourDrawSize('Your Draw Size (short games)', 300),
+    GScoringYourDrawSize('Your Draw Size (short games)',     300),
     GScoringYourDrawSize('Your Draw Size (unlimited games)', 320),
 ]

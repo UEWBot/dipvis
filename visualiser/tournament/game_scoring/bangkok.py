@@ -30,19 +30,47 @@ class GScoringBangkok(GameScoringSystem):
     In a draw,
       Everyone gets 1 point per centre.
       12 points is divided between dominating players:
-        3 shares to topping players
-        2 shares to players 1 centre from the top
-        1 share to players 2 centres from the top
+        Some shares to topping players (top_shares)
+        Some shares to players 1 centre from the top (one_away_shares)
+        Some shares to players 2 centres from the top (two_away_shares)
         points = 12 * (player's shares) / sum of all shares
       3 points to all surviving players
-      0.3 points per year survived for elimnated players
+      0.3 points per year survived for eliminated players
     In a solo:
-      Soloer gets 41 points
-      Everyone else gets 0.5 points per centre
+      Soloer gets some points (soloer_points)
+      Everyone else gets some points per centre (loser_points_per_dot)
     """
-    def __init__(self):
-        self.name = _('Bangkok')
+    def __init__(self, name, soloer_points, loser_points_per_dot, top_shares, one_away_shares, two_away_shares):
+        self.name = name
+        self.soloer_points = soloer_points
+        self.loser_points_per_dot = loser_points_per_dot
+        self.top_shares = top_shares
+        self.one_away_shares = one_away_shares
+        self.two_away_shares = two_away_shares
         self.dead_score_can_change = True
+
+    @property
+    def description(self):
+        if self.loser_points_per_dot > 0:
+            loser_str = _('Everyone else gets %(points).1f points per centre') % {'points': self.loser_points_per_dot}
+        else:
+            loser_str = _('Everyone else gets no points')
+        return _("""
+                 In a draw,
+                   Everyone gets 1 point per centre.
+                   12 points is divided between dominating players:
+                     %(top_shares).1f shares to topping players
+                     %(one_away_shares).1f shares to players 1 centre from the top
+                     %(two_away_shares).1f shares to players 2 centres from the top
+                     points = 12 * (player's shares) / sum of all shares
+                   3 points to all surviving players
+                   0.3 points per year survived for eliminated players
+                 In a solo:
+                   Soloer gets %(soloer_points)d points
+                 """) % {'soloer_points': self.soloer_points,
+                         'top_shares': self.top_shares,
+                         'one_away_shares': self.one_away_shares,
+                         'two_away_shares': self.two_away_shares} + loser_str
 
     def scores(self, state):
         """
@@ -56,9 +84,9 @@ class GScoringBangkok(GameScoringSystem):
             for p in all_powers:
                 dots = state.dot_count(p)
                 if p == soloer:
-                    retval[p] = 41
+                    retval[p] = self.soloer_points
                 else:
-                    retval[p] = 0.5 * dots
+                    retval[p] = self.loser_points_per_dot * dots
         else:
             shares = {}
             leader_scs = state.highest_dot_count()
@@ -67,11 +95,11 @@ class GScoringBangkok(GameScoringSystem):
                 retval[p] = dots
                 # Store shares for domination bonus
                 if dots == leader_scs:
-                    shares[p] = 3
+                    shares[p] = self.top_shares
                 elif dots == leader_scs - 1:
-                    shares[p] = 2
+                    shares[p] = self.one_away_shares
                 elif dots == leader_scs - 2:
-                    shares[p] = 1
+                    shares[p] = self.two_away_shares
                 else:
                     shares[p] = 0
                 if dots == 0:
