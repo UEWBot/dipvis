@@ -25,7 +25,7 @@ from tournament.game_scoring.game_scoring_system import GameScoringSystem
 
 class GScoringBangkokPike(GameScoringSystem):
     """
-    Bengkok Pike scoring system
+    Bangkok Pike scoring system
 
     In a draw,
       3 points for having at least 1 supply centre

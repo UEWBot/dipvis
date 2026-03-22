@@ -25,7 +25,7 @@ from tournament.game_scoring.game_scoring_system import GameScoringSystem
 
 class GScoringBangkok(GameScoringSystem):
     """
-    Bengkok scoring system
+    Bangkok scoring system
 
     In a draw,
       Everyone gets 1 point per centre.
