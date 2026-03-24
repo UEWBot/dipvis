@@ -2072,3 +2072,9 @@ class RoundViewTests(TestCase):
                                            args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_board_call_by_player(self):
+        response = self.client.get(reverse('board_call_by_player',
+                                           args=(self.t4.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
