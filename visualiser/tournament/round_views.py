@@ -487,7 +487,8 @@ def seed_games(request, tournament_id, round_num):
     r = get_round_or_404(t, round_num)
     if request.method == 'POST':
         data = []
-        for g in r.game_set.all():
+        # Ordering must match that used inside the formset
+        for g in r.game_set.order_by('pool'):
             current = {'name': g.name,
                        'the_set': g.the_set,
                        'top_board': g.is_top_board,

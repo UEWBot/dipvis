@@ -1882,10 +1882,11 @@ class BasePowerAssignFormsetTest(TestCase):
                                       scoring_system=G_SCORING_SYSTEMS[0].name,
                                       dias=True,
                                       start=datetime.combine(t.start_date, time(hour=17, tzinfo=datetime_timezone.utc)))
-        g1 = Game.objects.create(name='Test Game 1',
+        # Deliberately not in alphabetical order
+        g1 = Game.objects.create(name='Test Game 2',
                                  the_round=cls.r1,
                                  the_set=GameSet.objects.first())
-        g2 = Game.objects.create(name='Test Game 2',
+        g2 = Game.objects.create(name='Test Game 1',
                                  the_round=cls.r1,
                                  the_set=GameSet.objects.first())
         p1 = Player.objects.create(first_name='Arthur', last_name='Amphitheatre')
@@ -1909,20 +1910,20 @@ class BasePowerAssignFormsetTest(TestCase):
         RoundPlayer.objects.create(player=p5, the_round=cls.r1)
         RoundPlayer.objects.create(player=p6, the_round=cls.r1)
         RoundPlayer.objects.create(player=p7, the_round=cls.r1)
-        cls.gp1 = GamePlayer.objects.create(player=p1, game=g1)
-        cls.gp2 = GamePlayer.objects.create(player=p2, game=g1)
-        cls.gp3 = GamePlayer.objects.create(player=p3, game=g1)
-        cls.gp4 = GamePlayer.objects.create(player=p4, game=g1)
-        cls.gp5 = GamePlayer.objects.create(player=p5, game=g1)
-        cls.gp6 = GamePlayer.objects.create(player=p6, game=g1)
-        cls.gp7 = GamePlayer.objects.create(player=p7, game=g1)
-        cls.gp8 = GamePlayer.objects.create(player=p1, game=g2)
-        cls.gp9 = GamePlayer.objects.create(player=p2, game=g2)
-        cls.gp10 = GamePlayer.objects.create(player=p3, game=g2)
-        cls.gp11 = GamePlayer.objects.create(player=p4, game=g2)
-        cls.gp12 = GamePlayer.objects.create(player=p5, game=g2)
-        cls.gp13 = GamePlayer.objects.create(player=p6, game=g2)
-        cls.gp14 = GamePlayer.objects.create(player=p7, game=g2)
+        cls.gp1 = GamePlayer.objects.create(player=p1, game=g1, power=cls.russia)
+        cls.gp2 = GamePlayer.objects.create(player=p2, game=g1, power=cls.turkey)
+        cls.gp3 = GamePlayer.objects.create(player=p3, game=g1, power=cls.austria)
+        cls.gp4 = GamePlayer.objects.create(player=p4, game=g1, power=cls.england)
+        cls.gp5 = GamePlayer.objects.create(player=p5, game=g1, power=cls.france)
+        cls.gp6 = GamePlayer.objects.create(player=p6, game=g1, power=cls.germany)
+        cls.gp7 = GamePlayer.objects.create(player=p7, game=g1, power=cls.italy)
+        cls.gp8 = GamePlayer.objects.create(player=p1, game=g2, power=cls.france)
+        cls.gp9 = GamePlayer.objects.create(player=p2, game=g2, power=cls.germany)
+        cls.gp10 = GamePlayer.objects.create(player=p3, game=g2, power=cls.russia)
+        cls.gp11 = GamePlayer.objects.create(player=p4, game=g2, power=cls.turkey)
+        cls.gp12 = GamePlayer.objects.create(player=p5, game=g2, power=cls.italy)
+        cls.gp13 = GamePlayer.objects.create(player=p6, game=g2, power=cls.england)
+        cls.gp14 = GamePlayer.objects.create(player=p7, game=g2, power=cls.austria)
 
         cls.PowerAssignFormset = formset_factory(PowerAssignForm,
                                                  extra=0,
@@ -1935,10 +1936,15 @@ class BasePowerAssignFormsetTest(TestCase):
             'form-MIN_NUM_FORMS': '0',
         }
         cls.initial = []
-        for game in cls.r1.game_set.all():
-            game_dict = {}
-            game_dict['name'] = game.name
-            game_dict['the_set'] = game.the_set
+        # Ordering must match that used inside the formset
+        for game in cls.r1.game_set.order_by('pool'):
+            game_dict = {'name': game.name,
+                         'the_set': game.the_set,
+                         'top_board': game.is_top_board,
+                         'external_url': game.external_url,
+                         'notes': game.notes}
+            for gp in game.gameplayer_set.order_by():
+                game_dict[str(gp.id)] = gp.power
             cls.initial.append(game_dict)
 
     def test_formset_needs_round(self):
@@ -1959,6 +1965,13 @@ class BasePowerAssignFormsetTest(TestCase):
             self.PowerAssignFormset(the_round=self.r2)
 
     # TODO Check ordering of games when the Round has Pools
+
+    def test_formset_initial(self):
+        """Pass in initial"""
+        formset = self.PowerAssignFormset(initial=self.initial, the_round=self.r1)
+        # Players should all have their powers assigned
+        self.assertNotIn('value="" selected', str(formset))
+        #print(str(formset))
 
     def test_formset_success(self):
         """Complete the form correctly"""
