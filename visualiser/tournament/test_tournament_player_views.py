@@ -730,6 +730,18 @@ class TournamentPlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
+    def test_details_player_in_tourney_with_no_rounds(self):
+        # Add a TournamentPlayer to t3
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=self.t3)
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t3.pk, tp.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        tp.delete()
+
     def test_details_valid(self):
         response = self.client.get(reverse('tournament_player_detail',
                                            args=(self.t1.pk, self.tp11.pk)),

@@ -1739,7 +1739,7 @@ class TournamentPlayer(models.Model):
                 if not rp.score_is_final():
                     return False
         final_round = t.round_set.last()
-        if not final_round.in_progress():
+        if (final_round is None) or not final_round.in_progress():
             # There are more rounds to go, so more opportunities to score
             return False
         if not system.uses_round_scores:
