@@ -439,7 +439,8 @@ def _seed_games(tournament, the_round):
     """
     power_assignment = tournament.power_assignment
     seeder = _create_game_seeder(tournament, the_round)
-    pool_set = the_round.pool_set.all()
+    # Pools with a board_count first
+    pool_set = the_round.pool_set.order_by('-board_count')
     if pool_set:
         retval = []
         for pool in pool_set:
@@ -488,7 +489,7 @@ def seed_games(request, tournament_id, round_num):
     if request.method == 'POST':
         data = []
         # Ordering must match that used inside the formset
-        for g in r.game_set.order_by('pool'):
+        for g in r.game_set.order_by('name'):
             current = {'name': g.name,
                        'the_set': g.the_set,
                        'top_board': g.is_top_board,

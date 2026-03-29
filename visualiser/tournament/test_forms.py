@@ -1937,7 +1937,7 @@ class BasePowerAssignFormsetTest(TestCase):
         }
         cls.initial = []
         # Ordering must match that used inside the formset
-        for game in cls.r1.game_set.order_by('pool'):
+        for game in cls.r1.game_set.order_by('name'):
             game_dict = {'name': game.name,
                          'the_set': game.the_set,
                          'top_board': game.is_top_board,
@@ -1978,23 +1978,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
-        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
-        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
-        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
-        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
-        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
-        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
+        data[f'form-0-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = 'Game2'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
-        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
-        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
-        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
-        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
-        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
-        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
+        data[f'form-1-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertIs(True, formset.is_valid())
@@ -2004,23 +2004,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = 'Game1'
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
-        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
-        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
-        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
-        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
-        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
-        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
+        data[f'form-0-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = 'RidiculouslyLongGameName'
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
-        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
-        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
-        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
-        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
-        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
-        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
+        data[f'form-1-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertIs(False, formset.is_valid())
@@ -2034,23 +2034,23 @@ class BasePowerAssignFormsetTest(TestCase):
         data = self.data.copy()
         data['form-0-name'] = GAME_NAME
         data['form-0-the_set'] = str(GameSet.objects.first().pk)
-        data[f'form-0-{self.gp1.pk}'] = str(self.austria.pk)
-        data[f'form-0-{self.gp2.pk}'] = str(self.england.pk)
-        data[f'form-0-{self.gp3.pk}'] = str(self.france.pk)
-        data[f'form-0-{self.gp4.pk}'] = str(self.germany.pk)
-        data[f'form-0-{self.gp5.pk}'] = str(self.italy.pk)
-        data[f'form-0-{self.gp6.pk}'] = str(self.russia.pk)
-        data[f'form-0-{self.gp7.pk}'] = str(self.turkey.pk)
+        data[f'form-0-{self.gp8.pk}'] = str(self.austria.pk)
+        data[f'form-0-{self.gp9.pk}'] = str(self.england.pk)
+        data[f'form-0-{self.gp10.pk}'] = str(self.france.pk)
+        data[f'form-0-{self.gp11.pk}'] = str(self.germany.pk)
+        data[f'form-0-{self.gp12.pk}'] = str(self.italy.pk)
+        data[f'form-0-{self.gp13.pk}'] = str(self.russia.pk)
+        data[f'form-0-{self.gp14.pk}'] = str(self.turkey.pk)
         data['form-0-issues'] = ''
         data['form-1-name'] = GAME_NAME
         data['form-1-the_set'] = str(GameSet.objects.first().pk)
-        data[f'form-1-{self.gp8.pk}'] = str(self.austria.pk)
-        data[f'form-1-{self.gp9.pk}'] = str(self.england.pk)
-        data[f'form-1-{self.gp10.pk}'] = str(self.france.pk)
-        data[f'form-1-{self.gp11.pk}'] = str(self.germany.pk)
-        data[f'form-1-{self.gp12.pk}'] = str(self.italy.pk)
-        data[f'form-1-{self.gp13.pk}'] = str(self.russia.pk)
-        data[f'form-1-{self.gp14.pk}'] = str(self.turkey.pk)
+        data[f'form-1-{self.gp1.pk}'] = str(self.austria.pk)
+        data[f'form-1-{self.gp2.pk}'] = str(self.england.pk)
+        data[f'form-1-{self.gp3.pk}'] = str(self.france.pk)
+        data[f'form-1-{self.gp4.pk}'] = str(self.germany.pk)
+        data[f'form-1-{self.gp5.pk}'] = str(self.italy.pk)
+        data[f'form-1-{self.gp6.pk}'] = str(self.russia.pk)
+        data[f'form-1-{self.gp7.pk}'] = str(self.turkey.pk)
         data['form-1-issues'] = ''
         formset = self.PowerAssignFormset(data, the_round=self.r1)
         self.assertIs(False, formset.is_valid())
