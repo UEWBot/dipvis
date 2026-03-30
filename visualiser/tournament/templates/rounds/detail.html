@@ -62,6 +62,7 @@
   <li><a href="{% url 'board_call' tournament.id round.number %}">{% trans "Board Call" %}</a></li>
   <li><a href="{% url 'board_call_by_player' tournament.id round.number %}">{% trans "Board Call by Player" %}</a></li>
   <li><a href="{% url 'game_index' tournament.id round.number %}">{% trans "Game Index" %}</a></li>
+  <li><a href="{% url 'round_scores' tournament.id round.number %}">{% trans "Scores after the round" %}</a></li>
 </ul>
 
 <p>{% trans "CSV file download:" %}</p>

@@ -372,6 +372,81 @@ class RoundViewTests(TestCase):
             gp.power = power
             gp.save(update_fields=['power'])
 
+    def test_round_scores(self):
+        self.assertTrue(self.t2.show_current_scores)
+        response = self.client.get(reverse('round_scores',
+                                           args=(self.t2.pk, 2)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_round_scores_large_round_number(self):
+        """Beyond last round is allowed"""
+        self.assertTrue(self.t2.show_current_scores)
+        self.assertTrue(self.t2.tournament_scoring_system_obj().uses_round_scores)
+        tss = self.t2.tournament_scoring_system
+        self.t2.tournament_scoring_system = "Best single game result"
+        self.t2.save()
+        response = self.client.get(reverse('round_scores',
+                                           args=(self.t2.pk, 10)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t2.tournament_scoring_system = tss
+        self.t2.save()
+
+    def test_round_scores_no_scores_shown(self):
+        """Scores kept secret until the round has ended"""
+        self.assertTrue(self.t2.show_current_scores)
+        self.assertFalse(self.t2.round_set.filter(is_finished=True).exists())
+        self.t2.show_current_scores = False
+        self.t2.save()
+        response = self.client.get(reverse('round_scores',
+                                           args=(self.t2.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        self.t2.show_current_scores = True
+        self.t2.save()
+
+    def test_round_scores_some_scores_shown(self):
+        """Scores kept secret until the round has ended, then shown"""
+        self.assertTrue(self.t2.show_current_scores)
+        r1 = self.t2.round_numbered(1)
+        self.assertFalse(r1.is_finished)
+        self.assertFalse(self.t2.round_numbered(2).is_finished)
+        self.t2.show_current_scores = False
+        self.t2.save()
+        r1.is_finished = True
+        r1.save()
+        response = self.client.get(reverse('round_scores',
+                                           args=(self.t2.pk, 2)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        r1.is_finished = False
+        r1.save()
+        self.t2.show_current_scores = True
+        self.t2.save()
+
+    def test_round_scores_all_scores_shown(self):
+        """Scores shown if the round has ended"""
+        self.assertTrue(self.t2.show_current_scores)
+        r1 = self.t2.round_numbered(1)
+        self.assertFalse(r1.is_finished)
+        self.t2.show_current_scores = False
+        self.t2.save()
+        r1.is_finished = True
+        r1.save()
+        response = self.client.get(reverse('round_scores',
+                                           args=(self.t2.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        # Cleanup
+        r1.is_finished = False
+        r1.save()
+        self.t2.show_current_scores = True
+        self.t2.save()
+
     def test_game_cycle_no_games(self):
         response = self.client.get(reverse('round_sc_graphs',
                                            args=(self.t1.pk, 1)),

@@ -42,7 +42,7 @@ from tournament.forms import (BaseGamePlayersFormset, BasePlayerRoundFormset,
                               PlayerRoundForm, PoolForm, PowerAssignForm)
 from tournament.game_seeder import GameSeeder
 from tournament.models import (Game, GamePlayer, Pool, PowerAssignMethods,
-                               Round, RoundPlayer, TournamentPlayer)
+                               Round, RoundPlayer, Tournament, TournamentPlayer)
 from tournament.tournament_views import (get_modifiable_tournament_or_404,
                                          get_visible_tournament_or_404)
 
@@ -729,6 +729,64 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                   {'tournament': t,
                    'round': r,
                    'formset': formset})
+
+
+def round_scores(request, tournament_id, round_num):
+    """Display scores after the specified round"""
+    # TODO can we share code with tournament_scores() ?
+    t = get_visible_tournament_or_404(tournament_id, request.user)
+    tps = t.tournamentplayer_set.order_by('-score',
+                                          'player__last_name',
+                                          'player__first_name').prefetch_related('player')
+    rds = t.round_set.prefetch_related('roundplayer_set')
+    if t.show_current_scores:
+        # Grab the tournament scores and positions after the specified round
+        t_positions_and_scores = t.positions_and_scores(after_round_num=round_num)
+    else:
+        # Get the scores after the last finished Round, if any
+        r = rds.filter(is_finished=True).last()
+        if r is None:
+            # After Round 0, everyone had a score of zero
+            t_positions_and_scores = t.positions_and_scores(after_round_num=0)
+        else:
+            finished_round_num = r.number()
+            if finished_round_num < round_num:
+                t_positions_and_scores = t.positions_and_scores(after_round_num=finished_round_num)
+            else:
+                t_positions_and_scores = t.positions_and_scores(after_round_num=round_num)
+    # Discard any rounds after the one specified
+    rds = rds[:round_num]
+    # Construct a list of dicts with {rank, tournament player, [round 1 player, ..., round n player]}
+    scores = []
+    for tp in tps:
+        rs = []
+        last_rp = None
+        for r in rds:
+            try:
+                rp = r.roundplayer_set.get(player=tp.player)
+            except RoundPlayer.DoesNotExist:
+                # This player didn't play this round
+                rs.append(None)
+            else:
+                rs.append(rp)
+                last_rp = rp
+        row = {'rank': f'{t_positions_and_scores[tp.player][0]}',
+               'player': tp,
+               'last_rp': last_rp,
+               'rounds': rs}
+        scores.append(row)
+    # sort rows by position (they'll retain the alphabetic sorting if equal)
+    scores.sort(key=lambda row: float(row['rank']))
+    # After sorting, replace UNRANKED with suitable text
+    for row in scores:
+        row['rank'] = row['rank'].replace(f'{Tournament.UNRANKED}', _('Unranked'))
+    context = {'tournament': t, 'round': round_num, 'scores': scores, 'rounds': rds}
+    # Display scores either with round scores or game scores, as appropriate
+    if t.tournament_scoring_system_obj().uses_round_scores:
+        template = 'rounds/scores.html'
+    else:
+        template = 'rounds/scores_no_round_scores.html'
+    return render(request, template, context)
 
 
 @permission_required('tournament.change_gameplayer')

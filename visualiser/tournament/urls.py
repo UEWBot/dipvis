@@ -64,6 +64,7 @@ round_patterns = [
     path('roll_call/', round_views.roll_call, name='round_roll_call'),
     path('populate_pools/', round_views.populate_pools, name='populate_pools'),
     path('get_seven/', round_views.get_seven, name='get_seven'),
+    path('scores/', round_views.round_scores, name='round_scores'),
     path('seed_games/', round_views.seed_games, name='seed_games'),
     path('create_games/', round_views.create_games, name='create_games'),
     path('create_games/<slug:pool_slug>/', round_views.create_games,
