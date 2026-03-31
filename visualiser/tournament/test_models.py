@@ -2633,7 +2633,9 @@ class TournamentTests(TestCase):
         r11 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
-                                   start=datetime.combine(t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                   start=datetime.combine(t1.start_date,
+                                                          time(hour=8,
+                                                               tzinfo=datetime_timezone.utc)))
         r12 = Round.objects.create(tournament=t1,
                                    scoring_system=s1,
                                    dias=True,
@@ -2651,25 +2653,29 @@ class TournamentTests(TestCase):
         r21 = Round.objects.create(tournament=t2,
                                    scoring_system=s1,
                                    dias=False,
-                                   start=datetime.combine(t2.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+                                   start=datetime.combine(t2.start_date,
+                                                          time(hour=8,
+                                                               tzinfo=datetime_timezone.utc)))
         r22 = Round.objects.create(tournament=t2,
                                    scoring_system=s1,
                                    dias=False,
                                    start=r21.start + HOURS_8)
         # Add Rounds to t3
-        r31 = Round.objects.create(tournament=t3,
-                                   scoring_system=s1,
-                                   dias=True,
-                                   is_finished=True,
-                                   start=datetime.combine(t3.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
-                                   final_year=1907)
+        cls.r31 = Round.objects.create(tournament=t3,
+                                       scoring_system=s1,
+                                       dias=True,
+                                       is_finished=True,
+                                       start=datetime.combine(t3.start_date,
+                                                              time(hour=8,
+                                                                   tzinfo=datetime_timezone.utc)),
+                                       final_year=1907)
         cls.r32 = Round.objects.create(tournament=t3,
                                        scoring_system=s1,
                                        dias=True,
                                        is_finished=True,
-                                       start=r31.start + HOURS_8,
-                                       earliest_end_time=r31.start + HOURS_8,
-                                       latest_end_time=r31.start + HOURS_9)
+                                       start=cls.r31.start + HOURS_8,
+                                       earliest_end_time=cls.r31.start + HOURS_8,
+                                       latest_end_time=cls.r31.start + HOURS_9)
 
         # Add Games to r11
         g11 = Game.objects.create(name='g11',
@@ -2712,17 +2718,17 @@ class TournamentTests(TestCase):
                             the_round=r22,
                             the_set=cls.set1)
         # Add Games to r31
-        Game.objects.create(name='g31',
-                            started_at=r31.start,
-                            the_round=r31,
-                            is_finished=True,
-                            the_set=cls.set1)
+        cls.g31 = Game.objects.create(name='g31',
+                                      started_at=cls.r31.start,
+                                      the_round=cls.r31,
+                                      is_finished=True,
+                                      the_set=cls.set1)
         # Add Games to r32
-        Game.objects.create(name='g32',
-                            started_at=cls.r32.start,
-                            the_round=cls.r32,
-                            is_finished=True,
-                            the_set=cls.set1)
+        cls.g32 = Game.objects.create(name='g32',
+                                      started_at=cls.r32.start,
+                                      the_round=cls.r32,
+                                      is_finished=True,
+                                      the_set=cls.set1)
 
         # Easy access to all the GreatPowers
         cls.austria = GreatPower.objects.get(abbreviation='A')
@@ -2877,8 +2883,8 @@ class TournamentTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
         TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
         # Add RoundPlayers to r31
-        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.1)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=5.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r31, score=0.1)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r31, score=5.0)
         # Add RoundPlayers to r32
         RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
         RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=57.3)
@@ -3122,6 +3128,23 @@ class TournamentTests(TestCase):
         scores = {}
         for tp in t.tournamentplayer_set.all():
             scores[tp] = tp.score
+        # Add GamePlayers to the first two rounds
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g31,
+                                  power=self.italy,
+                                  score=0.1)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g31,
+                                  power=self.russia,
+                                  score=5.0)
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g32,
+                                  power=self.france,
+                                  score=47.3)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g32,
+                                  power=self.germany,
+                                  score=57.3)
         for r in t.round_set.all():
             for rp in r.roundplayer_set.all():
                 scores[rp] = rp.score
@@ -3138,6 +3161,8 @@ class TournamentTests(TestCase):
         for xp, score in scores.items():
             xp.score = score
             xp.save()
+        self.g31.gameplayer_set.all().delete()
+        self.g32.gameplayer_set.all().delete()
 
     def test_tournament_positions_and_scores_round(self):
         t = Tournament.objects.get(name='t3')
@@ -3145,6 +3170,23 @@ class TournamentTests(TestCase):
         scores = {}
         for tp in t.tournamentplayer_set.all():
             scores[tp] = tp.score
+        # Add GamePlayers to the first two rounds
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g31,
+                                  power=self.italy,
+                                  score=0.1)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g31,
+                                  power=self.russia,
+                                  score=5.0)
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g32,
+                                  power=self.france,
+                                  score=47.3)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g32,
+                                  power=self.germany,
+                                  score=57.3)
         for r in t.round_set.all():
             for rp in r.roundplayer_set.all():
                 scores[rp] = rp.score
@@ -3161,6 +3203,113 @@ class TournamentTests(TestCase):
         for xp, score in scores.items():
             xp.score = score
             xp.save()
+        self.g31.gameplayer_set.all().delete()
+        self.g32.gameplayer_set.all().delete()
+
+    def test_tournament_positions_and_scores_middle_round(self):
+        """Neither the first nor the last round"""
+        t = Tournament.objects.get(name='t3')
+        # Store the current scores
+        scores = {}
+        for tp in t.tournamentplayer_set.all():
+            scores[tp] = tp.score
+        # Add GamePlayers to the first two rounds
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g31,
+                                  power=self.italy,
+                                  score=0.1)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g31,
+                                  power=self.russia,
+                                  score=5.0)
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g32,
+                                  power=self.france,
+                                  score=47.3)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g32,
+                                  power=self.germany,
+                                  score=57.3)
+        # Add a third round
+        new_r = Round.objects.create(tournament=t,
+                                     scoring_system=self.r32.scoring_system,
+                                     dias=True,
+                                     start=self.r32.start + HOURS_8)
+        new_g = Game.objects.create(name='g33',
+                                    started_at=new_r.start,
+                                    the_round=new_r,
+                                    is_finished=True,
+                                    the_set=self.set1)
+        # Add two more players, one who only played the first round, and one who only played the second
+        new_tp1 = TournamentPlayer.objects.create(player=self.p9,
+                                                  tournament=t,
+                                                  score=124.6)
+        new_tp2 = TournamentPlayer.objects.create(player=self.p11,
+                                                  tournament=t,
+                                                  score=21.2)
+        new_rp1 = RoundPlayer.objects.create(player=self.p9,
+                                             the_round=self.r31,
+                                             score=35.6)
+        new_gp1 = GamePlayer.objects.create(player=self.p9,
+                                            game=self.g31,
+                                            power=self.turkey,
+                                            score=35.6)
+        new_rp2 = RoundPlayer.objects.create(player=self.p11,
+                                             the_round=self.r32,
+                                             score=53.1)
+        new_gp2 = GamePlayer.objects.create(player=self.p11,
+                                            game=self.g32,
+                                            power=self.austria,
+                                            score=53.1)
+        # add some players with scores to round 3
+        RoundPlayer.objects.create(player=self.p7, the_round=new_r, score=81.9)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=new_g,
+                                  power=self.italy,
+                                  score=81.9)
+        RoundPlayer.objects.create(player=self.p9, the_round=new_r, score=75.9)
+        GamePlayer.objects.create(player=self.p9,
+                                  game=new_g,
+                                  power=self.france,
+                                  score=75.9)
+        RoundPlayer.objects.create(player=self.p11, the_round=new_r, score=62.0)
+        GamePlayer.objects.create(player=self.p11,
+                                  game=new_g,
+                                  power=self.russia,
+                                  score=62.0)
+        for r in t.round_set.all():
+            for rp in r.roundplayer_set.all():
+                scores[rp] = rp.score
+            # Call update_scores() to set rp.tournament_score
+            r.update_scores()
+        # Get the positions and scores
+        p_and_s = t.positions_and_scores(after_round_num=2)
+        # Just the first two rounds should count
+        rps1 = t.round_numbered(1).roundplayer_set.all()
+        rps2 = t.round_numbered(2).roundplayer_set.all()
+        for tp in t.tournamentplayer_set.all():
+            p = tp.player
+            with self.subTest(player=p):
+                try:
+                    score1 = rps1.get(player=p).score
+                except RoundPlayer.DoesNotExist:
+                    score1 = 0.0
+                try:
+                    score2 = rps2.get(player=p).score
+                except RoundPlayer.DoesNotExist:
+                    score2 = 0.0
+                self.assertAlmostEqual(p_and_s[p][1], score1 + score2)
+        # Cleanup
+        for xp, score in scores.items():
+            xp.score = score
+            xp.save()
+        new_r.delete()
+        new_rp1.delete()
+        new_rp2.delete()
+        new_tp1.delete()
+        new_tp2.delete()
+        self.g31.gameplayer_set.all().delete()
+        self.g32.gameplayer_set.all().delete()
 
     def test_tournament_positions_and_scores_last_round(self):
         t = Tournament.objects.get(name='t3')
@@ -3168,6 +3317,23 @@ class TournamentTests(TestCase):
         scores = {}
         for tp in t.tournamentplayer_set.all():
             scores[tp] = tp.score
+        # Add GamePlayers to the first two rounds
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g31,
+                                  power=self.italy,
+                                  score=0.1)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g31,
+                                  power=self.russia,
+                                  score=5.0)
+        GamePlayer.objects.create(player=self.p5,
+                                  game=self.g32,
+                                  power=self.france,
+                                  score=47.3)
+        GamePlayer.objects.create(player=self.p7,
+                                  game=self.g32,
+                                  power=self.germany,
+                                  score=57.3)
         for r in t.round_set.all():
             for rp in r.roundplayer_set.all():
                 scores[rp] = rp.score
@@ -3182,6 +3348,8 @@ class TournamentTests(TestCase):
         for xp, score in scores.items():
             xp.score = score
             xp.save()
+        self.g31.gameplayer_set.all().delete()
+        self.g32.gameplayer_set.all().delete()
 
     def test_tournament_positions_and_scores_top_board_played(self):
         """Tournament with a top board that has been played"""

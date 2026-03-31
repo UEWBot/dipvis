@@ -1139,9 +1139,12 @@ class Tournament(models.Model):
         # Populate t_scores with a dict keyed by player of scores
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
             t_scores = {}
-            for n, r in enumerate(self.round_set.order_by('start'), start=1):
-                if n > after_round_num:
-                    break
+            for n, r in reversed(list(enumerate(self.round_set.order_by('start'),
+                                                start=1))[:after_round_num]):
+                #if n > after_round_num:
+                #    # Skip this round
+                #    continue
+                # Keep the score from the latest round
                 for rp in r.roundplayer_set.order_by():
                     if rp.player not in t_scores:
                         t_scores[rp.player] = rp.tournament_score
