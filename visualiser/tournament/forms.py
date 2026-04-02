@@ -31,8 +31,8 @@ from tournament.diplomacy.models.supply_centre import SupplyCentre
 from tournament.diplomacy.tasks.validate_preference_string import \
     validate_preference_string
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS
-from tournament.models import (Award, DrawSecrecy, Game, GameImage,
-                               Seasons, SeederBias, Team, TournamentPlayer,
+from tournament.models import (Award, DrawSecrecy, Game, GameImage, Seasons,
+                               SeederBias, Team, TournamentPlayer,
                                validate_game_name)
 from tournament.players import Player
 

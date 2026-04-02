@@ -26,10 +26,10 @@ from django.urls import reverse
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
-                               R_SCORING_SYSTEMS, Award,
-                               CentreCount, DrawProposal, DrawSecrecy, Game,
-                               GamePlayer, PowerAssignMethods, Preference,
-                               Round, RoundPlayer, Seasons, SeederBias, Team,
+                               R_SCORING_SYSTEMS, Award, CentreCount,
+                               DrawProposal, DrawSecrecy, Game, GamePlayer,
+                               PowerAssignMethods, Preference, Round,
+                               RoundPlayer, Seasons, SeederBias, Team,
                                Tournament, TournamentPlayer)
 from tournament.players import Player
 
