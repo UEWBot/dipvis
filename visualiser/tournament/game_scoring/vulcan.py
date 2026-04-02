@@ -19,8 +19,8 @@ This module contains a class that implements the Vulcan scoring system.
 """
 from operator import itemgetter
 
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
-from tournament.game_scoring.utils import _sorted_scores
+from .game_scoring_system import GameScoringSystem
+from .utils import _sorted_scores
 
 
 class GScoringVulcan(GameScoringSystem):

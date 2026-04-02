@@ -24,7 +24,8 @@ from django.utils.translation import ngettext
 from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
                                                           TOTAL_SCS,
                                                           WINNING_SCS)
-from tournament.game_scoring.game_state import DotCountUnknown, GameState
+
+from .game_state import DotCountUnknown, GameState
 
 
 class InvalidState(Exception):

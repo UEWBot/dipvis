@@ -24,10 +24,8 @@ from django.http import Http404
 from django.shortcuts import render
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.game_state import DotCountUnknown
-from tournament.game_scoring.simple_game_state import SimpleGameState
-
+from tournament.game_scoring import (G_SCORING_SYSTEMS, DotCountUnknown,
+                                     SimpleGameState)
 
 # Some fixed interesting game ends
 GAME_1 = {'sc_counts': [0, 17, 0, 0, 16, 1, 0],

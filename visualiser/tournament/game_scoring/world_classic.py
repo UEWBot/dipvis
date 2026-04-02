@@ -20,7 +20,8 @@ This module contains a class that implements the World Classic and Summer Classi
 from django.utils.translation import gettext as _
 
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
+
+from .game_scoring_system import GameScoringSystem
 
 
 class GScoringWorldClassic(GameScoringSystem):

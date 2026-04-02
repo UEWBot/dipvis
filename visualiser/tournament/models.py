@@ -59,8 +59,7 @@ from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
                                                           TOTAL_SCS,
                                                           WINNING_SCS)
 from tournament.email import send_prefs_email
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
+from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
 from tournament.players import (MASK_ALL_BG, MASK_ROUND_ENDPOINTS,
                                 MASK_SERIES_WINS, Player, add_player_bg)
 from tournament.tournament_game_state import TournamentGameState

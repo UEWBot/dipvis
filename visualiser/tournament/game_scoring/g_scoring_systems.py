@@ -19,28 +19,28 @@ This module contains the G_SCORING_SYSTEMS array.
 """
 from django.utils.translation import gettext as _
 
-from tournament.game_scoring.bangkok import GScoringBangkok
-from tournament.game_scoring.bangkok_pike import GScoringBangkokPike
-from tournament.game_scoring.base3 import GScoringBase3
-from tournament.game_scoring.carnage import GScoringCarnage
-from tournament.game_scoring.cdiplo import GScoringCDiplo
-from tournament.game_scoring.cdiplo_namur import GScoringCDiploNamur
-from tournament.game_scoring.detour09 import GScoringDetour09
-from tournament.game_scoring.draw_size import GScoringDrawSize
-from tournament.game_scoring.haight import GScoringHaight
-from tournament.game_scoring.manorcon import GScoringManorCon
-from tournament.game_scoring.maxonian import GScoringMaxonian
-from tournament.game_scoring.open_mind_the_gap import GScoringOMG
-from tournament.game_scoring.open_tribute import GScoringOpenTribute
-from tournament.game_scoring.ranked_classic import GScoringRankedClassic
-from tournament.game_scoring.solos import GScoringSolos
-from tournament.game_scoring.southern_sun import GScoringSouthernSun
-from tournament.game_scoring.sum_of_squares import GScoringSumOfSquares
-from tournament.game_scoring.tribute import GScoringTribute
-from tournament.game_scoring.vulcan import GScoringVulcan
-from tournament.game_scoring.whipping import GScoringWhipping
-from tournament.game_scoring.world_classic import GScoringWorldClassic
-from tournament.game_scoring.your_draw_size import GScoringYourDrawSize
+from .bangkok import GScoringBangkok
+from .bangkok_pike import GScoringBangkokPike
+from .base3 import GScoringBase3
+from .carnage import GScoringCarnage
+from .cdiplo import GScoringCDiplo
+from .cdiplo_namur import GScoringCDiploNamur
+from .detour09 import GScoringDetour09
+from .draw_size import GScoringDrawSize
+from .haight import GScoringHaight
+from .manorcon import GScoringManorCon
+from .maxonian import GScoringMaxonian
+from .open_mind_the_gap import GScoringOMG
+from .open_tribute import GScoringOpenTribute
+from .ranked_classic import GScoringRankedClassic
+from .solos import GScoringSolos
+from .southern_sun import GScoringSouthernSun
+from .sum_of_squares import GScoringSumOfSquares
+from .tribute import GScoringTribute
+from .vulcan import GScoringVulcan
+from .whipping import GScoringWhipping
+from .world_classic import GScoringWorldClassic
+from .your_draw_size import GScoringYourDrawSize
 
 
 # All the game scoring systems we support

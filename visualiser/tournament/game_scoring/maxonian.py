@@ -23,9 +23,10 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
                                                           WINNING_SCS)
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
-from tournament.game_scoring.game_state import DotCountUnknown
-from tournament.game_scoring.utils import _sorted_scores
+
+from .game_scoring_system import GameScoringSystem
+from .game_state import DotCountUnknown
+from .utils import _sorted_scores
 
 
 class GScoringMaxonian(GameScoringSystem):

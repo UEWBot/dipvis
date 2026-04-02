@@ -21,8 +21,8 @@ from django.test import TestCase
 
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.game_state import DotCountUnknown, InvalidYear
+from tournament.game_scoring import (G_SCORING_SYSTEMS, DotCountUnknown,
+                                     InvalidYear)
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                CentreCount, DrawProposal, DrawSecrecy, Game,
                                Round, Seasons, Tournament,

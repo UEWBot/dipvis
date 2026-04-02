@@ -28,7 +28,7 @@ from tournament import backstabbr, webdip
 from tournament.diplomacy.models.game_set import GameSet
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
+from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                T_SCORING_SYSTEMS, Award, BestCountryCriteria,
                                CentreCount, DBNCoverage, DrawProposal,

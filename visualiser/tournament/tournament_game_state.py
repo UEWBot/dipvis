@@ -21,8 +21,7 @@ This module contains the interface between the game scoring code and the tournam
 from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
                                                           WINNING_SCS)
-from tournament.game_scoring.game_state import (DotCountUnknown, GameState,
-                                                InvalidYear)
+from tournament.game_scoring import DotCountUnknown, GameState, InvalidYear
 
 
 class TournamentGameState(GameState):

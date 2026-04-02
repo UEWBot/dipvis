@@ -19,10 +19,11 @@ import copy
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.sc_chart_game_state import SCChartGameState
-from tournament.game_scoring.simple_game_state import SimpleGameState
 from tournament.models import find_game_scoring_system
+
+from .g_scoring_systems import G_SCORING_SYSTEMS
+from .sc_chart_game_state import SCChartGameState
+from .simple_game_state import SimpleGameState
 
 
 # Function needed by most classes

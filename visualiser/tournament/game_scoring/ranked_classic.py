@@ -23,9 +23,9 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
                                                           WINNING_SCS)
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
-from tournament.game_scoring.utils import (_adjust_rank_score_lower_special,
-                                           _sorted_scores)
+
+from .game_scoring_system import GameScoringSystem
+from .utils import _adjust_rank_score_lower_special, _sorted_scores
 
 
 class GScoringRankedClassic(GameScoringSystem):

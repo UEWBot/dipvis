@@ -17,8 +17,9 @@
 from django.test import TestCase
 
 from tournament.diplomacy.models.great_power import GreatPower
-from tournament.game_scoring.sc_chart_game_state import SCChartGameState
-from tournament.game_scoring.test_general import check_score_for_state
+
+from .sc_chart_game_state import SCChartGameState
+from .test_general import check_score_for_state
 
 
 class MaxonianGameScoringTests(TestCase):

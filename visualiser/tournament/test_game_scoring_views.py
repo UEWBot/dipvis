@@ -17,9 +17,8 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
-from tournament.game_scoring.simple_game_state import (InvalidState,
-                                                       SimpleGameState)
+from tournament.game_scoring import (G_SCORING_SYSTEMS, InvalidState,
+                                     SimpleGameState)
 
 
 class GameScoringViewTests(TestCase):

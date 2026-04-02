@@ -22,8 +22,9 @@ from operator import itemgetter
 from django.utils.translation import gettext as _
 
 from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
-from tournament.game_scoring.game_scoring_system import GameScoringSystem
-from tournament.game_scoring.utils import _adjust_rank_score, _sorted_scores
+
+from .game_scoring_system import GameScoringSystem
+from .utils import _adjust_rank_score, _sorted_scores
 
 
 class GScoringCDiplo(GameScoringSystem):
@@ -79,7 +80,7 @@ class GScoringCDiplo(GameScoringSystem):
         """
         retval = {}
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
-        dots.sort(key = itemgetter(1), reverse=True)
+        dots.sort(key=itemgetter(1), reverse=True)
         # Tweak the ranking points to allow for ties
         rank_pts = _adjust_rank_score(dots, self.position_pts)
         for i, (p, c) in enumerate(dots):

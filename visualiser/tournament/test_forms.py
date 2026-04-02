@@ -41,7 +41,7 @@ from tournament.forms import (AwardForm, BackstabbrUrlForm, BaseAwardsFormset,
                               PlayerRoundScoreForm, PoolForm, PowerAssignForm,
                               PrefsForm, SCCountForm, SCOwnerForm,
                               SeederBiasForm, TeamForm)
-from tournament.game_scoring.g_scoring_systems import G_SCORING_SYSTEMS
+from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                DrawSecrecy, Game, GamePlayer, Pool, Round,
                                RoundPlayer, Seasons, Team, Tournament,
