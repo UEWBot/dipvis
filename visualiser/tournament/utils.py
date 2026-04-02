@@ -41,9 +41,9 @@ from tournament.diplomacy.models.great_power import GreatPower
 from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
-                               DrawProposal, Game, GameImage, GamePlayer,
+                               DrawProposal, Game, GameImage, GamePlayer, Pool,
                                Preference, Round, RoundPlayer, SeederBias,
-                               SupplyCentreOwnership, Tournament,
+                               SupplyCentreOwnership, Team, Tournament,
                                TournamentPlayer)
 from tournament.players import (Player, PlayerAward, PlayerGameResult,
                                 PlayerTournamentRanking, WDDPlayer)
