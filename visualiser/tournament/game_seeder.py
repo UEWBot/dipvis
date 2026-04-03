@@ -743,7 +743,7 @@ class GameSeeder:
                     print("bin entries: ", bin_entries)
                 except:
                     print("no bins")
-            if stop_adding_pairs == True:
+            if stop_adding_pairs:
                 break
 
         min_game_players = min([len(g) for g in games])
