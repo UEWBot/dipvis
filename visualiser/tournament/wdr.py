@@ -24,7 +24,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 
 
 WDR_NETLOC = 'www.world-diplomacy-reference.com'

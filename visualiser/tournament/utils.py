@@ -36,9 +36,7 @@ from django.utils import timezone as django_timezone
 from tournament import backstabbr
 from tournament.background import (InvalidWDRId, WDDBackground, WDRBackground,
                                    WDRNotAccessible)
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
+from tournament.diplomacy import FIRST_YEAR, GameSet, GreatPower
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
                                DrawProposal, Game, GameImage, GamePlayer, Pool,

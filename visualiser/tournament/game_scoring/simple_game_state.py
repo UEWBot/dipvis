@@ -21,9 +21,7 @@ Minimalist GameState
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
-from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
-                                                          TOTAL_SCS,
-                                                          WINNING_SCS)
+from tournament.diplomacy import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 
 from .game_state import DotCountUnknown, GameState
 

@@ -40,24 +40,14 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament import backstabbr, webdip
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.diplomacy.tasks.validate_max_greatpowers import \
-    validate_max_greatpowers
-from tournament.diplomacy.tasks.validate_max_supplycentres import \
-    validate_max_supplycentres
-from tournament.diplomacy.tasks.validate_preference_string import \
-    validate_preference_string
 # validate_sc_count() and validate_ranking() are no longer used except by migrations
-from tournament.diplomacy.tasks.validate_ranking import validate_ranking
-from tournament.diplomacy.tasks.validate_sc_count import validate_sc_count
-from tournament.diplomacy.tasks.validate_year import validate_year
-from tournament.diplomacy.tasks.validate_year_including_start import \
-    validate_year_including_start
-from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
-                                                          TOTAL_SCS,
-                                                          WINNING_SCS)
+from tournament.diplomacy import (FIRST_YEAR, TOTAL_SCS, WINNING_SCS, GameSet,
+                                  GreatPower, SupplyCentre,
+                                  validate_max_greatpowers,
+                                  validate_max_supplycentres,
+                                  validate_preference_string, validate_ranking,
+                                  validate_sc_count, validate_year,
+                                  validate_year_including_start)
 from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
 from tournament.players import (MASK_ALL_BG, MASK_ROUND_ENDPOINTS,

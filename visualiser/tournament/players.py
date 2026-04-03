@@ -31,8 +31,6 @@ import traceback
 from pathlib import Path
 from urllib.parse import urlencode, urlunparse
 
-from django_countries.fields import Country, CountryField
-
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -40,17 +38,14 @@ from django.db.models import Max, Min, Q
 from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
+from django_countries.fields import Country, CountryField
 
 from tournament.background import (InvalidWDDId, WDDBackground,
                                    WDDNotAccessible, WDRBackground,
                                    WDRNotAccessible, WikipediaBackground)
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.tasks.validate_max_supplycentres import \
-    validate_max_supplycentres
-from tournament.diplomacy.tasks.validate_year import validate_year
-from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
-                                                          TOTAL_SCS,
-                                                          WINNING_SCS)
+from tournament.diplomacy import (FIRST_YEAR, TOTAL_SCS, WINNING_SCS,
+                                  GreatPower, validate_max_supplycentres,
+                                  validate_year)
 from tournament.wdd import (WDD_BASE_RANKING_PATH, WDD_BASE_RESULTS_PATH,
                             WDD_BASE_RESULTS_URL, WDD_NETLOC,
                             UnrecognisedCountry, validate_wdd_player_id,

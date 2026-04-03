@@ -16,7 +16,7 @@
 
 from django.test import TestCase
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 
 from .sc_chart_game_state import SCChartGameState
 from .test_general import check_score_for_state

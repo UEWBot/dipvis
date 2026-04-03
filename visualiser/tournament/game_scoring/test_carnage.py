@@ -16,8 +16,7 @@
 
 from django.test import TestCase
 
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS
+from tournament.diplomacy import TOTAL_SCS, GreatPower
 
 from .simple_game_state import SimpleGameState
 from .test_general import check_score_for_state

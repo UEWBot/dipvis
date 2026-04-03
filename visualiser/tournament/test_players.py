@@ -21,7 +21,7 @@ from django_countries.fields import Country
 
 from django.test import TestCase, tag
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import (MASK_ALL_BG, Player, PlayerAward,

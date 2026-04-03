@@ -18,7 +18,7 @@ import copy
 
 from django.test import TestCase
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 from tournament.models import find_game_scoring_system
 
 from .g_scoring_systems import G_SCORING_SYSTEMS

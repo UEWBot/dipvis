@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, tag
 from django.urls import reverse
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 from tournament.players import Player, PlayerGameResult, WDDPlayer
 
 

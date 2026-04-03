@@ -23,7 +23,7 @@ from operator import attrgetter
 from django.http import Http404
 from django.shortcuts import render
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 from tournament.game_scoring import (G_SCORING_SYSTEMS, DotCountUnknown,
                                      SimpleGameState)
 

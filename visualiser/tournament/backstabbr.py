@@ -24,7 +24,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 import requests
 from bs4 import BeautifulSoup
 
-from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
+from tournament.diplomacy import WINNING_SCS
 
 BACKSTABBR_NETLOCS = ['backstabbr.com', 'www.backstabbr.com']
 BACKSTABBR_NETLOC = BACKSTABBR_NETLOCS[1]

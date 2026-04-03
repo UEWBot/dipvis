@@ -35,9 +35,8 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 
 from tournament import backstabbr, webdip
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.models.supply_centre import SupplyCentre
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR, TOTAL_SCS
+from tournament.diplomacy import (FIRST_YEAR, TOTAL_SCS, GreatPower,
+                                  SupplyCentre)
 from tournament.forms import (BaseSCCountFormset, BaseSCOwnerFormset,
                               DeathYearForm, DrawForm, GameEndedForm,
                               GameImageForm, SCCountForm, SCOwnerForm)

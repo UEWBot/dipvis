@@ -24,7 +24,8 @@ from bs4 import BeautifulSoup
 
 from django.conf import settings
 
-from tournament.diplomacy.values.diplomacy_values import WINNING_SCS
+from tournament.diplomacy import WINNING_SCS
+
 
 WEBDIPLOMACY_NETLOC = 'webdiplomacy.net'
 

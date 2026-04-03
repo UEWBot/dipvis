@@ -34,8 +34,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_board_call_email
 from tournament.forms import (BaseGamePlayersFormset, BasePlayerRoundFormset,
                               BasePowerAssignFormset, GamePlayersForm,

@@ -22,8 +22,7 @@ import csv
 
 from django.http import HttpResponse
 
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
+from tournament.diplomacy import FIRST_YEAR, GreatPower
 from tournament.models import Game, GamePlayer, Tournament
 from tournament.tournament_views import get_visible_tournament_or_404
 from tournament.wdd import (WDD_MAX_AWARDS, WDD_MAX_ROUNDS, WDD_MAX_YEAR,

@@ -19,8 +19,7 @@ from datetime import timezone as datetime_timezone
 
 from django.test import TestCase
 
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import (G_SCORING_SYSTEMS, DotCountUnknown,
                                      InvalidYear)
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,

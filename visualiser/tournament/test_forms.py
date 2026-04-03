@@ -25,9 +25,7 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 
 from tournament.backstabbr import BACKSTABBR_NETLOC
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.models.supply_centre import SupplyCentre
+from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.forms import (AwardForm, BackstabbrUrlForm, BaseAwardsFormset,
                               BaseGamePlayersFormset, BaseHandicapsFormset,
                               BasePaidFormset, BasePlayerRoundFormset,

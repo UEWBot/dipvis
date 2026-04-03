@@ -16,7 +16,7 @@
 
 from django.test import TestCase
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 
 from .simple_game_state import SimpleGameState
 

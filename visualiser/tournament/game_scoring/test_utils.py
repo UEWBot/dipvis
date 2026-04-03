@@ -16,7 +16,7 @@
 
 from django.test import TestCase
 
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GreatPower
 
 from .utils import _adjust_rank_score_lower_special
 

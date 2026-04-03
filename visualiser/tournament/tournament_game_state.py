@@ -18,9 +18,7 @@
 This module contains the interface between the game scoring code and the tournament database.
 """
 
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
-                                                          WINNING_SCS)
+from tournament.diplomacy import FIRST_YEAR, WINNING_SCS, GreatPower
 from tournament.game_scoring import DotCountUnknown, GameState, InvalidYear
 
 

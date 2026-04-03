@@ -21,7 +21,7 @@ from operator import itemgetter
 
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy.values.diplomacy_values import TOTAL_SCS
+from tournament.diplomacy import TOTAL_SCS
 
 from .game_scoring_system import GameScoringSystem
 from .utils import _adjust_rank_score, _sorted_scores

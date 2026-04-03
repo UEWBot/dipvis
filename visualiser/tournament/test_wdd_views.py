@@ -22,8 +22,7 @@ from django_countries.fields import Country
 from django.test import TestCase
 from django.urls import reverse
 
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                CentreCount, DrawProposal, DrawSecrecy, Game,

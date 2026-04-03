@@ -18,7 +18,7 @@ from django.urls import include, path, register_converter
 
 from tournament import (game_views, round_views, series_views,
                         tournament_player_views, tournament_views, wdd_views)
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
+from tournament.diplomacy import FIRST_YEAR
 
 
 class YearConverter:

@@ -20,8 +20,7 @@ from datetime import timezone as datetime_timezone
 from django.core import mail
 from django.test import TestCase, override_settings
 
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import (send_board_call_email, send_prefs_email,
                               send_roll_call_emails)
 from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,

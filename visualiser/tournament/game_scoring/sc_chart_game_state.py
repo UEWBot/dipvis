@@ -14,9 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from tournament.diplomacy.values.diplomacy_values import (FIRST_YEAR,
-                                                          TOTAL_SCS,
-                                                          WINNING_SCS)
+from tournament.diplomacy import FIRST_YEAR, TOTAL_SCS, WINNING_SCS
 
 from .game_state import DotCountUnknown, GameState
 

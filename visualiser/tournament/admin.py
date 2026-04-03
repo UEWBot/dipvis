@@ -17,10 +17,7 @@
 from django.contrib import admin
 from django.db import transaction
 
-from tournament.diplomacy.models.game_set import GameSet
-from tournament.diplomacy.models.great_power import GreatPower
-from tournament.diplomacy.models.set_power import SetPower
-from tournament.diplomacy.models.supply_centre import SupplyCentre
+from tournament.diplomacy import GameSet, GreatPower, SetPower, SupplyCentre
 from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
                                Game, GameImage, GamePlayer, Pool, Round,
                                RoundPlayer, SeederBias, Series,

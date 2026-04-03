@@ -19,7 +19,7 @@ This module contains a class that implements the Bangkok scoring system.
 """
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy.values.diplomacy_values import FIRST_YEAR
+from tournament.diplomacy import FIRST_YEAR
 
 from .game_scoring_system import GameScoringSystem
 
