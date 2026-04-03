@@ -343,7 +343,7 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
-    def test_detail_non_existant_round(self):
+    def test_detail_non_existent_round(self):
         response = self.client.get(reverse('round_detail',
                                            args=(self.t1.pk, 2)),
                                    secure=True)

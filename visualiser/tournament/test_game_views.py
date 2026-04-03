@@ -207,7 +207,7 @@ class GameViewTests(TestCase):
         p6.delete()
         p7.delete()
 
-    def test_detail_non_existant_game(self):
+    def test_detail_non_existent_game(self):
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, 'Game42')),
                                    secure=True)
@@ -357,7 +357,7 @@ class GameViewTests(TestCase):
         # Clean up
         p.delete()
 
-    def test_non_existant_aar(self):
+    def test_non_existent_aar(self):
         # Add a GamePlayer without an AAR
         p = Player.objects.create(first_name='Thor', last_name='Odinson')
         TournamentPlayer.objects.create(tournament=self.t1, player=p)
