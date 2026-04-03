@@ -417,6 +417,17 @@ def check_wdd_player_ids():
 
 # Maintenance utilities - fix errors in the database
 
+def nuke_invalid_email(email):
+    """
+    Removes an invalid email address from the database
+
+    Use this is email sent to the address gets a permanent error
+    """
+    p = Player.objects.get(email=email)
+    p.email=''
+    p.save()
+
+
 def clean_duplicate_player(del_player, keep_player, dry_run=False):
     """
     Moves any TournamentPlayers, RoundPlayers, and GamePlayers from del_player to keep_player.
