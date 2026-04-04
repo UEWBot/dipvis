@@ -24,12 +24,13 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 
 from tournament.diplomacy import GameSet, GreatPower
-from tournament.forms import BasePowerAssignFormset, PowerAssignForm
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Game, GamePlayer, Round,
                                RoundPlayer, Tournament, TournamentPlayer)
 from tournament.players import Player
+
+from . import BasePowerAssignFormset, PowerAssignForm
 
 
 class PowerAssignFormTest(TestCase):

@@ -21,7 +21,8 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.forms import BaseSCCountFormset, SCCountForm
+
+from . import BaseSCCountFormset, SCCountForm
 
 
 class SCCountFormTest(TestCase):

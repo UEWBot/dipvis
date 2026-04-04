@@ -21,7 +21,8 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower, SupplyCentre
-from tournament.forms import BaseSCOwnerFormset, SCOwnerForm
+
+from . import BaseSCOwnerFormset, SCOwnerForm
 
 
 class SCOwnerFormTest(TestCase):

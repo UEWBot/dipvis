@@ -22,7 +22,8 @@ from urllib.parse import urlunparse
 from django.test import TestCase
 
 from tournament.backstabbr import BACKSTABBR_NETLOC
-from tournament.forms import BackstabbrUrlForm
+
+from . import BackstabbrUrlForm
 
 
 class BackstabbrUrlFormTest(TestCase):

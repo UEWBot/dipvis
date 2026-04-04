@@ -20,7 +20,8 @@ Power Death Forms Tests for the Diplomacy Tournament Visualiser.
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.forms import DeathYearForm
+
+from . import DeathYearForm
 
 
 class DeathYearFormTest(TestCase):

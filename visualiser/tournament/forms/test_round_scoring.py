@@ -24,12 +24,13 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 
 from tournament.diplomacy import GameSet
-from tournament.forms import BasePlayerRoundScoreFormset, PlayerRoundScoreForm
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Game, Round, RoundPlayer,
                                Tournament, TournamentPlayer)
 from tournament.players import Player
+
+from . import BasePlayerRoundScoreFormset, PlayerRoundScoreForm
 
 
 class PlayerRoundScoreFormTest(TestCase):

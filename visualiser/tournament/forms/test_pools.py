@@ -22,12 +22,13 @@ from datetime import timezone as datetime_timezone
 
 from django.test import TestCase
 
-from tournament.forms import PoolForm
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Pool, Round, RoundPlayer,
                                Tournament, TournamentPlayer)
 from tournament.players import Player
+
+from . import PoolForm
 
 
 class PoolFormTest(TestCase):

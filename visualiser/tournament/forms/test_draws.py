@@ -20,8 +20,9 @@ Draw Forms Tests for the Diplomacy Tournament Visualiser.
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.forms import DrawForm
 from tournament.models import DrawSecrecy, Seasons
+
+from . import DrawForm
 
 
 class DrawFormTest(TestCase):

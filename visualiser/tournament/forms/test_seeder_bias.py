@@ -21,10 +21,11 @@ from datetime import date, timedelta
 
 from django.test import TestCase
 
-from tournament.forms import SeederBiasForm
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import Player
+
+from . import SeederBiasForm
 
 
 class SeederBiasFormTest(TestCase):

@@ -19,7 +19,7 @@ Game Ended Forms Tests for the Diplomacy Tournament Visualiser.
 """
 from django.test import TestCase
 
-from tournament.forms import GameEndedForm
+from . import GameEndedForm
 
 
 class GameEndedFormTest(TestCase):

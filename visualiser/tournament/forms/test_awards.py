@@ -23,10 +23,11 @@ from django.forms.formsets import formset_factory
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.forms import AwardForm, BaseAwardsFormset
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import Player
+
+from . import AwardForm, BaseAwardsFormset
 
 
 class AwardFormTest(TestCase):

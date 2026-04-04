@@ -22,10 +22,11 @@ from datetime import date, timedelta
 from django.forms.formsets import formset_factory
 from django.test import TestCase
 
-from tournament.forms import BasePaidFormset, PaidForm
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import Player
+
+from . import BasePaidFormset, PaidForm
 
 
 class PaidFormTest(TestCase):

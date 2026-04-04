@@ -20,7 +20,8 @@ Game Scoring Forms Tests for the Diplomacy Tournament Visualiser.
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.forms import GameScoreForm
+
+from . import GameScoreForm
 
 
 class GameScoreFormTest(TestCase):
