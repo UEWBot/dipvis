@@ -34,8 +34,6 @@ from django.conf import settings
 from django.utils import timezone as django_timezone
 
 from tournament import backstabbr
-from tournament.background import (InvalidWDRId, WDDBackground, WDRBackground,
-                                   WDRNotAccessible)
 from tournament.diplomacy import FIRST_YEAR, GameSet, GreatPower
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
 from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
@@ -43,8 +41,10 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
                                Preference, Round, RoundPlayer, SeederBias,
                                SupplyCentreOwnership, Team, Tournament,
                                TournamentPlayer)
-from tournament.players import (Player, PlayerAward, PlayerGameResult,
-                                PlayerTournamentRanking, WDDPlayer)
+from tournament.players import (InvalidWDRId, Player, PlayerAward,
+                                PlayerGameResult, PlayerTournamentRanking,
+                                WDDBackground, WDDPlayer, WDRBackground,
+                                WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
                             wdd_url_to_tournament_id)

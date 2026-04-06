@@ -37,12 +37,12 @@ from django.utils.translation import ngettext
 
 from django_countries.fields import CountryField
 
-from tournament.background import WDRBackground, WDRNotAccessible
 from tournament.diplomacy import WINNING_SCS, GreatPower
 from tournament.wdr import WDR_BASE_URL, validate_wdr_player_id
 
 from .game_results import GameResults
 from .position_str import position_str
+from .wdr_background import WDRBackground, WDRNotAccessible
 
 
 # Mask values to choose which background strings to include

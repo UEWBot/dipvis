@@ -31,8 +31,6 @@ import traceback
 
 from django_countries.fields import Country
 
-from tournament.background import (WDDBackground, WDRBackground,
-                                   WDRNotAccessible, WikipediaBackground)
 from tournament.diplomacy import GreatPower
 from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
                             wdd_url_to_tournament_id)
@@ -43,6 +41,9 @@ from .player_game_result import PlayerGameResult
 from .player_ranking import PlayerRanking
 from .player_title import PlayerTitle
 from .player_tournament_ranking import PlayerTournamentRanking
+from .wdd_background import WDDBackground
+from .wdr_background import WDRBackground, WDRNotAccessible
+from .wikipedia_background import WikipediaBackground
 
 
 TITLE_MAP = {

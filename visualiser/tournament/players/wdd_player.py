@@ -30,10 +30,10 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import gettext as _
 
-from tournament.background import InvalidWDDId, WDDBackground, WDDNotAccessible
 from tournament.wdd import WDD_BASE_RESULTS_URL, validate_wdd_player_id
 
 from .player import Player
+from .wdd_background import InvalidWDDId, WDDBackground, WDDNotAccessible
 
 
 class WDDPlayerIdField(models.PositiveIntegerField):

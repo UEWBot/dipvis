@@ -16,4 +16,8 @@ from .player_ranking import PlayerRanking
 from .player_title import PlayerTitle
 from .player_tournament_ranking import PlayerTournamentRanking
 from .position_str import position_str
+from .wdd_background import (InvalidWDDId, UnableToSplitName, WDDBackground,
+                             WDDNotAccessible)
 from .wdd_player import WDDPlayer, WDDPlayerIdField
+from .wdr_background import InvalidWDRId, WDRBackground, WDRNotAccessible
+from .wikipedia_background import WikipediaBackground, WikipediaNotAccessible
