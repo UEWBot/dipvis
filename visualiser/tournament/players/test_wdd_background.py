@@ -1,5 +1,5 @@
 # Diplomacy Tournament Visualiser
-# Copyright (C) 2014, 2016 Chris Brand
+# Copyright (C) 2014, 2016-2026 Chris Brand
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,58 +16,7 @@
 
 from django.test import TestCase, tag
 
-from tournament.background import (InvalidWDDId, InvalidWDRId, WDDBackground,
-                                   WDRBackground, WikipediaBackground)
-
-
-class WikipediaBackgroundTests(TestCase):
-
-    def test_wikipedia_background_titles(self):
-        name = 'Cyrille Sevin'
-        flags = ['France']
-        bg = WikipediaBackground(name)
-        titles = bg.titles()
-        self.assertEqual(len(titles), 8)
-        for t in titles:
-            with self.subTest(title=t):
-                if t['Year'] == 1997:
-                    if t['Tournament'] == 'EuroDipCon':
-                        self.assertEqual(t['European Champion'], name)
-                        self.assertEqual(t['European Champion Flags'], flags)
-                    else:
-                        self.assertEqual(t['World Champion'], name)
-                        self.assertEqual(t['World Champion Flags'], flags)
-                elif t['Year'] == 2001:
-                    self.assertEqual(t['World Champion'], name)
-                    self.assertEqual(t['World Champion Flags'], flags)
-                elif t['Year'] == 2004:
-                    self.assertEqual(t['Third'], name)
-                    self.assertEqual(t['Third Flags'], flags)
-                elif t['Year'] == 2006:
-                    self.assertEqual(t['Second'], name)
-                    self.assertEqual(t['Second Flags'], flags)
-                elif t['Year'] == 2008:
-                    self.assertEqual(t['Second'], name)
-                    self.assertEqual(t['Second Flags'], flags)
-                elif t['Year'] == 2013:
-                    self.assertEqual(t['World Champion'], name)
-                    self.assertEqual(t['World Champion Flags'], flags)
-                else:
-                    # 2015
-                    self.assertEqual(t['European Champion'], name)
-                    self.assertEqual(t['European Champion Flags'], flags)
-
-    def test_wikipedia_background_nationalities(self):
-        """Check that multi-nationals get parsed correctly"""
-        name = 'Antonio Ribeiro da Silva'
-        flags = ['France', 'Portugal']
-        bg = WikipediaBackground(name)
-        titles = bg.titles()
-        self.assertEqual(len(titles), 1)
-        for t in titles:
-            with self.subTest(title=t):
-                self.assertEqual(t['Second'], name)
-                self.assertEqual(t['Second Flags'], flags)
+from . import InvalidWDDId, WDDBackground
 
 
 @tag('wdd')
@@ -192,47 +141,3 @@ class WDDBackgroundTests(TestCase):
                     self.assertEqual(s['Score'], '14.40')
                 elif s['Date'] == '1998-07-06':
                     self.assertEqual(s['Score'], '4.00')
-
-
-@tag('wdr')
-class WDRBackgroundTests(TestCase):
-
-    INVALID_WDR_ID = 0
-    CHRIS_BRAND_WDR_ID = 7164
-
-    # WDRBackground mostly gets tested implictly when Players are created. Explicitly test invalid wdd ids
-    @tag('wdr')
-    def test_wdr_background_id_invalid(self):
-        self.assertRaises(InvalidWDRId, WDRBackground, self.INVALID_WDR_ID)
-
-    # WDRBackground.wdd_id()
-    @tag('wdr')
-    def test_wdr_background_wdd_id(self):
-        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
-        self.assertEqual(4173, b.wdd_id())
-
-    # WDRBackground.firstname_lastname()
-    @tag('wdr')
-    def test_wdr_background_firstname_lastname(self):
-        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
-        self.assertEqual(('Chris', 'Brand'), b.firstname_lastname())
-
-    # WDRBackground.nationality()
-    @tag('wdr')
-    def test_wdr_background_nationality(self):
-        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
-        self.assertEqual('CA', b.nationality())
-
-    # WDRBackground.location()
-    @tag('wdr')
-    def test_wdr_background_location(self):
-        b = WDRBackground(self.CHRIS_BRAND_WDR_ID)
-        self.assertEqual('CA', b.location())
-
-    # TODO WDRBackground.tournaments()
-
-    # TODO WDRBackground.boards()
-
-    # TODO WDRBackground.awards()
-
-    # TODO WDRBackground.rankings()
