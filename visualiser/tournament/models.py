@@ -241,7 +241,7 @@ class TournamentScoringSystem(ABC):
 
     Provides a method to calculate a score for each player of tournament.
     """
-    MAX_NAME_LENGTH = 50
+    MAX_NAME_LENGTH = 80
     name = u''
 
     @abstractmethod
