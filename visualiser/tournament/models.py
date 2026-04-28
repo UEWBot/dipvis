@@ -534,17 +534,30 @@ class TScoringSumGames(TournamentScoringSystem):
     of the remaining Games, multiplied by some factor (residual_multiplier). When
     residual_multiplier is non-zero, residual_count can be set to limit the number of scores
     that get included.
+    When residual_multiplier is non-zero, residual_count is set, and residual_multiplier_2 is set,
+    residual_multiplier is used if the player played more than scored_games and up to
+    (scored_games + residual_count) and residual_multiplier_2 is used if the player played more
+    than (scored_games + residual_count).
     In this case, GamePlayer.score is used directly and any (non-zero) RoundPlayer.scores are
     treated as "pseudo Game scores" due to sitting-out bonuses.
     """
-    def __init__(self, name, scored_games, residual_multiplier=0.0, residual_count=None):
+    def __init__(self,
+                 name,
+                 scored_games,
+                 residual_multiplier=0.0,
+                 residual_count=None,
+                 residual_multiplier_2=0.0):
         self.name = name
         self.scored_games = scored_games
         self.residual_multiplier = residual_multiplier
         self.residual_count = residual_count
+        self.residual_multiplier_2 = residual_multiplier_2
         # Residual count is only meaningful with non-zero residual_multiplier
         if residual_count and (residual_multiplier == 0.0):
             raise ValueError("non-None residual_count with zero residual_multiplier")
+        # Residual count 2 is only menaningful with residual_count
+        if (residual_count is None) and (residual_multiplier_2 != 0.0):
+            raise ValueError("None residual_count with non-zero residual_multiplier")
 
     uses_round_scores = False
 
@@ -563,6 +576,7 @@ class TScoringSumGames(TournamentScoringSystem):
             rp = gp
         rp.score_dropped = False
         rp.save(update_fields=['score_dropped'])
+
 
     def scores(self, round_players):
         """
@@ -620,7 +634,19 @@ class TScoringSumGames(TournamentScoringSystem):
                         # so we have to explicitly flag this score as not dropped
                         gp.score_dropped = False
                         gp.save(update_fields=['score_dropped'])
-                if (self.residual_multiplier != 0.0) and len(player_scores):
+                if (self.residual_multiplier_2 != 0.0) and len(player_scores):
+                    # Add each remaining score with the appropriate multipler
+                    if len(player_scores) > self.residual_count:
+                        for gp, score in player_scores:
+                            t_scores[p] += score * self.residual_multiplier_2
+                            self._flag_included_score(gp)
+                    else:
+                        for gp, score in player_scores:
+                            t_scores[p] += score * self.residual_multiplier
+                            self._flag_included_score(gp)
+                    # We've used all the player_scores
+                    player_scores = []
+                elif (self.residual_multiplier != 0.0) and len(player_scores):
                     if self.residual_count:
                         # Remove any remaining scores that don't contribute
                         while self.residual_count < len(player_scores):
@@ -654,6 +680,8 @@ T_SCORING_SYSTEMS = [
     TScoringSumGames(_('Sum best 2 games plus half the average of the rest'), 2, residual_multiplier=0.5),
     TScoringSumGames(_('Sum best 2 games plus half the third best'), 2, residual_multiplier=0.5, residual_count=1),
     TScoringSumGames(_('Sum best 3 games plus half the fourth best'), 3, residual_multiplier=0.5, residual_count=1),
+    TScoringSumGames(_('Sum best 2 games plus either 1/2 the 3rd or 1/3 the sum of the 3rd and 4th'),
+                     2, residual_multiplier=0.5, residual_count=1, residual_multiplier_2=1/3),
     TScoringWDC2025(),
 ]
 
