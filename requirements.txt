@@ -6,3 +6,4 @@ Pillow
 matplotlib>=3.5.3
 requests
 django-countries>=7.6.1
+pandas
