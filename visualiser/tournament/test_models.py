@@ -3149,7 +3149,7 @@ class TournamentTests(TestCase):
         RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=57.3)
 
     # Tournament.powers_assigned_from_prefs()
-    def test_tournament_powers_Assigned_from_prefs_false(self):
+    def test_tournament_powers_assigned_from_prefs_false(self):
         t = Tournament.objects.first()
         self.assertIs(False, t.powers_assigned_from_prefs())
 
