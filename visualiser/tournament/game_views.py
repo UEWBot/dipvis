@@ -850,11 +850,13 @@ def api(request, version, tournament_id, game_name):
         sc_chart[year] = {}
         for sc in g.centrecount_set.filter(year=year).order_by():
             sc_chart[year][sc.power.name] = sc.count
-        sc_owners[year] = {}
-        for power in GreatPower.objects.all():
-            sc_owners[year][power.name] = []
-        for sco in g.supplycentreownership_set.filter(year=year):
-            sc_owners[year][sco.owner.name].append(sco.sc.name)
+        scos = g.supplycentreownership_set.filter(year=year)
+        if scos:
+            sc_owners[year] = {}
+            for power in GreatPower.objects.all():
+                sc_owners[year][power.name] = []
+            for sco in scos:
+                sc_owners[year][sco.owner.name].append(sco.sc.name)
     # TODO add DrawProposals
     data = {'round_number': g.the_round.number(),
             'started_at': g.started_at,
