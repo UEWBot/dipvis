@@ -864,6 +864,7 @@ def api(request, version, tournament_id, game_name):
             'is_top_board': g.is_top_board,
             'external_url': g.external_url,
             'notes': g.notes,
+            'final-year': year,
             'sc_chart': sc_chart,
             'sc_owners': sc_owners}
     return JsonResponse(data)
