@@ -844,6 +844,7 @@ def api(request, tournament_id, version):
                 if gp.score_is_final():
                     players[str(gp.power)]['score'] = gp.score
                     players[str(gp.power)]['final_scs'] = gp.final_sc_count()
+                players[str(gp.power)]['elimination_year'] = gp.elimination_year()
             games[g.name] = {'sandbox': g.external_url,
                              'started': g.started_at,
                              'players': players}
