@@ -93,7 +93,12 @@ class WikipediaCache():
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return ''
-        json = page.json()
+        try:
+            json = page.json()
+        except requests.RequestsJSONDecodeError:
+            print('RequestsJSONDecodeError:')
+            print(page.text)
+            return ''
         return json['items'][0]['rev']
 
     def soup(self):
