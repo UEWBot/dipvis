@@ -860,10 +860,10 @@ def api(request, version, tournament_id, game_name):
     # include any passed DrawProposal
     dp = g.passed_draw()
     if dp:
-        draw = {'season': dp.season.label,
+        draw = {'season': dp.get_season_display(),
                 'year': dp.year,
                 'powers': []}
-        for p in dp.drawing_powers:
+        for p in dp.drawing_powers.all():
             draw['powers'].append(str(p))
     else:
         draw = None

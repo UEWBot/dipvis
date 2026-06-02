@@ -839,10 +839,10 @@ def api(request, tournament_id, version):
             # Include any passed DrawProposal
             dp = g.passed_draw()
             if dp:
-                draw = {'season': dp.season.label,
+                draw = {'season': dp.get_season_display(),
                         'year': dp.year,
                         'powers': []}
-                for p in dp.drawing_powers:
+                for p in dp.drawing_powers.all():
                     draw['powers'].append(str(p))
             else:
                 draw = None
@@ -857,7 +857,7 @@ def api(request, tournament_id, version):
                     players[power_str]['final_scs'] = gp.final_sc_count()
                 players[power_str]['elimination_year'] = gp.elimination_year()
                 if dp:
-                    players[power_str]['in_draw'] = gp.power in dp.drawing_powers
+                    players[power_str]['in_draw'] = gp.power in dp.drawing_powers.all()
             games[g.name] = {'sandbox': g.external_url,
                              'started': g.started_at,
                              'players': players,
