@@ -39,7 +39,7 @@
         <tr class="{% cycle 'odd_row' 'even_row' %}">
           <td>{{ forloop.counter }}</td>
           <td><a href="{% if tournament.current_round.game_set.exists %}{{ tp.get_absolute_url }}{% else %}{{ tp.player.get_absolute_url }}{% endif %}">{{ tp.player }}</a></td>
-          <td>{{ tp.player.wdr_player_id }}</td>
+          <td>{{ tp.player.wdr_player_id|default:"" }}</td>
           {% if tournament.handicaps %}
             <td>{{ tp.handicap|floatformat:2 }}</td>
           {% endif %}
