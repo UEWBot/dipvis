@@ -95,7 +95,7 @@ class WikipediaCache():
             return ''
         try:
             json = page.json()
-        except requests.RequestsJSONDecodeError:
+        except requests.exceptions.RequestsJSONDecodeError:
             print('RequestsJSONDecodeError:')
             print(page.text)
             return ''
