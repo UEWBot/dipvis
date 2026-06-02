@@ -836,18 +836,32 @@ def api(request, tournament_id, version):
     for num, r in enumerate(rds, 1):
         games = {}
         for g in r.game_set.all():
+            # Include any passed DrawProposal
+            dp = g.passed_draw()
+            if dp:
+                draw = {'season': dp.season.label,
+                        'year': dp.year,
+                        'powers': []}
+                for p in dp.drawing_powers:
+                    draw['powers'].append(str(p))
+            else:
+                draw = None
             players = {}
             for gp in g.gameplayer_set.order_by('power'):
-                players[str(gp.power)] = {'name': str(gp.player),
-                                          'location': gp.player.location,
-                                          'wdr_id': gp.player.wdr_player_id}
+                power_str = str(gp.power)
+                players[power_str] = {'name': str(gp.player),
+                                      'location': gp.player.location,
+                                      'wdr_id': gp.player.wdr_player_id}
                 if gp.score_is_final():
-                    players[str(gp.power)]['score'] = gp.score
-                    players[str(gp.power)]['final_scs'] = gp.final_sc_count()
-                players[str(gp.power)]['elimination_year'] = gp.elimination_year()
+                    players[power_str]['score'] = gp.score
+                    players[power_str]['final_scs'] = gp.final_sc_count()
+                players[power_str]['elimination_year'] = gp.elimination_year()
+                if dp:
+                    players[power_str]['in_draw'] = gp.power in dp.drawing_powers
             games[g.name] = {'sandbox': g.external_url,
                              'started': g.started_at,
-                             'players': players}
+                             'players': players,
+                             'draw': draw}
         rounds[num] = {'scoring_system': r.scoring_system,
                        'games': games}
     results = []

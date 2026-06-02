@@ -857,7 +857,16 @@ def api(request, version, tournament_id, game_name):
                 sc_owners[year][power.name] = []
             for sco in scos:
                 sc_owners[year][sco.owner.name].append(sco.sc.name)
-    # TODO add DrawProposals
+    # include any passed DrawProposal
+    dp = g.passed_draw()
+    if dp:
+        draw = {'season': dp.season.label,
+                'year': dp.year,
+                'powers': []}
+        for p in dp.drawing_powers:
+            draw['powers'].append(str(p))
+    else:
+        draw = None
     data = {'round_number': g.the_round.number(),
             'started_at': g.started_at,
             'is_finished': g.is_finished,
@@ -865,6 +874,7 @@ def api(request, version, tournament_id, game_name):
             'external_url': g.external_url,
             'notes': g.notes,
             'final-year': year,
+            'draw': draw,
             'sc_chart': sc_chart,
             'sc_owners': sc_owners}
     return JsonResponse(data)
