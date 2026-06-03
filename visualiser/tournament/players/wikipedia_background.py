@@ -89,14 +89,15 @@ class WikipediaCache():
         try:
             page = requests.get(url,
                                 headers={'User-Agent': settings.USER_AGENT,
+                                         'Accept': 'application/json',
                                          'Accept-Encoding': 'gzip'},
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return ''
         try:
             json = page.json()
-        except requests.exceptions.RequestsJSONDecodeError:
-            print('RequestsJSONDecodeError:')
+        except requests.exceptions.JSONDecodeError:
+            print('JSONDecodeError:')
             print(page.text)
             return ''
         return json['items'][0]['rev']
