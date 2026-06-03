@@ -26,6 +26,7 @@ Currently those sources are Wikipedia for titles and the World Diplomacy
 Database or World Diplomacy Reference for everything else.
 """
 
+import datetime as dt
 import requests
 from bs4 import BeautifulSoup
 
@@ -54,10 +55,13 @@ class WikipediaCache():
 
     # Timeout for retrieving wikipedia pages
     TIMEOUT = 1.5
+    # Minimum time between checking wikipedia for an update
+    MIN_READ_INTERVAL = dt.timedelta(minutes=10)
 
     def __init__(self):
         self.the_soup = None
         self.revision = ''
+        self.last_read = dt.datetime.min
         self._read_page()
 
     def _read_page(self):
@@ -71,6 +75,7 @@ class WikipediaCache():
         except requests.exceptions.Timeout:
             return
         self.the_soup = BeautifulSoup(page.text, "html.parser")
+        self.last_read = dt.datetime.now()
         try:
             etag = page.headers["ETag"]
         except KeyError as e:
@@ -104,9 +109,11 @@ class WikipediaCache():
 
     def soup(self):
         """Get the soup of the wikipedia page"""
-        # Check the current revision and re-read the page if the cache is out-of-date
-        if self.revision != self._latest_revision():
-            self._read_page()
+        # Don't even bother checking the revision if we read the page recently
+        if dt.datetime.now() - self.last_read > self.MIN_READ_INTERVAL:
+            # Check the current revision and re-read the page if the cache is out-of-date
+            if self.revision != self._latest_revision():
+                self._read_page()
         if self.the_soup is None:
             raise WikipediaNotAccessible
         return self.the_soup
