@@ -112,7 +112,10 @@ class WikipediaCache():
         # Don't even bother checking the revision if we read the page recently
         if dt.datetime.now() - self.last_read > self.MIN_READ_INTERVAL:
             # Check the current revision and re-read the page if the cache is out-of-date
-            if self.revision != self._latest_revision():
+            if self.revision == self._latest_revision():
+                # Page we have stored is still current
+                self.last_read = dt.datetime.now()
+            else:
                 self._read_page()
         if self.the_soup is None:
             raise WikipediaNotAccessible
