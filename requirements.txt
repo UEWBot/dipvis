@@ -1,8 +1,8 @@
 bs4>=0.0.1
-Django==4.2.30
-django-extensions>=3.1.3
+Django>=5.2,<5.3
+django-extensions>=3.2.3
 django-slowtests>=1.1.1
-Pillow
-matplotlib>=3.5.3
-requests
+Pillow>=10.0.0
+matplotlib>=3.8.0
+requests>=2.31.0
 django-countries>=7.6.1
