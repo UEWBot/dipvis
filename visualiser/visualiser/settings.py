@@ -90,7 +90,7 @@ MIDDLEWARE = (
 
 ROOT_URLCONF = 'visualiser.urls'
 
-WSGI_APPLICATION = 'visualiser.wsgi.application'
+ASGI_APPLICATION = 'visualiser.asgi.application'
 
 
 # Password validation
