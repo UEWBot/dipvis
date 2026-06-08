@@ -1340,6 +1340,104 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
 
+    def test_post_secret_non_dias_draw_vote_rejects_dead_power(self):
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        self.assertFalse(self.g2.centrecount_set.filter(year=1901).exists())
+        CentreCount.objects.create(power=self.austria, game=self.g2, year=1901, count=5)
+        CentreCount.objects.create(power=self.england, game=self.g2, year=1901, count=5)
+        CentreCount.objects.create(power=self.france, game=self.g2, year=1901, count=5)
+        CentreCount.objects.create(power=self.germany, game=self.g2, year=1901, count=10)
+        CentreCount.objects.create(power=self.italy, game=self.g2, year=1901, count=0)
+        CentreCount.objects.create(power=self.russia, game=self.g2, year=1901, count=5)
+        CentreCount.objects.create(power=self.turkey, game=self.g2, year=1901, count=4)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'passed': False,
+                          'powers': [str(self.england), str(self.italy)],
+                          'proposer': str(self.england)}, True)
+        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g2.name)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        # Clean up
+        self.g2.centrecount_set.filter(year=1901).delete()
+
+    def test_post_secret_non_dias_draw_vote_passed_updates_scores_after_adding_powers(self):
+        t = Tournament.objects.create(name='t_draw_size',
+                                      start_date=self.t1.start_date,
+                                      end_date=self.t1.end_date,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Draw size',
+                                 dias=False,
+                                 start=self.r1.start + HOURS_24)
+        g = Game.objects.create(name='GameDrawSize',
+                                started_at=r.start,
+                                the_round=r,
+                                the_set=GameSet.objects.first())
+        players = []
+        try:
+            for first_name, last_name, power in [
+                    ('Abbey', 'Alpha', self.austria),
+                    ('Brian', 'Beta', self.england),
+                    ('Carol', 'Gamma', self.france),
+                    ('Derek', 'Delta', self.germany),
+                    ('Erin', 'Epsilon', self.italy),
+                    ('Fiona', 'Zeta', self.russia),
+                    ('Gary', 'Eta', self.turkey)]:
+                player = Player.objects.create(first_name=first_name,
+                                               last_name=last_name)
+                players.append(player)
+                TournamentPlayer.objects.create(player=player, tournament=t)
+                RoundPlayer.objects.create(player=player, the_round=r)
+                GamePlayer.objects.create(player=player, game=g, power=power)
+
+            for power, count in {
+                    self.austria: 6,
+                    self.england: 5,
+                    self.france: 6,
+                    self.germany: 4,
+                    self.italy: 0,
+                    self.russia: 0,
+                    self.turkey: 0,
+                }.items():
+                CentreCount.objects.create(power=power,
+                                           game=g,
+                                           year=1903,
+                                           count=count)
+
+            self.client.login(username=self.USERNAME1, password=self.PWORD1)
+            data = urlencode({'year': '1904',
+                              'season': Seasons.FALL,
+                              'passed': True,
+                              'powers': [str(self.austria), str(self.france)],
+                              'proposer': str(self.austria)}, True)
+            response = self.client.post(reverse('draw_vote', args=(t.pk, g.name)),
+                                        data,
+                                        secure=True,
+                                        content_type='application/x-www-form-urlencoded')
+
+            self.assertEqual(response.status_code, 302)
+            self.assertEqual(response.url, g.get_absolute_url())
+            self.assertEqual(g.drawproposal_set.count(), 1)
+            self.assertEqual(g.gameplayer_set.get(power=self.austria).score, 50.0)
+            self.assertEqual(g.gameplayer_set.get(power=self.france).score, 50.0)
+            for power in [self.england,
+                          self.germany,
+                          self.italy,
+                          self.russia,
+                          self.turkey]:
+                with self.subTest(power=power):
+                    self.assertEqual(g.gameplayer_set.get(power=power).score, 0.0)
+        finally:
+            t.delete()
+
     def test_post_secret_dias_draw_vote_passed(self):
         self.assertEqual(self.g1.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)

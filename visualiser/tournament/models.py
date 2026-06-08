@@ -2801,15 +2801,6 @@ class DrawProposal(models.Model):
     def __str__(self):
         return f'{self.game} {self.year}{self.season}'
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        # Does this complete the game ?
-        if self.passed:
-            self.game.is_finished = True
-            self.game.save(update_fields=['is_finished'])
-            # That could change the scoring
-            self.game.update_scores()
-
     def clean(self):
         """
         Validate the object.

@@ -580,19 +580,31 @@ def draw_vote(request, tournament_id, game_name, concession):
                           votes_in_favour=votes_in_favour,
                           proposer=form.cleaned_data['proposer'])
         try:
-            dp.full_clean()
+            with transaction.atomic():
+                dp.save()
+                for c in countries:
+                    dp.drawing_powers.add(c)
+                dp.full_clean()
+                if dp.passed:
+                    g.set_is_finished()
+                    g.update_scores()
         except ValidationError as e:
-            form.add_error(None, e)
+            if hasattr(e, 'message_dict'):
+                for field_name, errors in e.message_dict.items():
+                    if field_name == 'drawing_powers':
+                        field_name = 'powers'
+                    if field_name not in form.fields:
+                        field_name = None
+                    for error in errors:
+                        form.add_error(field_name, error)
+            else:
+                form.add_error(None, e)
             return render(request,
                           'games/vote.html',
                           {'tournament': t,
                            'game': g,
                            'concession': concession,
                            'form': form})
-        with transaction.atomic():
-            dp.save()
-            for c in countries:
-                dp.drawing_powers.add(c)
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
                                             args=(tournament_id, game_name)))

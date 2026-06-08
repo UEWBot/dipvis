@@ -8715,55 +8715,6 @@ class DrawProposalTests(TestCase):
         CentreCount.objects.filter(game=g, year=1903).delete()
         dp.delete()
 
-    # DrawProposal.save()
-    def test_draw_proposal_save_vote_passed(self):
-        t = Tournament.objects.get(name='t3')
-        g = t.round_numbered(1).game_set.get(name='g31')
-        # Modify the game to not yet be finished
-        g.is_finished = False
-        g.save(update_fields=['is_finished'])
-        dp = DrawProposal.objects.create(game=g,
-                                         year=1905,
-                                         season=Seasons.FALL,
-                                         votes_in_favour=7,
-                                         proposer=self.austria)
-        dp.drawing_powers.add(self.england)
-        dp.drawing_powers.add(self.france)
-        dp.drawing_powers.add(self.germany)
-        dp.drawing_powers.add(self.italy)
-        dp.drawing_powers.add(self.russia)
-        dp.drawing_powers.add(self.turkey)
-        dp.drawing_powers.add(self.austria)
-        self.assertIs(True, dp.passed)
-        self.assertIs(True, g.is_finished)
-        # Cleanup
-        dp.delete()
-
-    def test_draw_proposal_save_sets_passed_to_true(self):
-        t = Tournament.objects.get(name='t3')
-        g = t.round_numbered(1).game_set.get(name='g31')
-        # Modify the game to not yet be finished
-        g.is_finished = False
-        g.save(update_fields=['is_finished'])
-        dp = DrawProposal.objects.create(game=g,
-                                         year=1905,
-                                         season=Seasons.FALL,
-                                         votes_in_favour=6,
-                                         proposer=self.austria)
-        dp.drawing_powers.add(self.england)
-        dp.drawing_powers.add(self.france)
-        dp.drawing_powers.add(self.germany)
-        dp.drawing_powers.add(self.italy)
-        dp.drawing_powers.add(self.russia)
-        dp.drawing_powers.add(self.turkey)
-        dp.drawing_powers.add(self.austria)
-        self.assertIs(False, dp.passed)
-        self.assertIs(False, g.is_finished)
-        # Cleanup
-        dp.delete()
-        g.is_finished = True
-        g.save(update_fields=['is_finished'])
-
     def test_draw_proposal_two_successful(self):
         t = Tournament.objects.get(name='t3')
         g = t.round_numbered(1).game_set.get(name='g31')
