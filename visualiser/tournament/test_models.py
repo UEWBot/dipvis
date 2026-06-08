@@ -4920,6 +4920,76 @@ class TournamentTests(TestCase):
         t.get_absolute_url()
 
     # Tournament.clean()
+    def test_tournament_full_clean_blank_round_scoring_system(self):
+        today = date.today()
+        tournament = Tournament(name='Blank round scoring',
+                                start_date=today,
+                                end_date=today,
+                                round_scoring_system='',
+                                tournament_scoring_system='Sum all round scores',
+                                draw_secrecy=DrawSecrecy.SECRET)
+
+        with self.assertRaises(ValidationError) as context:
+            tournament.full_clean()
+
+        self.assertIn('round_scoring_system', context.exception.message_dict)
+
+    def test_tournament_full_clean_blank_tournament_scoring_system(self):
+        today = date.today()
+        tournament = Tournament(name='Blank tournament scoring',
+                                start_date=today,
+                                end_date=today,
+                                round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                tournament_scoring_system='',
+                                draw_secrecy=DrawSecrecy.SECRET)
+
+        with self.assertRaises(ValidationError) as context:
+            tournament.full_clean()
+
+        self.assertIn('tournament_scoring_system', context.exception.message_dict)
+
+    def test_tournament_full_clean_invalid_round_scoring_system(self):
+        today = date.today()
+        tournament = Tournament(name='Invalid round scoring',
+                                start_date=today,
+                                end_date=today,
+                                round_scoring_system='not-a-system',
+                                tournament_scoring_system='Sum all round scores',
+                                draw_secrecy=DrawSecrecy.SECRET)
+
+        with self.assertRaises(ValidationError) as context:
+            tournament.full_clean()
+
+        self.assertIn('round_scoring_system', context.exception.message_dict)
+
+    def test_tournament_full_clean_invalid_tournament_scoring_system(self):
+        today = date.today()
+        tournament = Tournament(name='Invalid tournament scoring',
+                                start_date=today,
+                                end_date=today,
+                                round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                tournament_scoring_system='not-a-system',
+                                draw_secrecy=DrawSecrecy.SECRET)
+
+        with self.assertRaises(ValidationError) as context:
+            tournament.full_clean()
+
+        self.assertIn('tournament_scoring_system', context.exception.message_dict)
+
+    def test_tournament_full_clean_incompatible_valid_scoring_systems(self):
+        today = date.today()
+        tournament = Tournament(name='Incompatible scoring systems',
+                                start_date=today,
+                                end_date=today,
+                                round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                tournament_scoring_system='Sum all round scores',
+                                draw_secrecy=DrawSecrecy.SECRET)
+
+        with self.assertRaises(ValidationError) as context:
+            tournament.full_clean()
+
+        self.assertIn('__all__', context.exception.message_dict)
+
     def test_tournament_clean_sum_1(self):
         today = date.today()
         t = Tournament(name='Test tournament',

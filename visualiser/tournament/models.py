@@ -1036,8 +1036,18 @@ class Tournament(models.Model):
 
         round_scoring_system and tournament_scoring_system are compatible.
         """
-        if not scoring_systems_are_compatible(self.round_scoring_system,
-                                              self.tournament_scoring_system):
+        if (not self.round_scoring_system) or (not self.tournament_scoring_system):
+            # Required-field/blank handling is done by field validation.
+            return
+
+        try:
+            compatible = scoring_systems_are_compatible(self.round_scoring_system,
+                                                        self.tournament_scoring_system)
+        except InvalidScoringSystem:
+            # Invalid values are reported by field/form validation.
+            return
+
+        if not compatible:
             raise ValidationError(_('The round and tournament scoring systems are not compatible'))
 
     def powers_assigned_from_prefs(self):
