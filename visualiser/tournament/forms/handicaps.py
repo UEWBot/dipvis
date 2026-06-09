@@ -19,42 +19,20 @@ Forms for handicaps in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
-from django.forms.formsets import BaseFormSet
+
+from tournament.models import TournamentPlayer
 
 
-class HandicapForm(forms.Form):
-    """Form to set one TournamentPlayer's handicap"""
-    handicap = forms.FloatField()
+class HandicapForm(forms.ModelForm):
+    """ModelForm for setting one TournamentPlayer's handicap."""
+
+    class Meta:
+        model = TournamentPlayer
+        fields = ('handicap',)
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
-        self.tp = kwargs.pop('tp')
-        # Overridable default initial value, like ModelForm
-        if 'initial' not in kwargs.keys():
-            kwargs['initial'] = {'handicap': self.tp.handicap}
         super().__init__(*args, **kwargs)
-        # Set the label to the player's name
-        self.fields['handicap'].label = str(self.tp.player)
-
-
-class BaseHandicapsFormset(BaseFormSet):
-    """Formset for setting handicaps for TournamentPlayers"""
-    def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
-        self.tournament = kwargs.pop('tournament')
-        # Get the list of TournamentPlayers
-        self.tps = list(self.tournament.tournamentplayer_set.all())
-        # Create initial if not provided
-        if 'initial' not in kwargs.keys():
-            # And construct initial data from it
-            # __init__() uses len(initial) to decide how many forms to create
-            initial = []
-            for tp in self.tps:
-                initial.append({'handicap': tp.handicap})
-            kwargs['initial'] = initial
-        super().__init__(*args, **kwargs)
-
-    def _construct_form(self, index, **kwargs):
-        # Pass the special arg down to the form itself
-        kwargs['tp'] = self.tps[index]
-        return super()._construct_form(index, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['handicap'].label = str(self.instance.player)
+        # Keep legacy presentation used by templates/tests.
+        self.fields['handicap'].help_text = ''

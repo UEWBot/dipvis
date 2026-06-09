@@ -1207,7 +1207,7 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_post(self):
         """A manager can enter handicaps for their tournament"""
-        tps = list(self.t2.tournamentplayer_set.all())
+        tps = list(self.t2.tournamentplayer_set.order_by('player'))
         for tp in tps:
             self.assertEqual(tp.handicap, 0.0)
         self.assertIs(False, self.t2.handicaps)
@@ -1218,9 +1218,14 @@ class TournamentViewTests(TestCase):
         expected = {}
         for i, tp in enumerate(tps):
             # Distinct values make index-to-player mismatches obvious.
-            value = round(100.0 + (i * 0.5), 1)
-            expected[tp.id] = value
-            data[f'form-{i}-handicap'] = f'{value:.1f}'
+            data[f'form-{i}-id'] = str(tp.id)
+            if i == 1:
+                expected[tp.id] = 0.0
+                data[f'form-{i}-handicap'] = '0.0'
+            else:
+                value = round(100.0 + (i * 0.5), 1)
+                expected[tp.id] = value
+                data[f'form-{i}-handicap'] = f'{value:.1f}'
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
         data['form-INITIAL_FORMS'] = f'{i}'

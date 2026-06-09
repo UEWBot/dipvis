@@ -29,6 +29,7 @@ import matplotlib.ticker as ticker
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.db import transaction
+from django.forms import modelformset_factory
 from django.forms.formsets import formset_factory
 from django.http import (Http404, HttpResponse, HttpResponseRedirect,
                          JsonResponse)
@@ -39,7 +40,6 @@ from django.utils.translation import gettext as _
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_roll_call_emails
 from tournament.forms import (AwardForm, BaseAwardsFormset,
-                              BaseHandicapsFormset,
                               BasePlayerRoundScoreFormset, BasePrefsFormset,
                               BaseTeamsFormset, EnableCheckInForm,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
@@ -752,16 +752,13 @@ def enter_handicaps(request, tournament_id):
     # Only valid for Tournaments with handicaps
     if not t.handicaps:
         raise Http404('Tournament does not use handicaps')
-    HandicapsFormset = formset_factory(HandicapForm,
-                                       extra=0,
-                                       formset=BaseHandicapsFormset)
-    formset = HandicapsFormset(request.POST or None, tournament=t)
+    HandicapsFormset = modelformset_factory(TournamentPlayer,
+                                            form=HandicapForm,
+                                            extra=0)
+    queryset = t.tournamentplayer_set.prefetch_related('player').order_by('player')
+    formset = HandicapsFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
-        for form in formset:
-            if form.has_changed():
-                tp = form.tp
-                tp.handicap = form.cleaned_data['handicap']
-                tp.save(update_fields=['handicap'])
+        formset.save()
         # Redirect to the TP index page
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))

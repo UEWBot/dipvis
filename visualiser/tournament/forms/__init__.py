@@ -10,7 +10,7 @@ from .game_images import GameImageForm
 from .game_scoring import GameScoreForm
 from .game_seeding import BaseGamePlayersFormset, GamePlayersForm
 from .get_seven import GetSevenPlayersForm
-from .handicaps import BaseHandicapsFormset, HandicapForm
+from .handicaps import HandicapForm
 from .payments import BasePaidFormset, PaidForm
 from .players import PlayerForm
 from .pools import PoolForm
