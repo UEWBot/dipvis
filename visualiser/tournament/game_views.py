@@ -389,7 +389,7 @@ def sc_counts(request, tournament_id, game_name):
     formset = SCCountFormset(request.POST or None, prefix='scs', initial=data)
     end_form = GameEndedForm(request.POST or None,
                              prefix='end',
-                             initial={'is_finished': g.is_finished})
+                             instance=g)
     death_form = DeathYearForm(request.POST or None,
                                prefix='death',
                                initial=death_data)
@@ -475,12 +475,8 @@ def sc_counts(request, tournament_id, game_name):
             # Set the "game over" flag as appropriate
             # Game is over if it reached the final year,
             # somebody won, or the checkbox was checked
-            if end_form.cleaned_data['is_finished']:
-                g.is_finished = True
-                g.save(update_fields=['is_finished'])
-            else:
-                g.is_finished = False
-                g.save(update_fields=['is_finished'])
+            end_form.save()
+            if not end_form.cleaned_data['is_finished']:
                 # Game could still be finished for other reasons
                 g.set_is_finished()
         # Changes are likely to affect the scores

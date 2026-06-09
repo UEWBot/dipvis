@@ -21,9 +21,17 @@ Forms for game ending in the Diplomacy Tournament Visualiser.
 from django import forms
 from django.utils.translation import gettext as _
 
+from tournament.models import Game
 
-class GameEndedForm(forms.Form):
-    """Form that just provides a checkbox to indicate that a Game is over"""
-    is_finished = forms.BooleanField(label=_('Game ended'),
-                                     required=False,
-                                     initial=False)
+
+class GameEndedForm(forms.ModelForm):
+    """ModelForm that provides a checkbox to indicate that a Game is over."""
+
+    class Meta:
+        model = Game
+        fields = ('is_finished',)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['is_finished'].label = _('Game ended')
+        self.fields['is_finished'].required = False
