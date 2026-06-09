@@ -1652,18 +1652,24 @@ class Team(models.Model):
                 tp = TournamentPlayer.objects.get(tournament=self.tournament,
                                                   player=player)
             except TournamentPlayer.DoesNotExist:
-                errors.append(_('%(player)s is not registered for this tournament')
-                              % {'player': player})
+                errors.append(ValidationError(_('%(player)s is not registered for this tournament'),
+                                              code='player_not_registered',
+                                              params={'player': player,
+                                                      'player_id': player.pk}))
                 continue
 
             if tp.unranked:
-                errors.append(_('%(player)s is unranked and cannot be in a team')
-                              % {'player': player})
+                errors.append(ValidationError(_('%(player)s is unranked and cannot be in a team'),
+                                              code='player_unranked',
+                                              params={'player': player,
+                                                      'player_id': player.pk}))
 
             if Team.objects.filter(tournament=self.tournament,
                                    players=player).exclude(pk=self.pk).exists():
-                errors.append(_('%(player)s appears in multiple teams')
-                              % {'player': player})
+                errors.append(ValidationError(_('%(player)s appears in multiple teams'),
+                                              code='player_in_multiple_teams',
+                                              params={'player': player,
+                                                      'player_id': player.pk}))
 
         if errors:
             raise ValidationError({'players': errors})

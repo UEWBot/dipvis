@@ -1464,6 +1464,49 @@ class TournamentViewTests(TestCase):
         self.t2.team_size = None
         self.t2.save()
 
+    def test_enter_teams_model_player_error_targets_specific_field(self):
+        self.assertIsNone(self.t2.team_size)
+        self.t2.team_size = 3
+        self.t2.save()
+        players = list(self.t2.tournamentplayer_set.order_by('pk'))
+        tm1 = Team.objects.create(tournament=self.t2,
+                      name='Existing Team 1')
+        tm1.players.add(players[0].player)
+        tm1.players.add(players[1].player)
+        tm1.players.add(players[2].player)
+        tm2 = Team.objects.create(tournament=self.t2,
+                      name='Existing Team 2')
+        tm2.players.add(players[3].player)
+        tm2.players.add(players[4].player)
+        tm2.players.add(players[5].player)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        # Submit only one form (tm1) and steal one player from tm2.
+        # Formset-level duplicate checks cannot see unsubmitted teams,
+        # so Team.clean() should add an error to the specific player field.
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': tm1.name,
+                'form-0-player_0': str(players[0].player.pk),
+                'form-0-player_1': str(players[1].player.pk),
+                'form-0-player_2': str(players[3].player.pk),
+               }
+        response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        form = response.context['formset'].forms[0]
+        self.assertFormError(form, 'player_2',
+                             f'{players[3].player} appears in multiple teams')
+        tm1.refresh_from_db()
+        self.assertNotIn(players[3].player, tm1.players.all())
+        # Cleanup
+        self.t2.team_set.all().delete()
+        self.t2.team_size = None
+        self.t2.save()
+
     def test_enter_teams_create(self):
         """A manager can enter teams for their tournament"""
         self.assertEqual(0, self.t2.team_set.count())

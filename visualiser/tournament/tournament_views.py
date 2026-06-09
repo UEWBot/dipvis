@@ -820,12 +820,19 @@ def enter_teams(request, tournament_id):
                               'tournaments/enter_teams.html',
                               {'tournament': t,
                                'formset': formset})
-            if hasattr(exc, 'message_dict'):
-                for field_name, errors in exc.message_dict.items():
-                    # Team.clean() reports player-related issues under "players",
-                    # which is not a TeamForm field.
-                    target_field = field_name if field_name in form.fields else None
+            if hasattr(exc, 'error_dict'):
+                player_field_map = {
+                    value.pk: field_name
+                    for field_name, value in form.cleaned_data.items()
+                    if field_name.startswith('player_') and value is not None
+                }
+                for field_name, errors in exc.error_dict.items():
                     for err in errors:
+                        target_field = field_name if field_name in form.fields else None
+                        if field_name == 'players':
+                            player_id = (err.params or {}).get('player_id')
+                            if player_id in player_field_map:
+                                target_field = player_field_map[player_id]
                         form.add_error(target_field, err)
             else:
                 for err in exc.messages:
