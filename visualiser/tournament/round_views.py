@@ -661,26 +661,22 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                     g = Game.objects.get(pk=f.cleaned_data['game_id'])
                 # Have any non-player fields changed?
                 if set(f.changed_data) & non_player_fields:
-                    try:
-                        if f.cleaned_data['game_id'] is not None:
-                            # Game should exist
-                            g = Game.objects.get(pk=f.cleaned_data['game_id'])
-                            g.name = f.cleaned_data['name']
-                            g.the_set = f.cleaned_data['the_set']
-                            g.is_top_board = f.cleaned_data['top_board']
-                            g.external_url = f.cleaned_data['external_url']
-                            g.notes = f.cleaned_data['notes']
-                        else:
-                            g = Game(name=f.cleaned_data['name'],
-                                     the_round=r,
-                                     pool=pool,
-                                     the_set=f.cleaned_data['the_set'],
-                                     is_top_board = f.cleaned_data['top_board'],
-                                     external_url=f.cleaned_data['external_url'],
-                                     notes=f.cleaned_data['notes'])
-                    except KeyError:
-                        # This must be an extra, unused formset
-                        continue
+                    if f.cleaned_data['game_id'] is not None:
+                        # Game should exist
+                        g = Game.objects.get(pk=f.cleaned_data['game_id'])
+                        g.name = f.cleaned_data['name']
+                        g.the_set = f.cleaned_data['the_set']
+                        g.is_top_board = f.cleaned_data['top_board']
+                        g.external_url = f.cleaned_data['external_url']
+                        g.notes = f.cleaned_data['notes']
+                    else:
+                        g = Game(name=f.cleaned_data['name'],
+                                 the_round=r,
+                                 pool=pool,
+                                 the_set=f.cleaned_data['the_set'],
+                                 is_top_board = f.cleaned_data['top_board'],
+                                 external_url=f.cleaned_data['external_url'],
+                                 notes=f.cleaned_data['notes'])
                     try:
                         g.full_clean()
                     except ValidationError as e:
