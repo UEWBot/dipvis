@@ -78,11 +78,7 @@ def index(request, tournament_id):
         if formset.is_valid():
             for form in formset:
                 if form.has_changed():
-                    try:
-                        player = form.cleaned_data['player']
-                    except KeyError:
-                        # Empty form - nothing to do
-                        continue
+                    player = form.cleaned_data['player']
                     tp, created = TournamentPlayer.objects.get_or_create(player=player,
                                                                          tournament=t)
                     if not created:
