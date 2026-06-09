@@ -1934,6 +1934,37 @@ class RoundViewTests(TestCase):
         # Clean up
         self.r11.game_set.all().delete()
 
+    def test_create_games_hidden_field_errors_rendered(self):
+        """Hidden game_id errors should be visible in create_games template."""
+        self.assertEqual(self.r11.game_set.count(), 0)
+        powers = {self.austria: self.rp11,
+                  self.turkey: self.rp12,
+                  self.england: self.rp13,
+                  self.russia: self.rp15,
+                  self.italy: self.rp16,
+                  self.france: self.rp17,
+                  self.germany: self.rp19}
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-game_id': 'not-an-int',
+                'form-0-name': 'NewName',
+                'form-0-external_url': '',
+                'form-0-notes': '',
+                'form-0-the_set': str(self.gibsons.pk)}
+        for p, rp in powers.items():
+            data[f'form-0-{p.name}'] = str(rp.pk)
+        data = urlencode(data)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.post(reverse('create_games', args=(self.t1.pk, 1)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
+        self.assertContains(response, 'Enter a whole number.')
+
     def test_create_games_post_modify_players(self):
         """Change players or power assignments"""
         self.assertEqual(self.r11.game_set.count(), 0)

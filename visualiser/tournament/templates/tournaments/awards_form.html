@@ -19,6 +19,7 @@
       <tbody<tr>
         {{ form.non_field_errors }}
         {% for hidden in form.hidden_fields %}
+          {{ hidden.errors.as_ul }}
           {{ hidden }}
         {% endfor %}
         {% for field in form.visible_fields %}

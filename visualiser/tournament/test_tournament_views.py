@@ -1993,6 +1993,28 @@ class TournamentViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournaments/awards_form.html')
         self.assertContains(response, 'Select a valid choice')
 
+    def test_enter_awards_hidden_field_errors_rendered(self):
+        """Hidden field validation errors should be visible to users."""
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        tp = self.t1.tournamentplayer_set.first()
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, a in enumerate(self.t1.awards.all()):
+            # Omit one hidden award field to trigger a hidden-field validation error.
+            if i != 0:
+                data[f'form-{i}-award'] = str(a.id)
+            data[f'form-{i}-players'] = [str(tp.id)]
+        i += 1
+        data['form-TOTAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = f'{i}'
+        data = urlencode(data, doseq=True)
+        response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards_form.html')
+        self.assertContains(response, 'This field is required.')
+
     def test_tournament_wdd_awards(self):
         """Should be viewable without logging in"""
         response = self.client.get(reverse('tournament_wdd_awards',

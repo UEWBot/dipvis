@@ -25,6 +25,7 @@
                 <td>
                     {% if forloop.first %}
                         {% for hidden in form.hidden_fields %}
+                            {{ hidden.errors.as_ul }}
                             {{ hidden }}
                         {% endfor %}
                     {% endif %}
@@ -40,6 +41,7 @@
                 <td>
                     {% if forloop.first %}
                         {% for hidden in death_form.hidden_fields %}
+                            {{ hidden.errors.as_ul }}
                             {{ hidden }}
                         {% endfor %}
                     {% endif %}
