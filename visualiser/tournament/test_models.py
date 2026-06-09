@@ -18,10 +18,13 @@ from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
 from unittest import skip
 
+from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.db.utils import IntegrityError
+from django.forms import modelform_factory
 from django.test import TestCase, override_settings, tag
 
 from tournament import backstabbr, webdip
@@ -47,6 +50,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                validate_round_scoring_system,
                                validate_tournament_scoring_system,
                                validate_vote_count)
+from tournament.admin import TournamentAdmin
 from tournament.players import MASK_ALL_BG, Player
 
 HOURS_8 = timedelta(hours=8)
@@ -5035,6 +5039,61 @@ class TournamentTests(TestCase):
                          'incompatible_scoring_systems')
         self.assertEqual(context.exception.error_dict['tournament_scoring_system'][0].code,
                          'incompatible_scoring_systems')
+
+    def test_tournament_modelform_incompatible_valid_scoring_systems(self):
+        today = date.today()
+        TournamentForm = modelform_factory(Tournament,
+                                           fields=['name',
+                                                   'start_date',
+                                                   'end_date',
+                                                   'round_scoring_system',
+                                                   'tournament_scoring_system',
+                                                   'draw_secrecy'])
+        form = TournamentForm(data={'name': 'Incompatible scoring systems',
+                                    'start_date': today,
+                                    'end_date': today,
+                                    'round_scoring_system': NO_SCORING_SYSTEM_STR,
+                                    'tournament_scoring_system': 'Sum all round scores',
+                                    'draw_secrecy': DrawSecrecy.SECRET})
+        self.assertFalse(form.is_valid())
+        self.assertIn('round_scoring_system', form.errors)
+        self.assertIn('tournament_scoring_system', form.errors)
+
+    def test_tournament_admin_form_incompatible_valid_scoring_systems(self):
+        today = date.today()
+        manager = User.objects.create_user(username='admin-form-manager')
+        award = Award.objects.create(name='Admin Form Award',
+                                     description='Used by admin form test')
+        admin_form_cls = TournamentAdmin(Tournament, AdminSite()).get_form(request=None)
+        form = admin_form_cls(data={'name': 'Incompatible scoring systems admin',
+                                    'start_date': today,
+                                    'end_date': today,
+                                    'team_size': '',
+                                    'num_games_in_team_score': '',
+                                    'seed_games': 'on',
+                                    'power_assignment': PowerAssignMethods.AUTO,
+                                    'tournament_scoring_system': 'Sum all round scores',
+                                    'handicaps': '',
+                                    'round_scoring_system': NO_SCORING_SYSTEM_STR,
+                                    'non_player_round_score': '0.0',
+                                    'non_player_round_score_once': '',
+                                    'show_current_scores': 'on',
+                                    'draw_secrecy': DrawSecrecy.SECRET,
+                                    'best_country_criterion': BestCountryCriteria.SCORE,
+                                    'discord_url': '',
+                                    'is_published': '',
+                                    'delay_game_url_publication': '',
+                                    'managers': [str(manager.pk)],
+                                    'editable': 'on',
+                                    'no_email': '',
+                                    'wdd_tournament_id': '',
+                                    'wdr_tournament_id': '',
+                                    'awards': [str(award.pk)],
+                                    'format': Formats.FTF,
+                                    'location': ''})
+        self.assertFalse(form.is_valid())
+        self.assertIn('round_scoring_system', form.errors)
+        self.assertIn('tournament_scoring_system', form.errors)
 
     def test_tournament_clean_sum_1(self):
         today = date.today()
