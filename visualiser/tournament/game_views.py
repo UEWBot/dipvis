@@ -394,11 +394,7 @@ def sc_counts(request, tournament_id, game_name):
             with transaction.atomic():
                 for form in formset:
                     if form.has_changed():
-                        try:
-                            year = form.cleaned_data['year']
-                        except KeyError:
-                            # Must be one of the extra forms, still blank
-                            continue
+                        year = form.cleaned_data['year']
                         with transaction.atomic():
                             for name, value in form.cleaned_data.items():
                                 if value is None:
