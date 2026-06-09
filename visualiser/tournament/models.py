@@ -1966,7 +1966,17 @@ class SeederBias(models.Model):
         All players are from the same Tournament.
         """
         if self.player1.tournament != self.player2.tournament:
-            raise ValidationError(_('The players must be playing the same tournament'))
+            params = {'player1_tournament_id': self.player1.tournament_id,
+                      'player2_tournament_id': self.player2.tournament_id}
+            message = _('The players must be playing the same tournament')
+            raise ValidationError({
+                'player1': ValidationError(message,
+                                           code='different_tournaments',
+                                           params=params),
+                'player2': ValidationError(message,
+                                           code='different_tournaments',
+                                           params=params),
+            })
 
 
 class Preference(models.Model):

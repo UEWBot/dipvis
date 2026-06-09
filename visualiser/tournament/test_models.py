@@ -5723,7 +5723,14 @@ class SeederBiasTests(TestCase):
         tp2 = t.tournamentplayer_set.first()
         sb = SeederBias(player1=tp1,
                         player2=tp2)
-        self.assertRaises(ValidationError, sb.clean)
+        with self.assertRaises(ValidationError) as context:
+            sb.clean()
+        self.assertIn('player1', context.exception.message_dict)
+        self.assertIn('player2', context.exception.message_dict)
+        self.assertEqual(context.exception.error_dict['player1'][0].code,
+                         'different_tournaments')
+        self.assertEqual(context.exception.error_dict['player2'][0].code,
+                         'different_tournaments')
 
     def test_seederbias_clean_ok(self):
         t = Tournament.objects.get(name='t1')
