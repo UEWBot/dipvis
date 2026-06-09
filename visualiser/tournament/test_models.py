@@ -8592,7 +8592,12 @@ class DrawProposalTests(TestCase):
                            season=Seasons.FALL,
                            passed=True,
                            proposer=self.austria)
-        self.assertRaises(ValidationError, dp2.clean)
+        with self.assertRaises(ValidationError) as context:
+            dp2.clean()
+        err = context.exception.error_list[0]
+        self.assertEqual(err.code, 'duplicate_successful_draw_proposal')
+        self.assertEqual(err.params['existing_proposal_id'], dp1.pk)
+        self.assertEqual(err.params['game_id'], g.pk)
         # Clean up
         dp1.delete()
         g.is_finished = done
@@ -8788,7 +8793,12 @@ class DrawProposalTests(TestCase):
                            season=Seasons.FALL,
                            proposer=self.austria,
                            votes_in_favour=7)
-        self.assertRaises(ValidationError, dp2.clean)
+        with self.assertRaises(ValidationError) as context:
+            dp2.clean()
+        err = context.exception.error_list[0]
+        self.assertEqual(err.code, 'duplicate_successful_draw_proposal')
+        self.assertEqual(err.params['existing_proposal_id'], dp1.pk)
+        self.assertEqual(err.params['game_id'], g.pk)
         dp1.delete()
 
     def test_draw_proposal_clean_votes_in_favour_too_many(self):

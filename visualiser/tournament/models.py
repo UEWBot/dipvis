@@ -2887,7 +2887,10 @@ class DrawProposal(models.Model):
                 p = DrawProposal.objects.get(game=self.game,
                                              passed=True)
                 if p != self:
-                    raise ValidationError(_(u'Game already has a successful draw proposal'))
+                    raise ValidationError(_(u'Game already has a successful draw proposal'),
+                                          code='duplicate_successful_draw_proposal',
+                                          params={'existing_proposal_id': p.pk,
+                                                  'game_id': self.game_id})
             except DrawProposal.DoesNotExist:
                 pass
         # No successful proposal prior to the latest SC count
