@@ -5028,7 +5028,13 @@ class TournamentTests(TestCase):
         with self.assertRaises(ValidationError) as context:
             tournament.full_clean()
 
-        self.assertIn('__all__', context.exception.message_dict)
+        self.assertIn('round_scoring_system', context.exception.message_dict)
+        self.assertIn('tournament_scoring_system', context.exception.message_dict)
+
+        self.assertEqual(context.exception.error_dict['round_scoring_system'][0].code,
+                         'incompatible_scoring_systems')
+        self.assertEqual(context.exception.error_dict['tournament_scoring_system'][0].code,
+                         'incompatible_scoring_systems')
 
     def test_tournament_clean_sum_1(self):
         today = date.today()

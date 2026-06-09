@@ -1048,7 +1048,21 @@ class Tournament(models.Model):
             return
 
         if not compatible:
-            raise ValidationError(_('The round and tournament scoring systems are not compatible'))
+            # Attach this to both fields so forms can highlight each one.
+            raise ValidationError({
+                'round_scoring_system': ValidationError(
+                    _('The round and tournament scoring systems are not compatible'),
+                    code='incompatible_scoring_systems',
+                    params={'round_scoring_system': self.round_scoring_system,
+                            'tournament_scoring_system': self.tournament_scoring_system}
+                ),
+                'tournament_scoring_system': ValidationError(
+                    _('The round and tournament scoring systems are not compatible'),
+                    code='incompatible_scoring_systems',
+                    params={'round_scoring_system': self.round_scoring_system,
+                            'tournament_scoring_system': self.tournament_scoring_system}
+                ),
+            })
 
     def powers_assigned_from_prefs(self):
         """
