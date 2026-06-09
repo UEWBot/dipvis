@@ -71,8 +71,9 @@ class TeamForm(forms.Form):
                 continue
         for p in players:
             if p and (players.count(p) > 1):
-                raise forms.ValidationError(_('Player %(player)s appears more than once')
-                                            % {'player': p})
+                raise forms.ValidationError(_('Player %(player)s appears more than once'),
+                                            code='duplicate_player_in_team',
+                                            params={'player': p})
         return cleaned_data
 
 
@@ -120,8 +121,9 @@ class BaseTeamsFormset(BaseFormSet):
                 names.append(name)
         for name in names:
             if names.count(name) > 1:
-                raise forms.ValidationError(_('Team %(team)s appears more than once')
-                                            % {'team': name})
+                raise forms.ValidationError(_('Team %(team)s appears more than once'),
+                                            code='duplicate_team_name',
+                                            params={'team': name})
         # Any duplicates within the page ?
         players = []
         for form in self.forms:
@@ -129,5 +131,6 @@ class BaseTeamsFormset(BaseFormSet):
                 players.append(form.cleaned_data[f'player_{n}'])
         for p in players:
             if p and (players.count(p) > 1):
-                raise forms.ValidationError(_('Player %(player)s appears in multiple teams')
-                                            % {'player': p})
+                raise forms.ValidationError(_('Player %(player)s appears in multiple teams'),
+                                            code='duplicate_player_across_teams',
+                                            params={'player': p})

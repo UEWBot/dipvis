@@ -81,8 +81,9 @@ class PowerAssignForm(forms.Form):
             if power is None:
                 return cleaned_data
             if power in powers:
-                raise forms.ValidationError(_('Power %(power)s appears more than once')
-                                            % {'power': power})
+                raise forms.ValidationError(_('Power %(power)s appears more than once'),
+                                            code='duplicate_power_assignment',
+                                            params={'power': power})
             powers.append(power)
 
         return cleaned_data
@@ -111,4 +112,5 @@ class BasePowerAssignFormset(BaseFormSet):
         # Any duplicates within the page ?
         names = [form.cleaned_data['name'] for form in self.forms]
         if len(set(names)) != len(names):
-            raise forms.ValidationError(_('Game names must be unique within the tournament'))
+            raise forms.ValidationError(_('Game names must be unique within the tournament'),
+                                        code='duplicate_game_names')

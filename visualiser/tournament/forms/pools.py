@@ -53,6 +53,7 @@ class PoolForm(forms.Form):
                 continue
         for rp in r_players:
             if rp and (r_players.count(rp) > 1):
-                raise forms.ValidationError(_('Player %(player)s appears more than once')
-                                            % {'player': rp.player})
+                raise forms.ValidationError(_('Player %(player)s appears more than once'),
+                                            code='duplicate_player_in_pool',
+                                            params={'player': rp.player})
         return cleaned_data

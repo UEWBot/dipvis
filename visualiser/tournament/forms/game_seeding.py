@@ -98,8 +98,9 @@ class GamePlayersForm(forms.Form):
             if r_player is None:
                 return cleaned_data
             if r_player in r_players:
-                raise forms.ValidationError(_('Player %(player)s appears more than once')
-                                            % {'player': r_player.player})
+                raise forms.ValidationError(_('Player %(player)s appears more than once'),
+                                            code='duplicate_player_in_game',
+                                            params={'player': r_player.player})
             r_players.append(r_player)
         if self.the_round.is_team_round:
             teams = []
@@ -109,8 +110,9 @@ class GamePlayersForm(forms.Form):
                 except Team.DoesNotExist:
                     continue
                 if team in teams:
-                    raise forms.ValidationError(_('Multiple players from team %(team)s')
-                                                % {'team': team.name})
+                    raise forms.ValidationError(_('Multiple players from team %(team)s'),
+                                                code='duplicate_team_in_game',
+                                                params={'team': team.name})
                 teams.append(team)
 
         return cleaned_data
@@ -143,4 +145,5 @@ class BaseGamePlayersFormset(BaseFormSet):
                 # This happens when we have a form left blank
                 pass
         if len(set(names)) != len(names):
-            raise forms.ValidationError(_('Game names must be unique within the tournament'))
+            raise forms.ValidationError(_('Game names must be unique within the tournament'),
+                                        code='duplicate_game_names')

@@ -57,8 +57,9 @@ class BaseSCOwnerFormset(BaseFormSet):
                 # Blank form
                 continue
             if year in years:
-                raise forms.ValidationError(_('Year %(year)s appears more than once')
-                                            % {'year': year})
+                raise forms.ValidationError(_('Year %(year)s appears more than once'),
+                                            code='duplicate_year',
+                                            params={'year': year})
             years.append(year)
         years.sort()
         # Check that SCs never become neutral

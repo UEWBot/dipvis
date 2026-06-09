@@ -62,10 +62,11 @@ class SCCountForm(forms.Form):
             else:
                 total_scs += dots
         if total_scs > TOTAL_SCS:
-            raise forms.ValidationError(_("Total SC count for %(year)d is %(dots)d, more than %(max)d")
-                                        % {'year': year,
-                                           'dots': total_scs,
-                                           'max': TOTAL_SCS})
+            raise forms.ValidationError(_("Total SC count for %(year)d is %(dots)d, more than %(max)d"),
+                                        code='too_many_supply_centres',
+                                        params={'year': year,
+                                                'dots': total_scs,
+                                                'max': TOTAL_SCS})
         if got_full_set:
             # Add a pseudo-field with the number of neutrals, for convenience
             cleaned_data['neutral'] = TOTAL_SCS - total_scs
@@ -90,8 +91,9 @@ class BaseSCCountFormset(BaseFormSet):
                 # Blank form
                 continue
             if year in years:
-                raise forms.ValidationError(_('Year %(year)s appears more than once')
-                                            % {'year': year})
+                raise forms.ValidationError(_('Year %(year)s appears more than once'),
+                                            code='duplicate_year',
+                                            params={'year': year})
             years.add(year)
             # Remember the number of neutrals left
             try:
@@ -103,8 +105,9 @@ class BaseSCCountFormset(BaseFormSet):
         prev_neutrals = TOTAL_SCS
         for year in sorted(neutrals.keys()):
             if neutrals[year] > prev_neutrals:
-                raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d')
-                                            % {'before': prev_neutrals,
-                                               'after': neutrals[year],
-                                               'year': year})
+                raise forms.ValidationError(_('Neutrals increases from %(before)d to %(after)d in %(year)d'),
+                                            code='neutrals_increase',
+                                            params={'before': prev_neutrals,
+                                                    'after': neutrals[year],
+                                                    'year': year})
             prev_neutrals = neutrals[year]

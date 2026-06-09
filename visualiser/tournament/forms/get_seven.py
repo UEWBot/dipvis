@@ -124,8 +124,9 @@ class GetSevenPlayersForm(forms.Form):
             if rp is None:
                 continue
             if rp in round_players:
-                raise forms.ValidationError(_('Player %(player)s appears more than once')
-                                            % {'player': rp.player})
+                raise forms.ValidationError(_('Player %(player)s appears more than once'),
+                                            code='duplicate_round_player',
+                                            params={'player': rp.player})
             round_players.append(rp)
         return len(round_players)
 
@@ -144,20 +145,24 @@ class GetSevenPlayersForm(forms.Form):
         doubles = self._check_duplicates(cleaned_data, 'double', self.doubles)
 
         if (doubles > 0) and (sitters > 0):
-            raise forms.ValidationError(_('Either have players sit out the round or have players play two games'))
+            raise forms.ValidationError(_('Either have players sit out the round or have players play two games'),
+                                        code='mixed_sitters_and_doubles')
 
         if 0 < standbys < self.standbys:
-            raise forms.ValidationError(_('Too few standby players selected to play. Got %(actual)d, expected %(expected)d')
-                                        % {'actual': standbys,
-                                           'expected': self.standbys})
+            raise forms.ValidationError(_('Too few standby players selected to play. Got %(actual)d, expected %(expected)d'),
+                                        code='too_few_standbys',
+                                        params={'actual': standbys,
+                                                'expected': self.standbys})
         if 0 < sitters < self.sitters:
-            raise forms.ValidationError(_('Too few players sitting out games. Got %(actual)d, expected %(expected)d')
-                                        % {'actual': sitters,
-                                           'expected': self.sitters})
+            raise forms.ValidationError(_('Too few players sitting out games. Got %(actual)d, expected %(expected)d'),
+                                        code='too_few_sitters',
+                                        params={'actual': sitters,
+                                                'expected': self.sitters})
         if 0 < doubles < self.doubles:
-            raise forms.ValidationError(_('Too few players playing two games. Got %(actual)d, expected %(expected)d')
-                                        % {'actual': doubles,
-                                           'expected': self.doubles})
+            raise forms.ValidationError(_('Too few players playing two games. Got %(actual)d, expected %(expected)d'),
+                                        code='too_few_doubles',
+                                        params={'actual': doubles,
+                                                'expected': self.doubles})
         # Note that we always require all standbys to play before anyone is asked to play
         # two boards, so there's no danger of a standby player being listed in doubles
         # but not in standbys
