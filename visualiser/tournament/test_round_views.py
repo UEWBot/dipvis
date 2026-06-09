@@ -1702,6 +1702,44 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
+    def test_seed_games_post_duplicate_game_name_in_tournament(self):
+        """Model-level uniqueness should be handled by the full_clean() error path."""
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # Existing game in another round of the same tournament.
+        duplicate_name = self.r31.game_set.first().name
+        # Game in target round that we'll try to rename to the duplicate.
+        g = Game.objects.create(name='T3R2G1',
+                                started_at=self.r32.start,
+                                is_finished=True,
+                                the_round=self.r32,
+                                the_set=GameSet.objects.get(name='Avalon Hill'))
+        GamePlayer.objects.create(player=self.p1, game=g, power=self.turkey)
+        GamePlayer.objects.create(player=self.p3, game=g, power=self.russia)
+        GamePlayer.objects.create(player=self.p4, game=g, power=self.italy)
+        GamePlayer.objects.create(player=self.p5, game=g, power=self.germany)
+        GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
+        GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
+        GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': duplicate_name,
+                'form-0-the_set': str(self.gibsons.pk)}
+        for gp in g.gameplayer_set.all():
+            data[f'form-0-{gp.pk}'] = str(gp.power.pk)
+        data = urlencode(data)
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
+        self.assertContains(response, 'Game names must be unique within the tournament')
+        # Clean up
+        g.delete()
+
     def test_seed_games_post_invalid_power(self):
         """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
