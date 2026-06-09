@@ -712,6 +712,25 @@ class TournamentPlayerViewTests(TestCase):
         self.u3.user_permissions.remove(perm)
         self.u3.save()
 
+    def test_payments_form_errors_rendered(self):
+        """Invalid POST should display formset errors to the user."""
+        perm = Permission.objects.get(name='Can change tournament player')
+        self.u3.user_permissions.add(perm)
+        self.u3.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        url = reverse('tournament_player_payments', args=(self.t2.pk,))
+        # Partial form data makes the formset bound but invalid (missing management form).
+        response = self.client.post(url,
+                        'form-0-paid=on',
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/payments.html')
+        self.assertContains(response,
+                            'ManagementForm data is missing or has been tampered with')
+        self.u3.user_permissions.remove(perm)
+        self.u3.save()
+
     def test_details_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
         response = self.client.get(reverse('tournament_player_detail',

@@ -1248,6 +1248,31 @@ class TournamentViewTests(TestCase):
         self.t2.handicaps = False
         self.t2.save()
 
+    def test_enter_handicaps_form_errors_rendered(self):
+        """Invalid handicap values should be shown as field errors."""
+        self.t2.handicaps = True
+        self.t2.save()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        players = list(self.t2.tournamentplayer_set.all())
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, tp in enumerate(players):
+            if i == 0:
+                data[f'form-{i}-handicap'] = 'not-a-number'
+            else:
+                data[f'form-{i}-handicap'] = str(tp.handicap)
+        data['form-TOTAL_FORMS'] = str(len(players))
+        data['form-INITIAL_FORMS'] = str(len(players))
+        data = urlencode(data)
+        response = self.client.post(reverse('enter_handicaps', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_handicaps.html')
+        self.assertContains(response, 'Enter a number.')
+        self.t2.handicaps = False
+        self.t2.save()
+
     def test_teams(self):
         self.t1.team_size = 3
         self.t1.save()
@@ -1614,6 +1639,28 @@ class TournamentViewTests(TestCase):
             self.assertEqual(tp.prefs_string(), expected[tp.id])
         # Clean up
         Preference.objects.filter(player__tournament=self.t2).all().delete()
+
+    def test_enter_prefs_form_errors_rendered(self):
+        """Invalid preference strings should be shown as field errors."""
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        players = list(self.t2.tournamentplayer_set.all())
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, _tp in enumerate(players):
+            if i == 0:
+                data[f'form-{i}-prefs'] = 'X'
+            else:
+                data[f'form-{i}-prefs'] = 'FART'
+        data['form-TOTAL_FORMS'] = str(len(players))
+        data['form-INITIAL_FORMS'] = str(len(players))
+        data = urlencode(data)
+
+        response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_prefs.html')
+        self.assertContains(response, 'contains invalid character(s)')
 
     def test_upload_prefs_not_logged_in(self):
         response = self.client.get(reverse('upload_prefs',
