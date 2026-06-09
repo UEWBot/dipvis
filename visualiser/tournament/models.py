@@ -1633,15 +1633,40 @@ class Team(models.Model):
         Validate the object.
 
         Tournament uses teams.
-
-        Note that it doesn't check for any of the following:
-        - Too many players in the Team.
-        - Players are registered in the Tournament.
-        - One player in multiple Teams
-        - Unranked player in a Team
         """
         if not self.tournament.team_size:
             raise ValidationError(_("Tournament doesn't use teams"))
+
+        # Many-to-many players only exist on saved Team instances.
+        if self.pk is None:
+            return
+
+        players = list(self.players.all())
+        errors = []
+
+        if len(players) > self.tournament.team_size:
+            errors.append(_('Team has too many players'))
+
+        for player in players:
+            try:
+                tp = TournamentPlayer.objects.get(tournament=self.tournament,
+                                                  player=player)
+            except TournamentPlayer.DoesNotExist:
+                errors.append(_('%(player)s is not registered for this tournament')
+                              % {'player': player})
+                continue
+
+            if tp.unranked:
+                errors.append(_('%(player)s is unranked and cannot be in a team')
+                              % {'player': player})
+
+            if Team.objects.filter(tournament=self.tournament,
+                                   players=player).exclude(pk=self.pk).exists():
+                errors.append(_('%(player)s appears in multiple teams')
+                              % {'player': player})
+
+        if errors:
+            raise ValidationError({'players': errors})
 
     def gameplayers(self):
         """

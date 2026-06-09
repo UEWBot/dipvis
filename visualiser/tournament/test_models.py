@@ -2824,6 +2824,46 @@ class TeamTests(TestCase):
         self.tm.players.remove(self.p2)
         self.tm.players.remove(self.p4)
 
+    def test_clean_too_many_players(self):
+        self.tm.players.add(self.p1)
+        self.tm.players.add(self.p2)
+        self.tm.players.add(self.p3)
+        with self.assertRaises(ValidationError) as cm:
+            self.tm.clean()
+        self.assertIn('Team has too many players', str(cm.exception))
+        # Cleanup
+        self.tm.players.remove(self.p1)
+        self.tm.players.remove(self.p2)
+        self.tm.players.remove(self.p3)
+
+    def test_clean_player_not_registered(self):
+        self.tm.players.add(self.p9)
+        with self.assertRaises(ValidationError) as cm:
+            self.tm.clean()
+        self.assertIn('is not registered for this tournament', str(cm.exception))
+        # Cleanup
+        self.tm.players.remove(self.p9)
+
+    def test_clean_player_unranked(self):
+        self.tm.players.add(self.p5)
+        with self.assertRaises(ValidationError) as cm:
+            self.tm.clean()
+        self.assertIn('is unranked and cannot be in a team', str(cm.exception))
+        # Cleanup
+        self.tm.players.remove(self.p5)
+
+    def test_clean_player_in_multiple_teams(self):
+        other = Team.objects.create(tournament=self.t,
+                                    name='Other team')
+        other.players.add(self.p3)
+        self.tm.players.add(self.p3)
+        with self.assertRaises(ValidationError) as cm:
+            self.tm.clean()
+        self.assertIn('appears in multiple teams', str(cm.exception))
+        # Cleanup
+        self.tm.players.remove(self.p3)
+        other.delete()
+
     # Team.__str__()
     def test_team_str(self):
         s = str(self.tm)
