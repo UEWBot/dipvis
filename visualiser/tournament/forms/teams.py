@@ -107,11 +107,20 @@ class BaseTeamsFormset(BaseFormSet):
         """
         Check for problems with the list of teams
 
-        Checks for players in multiple teams
+        Checks for duplicate team names and players in multiple teams.
         """
         if any(self.errors):
             # One or more forms is invalid anyway
             return
+        names = []
+        for form in self.forms:
+            name = form.cleaned_data.get('name')
+            if name:
+                names.append(name)
+        for name in names:
+            if names.count(name) > 1:
+                raise forms.ValidationError(_('Team %(team)s appears more than once')
+                                            % {'team': name})
         # Any duplicates within the page ?
         players = []
         for form in self.forms:

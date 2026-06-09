@@ -1388,6 +1388,51 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
+    def test_enter_teams_duplicate_team_names(self):
+        self.assertIsNone(self.t2.team_size)
+        self.t2.team_size = 3
+        self.t2.save()
+        players = list(self.t2.tournamentplayer_set.order_by('pk'))
+        tm1 = Team.objects.create(tournament=self.t2,
+                      name='Existing Team 1')
+        tm1.players.add(players[0].player)
+        tm1.players.add(players[1].player)
+        tm1.players.add(players[2].player)
+        tm2 = Team.objects.create(tournament=self.t2,
+                      name='Existing Team 2')
+        tm2.players.add(players[3].player)
+        tm2.players.add(players[4].player)
+        tm2.players.add(players[5].player)
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        # Submit two existing teams but change team #2 to duplicate team #1's name.
+        # Formset validation should catch duplicate names before model save.
+        data = {'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+            'form-0-name': tm1.name,
+            'form-0-player_0': str(players[0].player.pk),
+            'form-0-player_1': str(players[1].player.pk),
+            'form-0-player_2': str(players[2].player.pk),
+            'form-1-name': tm1.name,
+            'form-1-player_0': str(players[3].player.pk),
+            'form-1-player_1': str(players[4].player.pk),
+            'form-1-player_2': str(players[5].player.pk),
+               }
+        response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'appears more than once')
+        tm2.refresh_from_db()
+        self.assertEqual(tm2.name, 'Existing Team 2')
+        self.assertEqual(self.t2.team_set.count(), 2)
+        # Cleanup
+        self.t2.team_set.all().delete()
+        self.t2.team_size = None
+        self.t2.save()
+
     def test_enter_teams_create(self):
         """A manager can enter teams for their tournament"""
         self.assertEqual(0, self.t2.team_set.count())

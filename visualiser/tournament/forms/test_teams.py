@@ -224,3 +224,23 @@ class TeamsFormsetTest(TestCase):
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
         self.assertEqual(formset.total_error_count(), 1)
         self.assertFormSetError(formset, None, None, 'Player Arthur Bottom appears in multiple teams')
+
+    def test_teams_duplicate_name(self):
+        """Team names should be unique within the submitted formset"""
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.p1.pk),
+                'form-0-player_1': str(self.p2.pk),
+                'form-1-name': 'Team 0',
+                'form-1-player_0': str(self.p3.pk),
+                'form-1-player_1': str(self.p4.pk),
+               }
+        formset = self.TeamsFormset(data, tournament=self.t)
+        self.assertIs(False, formset.is_valid())
+        # Should have no form errors, one formset error
+        self.assertEqual(sum(len(err) for err in formset.errors), 0)
+        self.assertEqual(formset.total_error_count(), 1)
+        self.assertFormSetError(formset, None, None, 'Team Team 0 appears more than once')
