@@ -39,7 +39,8 @@ class TeamForm(forms.Form):
         self.tournament = kwargs.pop('tournament')
         self.team = kwargs.pop('team', None)
         # Create an appropriate number of player fields
-        queryset = Player.objects.filter(tournamentplayer__in=self.tournament.tournamentplayer_set.order_by()).distinct()
+        queryset = Player.objects.filter(tournamentplayer__tournament=self.tournament,
+                         tournamentplayer__unranked=False).distinct()
         # Overridable default initial value, like ModelForm
         # TODO This is dead code if we only ever use the formset
         if 'initial' not in kwargs.keys():

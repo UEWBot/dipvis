@@ -1388,6 +1388,37 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
+    def test_enter_teams_rejects_unranked_player(self):
+        self.assertEqual(0, self.t2.team_set.count())
+        self.assertIsNone(self.t2.team_size)
+        self.t2.team_size = 3
+        self.t2.save()
+        self.tp29.unranked = True
+        self.tp29.save(update_fields=['unranked'])
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        data = {'form-TOTAL_FORMS': '1',
+                'form-INITIAL_FORMS': '0',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.tp29.player.pk),
+                'form-0-player_1': str(self.p1.pk),
+                'form-0-player_2': str(self.p3.pk),
+               }
+        data = urlencode(data)
+        response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
+        self.assertEqual(0, self.t2.team_set.count())
+        # Cleanup
+        self.tp29.unranked = False
+        self.tp29.save(update_fields=['unranked'])
+        self.t2.team_size = None
+        self.t2.save()
+
     def test_enter_teams_duplicate_team_names(self):
         self.assertIsNone(self.t2.team_size)
         self.t2.team_size = 3

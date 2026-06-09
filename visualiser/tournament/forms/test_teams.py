@@ -89,6 +89,20 @@ class TeamFormTest(TestCase):
                              'player_2',
                              'Select a valid choice. That choice is not one of the available choices.')
 
+    def test_team_unranked_player(self):
+        """Unranked players should not be assignable to teams"""
+        tp = TournamentPlayer.objects.get(tournament=self.t,
+                                          player=self.p1)
+        tp.unranked = True
+        tp.save(update_fields=['unranked'])
+        form = TeamForm(tournament=self.t, data={'name': 'Sausages',
+                                                 'player_0': str(self.p1.pk),
+                                                 'player_1': str(self.p2.pk)})
+        self.assertIs(False, form.is_valid())
+        self.assertFormError(form,
+                             'player_0',
+                             'Select a valid choice. That choice is not one of the available choices.')
+
     def test_team_form_has_changed_implicit_initial_1(self):
         form = TeamForm(tournament=self.t,
                         team=self.tm,
