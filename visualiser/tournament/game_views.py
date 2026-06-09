@@ -323,11 +323,7 @@ def sc_owners(request, tournament_id, game_name):
     if formset.is_valid():
         for form in formset:
             if form.has_changed():
-                try:
-                    year = form.cleaned_data['year']
-                except KeyError:
-                    # Must be one of the extra forms, still blank
-                    continue
+                year = form.cleaned_data['year']
                 if year is None:
                     continue
                 with transaction.atomic():
