@@ -28,7 +28,8 @@ import matplotlib.ticker as ticker
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
-from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.db import IntegrityError, transaction
 from django.forms import modelformset_factory
 from django.forms.formsets import formset_factory
 from django.http import (Http404, HttpResponse, HttpResponseRedirect,
@@ -791,29 +792,48 @@ def enter_teams(request, tournament_id):
                                    formset=BaseTeamsFormset)
     formset = TeamsFormset(request.POST or None, tournament=t)
     if formset.is_valid():
-        for form in formset:
-            if form.has_changed():
-                tm = form.team
-                if tm:
-                    tm.name = form.cleaned_data['name']
-                    tm.save()
-                else:
-                    tm = Team.objects.create(tournament=t,
-                                             name=form.cleaned_data['name'])
-                # Put together a list of players that should be on the team
-                players = []
-                for r_name, value in form.cleaned_data.items():
-                    if r_name.startswith('player_'):
-                        players.append(value)
-                # Compare against the players currently on the team
-                for p in tm.players.all():
-                    if p in players:
-                        players.remove(p)
-                    else:
-                        tm.players.remove(p)
-                # Add any missing players
-                for p in players:
-                    tm.players.add(p)
+        try:
+            with transaction.atomic():
+                for form in formset:
+                    if form.has_changed():
+                        tm = form.team
+                        if tm:
+                            tm.name = form.cleaned_data['name']
+                        else:
+                            tm = Team(tournament=t,
+                                      name=form.cleaned_data['name'])
+                        # Validate basic model fields/constraints before write.
+                        tm.full_clean()
+                        tm.save()
+                        # Put together a list of players that should be on the team
+                        players = []
+                        for r_name, value in form.cleaned_data.items():
+                            if r_name.startswith('player_') and value is not None:
+                                players.append(value)
+                        # Update membership and enforce model-level validation.
+                        tm.players.set(players)
+                        tm.full_clean()
+        except (IntegrityError, ValidationError) as exc:
+            if isinstance(exc, IntegrityError):
+                form.add_error(None, _('Team could not be saved due to a database constraint.'))
+                return render(request,
+                              'tournaments/enter_teams.html',
+                              {'tournament': t,
+                               'formset': formset})
+            if hasattr(exc, 'message_dict'):
+                for field_name, errors in exc.message_dict.items():
+                    # Team.clean() reports player-related issues under "players",
+                    # which is not a TeamForm field.
+                    target_field = field_name if field_name in form.fields else None
+                    for err in errors:
+                        form.add_error(target_field, err)
+            else:
+                for err in exc.messages:
+                    form.add_error(None, err)
+            return render(request,
+                          'tournaments/enter_teams.html',
+                          {'tournament': t,
+                           'formset': formset})
         # Redirect to the teams page
         return HttpResponseRedirect(reverse('teams',
                                             args=(tournament_id,)))
