@@ -125,10 +125,10 @@ class PrefsFormsetTest(TestCase):
         self.assertIn(self.tp2, tps)
 
     def test_prefs_formset_initial(self):
-        initial = []
-        initial.append({'prefs': 'EF'})
+        initial = [{'prefs': 'EF'},
+                   {'prefs': 'AT'}]
         formset = self.PrefsFormset(tournament=self.t, initial=initial)
         # Explicit initial should override implicit
-        for form in formset:
-            self.assertEqual(form['prefs'].initial, 'EF')
+        for i, form in enumerate(formset):
+            self.assertEqual(form['prefs'].initial, initial[i]['prefs'])
         self.assertEqual(len(formset), len(initial))

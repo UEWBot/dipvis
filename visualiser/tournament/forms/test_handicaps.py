@@ -119,10 +119,10 @@ class HandicapsFormsetTest(TestCase):
         self.assertIn(self.tp2, tps)
 
     def test_handicaps_formset_initial(self):
-        initial = []
-        initial.append({'handicap': '10.0'})
+        initial = [{'handicap': '10.0'},
+                   {'handicap': '20.0'}]
         formset = self.HandicapsFormset(tournament=self.t, initial=initial)
         # Explicit initial should override implicit
-        for form in formset:
-            self.assertEqual(form['handicap'].initial, '10.0')
+        for i, form in enumerate(formset):
+            self.assertEqual(form['handicap'].initial, initial[i]['handicap'])
         self.assertEqual(len(formset), len(initial))

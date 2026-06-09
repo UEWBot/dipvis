@@ -144,10 +144,18 @@ class AwardsFormsetTest(TestCase):
         self.assertIn(self.a3.id, awards)
 
     def test_awards_formset_initial(self):
+        awards = list(self.t.awards.all())
+        expected_players = {self.a1.id: [self.tp1.id],
+                            self.a2.id: [self.tp2.id],
+                            self.a3.id: [self.tp3.id]}
         initial = []
-        initial.append({'award': self.a1.id, 'players': [self.tp2.id]})
+        for award in awards:
+            initial.append({'award': award.id,
+                            'players': expected_players[award.id]})
         formset = self.AwardsFormset(tournament=self.t, initial=initial)
         # Explicit initial should override implicit
-        for form in formset:
-            self.assertEqual(form['players'].initial, [self.tp2.id])
+        for i, form in enumerate(formset):
+            award_id = awards[i].id
+            self.assertEqual(form['award'].initial, award_id)
+            self.assertEqual(form['players'].initial, expected_players[award_id])
         self.assertEqual(len(formset), len(initial))

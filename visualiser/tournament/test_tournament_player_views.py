@@ -671,21 +671,24 @@ class TournamentPlayerViewTests(TestCase):
         perm = Permission.objects.get(name='Can change tournament player')
         self.u3.user_permissions.add(perm)
         self.u3.save()
-        paid = {}
-        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
-            paid[tp] = tp.paid
-            if i in [1, 3]:
-                tp.paid = True
-                tp.save()
+        tps = list(self.t2.tournamentplayer_set.all())
+        original_paid = {tp.id: tp.paid for tp in tps}
+        # Ensure initial values vary, to exercise form.has_changed() behaviour.
+        for i, tp in enumerate(tps):
+            tp.paid = (i % 2) == 1
+            tp.save(update_fields=['paid'])
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         url = reverse('tournament_player_payments', args=(self.t2.pk,))
-        data = {'form-TOTAL_FORMS': f'{self.t2.tournamentplayer_set.count()}',
+        data = {'form-TOTAL_FORMS': f'{len(tps)}',
                 'form-MIN_NUM_FORMS': '0',
                 'form-MAX_NUM_FORMS': '1000',
-                'form-INITIAL_FORMS': f'{self.t2.tournamentplayer_set.count()}'}
-        # Toggle [1] from paid to unpaid, [2] from unpaid to paid, leave [3] as paid, leave [4] unpaid
-        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
-            if i not in [1, 4]:
+                'form-INITIAL_FORMS': f'{len(tps)}'}
+        expected_paid = {}
+        for i, tp in enumerate(tps):
+            # Alternate the submitted values in a different pattern from initial.
+            should_be_paid = (i % 3) != 1
+            expected_paid[tp.id] = should_be_paid
+            if should_be_paid:
                 data[f'form-{i}-paid'] = 'on'
         data = urlencode(data)
         response = self.client.post(url,
@@ -695,17 +698,15 @@ class TournamentPlayerViewTests(TestCase):
         # It should redirect to the index page
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_players', args=(self.t2.pk,)))
-        # Check that the paid status of the players has been changed
-        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
+        # Check that each specific TournamentPlayer got the intended value.
+        for tp in tps:
+            tp.refresh_from_db()
             with self.subTest(tp.player):
-                if i in [1, 4]:
-                    self.assertIs(False, tp.paid)
-                else:
-                    self.assertIs(True, tp.paid)
+                self.assertIs(tp.paid, expected_paid[tp.id])
         # Cleanup
-        for tp in self.t2.tournamentplayer_set.all():
-            tp.paid = paid[tp]
-            tp.save()
+        for tp in tps:
+            tp.paid = original_paid[tp.id]
+            tp.save(update_fields=['paid'])
         self.u3.user_permissions.remove(perm)
         self.u3.save()
 

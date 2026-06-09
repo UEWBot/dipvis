@@ -154,6 +154,19 @@ class TeamsFormsetTest(TestCase):
         formset = self.TeamsFormset(data, tournament=self.t)
         self.assertIs(True, formset.is_valid())
 
+    def test_teams_formset_initial(self):
+        initial = [{'name': 'Alpha',
+                    'player_0': self.p1.id,
+                    'player_1': self.p2.id},
+                   {'name': 'Bravo',
+                    'player_0': self.p3.id,
+                    'player_1': self.p4.id}]
+        formset = self.TeamsFormset(tournament=self.t, initial=initial)
+        for i in range(len(initial)):
+            self.assertEqual(formset[i]['name'].initial, initial[i]['name'])
+            self.assertEqual(formset[i]['player_0'].initial, initial[i]['player_0'])
+            self.assertEqual(formset[i]['player_1'].initial, initial[i]['player_1'])
+
     def test_teams_invalid_form(self):
         """One form fails validation"""
         data = {'form-TOTAL_FORMS': '2',

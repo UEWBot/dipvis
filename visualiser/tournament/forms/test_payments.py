@@ -98,10 +98,10 @@ class PaidFormsetTest(TestCase):
         self.assertIn(self.tp2, tps)
 
     def test_paid_formset_initial(self):
-        initial = []
-        initial.append({'paid': True})
+        initial = [{'paid': True},
+                   {'paid': False}]
         formset = self.PaidFormset(tournament=self.t, initial=initial)
         # Explicit initial should override implicit
-        for form in formset:
-            self.assertEqual(form['paid'].initial, True)
+        for i, form in enumerate(formset):
+            self.assertEqual(form['paid'].initial, initial[i]['paid'])
         self.assertEqual(len(formset), len(initial))

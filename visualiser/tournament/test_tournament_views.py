@@ -1207,19 +1207,20 @@ class TournamentViewTests(TestCase):
 
     def test_enter_handicaps_post(self):
         """A manager can enter handicaps for their tournament"""
-        for tp in self.t2.tournamentplayer_set.all():
+        tps = list(self.t2.tournamentplayer_set.all())
+        for tp in tps:
             self.assertEqual(tp.handicap, 0.0)
         self.assertIs(False, self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = {'form-MAX_NUM_FORMS': '1000'}
-        # Update most handicaps to a different value
-        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
-            if i == 1:
-                data[f'form-{i}-handicap'] = '0.0'
-            else:
-                data[f'form-{i}-handicap'] = f'{float(i)}'
+        expected = {}
+        for i, tp in enumerate(tps):
+            # Distinct values make index-to-player mismatches obvious.
+            value = round(100.0 + (i * 0.5), 1)
+            expected[tp.id] = value
+            data[f'form-{i}-handicap'] = f'{value:.1f}'
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
         data['form-INITIAL_FORMS'] = f'{i}'
@@ -1231,17 +1232,14 @@ class TournamentViewTests(TestCase):
         # It should redirect to the tournament player index page
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_players', args=(self.t2.pk,)))
-        # And the handicaps entered should be saved
-        tp.refresh_from_db()
-        for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
-            if i == 1:
-                self.assertAlmostEqual(tp.handicap, 0.0)
-            else:
-                self.assertAlmostEqual(tp.handicap, float(i))
+        # And each specific TournamentPlayer should have the intended value.
+        for tp in tps:
+            tp.refresh_from_db()
+            self.assertAlmostEqual(tp.handicap, expected[tp.id])
         # Clean up
-        for tp in self.t2.tournamentplayer_set.all():
+        for tp in tps:
             tp.handicap = 0.0
-            tp.save()
+            tp.save(update_fields=['handicap'])
         self.t2.handicaps = False
         self.t2.save()
 
@@ -1585,9 +1583,14 @@ class TournamentViewTests(TestCase):
         tp = self.t2.tournamentplayer_set.last()
         tp.create_preferences_from_string('FART')
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        tps = list(self.t2.tournamentplayer_set.all())
         data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, tp2 in enumerate(self.t2.tournamentplayer_set.all()):
-            data[f'form-{i}-prefs'] = 'FART'
+        expected = {}
+        pref_values = ['A', 'E', 'F', 'G', 'I', 'R', 'T', 'AE', 'AT', 'RF']
+        for i, tp2 in enumerate(tps):
+            prefs = pref_values[i % len(pref_values)]
+            expected[tp2.id] = prefs
+            data[f'form-{i}-prefs'] = prefs
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
         data['form-INITIAL_FORMS'] = f'{i}'
@@ -1600,9 +1603,10 @@ class TournamentViewTests(TestCase):
         # It should redirect to the tournament_detail page
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_detail', args=(self.t2.pk,)))
-        # ... and the preferences should have been set
-        for tp in self.t2.tournamentplayer_set.all():
-            self.assertEqual(tp.prefs_string(), 'FART')
+        # ... and each specific TournamentPlayer should have the intended preferences.
+        for tp in tps:
+            tp.refresh_from_db()
+            self.assertEqual(tp.prefs_string(), expected[tp.id])
         # Clean up
         Preference.objects.filter(player__tournament=self.t2).all().delete()
 
@@ -1892,11 +1896,14 @@ class TournamentViewTests(TestCase):
         self.t1.tournamentplayer_set.last().awards.add(self.t1.awards.first())
         self.t1.tournamentplayer_set.first().awards.add(self.t1.awards.last())
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        tp = self.t1.tournamentplayer_set.first()
+        tps = list(self.t1.tournamentplayer_set.all())
         data = {'form-MAX_NUM_FORMS': '1000'}
+        expected = {}
         for i, a in enumerate(self.t1.awards.all()):
             data[f'form-{i}-award'] = str(a.id)
-            data[f'form-{i}-players'] = [str(tp.id)]
+            players = [str(tps[i % len(tps)].id)]
+            expected[a.id] = {int(players[0])}
+            data[f'form-{i}-players'] = players
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
         data['form-INITIAL_FORMS'] = f'{i}'
@@ -1907,12 +1914,13 @@ class TournamentViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_awards', args=(self.t1.pk,)))
-        # Check what awards the players now have
+        # Check each award has exactly the player submitted for that row.
         for a in self.t1.awards.all():
-            self.assertIn(a, tp.awards.all())
-            self.assertEqual(a.tournamentplayer_set.count(), 1)
+            actual = set(a.tournamentplayer_set.values_list('id', flat=True))
+            self.assertEqual(actual, expected[a.id])
         # Cleanup
-        tp.awards.clear()
+        for tp in tps:
+            tp.awards.clear()
 
     def test_tournament_wdd_awards(self):
         """Should be viewable without logging in"""

@@ -404,6 +404,12 @@ class BasePowerAssignFormsetTest(TestCase):
         self.assertNotIn('value="" selected', str(formset))
         #print(str(formset))
 
+    def test_formset_games_are_name_ordered(self):
+        formset = self.PowerAssignFormset(initial=self.initial, the_round=self.r1)
+        games = list(self.r1.game_set.order_by('name'))
+        for i, game in enumerate(games):
+            self.assertEqual(formset.forms[i].game, game)
+
     def test_formset_success(self):
         """Complete the form correctly"""
         data = self.data.copy()
