@@ -19,6 +19,7 @@ Tournament Player Views for the Diplomacy Tournament Visualiser.
 """
 
 from django.contrib.auth.decorators import permission_required
+from django.forms import modelformset_factory
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -27,7 +28,7 @@ from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
 
 from tournament.email import send_prefs_email
-from tournament.forms import BasePaidFormset, PaidForm, PlayerForm, PrefsForm
+from tournament.forms import PaidForm, PlayerForm, PrefsForm
 from tournament.models import Tournament, TournamentPlayer
 from tournament.tournament_views import (get_modifiable_tournament_or_404,
                                          get_visible_tournament_or_404)
@@ -103,23 +104,13 @@ def index(request, tournament_id):
 def payments(request, tournament_id):
     """Page to track player registration payments"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    PaidFormset = formset_factory(PaidForm,
-                                    extra=0,
-                                    formset=BasePaidFormset)
-    data = []
-    for tp in t.tournamentplayer_set.all():
-        current = {'tp': tp, 'paid': tp.paid}
-        data.append(current)
-    formset = PaidFormset(request.POST or None, tournament=t, initial=data)
+    PaidFormset = modelformset_factory(TournamentPlayer,
+                                       form=PaidForm,
+                                       extra=0)
+    queryset = t.tournamentplayer_set.prefetch_related('player').order_by('player')
+    formset = PaidFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
-        for form in formset:
-            if form.has_changed():
-                tp = form.tp
-                if form.cleaned_data['paid'] is True:
-                    tp.paid = True
-                else:
-                    tp.paid = False
-                tp.save(update_fields=['paid'])
+        formset.save()
         # Redirect to the index page
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))

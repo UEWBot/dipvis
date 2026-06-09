@@ -11,7 +11,7 @@ from .game_scoring import GameScoreForm
 from .game_seeding import BaseGamePlayersFormset, GamePlayersForm
 from .get_seven import GetSevenPlayersForm
 from .handicaps import HandicapForm
-from .payments import BasePaidFormset, PaidForm
+from .payments import PaidForm
 from .players import PlayerForm
 from .pools import PoolForm
 from .power_assign import BasePowerAssignFormset, PowerAssignForm
