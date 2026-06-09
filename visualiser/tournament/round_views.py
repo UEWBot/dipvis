@@ -146,11 +146,7 @@ def roll_call(request, tournament_id, round_num):
         errors_added = False
         for form in formset:
             if form.has_changed():
-                try:
-                    p = form.cleaned_data['player']
-                except KeyError:
-                    # This must be one of the extra forms, still empty
-                    continue
+                p = form.cleaned_data['player']
                 # Ensure that this Player is in the Tournament
                 TournamentPlayer.objects.get_or_create(player=p,
                                                        tournament=t)
