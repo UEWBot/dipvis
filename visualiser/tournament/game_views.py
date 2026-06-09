@@ -445,10 +445,11 @@ def sc_counts(request, tournament_id, game_name):
                                             count=0)
                         try:
                             if i.count != 0:
-                                raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d')
-                                                      % {'power': power,
-                                                         'count': i.count,
-                                                         'year': value})
+                                raise ValidationError(_('%(power)s cannot have %(count)d SCs and be eliminated in %(year)d'),
+                                                      code='eliminated_power_has_supply_centres',
+                                                      params={'power': power,
+                                                              'count': i.count,
+                                                              'year': value})
                             i.full_clean()
                         except ValidationError as e:
                             death_form.add_error(name, e)

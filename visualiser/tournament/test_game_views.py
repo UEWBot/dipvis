@@ -833,6 +833,10 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # Italy died in 1908, but also had 4 SCs
         self.assertIn(str(self.italy), response.context['death_form'].errors.keys())
+        err = response.context['death_form'].errors.as_data()[str(self.italy)][0]
+        self.assertEqual(err.code, 'eliminated_power_has_supply_centres')
+        self.assertEqual(err.params['year'], 1908)
+        self.assertEqual(err.params['count'], 4)
         # No new CentreCounts should have been created
         self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
         self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1908).exists())
