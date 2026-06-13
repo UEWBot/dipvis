@@ -1974,6 +1974,25 @@ class TournamentViewTests(TestCase):
         for tp in tps:
             tp.awards.clear()
 
+    def test_enter_awards_form_errors_rendered(self):
+        """Invalid award player selection should be shown as a field error."""
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        data = {'form-MAX_NUM_FORMS': '1000'}
+        for i, a in enumerate(self.t1.awards.all()):
+            data[f'form-{i}-award'] = str(a.id)
+            if i == 0:
+                data[f'form-{i}-players'] = ['999999']
+        data['form-TOTAL_FORMS'] = str(i + 1)
+        data['form-INITIAL_FORMS'] = str(i + 1)
+        data = urlencode(data, doseq=True)
+        response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards_form.html')
+        self.assertContains(response, 'Select a valid choice')
+
     def test_tournament_wdd_awards(self):
         """Should be viewable without logging in"""
         response = self.client.get(reverse('tournament_wdd_awards',

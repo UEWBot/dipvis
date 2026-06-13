@@ -15,7 +15,7 @@
         {% for field in form.visible_fields %}
           <th>{{ field.label }}</th>
         {% endfor %}
-      </th></tr>
+      </tr></thead>
       <tbody<tr>
         {{ form.non_field_errors }}
         {% for hidden in form.hidden_fields %}
@@ -23,7 +23,7 @@
         {% endfor %}
         {% for field in form.visible_fields %}
           <td>
-            {{ field.error.as_ul }}
+            {{ field.errors.as_ul }}
             {{ field }}
           </td>
         {% endfor %}
