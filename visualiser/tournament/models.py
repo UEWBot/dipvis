@@ -1647,6 +1647,10 @@ class Team(models.Model):
         Validate the object.
 
         Tournament uses teams.
+        Team doesn't have too many players.
+        All players are registered in the tournament.
+        No player is in more than one team.
+        No unranked player is in the team.
         """
         if not self.tournament.team_size:
             raise ValidationError(_("Tournament doesn't use teams"))
