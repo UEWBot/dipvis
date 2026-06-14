@@ -36,6 +36,7 @@ from .ranked_classic import GScoringRankedClassic
 from .solos import GScoringSolos
 from .southern_sun import GScoringSouthernSun
 from .sum_of_squares import GScoringSumOfSquares
+from .sydney_league import GScoringSydneyLeague
 from .tribute import GScoringTribute
 from .vulcan import GScoringVulcan
 from .whipping import GScoringWhipping
@@ -81,6 +82,7 @@ G_SCORING_SYSTEMS = [
     GScoringSolos(),
     GScoringSumOfSquares(),
     GScoringSouthernSun(),
+    GScoringSydneyLeague(),
     GScoringTribute(),
     GScoringOpenTribute(),
     GScoringVulcan(),
