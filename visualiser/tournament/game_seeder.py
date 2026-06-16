@@ -21,12 +21,15 @@ Assign players to Diplomacy games in a tournament setting.
 import copy
 import itertools
 import random
+import time
 #No auto until python 3.6
 #from enum import Enum, auto
 from enum import Enum
 from operator import itemgetter
 
 from django.utils.translation import gettext as _
+import numpy as np
+import pandas as pd
 
 
 class InvalidPlayer(Exception):
@@ -81,6 +84,7 @@ class SeedMethod(Enum):
     """
     #RANDOM = auto()
     #EXHAUSTIVE = auto()
+    MATRIX = 0
     RANDOM = 1
     EXHAUSTIVE = 2
 
@@ -103,11 +107,18 @@ class GameSeeder:
     In both cases, a fitness measure is used to determine the best candidate
     seeding.
     """
+
+    '''
+    in testing could go up to 100,000 iterations and keep runtime for a round seeding
+    in the ~30s range
+    '''
     def __init__(self,
                  powers,
                  starts=1,
-                 iterations=1000,
-                 seed_method=SeedMethod.RANDOM):
+                 iterations=10_000,
+                 #seed_method=SeedMethod.RANDOM):
+                 #seed_method=SeedMethod.EXHAUSTIVE):
+                 seed_method=SeedMethod.MATRIX):
         """
         Create a GameSeeder object
 
@@ -276,6 +287,8 @@ class GameSeeder:
 
         This is the set of all possible games with that player and power list.
         """
+        #print("players ", players)
+        #print("number of players ", len(players))
         assert len(players) == len(powers)
         # If there's just one player left, there's only one possible game
         if len(players) == 1:
@@ -329,6 +342,7 @@ class GameSeeder:
         game is a set of players (player can be any type as long as it's the
         same in all calls to this object).
         """
+        
         if games_played_matrix is None:
             games_played_matrix = self.games_played_matrix
         f = 0
@@ -410,10 +424,19 @@ class GameSeeder:
         # There's nothing to do if we only have one game
         if len(games) >= 2:
             # The more iterations, the better the result, but the longer it takes
-            for _ in range(self.iterations):
+
+            try:
+                iterations = self.iterations
+            except:
+                iterations = 1_000*len(games)
+
+            start = time.time()
+            for _ in range(iterations):
                 # Try swapping a random player between two random games
-                g1, g2 = random.sample(games, 2)
-                # Pick a player from each game that isn't also playing the other
+                g1, g2 = random.sample(games,2)
+                # # Pick a player from each game that isn't also playing the other
+                # print("g1 ", g1)
+                # print("g2 ", g2)
                 p1 = random.choice(list(g1 - g2))
                 p2 = random.choice(list(g2 - g1))
                 g1.remove(p1)
@@ -426,6 +449,10 @@ class GameSeeder:
                     #print(games)
                     best_fitness = fitness
                     best_set = copy.deepcopy(games)
+            end = time.time()
+            runtime = end-start
+            runtime = str(round(runtime,2))
+            #print(f"improving fitness took {runtime} seconds")
         return best_set, best_fitness
 
     def _assign_players_wrapper(self, players):
@@ -547,24 +574,207 @@ class GameSeeder:
         """
         result = []
         games = self.seed_games(omitting_players, players_doubling_up)
+
         for game in games:
             result.append(self._assign_powers(game))
         return result
 
-    def _add_bias_for_doublers(self, players_doubling_up, add):
-        """
-        Keep players playing two games in a round apart by adding bias
+    def _matrix_assignment(self, players, players_doubling_up=()):
+        players_to_index = {player: index for index, player in enumerate(players)}
+        index_to_players = {index: player for index, player in enumerate(players)}
 
-        Adds or removes bias for every possible pair of players in the list.
-        add is a boolean = True to add bias, False to add negative bias,
-        undoing an earlier call with add=True.
-        """
-        if add:
-            w = self._TEMP_WEIGHT
-        else:
-            w = -self._TEMP_WEIGHT
-        for (p1, p2) in itertools.combinations(players_doubling_up, 2):
-            self._add_bias(p1, p2, w)
+        player_ids = [player.id for player in players]
+
+        for p in players:
+            print(p.id, p)
+
+        n = len(players)
+        n_games = int((len(players) + len(players_doubling_up))/7)
+
+        # in hindsight I think I could have just kept this as an np matrix instead of
+        # doing np->pd->np but this also isn't really adding any runtime       
+        games_matrix_np = np.zeros((n,n), dtype=int)
+        games_matrix_pd = pd.DataFrame(games_matrix_np, index=player_ids, columns=player_ids)
+
+        for player in players:
+            row = games_matrix_pd.loc[player.id]
+            for other_player in players:
+                if player != other_player:
+                    try:
+                        games_matrix_pd.loc[player.id, other_player.id] = self.games_played_matrix[player][other_player]
+                    except:
+                        # the self.games_played_matrix dict doesn't have entries
+                        # for players who haven't played togehter yet 
+                        games_matrix_pd.loc[player.id, other_player.id] = 0
+
+        games_matrix_np = games_matrix_pd.to_numpy()
+
+        games = [set() for _ in range(int(n_games))]
+
+        # returns rows as array[0] and columns as array[1]
+        # will exclude the diagonal, i.e. same-player pairings (the k=1 option)
+        upper_triang = np.triu_indices(n, k=1)
+
+        #turn this into a list of (row, col)
+        upper_triang = [u for u in zip(upper_triang[0], upper_triang[1])]
+
+        assigned_players = []
+
+        # assign the multi-boarders first
+        # then assigned blocked player pairs to different games
+        if players_doubling_up != ():
+            for player in players_doubling_up:
+                #print(games)
+                g1, g2 = random.sample(games,2)
+
+                g1.add(player)
+                g2.add(player)
+
+                assigned_players.append(player)
+
+        blocked_rows, blocked_columns = np.where(games_matrix_np > 20)
+        blocked_indices = list(zip(blocked_rows, blocked_columns))
+        blocked_players = []
+
+        if blocked_indices != []:
+            blocked_indices = [b for b in blocked_indices if b in upper_triang]
+            for b in blocked_indices:
+                b0 = index_to_players[b[0]]
+                b1 = index_to_players[b[1]]
+
+                blocked_players.append(b0)
+                blocked_players.append(b1)
+
+                g1, g2 = random.sample(games,2)
+                g1.add(b0)
+                g2.add(b1)
+
+                assigned_players.append(b0)
+                assigned_players.append(b1)
+
+        blocked_players = list(set(blocked_players))
+
+        for g in games:
+            print(g)
+
+        bins = np.unique(games_matrix_np)
+        print(f"bins {bins}")
+
+        stop_adding_pairs = False
+
+        for b in bins:
+            '''
+            the bins are how many times players have played together;
+            some pairs of people have played 0 times, 1 times, 2 times, etc.
+
+            select pairs of players who've played the minimum possible number
+            of times together for the current point in the tournament, then
+            cycle through the different games adding player pairs. if you run out of players at
+            the first bin, then proceed to the next bin. once you've assigned
+            6 or 7 players to each game, break out of this for loop and randomly
+            assign individual players to the remaining games until they're full.
+
+            a future improvement might be to do this remaining assignment based on picking a player
+            who increases the fitness score the least. one consideration is thinking through if you
+            need to do anything to prevent grabbing good player assignments early in the process and then
+            only having bad (high marginal fitness score) players left toward the end.
+            '''
+
+            #print("players who have played ", b, " times together so far")
+            rows, columns = np.where(games_matrix_np == b)
+            bin_indices = list(zip(rows, columns)) 
+            
+            bin_indices = [b for b in bin_indices if b in upper_triang]
+
+            bin_entries = set([ (int(bin_index[0]), int(bin_index[1])) for bin_index in bin_indices])
+            i = 0
+
+            '''
+            remove pairings containing at least one player who
+            has already been assigned because they're doubling
+            or have a block from playing with another player
+            '''
+            for bin_entry in bin_entries:
+                for player in assigned_players:
+                    player_index = players_to_index[player]
+                    if player_index in bin_entry:
+                        bin_entries = bin_entries - {bin_entry}
+
+            # imagine a 2 board tournament: 0%2 = 0, 1%2 = 1, 2%2 = 0, 3%2 = 1...
+            # so i%n_games lets i just keep increasing to cycle through your n games            
+            while len(bin_entries) > 0:
+                # don't assign more than 7 people to a game
+                if len(games[i%n_games]) + 2 > 7:
+                    player_counts = [len(g) for g in games]
+                    
+                    # if all games currently have 6 or 7 players, break out
+                    # of this loop; but if some are left just skip the current
+                    # game being selected by the loop
+                    if min(player_counts) + 2 > 7:
+                        print("game player counts: ", [len(g) for g in games])
+                        print("switching from pairs of players to individuals, all games have six or seven players\n")
+                        stop_adding_pairs = True
+                        break
+                    else:
+                        print(f"player count for game {i%n} is {len(games[i%n_games])}, proceeding to seed next game\n")
+                        i += 1
+                        continue
+                
+                bin_entry = random.choice(list(bin_entries))
+                row = bin_entry[0]
+                col = bin_entry[1]            
+
+                games[i%n_games].add(index_to_players[row])
+                games[i%n_games].add(index_to_players[col])
+
+                assigned_players.append(index_to_players[row])
+                assigned_players.append(index_to_players[col])
+
+                print(f"game {i%n_games}: {games[i%n_games]}")
+                print("")
+                i += 1
+                for bin_entry in bin_entries:
+                    print(f"row {row}")
+                    print(f"col {col}")
+                    print(f"bin entry {bin_entry}")
+                    if (row in bin_entry) or (col in bin_entry):
+                        bin_entries = bin_entries - {bin_entry}
+                try:
+                    print("bin entries: ", bin_entries)
+                except:
+                    print("no bins")
+            if stop_adding_pairs:
+                break
+
+        min_game_players = min([len(g) for g in games])
+        if min_game_players < 7:        
+            '''
+            because the board call interface enforces making you hit a multiple
+            of 7 players (including counting multi-boarders) for a round before
+            proceeding to the games you can assume that running out of players to 
+            assign is equivalent to every game having 7 players 
+            '''
+
+            players_to_assign = list( set(players) - set(assigned_players))
+            #print("players to assign ", len(players_to_assign), players_to_assign)
+
+            while len(players_to_assign) > 0:
+                player = random.choice(list(players_to_assign))
+                remaining_games = [game for game in games if len(game) < 7]
+                if remaining_games == []:
+                    #print("breaking\n")
+                    break
+                game = random.choice([game for game in remaining_games if len(game) < 7])
+                game.add(player)
+                players_to_assign.remove(player)
+
+        games_with_names = [set() for _ in range(int(n_games))]
+
+        for game_index, game in enumerate(games):
+            for player in game:
+                games_with_names[game_index].add(player)
+
+        return games_with_names
 
     def seed_games(self, omitting_players=(), players_doubling_up=()):
         """
@@ -583,12 +793,34 @@ class GameSeeder:
         Can raise ImpossibleToSeed if no valid seeding is possible.
         """
         # Add temporary bias to keep players_doubling_up apart
-        self._add_bias_for_doublers(players_doubling_up, add=True)
+        #print("doublers ",players_doubling_up)
         try:
+            '''
+            You could use SeedMethod.RANDOM for the first round even if using
+            SeedMethod.MATRIX for the additional rounds, but SeedMethod.MATRIX
+            handles assigning doublers and blocked player pairs.
+            '''
+            if self.seed_method == SeedMethod.MATRIX:
+                seedings = []
+
+                players = self._player_pool(omitting_players, ())
+
+                s = self._matrix_assignment(players, players_doubling_up)
+
+                #print("fitness before swaps ", self._set_fitness(s))
+                
+                if self.games_played:
+                    s, fitness = self._improve_fitness(s)
+                else:
+                    fitness = 0
+
+                #print("fitness after swaps ", self._set_fitness(s))
+
+                seedings.append((s, fitness))
             # Generate the specified number of seedings
             # Use the random method if no games have been played yet and at most
             # one player is playing two games, because any seeding is fine
-            if ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
+            elif ((not self.games_played) and (len(players_doubling_up) < 2)) or (self.seed_method == SeedMethod.RANDOM):
                 seedings = []
                 # No point generating multiples if they're all equally good
                 starts = 1
@@ -598,7 +830,7 @@ class GameSeeder:
                     # This gives us a list of 2-tuples with (seeding, fitness)
                     seedings.append(self._seed_games(omitting_players,
                                                      players_doubling_up))
-            else:  # self.seed_method == SeedMethod.EXHAUSTIVE
+            else: # self.seed_method == SeedMethod.EXHAUSTIVE
                 players = self._player_pool(omitting_players, players_doubling_up)
                 seedings = []
                 try:
@@ -613,11 +845,14 @@ class GameSeeder:
             seedings.sort(key=itemgetter(1))
             if self.seed_method == SeedMethod.RANDOM:
                 bg_str = f'With starts={self.starts} and iterations={self.iterations}'
-            else:
+            elif self.seed_method == SeedMethod.EXHAUSTIVE:
                 bg_str = 'With Exhaustive seeding'
+            else:
+                bg_str = 'With Matrix seeding'
             print(f'{bg_str}, best fitness score is {seedings[0][1]} in {len(seedings)} seedings')
         finally:
             # Remove temporary bias
-            self._add_bias_for_doublers(players_doubling_up, add=False)
+            pass
+            #self._add_bias_for_doublers(players_doubling_up, add=False)
         # Return the best (we don't care if multiple seedings are equally good)
         return seedings[0][0]
