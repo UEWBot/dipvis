@@ -636,16 +636,6 @@ class GameSeederSetupTest(unittest.TestCase):
     # TODO more tests of seed_games_and_powers() power assignment
 
 
-def create_seeder(starts=1, iterations=1000, num_players=20):
-    # As there's no way to remove players, we'll re-create the seeder in each test
-    seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
-    # Add players
-    # Note that the upper limit for num_players is 26
-    for p in range(num_players):
-        seeder.add_player(ascii_uppercase[p])
-    return seeder
-
-
 def with_powers(game):
     """Convert a set of seven players to a set of seven (player, power) 2-tuples"""
     return set(zip(list(game), ['1', '2', '3', '4', '5', '6', '7']))
@@ -691,12 +681,199 @@ class _GameSetAssertionsMixin:
                 self.assertEqual(p2, 0)
 
 
-class RandomGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
+class _SharedSeederAlgorithmCasesMixin:
+    """
+    Shared seeding test cases that should pass for all algorithms.
+
+    No more than 2 boards per round.
+    """
+
+    seed_method = None
+
+    def _create_method_seeder(self, num_players, starts=1, iterations=1000):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            starts=starts,
+                            iterations=iterations,
+                            seed_method=self.seed_method)
+        for i in range(num_players):
+            seeder.add_player(f'{i}p')
+        return seeder
+
+    def expected_second_round_single_doubler_fitness(self):
+        """Override in subclasses that can assert an exact second-round fitness."""
+        return None
+
+    def test_shared_seed_games_initial(self):
+        seeder = self._create_method_seeder(num_players=14)
+        games = seeder.seed_games()
+        self.check_game_set(games, 14)
+
+    def test_shared_seed_games_second_round(self):
+        seeder = self._create_method_seeder(num_players=14)
+        first_round = seeder.seed_games()
+        for g in first_round:
+            seeder.add_played_game(with_powers(g))
+        second_round = seeder.seed_games()
+        self.check_game_set(second_round, 14)
+
+    def test_shared_seed_games_wrong_count(self):
+        seeder = self._create_method_seeder(num_players=13)
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games)
+
+    def test_shared_seed_games_wrong_count_with_omission(self):
+        seeder = self._create_method_seeder(num_players=14)
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games, {'0p'})
+
+    def test_shared_seed_games_wrong_count_with_single_doubler(self):
+        seeder = self._create_method_seeder(num_players=14)
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games, set(), {'0p'})
+
+    def test_shared_seed_games_wrong_count_with_two_doublers(self):
+        seeder = self._create_method_seeder(num_players=14)
+        self.assertRaises(InvalidPlayerCount, seeder.seed_games, set(), {'0p', '1p'})
+        self.check_no_games_played(seeder)
+
+    def test_shared_seed_games_with_omission(self):
+        seeder = self._create_method_seeder(num_players=15)
+        omit = {'14p'}
+        games = seeder.seed_games(omitting_players=omit)
+        self.check_game_set(games, 14, omissions=omit)
+
+    def test_shared_seed_games_invalid_dup(self):
+        seeder = self._create_method_seeder(num_players=14)
+        self.assertRaises(InvalidPlayer, seeder.seed_games, players_doubling_up={'X'})
+
+    def test_shared_seed_games_invalid_sit(self):
+        seeder = self._create_method_seeder(num_players=14)
+        self.assertRaises(InvalidPlayer, seeder.seed_games, omitting_players={'X'})
+
+    def test_shared_seed_games_with_single_doubler(self):
+        seeder = self._create_method_seeder(num_players=13)
+        first_dup = '2p'
+        games = seeder.seed_games(players_doubling_up={first_dup})
+        self.check_game_set(games, 14, duplicates={first_dup})
+
+        first_round_fitness = seeder._set_fitness(games)
+        self.assertGreaterEqual(first_round_fitness, 0)
+
+        for g in games:
+            seeder.add_played_game(with_powers(g))
+
+        second_dup = '3p'
+        games = seeder.seed_games(players_doubling_up={second_dup})
+        self.check_game_set(games, 14, duplicates={second_dup})
+
+        second_round_fitness = seeder._set_fitness(games)
+        self.assertGreaterEqual(second_round_fitness, 0)
+        expected = self.expected_second_round_single_doubler_fitness()
+        if expected is not None:
+            self.assertEqual(second_round_fitness, expected)
+
+
+class _SharedRandomBoardSeederCasesMixin:
+    """Shared larger-scale behavior tests for RANDOM and BOARD methods."""
+
+    def assert_second_round_21_fitness(self, fitness):
+        """Override for algorithm-specific quality assertion on 21-player round 2."""
+        self.assertLessEqual(fitness, 30)
+
+    def bigger_tournament_cases(self):
+        return [(1, 1000), (100, 100), (1000, 1)]
+
+    def assert_bigger_tournament_second_round_fitness(self, fitness):
+        """Override for algorithm-specific quality assertion on 49-player round 2."""
+        self.assertLess(fitness, 24)
+
+    def _seed_bigger_tournament(self, starts, iterations):
+        """Two rounds of a 49-player tournament."""
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            starts=starts,
+                            iterations=iterations,
+                            seed_method=self.seed_method)
+        for i in range(49):
+            seeder.add_player(f'{i}p')
+        games = seeder.seed_games()
+        self.check_game_set(games, 49)
+        self.assertEqual(seeder._set_fitness(games), 0)
+        for g in games:
+            seeder.add_played_game(with_powers(g))
+        games = seeder.seed_games()
+        self.check_game_set(games, 49)
+        self.assert_bigger_tournament_second_round_fitness(seeder._set_fitness(games))
+
+    def test_seed_games_second_round(self):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            seed_method=self.seed_method)
+        for p in ascii_uppercase[:21]:
+            seeder.add_player(p)
+        # Add some previously-played games.
+        seeder.add_played_game({('A', '1'),
+                                ('B', '2'),
+                                ('C', '3'),
+                                ('D', '4'),
+                                ('E', '5'),
+                                ('F', '6'),
+                                ('G', '7')})
+        seeder.add_played_game({('H', '1'),
+                                ('I', '2'),
+                                ('J', '3'),
+                                ('K', '4'),
+                                ('L', '5'),
+                                ('M', '6'),
+                                ('N', '7')})
+        seeder.add_played_game({('O', '1'),
+                                ('P', '2'),
+                                ('Q', '3'),
+                                ('R', '4'),
+                                ('S', '5'),
+                                ('T', '6'),
+                                ('U', '7')})
+        games = seeder.seed_games()
+        self.check_game_set(games, 21)
+        self.assert_second_round_21_fitness(seeder._set_fitness(games))
+
+    def test_seed_games_bigger_tournament(self):
+        for starts, iterations in self.bigger_tournament_cases():
+            with self.subTest(starts=starts, iterations=iterations):
+                self._seed_bigger_tournament(starts, iterations)
+
+    def test_seed_games_separate_dups_1(self):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            seed_method=self.seed_method)
+        for p in ascii_uppercase[:26]:
+            seeder.add_player(p)
+        dups = {'A', 'B'}
+        games = seeder.seed_games(players_doubling_up=dups)
+        self.check_game_set(games, 28, duplicates=dups)
+        for g in games:
+            self.assertNotEqual('A' in g, 'B' in g)
+        self.check_no_games_played(seeder)
+
+    def test_seed_games_separate_dups_2(self):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            seed_method=self.seed_method)
+        for p in ascii_uppercase[:18]:
+            seeder.add_player(p)
+        dups = {'A', 'B', 'C'}
+        games = seeder.seed_games(players_doubling_up=dups)
+        self.check_game_set(games, 21, duplicates=dups)
+        for g in games:
+            if ('A' in g) and ('B' in g):
+                self.assertNotIn('C', g)
+        self.check_no_games_played(seeder)
+
+
+class RandomGameSeederTest(_SharedRandomBoardSeederCasesMixin,
+                           _SharedSeederAlgorithmCasesMixin,
+                           _GameSetAssertionsMixin,
+                           unittest.TestCase):
     """
     Validate the meat of GameSeeder - actually seeding games
     """
 
     # Our players will be strings (names)
+
+    seed_method = SeedMethod.RANDOM
 
     def setUp(self):
         pass
@@ -704,144 +881,24 @@ class RandomGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
     def tearDown(self):
         pass
 
-    # seed_games()
-    def test_seed_games_initial(self):
-        s = create_seeder(num_players=21)
-        r = s.seed_games()
-        self.check_game_set(r, 21)
-
-    def test_seed_games_second_round(self):
-        s = create_seeder(num_players=21)
-        # Add some previously-played games
-        s.add_played_game({('A', '1'),
-                           ('B', '2'),
-                           ('C', '3'),
-                           ('D', '4'),
-                           ('E', '5'),
-                           ('F', '6'),
-                           ('G', '7')})
-        s.add_played_game({('H', '1'),
-                           ('I', '2'),
-                           ('J', '3'),
-                           ('K', '4'),
-                           ('L', '5'),
-                           ('M', '6'),
-                           ('N', '7')})
-        s.add_played_game({('O', '1'),
-                           ('P', '2'),
-                           ('Q', '3'),
-                           ('R', '4'),
-                           ('S', '5'),
-                           ('T', '6'),
-                           ('U', '7')})
-        r = s.seed_games()
-        self.check_game_set(r, 21)
-        # Check that game_set has a "good" fitness score
-        # With 21 players, we should end up with games with 2 pairs and a triplet,
-        # which gives each game a fitness of 2+2+6=10, and the set a fitness of 10*3=30
-        self.assertEqual(s._set_fitness(r), 30)
-
-    def seed_bigger_tournament(self, starts, iterations):
-        """Two rounds of a 49-player tournament"""
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'], starts, iterations)
-        for i in range(49):
-            seeder.add_player(f'{i}p')
-        r = seeder.seed_games()
-        self.check_game_set(r, 49)
-        # First round by definition should have a fitness of zero
-        self.assertEqual(seeder._set_fitness(r), 0)
-        # Add the first round games as played
-        for g in r:
-            seeder.add_played_game(with_powers(g))
-        r = seeder.seed_games()
-        self.check_game_set(r, 49)
-        # Check that game_set has a "good" fitness score
-        # TODO What number works here?
-        # With 49 players, there is a solution with a fitness of zero.
-        # In practice, with 1000 iterations I see 14..22
-        # In practice, with 10000 iterations I see 12..16
-        self.assertLess(seeder._set_fitness(r), 24)
-        print(seeder._set_fitness(r))
-
-    def test_seed_games_bigger_tournament(self):
-        the_cases = [(1, 1000), (100, 100), (1000, 1)]
-        for (starts, iterations) in the_cases:
-            with self.subTest(starts=starts, iterations=iterations):
-                self.seed_bigger_tournament(starts, iterations)
-
-    def test_seed_games_wrong_number_of_players(self):
-        """Total player count not a multiple of 7"""
-        s = create_seeder(num_players=22)
-        self.assertRaises(InvalidPlayerCount, s.seed_games)
-
-    def test_seed_games_wrong_number_of_players_2(self):
-        """Multiple of 7 players, minus one not playing"""
-        s = create_seeder(num_players=21)
-        self.assertRaises(InvalidPlayerCount, s.seed_games, {'U'})
-
-    def test_seed_games_wrong_number_of_players_3(self):
-        """Multiple of 7 players, plus one playing two games"""
-        s = create_seeder(num_players=21)
-        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), {'U'})
-
-    def test_seed_games_wrong_number_of_players_4(self):
-        """Multiple of 7 players, plus two playing two games"""
-        s = create_seeder(num_players=21)
-        self.assertRaises(InvalidPlayerCount, s.seed_games, set(), {'T', 'U'})
-        self.check_no_games_played(s)
-
-    def test_seed_games_with_omission(self):
-        """Multiple of 7 players plus one, minus one not playing"""
-        s = create_seeder(num_players=22)
-        omits = {'U'}
-        r = s.seed_games(omits)
-        self.check_game_set(r, 21, omits)
-
-    def test_seed_games_with_multiples(self):
-        """Multiple of 7 players minus one, minus one playing two games"""
-        s = create_seeder()
-        dups = {'T'}
-        r = s.seed_games(players_doubling_up=dups)
-        self.check_game_set(r, 21, duplicates=dups)
-
-    def test_seed_games_invalid_dup(self):
-        s = create_seeder()
-        dups = {'X'}
-        self.assertRaises(InvalidPlayer, s.seed_games, players_doubling_up=dups)
-
-    def test_seed_games_invalid_sit(self):
-        s = create_seeder()
-        sits = {'X'}
-        self.assertRaises(InvalidPlayer, s.seed_games, omitting_players=sits)
-
-    def test_seed_games_separate_dups_1(self):
-        s = create_seeder(num_players=26)
-        dups = {'A', 'B'}
-        r = s.seed_games(players_doubling_up=dups)
-        self.check_game_set(r, 28, duplicates=dups)
-        # Check that no game has both the players playing two games
-        for g in r:
-            self.assertNotEqual('A' in g, 'B' in g)
-        self.check_no_games_played(s)
-
-    def test_seed_games_separate_dups_2(self):
-        s = create_seeder(num_players=18)
-        dups = {'A', 'B', 'C'}
-        r = s.seed_games(players_doubling_up=dups)
-        self.check_game_set(r, 21, duplicates=dups)
-        # Check that no game has all the players playing two games
-        for g in r:
-            if ('A' in g) and ('B' in g):
-                self.assertNotIn('C', g)
-        self.check_no_games_played(s)
+    def assert_second_round_21_fitness(self, fitness):
+        # Random should hit the known optimum for this 21-player constructed case.
+        self.assertEqual(fitness, 30)
 
 
-class ExhaustiveGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
+class ExhaustiveGameSeederTest(_SharedSeederAlgorithmCasesMixin,
+                               _GameSetAssertionsMixin,
+                               unittest.TestCase):
     """
     Validate an exhaustive GameSeeder seeding games
     """
 
     # Our players will be strings (names)
+
+    seed_method = SeedMethod.EXHAUSTIVE
+
+    def expected_second_round_single_doubler_fitness(self):
+        return 42
 
     def setUp(self):
         pass
@@ -869,96 +926,11 @@ class ExhaustiveGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
                 # Check that game_set has the expected fitness score
                 self.assertEqual(seeder._set_fitness(r), fitness)
 
-    def test_exhaustive_with_dups(self):
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=SeedMethod.EXHAUSTIVE)
-        for i in range(13):
-            seeder.add_player(f'{i}p')
-        dup = '2p'
-        r = seeder.seed_games(players_doubling_up={dup})
-        # We should have two valid games, with player <dup> in both
-        self.assertEqual(len(r), 2)
-        for g in r:
-            self.check_game(g)
-            self.assertIn(dup, g)
-        self.assertEqual(seeder._set_fitness(r), 0)
-        # Add those games as played
-        for g in r:
-            seeder.add_played_game(with_powers(g))
-        dup = '3p'
-        r = seeder.seed_games(players_doubling_up={dup})
-        # We should again have two valid games, again with (different) player <dup> in both
-        self.assertEqual(len(r), 2)
-        for g in r:
-            self.check_game(g)
-            self.assertIn(dup, g)
-        # Check that game_set has the expected fitness score
-        self.assertEqual(seeder._set_fitness(r), 42)
 
-    def test_exhaustive_wrong_count(self):
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=SeedMethod.EXHAUSTIVE)
-        for i in range(13):
-            seeder.add_player(f'{i}p')
-        self.assertRaises(InvalidPlayerCount, seeder.seed_games)
-
-
-class BoardGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
+class BoardGameSeederTest(_SharedSeederAlgorithmCasesMixin,
+                          _SharedRandomBoardSeederCasesMixin,
+                          _GameSetAssertionsMixin,
+                          unittest.TestCase):
     """Validate board-based seeding."""
 
-    def test_board_seeding_initial_round(self):
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=SeedMethod.BOARD)
-        for i in range(21):
-            seeder.add_player(f'{i}p')
-        games = seeder.seed_games()
-        self.check_game_set(games, 21)
-        self.assertEqual(seeder._set_fitness(games), 0)
-
-    def test_board_seeding_with_previous_round(self):
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=SeedMethod.BOARD)
-        for i in range(21):
-            seeder.add_player(f'{i}p')
-        first_round = seeder.seed_games()
-        for g in first_round:
-            seeder.add_played_game(with_powers(g))
-        second_round = seeder.seed_games()
-        self.check_game_set(second_round, 21)
-        # Perfect second-round seeding for 21 players has fitness 30.
-        self.assertLessEqual(seeder._set_fitness(second_round), 30)
-
-    def test_board_seeding_with_dups_2_boards(self):
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=SeedMethod.BOARD)
-        for i in range(13):
-            seeder.add_player(f'{i}p')
-        dup = '2p'
-        r = seeder.seed_games(players_doubling_up={dup})
-        # We should have two valid games, with player <dup> in both
-        self.assertEqual(len(r), 2)
-        for g in r:
-            self.check_game(g)
-            self.assertIn(dup, g)
-        self.assertEqual(seeder._set_fitness(r), 0)
-        # Add those games as played
-        for g in r:
-            seeder.add_played_game(with_powers(g))
-        dup = '3p'
-        r = seeder.seed_games(players_doubling_up={dup})
-        # We should again have two valid games, again with (different) player <dup> in both
-        self.assertEqual(len(r), 2)
-        for g in r:
-            self.check_game(g)
-            self.assertIn(dup, g)
-        # Check that game_set has the expected fitness score
-        self.assertEqual(seeder._set_fitness(r), 42)
-
-    def test_board_seeding_with_dups_3_boards(self):
-        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                            seed_method=SeedMethod.BOARD)
-        for i in range(20):
-            seeder.add_player(f'{i}p')
-        dup = '2p'
-        games = seeder.seed_games(players_doubling_up={dup})
-        self.check_game_set(games, 21, duplicates={dup})
+    seed_method = SeedMethod.BOARD
