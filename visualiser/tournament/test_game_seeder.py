@@ -651,18 +651,8 @@ def with_powers(game):
     return set(zip(list(game), ['1', '2', '3', '4', '5', '6', '7']))
 
 
-class GameSeederSeedingTest(unittest.TestCase):
-    """
-    Validate the meat of GameSeeder - actually seeding games
-    """
-
-    # Our players will be strings (names)
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class _GameSetAssertionsMixin:
+    """Shared helpers for validating seeded games."""
 
     def check_game(self, game):
         # Game should have exactly 7 players
@@ -670,9 +660,13 @@ class GameSeederSeedingTest(unittest.TestCase):
         # Games should always be sets (and hence have no duplicate players)
         self.assertIsInstance(game, set)
 
-    def check_game_set(self, game_set, players, omissions=set(), duplicates=set()):
+    def check_game_set(self, game_set, players, omissions=None, duplicates=None):
+        if omissions is None:
+            omissions = set()
+        if duplicates is None:
+            duplicates = set()
         game_count = len(game_set)
-        self.assertEqual(game_count, players / 7)
+        self.assertEqual(game_count, players // 7)
         # Every game should be valid by itself
         for g in game_set:
             self.check_game(g)
@@ -695,6 +689,20 @@ class GameSeederSeedingTest(unittest.TestCase):
         for p1 in seeder.games_played_matrix.values():
             for p2 in p1.values():
                 self.assertEqual(p2, 0)
+
+
+class RandomGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
+    """
+    Validate the meat of GameSeeder - actually seeding games
+    """
+
+    # Our players will be strings (names)
+
+    def setUp(self):
+        pass
+
+    def tearDown(self):
+        pass
 
     # seed_games()
     def test_seed_games_initial(self):
@@ -828,7 +836,7 @@ class GameSeederSeedingTest(unittest.TestCase):
         self.check_no_games_played(s)
 
 
-class ExhaustiveGameSeederTest(unittest.TestCase):
+class ExhaustiveGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
     """
     Validate an exhaustive GameSeeder seeding games
     """
@@ -840,26 +848,6 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
 
     def tearDown(self):
         pass
-
-    # TODO This is a copy-paste from the class above. Should share code
-    def check_game(self, game):
-        # Game should have exactly 7 players
-        self.assertEqual(len(game), 7)
-        # Games should always be sets (and hence have no duplicate players)
-        self.assertIsInstance(game, set)
-
-    # TODO This is a copy-paste from the class above, then modified. Should share code
-    def check_game_set(self, game_set, players):
-        game_count = len(game_set)
-        self.assertEqual(game_count, players // 7)
-        # Every game should be valid by itself
-        for g in game_set:
-            self.check_game(g)
-        # Each player should be present exactly once
-        players = set()
-        for g in game_set:
-            players |= g
-        self.assertEqual(len(players), 7 * game_count, "One or more players is playing multiple games")
 
     def test_exhaustive_seeding(self):
         players = [(7, 42), (14, 36)]
@@ -915,28 +903,8 @@ class ExhaustiveGameSeederTest(unittest.TestCase):
         self.assertRaises(InvalidPlayerCount, seeder.seed_games)
 
 
-class BoardGameSeederTest(unittest.TestCase):
+class BoardGameSeederTest(_GameSetAssertionsMixin, unittest.TestCase):
     """Validate board-based seeding."""
-
-    def check_game(self, game):
-        self.assertEqual(len(game), 7)
-        self.assertIsInstance(game, set)
-
-    def check_game_set(self, game_set, players, duplicates=set()):
-        game_count = len(game_set)
-        self.assertEqual(game_count, players // 7)
-        for g in game_set:
-            self.check_game(g)
-        unique_players = set()
-        for g in game_set:
-            unique_players |= g
-        self.assertEqual(len(unique_players) + len(duplicates), 7 * game_count)
-        for p in duplicates:
-            count = 0
-            for g in game_set:
-                if p in g:
-                    count += 1
-            self.assertEqual(count, 2)
 
     def test_board_seeding_initial_round(self):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
