@@ -348,7 +348,7 @@ def _create_game_seeder(tournament, the_round):
     tourney_players = tournament.tournamentplayer_set.prefetch_related('seederbias_set').order_by()
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
-                        SeedMethod.RANDOM,
+                        SeedMethod.BOARD,
                         starts=100,
                         iterations=10)
     # Tell the seeder about every player in the tournament
