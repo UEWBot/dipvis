@@ -40,7 +40,7 @@ from tournament.forms import (BaseGamePlayersFormset, BasePlayerRoundFormset,
                               BasePowerAssignFormset, GamePlayersForm,
                               GameScoreForm, GetSevenPlayersForm,
                               PlayerRoundForm, PoolForm, PowerAssignForm)
-from tournament.game_seeder import GameSeeder
+from tournament.game_seeder import GameSeeder, SeedMethod
 from tournament.models import (Game, GamePlayer, Pool, PowerAssignMethods,
                                Round, RoundPlayer, Tournament, TournamentPlayer)
 from tournament.tournament_views import (get_modifiable_tournament_or_404,
@@ -348,6 +348,7 @@ def _create_game_seeder(tournament, the_round):
     tourney_players = tournament.tournamentplayer_set.prefetch_related('seederbias_set').order_by()
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
+                        SeedMethod.RANDOM,
                         starts=100,
                         iterations=10)
     # Tell the seeder about every player in the tournament

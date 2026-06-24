@@ -110,9 +110,9 @@ class GameSeeder:
     """
     def __init__(self,
                  powers,
+                 seed_method,
                  starts=1,
-                 iterations=1000,
-                 seed_method=SeedMethod.RANDOM):
+                 iterations=1000):
         """
         Create a GameSeeder object
 
