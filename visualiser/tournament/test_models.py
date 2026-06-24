@@ -47,6 +47,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                scoring_systems_are_compatible,
                                validate_game_name,
                                validate_game_scoring_system,
+                               validate_no_newlines,
                                validate_round_scoring_system,
                                validate_tournament_scoring_system,
                                validate_vote_count)
@@ -2428,6 +2429,16 @@ class ModelTests(TestCase):
 
     def test_find_t_scoring_system_invalid(self):
         self.assertRaises(InvalidScoringSystem, find_tournament_scoring_system, 'Invalid System')
+
+    # validate_no_newlines()
+    def test_validate_no_newlines_lf(self):
+        self.assertRaises(ValidationError, validate_no_newlines, 'bad\nvalue')
+
+    def test_validate_no_newlines_cr(self):
+        self.assertRaises(ValidationError, validate_no_newlines, 'bad\rvalue')
+
+    def test_validate_no_newlines_valid(self):
+        self.assertIsNone(validate_no_newlines('fine value'))
 
     # validate_game_name()
     def test_validate_game_name_spaces(self):

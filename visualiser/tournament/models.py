@@ -791,6 +791,14 @@ def validate_weight(value):
     raise AssertionError("This function should no longer be used")
 
 
+def validate_no_newlines(value):
+    """
+    Prohibit newline characters to prevent email header injection.
+    """
+    if '\n' in value or '\r' in value:
+        raise ValidationError(_(u'This field cannot contain newline characters.'))
+
+
 def validate_game_name(value):
     """
     Checks for a valid Game name
@@ -895,6 +903,7 @@ class Tournament(models.Model):
     MAX_NAME_LENGTH = 60
 
     name = models.CharField(max_length=MAX_NAME_LENGTH,
+                            validators=[validate_no_newlines],
                             help_text='Year will be appended based on start date')
     start_date = models.DateField()
     end_date = models.DateField()
