@@ -433,6 +433,9 @@ class GameSeeder:
                     #print(games)
                     best_fitness = fitness
                     best_set = copy.deepcopy(games)
+                    if best_fitness == 0:
+                        # A perfect score cannot be improved further.
+                        break
         return best_set, best_fitness
 
     def _assign_players_wrapper(self, players):
@@ -853,8 +856,12 @@ class GameSeeder:
                     starts = self.starts
                 for _ in range(starts):
                     # This gives us a list of 2-tuples with (seeding, fitness)
-                    seedings.append(self._seed_games(omitting_players,
-                                                     players_doubling_up))
+                    candidate = self._seed_games(omitting_players,
+                                                 players_doubling_up)
+                    seedings.append(candidate)
+                    if candidate[1] == 0:
+                        # Perfect random seeding found; no need to evaluate more starts.
+                        break
             else:  # self.seed_method == SeedMethod.EXHAUSTIVE
                 players = self._player_pool(omitting_players, players_doubling_up)
                 seedings = []
