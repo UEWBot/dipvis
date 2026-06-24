@@ -769,7 +769,6 @@ class _SharedSeederAlgorithmCasesMixin:
         if expected is not None:
             self.assertEqual(second_round_fitness, expected)
 
-
 class _SharedRandomBoardSeederCasesMixin:
     """Shared larger-scale behavior tests for RANDOM and BOARD methods."""
 
@@ -861,6 +860,35 @@ class _SharedRandomBoardSeederCasesMixin:
             if ('A' in g) and ('B' in g):
                 self.assertNotIn('C', g)
         self.check_no_games_played(seeder)
+
+    def test_seed_games_three_rounds_rotating_omissions(self):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            seed_method=self.seed_method)
+        for i in range(25):
+            seeder.add_player(f'{i}p')
+
+        all_players = {f'{i}p' for i in range(25)}
+        rotating_omissions = [
+            {'21p', '22p', '23p', '24p'},
+            {'17p', '18p', '19p', '20p'},
+            {'13p', '14p', '15p', '16p'},
+        ]
+
+        round_player_sets = []
+        for omitted in rotating_omissions:
+            games = seeder.seed_games(omitting_players=omitted)
+            self.check_game_set(games, 21, omissions=omitted)
+
+            playing = set()
+            for game in games:
+                playing |= game
+            self.assertEqual(playing, all_players - omitted)
+            round_player_sets.append(frozenset(playing))
+
+            for game in games:
+                seeder.add_played_game(with_powers(game))
+
+        self.assertEqual(len(set(round_player_sets)), 3)
 
 
 class RandomGameSeederTest(_SharedRandomBoardSeederCasesMixin,
