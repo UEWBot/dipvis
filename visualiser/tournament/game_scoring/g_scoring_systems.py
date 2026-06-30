@@ -30,6 +30,7 @@ from .draw_size import GScoringDrawSize
 from .haight import GScoringHaight
 from .manorcon import GScoringManorCon
 from .maxonian import GScoringMaxonian
+from .mischief import GScoringMischief
 from .open_mind_the_gap import GScoringOMG
 from .open_tribute import GScoringOpenTribute
 from .ranked_classic import GScoringRankedClassic
@@ -77,6 +78,7 @@ G_SCORING_SYSTEMS = [
     GScoringManorCon(_('ManorCon v2'),       100, False),
     GScoringMaxonian(_('Maxonian'), 13),
     GScoringMaxonian(_('7Eleven'),  11),
+    GScoringMischief(),
     GScoringOMG(),
     GScoringRankedClassic(),
     GScoringSolos(),
