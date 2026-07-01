@@ -25,11 +25,11 @@ from . import add_player_bg
 
 
 CHRIS_BRAND_WDD_ID = 4173
-MATT_SHIELDS_WDD_ID = 588
-SPIROS_BOBETSIS_WDD_ID = 12304
-MELINDA_HOLLEY_WDD_ID = 5185
 
 CHRIS_BRAND_WDR_ID = 7164
+MATT_SHIELDS_WDR_ID = 8838
+SPIROS_BOBETSIS_WDR_ID = 1777
+MELINDA_HOLLEY_WDR_ID = 8142
 
 
 class AddPlayerBgTests(TestCase):
@@ -74,15 +74,14 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdd')
-    def test_add_player_bg_wdd(self):
+    def test_add_player_no_wdr(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
         self.assertIsNone(p.wdr_player_id)
         add_player_bg(p)
         # TODO Validate results
 
-    @tag('wdr', 'wdd')
+    @tag('wdr')
     def test_add_player_bg_wdr(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
         p = wdd.player
@@ -90,6 +89,7 @@ class AddPlayerBgTests(TestCase):
         wdd.delete()
         p.wdr_player_id = CHRIS_BRAND_WDR_ID
         p.save()
+        p = Player.objects.get(wdr_player_id = CHRIS_BRAND_WDR_ID)
         add_player_bg(p)
         # TODO Validate results
         # Cleanup
@@ -98,26 +98,12 @@ class AddPlayerBgTests(TestCase):
         p.wdr_player_id = None
         p.save()
 
-    @tag('slow', 'wdr', 'wdd')
-    def test_add_player_bg_wdd_and_wdr(self):
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertIsNone(p.wdr_player_id)
-        p.wdr_player_id = CHRIS_BRAND_WDR_ID
-        p.save()
-        add_player_bg(p)
-        # TODO Validate results
-        # Cleanup
-        p.wdr_player_id = None
-        p.save()
-
-    @tag('slow', 'wdd')
+    @tag('slow', 'wdr')
     def test_add_player_bg_no_podiums(self):
         # Spiros has no podium finishes
         p = Player.objects.create(first_name='Spiros',
-                                  last_name='Bobetsis')
-        WDDPlayer.objects.create(player=p,
-                                 wdd_player_id=SPIROS_BOBETSIS_WDD_ID)
+                                  last_name='Bobetsis',
+                                  wdr_player_id=SPIROS_BOBETSIS_WDR_ID)
         add_player_bg(p)
         # Validate results
         ptrs = p.playertournamentranking_set.all()
@@ -125,13 +111,12 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdd')
+    @tag('slow', 'wdr')
     def test_add_player_bg_with_podiums(self):
         # Matt has podium finishes in 2008
         p = Player.objects.create(first_name='Matt',
-                                  last_name='Shields')
-        WDDPlayer.objects.create(player=p,
-                                 wdd_player_id=MATT_SHIELDS_WDD_ID)
+                                  last_name='Shields',
+                                  wdr_player_id=MATT_SHIELDS_WDR_ID)
         add_player_bg(p)
         # Validate results (mostly check that no tournaments get double-counted)
         ptrs = p.playertournamentranking_set.filter(year=2008)
@@ -141,18 +126,20 @@ class AddPlayerBgTests(TestCase):
 
     # TODO Test handling of invalid dates (PlayerTournamentRanking and PlayerAward)
 
-    @tag('slow', 'wdd')
+    @tag('slow', 'wdr')
     def test_add_player_bg_td(self):
         # Matt has tournaments listings for tournaments when he was TD
         p = Player.objects.create(first_name='Matt',
-                                  last_name='Shields')
-        WDDPlayer.objects.create(player=p,
-                                 wdd_player_id=MATT_SHIELDS_WDD_ID)
+                                  last_name='Shields',
+                                  wdr_player_id=MATT_SHIELDS_WDR_ID)
         add_player_bg(p)
         # Validate results
-        # WAC 10 he played Germany and Turkey
+        # Tournament should not be included
+        ptrs = p.playertournamentranking_set.filter(tournament='WAC 10 2013')
+        self.assertEqual(0, ptrs.count())
+        # WAC 10 he played Germany and Turkey, and we want to include those games
         pgrs = p.playergameresult_set.filter(tournament_name='WAC 10 2013')
-        self.assertNotEqual(0, pgrs.count())
+        self.assertEqual(2, pgrs.count())
         # Cleanup
         p.delete()
 
@@ -160,13 +147,12 @@ class AddPlayerBgTests(TestCase):
     #      There is a variant game in the Windy City Weasels 2012 league,
     #      but we only look at tournament games
 
-    @tag('slow', 'wdd')
+    @tag('slow', 'wdr')
     def test_add_player_bg_unranked(self):
         # Melinda has games listed with no ranking (n.c)
         p = Player.objects.create(first_name='Melinda',
-                                  last_name='Holley')
-        WDDPlayer.objects.create(player=p,
-                                 wdd_player_id=MELINDA_HOLLEY_WDD_ID)
+                                  last_name='Holley',
+                                  wdr_player_id=MELINDA_HOLLEY_WDR_ID)
         add_player_bg(p)
         # Validate results
         pgrs = p.playergameresult_set.filter(tournament_name__contains='DipCon')
@@ -188,58 +174,7 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    @tag('slow', 'wdd')
-    def test_add_player_bg_wpe(self):
-        """add_player_bg(include_wpe=True)"""
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertEqual(0, p.playertournamentranking_set.count())
-        add_player_bg(wdd.player, include_wpe=True)
-        # check results
-        ptrs = p.playertournamentranking_set.filter(wpe_score__isnull=False)
-        self.assertNotEqual(0, ptrs.count())
-
-    @tag('slow', 'wdd')
-    def test_add_player_bg_wdd_places_nop(self):
-        """add_player_bg() from WDD with existing nationalities and location"""
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertIsNone(p.wdr_player_id)
-        self.assertEqual(p.location, '')
-        self.assertEqual(len(p.nationalities), 0)
-        p.nationalities = Country('US')
-        p.location = "The moon"
-        p.save()
-        add_player_bg(p)
-        # check results - existing values should be left intact
-        p.refresh_from_db()
-        self.assertEqual(p.nationalities, [Country('US')])
-        self.assertEqual(p.location, 'The moon')
-        # Cleanup
-        p.location = ''
-        p.nationalities = []
-        p.save()
-
-    @tag('slow', 'wdd')
-    def test_add_player_bg_wdd_nationality(self):
-        """add_player_bg() from WDD without existing nationalities and location"""
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        p = wdd.player
-        self.assertIsNone(p.wdr_player_id)
-        self.assertEqual(p.location, '')
-        self.assertEqual(len(p.nationalities), 0)
-        add_player_bg(p)
-        # check results - values from WDD should be used
-        p.refresh_from_db()
-        self.assertEqual(p.nationalities, [Country('CA')])
-        # Note that WDDBackground.location() currently always returns ''
-        self.assertEqual(p.location, '')
-        # Cleanup
-        p.location = ''
-        p.nationalities = []
-        p.save()
-
-    @tag('slow', 'wdr', 'wdd')
+    @tag('slow', 'wdr')
     def test_add_player_bg_wdr_places_nop(self):
         """add_player_bg() from WDR with existing nationalities and location"""
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
@@ -265,7 +200,7 @@ class AddPlayerBgTests(TestCase):
         p.nationalities = []
         p.save()
 
-    @tag('slow', 'wdr', 'wdd')
+    @tag('slow', 'wdr')
     def test_add_player_bg_wdr_places(self):
         """add_player_bg() from WDR without existing nationalities and location"""
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)

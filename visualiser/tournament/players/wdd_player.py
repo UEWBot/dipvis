@@ -33,7 +33,6 @@ from django.utils.translation import gettext as _
 from tournament.wdd import WDD_BASE_RESULTS_URL, validate_wdd_player_id
 
 from .player import Player
-from .wdd_background import InvalidWDDId, WDDBackground, WDDNotAccessible
 
 
 class WDDPlayerIdField(models.PositiveIntegerField):
@@ -84,25 +83,3 @@ class WDDPlayer(models.Model):
     def wdd_url(self):
         """URL for this player in the World Diplomacy Database."""
         return f'{WDD_BASE_RESULTS_URL}player_fiche.php?id_player={self.wdd_player_id}'
-
-    def wdd_firstname_lastname(self):
-        """
-        Name for this player as a 2-tuple, as in the WDD.
-
-        If the name in the WDD cannot be determined, returns ('', '').
-        """
-        # Read from the WDD if we haven't cached it
-        if not self._wdd_firstname and not self._wdd_lastname:
-            bg = WDDBackground(self.wdd_player_id)
-            try:
-                self._wdd_firstname, self._wdd_lastname = bg.wdd_firstname_lastname()
-                self.save(update_fields=['_wdd_firstname', '_wdd_lastname'])
-            except WDDNotAccessible:
-                print(f'Unable to read name from WDD for id {self.wdd_player_id}')
-                # Nothing we can do
-                pass
-            except InvalidWDDId as e:
-                # This can only happen if we couldn't get to the WDD when wdd_player_id was validated
-                raise ValidationError(_(u'WDD Id %(wdd_id)d is invalid'),
-                                      params={'wdd_id': self.wdd_player_id}) from e
-        return (self._wdd_firstname, self._wdd_lastname)

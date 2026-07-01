@@ -52,21 +52,6 @@ class WDDPlayerTests(TestCase):
         url = wdd.wdd_url()
         # TODO verify result
 
-    # WDDPlayer.wdd_firstname_lastname()
-    @tag('wdd')
-    def test_wddplayer_wdd_name1(self):
-        wdd = WDDPlayer.objects.first()
-        name = wdd.wdd_firstname_lastname()
-        # TODO verify result
-
-    @tag('wdd')
-    def test_wddplayer_wdd_name2(self):
-        """Fast path if already cached"""
-        wdd = WDDPlayer.objects.first()
-        wdd._wdd_firstname = 'Arthur'
-        name = wdd.wdd_firstname_lastname()
-        self.assertEqual(name[0], 'Arthur')
-
     # WDDPlayer.delete()
     def test_wddplayer_delete(self):
         wdd = WDDPlayer.objects.first()

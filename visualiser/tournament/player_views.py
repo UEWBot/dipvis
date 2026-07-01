@@ -59,7 +59,7 @@ def player_detail(request, pk):
         else:
             # Technically, we should check permissions here,
             # but the impact of not doing so is minor
-            add_player_bg(player, include_wpe=True)
+            add_player_bg(player)
             # Redirect back here to flush the POST data
             return HttpResponseRedirect(reverse('player_detail',
                                                 args=(pk,)))

@@ -95,7 +95,7 @@ class PlayerViewTests(TestCase):
         self.p1.wddplayer_set.all().delete()
 
     def test_detail_refresh_wdd(self):
-        """Test the 'Refresh From WDD' button"""
+        """Test the 'Update background' button"""
         self.client.login(username=self.USERNAME, password=self.PWORD)
         player_url = reverse('player_detail', args=(self.p1.pk,))
         data = urlencode({'update_bg': 'Update background'})

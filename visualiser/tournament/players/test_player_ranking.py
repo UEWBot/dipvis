@@ -28,8 +28,8 @@ class PlayerRankingTests(TestCase):
 
     # PlayerRanking.wdd_url()
     def test_playerranking_wdd_url_wpe(self):
-        p = Player.objects.first()
-        self.assertNotEqual(p.wddplayer_set.count(), 0)
+        wdd = WDDPlayer.objects.first()
+        p = wdd.player
         pr = PlayerRanking(player=p,
                            system='World Performance Evaluation',
                            international_rank='8',
@@ -38,8 +38,8 @@ class PlayerRankingTests(TestCase):
         # TODO Validate results
 
     def test_playerranking_wdd_url_dip_pouch(self):
-        p = Player.objects.first()
-        self.assertNotEqual(p.wddplayer_set.count(), 0)
+        wdd = WDDPlayer.objects.first()
+        p = wdd.player
         pr = PlayerRanking(player=p,
                            system='Dip Pouch Tournament Rating',
                            international_rank='8',
@@ -48,8 +48,8 @@ class PlayerRankingTests(TestCase):
         # TODO Validate results
 
     def test_playerranking_wdd_url_sdr(self):
-        p = Player.objects.first()
-        self.assertNotEqual(p.wddplayer_set.count(), 0)
+        wdd = WDDPlayer.objects.first()
+        p = wdd.player
         pr = PlayerRanking(player=p,
                            system='SDR Marathon',
                            international_rank='8',
@@ -58,8 +58,8 @@ class PlayerRankingTests(TestCase):
         # TODO Validate results
 
     def test_playerranking_wdd_url_other(self):
-        p = Player.objects.first()
-        self.assertNotEqual(p.wddplayer_set.count(), 0)
+        wdd = WDDPlayer.objects.first()
+        p = wdd.player
         pr = PlayerRanking(player=p,
                            system='WPE7',
                            international_rank='8',

@@ -17,7 +17,5 @@
 # This file contains code to parse online sources of background information
 # about Diplomacy players. Currently reads Wikipedia for titles and the World
 # Diplomacy Database for lots of stuff.
-from .players import (InvalidWDDId, InvalidWDRId, UnableToSplitName,
-                      WDDBackground, WDDNotAccessible, WDRBackground,
-                      WDRNotAccessible, WikipediaBackground,
-                      WikipediaNotAccessible)
+from .players import (InvalidWDRId, WDRBackground, WDRNotAccessible,
+                      WikipediaBackground, WikipediaNotAccessible)

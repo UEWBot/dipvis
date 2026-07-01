@@ -17,7 +17,7 @@
 from django.urls import include, path, register_converter
 
 from tournament import (game_views, round_views, series_views,
-                        tournament_player_views, tournament_views, wdd_views)
+                        tournament_player_views, tournament_views)
 from tournament.diplomacy import FIRST_YEAR
 
 
@@ -242,9 +242,6 @@ tournament_patterns = [
     path('background_ticker/', tournament_views.tournament_background,
          {'as_ticker': True}, name='tournament_background_ticker'),
     path('rounds/', tournament_views.round_index, name='round_index'),
-    path('csv_classification/', wdd_views.view_classification_csv,
-         name='csv_classification'),
-    path('csv_boards/', wdd_views.view_boards_csv, name='csv_boards'),
     path('prefs/', tournament_views.enter_prefs, name='enter_prefs'),
     path('upload_prefs/', tournament_views.upload_prefs, name='upload_prefs'),
     path('prefs_csv/', tournament_views.prefs_csv, name='prefs_csv'),

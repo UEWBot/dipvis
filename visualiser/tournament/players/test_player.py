@@ -294,29 +294,6 @@ class PlayerTests(TestCase):
         # Cleanup
         p.delete()
 
-    # Player.wdd_firstname_lastname()
-    @tag('slow', 'wdd')
-    def test_player_wdd_firstname_lastname(self):
-        p = Player.objects.create(first_name='John', last_name='Smith')
-        wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
-        player = wdd.player
-        wdd.player = p
-        wdd.save()
-        res = p.wdd_firstname_lastname()
-        self.assertEqual(res, ('Chris', 'BRAND'))
-        # Cleanup
-        wdd.player = player
-        wdd.save()
-        p.delete()
-
-    def test_player_wdd_firstname_lastname_no_id(self):
-        p = Player.objects.create(first_name='John', last_name='Smith')
-        name = p.wdd_firstname_lastname()
-        self.assertEqual(name[0], 'John')
-        self.assertEqual(name[1], 'Smith')
-        # Cleanup
-        p.delete()
-
     # Player.wdr_name()
     @tag('wdr')
     def test_player_wdr_name(self):

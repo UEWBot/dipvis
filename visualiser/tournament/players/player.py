@@ -163,19 +163,6 @@ class Player(models.Model):
             return f'{WDR_BASE_URL}players/{self.wdr_player_id}'
         return ''
 
-    def wdd_firstname_lastname(self):
-        """
-        Name for this player as a 2-tuple, as in the WDD.
-
-        If the name in the WDD cannot be determined, returns the name used locally.
-        """
-        qs = self.wddplayer_set.all()
-        try:
-            wdd = qs[0]
-        except IndexError:
-            return (self.first_name, self.last_name)
-        return wdd.wdd_firstname_lastname()
-
     def wdr_name(self):
         """Returns the name of the player in the WDR as a string"""
         try:

@@ -41,7 +41,6 @@ from .player_game_result import PlayerGameResult
 from .player_ranking import PlayerRanking
 from .player_title import PlayerTitle
 from .player_tournament_ranking import PlayerTournamentRanking
-from .wdd_background import WDDBackground
 from .wdr_background import WDRBackground, WDRNotAccessible
 from .wikipedia_background import WikipediaBackground
 
@@ -98,83 +97,13 @@ def _update_or_create_playertitle_wiki(player, title):
             traceback.print_exc()
 
 
-def _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores):
-    """
-    Creates or updates a PlayerTournamentRanking for the player
-
-    Given a Player and a dict with 'Tournament' 'Date', 'Position',
-    and 'WDD URL' keys, representing the World Diplomacy Database data,
-    plus a dict keyed by WDD tournament id of WPE scores for the player,
-    create or update a PlayerTournamentRanking
-    """
-    d = finish['Date']
-    try:
-        wdd_tournament_id = wdd_url_to_tournament_id(finish['WDD URL'])
-        defaults = {'position': finish['Position'],
-                    'tournament': finish['Tournament']}
-        try:
-            defaults['wpe_score'] = wpe_scores[wdd_tournament_id]
-        except KeyError:
-            pass
-        try:
-            # WDD contains some invalid dates (e.g. '2017-09-0')
-            datetime.datetime.strptime(d, '%Y-%m-%d')
-        except ValueError:
-            pass
-        else:
-            defaults['date'] = d
-        PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                         wdd_tournament_id=wdd_tournament_id,
-                                                         year=d[:4],
-                                                         defaults=defaults)
-    except Exception:
-        # Handle all exceptions
-        # This way, we fail to add/update the single ranking rather than all the background
-        print('Failed to save PlayerTournamentRanking')
-        print(f'player={str(player)}, tournament={finish["Tournament"]}, position={finish["Position"]}, year={d[:4]}')
-        traceback.print_exc()
-
-
-def _update_or_create_playertournamentranking_wdd2(player, t):
-    """
-    Creates or updates a PlayerTournamentRanking for the player
-
-    Given a Player and a dict with 'Name of the Tournament' 'Date', 'Rank',
-    and 'WDD URL' keys, representing the World Diplomacy Database data,
-    create or update a PlayerTournamentRanking
-    """
-    d = t['Date']
-    try:
-        wdd_tournament_id = wdd_url_to_tournament_id(t['WDD URL'])
-        defaults = {'position': t['Rank'],
-                    'tournament': t['Name of the tournament']}
-        try:
-            # WDD contains some invalid dates (e.g. '2017-09-0')
-            datetime.datetime.strptime(d, '%Y-%m-%d')
-        except ValueError:
-            pass
-        else:
-            defaults['date'] = d
-        PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                         wdd_tournament_id=wdd_tournament_id,
-                                                         year=d[:4],
-                                                         defaults=defaults)
-    except KeyError:
-        # No rank implies they were the TD or similar - just ignore that tournament
-        print(f'Ignoring unranked {t["Name of the tournament"]} for {player}')
-    except Exception:
-        # Handle all other exceptions
-        # This way, we fail to add/update the single ranking rather than all the background
-        print('Failed to save PlayerTournamentRanking')
-        print(f'player={str(player)}, tournament={t["Name of the tournament"]}, position={t["Rank"]}, year={d[:4]}')
-        traceback.print_exc()
-
-
 def _split_wdd_game_name(name):
     """
     Extracts the round number and game number from a WDD game name.
 
     Returns a (round_number, game_number) 2-tuple.
+
+    Obsolete - only retained for old migrations.
     """
     # Format is "R n B m" or "R / B"
     parts = name.split()
@@ -183,210 +112,6 @@ def _split_wdd_game_name(name):
     elif (len(parts) == 3) and (parts[1] == '/'):
         return parts[0], parts[-1]
     raise ValueError(name)
-
-
-def _update_or_create_playergameresult(player, b):
-    """
-    Creates or updates a PlayerGameResult for the player
-
-    Given a Player and a dict with 'Country', 'Name of the Tournament' 'Date' 'Round / Board', 'Position',
-    and 'WDD Tournament URL' keys, and optional 'Position sharing' 'Score' 'Final SCs' 'Game end' and
-    'Elimination year' keys, representing the World Diplomacy Database data, create or update a PlayerGameResult
-    """
-    try:
-        power = b['Country']
-        p = GreatPower.objects.get(name__contains=power)
-    except GreatPower.DoesNotExist:
-        # Apparently not a Standard game
-        return
-    if 'Position' not in b:
-        # We can't make assumptions about how players are ranked within a game
-        # without knowing the scoring system, DIAS, etc.
-        print(f'Ignoring game {b["Round / Board"]} in {b["Name of the tournament"]} for {str(player)} with no position')
-        return
-    try:
-        wdd_tournament_id = wdd_url_to_tournament_id(b['WDD Tournament URL'])
-        defaults = {'position': b['Position'],
-                    'tournament_name': b['Name of the tournament']}
-        # If there's no 'Position sharing', they were alone at that position
-        defaults['position_equals'] = b.get('Position sharing', 1)
-        # Ignore any of these that aren't present
-        try:
-            defaults['score'] = b['Score']
-        except KeyError:
-            pass
-        try:
-            defaults['final_sc_count'] = b['Final SCs']
-        except KeyError:
-            pass
-        try:
-            defaults['result'] = b['Game end']
-        except KeyError:
-            pass
-        try:
-            defaults['year_eliminated'] = b['Elimination year']
-        except KeyError:
-            pass
-        # WDD has been known to change the date
-        # The result should still be unique without it, though
-        defaults['date'] = b['Date']
-        round_num, game_num = _split_wdd_game_name(b['Round / Board'])
-        PlayerGameResult.objects.update_or_create(wdd_tournament_id=wdd_tournament_id,
-                                                  round_number=round_num,
-                                                  game_number=game_num,
-                                                  player=player,
-                                                  power=p,
-                                                  defaults=defaults)
-    except Exception:
-        # Handle all exceptions
-        # This way, we fail to add/update the single ranking rather than all the background
-        print('Failed to save PlayerGameResult')
-        print(f'player={str(player)}, tournament_name={b["Name of the tournament"]}, round_number={round_num}, game_number={game_num}, power={str(p)}, position={b["Position"]}, date={b["Date"]}')
-        traceback.print_exc()
-
-
-def _update_or_create_playeraward(player, k, a):
-    """
-    Creates or updates a PlayerAward for the player
-
-    Given a Player and key ('Awards' or a GreatPower name) and a dict with 'Tournament', 'Date',
-    and 'WDD URL' keys, and optional 'Score' and 'SCs' keys,
-    representing the World Diplomacy Database data, create or update a PlayerAward
-    """
-    if k == 'Awards':
-        award_name = a['Name']
-    else:
-        try:
-            p = GreatPower.objects.get(name__contains=k)
-        except GreatPower.DoesNotExist:
-            # Apparently not a Standard game
-            return
-        award_name = f'Best {p}'
-    # Some of the WDD pages are badly-structured with nested tables
-    # Ignore any messed-up results
-    # TODO "bad date" is often just a year - could pick 31 Dec for those
-    #      "no date" often have a year, which could also be used as above
-    try:
-        date_str = a['Date']
-        if len(date_str) != 10:
-            print(f'Ignoring award with bad date {str(a)}')
-            return
-    except KeyError:
-        print(f'Ignoring award with no date {str(a)}')
-        return
-    try:
-        wdd_tournament_id = wdd_url_to_tournament_id(a['WDD URL'])
-        defaults = {'tournament': a['Tournament']}
-        if k != 'Awards':
-            defaults['power'] = p
-        # Ignore any of these that aren't present
-        try:
-            defaults['score'] = a['Score']
-        except KeyError:
-            pass
-        try:
-            defaults['final_sc_count'] = a['SCs']
-        except KeyError:
-            pass
-        PlayerAward.objects.update_or_create(player=player,
-                                             wdd_tournament_id=wdd_tournament_id,
-                                             date=date_str,
-                                             name=award_name,
-                                             defaults=defaults)
-    except Exception:
-        # Handle all exceptions
-        # This way, we fail to add/update the single ranking rather than all the background
-        print('Failed to save PlayerAward')
-        print(f'player={str(player)}, tournament={a["Tournament"]}, date={date_str}, name={award_name}')
-        traceback.print_exc()
-
-
-def _update_or_create_playerranking(player, r):
-    """
-    Creates or updates a PlayerRanking for the player
-
-    Given a Player and a dict with 'Name' 'Score' 'International rank' and 'National rank' keys,
-    representing the World Diplomacy Database data, create or update a PlayerRanking
-    """
-    try:
-        PlayerRanking.objects.update_or_create(player=player,
-                                               system=r['Name'],
-                                               defaults={'score': float(r['Score']),
-                                                         'international_rank': r['International rank'],
-                                                         'national_rank': r['National rank']})
-    except Exception:
-        # Handle all exceptions
-        # This way, we fail to add/update the single ranking rather than all the background
-        print('Failed to save PlayerRanking')
-        print(f'player={str(player)}, system={r["Name"]}')
-        traceback.print_exc()
-
-
-def _add_player_bg_from_wdd(player, wdd_id, include_wpe):
-    """
-    Add or update player background information from the WDD
-
-    Returns a list of Player fields that were updated and need saving.
-    """
-    fields = []
-    bg = WDDBackground(wdd_id)
-    # WPE scores
-    wpe_scores = {}
-    if include_wpe:
-        # Construct a dict, keyed by WDD Id, of WPE scores
-        for score in bg.wpe_scores():
-            key = wdd_url_to_tournament_id(score['WDD WPE URL'])
-            if key:
-                wpe_scores[key] = score['Score']
-    # Podium finishes
-    finishes = bg.finishes()
-    for finish in finishes:
-        _update_or_create_playertournamentranking_wdd1(player, finish, wpe_scores)
-    # Tournaments
-    tournaments = bg.tournaments()
-    for t in tournaments:
-        _update_or_create_playertournamentranking_wdd2(player, t)
-    # Boards
-    boards = bg.boards()
-    for b in boards:
-        _update_or_create_playergameresult(player, b)
-    # Awards
-    awards = bg.awards()
-    for k, v in awards.items():
-        # Go through the list of awards
-        for a in v:
-            _update_or_create_playeraward(player, k, a)
-    # Rankings
-    rankings = bg.rankings()
-    for r in rankings:
-        _update_or_create_playerranking(player, r)
-    # Nationalities
-    # Assume that if we know nationalities they either came from the WDD or are more accurate
-    if not player.nationalities:
-        nats = bg.nationalities()
-        try:
-            player.nationalities = wdd_nation_to_country(nats[0])
-        except IndexError:
-            # WDD doesn't have nationality info
-            pass
-        except UnrecognisedCountry:
-            # WDD does have a country, but it doesn't map to a real-world country
-            pass
-        else:
-            fields.append('nationalities')
-    # Location
-    # Assume that if we know a location it either came from the WDD or is more accurate
-    if not player.location:
-        loc = bg.location()
-        if loc:
-            try:
-                player.location = wdd_nation_to_country(loc).name
-            except UnrecognisedCountry:
-                # WDD does have a country, but it doesn't map to a real-world country
-                pass
-            else:
-                fields.append('location')
-    return fields
 
 
 def _find_wdr_tournament(wdr_id, tournaments_list):
@@ -622,12 +347,9 @@ def _add_player_bg_from_wdr(player, wdr_id):
     return fields
 
 
-def add_player_bg(player, include_wpe=False):
+def add_player_bg(player):
     """
-    Cache background data for the player
-
-    include_wpe=True will set PlayerTournamentRanking.wpe_score,
-    which involves parsing an additional WDD page
+    Cache background data for the player in the database
     """
     fields = []
     # First check wikipedia
@@ -636,9 +358,6 @@ def add_player_bg(player, include_wpe=False):
     titles = bg.titles()
     for title in titles:
         _update_or_create_playertitle_wiki(player, title)
-    # TODO If we have both ids, check that the WDR agrees about the WDD id
-    #      player.wdd_player_id == WDRBackground(player.wdr_player_id).wdd_id()
-    # WDR is easier to parse and often more up-to-date, so use it in preference to WDD
     # Do we have a WDR id for this player?
     wdr = player.wdr_player_id
     if wdr:
@@ -647,10 +366,6 @@ def add_player_bg(player, include_wpe=False):
         except WDRNotAccessible:
             print(f'Unable to read from WDR for id {wdr}')
             wdr = None
-    if not wdr:
-        # Do we have any WDD ids for this player?
-        for wdd in player.wddplayer_set.all():
-            fields += _add_player_bg_from_wdd(player, wdd.wdd_player_id, include_wpe)
     if fields:
         player.save(update_fields=fields)
     # TODO Set PlayerTitle.ranking to cross-reference

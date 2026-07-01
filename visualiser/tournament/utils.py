@@ -43,12 +43,10 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
                                TournamentPlayer)
 from tournament.players import (InvalidWDRId, Player, PlayerAward,
                                 PlayerGameResult, PlayerTournamentRanking,
-                                WDDBackground, WDDPlayer, WDRBackground,
-                                WDRNotAccessible)
+                                WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
                             wdd_url_to_tournament_id)
-from tournament.wdd_views import _power_award_to_gameplayers
 from tournament.wdr import wdr_tournament_as_json
 
 
@@ -60,6 +58,23 @@ def map_to_backstabbr_power(gp):
         if gp.abbreviation == power[0]:
             return power
     raise ValueError(gp)
+
+
+def _power_award_to_gameplayers(tournament, award):
+    """
+    Map a "best country" award to the corresponding GamePlayers in the Tournament.
+
+    Returns a list of GamePlayers.
+    """
+    assert award.power is not None
+    ret = []
+    # First find the TournamentPlayers who got the specified award at this tournament
+    for tp in award.tournamentplayer_set.filter(tournament=tournament).order_by():
+        # Find the corresponding GamePlayer
+        for rp in tp.roundplayers().all():
+            for gp in rp.gameplayers().filter(power=award.power):
+                ret.append(gp)
+    return ret
 
 
 def _import_dixie_round(r_num, player, tournament, row):
@@ -201,33 +216,6 @@ def add_missing_player_wdr_ids(dry_run=False):
                         break
 
 
-def set_nationalities(dry_run=False):
-    """
-    Set Player.nationalities as specified in the WDD, unless already set.
-    """
-    for wdd in WDDPlayer.objects.filter(player__nationalities=''):
-        p = wdd.player
-        bg = WDDBackground(wdd.wdd_player_id)
-        nats = bg.nationalities()
-        if not nats:
-            # No nationality information in the WDD
-            print(f'WDD has no nationality for WDD player {wdd.wdd_player_id}')
-            continue
-        elif len(nats) > 1:
-            # This is currently impossible
-            print('Setting multiple nationalities is not supported')
-        n = nats[0]
-        try:
-            c = wdd_nation_to_country(n)
-        except UnrecognisedCountry:
-            print(f'Skipping unrecognised country "{n}" for WDD player {wdd.wdd_player_id}')
-            continue
-        print(f'Setting nationality of {p} to {c.name}')
-        if not dry_run:
-            p.nationalities = c
-            p.save(update_fields=['nationalities'])
-
-
 def add_missing_wdd_player_ids(dry_run=False):
     """
     Where we have WDR ids, we can use the WDR to double-check WDD ids
@@ -261,22 +249,6 @@ def add_missing_wdd_player_ids(dry_run=False):
         elif wdd_id and (wdd_id not in wdd_ids):
             # We have a different WDD id
             print(f'{p} ({p.id}) has WDD ids {wdd_ids} here but {wdd_id} in the WDR')
-
-
-def add_wpe_scores(player, dry_run=False):
-    """Update the Player's PlayerTournamentRankings to set the wpe_score attribute."""
-    # First get the WPE scores
-    bg = WDDBackground(player.wddplayer_set.first().wdd_player_id)
-    scores = bg.wpe_scores()
-    # Now update their rankings
-    ptr_s = player.playertournamentranking_set.all()
-    for score in scores:
-        wdd_id = wdd_url_to_tournament_id(score['WDD WPE URL'])
-        for ptr in ptr_s.filter(wdd_tournament_id=wdd_id):
-            print(f'Setting wpe_score for {score["Tournament"]} to {float(score["Score"]):.2f}')
-            if not dry_run:
-                ptr.wpe_score = score['Score']
-                ptr.save(update_fields=['wpe_score'])
 
 
 def add_bs_profile_urls(dry_run=False):
