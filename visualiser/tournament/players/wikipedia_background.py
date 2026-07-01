@@ -32,11 +32,6 @@ from bs4 import BeautifulSoup
 
 from django.conf import settings
 
-from tournament.diplomacy import WINNING_SCS
-from tournament.wdd import (WDD_BASE_RANKING_URL, WDD_BASE_RESULTS_URL,
-                            wdd_img_to_country)
-from tournament.wdr import WDR_BASE_URL
-
 
 class WikipediaNotAccessible(Exception):
     """Wikipedia cannot currently be accessed."""
