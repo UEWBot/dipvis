@@ -515,7 +515,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
         # Ignore any of these that aren't present
         if b['board_score']:
             defaults['score'] = b['board_score']
-        if b['board_centers']:
+        if b['board_centers'] and (b['board_centers'] != -1):
             defaults['final_sc_count'] = b['board_centers']
         if b['board_year_of_elimination']:
             defaults['year_eliminated'] = b['board_year_of_elimination']
@@ -531,7 +531,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}')
+                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t_id
@@ -546,7 +546,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}')
+                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
                 traceback.print_exc()
     # Awards
     for a in bg.awards():
