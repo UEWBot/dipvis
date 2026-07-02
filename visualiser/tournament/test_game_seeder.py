@@ -375,11 +375,6 @@ class GameSeederSetupTest(unittest.TestCase):
         self.assertEqual(8, seeder._fitness_score(game))
 
     # seed_games() errors
-    def test_seed_games_no_players(self):
-        seeder = GameSeeder(self.powers, SeedMethod.RANDOM)
-        games = seeder.seed_games()
-        self.assertEqual(len(games), 0)
-
     def test_seed_games_exhaustive_bad_count(self):
         """Exhaustive seeding with only 6 players in the second round"""
         seeder = GameSeeder(self.powers,
@@ -551,6 +546,12 @@ class _SharedSeederAlgorithmCasesMixin:
     """
 
     seed_method = None
+
+    def test_seed_games_no_players(self):
+        seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
+                            self.seed_method)
+        games = seeder.seed_games()
+        self.assertEqual(len(games), 0)
 
     def _create_method_seeder(self, num_players, starts=1, iterations=1000):
         seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
