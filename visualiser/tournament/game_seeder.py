@@ -166,7 +166,6 @@ class GameSeeder:
         game is either a set of (player, power) 2-tuples, or a set of players
         (player can be any type as long as it's the same in all calls to this object).
         Can raise InvalidPlayer if any player is unknown.
-        Raises InvalidPlayerCount if the game doesn't have seven players.
         """
         with_powers = False
         for x in game:
@@ -279,7 +278,7 @@ class GameSeeder:
 
     def _assign_some_powers(self, players, powers):
         """
-        Returns a list of sets of (player, power) 2- tuples.
+        Returns a list of sets of (player, power) 2-tuples.
 
         This is the set of all possible games with that player and power list.
         """

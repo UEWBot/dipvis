@@ -759,7 +759,7 @@ class RandomGameSeederTest(_SharedRandomBoardSeederCasesMixin,
                            _GameSetAssertionsMixin,
                            unittest.TestCase):
     """
-    Validate the meat of GameSeeder - actually seeding games
+    Validate a random GameSeeder seeding games
     """
 
     # Our players will be strings (names)
