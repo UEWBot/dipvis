@@ -320,6 +320,9 @@ class GameSeeder:
             if score < best_fitness:
                 best_fitness = score
                 best_result = g
+            if best_fitness == 0:
+                # This is as good as it gets - no player has played this power before
+                break
         issues = []
         if best_fitness > 0:
             issues.append(_('Game has %(num)d player(s) who have already played their power') % {'num': best_fitness})
