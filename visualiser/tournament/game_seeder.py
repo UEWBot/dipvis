@@ -463,9 +463,6 @@ class GameSeeder:
         doubling up. Duplicates are treated as distinct entries, but two
         entries representing the same player are never allowed in one board.
         """
-        if len(players) % self.num_powers != 0:
-            raise InvalidPlayerCount(f'{len(players)} is not an exact multiple of {self.num_powers}')
-
         num_boards = len(players) // self.num_powers
         entry_players = list(players)
         num_entries = len(entry_players)
@@ -669,10 +666,6 @@ class GameSeeder:
         players = self._player_pool(omitting_players, players_doubling_up)
         if not players:
             return [], 0
-        if len(players) % self.num_powers != 0:
-            raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
-        if players_doubling_up and (len(players) < 2 * self.num_powers):
-            raise ImpossibleToSeed(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
 
         starts = 1
         if self.games_played or (len(players_doubling_up) > 1):
@@ -708,8 +701,6 @@ class GameSeeder:
         Raises _AssignmentFailed if no valid games can be formed from the
         specified players.
         """
-        if len(players) % self.num_powers != 0:
-            raise InvalidPlayerCount(f'{len(players)} is not an exact multiple of {self.num_powers}')
         if len(set(players)) < self.num_powers:
             # We've ended up with a group of players that we can't make a valid game from
             raise _AssignmentFailed
@@ -760,6 +751,12 @@ class GameSeeder:
             players.remove(p)
         # Add in any duplicate players
         players += list(players_doubling_up)
+        if players:
+            if len(players) % self.num_powers != 0:
+                raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
+            if len(set(players)) < self.num_powers:
+                # We've ended up with a group of players that we can't make a valid game from
+                raise ImpossibleToSeed('Too few unique players for a single game')
         return players
 
     def _seed_games(self, omitting_players, players_doubling_up):
@@ -780,13 +777,6 @@ class GameSeeder:
         players = self._player_pool(omitting_players, players_doubling_up)
         if not players:
             return [], 0
-        # Check that we have a multiple of seven players
-        if len(players) % self.num_powers != 0:
-            raise InvalidPlayerCount(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
-        # If any players are playing two games, there must be at least two games
-        if players_doubling_up:
-            if len(players) < 2 * self.num_powers:
-                raise ImpossibleToSeed(f'{len(self.games_played_matrix)} total plus {len(players_doubling_up)} duplicated minus {len(omitting_players)} omitted')
         res = self._assign_players_wrapper(players)
         # There's no point iterating if all solutions have a fitness of zero
         if self.games_played or (len(players_doubling_up) > 1):
