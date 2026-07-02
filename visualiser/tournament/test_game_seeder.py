@@ -395,6 +395,13 @@ class GameSeederSetupTest(unittest.TestCase):
                                 ('G', '7')})
         self.assertRaises(InvalidPlayerCount, seeder.seed_games, {'E'})
 
+    def test_seed_games_doubler_not_playing(self):
+        seeder = GameSeeder(self.powers,
+                            SeedMethod.EXHAUSTIVE)
+        for p in ['A', 'B', 'C', 'D', 'E', 'F', 'G']:
+            seeder.add_player(p)
+        self.assertRaises(ImpossibleToSeed, seeder.seed_games, {'E'}, {'E'})
+
     def test_seed_games_impossible(self):
         """
         6 players, with one playing two games

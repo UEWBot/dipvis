@@ -747,6 +747,8 @@ class GameSeeder:
         """
         # Come up with a list of players to draw from
         players = list(self.games_played_matrix.keys())
+        if set(omitting_players) & set(players_doubling_up):
+            raise ImpossibleToSeed(f'omitting_players and players_doubling_up are not disjoint')
         # Check the players_doubling_up list
         for p in players_doubling_up:
             if p not in players:
