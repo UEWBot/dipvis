@@ -753,13 +753,13 @@ class GameSeeder:
         for p in players_doubling_up:
             if p not in players:
                 raise InvalidPlayer(str(p))
-        # Add in any duplicate players
-        players += list(players_doubling_up)
-        # And omit any who aren't playing this round
+        # Omit any players who aren't playing this round
         for p in omitting_players:
             if p not in players:
                 raise InvalidPlayer(str(p))
             players.remove(p)
+        # Add in any duplicate players
+        players += list(players_doubling_up)
         return players
 
     def _seed_games(self, omitting_players, players_doubling_up):
