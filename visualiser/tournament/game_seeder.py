@@ -868,7 +868,7 @@ class GameSeeder:
             # Sort them by fitness
             seedings.sort(key=itemgetter(1))
             if self.seed_method == SeedMethod.RANDOM:
-                bg_str = f'With starts={self.starts} and iterations={self.iterations}'
+                bg_str = f'With Random seeding, starts={self.starts} and iterations={self.iterations}'
             elif self.seed_method == SeedMethod.BOARD:
                 bg_str = f'With Board seeding, starts={self.starts}'
             else:
