@@ -802,7 +802,7 @@ class ExhaustiveGameSeederTest(_SharedSeederAlgorithmCasesMixin,
         for count, fitness in players:
             with self.subTest(player_count=count):
                 seeder = GameSeeder(['1', '2', '3', '4', '5', '6', '7'],
-                                    seed_method=SeedMethod.EXHAUSTIVE)
+                                    seed_method=self.seed_method)
                 for i in range(count):
                     seeder.add_player(f'{i}p')
                 r = seeder.seed_games()
