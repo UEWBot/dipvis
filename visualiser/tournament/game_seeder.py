@@ -678,7 +678,7 @@ class GameSeeder:
         best_seeding = None
         best_fitness = None
 
-        for _ in range(starts):
+        for n in range(starts):
             try:
                 seeding, fitness = self._board_seed_games_once(players,
                                                                include_these_games,
@@ -691,6 +691,8 @@ class GameSeeder:
             if best_fitness == 0:
                 # This is as good as it gets, so no point continuing
                 break
+
+        print(f'With Board seeding, starts={self.starts}, best fitness score is {best_fitness} in {n+1} seedings')
 
         return best_seeding, best_fitness
 
@@ -871,11 +873,11 @@ class GameSeeder:
             seedings.sort(key=itemgetter(1))
             if self.seed_method == SeedMethod.RANDOM:
                 bg_str = f'With Random seeding, starts={self.starts} and iterations={self.iterations}'
-            elif self.seed_method == SeedMethod.BOARD:
-                bg_str = f'With Board seeding, starts={self.starts}'
-            else:
+            elif self.seed_method == SeedMethod.EXHAUSTIVE:
                 bg_str = 'With Exhaustive seeding'
-            print(f'{bg_str}, best fitness score is {seedings[0][1]} in {len(seedings)} seedings')
+            if self.seed_method != SeedMethod.BOARD:
+                # The stats for BOARD seeding were already printed
+                print(f'{bg_str}, best fitness score is {seedings[0][1]} in {len(seedings)} seedings')
         finally:
             # Remove temporary bias
             self._add_bias_for_doublers(players_doubling_up, add=False)
