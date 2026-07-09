@@ -684,7 +684,7 @@ class GameSeeder:
                                                                include_these_games,
                                                                optimise_swaps)
             except _AssignmentFailed as e:
-                raise ImpossibleToSeed from e
+                continue
             if (best_fitness is None) or (fitness < best_fitness):
                 best_seeding = seeding
                 best_fitness = fitness
@@ -693,6 +693,9 @@ class GameSeeder:
                 break
 
         print(f'With Board seeding, starts={self.starts}, best fitness score is {best_fitness} in {n+1} seedings')
+
+        if best_fitness is None:
+            raise ImpossibleToSeed(f"Tried {starts} times, and didn't find a valid seeding. doublers={players_doubling_up}, games_played={self.games_played_matrix}")
 
         return best_seeding, best_fitness
 
