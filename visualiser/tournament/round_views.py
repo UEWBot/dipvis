@@ -349,7 +349,7 @@ def _create_game_seeder(tournament, the_round):
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
                         SeedMethod.BOARD,
-                        starts=100)
+                        starts=10)
     # Tell the seeder about every player in the tournament
     # (regardless of whether they're playing this round - they may have played already)
     for tp in tourney_players:
