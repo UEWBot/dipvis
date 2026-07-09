@@ -366,7 +366,7 @@ class GameSeeder:
             if ((len(players) == self.num_powers)
                     and (len(set(players)) < self.num_powers)):
                 # We have just seven players left, but not seven unique players
-                raise _AssignmentFailed
+                raise _AssignmentFailed(f"{self.num_powers} remaining players includes duplicates")
             # Pick a random player to add to the current game
             p = random.choice(list(players))
             if p in game:
@@ -509,7 +509,7 @@ class GameSeeder:
                         continue
                     candidate_scores.append(badness_matrix[b_idx][entry])
                 if not candidate_scores:
-                    raise _AssignmentFailed
+                    raise _AssignmentFailed("No candidate scores")
                 player_to_min_badness[entry] = min(candidate_scores)
 
             critical_value = max(player_to_min_badness.values())
@@ -549,7 +549,7 @@ class GameSeeder:
                 )
             ]
             if not possible_boards:
-                raise _AssignmentFailed
+                raise _AssignmentFailed("No possible boards")
 
             freest = min(len(boards[b_idx]) for b_idx in possible_boards)
             restricted_boards = [b_idx for b_idx in possible_boards if len(boards[b_idx]) == freest]
@@ -710,7 +710,7 @@ class GameSeeder:
         """
         if len(set(players)) < self.num_powers:
             # We've ended up with a group of players that we can't make a valid game from
-            raise _AssignmentFailed
+            raise _AssignmentFailed(f"{len(set(players))} players is fewer than the {self.num_powers} needed")
         if len(players) == self.num_powers:
             # With this number of players, there is exactly one possible game,
             # and therefore exactly one possible seeding
