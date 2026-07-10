@@ -93,10 +93,22 @@ class GameSetAdmin(admin.ModelAdmin):
     inlines = [SetPowerInline]
 
 
+class WDDPlayerInline(admin.TabularInline):
+    model = WDDPlayer
+
+    def get_extra(self, request, obj=None, **kwargs):
+        """Returns the number of extra inline forms to display"""
+        # The vast majority of Players only have one entry in the WDD
+        if obj and obj.wddplayer_set.exists():
+            return 0
+        return 1
+
+
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
     exclude = ['_wdd_firstname', '_wdd_lastname']
     list_filter = ['first_name', 'last_name']
+    inlines = [WDDPlayerInline]
 
 
 @admin.register(PlayerAward)
