@@ -408,6 +408,14 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_detail_superuser_finished(self):
+        """Editable, finished tournament"""
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
     def test_detail_manager(self):
         """A manager can see their unpublished tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
