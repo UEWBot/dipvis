@@ -26,9 +26,10 @@ from django.urls import reverse
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
                                R_SCORING_SYSTEMS, Award, CentreCount,
+                               DBNCoverage,
                                DrawProposal, DrawSecrecy, Game, GamePlayer,
                                PowerAssignMethods, Preference, Round,
-                               RoundPlayer, Seasons, SeederBias, Team,
+                               RoundPlayer, Seasons, SeederBias, Series, Team,
                                Tournament, TournamentPlayer)
 from tournament.players import Player
 
@@ -445,6 +446,66 @@ class TournamentViewTests(TestCase):
         # Cleanup
         self.t2.handicaps = False
         self.t2.save()
+
+    def test_detail_optional_sections(self):
+        """Detail page shows optional metadata sections when present"""
+        t = self.t1
+
+        old_wdr = t.wdr_tournament_id
+        old_wdd = t.wdd_tournament_id
+        old_draw_secrecy = t.draw_secrecy
+        old_team_size = t.team_size
+
+        series = Series.objects.create(name='Coverage Series')
+        series.tournaments.add(t)
+
+        dbn = DBNCoverage.objects.create(tournament=t,
+                                         dbn_url='https://example.com/dbn-test',
+                                         description='Round 1 Stream')
+
+        t.draw_secrecy = DrawSecrecy.COUNTS
+        t.team_size = 3
+        t.save()
+
+        # Make sure at least one listed team round number exists for rendering.
+        r = t.round_set.first()
+        r.is_team_round = True
+        r.save(update_fields=['is_team_round'])
+
+        t.wdr_tournament_id = 1234
+        t.wdd_tournament_id = None
+        t.save(update_fields=['wdr_tournament_id', 'wdd_tournament_id'])
+
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(t.pk,)),
+                                   secure=True)
+        self.assertContains(response, 'View on WDR')
+        self.assertContains(response, 'Part of the following series:')
+        self.assertContains(response, 'Coverage Series')
+        self.assertContains(response, 'Counts of votes in favour of and against draws are revealed.')
+        self.assertContains(response, 'Teams of 3 players')
+        self.assertContains(response, 'Team round:')
+        self.assertContains(response, 'Round 1 Stream')
+
+        t.wdr_tournament_id = None
+        t.wdd_tournament_id = 1234
+        t.save(update_fields=['wdr_tournament_id', 'wdd_tournament_id'])
+
+        response = self.client.get(reverse('tournament_detail',
+                                           args=(t.pk,)),
+                                   secure=True)
+        self.assertContains(response, 'View on WDD')
+
+        # Cleanup
+        r.is_team_round = False
+        r.save(update_fields=['is_team_round'])
+        dbn.delete()
+        series.delete()
+        t.wdr_tournament_id = old_wdr
+        t.wdd_tournament_id = old_wdd
+        t.draw_secrecy = old_draw_secrecy
+        t.team_size = old_team_size
+        t.save()
 
     def test_framesets(self):
         response = self.client.get(reverse('framesets',
