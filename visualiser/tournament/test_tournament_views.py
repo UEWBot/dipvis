@@ -372,6 +372,20 @@ class TournamentViewTests(TestCase):
         self.assertNotContains(response, 't3')  # Unpublished
         self.assertContains(response, 't4')  # Published
 
+    def test_index_in_progress_tournament_shows_current_round_link(self):
+        # Mark a published, unfinished tournament as in progress by adding roll-call data.
+        r = self.t1.round_set.first()
+        rp = RoundPlayer.objects.create(player=self.p1, the_round=r)
+
+        response = self.client.get(reverse('index'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse('tournament_round', args=(self.t1.pk,)))
+        self.assertTemplateUsed(response, 'tournaments/index.html')
+
+        # Cleanup
+        rp.delete()
+
     def test_detail_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
         response = self.client.get(reverse('tournament_detail',
