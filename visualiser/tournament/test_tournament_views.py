@@ -1839,6 +1839,62 @@ class TournamentViewTests(TestCase):
         self.assertContains(response, '<meta http-equiv="refresh"')
         self.assertTemplateUsed(response, 'tournaments/ticker.html')
 
+    def test_ticker_current_round_with_games_redirects_to_news(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        expected_news_url = reverse('tournament_news_ticker',
+                                    args=(self.t2.pk,))
+
+        response = self.client.get(reverse('tournament_ticker',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertContains(response, expected_news_url)
+        self.assertTemplateUsed(response, 'tournaments/ticker.html')
+
+    def test_ticker_current_round_with_no_games_redirects_to_background(self):
+        t = Tournament.objects.create(name='ticker_no_games',
+                                      start_date=self.t1.start_date,
+                                      end_date=self.t1.end_date,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        Round.objects.create(tournament=t,
+                             start=datetime.combine(t.start_date,
+                                                    time(hour=8, tzinfo=datetime_timezone.utc)),
+                             scoring_system=G_SCORING_SYSTEMS[0].name,
+                             dias=True)
+        expected_background_url = reverse('tournament_background_ticker',
+                                          args=(t.pk,))
+
+        try:
+            response = self.client.get(reverse('tournament_ticker',
+                                               args=(t.pk,)),
+                                       secure=True)
+            self.assertContains(response, expected_background_url)
+            self.assertTemplateUsed(response, 'tournaments/ticker.html')
+        finally:
+            t.delete()
+
+    def test_ticker_no_current_round_redirects_to_background(self):
+        t = Tournament.objects.create(name='ticker_no_rounds',
+                                      start_date=self.t1.start_date,
+                                      end_date=self.t1.end_date,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        expected_background_url = reverse('tournament_background_ticker',
+                                          args=(t.pk,))
+
+        try:
+            response = self.client.get(reverse('tournament_ticker',
+                                               args=(t.pk,)),
+                                       secure=True)
+            self.assertContains(response, expected_background_url)
+            self.assertTemplateUsed(response, 'tournaments/ticker.html')
+        finally:
+            t.delete()
+
     def test_background_ticker(self):
         response = self.client.get(reverse('tournament_background_ticker',
                                            args=(self.t1.pk,)),
