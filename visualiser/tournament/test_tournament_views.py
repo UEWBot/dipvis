@@ -1157,6 +1157,27 @@ class TournamentViewTests(TestCase):
         gps[0].tournamentplayer().awards.clear()
         self.t4.awards.clear()
 
+    def test_best_countries_in_progress_uses_italics_for_non_final_values(self):
+        """In-progress games show tentative score and centre count in italics"""
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+
+        gp = GamePlayer.objects.filter(game__the_round=self.r21).first()
+        old_score = gp.score
+        gp.score = 5.55
+        gp.save(update_fields=['score'])
+
+        response = self.client.get(reverse('tournament_best_countries',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/best_countries.html')
+        self.assertContains(response, '5.55')
+        self.assertGreaterEqual(response.content.decode().count('<i>'), 2)
+
+        # Cleanup
+        gp.score = old_score
+        gp.save(update_fields=['score'])
+
     def test_enter_scores_not_logged_in(self):
         response = self.client.get(reverse('enter_scores',
                                            args=(self.t1.pk,)),
