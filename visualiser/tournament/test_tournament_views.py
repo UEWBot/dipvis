@@ -344,6 +344,7 @@ class TournamentViewTests(TestCase):
     def test_index(self):
         response = self.client.get(reverse('index'),
                                    secure=True)
+        self.assertTemplateUsed(response, 'tournaments/index.html')
         # Check that we get the right tournaments listed
         self.assertContains(response, 't1')  # Published
         self.assertNotContains(response, 't2')  # Unpublished
@@ -391,6 +392,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
 
     def test_detail_regular_user(self):
         """Any user can see a published tournament"""
@@ -449,48 +451,56 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_picker.html')
 
     def test_frameset_3x3(self):
         response = self.client.get(reverse('frameset_3x3',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_3x3.html')
 
     def test_frameset_3_games(self):
         response = self.client.get(reverse('frameset_3_games',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_3_games.html')
 
     def test_frameset_2_games(self):
         response = self.client.get(reverse('frameset_2_games',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_2_games.html')
 
     def test_frameset_top_board(self):
         response = self.client.get(reverse('frameset_top_board',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_top_board.html')
 
     def test_frameset_2x2(self):
         response = self.client.get(reverse('frameset_2x2',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_2x2.html')
 
     def test_frameset_1x1(self):
         response = self.client.get(reverse('frameset_1x1',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/frameset_1x1.html')
 
     def test_views(self):
         response = self.client.get(reverse('tournament_views',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/view.html')
 
     def test_views_finished(self):
         self.assertIs(True, self.t4.is_finished)
@@ -867,6 +877,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/score_graph.html')
 
     def test_score_graph_refresh(self):
         self.assertIs(True, self.t4.is_finished)
@@ -903,6 +914,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/game_results.html')
 
     def test_game_results_ongoing(self):
         # Ongoing tournament
@@ -940,6 +952,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/best_countries.html')
 
     def test_best_countries_old(self):
         self.assertIs(True, self.t4.show_current_scores)
@@ -1652,30 +1665,35 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/info.html')
 
     def test_news_ticker(self):
         response = self.client.get(reverse('tournament_news_ticker',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'tournaments/info_ticker.html')
 
     def test_background(self):
         response = self.client.get(reverse('tournament_background',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/info.html')
 
     def test_ticker(self):
         response = self.client.get(reverse('tournament_ticker',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'tournaments/ticker.html')
 
     def test_background_ticker(self):
         response = self.client.get(reverse('tournament_background_ticker',
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'tournaments/info_ticker.html')
 
     def test_rounds(self):
         response = self.client.get(reverse('round_index',
@@ -1695,6 +1713,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/game_links.html')
         # One game has a sandbox link, the other doesn't
         self.assertContains(response, url)
         self.assertContains(response, 'No sandbox link')
