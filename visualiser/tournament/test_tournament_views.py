@@ -597,6 +597,75 @@ class TournamentViewTests(TestCase):
         self.t1.tournament_scoring_system = tss
         self.t1.save()
 
+    def test_scores_no_rounds_finished_shows_final_gp_and_handicap(self):
+        """No-round-scores template: finished heading, gp score row, and handicap value"""
+        self.assertIs(True, self.t4.is_finished)
+        self.assertIs(True, self.t4.tournament_scoring_system_obj().uses_round_scores)
+
+        rss = self.t4.round_scoring_system
+        tss = self.t4.tournament_scoring_system
+        handicaps = self.t4.handicaps
+
+        self.t4.round_scoring_system = NO_SCORING_SYSTEM_STR
+        self.t4.tournament_scoring_system = 'Sum best 3 games in any rounds'
+        self.t4.handicaps = True
+        self.t4.save()
+
+        gp = GamePlayer.objects.filter(game__the_round=self.r41).first()
+        gp.score = 4.56
+        gp.save(update_fields=['score'])
+
+        tp = self.t4.tournamentplayer_set.filter(player=gp.player).first()
+        tp.handicap = 12.34
+        tp.save(update_fields=['handicap'])
+
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t4.pk,)),
+                                   secure=True)
+        self.assertContains(response, 'Final Scores')
+        self.assertContains(response, '4.56')
+        self.assertContains(response, '12.34')
+        self.assertTemplateUsed(response, 'tournaments/scores_no_round_scores.html')
+
+        # Cleanup
+        tp.handicap = 0.0
+        tp.save(update_fields=['handicap'])
+        self.t4.round_scoring_system = rss
+        self.t4.tournament_scoring_system = tss
+        self.t4.handicaps = handicaps
+        self.t4.save()
+
+    def test_scores_no_rounds_fallback_roundplayer_score(self):
+        """No-round-scores template: roundplayer score shown when there are no gameplayers"""
+        self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
+
+        rss = self.t1.round_scoring_system
+        tss = self.t1.tournament_scoring_system
+
+        self.t1.round_scoring_system = NO_SCORING_SYSTEM_STR
+        self.t1.tournament_scoring_system = 'Sum best 3 games in any rounds'
+        self.t1.save()
+
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=self.t1)
+        rp = RoundPlayer.objects.create(player=self.p2,
+                                        the_round=self.t1.round_set.first(),
+                                        game_count=0,
+                                        score=1.23)
+
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertContains(response, '1.23*')
+        self.assertTemplateUsed(response, 'tournaments/scores_no_round_scores.html')
+
+        # Cleanup
+        rp.delete()
+        tp.delete()
+        self.t1.round_scoring_system = rss
+        self.t1.tournament_scoring_system = tss
+        self.t1.save()
+
     def test_scores_completed(self):
         """Scores page for a completed Tournament"""
         self.assertIs(False, self.t4.handicaps)
