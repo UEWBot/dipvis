@@ -163,6 +163,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, NOTE)
+        self.assertTemplateUsed(response, 'games/detail.html')
 
     def test_detail_no_powers(self):
         """Add some GamePlayers, but don't assign powers"""
@@ -198,6 +199,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         p1.delete()
         p2.delete()
@@ -237,6 +239,7 @@ class GameViewTests(TestCase):
                                            args=(self.t2.pk, self.g3.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Cleanup
         self.g3.drawproposal_set.all().delete()
 
@@ -247,6 +250,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertNotContains(response, 'from Backstabbr')
+        self.assertTemplateUsed(response, 'games/detail.html')
 
     def test_detail_scrape_bs_link(self):
         # Give g1 a backstabbr URL
@@ -257,6 +261,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertContains(response, 'from Backstabbr')
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -270,6 +275,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertContains(response, 'from Backstabbr')
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -286,6 +292,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, VALID_BS_URL)
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -304,6 +311,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertNotContains(response, VALID_BS_URL.encode('utf-8'))
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
@@ -323,6 +331,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertNotContains(response, 'After Action Report')
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         p.delete()
         self.g1.is_finished = False
@@ -341,6 +350,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertContains(response, 'After Action Report')
+        self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
         p.delete()
 
@@ -354,6 +364,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name, p.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/aar.html')
         # Clean up
         p.delete()
 
@@ -385,6 +396,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_count.html')
 
     def test_sc_chart_no_powers(self):
         """GamePlayers exist but don't have powers assigned"""
@@ -407,6 +419,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_count.html')
         # Cleanup
         p1.delete()
         p2.delete()
@@ -437,6 +450,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_count.html')
         # Cleanup
         self.g1.gameplayer_set.all().delete()
 
@@ -456,6 +470,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_count.html')
         # Clean up
         self.g1.centrecount_set.filter(year=1902).delete()
         self.g1.centrecount_set.filter(year=1903).delete()
@@ -465,6 +480,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_count.html')
 
     def test_sc_chart_refresh_after_end(self):
         self.assertIs(False, self.g1.is_finished)
@@ -475,6 +491,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'games/sc_count.html')
         # Clean up
         self.g1.is_finished = False
         self.g1.save()
@@ -499,6 +516,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, 'form-1')
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
         # Clean up
         g.delete()
 
@@ -514,6 +532,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_counts_form.html')
 
     def test_post_enter_scs(self):
         self.assertIs(False, self.g1.is_finished)
@@ -788,6 +807,7 @@ class GameViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # Should get an error for the year with too many total SCs
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_counts_form.html')
         # One form-wide error in the 1910 form, because the SC total is 35
         self.assertEqual(response.context['formset'].total_error_count(), 1)
 
@@ -831,6 +851,7 @@ class GameViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # Should get an error for the year with too many total SCs
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_counts_form.html')
         # Italy died in 1908, but also had 4 SCs
         self.assertIn(str(self.italy), response.context['death_form'].errors.keys())
         err = response.context['death_form'].errors.as_data()[str(self.italy)][0]
@@ -881,6 +902,7 @@ class GameViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # Should get an error for Russia recovering from an elimination
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_counts_form.html')
         self.assertEqual(response.context['formset'].total_error_count(), 1)
         # No new CentreCounts should have been created
         self.assertFalse(CentreCount.objects.filter(game=self.g1, year=1907).exists())
@@ -891,12 +913,14 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners.html')
 
     def test_sc_owners_refresh(self):
         response = self.client.get(reverse('game_sc_owners_refresh',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners.html')
 
     def test_sc_owners_refresh_after_end(self):
         self.assertIs(False, self.g1.is_finished)
@@ -907,6 +931,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'games/sc_owners.html')
         # Clean up
         self.g1.is_finished = False
         self.g1.save()
@@ -926,6 +951,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners.html')
         # Cleanup
         self.g1.centrecount_set.filter(year=1902).delete()
 
@@ -952,6 +978,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners.html')
         # Clean up
         self.g1.supplycentreownership_set.filter(year=1903).delete()
         self.g1.centrecount_set.filter(year=1903).delete()
@@ -969,6 +996,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners_form.html')
 
     def test_enter_sc_owners_fixed_end(self):
         r = self.g1.the_round
@@ -980,6 +1008,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners_form.html')
         # Validate the number of empty rows
         # Header, 1900, plus 5 empty rows (1901..1905)
         self.assertEqual(response.content.count(b'</tr>'), 1 + 1 + 5)
@@ -1115,6 +1144,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/image.html')
 
     def test_current_game_image_after_end(self):
         self.assertIs(False, self.g1.is_finished)
@@ -1125,6 +1155,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'games/image.html')
         # Clean up
         self.g1.is_finished = False
         self.g1.save()
@@ -1134,6 +1165,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name, 'S1901M')),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/image.html')
 
     def test_game_image_invalid1(self):
         """Year too early"""
@@ -1154,12 +1186,14 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/image.html')
 
     def test_game_image_seq(self):
         response = self.client.get(reverse('game_image_seq',
                                            args=(self.t1.pk, self.g1.name, 'S1901M')),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/image.html')
 
     def test_add_position_not_logged_in(self):
         response = self.client.get(reverse('add_game_image',
@@ -1173,12 +1207,14 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/add_image.html')
 
     def test_news(self):
         response = self.client.get(reverse('game_news',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/info.html')
 
     def test_news_for_year(self):
         p1 = Player.objects.create(first_name='Abbey', last_name='Artichoke')
@@ -1220,6 +1256,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name, 1903)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/info.html')
         # Cleanup
         self.g1.centrecount_set.filter(year=1903).all().delete()
         p1.delete()
@@ -1241,24 +1278,28 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/info_ticker.html')
 
     def test_background(self):
         response = self.client.get(reverse('game_background',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/info.html')
 
     def test_background_ticker(self):
         response = self.client.get(reverse('game_background_ticker',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/info_ticker.html')
 
     def test_ticker(self):
         response = self.client.get(reverse('game_ticker',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/ticker.html')
 
     def test_draw_vote_not_logged_in(self):
         response = self.client.get(reverse('draw_vote',
@@ -1365,6 +1406,7 @@ class GameViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/vote.html')
         self.assertEqual(self.g2.drawproposal_set.count(), 0)
         # Clean up
         self.g2.centrecount_set.filter(year=1901).delete()
@@ -1680,6 +1722,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/vote.html')
 
     def test_post_secret_concession(self):
         self.assertEqual(self.g2.drawproposal_set.count(), 0)
@@ -1843,6 +1886,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/vote.html')
 
     # test game_views._graph_end_year()
     def test_graph_end_year_finished(self):
@@ -1893,6 +1937,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
 
     def test_sc_graph_refresh(self):
         """Test the page that holds the graph image"""
@@ -1900,6 +1945,7 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
 
     def test_sc_graph_refresh_after_end(self):
         """Test the page that holds the graph image"""
@@ -1911,6 +1957,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertNotContains(response, '<meta http-equiv="refresh"')
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
         # Clean up
         self.g1.is_finished = False
         self.g1.save()
@@ -1959,24 +2006,28 @@ class GameViewTests(TestCase):
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/view.html')
 
     def test_overview(self):
         response = self.client.get(reverse('game_overview',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_count.html')
 
     def test_overview2(self):
         response = self.client.get(reverse('game_overview_2',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_owners.html')
 
     def test_overview3(self):
         response = self.client.get(reverse('game_overview_3',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
 
     def test_scrape_external_not_logged_in(self):
         response = self.client.get(reverse('enter_scs',
@@ -2005,6 +2056,7 @@ class GameViewTests(TestCase):
                                    secure=True)
         # TODO Check the information displayed on the page
         self.assertContains(response, '1912')
+        self.assertTemplateUsed(response, 'games/scrape_external_site.html')
         # We should have added CentreCounts and SupplyCentreOwnerships for 1912
         ccs = self.g1.centrecount_set.filter(year=1912)
         self.assertEqual(len(ccs), 7)
