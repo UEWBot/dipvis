@@ -5381,7 +5381,7 @@ class TournamentTests(TestCase):
             tournament.delete()
             manager.delete()
 
-    def test_tournament_can_be_deleted_by_rejects_non_manager_non_editable_or_games(self):
+    def test_tournament_can_be_deleted_by_rejects_non_manager_or_non_editable(self):
         today = date.today()
         manager = User.objects.create_user(username='delete-manager-2')
         other_user = User.objects.create_user(username='delete-non-manager')
@@ -5400,9 +5400,23 @@ class TournamentTests(TestCase):
             tournament.editable = False
             tournament.save(update_fields=['editable'])
             self.assertFalse(tournament.can_be_deleted_by(manager))
+        finally:
+            tournament.delete()
+            manager.delete()
+            other_user.delete()
 
-            tournament.editable = True
-            tournament.save(update_fields=['editable'])
+    def test_tournament_can_be_deleted_by_manager_even_with_games(self):
+        today = date.today()
+        manager = User.objects.create_user(username='delete-manager-games')
+        tournament = Tournament.objects.create(name='Delete permission with games test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=True)
+        try:
+            tournament.managers.add(manager)
             r = Round.objects.create(tournament=tournament,
                                      scoring_system=G_SCORING_SYSTEMS[0].name,
                                      dias=True,
@@ -5412,11 +5426,10 @@ class TournamentTests(TestCase):
                                 started_at=r.start,
                                 the_round=r,
                                 the_set=self.set1)
-            self.assertFalse(tournament.can_be_deleted_by(manager))
+            self.assertTrue(tournament.can_be_deleted_by(manager))
         finally:
             tournament.delete()
             manager.delete()
-            other_user.delete()
 
     def test_tournament_clean_sum_1(self):
         today = date.today()

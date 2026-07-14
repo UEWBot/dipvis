@@ -1105,15 +1105,10 @@ class Tournament(models.Model):
         """
         Returns False if the specified user is not allowed to delete the Tournament
 
-        This method only checks self.managers, self.editable, and whether Games
-        already exist. It is up to the caller to check permissions, etc.
+        This method only checks self.managers and self.editable. It is up to
+        the caller to check permissions, etc.
         """
-        if not self.can_be_managed_by(user):
-            return False
-        if not self.editable:
-            return False
-        # If there are already Games, don't allow the deletion
-        return not Game.objects.filter(the_round__tournament=self).exists()
+        return self.can_be_changed_by(user)
 
     def powers_assigned_from_prefs(self):
         """
