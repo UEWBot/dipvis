@@ -342,6 +342,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/detail.html')
 
     def test_detail_final_year_and_pools(self):
         t = Tournament.objects.create(name='detail_final_year',
@@ -363,6 +364,7 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_detail', args=(t.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/detail.html')
         self.assertContains(response, 'Games in this round end with 1905.')
         self.assertContains(response, 'Pools:')
         self.assertContains(response, 'Pool A')
@@ -393,6 +395,7 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_detail', args=(t.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/detail.html')
         self.assertContains(response, 'Games in this round will end between')
         self.assertContains(response, 'detail-round-game')
         self.assertContains(response, ' (Complete)')
@@ -412,6 +415,7 @@ class RoundViewTests(TestCase):
         response = self.client.get(reverse('round_detail', args=(self.t3.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/detail.html')
         self.assertContains(response, 'Pool B:')
         self.assertContains(response, 'T3R1G1')
         self.assertContains(response, ' (Complete)')
@@ -456,6 +460,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 2)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/scores.html')
 
     def test_round_scores_no_round_scores_template_non_final_scores(self):
         t = Tournament.objects.create(name='round_scores_no_round_scores',
@@ -511,6 +516,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 10)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/scores_no_round_scores.html')
         # Cleanup
         self.t2.tournament_scoring_system = tss
         self.t2.save()
@@ -525,6 +531,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/scores.html')
         # Cleanup
         self.t2.show_current_scores = True
         self.t2.save()
@@ -543,6 +550,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 2)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/scores.html')
         # Cleanup
         r1.is_finished = False
         r1.save()
@@ -562,6 +570,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/scores.html')
         # Cleanup
         r1.is_finished = False
         r1.save()
@@ -579,6 +588,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t3.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
         # Should redirect to itself
         self.assertContains(response, 'sc_graphs/T3R1G1/')
 
@@ -587,12 +597,14 @@ class RoundViewTests(TestCase):
                                            args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
         # Should redirect to game 2
         self.assertContains(response, 'sc_graphs/T4R1G2/')
         response = self.client.get(reverse('round_sc_graphs_from_game',
                                            args=(self.t4.pk, 1, 'T4R1G2')),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/sc_graph.html')
         # Should redirect back to game 1
         self.assertContains(response, 'sc_graphs/T4R1G1/')
 
@@ -614,6 +626,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/roll_call.html')
 
     def test_roll_call_post_current_round_no_seeding(self):
         """roll_call() POST for t1, which only has a single Round"""
@@ -830,6 +843,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertContains(response, ' did play this round')
+        self.assertTemplateUsed(response, 'rounds/roll_call.html')
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
         # Clean up
         GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
@@ -869,6 +883,7 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # There should be a validation error for the last player
         self.assertContains(response, 'appears more than once')
+        self.assertTemplateUsed(response, 'rounds/roll_call.html')
         # Should re-load the same page
         self.assertEqual(response.context['post_url'], url)
         # No clean up needed because there was an error
@@ -885,6 +900,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/get_seven.html')
 
     def test_get_seven_too_few_players(self):
         """Nothing we can do if have fewer than seven players"""
@@ -904,6 +920,7 @@ class RoundViewTests(TestCase):
                                    secure=True)
         # We should still get the "get seven" page
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/get_seven.html')
 
     def test_get_seven_sitters(self):
         """get_seven where we specify people sitting out"""
@@ -1163,6 +1180,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/populate_pools.html')
         # Cleanup
         self.r11.pool_set.all().delete()
 
@@ -1252,6 +1270,7 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # All 7 players should be required
         self.assertContains(response, 'This field is required.')
+        self.assertTemplateUsed(response, 'rounds/populate_pools.html')
         # No RoundPlayers should be assigned to a pool
         for rp in self.r11.roundplayer_set.all():
             self.assertEqual(rp.pool, None)
@@ -1276,6 +1295,7 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # Duplicate should be reported as an error
         self.assertContains(response, 'Player Bobby Bandersnatch appears more than once')
+        self.assertTemplateUsed(response, 'rounds/populate_pools.html')
         # No RoundPlayers should be assigned to a pool
         for rp in self.r11.roundplayer_set.all():
             self.assertEqual(rp.pool, None)
@@ -1306,6 +1326,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 3)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # A single Game should have been created
         g_qs = self.t2.round_numbered(3).game_set
         self.assertEqual(g_qs.count(), 1)
@@ -1328,6 +1349,7 @@ class RoundViewTests(TestCase):
                                    secure=True)
         # Check that the powers are not selected in the form (this also checks for status 200)
         self.assertContains(response, 'option value="" selected')
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # A single Game should have been created
         g_qs = self.t2.round_numbered(3).game_set
         self.assertEqual(g_qs.count(), 1)
@@ -1351,6 +1373,7 @@ class RoundViewTests(TestCase):
                                    secure=True)
         # Check that the powers are selected in the form (this also checks for status 200)
         self.assertNotContains(response, 'option value="" selected')
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # A single Game should have been created
         g_qs = self.t3.round_numbered(2).game_set
         self.assertEqual(g_qs.count(), 1)
@@ -1375,6 +1398,7 @@ class RoundViewTests(TestCase):
                                    secure=True)
         # Check that the powers are selected in the form (this also checks for status 200)
         self.assertNotContains(response, 'option value="" selected')
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Two Games should have been created
         g_qs = self.t1.round_numbered(1).game_set
         self.assertEqual(g_qs.count(), 2)
@@ -1487,6 +1511,7 @@ class RoundViewTests(TestCase):
         # Form should be for one game in each of the two pools
         self.assertContains(response, 'R1GA')
         self.assertContains(response, 'R1GB')
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Cleanup
         new_rp.delete()
         tp.delete()
@@ -1534,6 +1559,7 @@ class RoundViewTests(TestCase):
         # Form should be for one game in each of the two pools
         self.assertContains(response, 'R1GA')
         self.assertContains(response, 'R1GB')
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Cleanup
         new_rp.delete()
         tp.delete()
@@ -1586,6 +1612,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(gs2.count(), 1)
         for gp in gs2.first().gameplayer_set.all():
             self.assertIsNotNone(gp.power)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Cleanup
         new_rp.delete()
         tp.delete()
@@ -1636,6 +1663,7 @@ class RoundViewTests(TestCase):
         gs2 = pool2.game_set.all()
         self.assertEqual(gs2.count(), 1)
         self.assertEqual(gs2.first().is_top_board, False)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Cleanup
         new_rp.delete()
         tp.delete()
@@ -1816,6 +1844,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Check error(s)
         self.assertEqual(len(response.context['formset'].errors[0]['name']), 1)
         self.assertIn('Game names cannot contain ',
@@ -1900,6 +1929,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Check error(s)
         self.assertIn('Select a valid choice. That choice is not one of the available choices.',
                       response.context['formset'].errors[0][str(gp5.pk)])
@@ -1944,6 +1974,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
         # Check error(s)
         self.assertIn('Power Italy appears more than once',
                       response.context['formset'].errors[0]['__all__'])
@@ -1962,6 +1993,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
 
     def test_create_games_no_players(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1969,6 +2001,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
 
     def test_create_games_when_games_exist(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1976,6 +2009,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t3.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
 
     def test_create_games_invalid_pool(self):
         r = self.t3.round_numbered(1)
@@ -2012,6 +2046,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t4.pk, 1, pool1.slug)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
         # g2 should be in the form, g1 should not
         self.assertNotContains(response, g1.name)
         self.assertContains(response, g2.name)
@@ -2035,6 +2070,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t3.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
         # Clean-up
         for gp in g.gameplayer_set.all():
             gp.power = powers[gp]
@@ -2363,6 +2399,7 @@ class RoundViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         # We should get an error due to the duplicate name
+        self.assertTemplateUsed(response, 'rounds/create_games.html')
         self.assertContains(response, 'must be unique')
         # Clean up
         self.r21.game_set.all().delete()
@@ -2380,6 +2417,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t3.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/game_score.html')
 
     def test_game_scores_post(self):
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -2432,15 +2470,18 @@ class RoundViewTests(TestCase):
                                            args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/index.html')
 
     def test_board_call(self):
         response = self.client.get(reverse('board_call',
                                            args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/board_call.html')
 
     def test_board_call_by_player(self):
         response = self.client.get(reverse('board_call_by_player',
                                            args=(self.t4.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/board_call_by_player.html')
