@@ -41,11 +41,13 @@ class TournamentPermissionAdminMixin:
             tournament = getattr(tournament, attr)
         return tournament
 
+    def has_tournament_change_permission(self, request, obj, tournament):
+        """Hook for model-specific object-level change checks."""
+        return tournament.can_be_changed_by(request.user)
+
     def has_view_permission(self, request, obj=None):
         """Check admin permission plus Tournament-level visibility constraints."""
         # Generic permissions for unspecified obj
-        if request.user.is_superuser:
-            return True
         if not super().has_view_permission(request, None):
             return False
         if obj is None:
@@ -58,8 +60,6 @@ class TournamentPermissionAdminMixin:
     def has_change_permission(self, request, obj=None):
         """Check admin permission plus Tournament-level constraints for action."""
         # Generic permissions for unspecified obj
-        if request.user.is_superuser:
-            return True
         if not super().has_change_permission(request, None):
             return False
         if obj is None:
@@ -67,13 +67,11 @@ class TournamentPermissionAdminMixin:
 
         # Specific permissions for objects in a given tournament
         tournament = self.get_tournament_for_permission(obj)
-        return tournament.can_be_changed_by(request.user)
+        return self.has_tournament_change_permission(request, obj, tournament)
 
     def has_delete_permission(self, request, obj=None):
         """Check admin permission plus Tournament-level constraints for action."""
         # Generic permissions for unspecified obj
-        if request.user.is_superuser:
-            return True
         if not super().has_delete_permission(request, None):
             return False
         if obj is None:
@@ -282,6 +280,11 @@ class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
 
     def get_tournament_for_permission(self, obj):
         return obj
+
+    def has_tournament_change_permission(self, request, obj, tournament):
+        # Tournament managers may always edit the Tournament object itself,
+        # including toggling editable.
+        return tournament.can_be_managed_by(request.user)
 
 
 @admin.register(TournamentPlayer)

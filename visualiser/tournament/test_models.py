@@ -52,7 +52,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                validate_round_scoring_system,
                                validate_tournament_scoring_system,
                                validate_vote_count)
-from tournament.admin import TournamentAdmin
+from tournament.admin import RoundAdmin, TournamentAdmin
 from tournament.players import MASK_ALL_BG, Player
 
 HOURS_8 = timedelta(hours=8)
@@ -5124,6 +5124,106 @@ class TournamentTests(TestCase):
             tournament.delete()
             manager.delete()
 
+    def test_tournament_can_be_managed_by_manager(self):
+        today = date.today()
+        manager = User.objects.create_user(username='manage-manager')
+        tournament = Tournament.objects.create(name='Manage permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=False)
+        try:
+            tournament.managers.add(manager)
+            self.assertTrue(tournament.can_be_managed_by(manager))
+        finally:
+            tournament.delete()
+            manager.delete()
+
+    def test_tournament_can_be_managed_by_superuser(self):
+        today = date.today()
+        superuser = User.objects.create_user(username='manage-superuser',
+                                             is_superuser=True,
+                                             is_staff=True)
+        tournament = Tournament.objects.create(name='Manage superuser permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=False)
+        try:
+            self.assertTrue(tournament.can_be_managed_by(superuser))
+            self.assertFalse(tournament.can_be_changed_by(superuser))
+        finally:
+            tournament.delete()
+            superuser.delete()
+
+    def test_tournament_admin_manager_can_change_uneditable_tournament_only(self):
+        today = date.today()
+        manager = User.objects.create_user(username='manage-admin-manager',
+                                           is_staff=True)
+        change_tournament_perm = Permission.objects.get(codename='change_tournament')
+        change_round_perm = Permission.objects.get(codename='change_round')
+        manager.user_permissions.add(change_tournament_perm)
+        manager.user_permissions.add(change_round_perm)
+        tournament = Tournament.objects.create(name='Manage admin permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=False)
+        round_obj = Round.objects.create(tournament=tournament,
+                                         scoring_system=G_SCORING_SYSTEMS[0].name,
+                                         dias=True,
+                                         start=datetime.combine(tournament.start_date,
+                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+        try:
+            tournament.managers.add(manager)
+            request = RequestFactory().get('/admin/tournament/tournament/')
+            request.user = manager
+
+            tournament_admin = TournamentAdmin(Tournament, AdminSite())
+            round_admin = RoundAdmin(Round, AdminSite())
+
+            self.assertTrue(tournament_admin.has_change_permission(request, tournament))
+            self.assertFalse(round_admin.has_change_permission(request, round_obj))
+        finally:
+            tournament.delete()
+            manager.delete()
+
+    def test_tournament_admin_superuser_can_change_uneditable_tournament_only(self):
+        today = date.today()
+        superuser = User.objects.create_user(username='manage-admin-superuser',
+                                             is_staff=True,
+                                             is_superuser=True)
+        tournament = Tournament.objects.create(name='Manage admin superuser permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=False)
+        round_obj = Round.objects.create(tournament=tournament,
+                                         scoring_system=G_SCORING_SYSTEMS[0].name,
+                                         dias=True,
+                                         start=datetime.combine(tournament.start_date,
+                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+        try:
+            request = RequestFactory().get('/admin/tournament/tournament/')
+            request.user = superuser
+
+            tournament_admin = TournamentAdmin(Tournament, AdminSite())
+            round_admin = RoundAdmin(Round, AdminSite())
+
+            self.assertTrue(tournament_admin.has_change_permission(request, tournament))
+            self.assertFalse(round_admin.has_change_permission(request, round_obj))
+        finally:
+            tournament.delete()
+            superuser.delete()
+
     def test_tournament_can_be_viewed_by_published_tournament(self):
         today = date.today()
         user = User.objects.create_user(username='view-regular-user')
@@ -5159,6 +5259,24 @@ class TournamentTests(TestCase):
             tournament.delete()
             manager.delete()
             other_user.delete()
+
+    def test_tournament_can_be_viewed_by_unpublished_tournament_superuser(self):
+        today = date.today()
+        superuser = User.objects.create_user(username='view-superuser',
+                                             is_superuser=True,
+                                             is_staff=True)
+        tournament = Tournament.objects.create(name='Unpublished superuser visibility test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=False)
+        try:
+            self.assertTrue(tournament.can_be_viewed_by(superuser))
+        finally:
+            tournament.delete()
+            superuser.delete()
 
     def test_tournament_admin_has_view_permission_published_for_non_manager(self):
         today = date.today()

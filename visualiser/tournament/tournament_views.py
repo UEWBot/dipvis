@@ -74,33 +74,6 @@ def tournament_index(request):
     return render(request, 'tournaments/index.html', context)
 
 
-# Utility functions
-
-def user_can_manage(t, user):
-    """
-    Determine whether the specified user can manage the tournament
-    """
-    # It's easy if the user is a manager for the tournament
-    if user.is_active and t in user.tournament_set.all():
-        return True
-    # Superusers can manage all tournaments
-    if user.is_superuser:
-        return True
-    # Default to no
-    return False
-
-
-def tournament_is_visible(t, user):
-    """
-    Determine whether the specified user should be allowed to view the tournament
-    """
-    # Visible to all if published
-    if t.is_published:
-        return True
-    # and if the user can manage the tournament
-    return user_can_manage(t, user)
-
-
 def get_visible_tournament_or_404(pk, user):
     """
     Get the specified Tournament object, if it exists and is visible to the user.
@@ -108,7 +81,7 @@ def get_visible_tournament_or_404(pk, user):
     If it doesn't exist or isn't visible, raise Http404.
     """
     t = get_object_or_404(Tournament, pk=pk)
-    if tournament_is_visible(t, user):
+    if t.can_be_viewed_by(user):
         return t
     raise Http404
 
@@ -120,7 +93,7 @@ def get_modifiable_tournament_or_404(pk, user):
     If it doesn't exist or isn't editable, raise Http404.
     """
     t = get_visible_tournament_or_404(pk, user)
-    if t.editable:
+    if t.can_be_changed_by(user):
         return t
     raise Http404
 
@@ -674,7 +647,7 @@ def _previous_bias(tournament, user):
     # Look for any where both players are in this tournament
     sb_set = sb_set.filter(player1__player__in=players).filter(player2__player__in=players)
     # Remove any from tournaments the user can't see
-    sb_list = [sb for sb in sb_set if tournament_is_visible(sb.player1.tournament, user)]
+    sb_list = [sb for sb in sb_set if sb.player1.tournament.can_be_viewed_by(user)]
     # TODO remove any that are also in the current tournament ?
     # Note that this list will include SeederBiases that the current user can't
     # normally see (because they can't manage the tournament). We could
@@ -690,7 +663,7 @@ def seeder_bias(request, tournament_id):
     t = get_visible_tournament_or_404(tournament_id, user)
     # Only display the page if the user can manage the tournament
     # (but still display it if the tournament is no longer editable)
-    if not user_can_manage(t, user):
+    if not t.can_be_managed_by(user):
         raise Http404('User is not a manager of the tournament, or superuser')
     sb_set = SeederBias.objects.filter(player1__tournament=t)
     form = SeederBiasForm(request.POST or None,

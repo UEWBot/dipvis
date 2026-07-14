@@ -1080,17 +1080,26 @@ class Tournament(models.Model):
         This method only checks self.managers and self.editable. It is up to
         the caller to check permissions, etc.
         """
-        # Note that this means that only the superuser can unset editable
-        return self.managers.filter(pk=user.pk).exists() and self.editable
+        return self.can_be_managed_by(user) and self.editable
+
+    def can_be_managed_by(self, user):
+        """
+        Returns True if the specified user can manage the Tournament.
+
+        This method only checks superuser status and self.managers. It is up to
+        the caller to check
+        permissions, etc.
+        """
+        return user.is_superuser or self.managers.filter(pk=user.pk).exists()
 
     def can_be_viewed_by(self, user):
         """
         Returns False if the specified user is not allowed to view the Tournament.
 
         Published tournaments are visible to everyone.
-        Unpublished tournaments are only visible to managers.
+        Unpublished tournaments are only visible to superusers and managers.
         """
-        return self.is_published or self.managers.filter(pk=user.pk).exists()
+        return self.is_published or self.can_be_managed_by(user)
 
     def can_be_deleted_by(self, user):
         """
@@ -1099,7 +1108,7 @@ class Tournament(models.Model):
         This method only checks self.managers, self.editable, and whether Games
         already exist. It is up to the caller to check permissions, etc.
         """
-        if not self.managers.filter(pk=user.pk).exists():
+        if not self.can_be_managed_by(user):
             return False
         if not self.editable:
             return False
