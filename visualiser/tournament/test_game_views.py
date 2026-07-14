@@ -2002,11 +2002,31 @@ class GameViewTests(TestCase):
     # TODO what about a DrawProposal for a game that was won outright?
 
     def test_views(self):
+        self.assertGreater(self.g1.gameimage_set.count(), 0)
+        # Add ownership data so the Supply Centre Ownership link is shown
+        self.assertEqual(self.g1.supplycentreownership_set.filter(year=1903).count(), 0)
+        for sc, p in self.default_owners.items():
+            SupplyCentreOwnership.objects.create(game=self.g1,
+                                                 sc=SupplyCentre.objects.get(name=sc),
+                                                 owner=p,
+                                                 year=1903)
+        # Add a second image so Latest Position/Position Timelapse links are shown
+        first_image = self.g1.gameimage_set.order_by('year', '-season', 'phase').first()
+        image = self.g1.gameimage_set.create(year=first_image.year + 1,
+                                             season=first_image.season,
+                                             phase=first_image.phase,
+                                             image=first_image.image.name)
         response = self.client.get(reverse('game_views',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Supply Centre Ownership')
+        self.assertContains(response, 'Latest Position')
+        self.assertContains(response, 'Position Timelapse')
         self.assertTemplateUsed(response, 'games/view.html')
+        # Clean up
+        image.delete()
+        self.g1.supplycentreownership_set.filter(year=1903).delete()
 
     def test_overview(self):
         response = self.client.get(reverse('game_overview',
