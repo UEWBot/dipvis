@@ -900,6 +900,7 @@ class RoundViewTests(TestCase):
                                            args=(self.t1.pk, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'You need <b>either</b>')
         self.assertTemplateUsed(response, 'rounds/get_seven.html')
 
     def test_get_seven_too_few_players(self):
@@ -920,7 +921,46 @@ class RoundViewTests(TestCase):
                                    secure=True)
         # We should still get the "get seven" page
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "You don't need anyone to sit out or play two boards.")
         self.assertTemplateUsed(response, 'rounds/get_seven.html')
+
+    def test_get_seven_all_standbys_needed(self):
+        """A round with exactly enough standbys should require all of them"""
+        r = Round.objects.create(tournament=self.t1,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=self.r11.start + timedelta(hours=1))
+        for player in [self.p1, self.p2, self.p3, self.p4, self.p5]:
+            RoundPlayer.objects.create(player=player, the_round=r)
+        RoundPlayer.objects.create(player=self.p6, the_round=r, standby=True)
+        RoundPlayer.objects.create(player=self.p7, the_round=r, standby=True)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('get_seven', args=(self.t1.pk, r.number())),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'You need all your standby players to play.')
+        self.assertTemplateUsed(response, 'rounds/get_seven.html')
+        # Clean up
+        r.delete()
+
+    def test_get_seven_some_standbys_needed(self):
+        """A round with more standbys than needed should only ask for a subset"""
+        r = Round.objects.create(tournament=self.t1,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=self.r11.start + timedelta(hours=2))
+        for player in [self.p1, self.p2, self.p3, self.p4, self.p5, self.p6]:
+            RoundPlayer.objects.create(player=player, the_round=r)
+        for player in [self.p7, self.p8, self.p9, self.p10]:
+            RoundPlayer.objects.create(player=player, the_round=r, standby=True)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('get_seven', args=(self.t1.pk, r.number())),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'You need one standby player to play,')
+        self.assertTemplateUsed(response, 'rounds/get_seven.html')
+        # Clean up
+        r.delete()
 
     def test_get_seven_sitters(self):
         """get_seven where we specify people sitting out"""
