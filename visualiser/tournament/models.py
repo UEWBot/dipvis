@@ -1083,6 +1083,15 @@ class Tournament(models.Model):
         # Note that this means that only the superuser can unset editable
         return self.managers.filter(pk=user.pk).exists() and self.editable
 
+    def can_be_viewed_by(self, user):
+        """
+        Returns False if the specified user is not allowed to view the Tournament.
+
+        Published tournaments are visible to everyone.
+        Unpublished tournaments are only visible to managers.
+        """
+        return self.is_published or self.managers.filter(pk=user.pk).exists()
+
     def can_be_deleted_by(self, user):
         """
         Returns False if the specified user is not allowed to delete the Tournament

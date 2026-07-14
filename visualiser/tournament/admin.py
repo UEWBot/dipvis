@@ -41,6 +41,20 @@ class TournamentPermissionAdminMixin:
             tournament = getattr(tournament, attr)
         return tournament
 
+    def has_view_permission(self, request, obj=None):
+        """Check admin permission plus Tournament-level visibility constraints."""
+        # Generic permissions for unspecified obj
+        if request.user.is_superuser:
+            return True
+        if not super().has_view_permission(request, None):
+            return False
+        if obj is None:
+            return True
+
+        # Specific permissions for objects in a given tournament
+        tournament = self.get_tournament_for_permission(obj)
+        return tournament.can_be_viewed_by(request.user)
+
     def has_change_permission(self, request, obj=None):
         """Check admin permission plus Tournament-level constraints for action."""
         # Generic permissions for unspecified obj

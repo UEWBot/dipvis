@@ -19,13 +19,14 @@ from datetime import timezone as datetime_timezone
 from unittest import skip
 
 from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
 from django.db.utils import IntegrityError
 from django.forms import modelform_factory
-from django.test import TestCase, override_settings, tag
+from django.test import RequestFactory, TestCase, override_settings, tag
 
 from tournament import backstabbr, webdip
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
@@ -5122,6 +5123,104 @@ class TournamentTests(TestCase):
         finally:
             tournament.delete()
             manager.delete()
+
+    def test_tournament_can_be_viewed_by_published_tournament(self):
+        today = date.today()
+        user = User.objects.create_user(username='view-regular-user')
+        tournament = Tournament.objects.create(name='Published view permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=True)
+        try:
+            self.assertTrue(tournament.can_be_viewed_by(user))
+        finally:
+            tournament.delete()
+            user.delete()
+
+    def test_tournament_can_be_viewed_by_unpublished_tournament(self):
+        today = date.today()
+        manager = User.objects.create_user(username='view-manager')
+        other_user = User.objects.create_user(username='view-non-manager')
+        tournament = Tournament.objects.create(name='Unpublished view permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=False)
+        try:
+            tournament.managers.add(manager)
+            self.assertTrue(tournament.can_be_viewed_by(manager))
+            self.assertFalse(tournament.can_be_viewed_by(other_user))
+        finally:
+            tournament.delete()
+            manager.delete()
+            other_user.delete()
+
+    def test_tournament_admin_has_view_permission_published_for_non_manager(self):
+        today = date.today()
+        user = User.objects.create_user(username='admin-view-user',
+                                        is_staff=True)
+        view_perm = Permission.objects.get(codename='view_tournament')
+        user.user_permissions.add(view_perm)
+        tournament = Tournament.objects.create(name='Admin published visibility test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=True)
+        try:
+            request = RequestFactory().get('/admin/tournament/tournament/')
+            request.user = user
+            admin_instance = TournamentAdmin(Tournament, AdminSite())
+            self.assertTrue(admin_instance.has_view_permission(request, tournament))
+        finally:
+            tournament.delete()
+            user.delete()
+
+    def test_tournament_admin_has_view_permission_unpublished_is_limited(self):
+        today = date.today()
+        manager = User.objects.create_user(username='admin-view-manager',
+                                           is_staff=True)
+        other_user = User.objects.create_user(username='admin-view-non-manager',
+                                              is_staff=True)
+        superuser = User.objects.create_user(username='admin-view-superuser',
+                                             is_staff=True,
+                                             is_superuser=True)
+        view_perm = Permission.objects.get(codename='view_tournament')
+        manager.user_permissions.add(view_perm)
+        other_user.user_permissions.add(view_perm)
+        tournament = Tournament.objects.create(name='Admin unpublished visibility test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=False)
+        try:
+            tournament.managers.add(manager)
+            admin_instance = TournamentAdmin(Tournament, AdminSite())
+
+            manager_request = RequestFactory().get('/admin/tournament/tournament/')
+            manager_request.user = manager
+            self.assertTrue(admin_instance.has_view_permission(manager_request, tournament))
+
+            other_request = RequestFactory().get('/admin/tournament/tournament/')
+            other_request.user = other_user
+            self.assertFalse(admin_instance.has_view_permission(other_request, tournament))
+
+            superuser_request = RequestFactory().get('/admin/tournament/tournament/')
+            superuser_request.user = superuser
+            self.assertTrue(admin_instance.has_view_permission(superuser_request, tournament))
+        finally:
+            tournament.delete()
+            manager.delete()
+            other_user.delete()
+            superuser.delete()
 
     def test_tournament_can_be_changed_by_rejects_non_manager_or_non_editable(self):
         today = date.today()
