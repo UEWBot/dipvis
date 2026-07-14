@@ -343,6 +343,84 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
 
+    def test_detail_final_year_and_pools(self):
+        t = Tournament.objects.create(name='detail_final_year',
+                                      start_date=date.today(),
+                                      end_date=date.today() + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=False,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                                 final_year=1905)
+        Pool.objects.create(the_round=r,
+                            name='Pool A',
+                            board_count=2)
+
+        response = self.client.get(reverse('round_detail', args=(t.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Games in this round end with 1905.')
+        self.assertContains(response, 'Pools:')
+        self.assertContains(response, 'Pool A')
+        self.assertContains(response, '2 games')
+        # Clean up
+        t.delete()
+
+    def test_detail_earliest_end_time_and_games(self):
+        t = Tournament.objects.create(name='detail_earliest_end_time',
+                                      start_date=date.today(),
+                                      end_date=date.today() + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=False,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
+                                 earliest_end_time=datetime.combine(t.start_date, time(hour=10, tzinfo=datetime_timezone.utc)),
+                                 latest_end_time=datetime.combine(t.start_date, time(hour=12, tzinfo=datetime_timezone.utc)))
+        g = Game.objects.create(name='detail-round-game',
+                                started_at=r.start,
+                                is_finished=True,
+                                the_round=r,
+                                the_set=self.ah)
+
+        response = self.client.get(reverse('round_detail', args=(t.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Games in this round will end between')
+        self.assertContains(response, 'detail-round-game')
+        self.assertContains(response, ' (Complete)')
+        # Clean up
+        t.delete()
+
+    def test_detail_seed_games_warning_and_pooled_games(self):
+        r = self.r31
+        g = r.game_set.first()
+        pool = Pool.objects.create(the_round=r,
+                                   name='Pool B',
+                                   board_count=1)
+        g.pool = pool
+        g.save(update_fields=['pool'])
+
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('round_detail', args=(self.t3.pk, 1)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Pool B:')
+        self.assertContains(response, 'T3R1G1')
+        self.assertContains(response, ' (Complete)')
+        self.assertContains(response, 'permanently delete the existing 1 games!')
+        # Clean up
+        g.pool = None
+        g.save(update_fields=['pool'])
+        pool.delete()
+
     def test_detail_non_existent_round(self):
         response = self.client.get(reverse('round_detail',
                                            args=(self.t1.pk, 2)),
