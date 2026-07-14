@@ -24,10 +24,10 @@ from django.urls import reverse
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.game_scoring import G_SCORING_SYSTEMS
-from tournament.models import (R_SCORING_SYSTEMS, DrawSecrecy, Formats, Game,
-                               GamePlayer, Pool, PowerAssignMethods, Round,
-                               RoundPlayer, SeederBias, Team, Tournament,
-                               TournamentPlayer)
+from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
+                               DrawSecrecy, Formats, Game, GamePlayer, Pool,
+                               PowerAssignMethods, Round, RoundPlayer,
+                               SeederBias, Team, Tournament, TournamentPlayer)
 from tournament.players import Player
 
 
@@ -456,6 +456,49 @@ class RoundViewTests(TestCase):
                                            args=(self.t2.pk, 2)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+
+    def test_round_scores_no_round_scores_template_non_final_scores(self):
+        t = Tournament.objects.create(name='round_scores_no_round_scores',
+                                      start_date=date.today(),
+                                      end_date=date.today() + timedelta(hours=24),
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                      tournament_scoring_system='Sum best 3 games in any rounds',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=r1.start + timedelta(hours=24))
+        TournamentPlayer.objects.create(player=self.p1,
+                                        tournament=t)
+        RoundPlayer.objects.create(player=self.p1,
+                                   the_round=r1)
+        RoundPlayer.objects.create(player=self.p1,
+                                   the_round=r2,
+                                   score=1.23)
+        g = Game.objects.create(name='round_scores_game',
+                                started_at=r1.start,
+                                is_finished=False,
+                                the_round=r1,
+                                the_set=self.ah)
+        GamePlayer.objects.create(player=self.p1,
+                                  game=g,
+                                  power=self.turkey,
+                                  score=4.56)
+
+        response = self.client.get(reverse('round_scores', args=(t.pk, 2)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '4.56')
+        self.assertContains(response, '1.23*')
+        self.assertTemplateUsed(response, 'rounds/scores_no_round_scores.html')
+
+        # Cleanup
+        t.delete()
 
     def test_round_scores_large_round_number(self):
         """Beyond last round is allowed"""
