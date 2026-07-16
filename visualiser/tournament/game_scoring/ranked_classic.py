@@ -24,7 +24,8 @@ from django.utils.translation import gettext as _
 from tournament.diplomacy import FIRST_YEAR, WINNING_SCS
 
 from .game_scoring_system import GameScoringSystem
-from .utils import _adjust_rank_score_lower_special, _sorted_scores
+from .utils import (_adjust_rank_score_lower_special,
+                    _adjust_rank_score_lower_special2, _sorted_scores)
 
 
 class GScoringRankedClassic(GameScoringSystem):
@@ -45,18 +46,54 @@ class GScoringRankedClassic(GameScoringSystem):
          2nd: 90 points (70 if tied by 2 players)
          1st: 200 points (135 if tied by 2 players)
        If there is a tie for a particular rank between three or more players,
-       those players receive the score for the lower of the rankings (i.e.,
+       those players either receive the score for the lower of the rankings (i.e.,
        in a 3-way tie for 1st place, those players are all ranked third; in
-       a 4-way tie for 4th, those players are ranked seventh, etc).
+       a 4-way tie for 4th, those players are ranked seventh, etc) or the 2-way tie
+       score for the second lowest position (so 3 people tying for first means
+       they're all ranked tied second, and 4 people tying for fourth means they're
+       all ranked tied sixth).
     Games that end in solos score as follows:
      - The soloing player gets 550 points.
      - All other players get 1 point for every year survived.
     """
-    def __init__(self):
-        self.name = _('Ranked Classic')
+    def __init__(self, name, multi_way_ties_score_lower):
+        self.name = name
         self.position_points = [200, 90, 60, 40, 30, 20, 10]
         self.position_points_2_tied = [135, 70, 50, 35, 25, 15]
         self.dead_score_can_change = False
+        self.multi_way_ties_score_lower = multi_way_ties_score_lower
+
+    @property
+    def description(self):
+        if self.multi_way_ties_score_lower:
+            multi_way_tie_desc = """If there is a tie for a particular rank between three or more players,
+                                    those players receive the score for the lower of the rankings (i.e.,
+                                    in a 3-way tie for 1st place, those players are all ranked third; in
+                                    a 4-way tie for 4th, those players are ranked seventh, etc)."""
+        else:
+            multi_way_tie_desc = """If a rank is tied by 3+ players, all players receive rank points as
+                                    if there was a two way tie for the second lowest position (so 3 people
+                                    tying for first means they're all ranked tied second, and 4 people
+                                    tying for fourth means they're all ranked tied sixth)."""
+        return _("""
+                 Games that end by draw vote or timing out score as follows:
+                  - Players score 10 points per supply center.
+                  - Eliminated players get 1 point for every year survived.
+                  - Surviving players get a 30 point survival bonus.
+                  - Surviving players are ranked by their ending supply center count
+                    and score a ranking bonus as follows:
+                      7th: 10 points
+                      6th: 20 points (15 if tied by 2 players)
+                      5th: 30 points (25 if tied by 2 players)
+                      4th: 40 points (35 if tied by 2 players)
+                      3rd: 60 points (50 if tied by 2 players)
+                      2nd: 90 points (70 if tied by 2 players)
+                      1st: 200 points (135 if tied by 2 players)
+                    %(multi_way_tie_desc)s
+                 Games that end in solos score as follows:
+                  - The soloing player gets 550 points.
+                  - All other players get 1 point for every year survived.
+                 """) % {'multi_way_tie_desc': multi_way_tie_desc}
 
     def scores(self, state):
         """
@@ -77,9 +114,14 @@ class GScoringRankedClassic(GameScoringSystem):
         else:
             dots.sort(key=itemgetter(1), reverse=True)
             # Tweak the ranking points to allow for ties
-            rank_pts = _adjust_rank_score_lower_special(dots,
-                                                        self.position_points,
-                                                        self.position_points_2_tied)
+            if self.multi_way_ties_score_lower:
+                rank_pts = _adjust_rank_score_lower_special(dots,
+                                                            self.position_points,
+                                                            self.position_points_2_tied)
+            else:
+                rank_pts = _adjust_rank_score_lower_special2(dots,
+                                                             self.position_points,
+                                                             self.position_points_2_tied)
             for i, (p, c) in enumerate(dots):
                 if c < 1:
                     # Eliminated players only get participation points

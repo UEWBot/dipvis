@@ -162,3 +162,62 @@ def _adjust_rank_score_lower_special(centre_counts, rank_points, two_way_rank_po
     return rank_pts[0:i] + _adjust_rank_score_lower_special(centre_counts[i:],
                                                             rank_pts[i:],
                                                             two_way_rank_pts[i:])
+
+
+def _adjust_rank_score_lower_special2(centre_counts, rank_points, two_way_rank_points):
+    """
+    Allocate points for rank
+
+    Takes a list of (power, centre count) 2-tuples for one year of one game,
+    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered from first place to last.
+    Also takes a second list of ranking points for positions, also
+    ordered from first place to last, that is used if exactly two players are
+    tied for a given rank.
+    Returns a list of ranking points for positions, ordered to correspond to
+    the centre counts, having made adjustments for any tied positions.
+    Where three or more powers have the same number of SCs, all tied players
+    get points as if there was a 2-way tie for the second lowest position.
+    """
+    if not rank_points:
+        # The rest of them get zero points
+        return [] + [0.0] * len(centre_counts)
+    # Work with copies of rank_points and two_way_rank_points
+    rank_pts = rank_points.copy()
+    two_way_rank_pts = two_way_rank_points.copy()
+    # First count powers tied at the top
+    i = 0
+    points = 0
+    scs = centre_counts[0][1]
+    while (i < len(centre_counts)) and (centre_counts[i][1] == scs):
+        if i < len(rank_pts):
+            points = rank_pts[i]
+        else:
+            points = 0
+        i += 1
+    # Do we not have a tie at the top?
+    if i == 1:
+        # Just regular old rank_points
+        pass
+    # If exactly two players are tied for the rank, use the alternate table
+    elif i == 2:
+        if len(two_way_rank_pts):
+            points = two_way_rank_pts[0]
+        else:
+            points = 0
+    # 3 or more tied players is complex
+    else:
+        if len(two_way_rank_pts) > i - 2:
+            points = two_way_rank_pts[i-2]
+        else:
+            points = 0
+    # Now give the points to those tied players
+    for j in range(0, i):
+        if j < len(rank_pts):
+            rank_pts[j] = points
+        else:
+            rank_pts.append(points)
+    # And recursively continue
+    return rank_pts[0:i] + _adjust_rank_score_lower_special2(centre_counts[i:],
+                                                             rank_pts[i:],
+                                                             two_way_rank_pts[i:])

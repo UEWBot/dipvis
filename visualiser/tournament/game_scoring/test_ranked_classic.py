@@ -25,7 +25,8 @@ from .test_general import check_score_for_state
 class RankedClassicGameScoringTests(TestCase):
     fixtures = ['game_sets.json']
 
-    RANKED_CLASSIC = 'Ranked Classic'
+    RANKED_CLASSIC_ORIG = 'Ranked Classic'
+    RANKED_CLASSIC_V2 = 'Ranked Classic v2'
 
     @classmethod
     def setUpTestData(cls):
@@ -57,7 +58,9 @@ class RankedClassicGameScoringTests(TestCase):
                   self.italy: 30 + 5 * 10 + 40,
                   self.russia: 7,
                   self.turkey: 30 + 2 * 10 + 30}
-        check_score_for_state(self, example_a, self.RANKED_CLASSIC, EXPECT)
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, example_a, sys, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo2(self):
         example_b = SimpleGameState(sc_counts={self.austria: 0,
@@ -79,7 +82,9 @@ class RankedClassicGameScoringTests(TestCase):
                   self.italy: 30 + 4 * 10 + 60,
                   self.russia: 7,
                   self.turkey: 30 + 3 * 10 + 40}
-        check_score_for_state(self, example_b, self.RANKED_CLASSIC, EXPECT)
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, example_b, sys, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo3(self):
         example_c = SimpleGameState(sc_counts={self.austria: 0,
@@ -94,14 +99,23 @@ class RankedClassicGameScoringTests(TestCase):
                                                        self.france: 1908,
                                                        self.russia: 1908},
                                     draw=None)
-        EXPECT = {self.austria: 3,
-                  self.england: 30 + 11 * 10 + 60,
-                  self.france: 7,
-                  self.germany: 30 + 11 * 10 + 60,
-                  self.italy: 30 + 11 * 10 + 60,
-                  self.russia: 7,
-                  self.turkey: 30 + 1 * 10 + 40}
-        check_score_for_state(self, example_c, self.RANKED_CLASSIC, EXPECT)
+        EXPECT = {self.RANKED_CLASSIC_ORIG: {self.austria: 3,
+                                             self.england: 30 + 11 * 10 + 60,
+                                             self.france: 7,
+                                             self.germany: 30 + 11 * 10 + 60,
+                                             self.italy: 30 + 11 * 10 + 60,
+                                             self.russia: 7,
+                                             self.turkey: 30 + 1 * 10 + 40},
+                  self.RANKED_CLASSIC_V2: {self.austria: 3,
+                                           self.england: 30 + 11 * 10 + 70,
+                                           self.france: 7,
+                                           self.germany: 30 + 11 * 10 + 70,
+                                           self.italy: 30 + 11 * 10 + 70,
+                                           self.russia: 7,
+                                           self.turkey: 30 + 1 * 10 + 40}}
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, example_c, sys, EXPECT[sys])
 
     def test_g_scoring_rankedclassic_no_solo4(self):
         example_d = SimpleGameState(sc_counts={self.austria: 0,
@@ -124,7 +138,9 @@ class RankedClassicGameScoringTests(TestCase):
                   self.italy: 30 + 11 * 10 + 70,
                   self.russia: 6,
                   self.turkey: 6}
-        check_score_for_state(self, example_d, self.RANKED_CLASSIC, EXPECT)
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, example_d, sys, EXPECT)
 
     def test_g_scoring_rankedclassic_no_solo5(self):
         example_e = SimpleGameState(sc_counts={self.austria: 0,
@@ -146,7 +162,38 @@ class RankedClassicGameScoringTests(TestCase):
                   self.italy: 30 + 10 * 10 + 70,
                   self.russia: 7,
                   self.turkey: 30 + 2 * 10 + 40}
-        check_score_for_state(self, example_e, self.RANKED_CLASSIC, EXPECT)
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, example_e, sys, EXPECT)
+
+    def test_g_scoring_rankedclassic_no_solo6(self):
+        four_way_tie = SimpleGameState(sc_counts={self.austria: 2,
+                                                  self.england: 7,
+                                                  self.france: 2,
+                                                  self.germany: 9,
+                                                  self.italy: 10,
+                                                  self.russia: 2,
+                                                  self.turkey: 2},
+                                       final_year=1908,
+                                       elimination_years={},
+                                       draw=None)
+        EXPECT = {self.RANKED_CLASSIC_ORIG: {self.austria: 30 + 2 * 10 + 10,
+                                             self.england: 30 + 7 * 10 + 60,
+                                             self.france: 30 + 2 * 10 + 10,
+                                             self.germany: 30 + 9 * 10 + 90,
+                                             self.italy: 30 + 10 * 10 + 200,
+                                             self.russia: 30 + 2 * 10 + 10,
+                                             self.turkey: 30 + 2 * 10 + 10},
+                  self.RANKED_CLASSIC_V2: {self.austria: 30 + 2 * 10 + 15,
+                                           self.england: 30 + 7 * 10 + 60,
+                                           self.france: 30 + 2 * 10 + 15,
+                                           self.germany: 30 + 9 * 10 + 90,
+                                           self.italy: 30 + 10 * 10 + 200,
+                                           self.russia: 30 + 2 * 10 + 15,
+                                           self.turkey: 30 + 2 * 10 + 15}}
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, four_way_tie, sys, EXPECT[sys])
 
     def test_g_scoring_rankedclassic_solo(self):
         example_f = SimpleGameState(sc_counts={self.austria: 0,
@@ -168,4 +215,6 @@ class RankedClassicGameScoringTests(TestCase):
                   self.italy: 10,
                   self.russia: 7,
                   self.turkey: 10}
-        check_score_for_state(self, example_f, self.RANKED_CLASSIC, EXPECT)
+        for sys in [self.RANKED_CLASSIC_ORIG, self.RANKED_CLASSIC_V2]:
+            with self.subTest(system=sys):
+               check_score_for_state(self, example_f, sys, EXPECT)

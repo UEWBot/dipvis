@@ -18,7 +18,8 @@ from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
 
-from .utils import _adjust_rank_score_lower_special
+from .utils import (_adjust_rank_score_lower_special,
+                    _adjust_rank_score_lower_special2)
 
 
 class UtilsTests(TestCase):
@@ -71,4 +72,39 @@ class UtilsTests(TestCase):
         result = _adjust_rank_score_lower_special(dots,
                                                   POS_PTS,
                                                   POS_PTS_2_TIED)
+        self.assertEqual(result, EXPECT)
+
+    # Some tests of _adjust_rank_score_lower_special2
+    def test_adjust_rank_score_lower_special2_3_way_ties(self):
+        POS_PTS = [70, 60, 50, 40, 30, 20, 10]
+        POS_PTS_2_TIED = [700, 600, 500, 400, 300, 200]
+        dots = [(self.austria, 6),
+                (self.england, 6),
+                (self.france, 6),
+                (self.germany, 5),
+                (self.italy, 5),
+                (self.russia, 5),
+                (self.turkey, 1)]
+        # 3 from POS_PTS_2_TIED, then 3 more from there, last one from POS_PTS
+        EXPECT = [600, 600, 600, 300, 300, 300, 10]
+        result = _adjust_rank_score_lower_special2(dots,
+                                                   POS_PTS,
+                                                   POS_PTS_2_TIED)
+        self.assertEqual(result, EXPECT)
+
+    def test_adjust_rank_score_lower_special2_6_way_tie(self):
+        POS_PTS = [70, 60, 50, 40, 30, 20, 10]
+        POS_PTS_2_TIED = [700, 600, 500, 400, 300, 200]
+        dots = [(self.austria, 5),
+                (self.england, 5),
+                (self.france, 5),
+                (self.germany, 5),
+                (self.italy, 5),
+                (self.russia, 5),
+                (self.turkey, 4)]
+        # Six from POS_PTS_2_TIED, then 1 from POS_PTS
+        EXPECT = [300, 300, 300, 300, 300, 300, 10]
+        result = _adjust_rank_score_lower_special2(dots,
+                                                   POS_PTS,
+                                                   POS_PTS_2_TIED)
         self.assertEqual(result, EXPECT)
