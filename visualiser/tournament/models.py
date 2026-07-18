@@ -980,7 +980,7 @@ class Tournament(models.Model):
     num_games_in_team_score = models.PositiveSmallIntegerField(blank=True,
                                                                null=True,
                                                                validators=[MinValueValidator(1)],
-                                                               help_text=_('The number of game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
+                                                               help_text=_('The number of team round game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
 
     class Meta:
         ordering = ['-start_date']
