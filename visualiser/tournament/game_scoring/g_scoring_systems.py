@@ -27,6 +27,7 @@ from .cdiplo import GScoringCDiplo
 from .cdiplo_namur import GScoringCDiploNamur
 from .detour09 import GScoringDetour09
 from .draw_size import GScoringDrawSize
+from .duct_tape_v2 import GScoringDuctTapeV2
 from .haight import GScoringHaight
 from .manorcon import GScoringManorCon
 from .maxonian import GScoringMaxonian
@@ -72,6 +73,8 @@ G_SCORING_SYSTEMS = [
     GScoringCDiploNamur(),
     GScoringDetour09(),
     GScoringDrawSize(),
+    GScoringDuctTapeV2(_('Duct Tape V2'), elimination_order=False),
+    GScoringDuctTapeV2(_('Duct Tape V2 (elimination order)'), elimination_order=True),
     GScoringHaight(),
     GScoringManorCon(_('ManorCon'),           75, True),
     GScoringManorCon(_('Original ManorCon'), 100, True),
