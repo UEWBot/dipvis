@@ -27,7 +27,7 @@ class DuctTapeV2GameScoringTests(TestCase):
 
     # Scoring systems tested
     DUCT_TAPE_DEAD_EQUAL = 'Duct Tape V2'
-    DUCT_TAPE_ELIM_ORDER = 'Duct Tape V2 (elimination order)'
+    DUCT_TAPE_ELIM_ORDER = 'Duct Tape V2 with elimination order'
 
     @classmethod
     def setUpTestData(cls):

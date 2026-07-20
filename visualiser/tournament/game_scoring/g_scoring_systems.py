@@ -74,7 +74,7 @@ G_SCORING_SYSTEMS = [
     GScoringDetour09(),
     GScoringDrawSize(),
     GScoringDuctTapeV2(_('Duct Tape V2'), elimination_order=False),
-    GScoringDuctTapeV2(_('Duct Tape V2 (elimination order)'), elimination_order=True),
+    GScoringDuctTapeV2(_('Duct Tape V2 with elimination order'), elimination_order=True),
     GScoringHaight(),
     GScoringManorCon(_('ManorCon'),           75, True),
     GScoringManorCon(_('Original ManorCon'), 100, True),
