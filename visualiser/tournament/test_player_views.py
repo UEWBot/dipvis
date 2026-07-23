@@ -301,6 +301,8 @@ class PlayerViewTests(TestCase):
         self.assertContains(response, 'Last Name')
         self.assertContains(response, 'Optional columns:')
         self.assertContains(response, 'Backstabbr Username')
+        self.assertContains(response, 'WDR URL')
+        self.assertContains(response, 'WDR Id')
         self.assertContains(response, 'WDD URL')
         self.assertContains(response, 'WDD Id')
         self.assertContains(response, 'Upload')
@@ -401,6 +403,86 @@ class PlayerViewTests(TestCase):
         self.assertEqual(response.url, reverse('upload_players'))
         p = Player.objects.get(first_name='Will', last_name='WrongId')
         self.assertFalse(WDDPlayer.objects.filter(player=p).exists())
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_invalid_wdr_id_non_integer(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,WDR Id,Backstabbr Username\n'
+            'Wren,WrongWdr,abc,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        response = self.client.post(reverse('upload_players'),
+                                    {'csv_file': csv_file},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Wren', last_name='WrongWdr')
+        self.assertIsNone(p.wdr_player_id)
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_valid_wdr_id(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,WDR Id,Backstabbr Username\n'
+            'Ria,RightWdr,4173,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.validate_wdr_player_id',
+                   return_value=None):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Ria', last_name='RightWdr')
+        self.assertEqual(p.wdr_player_id, 4173)
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_valid_wdr_url(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,WDR URL,Backstabbr Username\n'
+            'Ruth,UrlWdr,https://www.world-diplomacy-reference.com/players/4173,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.validate_wdr_player_id',
+                   return_value=None):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Ruth', last_name='UrlWdr')
+        self.assertEqual(p.wdr_player_id, 4173)
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_invalid_wdr_url_non_integer(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,WDR URL,Backstabbr Username\n'
+            'Uma,UrlBadWdr,https://www.world-diplomacy-reference.com/players/not-a-number,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        response = self.client.post(reverse('upload_players'),
+                                    {'csv_file': csv_file},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Uma', last_name='UrlBadWdr')
+        self.assertIsNone(p.wdr_player_id)
         # Cleanup
         p.delete()
 

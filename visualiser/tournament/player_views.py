@@ -35,6 +35,7 @@ from tournament.forms import PlayerForm
 from tournament.players import (Player, PlayerGameResult, WDDPlayer,
                                 add_player_bg)
 from tournament.wdd import validate_wdd_player_id
+from tournament.wdr import validate_wdr_player_id
 
 # Player views
 
@@ -195,11 +196,56 @@ def upload_players(request):
                             messages.warning(request, f'WDD URL for {first_name} {last_name} is invalid - ignored')
                             wdd_id = None
 
+            # Accept either WDR Id or WDR URL
+            # If we have a valid WDR Id, ignore WDR URL
+            try:
+                wdr_id = row['WDR Id'].strip()
+            except KeyError:
+                wdr_id = None
+            else:
+                try:
+                    wdr_id = int(wdr_id)
+                except ValueError:
+                    if len(wdr_id):
+                        messages.warning(request, f'WDR Id for {first_name} {last_name} is invalid - ignored')
+                    wdr_id = None
+                else:
+                    try:
+                        validate_wdr_player_id(wdr_id)
+                    except ValidationError:
+                        messages.warning(request, f'WDR Id for {first_name} {last_name} is invalid - ignored')
+                        wdr_id = None
+
+            if wdr_id is None:
+                try:
+                    wdr_url = row['WDR URL'].strip()
+                except KeyError:
+                    wdr_url = None
+                else:
+                    if len(wdr_url) > 0:
+                        try:
+                            wdr_id = int(wdr_url.rstrip('/').rpartition('/players/')[-1])
+                        except ValueError:
+                            messages.warning(request, f'WDR URL for {first_name} {last_name} is invalid - ignored')
+                            wdr_id = None
+                        else:
+                            try:
+                                validate_wdr_player_id(wdr_id)
+                            except ValidationError:
+                                messages.warning(request, f'WDR URL for {first_name} {last_name} is invalid - ignored')
+                                wdr_id = None
+
             # Add the Player
             p, created = Player.objects.update_or_create(first_name=first_name,
                                                          last_name=last_name,
                                                          defaults={'email': email,
                                                                    'backstabbr_username': bs_un})
+            if wdr_id:
+                if p.wdr_player_id is None:
+                    p.wdr_player_id = wdr_id
+                    p.save(update_fields=['wdr_player_id'])
+                elif p.wdr_player_id != wdr_id:
+                    messages.warning(request, f'Player {first_name} {last_name} already exists with a different WDR id')
             if wdd_id:
                 WDDPlayer.get_or_create(wdd_player_id=wdd_id, player=p)
             if created:
