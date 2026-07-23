@@ -371,6 +371,7 @@ class TournamentPlayerViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/index.html')
         # Verify that paid players get asterisks
         for tp in self.t1.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
@@ -378,6 +379,24 @@ class TournamentPlayerViewTests(TestCase):
                     self.assertContains(response, f'{tp.player.last_name}</a>*')
                 else:
                     self.assertNotContains(response, f'{tp.player.last_name}*')
+
+    def test_index_no_players_registered(self):
+        today = date.today()
+        t = Tournament.objects.create(name='t_no_players',
+                                      start_date=today,
+                                      end_date=today + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        response = self.client.get(reverse('tournament_players',
+                                           args=(t.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/index.html')
+        self.assertContains(response, 'No players yet registered')
+        # Cleanup
+        t.delete()
 
     def test_index_editable_prefs(self):
         """A tournament that can be edited, that uses preferences for power assignment"""
@@ -438,6 +457,24 @@ class TournamentPlayerViewTests(TestCase):
         # Clean up
         tp.handicap = 0.0
         tp.save()
+
+    def test_index_editable_paid_column(self):
+        """A tournament that can be edited, with at least one paid player"""
+        tp = self.t2.tournamentplayer_set.first()
+        original_paid = tp.paid
+        tp.paid = True
+        tp.save(update_fields=['paid'])
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('tournament_players',
+                                           args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/index_form.html')
+        self.assertContains(response, 'Paid?')
+        self.assertContains(response, '>Yes<', html=False)
+        # Cleanup
+        tp.paid = original_paid
+        tp.save(update_fields=['paid'])
 
     def test_index_archived(self):
         """A tournament that the user could edit, except that it's been set to not editable"""
@@ -578,6 +615,7 @@ class TournamentPlayerViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # It should redirect back to the same page
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/index_form.html')
         self.assertEqual('Select a valid choice. That choice is not one of the available choices.',
                          response.context['formset'].errors[1]['player'][0])
 
@@ -663,6 +701,7 @@ class TournamentPlayerViewTests(TestCase):
                                    secure=True,
                                    content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/payments.html')
         self.u3.user_permissions.remove(perm)
         self.u3.save()
 
@@ -760,6 +799,7 @@ class TournamentPlayerViewTests(TestCase):
                                            args=(self.t3.pk, tp.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/detail.html')
         # Cleanup
         tp.delete()
 
@@ -768,6 +808,86 @@ class TournamentPlayerViewTests(TestCase):
                                            args=(self.t1.pk, self.tp11.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/detail.html')
+
+    def test_details_unranked(self):
+        self.assertIs(False, self.tp11.unranked)
+        self.tp11.unranked = True
+        self.tp11.save(update_fields=['unranked'])
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp11.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/detail.html')
+        self.assertContains(response, 'Position: Unranked')
+        self.assertContains(response, 'Ineligible for awards.')
+        # Cleanup
+        self.tp11.unranked = False
+        self.tp11.save(update_fields=['unranked'])
+
+    def test_details_finished_position(self):
+        tp = self.t4.tournamentplayer_set.get(player=self.p1)
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t4.pk, tp.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/detail.html')
+        self.assertContains(response, 'Position:')
+        self.assertNotContains(response, 'Current position:')
+        self.assertContains(response, 'Round 1')
+
+    def test_details_power_not_assigned(self):
+        r = self.t1.round_numbered(1)
+        g = Game.objects.create(name='PendingPowerGame',
+                                the_round=r,
+                                started_at=r.start,
+                                the_set=GameSet.objects.first(),
+                                is_finished=False)
+        rp = RoundPlayer.objects.create(player=self.p1,
+                                        the_round=r)
+        gp = GamePlayer.objects.create(player=self.p1,
+                                       game=g,
+                                       power=None)
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp11.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/detail.html')
+        self.assertContains(response, 'Round 1')
+        self.assertContains(response, 'Power not yet assigned in')
+        self.assertContains(response, 'PendingPowerGame')
+        # Cleanup
+        gp.delete()
+        rp.delete()
+        g.delete()
+
+    def test_details_currently_best_country(self):
+        r = self.t1.round_numbered(1)
+        g = Game.objects.create(name='CurrentBestGame',
+                                the_round=r,
+                                started_at=r.start,
+                                the_set=GameSet.objects.first(),
+                                is_finished=False)
+        rp = RoundPlayer.objects.create(player=self.p1,
+                                        the_round=r)
+        gp = GamePlayer.objects.create(player=self.p1,
+                                       game=g,
+                                       power=self.austria,
+                                       score=12.0)
+        CentreCount.objects.create(power=self.austria,
+                                   game=g,
+                                   year=1901,
+                                   count=7)
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp11.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/detail.html')
+        self.assertContains(response, 'Currently best')
+        # Cleanup
+        gp.delete()
+        rp.delete()
+        g.delete()
 
     def test_details_versus(self):
         """Test the 'Versus' button"""
@@ -787,6 +907,7 @@ class TournamentPlayerViewTests(TestCase):
                                            args=(self.t1.pk, self.tp11.uuid_str)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/player_entry.html')
 
     def test_player_prefs_invalid_uuid(self):
         """Should get a 404 error if the UUID doesn't correspond to a TournamentPlayer"""
