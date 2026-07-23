@@ -416,6 +416,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
 
     def test_detail_superuser(self):
         """A superuser can see any tournament"""
@@ -424,6 +425,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t3.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
 
     def test_detail_superuser_finished(self):
         """Editable, finished tournament"""
@@ -432,6 +434,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
 
     def test_detail_manager(self):
         """A manager can see their unpublished tournament"""
@@ -440,6 +443,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
 
     def test_detail_handicap(self):
         """Check for link to handicaps page"""
@@ -449,6 +453,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
         self.assertNotContains(response, 'andicap')
         self.t2.handicaps = True
         self.t2.save()
@@ -456,6 +461,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/detail.html')
         self.assertContains(response, 'andicap')
         # Cleanup
         self.t2.handicaps = False
@@ -583,6 +589,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/view.html')
 
     def test_views_team(self):
         self.assertIsNone(self.t4.team_size)
@@ -592,6 +599,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/view.html')
         # Cleanup
         self.t4.team_size = None
         self.t4.save()
@@ -1031,6 +1039,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/score_graph.html')
         self.assertContains(response, '<meta http-equiv="refresh"')
         # Cleanup
         self.t4.is_finished = True
@@ -1042,6 +1051,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/score_graph.html')
         self.assertNotContains(response, '<meta http-equiv="refresh"')
 
     def test_graph(self):
@@ -1067,6 +1077,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/game_results.html')
 
     def test_game_results_refresh_after_finish(self):
         t = self.t4
@@ -1075,6 +1086,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/game_results.html')
         self.assertNotContains(response, '<meta http-equiv="refresh"')
 
     def test_game_results_refresh(self):
@@ -1086,6 +1098,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/game_results.html')
         self.assertContains(response, '<meta http-equiv="refresh"')
         # Cleanup
         t.is_finished = True
@@ -1106,6 +1119,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/best_countries.html')
         # Cleanup
         self.t4.show_current_scores = True
         self.t4.save()
@@ -1118,6 +1132,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/best_countries.html')
         # Cleanup
         self.t1.show_current_scores = True
         self.t1.save()
@@ -1231,6 +1246,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_scores.html')
 
     def test_enter_scores_manager(self):
         """A manager can enter scores for their tournament"""
@@ -1239,6 +1255,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_scores.html')
 
     def test_enter_scores_post(self):
         """A manager can enter scores for their tournament"""
@@ -1364,6 +1381,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_handicaps.html')
         # Cleanup
         self.t1.handicaps = False
         self.t1.save()
@@ -1378,6 +1396,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_handicaps.html')
         # Cleanup
         self.t2.handicaps = False
         self.t2.save()
@@ -1469,6 +1488,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/teams.html')
         # Cleanup
         tm.delete()
         self.t1.team_size = None
@@ -1547,6 +1567,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_teams.html')
         # Cleanup
         self.t1.team_size = None
         self.t1.save()
@@ -1561,6 +1582,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_teams.html')
         # Cleanup
         self.t2.team_size = None
         self.t2.save()
@@ -1597,6 +1619,7 @@ class TournamentViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_teams.html')
         self.assertContains(response, 'Select a valid choice. That choice is not one of the available choices.')
         self.assertEqual(0, self.t2.team_set.count())
         # Cleanup
@@ -1641,6 +1664,7 @@ class TournamentViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_teams.html')
         self.assertContains(response, 'appears more than once')
         tm2.refresh_from_db()
         self.assertEqual(tm2.name, 'Existing Team 2')
@@ -1683,6 +1707,7 @@ class TournamentViewTests(TestCase):
                                     secure=True,
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_teams.html')
         form = response.context['formset'].forms[0]
         self.assertFormError(form, 'player_2',
                              f'{players[3].player} appears in multiple teams')
@@ -1810,6 +1835,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/detail.html')
 
     def test_current_round_completed(self):
         """'Current round' for a tournament that has ended"""
@@ -1921,6 +1947,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/index.html')
 
     def test_game_links(self):
         # Add an external URL to one game
@@ -1956,6 +1983,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t2.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/enter_prefs.html')
 
     def test_enter_prefs_no_prefs(self):
         """Even a manager can't enter preferences for a tournament that uses another power assignment method"""
@@ -2077,6 +2105,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/seeder_bias.html')
         # Shouldn't matter if the tournament is editable
         self.t1.editable = False
         self.t1.save()
@@ -2084,6 +2113,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/seeder_bias.html')
         # Clean up
         SeederBias.objects.filter(player1__tournament=self.t1).delete()
         self.t1.editable = True
@@ -2109,6 +2139,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/seeder_bias.html')
         # Check that the right suggestions appear in the list
         sb = SeederBias.objects.get(player1__tournament=self.t2)
         self.assertNotContains(response, str(sb))
@@ -2255,6 +2286,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards.html')
 
     def test_tournament_awards_afterwards(self):
         """For a finished Tournament, it should show who received the awards"""
@@ -2275,6 +2307,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards.html')
         # Clean up
         self.t4.awards.clear()
         self.tp41.awards.clear()
@@ -2309,6 +2342,7 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards_form.html')
 
     def test_enter_awards_post(self):
         # Give some awards to players beforehand
@@ -2388,3 +2422,4 @@ class TournamentViewTests(TestCase):
                                            args=(self.t1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards.html')
