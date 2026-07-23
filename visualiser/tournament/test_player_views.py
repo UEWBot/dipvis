@@ -270,8 +270,80 @@ class PlayerViewTests(TestCase):
         self.assertContains(response, 'Tournament')
         self.assertContains(response, 'Power')
         self.assertContains(response, 'Galaxy Championship')
+        self.assertContains(response, '2nd')
+        self.assertContains(response, '6th')
+        self.assertContains(response, '3.40')
+        self.assertContains(response, 'background-color:LightGreen;')
         pgr1.delete()
         pgr2.delete()
+        p2.delete()
+
+    def test_versus_prev_wdr_link(self):
+        france = GreatPower.objects.get(abbreviation='F')
+        turkey = GreatPower.objects.get(abbreviation='T')
+        p2 = Player.objects.create(first_name='Wendy',
+                                   last_name='West')
+        today = date.today()
+        pgr1 = PlayerGameResult.objects.create(tournament_name='Nebula Classic',
+                                               round_number=4,
+                                               game_number=5,
+                                               date=today,
+                                               player=self.p1,
+                                               power=france,
+                                               position=1,
+                                               wdr_tournament_id=4173)
+        PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+                                        round_number=pgr1.round_number,
+                                        game_number=pgr1.game_number,
+                                        date=pgr1.date,
+                                        player=p2,
+                                        power=turkey,
+                                        position=7,
+                                        wdr_tournament_id=4173)
+        response = self.client.get(reverse('player_versus',
+                                           args=(self.p1.pk, p2.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/versus.html')
+        self.assertContains(response,
+                            'href="https://www.world-diplomacy-reference.com/tournaments/4173/boards"')
+        self.assertContains(response, 'R 4 B 5')
+        # Cleanup
+        pgr1.delete()
+        p2.delete()
+
+    def test_versus_prev_wdd_link_fallback(self):
+        austria = GreatPower.objects.get(abbreviation='A')
+        russia = GreatPower.objects.get(abbreviation='R')
+        p2 = Player.objects.create(first_name='Waldo',
+                                   last_name='White')
+        today = date.today()
+        pgr1 = PlayerGameResult.objects.create(tournament_name='Comet Open',
+                                               round_number=1,
+                                               game_number=3,
+                                               date=today,
+                                               player=self.p1,
+                                               power=austria,
+                                               position=4,
+                                               wdd_tournament_id=9001)
+        PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+                                        round_number=pgr1.round_number,
+                                        game_number=pgr1.game_number,
+                                        date=pgr1.date,
+                                        player=p2,
+                                        power=russia,
+                                        position=5,
+                                        wdd_tournament_id=9001)
+        response = self.client.get(reverse('player_versus',
+                                           args=(self.p1.pk, p2.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/versus.html')
+        self.assertContains(response,
+                            'href="https://world-diplomacy-database.com/php/results/tournament_board.php?id_tournament=9001&amp;id_round=1&amp;id_board=3"')
+        self.assertContains(response, 'R 1 B 3')
+        # Cleanup
+        pgr1.delete()
         p2.delete()
 
     def test_wpe(self):
