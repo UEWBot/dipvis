@@ -56,6 +56,7 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/index.html')
+        self.assertContains(response, str(self.p1))
 
     def test_detail_invalid_player(self):
         response = self.client.get(reverse('player_detail',
@@ -149,6 +150,7 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertContains(response, 'style="width:32px;"')
         # Cleanup
         self.p1.nationalities = []
         self.p1.save(update_fields=['nationalities'])
@@ -222,6 +224,7 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/versus.html')
+        self.assertContains(response, 'No records of any games with both these players')
         p2.delete()
 
     def test_versus_prev(self):
@@ -264,6 +267,9 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/versus.html')
+        self.assertContains(response, 'Tournament')
+        self.assertContains(response, 'Power')
+        self.assertContains(response, 'Galaxy Championship')
         pgr1.delete()
         pgr2.delete()
         p2.delete()
@@ -275,7 +281,8 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/wpe.html')
-        # TODO validate result
+        self.assertContains(response, 'Start date:')
+        self.assertContains(response, 'WPE Score')
 
     def test_upload_players_requires_login(self):
         response = self.client.get(reverse('upload_players'),
@@ -289,6 +296,14 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/upload_players.html')
+        self.assertContains(response, 'Mandatory columns:')
+        self.assertContains(response, 'First Name')
+        self.assertContains(response, 'Last Name')
+        self.assertContains(response, 'Optional columns:')
+        self.assertContains(response, 'Backstabbr Username')
+        self.assertContains(response, 'WDD URL')
+        self.assertContains(response, 'WDD Id')
+        self.assertContains(response, 'Upload')
 
     def test_upload_players_post_missing_first_name(self):
         self.client.login(username=self.USERNAME, password=self.PWORD)
