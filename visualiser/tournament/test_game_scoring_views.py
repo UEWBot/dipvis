@@ -16,9 +16,10 @@
 
 from django.test import TestCase
 from django.urls import reverse
+from unittest.mock import patch
 
-from tournament.game_scoring import (G_SCORING_SYSTEMS, InvalidState,
-                                     SimpleGameState)
+from tournament.game_scoring import (DotCountUnknown, G_SCORING_SYSTEMS,
+                                     InvalidState, SimpleGameState)
 
 
 class GameScoringViewTests(TestCase):
@@ -28,6 +29,7 @@ class GameScoringViewTests(TestCase):
         response = self.client.get(reverse('game_scoring_index'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'game_scoring_systems/index.html')
         # Check sorting - systems should be listed in alphabetical order
         # TODO Probably needs work for translation
         names = [s.name for s in G_SCORING_SYSTEMS]
@@ -39,6 +41,14 @@ class GameScoringViewTests(TestCase):
                 self.assertGreater(i, last_i)
             last_i = i
             last_name = name
+
+    def test_index_no_systems(self):
+        with patch('tournament.game_scoring_system_views.G_SCORING_SYSTEMS', []):
+            response = self.client.get(reverse('game_scoring_index'),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'game_scoring_systems/index.html')
+        self.assertContains(response, 'No game scoring systems are available.')
 
     def test_detail_invalid_system(self):
         response = self.client.get(reverse('game_scoring_detail',
@@ -52,6 +62,25 @@ class GameScoringViewTests(TestCase):
                                            args=(G_SCORING_SYSTEMS[0].slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'game_scoring_systems/detail.html')
+
+    def test_detail_no_examples(self):
+        class DotUnknownSystem:
+            slug = 'dot-unknown-system'
+            name = 'Dot Unknown System'
+            description = 'System that cannot score examples'
+
+            @staticmethod
+            def scores(_state):
+                raise DotCountUnknown
+
+        with patch('tournament.game_scoring_system_views.G_SCORING_SYSTEMS', [DotUnknownSystem]):
+            response = self.client.get(reverse('game_scoring_detail',
+                                               args=(DotUnknownSystem.slug,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'game_scoring_systems/detail.html')
+        self.assertContains(response, 'No examples available')
 
     def test_detail_all(self):
         for sys in G_SCORING_SYSTEMS:
@@ -60,6 +89,7 @@ class GameScoringViewTests(TestCase):
                                                    args=(sys.slug,)),
                                            secure=True)
                 self.assertEqual(response.status_code, 200)
+                self.assertTemplateUsed(response, 'game_scoring_systems/detail.html')
 
     def test_invalid_simplegamestate_1(self):
         too_many_dots = {'A': 10, 'E': 0, 'F': 2, 'G': 10, 'I': 1, 'R': 10, 'T': 2}
