@@ -88,3 +88,4 @@ class ViewIndexTests(TestCase):
         response = self.client.get(reverse('player_index'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/index.html')

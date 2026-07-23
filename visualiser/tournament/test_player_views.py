@@ -51,6 +51,7 @@ class PlayerViewTests(TestCase):
         response = self.client.get(reverse('player_index'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/index.html')
 
     def test_detail_invalid_player(self):
         response = self.client.get(reverse('player_detail',
@@ -64,6 +65,7 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
 
     def test_detail_nationalities(self):
         self.assertEqual(len(self.p1.nationalities), 0)
@@ -74,6 +76,7 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
         # Cleanup
         self.p1.nationalities = []
         self.p1.save(update_fields=['nationalities'])
@@ -91,6 +94,7 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
         # Cleanup
         self.p1.wddplayer_set.all().delete()
 
@@ -145,6 +149,7 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/versus.html')
         p2.delete()
 
     def test_versus_prev(self):
@@ -186,6 +191,7 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/versus.html')
         pgr1.delete()
         pgr2.delete()
         p2.delete()
@@ -196,6 +202,7 @@ class PlayerViewTests(TestCase):
                                            args=(self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/wpe.html')
         # TODO validate result
 
     # TODO test upload_players(), including fields with trailing spaces
