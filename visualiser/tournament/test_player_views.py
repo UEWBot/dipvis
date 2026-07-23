@@ -20,6 +20,7 @@ from urllib.parse import urlencode
 from django_countries import countries
 
 from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, tag
 from django.urls import reverse
 
@@ -205,4 +206,97 @@ class PlayerViewTests(TestCase):
         self.assertTemplateUsed(response, 'players/wpe.html')
         # TODO validate result
 
-    # TODO test upload_players(), including fields with trailing spaces
+    def test_upload_players_requires_login(self):
+        response = self.client.get(reverse('upload_players'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_upload_players_get(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        response = self.client.get(reverse('upload_players'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/upload_players.html')
+
+    def test_upload_players_post_missing_first_name(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = 'Last Name\nAmpersand\n'
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        response = self.client.post(reverse('upload_players'),
+                                    {'csv_file': csv_file},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+
+    def test_upload_players_post_invalid_email_ignored(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,Email Address,Backstabbr Username\n'
+            'Iris,Invalid,not-an-email,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        response = self.client.post(reverse('upload_players'),
+                                    {'csv_file': csv_file},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Iris', last_name='Invalid')
+        self.assertEqual(p.email, '')
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_adds_player_trims_fields(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,Email Address,Backstabbr Username\n'
+            '  Una  ,  Update  ,  una@example.com  ,  una_bs  \n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        response = self.client.post(reverse('upload_players'),
+                                    {'csv_file': csv_file},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Una', last_name='Update')
+        self.assertEqual(p.email, 'una@example.com')
+        self.assertEqual(p.backstabbr_username, 'una_bs')
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_updates_existing_missing_fields(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        p = Player.objects.create(first_name='Nadia',
+                                  last_name='Needsinfo')
+        self.assertEqual(p.email, '')
+        self.assertEqual(p.backstabbr_username, '')
+        csv_data = (
+            'First Name,Last Name,Email Address,Backstabbr Username\n'
+            'Nadia,Needsinfo,nadia@example.com,nadia_bs\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        response = self.client.post(reverse('upload_players'),
+                                    {'csv_file': csv_file},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p.refresh_from_db()
+        self.assertEqual(p.email, 'nadia@example.com')
+        self.assertEqual(p.backstabbr_username, 'nadia_bs')
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_missing_file(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        response = self.client.post(reverse('upload_players'),
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
