@@ -159,7 +159,7 @@ def upload_players(request):
             try:
                 bs_un = row['Backstabbr Username'].strip()
             except KeyError:
-                bs_un = None
+                bs_un = ''
 
             # Accept either WDD Id or WDD URL
             # If we have a valid WDD Id, ignore WDD URL

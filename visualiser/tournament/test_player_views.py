@@ -362,8 +362,11 @@ class PlayerViewTests(TestCase):
                                     secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('upload_players'))
-        self.assertFalse(Player.objects.filter(first_name='Bella',
-                               last_name='NoBackstabbr').exists())
+        p = Player.objects.get(first_name='Bella', last_name='NoBackstabbr')
+        self.assertEqual(p.email, 'bella@example.com')
+        self.assertEqual(p.backstabbr_username, '')
+        # Cleanup
+        p.delete()
 
     def test_upload_players_post_large_file(self):
         self.client.login(username=self.USERNAME, password=self.PWORD)
