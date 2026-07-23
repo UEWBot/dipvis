@@ -80,6 +80,7 @@ class SeriesViewTests(TestCase):
         response = self.client.get(reverse('series_index'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/index.html')
 
     def test_detail_invalid_series(self):
         response = self.client.get(reverse('series_detail',
@@ -93,6 +94,7 @@ class SeriesViewTests(TestCase):
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/detail.html')
 
     def test_players_invalid_series(self):
         response = self.client.get(reverse('series_players',
@@ -106,24 +108,28 @@ class SeriesViewTests(TestCase):
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/players.html')
 
     def test_players_ftf(self):
         response = self.client.get(reverse('series_players_ftf',
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/players.html')
 
     def test_players_vftf(self):
         response = self.client.get(reverse('series_players_vftf',
                                            args=(self.s1.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/players.html')
 
     def test_players_empty_series(self):
         response = self.client.get(reverse('series_players',
                                            args=(self.s2.slug,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/players.html')
 
     # TODO: Test series_players filter link visibility
 

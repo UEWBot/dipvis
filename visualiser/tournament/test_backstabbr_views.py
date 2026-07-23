@@ -35,12 +35,14 @@ class BackstabbrViewTests(TestCase):
                                            args=(SOLO_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'backstabbr/sc_graph.html')
 
     def test_graph_page_sandbox(self):
         response = self.client.get(reverse('sandbox_sc_graph',
                                            args=(SANDBOX_1_GAME_NUMBER, )),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'backstabbr/sc_graph.html')
 
     def test_graph_game(self):
         response = self.client.get(reverse('graph_img_bs',
@@ -76,6 +78,7 @@ class BackstabbrViewTests(TestCase):
         response = self.client.get(reverse('enter_url'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'backstabbr/enter_url.html')
 
     def test_url_form_post_game(self):
         path = f'game/{SOLO_GAME_NUMBER}'
@@ -126,6 +129,7 @@ class BackstabbrViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         # Page should load
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'backstabbr/enter_url.html')
         # and contain a single error on the URL field
         self.assertEqual(len(response.context['form'].errors['url']), 1)
         self.assertIn('Not a valid backstabbr game URL',

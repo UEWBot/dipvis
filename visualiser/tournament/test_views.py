@@ -32,11 +32,13 @@ class ViewIndexTests(TestCase):
         response = self.client.get(reverse('series_index'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'series/index.html')
 
     def test_index(self):
         response = self.client.get(reverse('index'),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/index.html')
 
     def test_tournamentplayer_index(self):
         today = date.today()
@@ -51,6 +53,7 @@ class ViewIndexTests(TestCase):
                                            args=(t.id,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournament_players/index.html')
 
     def test_round_index(self):
         today = date.today()
@@ -65,6 +68,7 @@ class ViewIndexTests(TestCase):
                                            args=(t.id,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'rounds/index.html')
 
     def test_game_index(self):
         today = date.today()
@@ -83,6 +87,7 @@ class ViewIndexTests(TestCase):
                                            args=(t.id, 1)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/index.html')
 
     def test_player_index(self):
         response = self.client.get(reverse('player_index'),
