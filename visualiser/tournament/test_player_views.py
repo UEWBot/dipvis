@@ -25,6 +25,7 @@ from django.test import TestCase, tag
 from django.urls import reverse
 
 from tournament.diplomacy import GreatPower
+from tournament.models import DrawSecrecy, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Tournament, TournamentPlayer
 from tournament.players import Player, PlayerGameResult, WDDPlayer
 
 
@@ -67,6 +68,74 @@ class PlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertContains(response, str(self.p1))
+        self.assertContains(response, 'No tournaments in the database')
+        self.assertContains(response, 'WPE7 Scores')
+        self.assertContains(response, 'Compare With Another Player')
+
+    def test_detail_location_hidden_when_blank(self):
+        self.assertEqual(self.p1.location, '')
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertNotContains(response, 'Location:')
+
+    def test_detail_location_shown_when_set(self):
+        self.p1.location = 'Cambridge'
+        self.p1.save(update_fields=['location'])
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertContains(response, 'Location:')
+        self.assertContains(response, 'Cambridge')
+        # Cleanup
+        self.p1.location = ''
+        self.p1.save(update_fields=['location'])
+
+    def test_detail_picture_shown_when_set(self):
+        self.p1.picture = SimpleUploadedFile('player_picture.png',
+                                             b'png-bytes',
+                                             content_type='image/png')
+        self.p1.save(update_fields=['picture'])
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertContains(response, 'style="max-width:10%;"')
+        self.assertContains(response, 'alt="Angela Ampersand"')
+        # Cleanup
+        self.p1.picture.delete(save=False)
+        self.p1.picture = None
+        self.p1.save(update_fields=['picture'])
+
+    def test_detail_shows_tournament_entry(self):
+        today = date.today()
+        t = Tournament.objects.create(name='Detail Test Open',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        TournamentPlayer.objects.bulk_create([
+            TournamentPlayer(player=self.p1,
+                             tournament=t,
+                             score=9.5)
+        ])
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertContains(response, str(t))
+        self.assertNotContains(response, 'No tournaments in the database')
+        # Cleanup
+        t.delete()
 
     def test_detail_nationalities(self):
         self.assertEqual(len(self.p1.nationalities), 0)
