@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import requests
+from unittest.mock import patch
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 
@@ -23,6 +26,12 @@ from tournament.wdr import (validate_wdr_player_id, validate_wdr_tournament_id,
 
 class WDRTests(TestCase):
     fixtures = ['game_sets.json']
+
+    def test_validate_wdr_player_id_timeout_assumed_valid(self):
+        """Timeout when contacting WDR should not block validation."""
+        with patch('tournament.wdr.requests.head',
+                   side_effect=requests.exceptions.Timeout):
+            self.assertIsNone(validate_wdr_player_id(0))
 
     # validate_wdr_player_id()
     @tag('wdr')

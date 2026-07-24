@@ -14,9 +14,12 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import requests
+from unittest.mock import patch
+
 from django.test import TestCase, tag
 
-from . import InvalidWDRId, WDRBackground
+from . import InvalidWDRId, WDRBackground, WDRNotAccessible
 
 
 @tag('wdr')
@@ -29,6 +32,11 @@ class WDRBackgroundTests(TestCase):
     @tag('wdr')
     def test_wdr_background_id_invalid(self):
         self.assertRaises(InvalidWDRId, WDRBackground, self.INVALID_WDR_ID)
+
+    def test_wdr_background_timeout(self):
+        with patch('tournament.players.wdr_background.requests.get',
+                   side_effect=requests.exceptions.Timeout):
+            self.assertRaises(WDRNotAccessible, WDRBackground, self.CHRIS_BRAND_WDR_ID)
 
     # WDRBackground.wdd_id()
     @tag('wdr')

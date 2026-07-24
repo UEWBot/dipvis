@@ -14,6 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import requests
+from unittest.mock import patch
+
 from django_countries.fields import Country
 
 from django.core.exceptions import ValidationError
@@ -29,6 +32,12 @@ from tournament.wdd import (WDD_UNKNOWN_COUNTRY, UnrecognisedCountry,
 
 class WDDTests(TestCase):
     fixtures = ['game_sets.json']
+
+    def test_validate_wdd_player_id_timeout_assumed_valid(self):
+        """Timeout when contacting WDD should not block validation."""
+        with patch('tournament.wdd.requests.head',
+                   side_effect=requests.exceptions.Timeout):
+            self.assertIsNone(validate_wdd_player_id(1))
 
     # validate_wdd_player_id()
     @tag('wdd')
