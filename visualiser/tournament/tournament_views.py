@@ -118,7 +118,7 @@ def tournament_scores(request,
         refresh = False
     tps = list(t.tournamentplayer_set.order_by('-score',
                                                'player__last_name',
-                                               'player__first_name').prefetch_related('player'))
+                                               'player__first_name').select_related('player'))
     # Round number is start-time order, so preserve that explicitly.
     rds = list(t.round_set.order_by('start'))
     if t.show_current_scores:
@@ -293,7 +293,7 @@ def tournament_game_results(request,
     if t.is_finished and (redirect_url_name == 'tournament_game_results_refresh'):
         refresh = False
     tps = list(t.tournamentplayer_set.order_by('player__last_name',
-                                               'player__first_name').prefetch_related('player'))
+                                               'player__first_name').select_related('player'))
     rds = list(t.round_set.order_by('start'))
     rounds = list(range(1, len(rds) + 1))
 
@@ -374,7 +374,7 @@ def tournament_best_countries(request,
         except ValueError:
             pass
     # We have to just pick a set here. Avalon Hill is most common in North America
-    set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').prefetch_related('power')
+    set_powers = GameSet.objects.get(name='Avalon Hill').setpower_set.order_by('power').select_related('power')
     # TODO Sort set_powers alphabetically by translated power.name
     # How many rows do we need?
     row_count = max((len(l) for l in (gps[power] for power in GreatPower.objects.all())))
@@ -741,7 +741,7 @@ def enter_handicaps(request, tournament_id):
     HandicapsFormset = modelformset_factory(TournamentPlayer,
                                             form=HandicapForm,
                                             extra=0)
-    queryset = t.tournamentplayer_set.prefetch_related('player').order_by('player')
+    queryset = t.tournamentplayer_set.select_related('player').order_by('player')
     formset = HandicapsFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()

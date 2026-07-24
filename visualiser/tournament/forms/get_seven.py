@@ -50,7 +50,7 @@ class GetSevenPlayersForm(forms.Form):
 
         assert (self.pool is None) or (self.pool.board_count is None)
 
-        present = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player').order_by('player')
+        present = self.the_round.roundplayer_set.filter(pool=self.pool).select_related('player').order_by('player')
         playing = present.filter(standby=False)
         standbys = present.filter(standby=True)
 

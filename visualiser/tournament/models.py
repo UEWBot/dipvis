@@ -1229,7 +1229,7 @@ class Tournament(models.Model):
         Returns a dict, keyed by player, of float tournament scores.
         """
         t_scores = {}
-        for tp in self.tournamentplayer_set.prefetch_related('player').order_by():
+        for tp in self.tournamentplayer_set.select_related('player').order_by():
             t_scores[tp.player] = tp.score
         return t_scores
 
@@ -1261,14 +1261,14 @@ class Tournament(models.Model):
             ).order_by('-the_round__start', '-the_round').values('tournament_score')[:1]
 
             result = {}
-            unranked_tps = self.tournamentplayer_set.filter(unranked=True).prefetch_related('player').annotate(
+            unranked_tps = self.tournamentplayer_set.filter(unranked=True).select_related('player').annotate(
                 snapshot_score=Coalesce(models.Subquery(latest_snapshot_score), models.Value(0.0),
                                         output_field=models.FloatField())
             )
             for tp in unranked_tps:
                 result[tp.player] = (Tournament.UNRANKED, tp.snapshot_score)
 
-            ranked_tps = self.tournamentplayer_set.filter(unranked=False).prefetch_related('player').annotate(
+            ranked_tps = self.tournamentplayer_set.filter(unranked=False).select_related('player').annotate(
                 snapshot_score=Coalesce(models.Subquery(latest_snapshot_score), models.Value(0.0),
                                         output_field=models.FloatField())
             ).annotate(
@@ -1565,7 +1565,7 @@ class Tournament(models.Model):
         Returns a list of background strings for the tournament
         """
         results = []
-        for tp in self.tournamentplayer_set.prefetch_related('player').order_by():
+        for tp in self.tournamentplayer_set.select_related('player').order_by():
             results += tp.player.background(mask=mask)
         if (mask & MASK_SERIES_WINS) != 0:
             # Add in background for any series this Tournament is in
@@ -2226,7 +2226,7 @@ class Round(models.Model):
         Returns a dict, keyed by Player, of floats.
         """
         retval = {}
-        for p in self.roundplayer_set.prefetch_related('player').order_by('player'):
+        for p in self.roundplayer_set.select_related('player').order_by('player'):
             retval[p.player] = p.score
         return retval
 
@@ -2611,7 +2611,7 @@ class Game(models.Model):
         powers.
         """
         position_to_gps = {}
-        gps = self.gameplayer_set.prefetch_related('player', 'power').order_by()
+        gps = self.gameplayer_set.select_related('player', 'power').order_by()
         # Find current tournament positions (and scores)
         ranks = self.the_round.tournament.positions_and_scores()
         # Check for any GamePlayer that already has a power assigned
@@ -2721,7 +2721,7 @@ class Game(models.Model):
         """
         # If we have GamePlayers, and they have assigned powers,
         # we can just retrieve the scores from them
-        gps = self.gameplayer_set.prefetch_related('power').order_by('power')
+        gps = self.gameplayer_set.select_related('power').order_by('power')
         # Assume that if any GamePlayer has a power assigned, they all do
         if gps and gps.first().power:
             retval = {}
@@ -2740,7 +2740,7 @@ class Game(models.Model):
         Then calls the equivalent function for the Round this Game is in, unless update_round is False.
         """
         scores = self._calc_scores()
-        gps = self.gameplayer_set.prefetch_related('power').order_by()
+        gps = self.gameplayer_set.select_related('power').order_by()
         for gp in gps:
             if gp.power:
                 gp.score = scores[gp.power]
@@ -2777,7 +2777,7 @@ class Game(models.Model):
         """
         Returns a list of strings that give background for the game
         """
-        gps = self.gameplayer_set.prefetch_related('power').order_by()
+        gps = self.gameplayer_set.select_related('power').order_by()
         results = []
         for gp in gps:
             results += gp.player.background(gp.power, mask=mask)
@@ -3283,7 +3283,7 @@ class GamePlayer(models.Model):
         # Check all the other players of this power in the tournament
         t = self.game.the_round.tournament
         gps = GamePlayer.objects.filter(power=self.power,
-                                        game__the_round__tournament=t).prefetch_related('player')
+                        game__the_round__tournament=t).select_related('player')
         if self.tournamentplayer().unranked:
             # If there are ranked GamePlayers of the same power,
             # they will rank ahead of this GamePlayer.

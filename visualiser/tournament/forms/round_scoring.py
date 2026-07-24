@@ -41,7 +41,7 @@ class PlayerRoundScoreForm(forms.Form):
         self.last_round_num = kwargs.pop('last_round_num')
         super().__init__(*args, **kwargs)
 
-        self.fields['tp'].queryset = self.tournament.tournamentplayer_set.prefetch_related('player')
+        self.fields['tp'].queryset = self.tournament.tournamentplayer_set.select_related('player')
 
         # Create the right number of round fields, with the right ones read-only
         for i in range(1, 1 + self.last_round_num):

@@ -38,5 +38,5 @@ class SeederBiasForm(forms.ModelForm):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
         super().__init__(*args, **kwargs)
-        self.fields['player1'].queryset = self.tournament.tournamentplayer_set.prefetch_related('player')
-        self.fields['player2'].queryset = self.tournament.tournamentplayer_set.prefetch_related('player')
+        self.fields['player1'].queryset = self.tournament.tournamentplayer_set.select_related('player')
+        self.fields['player2'].queryset = self.tournament.tournamentplayer_set.select_related('player')

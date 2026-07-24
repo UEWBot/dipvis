@@ -66,7 +66,7 @@ class GamePlayersForm(forms.Form):
             # This form should be restricted to the pool the game is for
             self.pool = game.pool
         # Restrict to players from the relevant Pool
-        queryset = self.the_round.roundplayer_set.filter(pool=self.pool).prefetch_related('player').order_by('player')
+        queryset = self.the_round.roundplayer_set.filter(pool=self.pool).select_related('player').order_by('player')
 
         field_order = ['name', 'the_set', 'top_board', 'external_url']
 

@@ -103,7 +103,7 @@ def payments(request, tournament_id):
     PaidFormset = modelformset_factory(TournamentPlayer,
                                        form=PaidForm,
                                        extra=0)
-    queryset = t.tournamentplayer_set.prefetch_related('player').order_by('player')
+    queryset = t.tournamentplayer_set.select_related('player').order_by('player')
     formset = PaidFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()
