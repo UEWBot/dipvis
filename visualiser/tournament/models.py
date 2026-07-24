@@ -219,14 +219,10 @@ class RScoringAll(RoundScoringSystem):
         Otherwise, just take their game score.
         game_players is a QuerySet of GamePlayers.
         """
-        retval = {}
-        # for each player who played any of the specified games
-        for p in Player.objects.filter(gameplayer__in=game_players).distinct():
-            # Find just their games
-            player_games = game_players.filter(player=p)
-            # Add all game scores
-            retval[p] = sum(gp.score for gp in player_games)
-        return retval
+        retval = defaultdict(float)
+        for gp in game_players.select_related('player'):
+            retval[gp.player] += gp.score
+        return dict(retval)
 
 
 # All the round scoring systems we support
