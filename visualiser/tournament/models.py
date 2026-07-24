@@ -2874,9 +2874,11 @@ class Game(models.Model):
                                                                                              'dots': soloer.final_sc_count()}
         # TODO Did the game get to the fixed endpoint ?
         if self.is_finished:
-            gps = self.gameplayer_set.order_by('power')
+            gps_by_power_id = {
+                gp.power_id: gp for gp in self.gameplayer_set.select_related('player', 'power').order_by('power')
+            }
             toppers = self.board_toppers()
-            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps.get(power=scs.power).player,
+            first_str = ', '.join([_(u'%(player)s (%(power)s)') % {'player': gps_by_power_id[scs.power_id].player,
                                                                    'power': _(scs.power.abbreviation)} for scs in list(toppers)])
             return _(u'Game%(game)s ended. Board top is %(top)d centres, for %(player)s') % {'game': gn_str,
                                                                                              'top': toppers[0].count,

@@ -321,18 +321,29 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g1.is_finished, False)
         self.g1.is_finished = True
         self.g1.save(update_fields=['is_finished'])
-        # Add a GamePlayer without an AAR
-        p = Player.objects.create(first_name='Thor', last_name='Odinson')
-        TournamentPlayer.objects.create(tournament=self.t1, player=p)
-        RoundPlayer.objects.create(the_round=self.r1, player=p)
-        GamePlayer.objects.create(game=self.g1, player=p, power=self.italy, score=10.0)
+        # Game.result_str() needs GamePlayers. Add them without AARs
+        p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
+        p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
+        p3 = Player.objects.create(first_name='Charles', last_name='Cockerspaniel')
+        p4 = Player.objects.create(first_name='Dorothy', last_name='Dirigible')
+        p5 = Player.objects.create(first_name='Edward', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Florence', last_name='Florist')
+        p7 = Player.objects.create(first_name='Graham', last_name='Gorgonzola')
+        GamePlayer.objects.create(player=p1, game=self.g1, power=self.turkey, score=7)
+        GamePlayer.objects.create(player=p2, game=self.g1, power=self.england, score=2)
+        GamePlayer.objects.create(player=p3, game=self.g1, power=self.russia, score=6)
+        GamePlayer.objects.create(player=p4, game=self.g1, power=self.germany, score=4)
+        GamePlayer.objects.create(player=p5, game=self.g1, power=self.austria, score=1)
+        GamePlayer.objects.create(player=p6, game=self.g1, power=self.france, score=3)
+        GamePlayer.objects.create(player=p7, game=self.g1, power=self.italy, score=5)
         response = self.client.get(reverse('game_detail',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
         self.assertNotContains(response, 'After Action Report')
         self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
-        p.delete()
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
         self.g1.is_finished = False
         self.g1.save(update_fields=['is_finished'])
 
@@ -485,6 +496,21 @@ class GameViewTests(TestCase):
         self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
+        # Game.result_str() needs GamePlayers
+        p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
+        p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
+        p3 = Player.objects.create(first_name='Charles', last_name='Cockerspaniel')
+        p4 = Player.objects.create(first_name='Dorothy', last_name='Dirigible')
+        p5 = Player.objects.create(first_name='Edward', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Florence', last_name='Florist')
+        p7 = Player.objects.create(first_name='Graham', last_name='Gorgonzola')
+        GamePlayer.objects.create(player=p1, game=self.g1, power=self.turkey, score=7)
+        GamePlayer.objects.create(player=p2, game=self.g1, power=self.england, score=2)
+        GamePlayer.objects.create(player=p3, game=self.g1, power=self.russia, score=6)
+        GamePlayer.objects.create(player=p4, game=self.g1, power=self.germany, score=4)
+        GamePlayer.objects.create(player=p5, game=self.g1, power=self.austria, score=1)
+        GamePlayer.objects.create(player=p6, game=self.g1, power=self.france, score=3)
+        GamePlayer.objects.create(player=p7, game=self.g1, power=self.italy, score=5)
         response = self.client.get(reverse('game_sc_chart_refresh',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
@@ -492,6 +518,8 @@ class GameViewTests(TestCase):
         self.assertNotContains(response, '<meta http-equiv="refresh"')
         self.assertTemplateUsed(response, 'games/sc_count.html')
         # Clean up
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
         self.g1.is_finished = False
         self.g1.save()
 
@@ -925,6 +953,21 @@ class GameViewTests(TestCase):
         self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
+        # Game.result_str() needs GamePlayers
+        p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
+        p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
+        p3 = Player.objects.create(first_name='Charles', last_name='Cockerspaniel')
+        p4 = Player.objects.create(first_name='Dorothy', last_name='Dirigible')
+        p5 = Player.objects.create(first_name='Edward', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Florence', last_name='Florist')
+        p7 = Player.objects.create(first_name='Graham', last_name='Gorgonzola')
+        GamePlayer.objects.create(player=p1, game=self.g1, power=self.turkey, score=7)
+        GamePlayer.objects.create(player=p2, game=self.g1, power=self.england, score=2)
+        GamePlayer.objects.create(player=p3, game=self.g1, power=self.russia, score=6)
+        GamePlayer.objects.create(player=p4, game=self.g1, power=self.germany, score=4)
+        GamePlayer.objects.create(player=p5, game=self.g1, power=self.austria, score=1)
+        GamePlayer.objects.create(player=p6, game=self.g1, power=self.france, score=3)
+        GamePlayer.objects.create(player=p7, game=self.g1, power=self.italy, score=5)
         response = self.client.get(reverse('game_sc_owners_refresh',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
@@ -932,6 +975,8 @@ class GameViewTests(TestCase):
         self.assertNotContains(response, '<meta http-equiv="refresh"')
         self.assertTemplateUsed(response, 'games/sc_owners.html')
         # Clean up
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
         self.g1.is_finished = False
         self.g1.save()
 
@@ -1951,6 +1996,21 @@ class GameViewTests(TestCase):
         self.assertIs(False, self.g1.is_finished)
         self.g1.is_finished = True
         self.g1.save()
+        # Game.result_str() needs GamePlayers
+        p1 = Player.objects.create(first_name='Andrew', last_name='Aardvark')
+        p2 = Player.objects.create(first_name='Bethany', last_name='Bellweather')
+        p3 = Player.objects.create(first_name='Charles', last_name='Cockerspaniel')
+        p4 = Player.objects.create(first_name='Dorothy', last_name='Dirigible')
+        p5 = Player.objects.create(first_name='Edward', last_name='Eggplant')
+        p6 = Player.objects.create(first_name='Florence', last_name='Florist')
+        p7 = Player.objects.create(first_name='Graham', last_name='Gorgonzola')
+        GamePlayer.objects.create(player=p1, game=self.g1, power=self.turkey, score=7)
+        GamePlayer.objects.create(player=p2, game=self.g1, power=self.england, score=2)
+        GamePlayer.objects.create(player=p3, game=self.g1, power=self.russia, score=6)
+        GamePlayer.objects.create(player=p4, game=self.g1, power=self.germany, score=4)
+        GamePlayer.objects.create(player=p5, game=self.g1, power=self.austria, score=1)
+        GamePlayer.objects.create(player=p6, game=self.g1, power=self.france, score=3)
+        GamePlayer.objects.create(player=p7, game=self.g1, power=self.italy, score=5)
         response = self.client.get(reverse('game_sc_graph_refresh',
                                            args=(self.t1.pk, self.g1.name)),
                                    secure=True)
@@ -1958,6 +2018,8 @@ class GameViewTests(TestCase):
         self.assertNotContains(response, '<meta http-equiv="refresh"')
         self.assertTemplateUsed(response, 'games/sc_graph.html')
         # Clean up
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
         self.g1.is_finished = False
         self.g1.save()
 
