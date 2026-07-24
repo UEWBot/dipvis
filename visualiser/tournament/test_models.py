@@ -3438,6 +3438,39 @@ class TournamentTests(TestCase):
             tp.score = scores[tp]
             tp.save()
 
+    def test_tournament_positions_and_scores_rank_ordering(self):
+        t = Tournament.objects.get(name='t1')
+        original_scores = {}
+        values = {
+            self.p1: 30.0,
+            self.p2: 20.0,
+            self.p3: 20.0,
+            self.p4: 10.0,
+            self.p5: 99.0,  # unranked player, should remain UNRANKED
+            self.p6: 0.0,
+            self.p7: 0.0,
+            self.p8: -5.0,
+        }
+
+        for tp in t.tournamentplayer_set.all():
+            original_scores[tp] = tp.score
+            tp.score = values[tp.player]
+            tp.save(update_fields=['score'])
+
+        p_and_s = t.positions_and_scores()
+        self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
+        self.assertEqual(p_and_s[self.p1][0], 1)
+        self.assertEqual(p_and_s[self.p2][0], 2)
+        self.assertEqual(p_and_s[self.p3][0], 2)
+        self.assertEqual(p_and_s[self.p4][0], 4)
+        self.assertEqual(p_and_s[self.p6][0], 5)
+        self.assertEqual(p_and_s[self.p7][0], 5)
+        self.assertEqual(p_and_s[self.p8][0], 7)
+
+        for tp in t.tournamentplayer_set.all():
+            tp.score = original_scores[tp]
+            tp.save(update_fields=['score'])
+
     def test_tournament_positions_and_scores_round_zero(self):
         t = Tournament.objects.get(name='t3')
         # Store the current scores
@@ -3626,6 +3659,51 @@ class TournamentTests(TestCase):
         new_tp2.delete()
         self.g31.gameplayer_set.all().delete()
         self.g32.gameplayer_set.all().delete()
+
+    def test_tournament_positions_and_scores_round_rank_ordering(self):
+        """after_round_num path should preserve competition ranking semantics."""
+        t = Tournament.objects.get(name='t1')
+        r = t.round_numbered(1)
+        round_players = list(r.roundplayer_set.order_by('id'))
+        self.assertGreaterEqual(len(round_players), 3)
+
+        original_scores = {}
+        assigned_scores = {}
+
+        for i, rp in enumerate(round_players):
+            original_scores[rp] = rp.tournament_score
+            if i == 0:
+                score = 50.0
+            elif i in (1, 2):
+                score = 20.0
+            else:
+                score = 0.0
+            rp.tournament_score = score
+            rp.save(update_fields=['tournament_score'])
+            assigned_scores[rp.player] = score
+
+        p_and_s = t.positions_and_scores(after_round_num=1)
+
+        expected_scores = {}
+        for tp in t.tournamentplayer_set.filter(unranked=False).prefetch_related('player'):
+            expected_scores[tp.player] = assigned_scores.get(tp.player, 0.0)
+
+        sorted_scores = sorted(expected_scores.values(), reverse=True)
+        rank_by_score = {}
+        last_score = None
+        for i, score in enumerate(sorted_scores, start=1):
+            if score != last_score:
+                rank_by_score[score] = i
+                last_score = score
+
+        for player, expected_score in expected_scores.items():
+            with self.subTest(player=player):
+                self.assertAlmostEqual(p_and_s[player][1], expected_score)
+                self.assertEqual(p_and_s[player][0], rank_by_score[expected_score])
+
+        for rp in round_players:
+            rp.tournament_score = original_scores[rp]
+            rp.save(update_fields=['tournament_score'])
 
     def test_tournament_positions_and_scores_last_round(self):
         t = Tournament.objects.get(name='t3')

@@ -33,6 +33,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import F, Max, Q, Sum
+from django.db.models.functions import Coalesce, Rank
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.utils.text import slugify
@@ -1223,6 +1224,34 @@ class Tournament(models.Model):
           Players who are flagged as unranked in the tournament get the special
           place UNRANKED.
         """
+        top_pool = self._top_pool()
+
+        # Snapshot path: use database annotations for ranking when no top-board override is active.
+        if (after_round_num is not None) and (after_round_num < self.round_set.count()) and (top_pool is None):
+            round_ids = list(self.round_set.order_by('start').values_list('id', flat=True)[:after_round_num])
+            latest_snapshot_score = RoundPlayer.objects.filter(
+                the_round__in=round_ids,
+                player=models.OuterRef('player')
+            ).order_by('-the_round__start', '-the_round').values('tournament_score')[:1]
+
+            result = {}
+            unranked_tps = self.tournamentplayer_set.filter(unranked=True).prefetch_related('player').annotate(
+                snapshot_score=Coalesce(models.Subquery(latest_snapshot_score), models.Value(0.0),
+                                        output_field=models.FloatField())
+            )
+            for tp in unranked_tps:
+                result[tp.player] = (Tournament.UNRANKED, tp.snapshot_score)
+
+            ranked_tps = self.tournamentplayer_set.filter(unranked=False).prefetch_related('player').annotate(
+                snapshot_score=Coalesce(models.Subquery(latest_snapshot_score), models.Value(0.0),
+                                        output_field=models.FloatField())
+            ).annotate(
+                place=models.Window(expression=Rank(), order_by=F('snapshot_score').desc())
+            )
+            for tp in ranked_tps:
+                result[tp.player] = (tp.place, tp.snapshot_score)
+            return result
+
         # Populate t_scores with a dict keyed by player of scores
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
             t_scores = {}
@@ -1249,7 +1278,6 @@ class Tournament(models.Model):
         # Figure out everyone's ranking
         # Start with first place
         rank = 1
-        top_pool = self._top_pool()
         if top_pool is not None:
             # Some number of top board players get the top ranks
             # Starting with the player with the highest top board score
