@@ -2818,10 +2818,21 @@ class Game(models.Model):
             game_text += ' ' + self.external_url + '\n'
         if self.notes:
             game_text += ' ' + self.notes + '\n'
-        for gp in self.gameplayer_set.order_by('power').prefetch_related('player', 'power'):
+        tournament = self.the_round.tournament
+        include_backstabbr = tournament.is_virtual()
+        backstabbr_by_player_id = {}
+        if include_backstabbr:
+            player_ids = self.gameplayer_set.values_list('player_id', flat=True)
+            backstabbr_by_player_id = dict(
+                TournamentPlayer.objects.filter(tournament=tournament,
+                                                player_id__in=player_ids).values_list('player_id',
+                                                                                       'backstabbr_username')
+            )
+
+        for gp in self.gameplayer_set.order_by('power').select_related('player', 'power'):
             game_text += f' {gp.power or _("Power TBD")}: {gp.player}'
-            if self.the_round.tournament.is_virtual():
-                bs_un = gp.tournamentplayer().backstabbr_username
+            if include_backstabbr:
+                bs_un = backstabbr_by_player_id.get(gp.player_id, '')
                 if bs_un:
                     game_text += f' ({bs_un})\n'
                 else:
