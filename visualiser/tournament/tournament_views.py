@@ -116,33 +116,39 @@ def tournament_scores(request,
     # No point refreshing if nothing can change
     if t.is_finished and (redirect_url_name == 'tournament_scores_refresh'):
         refresh = False
-    tps = t.tournamentplayer_set.order_by('-score',
-                                          'player__last_name',
-                                          'player__first_name').prefetch_related('player')
-    rds = t.round_set.prefetch_related('roundplayer_set')
+    tps = list(t.tournamentplayer_set.order_by('-score',
+                                               'player__last_name',
+                                               'player__first_name').prefetch_related('player'))
+    # Round number is start-time order, so preserve that explicitly.
+    rds = list(t.round_set.order_by('start'))
     if t.show_current_scores:
         # Grab the tournament scores and positions, all "if it ended now"
         t_positions_and_scores = t.positions_and_scores()
     else:
         # Get the scores after the last finished Round, if any
-        r = rds.filter(is_finished=True).last()
-        if r:
-            t_positions_and_scores = t.positions_and_scores(after_round_num=r.number())
+        finished_round = next((rd for rd in reversed(rds) if rd.is_finished), None)
+        if finished_round:
+            t_positions_and_scores = t.positions_and_scores(after_round_num=rds.index(finished_round) + 1)
         else:
             # After Round 0, everyone had a score of zero
             t_positions_and_scores = t.positions_and_scores(after_round_num=0)
+
+    round_player_map = {}
+    if rds and tps:
+        round_ids = [rd.id for rd in rds]
+        player_ids = [tp.player_id for tp in tps]
+        rps = RoundPlayer.objects.filter(the_round_id__in=round_ids,
+                                         player_id__in=player_ids).select_related('player',
+                                                                                  'the_round')
+        round_player_map = {(rp.the_round_id, rp.player_id): rp for rp in rps}
+
     # Construct a list of dicts with {rank, tournament player, [round 1 player, ..., round n player]}
     scores = []
     for tp in tps:
         rs = []
         for r in rds:
-            try:
-                rp = r.roundplayer_set.get(player=tp.player)
-            except RoundPlayer.DoesNotExist:
-                # This player didn't play this round
-                rs.append(None)
-            else:
-                rs.append(rp)
+            # This player didn't play this round if the key is missing
+            rs.append(round_player_map.get((r.id, tp.player_id)))
         row = {'rank': f'{t_positions_and_scores[tp.player][0]}',
                'player': tp,
                'rounds': rs}
