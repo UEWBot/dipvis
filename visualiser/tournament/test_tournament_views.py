@@ -662,6 +662,58 @@ class TournamentViewTests(TestCase):
         self.t4.show_current_scores = True
         self.t4.save()
 
+    def test_scores_rounds_ordered_by_start_not_creation_order(self):
+        """Rounds on the scores page should always be shown in start-time order."""
+        today = date.today()
+        t = Tournament.objects.create(name='scores-ordering-test',
+                                      start_date=today,
+                                      end_date=today + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+
+        # Create rounds in reverse chronological order to detect accidental reliance on creation order.
+        late_round = Round.objects.create(tournament=t,
+                                          start=datetime.combine(t.start_date,
+                                                                 time(hour=16, tzinfo=datetime_timezone.utc)),
+                                          scoring_system=G_SCORING_SYSTEMS[0].name,
+                                          dias=True,
+                                          is_finished=True)
+        early_round = Round.objects.create(tournament=t,
+                                           start=datetime.combine(t.start_date,
+                                                                  time(hour=8, tzinfo=datetime_timezone.utc)),
+                                           scoring_system=G_SCORING_SYSTEMS[0].name,
+                                           dias=True,
+                                           is_finished=True)
+
+        tp = TournamentPlayer.objects.create(player=self.p2,
+                                             tournament=t,
+                                             score=10.0)
+        rp_late = RoundPlayer.objects.create(player=self.p2,
+                                             the_round=late_round,
+                                             score=2.0,
+                                             tournament_score=12.0)
+        rp_early = RoundPlayer.objects.create(player=self.p2,
+                                              the_round=early_round,
+                                              score=1.0,
+                                              tournament_score=10.0)
+
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(t.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+
+        rounds = response.context['rounds']
+        self.assertEqual([r.pk for r in rounds], [early_round.pk, late_round.pk])
+
+        score_rows = response.context['scores']
+        row = next(r for r in score_rows if r['player'].pk == tp.pk)
+        self.assertEqual(row['rounds'], [rp_early, rp_late])
+
+        # Cleanup
+        t.delete()
+
     def test_scores_no_rounds(self):
         """Scores page for an in-progress Tournament that doesn't use Rounds"""
         self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
