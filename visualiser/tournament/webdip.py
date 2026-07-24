@@ -17,7 +17,7 @@
 Scrape the interesting parts of a Diplomacy game on WebDiplomacy.net.
 """
 
-from urllib.parse import parse_qs, urlparse, urlunparse
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 import requests
 from bs4 import BeautifulSoup
@@ -107,6 +107,16 @@ class Game():
         """
         Open the specified URL, turn the web page into soup.
         """
+        # The default board URL now serves a JS app shell. Force the legacy
+        # dropdown view, which still exposes the server-rendered HTML that this
+        # parser expects.
+        parsed = urlparse(url)
+        if parsed.path.endswith('board.php'):
+            qs = parse_qs(parsed.query, keep_blank_values=True)
+            if qs.get('view', [''])[0] != 'dropDown':
+                qs['view'] = ['dropDown']
+                parsed = parsed._replace(query=urlencode(qs, doseq=True))
+                url = urlunparse(parsed)
         # TODO Ideally, I think we should pass the gameID in params
         page = requests.get(url,
                             headers={'User-Agent': settings.USER_AGENT,

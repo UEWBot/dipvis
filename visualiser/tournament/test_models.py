@@ -16,7 +16,6 @@
 
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
-from unittest import skip
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Permission
@@ -7269,7 +7268,7 @@ class GameTests(TestCase):
         self.assertRaises(backstabbr.InvalidGameUrl, g.backstabbr_game)
 
     # Game.webdiplomacy_game()
-    @skip('WebDip parsing is broken')
+    @tag('webdip')
     def test_game_webdiplomacy_game(self):
         g = Game(name='newgame1',
                  started_at=self.r32.start,

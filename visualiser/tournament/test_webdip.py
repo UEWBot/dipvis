@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from unittest import skip
+from unittest.mock import Mock, patch
 from urllib.parse import urlencode, urlunparse
 
 from django.test import TestCase, tag
@@ -35,7 +35,6 @@ DRAW_7_GAME_ID = 19
 #SANDBOX_GAME_ID = 5766492401172480
 
 
-@skip('WebDip parsing is broken')
 class WebDiplomacyTests(TestCase):
     @tag('webdip')
     def test_webdip_game_non_wd_url(self):
@@ -240,3 +239,26 @@ class WebDiplomacyTests(TestCase):
         self.check_game_results(g, RESULTS)
 
     # TODO Would be nice test in-progress games, both anonymous and not
+
+
+class WebDiplomacyUnitTests(TestCase):
+    def test_url_to_soup_forces_legacy_dropdown_view(self):
+        g = Game.__new__(Game)
+        response = Mock()
+        response.status_code = 200
+        response.text = '<html></html>'
+        with patch('tournament.webdip.requests.get', return_value=response) as get_mock:
+            g._url_to_soup('https://webdiplomacy.net/board.php?gameID=334382')
+        called_url = get_mock.call_args.args[0]
+        self.assertIn('gameID=334382', called_url)
+        self.assertIn('view=dropDown', called_url)
+
+    def test_url_to_soup_keeps_explicit_dropdown_view(self):
+        g = Game.__new__(Game)
+        response = Mock()
+        response.status_code = 200
+        response.text = '<html></html>'
+        with patch('tournament.webdip.requests.get', return_value=response) as get_mock:
+            g._url_to_soup('https://webdiplomacy.net/board.php?gameID=334382&view=dropDown')
+        called_url = get_mock.call_args.args[0]
+        self.assertEqual('https://webdiplomacy.net/board.php?gameID=334382&view=dropDown', called_url)

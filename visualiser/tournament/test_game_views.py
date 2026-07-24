@@ -16,7 +16,6 @@
 
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
-from unittest import skip
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
@@ -2089,7 +2088,7 @@ class GameViewTests(TestCase):
         self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()
 
-    @skip('WebDip parsing is broken')
+    @tag('webdip')
     def test_scrape_webdip_success(self):
         self.assertEqual(len(self.g1.external_url), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)
