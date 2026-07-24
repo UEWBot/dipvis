@@ -349,7 +349,8 @@ def _sitters_and_two_gamers(tournament, the_round, pool):
 
 def _create_game_seeder(tournament, the_round):
     """Return a GameSeeder that knows about the tournament so far"""
-    tourney_players = tournament.tournamentplayer_set.prefetch_related('seederbias_set').order_by()
+    tourney_players = list(tournament.tournamentplayer_set.prefetch_related('seederbias_set').order_by())
+    tp_by_player_id = {tp.player_id: tp for tp in tourney_players}
     # Create the game seeder
     seeder = GameSeeder(GreatPower.objects.all(),
                         SeedMethod.BOARD,
@@ -365,7 +366,10 @@ def _create_game_seeder(tournament, the_round):
             for gp in g.gameplayer_set.select_related('power',
                                                       'player',
                                                       'game__the_round').order_by():
-                game.add((gp.tournamentplayer(), gp.power))
+                tp = tp_by_player_id.get(gp.player_id)
+                if tp is None:
+                    tp = gp.tournamentplayer()
+                game.add((tp, gp.power))
             assert len(game) == 7
             seeder.add_played_game(game)
     # Add in any biases now that all players have been added
