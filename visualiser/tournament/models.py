@@ -1493,12 +1493,16 @@ class Tournament(models.Model):
             return tuples
         # Populate tuples. Dict, keyed by GreatPower,
         # of lists of (GamePlayer, score, dots, unranked) 4-tuples
-        for gp in GamePlayer.objects.filter(game__the_round__tournament=self).prefetch_related('power', 'player', 'game', 'game__the_round__tournament'):
+        unranked_by_player_id = dict(self.tournamentplayer_set.values_list('player_id',
+                                                                           'unranked'))
+        for gp in GamePlayer.objects.filter(game__the_round__tournament=self).select_related('power',
+                                                       'player',
+                                                       'game__the_round__tournament'):
             if not gp.power:
                 continue
             if (after_round_num is not None) and (gp.game.the_round.number() > after_round_num):
                 continue
-            tuple_ = (gp, gp.score, gp.final_sc_count(), gp.tournamentplayer().unranked)
+            tuple_ = (gp, gp.score, gp.final_sc_count(), unranked_by_player_id.get(gp.player_id, False))
             tuples.setdefault(gp.power, []).append(tuple_)
         for power in tuples:
             self._sort_best_country_list(tuples[power])
