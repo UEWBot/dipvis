@@ -94,13 +94,17 @@ def board_call_csv(request, tournament_id, round_num):
     writer = csv.DictWriter(response, fieldnames=headers)
     writer.writeheader()
 
+    backstabbr_by_player_id = dict(
+        t.tournamentplayer_set.values_list('player_id', 'backstabbr_username')
+    )
+
     for g in r.game_set.all():
         for gp in g.gameplayer_set.order_by('power'):
             row_dict = {_('Round'): round_num,
                         _('Board'): g.name,
                         _('Player Name'): str(gp.player),
                         _('Player Id'): gp.player.pk,
-                        _('Backstabbr Username'): gp.tournamentplayer().backstabbr_username}
+                        _('Backstabbr Username'): backstabbr_by_player_id.get(gp.player_id, '')}
             if gp.power:
                 row_dict[_('Power')] = _(gp.power.name)
             writer.writerow(row_dict)
