@@ -590,24 +590,22 @@ class TScoringSumGames(TournamentScoringSystem):
         changed_rps = {}
         changed_gps = {}
 
-        def mark_roundplayer(rp, dropped):
-            if rp.score_dropped != dropped:
-                rp.score_dropped = dropped
-                changed_rps[rp.pk] = rp
-
-        def mark_gameplayer(gp, dropped):
-            if gp.score_dropped != dropped:
-                gp.score_dropped = dropped
-                changed_gps[gp.pk] = gp
+        def mark_score_obj(score_obj, dropped):
+            if score_obj.score_dropped != dropped:
+                score_obj.score_dropped = dropped
+                if isinstance(score_obj, GamePlayer):
+                    changed_gps[score_obj.pk] = score_obj
+                else:
+                    changed_rps[score_obj.pk] = score_obj
 
         def flag_included_score(score_obj, roundplayer_by_round_id):
             # score_obj can be either a GamePlayer or a RoundPlayer pseudo-game
             if isinstance(score_obj, GamePlayer):
                 rp = roundplayer_by_round_id.get(score_obj.game.the_round_id)
                 if rp is not None:
-                    mark_roundplayer(rp, False)
+                    mark_score_obj(rp, False)
             else:
-                mark_roundplayer(score_obj, False)
+                mark_score_obj(score_obj, False)
 
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
@@ -620,7 +618,7 @@ class TScoringSumGames(TournamentScoringSystem):
             for rp in rps:
                 if self.residual_multiplier == 0.0:
                     # Assume the round score is dropped unless we find out otherwise
-                    mark_roundplayer(rp, True)
+                    mark_score_obj(rp, True)
                 rounds.append(rp.the_round)
 
             gps = list(GamePlayer.objects.filter(player=p,
@@ -654,11 +652,11 @@ class TScoringSumGames(TournamentScoringSystem):
                     score_obj, score = player_scores.pop()
                     t_scores[p] += score
                     flag_included_score(score_obj, roundplayer_by_round_id)
-                    if self.residual_multiplier == 0.0 and isinstance(score_obj, GamePlayer):
+                    if self.residual_multiplier == 0.0:
                         # It's possible that a player's score for a Game in-progress
                         # has dropped below an earlier score that was previously dropped
                         # so we have to explicitly flag this score as not dropped
-                        mark_gameplayer(score_obj, False)
+                        mark_score_obj(score_obj, False)
                 if (self.residual_multiplier_2 != 0.0) and len(player_scores):
                     # Add each remaining score with the appropriate multipler
                     if len(player_scores) > self.residual_count:
@@ -682,10 +680,7 @@ class TScoringSumGames(TournamentScoringSystem):
                 for score_obj, score in player_scores:
                     if self.residual_multiplier == 0.0:
                         # This score doesn't contribute
-                        if isinstance(score_obj, GamePlayer):
-                            mark_gameplayer(score_obj, True)
-                        else:
-                            mark_roundplayer(score_obj, True)
+                        mark_score_obj(score_obj, True)
                     else:
                         t_scores[p] += score * bonus_factor
                         flag_included_score(score_obj, roundplayer_by_round_id)
