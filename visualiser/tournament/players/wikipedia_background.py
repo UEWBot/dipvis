@@ -69,19 +69,21 @@ class WikipediaCache():
                                 timeout=self.TIMEOUT)
         except requests.exceptions.Timeout:
             return
-        self.the_soup = BeautifulSoup(page.text, "html.parser")
+        # Any successful HTTP response counts as a read attempt for backoff.
         self.last_read = dt.datetime.now()
         try:
             etag = page.headers["ETag"]
-        except KeyError as e:
-            print(page.headers)
-            self.revision = None
-            raise e
+        except KeyError:
+            # Some intermediary responses (e.g. rate-limited responses) can
+            # omit ETag; keep any existing cached page and revision, but back
+            # off before checking again.
+            return
         # ETag format is 'W/"1298445974/e23c2e85-8215-11f0-a785-1d77f87c9956/view/html"'
         # Store the revision
         s = etag.split('"')
         s = s[1].split('/')
         self.revision = s[0]
+        self.the_soup = BeautifulSoup(page.text, "html.parser")
 
     def _latest_revision(self):
         """Return the latest revision of the page, as a string"""

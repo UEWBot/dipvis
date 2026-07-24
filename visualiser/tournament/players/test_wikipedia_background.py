@@ -14,12 +14,59 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import requests
+from unittest.mock import Mock, patch
+
 from django.test import TestCase
 
 from . import WikipediaBackground
+from .wikipedia_background import WikipediaCache, WikipediaNotAccessible
 
 
 class WikipediaBackgroundTests(TestCase):
+
+    def test_wikipedia_cache_read_page_timeout(self):
+        with patch('tournament.players.wikipedia_background.requests.get',
+                   side_effect=requests.exceptions.Timeout):
+            cache = WikipediaCache()
+            self.assertIsNone(cache.the_soup)
+
+    def test_wikipedia_cache_latest_revision_timeout(self):
+        page = Mock()
+        page.text = '<html></html>'
+        page.headers = {'ETag': 'W/"1298445974/e23c2e85-8215-11f0-a785-1d77f87c9956/view/html"'}
+        with patch('tournament.players.wikipedia_background.requests.get', return_value=page):
+            cache = WikipediaCache()
+        with patch('tournament.players.wikipedia_background.requests.get',
+                   side_effect=requests.exceptions.Timeout):
+            self.assertEqual('', cache._latest_revision())
+
+    def test_wikipedia_cache_missing_etag_keeps_existing_cache(self):
+        good_page = Mock()
+        good_page.text = '<html><body><p>good-content</p></body></html>'
+        good_page.headers = {'ETag': 'W/"1298445974/e23c2e85-8215-11f0-a785-1d77f87c9956/view/html"'}
+        with patch('tournament.players.wikipedia_background.requests.get', return_value=good_page):
+            cache = WikipediaCache()
+
+        old_soup = cache.the_soup
+        old_revision = cache.revision
+        old_last_read = cache.last_read
+
+        bad_page = Mock()
+        bad_page.text = '<html><body><p>rate-limited</p></body></html>'
+        bad_page.headers = {}
+        with patch('tournament.players.wikipedia_background.requests.get', return_value=bad_page):
+            cache._read_page()
+
+        self.assertIs(cache.the_soup, old_soup)
+        self.assertEqual(old_revision, cache.revision)
+        self.assertGreaterEqual(cache.last_read, old_last_read)
+
+    def test_wikipedia_titles_when_page_unavailable(self):
+        bg = WikipediaBackground('Someone Unreachable')
+        with patch('tournament.players.wikipedia_background.cache.soup',
+                   side_effect=WikipediaNotAccessible):
+            self.assertEqual([], bg.titles())
 
     def test_wikipedia_background_titles(self):
         name = 'Cyrille Sevin'
