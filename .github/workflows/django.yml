@@ -28,4 +28,4 @@ jobs:
     - name: Run Tests
       run: |
         cd visualiser
-        python ./manage.py test
+        python ./manage.py test --exclude-tag=wikipedia_live

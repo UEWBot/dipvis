@@ -9,6 +9,7 @@ source =
 omit =
     tournament/migrations/*.py
     */README.txt
+    tournament/players/testdata/*
 
 [report]
 exclude_lines =

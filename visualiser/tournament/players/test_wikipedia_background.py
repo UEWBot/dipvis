@@ -16,14 +16,22 @@
 
 import requests
 from unittest.mock import Mock, patch
+from bs4 import BeautifulSoup
 
-from django.test import TestCase
+from django.test import TestCase, tag
 
 from . import WikipediaBackground
 from .wikipedia_background import WikipediaCache, WikipediaNotAccessible
 
 
 class WikipediaBackgroundTests(TestCase):
+
+    FIXTURE_PAGE = 'tournament/players/testdata/wikipedia_international_prize_list_of_diplomacy.html'
+
+    @classmethod
+    def _fixture_soup(cls):
+        with open(cls.FIXTURE_PAGE, encoding='utf-8') as f:
+            return BeautifulSoup(f.read(), "html.parser")
 
     def test_wikipedia_cache_read_page_timeout(self):
         with patch('tournament.players.wikipedia_background.requests.get',
@@ -72,7 +80,9 @@ class WikipediaBackgroundTests(TestCase):
         name = 'Cyrille Sevin'
         flags = ['France']
         bg = WikipediaBackground(name)
-        titles = bg.titles()
+        with patch('tournament.players.wikipedia_background.cache.soup',
+               return_value=self._fixture_soup()):
+            titles = bg.titles()
         self.assertEqual(len(titles), 8)
         for t in titles:
             with self.subTest(title=t):
@@ -108,9 +118,18 @@ class WikipediaBackgroundTests(TestCase):
         name = 'Antonio Ribeiro da Silva'
         flags = ['France', 'Portugal']
         bg = WikipediaBackground(name)
-        titles = bg.titles()
+        with patch('tournament.players.wikipedia_background.cache.soup',
+                   return_value=self._fixture_soup()):
+            titles = bg.titles()
         self.assertEqual(len(titles), 1)
         for t in titles:
             with self.subTest(title=t):
                 self.assertEqual(t['Second'], name)
                 self.assertEqual(t['Second Flags'], flags)
+
+    @tag('wikipedia_live')
+    def test_wikipedia_background_titles_live(self):
+        """Live integration check against current Wikipedia content."""
+        bg = WikipediaBackground('Cyrille Sevin')
+        titles = bg.titles()
+        self.assertGreater(len(titles), 0)
