@@ -611,7 +611,7 @@ class TScoringSumGames(TournamentScoringSystem):
 
         # for each player who played any of the specified rounds
         for p in Player.objects.filter(roundplayer__in=round_players).distinct():
-            # All the scores to consider. Dict, keyed by rp or gp, of scores
+            # All the scores to consider. Dict, keyed by score_obj (GamePlayer or RoundPlayer), of scores
             player_scores = {}
             # Find just the rounds they played
             rps = list(round_players.filter(player=p).select_related('the_round'))
@@ -642,33 +642,33 @@ class TScoringSumGames(TournamentScoringSystem):
             t_scores[p] = 0
             if len(player_scores) <= self.scored_games:
                 # All games/pseudo-games count for this player
-                for gp, score in player_scores.items():
-                    t_scores[p] += gp.score
-                    flag_included_score(gp, roundplayer_by_round_id)
+                for score_obj, score in player_scores.items():
+                    t_scores[p] += score
+                    flag_included_score(score_obj, roundplayer_by_round_id)
             else:
-                # Convert player_scores to a list of (gp, score) tuples, ordered by score
+                # Convert player_scores to a list of (score_obj, score) tuples, ordered by score
                 player_scores = sorted(player_scores.items(),
                                        key=itemgetter(1))
                 # Add up the best N Game scores and flag those scores as not dropped
                 for _ in range(self.scored_games):
-                    gp, score = player_scores.pop()
+                    score_obj, score = player_scores.pop()
                     t_scores[p] += score
-                    flag_included_score(gp, roundplayer_by_round_id)
-                    if self.residual_multiplier == 0.0 and isinstance(gp, GamePlayer):
+                    flag_included_score(score_obj, roundplayer_by_round_id)
+                    if self.residual_multiplier == 0.0 and isinstance(score_obj, GamePlayer):
                         # It's possible that a player's score for a Game in-progress
                         # has dropped below an earlier score that was previously dropped
                         # so we have to explicitly flag this score as not dropped
-                        mark_gameplayer(gp, False)
+                        mark_gameplayer(score_obj, False)
                 if (self.residual_multiplier_2 != 0.0) and len(player_scores):
                     # Add each remaining score with the appropriate multipler
                     if len(player_scores) > self.residual_count:
-                        for gp, score in player_scores:
+                        for score_obj, score in player_scores:
                             t_scores[p] += score * self.residual_multiplier_2
-                            flag_included_score(gp, roundplayer_by_round_id)
+                            flag_included_score(score_obj, roundplayer_by_round_id)
                     else:
-                        for gp, score in player_scores:
+                        for score_obj, score in player_scores:
                             t_scores[p] += score * self.residual_multiplier
-                            flag_included_score(gp, roundplayer_by_round_id)
+                            flag_included_score(score_obj, roundplayer_by_round_id)
                     # We've used all the player_scores
                     player_scores = []
                 elif (self.residual_multiplier != 0.0) and len(player_scores):
@@ -679,16 +679,16 @@ class TScoringSumGames(TournamentScoringSystem):
                     # How much does each additional score contribute ?
                     bonus_factor = self.residual_multiplier / len(player_scores)
                 # Then go through any remaining Game scores
-                for gp, score in player_scores:
+                for score_obj, score in player_scores:
                     if self.residual_multiplier == 0.0:
                         # This score doesn't contribute
-                        if isinstance(gp, GamePlayer):
-                            mark_gameplayer(gp, True)
+                        if isinstance(score_obj, GamePlayer):
+                            mark_gameplayer(score_obj, True)
                         else:
-                            mark_roundplayer(gp, True)
+                            mark_roundplayer(score_obj, True)
                     else:
                         t_scores[p] += score * bonus_factor
-                        flag_included_score(gp, roundplayer_by_round_id)
+                        flag_included_score(score_obj, roundplayer_by_round_id)
 
         if changed_gps:
             GamePlayer.objects.bulk_update(changed_gps.values(), ['score_dropped'])
