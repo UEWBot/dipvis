@@ -40,7 +40,6 @@ SANDBOX_2_GAME_NUMBER = 5412944885972992
 SANDBOX_3_GAME_NUMBER = 6238301148020736
 
 
-@tag('backstabbr')
 class BackstabbrTests(TestCase):
     def test_is_backstabbr_url_true1(self):
         path = f'game/{INVALID_GAME_NUMBER}'
@@ -61,12 +60,6 @@ class BackstabbrTests(TestCase):
         """Not a backstabbr URL."""
         path = f'game/{INVALID_GAME_NUMBER}'
         url = urlunparse(('https', 'google.com', path, '', '', ''))
-        self.assertRaises(InvalidGameUrl, Game, url)
-
-    def test_backstabbr_game_invalid_game_number(self):
-        """Invalid game number (but it is a number)"""
-        path = f'game/{INVALID_GAME_NUMBER}'
-        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
     def test_backstabbr_game_game_number_isnt1(self):
@@ -95,6 +88,13 @@ class BackstabbrTests(TestCase):
         url_with_invite = urlunparse(('https', BACKSTABBR_NETLOC, path_with_invite, '', '', ''))
         g = Game(url_with_invite, skip_read=True)
         self.assertEqual(g.url, url)
+
+    @tag('backstabbr')
+    def test_backstabbr_game_invalid_game_number(self):
+        """Invalid game number (but it is a number)"""
+        path = f'game/{INVALID_GAME_NUMBER}'
+        url = urlunparse(('https', BACKSTABBR_NETLOC, path, '', '', ''))
+        self.assertRaises(InvalidGameUrl, Game, url)
 
     def check_results(self, sc_counts, results):
         """Check that the centrecounts are as expected"""

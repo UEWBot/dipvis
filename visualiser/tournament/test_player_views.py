@@ -155,7 +155,6 @@ class PlayerViewTests(TestCase):
         self.p1.nationalities = []
         self.p1.save(update_fields=['nationalities'])
 
-    @tag('wdd')
     def test_detail_wddplayers(self):
         """Test a Player with multiple WDDPlayers"""
         self.assertFalse(self.p1.wddplayer_set.exists())

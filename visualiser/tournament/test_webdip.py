@@ -36,7 +36,6 @@ DRAW_7_GAME_ID = 19
 
 
 class WebDiplomacyTests(TestCase):
-    @tag('webdip')
     def test_webdip_game_non_wd_url(self):
         """Not a webdip URL."""
         path = 'board.php'
