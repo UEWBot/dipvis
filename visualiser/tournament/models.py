@@ -23,6 +23,7 @@ import string
 import sys
 import uuid
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from datetime import date, timedelta
 from operator import countOf, itemgetter
 from pathlib import Path
@@ -182,25 +183,33 @@ class RScoringBest(RoundScoringSystem):
         Also updates score_dropped for all the GamePlayers examined.
         """
         retval = {}
-        # for each player who played any of the specified games
-        for p in Player.objects.filter(gameplayer__in=game_players).distinct():
-            # Find just their games
-            player_games = game_players.filter(player=p)
-            # Find the highest score
+        changed_gps = []
+        player_games = defaultdict(list)
+        for gp in game_players.select_related('player'):
+            player_games[gp.player].append(gp)
+
+        for player, games in player_games.items():
             best = None
-            for gp in player_games:
-                if not best:
+            for gp in games:
+                if best is None:
                     best = gp
                 elif gp.score > best.score:
-                    best.score_dropped = True
-                    best.save(update_fields=['score_dropped'])
+                    if best.score_dropped is not True:
+                        best.score_dropped = True
+                        changed_gps.append(best)
                     best = gp
                 else:
-                    gp.score_dropped = True
-                    gp.save(update_fields=['score_dropped'])
-            best.score_dropped = False
-            best.save(update_fields=['score_dropped'])
-            retval[p] = best.score
+                    if gp.score_dropped is not True:
+                        gp.score_dropped = True
+                        changed_gps.append(gp)
+
+            if best.score_dropped is not False:
+                best.score_dropped = False
+                changed_gps.append(best)
+            retval[player] = best.score
+
+        if changed_gps:
+            GamePlayer.objects.bulk_update(changed_gps, ['score_dropped'])
         return retval
 
 
@@ -288,20 +297,24 @@ class TScoringSumRounds(TournamentScoringSystem):
         Also updates score_dropped for all the RoundPlayers examined.
         """
         t_scores = {}
-        # for each player who played any of the specified rounds
-        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
-            # Find just their rounds, sort by score, descending
-            rps = round_players.filter(player=p).order_by('-score')
-            # Add up the first N
-            t_scores[p] = 0.0
+        changed_rps = []
+        player_rounds = defaultdict(list)
+        for rp in round_players.select_related('player'):
+            player_rounds[rp.player].append(rp)
+
+        for player, rps in player_rounds.items():
+            rps.sort(key=lambda rp: rp.score, reverse=True)
+            t_scores[player] = 0.0
             for n, rp in enumerate(rps):
-                if n < self.scored_rounds:
-                    t_scores[p] += rp.score
-                    rp.score_dropped = False
-                    rp.save(update_fields=['score_dropped'])
-                else:
-                    rp.score_dropped = True
-                    rp.save(update_fields=['score_dropped'])
+                dropped = n >= self.scored_rounds
+                if not dropped:
+                    t_scores[player] += rp.score
+                if rp.score_dropped != dropped:
+                    rp.score_dropped = dropped
+                    changed_rps.append(rp)
+
+        if changed_rps:
+            RoundPlayer.objects.bulk_update(changed_rps, ['score_dropped'])
         return t_scores
 
 
@@ -325,20 +338,24 @@ class TScoringWDC2025(TournamentScoringSystem):
         Just calculates the sum of the best two round scores.
         """
         t_scores = {}
-        # for each player who played any of the specified rounds
-        for p in Player.objects.filter(roundplayer__in=round_players).distinct():
-            # Find just their rounds, sort by score, descending
-            rps = round_players.filter(player=p).order_by('-score')
-            # Add up the best 2
-            t_scores[p] = 0.0
+        changed_rps = []
+        player_rounds = defaultdict(list)
+        for rp in round_players.select_related('player'):
+            player_rounds[rp.player].append(rp)
+
+        for player, rps in player_rounds.items():
+            rps.sort(key=lambda rp: rp.score, reverse=True)
+            t_scores[player] = 0.0
             for n, rp in enumerate(rps):
-                if n < 2:
-                    t_scores[p] += rp.score
-                    rp.score_dropped = False
-                    rp.save(update_fields=['score_dropped'])
-                else:
-                    rp.score_dropped = True
-                    rp.save(update_fields=['score_dropped'])
+                dropped = n >= 2
+                if not dropped:
+                    t_scores[player] += rp.score
+                if rp.score_dropped != dropped:
+                    rp.score_dropped = dropped
+                    changed_rps.append(rp)
+
+        if changed_rps:
+            RoundPlayer.objects.bulk_update(changed_rps, ['score_dropped'])
         return t_scores
 
     def _top21(self, scores, tournament):
