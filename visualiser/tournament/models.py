@@ -2276,28 +2276,34 @@ class Round(models.Model):
         rps = self.roundplayer_set.order_by()
         if for_players is not None:
             rps = rps.filter(player__in=for_players)
+        rps = list(rps.select_related('player'))
+        changed_score_rps = {}
         if system:
             scores = system.scores(gps)
+            missing = object()
             for rp in rps:
-                try:
-                    rp.score = scores[rp.player]
-                    rp.save(update_fields=['score'])
-                except KeyError:
-                    # This player didn't actually play in the Round
-                    pass
+                score = scores.get(rp.player, missing)
+                if score is not missing and rp.score != score:
+                    rp.score = score
+                    changed_score_rps[rp.pk] = rp
         else:
             # Clear out any old scores, in case the scoring system changed
             for rp in rps:
-                rp.score = 0.0
-                rp.save(update_fields=['score'])
+                if rp.score != 0.0:
+                    rp.score = 0.0
+                    changed_score_rps[rp.pk] = rp
         # Identify any players who were checked in but didn't play
-        gps2 = gps.prefetch_related('player')
-        non_players = rps.exclude(player__in=[gp.player for gp in gps2])
+        gp_player_ids = set(gps.values_list('player_id', flat=True))
+        non_players = [rp for rp in rps if rp.player_id not in gp_player_ids]
         # Figure out scores for non-players
         scores = self._score_non_players(non_players)
         for rp in non_players:
-            rp.score = scores[rp.player]
-            rp.save(update_fields=['score'])
+            score = scores[rp.player]
+            if rp.score != score:
+                rp.score = score
+                changed_score_rps[rp.pk] = rp
+        if changed_score_rps:
+            RoundPlayer.objects.bulk_update(changed_score_rps.values(), ['score'])
         # That could change the Tournament scoring for those Players
         self.tournament.update_scores(for_players)
         if self.is_team_round:
@@ -2319,14 +2325,25 @@ class Round(models.Model):
             if for_players is not None:
                 rps2 = rps2.filter(player__in=for_players)
             t_scores = self.tournament._calculated_scores(rps2)
+            changed_tournament_score_rps = {}
             for rp in rps:
-                rp.tournament_score = t_scores.get(rp.player, 0.0)
-                rp.save(update_fields=['tournament_score'])
+                tournament_score = t_scores.get(rp.player, 0.0)
+                if rp.tournament_score != tournament_score:
+                    rp.tournament_score = tournament_score
+                    changed_tournament_score_rps[rp.pk] = rp
         else:
             # Tournament score calculated earlier doesn't include any later Rounds
+            tp_scores = dict(self.tournament.tournamentplayer_set.filter(
+                player_id__in=[rp.player_id for rp in rps]
+            ).values_list('player_id', 'score'))
+            changed_tournament_score_rps = {}
             for rp in rps:
-                rp.tournament_score = rp.tournamentplayer().score
-                rp.save(update_fields=['tournament_score'])
+                tournament_score = tp_scores.get(rp.player_id, 0.0)
+                if rp.tournament_score != tournament_score:
+                    rp.tournament_score = tournament_score
+                    changed_tournament_score_rps[rp.pk] = rp
+        if changed_tournament_score_rps:
+            RoundPlayer.objects.bulk_update(changed_tournament_score_rps.values(), ['tournament_score'])
 
     def set_is_finished(self):
         """
