@@ -292,24 +292,30 @@ def tournament_game_results(request,
     # No point refreshing if nothing can change
     if t.is_finished and (redirect_url_name == 'tournament_game_results_refresh'):
         refresh = False
-    tps = t.tournamentplayer_set.order_by('player__last_name', 'player__first_name').prefetch_related('player__gameplayer_set')
-    rds = t.round_set.prefetch_related('game_set')
+    tps = list(t.tournamentplayer_set.order_by('player__last_name',
+                                               'player__first_name').prefetch_related('player'))
+    rds = list(t.round_set.order_by('start'))
     rounds = list(range(1, len(rds) + 1))
-    # Grab the games for each round
-    round_games = {}
-    for r in rds:
-        round_games[r] = r.game_set.all()
+
+    gp_map = {}
+    if rds and tps:
+        round_ids = [rd.id for rd in rds]
+        player_ids = [tp.player_id for tp in tps]
+        all_gps = GamePlayer.objects.filter(player_id__in=player_ids,
+                                            game__the_round_id__in=round_ids).select_related(
+                                                'game__the_round',
+                                                'power',
+                                                'player').order_by('game')
+        for gp in all_gps:
+            gp_map.setdefault((gp.player_id, gp.game.the_round_id), []).append(gp)
+
     # Construct a list of dicts with tournament player and a list of gameplayer sets, one per round
     results = []
     for tp in tps:
-        # All the games (in every tournament) this player has played in
-        gps = tp.player.gameplayer_set.prefetch_related('game__the_round', 'power').order_by('game')
-        # Create a list of GamePlayers, indexed by Round
+        # Create a list of GamePlayers, indexed by Round.
         rs = []
         for r in rds:
-            # Create a list of GamePlayers for this Player and Round
-            gs = gps.filter(game__the_round=r).distinct()
-            rs.append(gs)
+            rs.append(gp_map.get((tp.player_id, r.id), []))
         row = {'tournament_player': tp,
                'rounds': rs}
         results.append(row)
