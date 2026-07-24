@@ -1252,7 +1252,11 @@ class Tournament(models.Model):
                 result[tp.player] = (tp.place, tp.snapshot_score)
             return result
 
-        # Populate t_scores with a dict keyed by player of scores
+        tp_rows = list(self.tournamentplayer_set.select_related('player').order_by())
+        player_map = {tp.player_id: tp.player for tp in tp_rows}
+        unranked_player_ids = {tp.player_id for tp in tp_rows if tp.unranked}
+
+        # Populate t_scores with a dict keyed by player id of scores
         if (after_round_num is not None) and (after_round_num < self.round_set.count()):
             t_scores = {}
             for n, r in reversed(list(enumerate(self.round_set.order_by('start'),
@@ -1261,31 +1265,35 @@ class Tournament(models.Model):
                 #    # Skip this round
                 #    continue
                 # Keep the score from the latest round
-                for rp in r.roundplayer_set.order_by():
-                    if rp.player not in t_scores:
-                        t_scores[rp.player] = rp.tournament_score
+                for player_id, tournament_score in r.roundplayer_set.values_list('player_id',
+                                                                                 'tournament_score').order_by():
+                    if player_id not in t_scores:
+                        t_scores[player_id] = tournament_score
             # Anyone who hadn't yet played scores zero
-            for tp in self.tournamentplayer_set.order_by():
-                if tp.player not in t_scores:
-                    t_scores[tp.player] = 0.0
+            for player_id in player_map:
+                if player_id not in t_scores:
+                    t_scores[player_id] = 0.0
         else:
-            t_scores = self.scores_detail()
+            t_scores = {tp.player_id: tp.score for tp in tp_rows}
         result = {}
         # First, deal with any unranked players
-        for tp in self.tournamentplayer_set.filter(unranked=True).prefetch_related('player').order_by():
+        for player_id in unranked_player_ids:
             # Take it out of scores and add it to result
-            result[tp.player] = (Tournament.UNRANKED, t_scores.pop(tp.player))
+            result[player_map[player_id]] = (Tournament.UNRANKED, t_scores.pop(player_id))
         # Figure out everyone's ranking
         # Start with first place
         rank = 1
         if top_pool is not None:
             # Some number of top board players get the top ranks
             # Starting with the player with the highest top board score
-            top_gps = GamePlayer.objects.filter(game__pool=top_pool).order_by('-score',
-                                                                              'tie_break_rank')
+            top_gps = GamePlayer.objects.filter(game__pool=top_pool).select_related('player').order_by('-score',
+                                                                                                         'tie_break_rank')
             last_score = None
-            for i, gp in enumerate([gp for gp in top_gps if not gp.tournamentplayer().unranked],
-                                   start=1):
+            i = 0
+            for gp in top_gps:
+                if gp.player_id in unranked_player_ids:
+                    continue
+                i += 1
                 # Equal tie_break_ranks will mess things up, but that's user error
                 if (gp.score != last_score) or (gp.tie_break_rank is not None):
                     rank, last_score = i, gp.score
@@ -1294,8 +1302,12 @@ class Tournament(models.Model):
                         break
                 # This player gets one of the top ranks
                 player = gp.player
-                result[player] = (rank, t_scores.pop(player))
-        return result | add_ranks(t_scores, rank)
+                result[player] = (rank, t_scores.pop(gp.player_id))
+
+        ranked = add_ranks(t_scores, rank)
+        ranked_players = {player_map[player_id]: rank_and_score
+                          for player_id, rank_and_score in ranked.items()}
+        return result | ranked_players
 
     def team_scores(self, after_round_num=None):
         """
