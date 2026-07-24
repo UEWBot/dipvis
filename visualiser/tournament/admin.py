@@ -16,6 +16,7 @@
 
 from django.contrib import admin
 from django.db import transaction
+from django.db.models import Q
 
 from tournament.diplomacy import GameSet, GreatPower, SetPower, SupplyCentre
 from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
@@ -45,6 +46,10 @@ class TournamentPermissionAdminMixin:
         """Hook for model-specific object-level change checks."""
         return tournament.can_be_changed_by(request.user)
 
+    def has_tournament_view_permission(self, request, obj, tournament):
+        """Hook for model-specific object-level view checks."""
+        return tournament.can_be_viewed_by(request.user)
+
     def has_view_permission(self, request, obj=None):
         """Check admin permission plus Tournament-level visibility constraints."""
         # Generic permissions for unspecified obj
@@ -55,7 +60,7 @@ class TournamentPermissionAdminMixin:
 
         # Specific permissions for objects in a given tournament
         tournament = self.get_tournament_for_permission(obj)
-        return tournament.can_be_viewed_by(request.user)
+        return self.has_tournament_view_permission(request, obj, tournament)
 
     def has_change_permission(self, request, obj=None):
         """Check admin permission plus Tournament-level constraints for action."""
@@ -80,6 +85,18 @@ class TournamentPermissionAdminMixin:
         # Specific permissions for objects in a given tournament
         tournament = self.get_tournament_for_permission(obj)
         return tournament.can_be_deleted_by(request.user)
+
+    def get_queryset(self, request):
+        """Limit changelist rows to tournaments visible to the request user."""
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+
+        t_attr = self.tournament_attr.replace('.', '__')
+        return qs.filter(
+            Q(**{f'{t_attr}__managers': request.user}) |
+            Q(**{f'{t_attr}__is_published': True})
+        ).distinct()
 
 
 @admin.register(Award)
@@ -117,6 +134,26 @@ class GamePlayerInline(admin.TabularInline):
     ]
 
 
+class ScoreVisibilityAdminMixin(TournamentPermissionAdminMixin):
+    """Restrict score visibility for non-managers when current scores are hidden."""
+
+    def has_tournament_view_permission(self, request, obj, tournament):
+        if (not tournament.show_current_scores) and (not tournament.can_be_managed_by(request.user)):
+            return False
+        return super().has_tournament_view_permission(request, obj, tournament)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+
+        t_attr = self.tournament_attr.replace('.', '__')
+        return qs.filter(
+            Q(**{f'{t_attr}__managers': request.user}) |
+            Q(**{f'{t_attr}__show_current_scores': True})
+        ).distinct()
+
+
 @admin.register(Game)
 class GameAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     """Include GamePlayer, CentreCount, DrawProposal, and SCOwnership with Game"""
@@ -135,7 +172,7 @@ class GameImageAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(GamePlayer)
-class GamePlayerAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
+class GamePlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'player']
     tournament_attr = 'game.the_round.tournament'
     ordering = ['game', 'power']
@@ -224,7 +261,7 @@ class RoundAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(RoundPlayer)
-class RoundPlayerAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
+class RoundPlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['the_round__tournament', 'the_round', 'player', 'game_count']
     tournament_attr = 'the_round.tournament'
     ordering = ['player', 'the_round__start']
@@ -274,7 +311,7 @@ class RoundInline(admin.StackedInline):
 
 
 @admin.register(Team)
-class TeamAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
+class TeamAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament']
     tournament_attr = 'tournament'
     ordering = ['name']
@@ -307,7 +344,7 @@ class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
 
 
 @admin.register(TournamentPlayer)
-class TournamentPlayerAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
+class TournamentPlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament', 'player', 'location', 'unranked']
     tournament_attr = 'tournament'
     ordering = ['player']
