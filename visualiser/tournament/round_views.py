@@ -356,7 +356,7 @@ def _create_game_seeder(tournament, the_round):
         seeder.add_player(tp)
     # Provide details of games already played this tournament
     for rnd in tournament.round_set.filter(start__lt=the_round.start).order_by():
-        for g in rnd.game_set.prefetch_related('gameplayer_set').order_by():
+        for g in rnd.game_set.order_by():
             game = set()
             for gp in g.gameplayer_set.select_related('power',
                                                       'player',
@@ -727,40 +727,47 @@ def round_scores(request, tournament_id, round_num):
     """Display scores after the specified round"""
     # TODO can we share code with tournament_scores() ?
     t = get_visible_tournament_or_404(tournament_id, request.user)
-    tps = t.tournamentplayer_set.order_by('-score',
-                                          'player__last_name',
-                                          'player__first_name').select_related('player')
-    rds = t.round_set.prefetch_related('roundplayer_set')
+    tps = list(t.tournamentplayer_set.order_by('-score',
+                                               'player__last_name',
+                                               'player__first_name').select_related('player'))
+    rds = list(t.round_set.order_by('start'))
     if t.show_current_scores:
         # Grab the tournament scores and positions after the specified round
         t_positions_and_scores = t.positions_and_scores(after_round_num=round_num)
     else:
         # Get the scores after the last finished Round, if any
-        r = rds.filter(is_finished=True).last()
-        if r is None:
+        finished_round = next((rd for rd in reversed(rds) if rd.is_finished), None)
+        if finished_round is None:
             # After Round 0, everyone had a score of zero
             t_positions_and_scores = t.positions_and_scores(after_round_num=0)
         else:
-            finished_round_num = r.number()
+            finished_round_num = rds.index(finished_round) + 1
             if finished_round_num < round_num:
                 t_positions_and_scores = t.positions_and_scores(after_round_num=finished_round_num)
             else:
                 t_positions_and_scores = t.positions_and_scores(after_round_num=round_num)
     # Discard any rounds after the one specified
     rds = rds[:round_num]
+
+    round_player_map = {}
+    if rds and tps:
+        round_ids = [rd.id for rd in rds]
+        player_ids = [tp.player_id for tp in tps]
+        rps = RoundPlayer.objects.filter(the_round_id__in=round_ids,
+                                         player_id__in=player_ids).select_related('player',
+                                                                                  'the_round')
+        round_player_map = {(rp.the_round_id, rp.player_id): rp for rp in rps}
+
     # Construct a list of dicts with {rank, tournament player, [round 1 player, ..., round n player]}
     scores = []
     for tp in tps:
         rs = []
         last_rp = None
         for r in rds:
-            try:
-                rp = r.roundplayer_set.get(player=tp.player)
-            except RoundPlayer.DoesNotExist:
-                # This player didn't play this round
-                rs.append(None)
-            else:
-                rs.append(rp)
+            # This player didn't play this round if the key is missing
+            rp = round_player_map.get((r.id, tp.player_id))
+            rs.append(rp)
+            if rp is not None:
                 last_rp = rp
         row = {'rank': f'{t_positions_and_scores[tp.player][0]}',
                'player': tp,
