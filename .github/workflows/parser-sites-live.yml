@@ -1,12 +1,12 @@
-name: Wikipedia Live Integration
+name: Parser Sites Live Integration
 
 on:
   schedule:
-    - cron: '17 3 * * *'
+    - cron: '47 3 * * *'
   workflow_dispatch:
 
 jobs:
-  wikipedia-live:
+  live-parser-sites:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-      - name: Run Live Wikipedia Tests
+      - name: Run Live Parser Tests
         run: |
           cd visualiser
-          python ./manage.py test --tag=wikipedia_live
+          python ./manage.py test \
+            --tag=wikipedia_live \
+            --tag=backstabbr \
+            --tag=webdip \
+            --tag=wdr \
+            --tag=wdd
