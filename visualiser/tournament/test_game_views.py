@@ -200,13 +200,8 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'games/detail.html')
         # Clean up
-        p1.delete()
-        p2.delete()
-        p3.delete()
-        p4.delete()
-        p5.delete()
-        p6.delete()
-        p7.delete()
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
 
     def test_detail_non_existent_game(self):
         response = self.client.get(reverse('game_detail',
@@ -431,13 +426,8 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'games/sc_count.html')
         # Cleanup
-        p1.delete()
-        p2.delete()
-        p3.delete()
-        p4.delete()
-        p5.delete()
-        p6.delete()
-        p7.delete()
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
 
     def test_sc_chart(self):
         """GamePlayers exist with powers assigned"""
@@ -462,7 +452,8 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'games/sc_count.html')
         # Cleanup
-        self.g1.gameplayer_set.all().delete()
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
 
     def test_sc_chart_gap_year(self):
         self.assertEqual(self.g1.centrecount_set.filter(year=1903).count(), 0)
@@ -1303,13 +1294,8 @@ class GameViewTests(TestCase):
         self.assertTemplateUsed(response, 'games/info.html')
         # Cleanup
         self.g1.centrecount_set.filter(year=1903).all().delete()
-        p1.delete()
-        p2.delete()
-        p3.delete()
-        p4.delete()
-        p5.delete()
-        p6.delete()
-        p7.delete()
+        for p in [p1, p2, p3, p4, p5, p6, p7]:
+            p.delete()
 
     def test_news_for_invalid_year(self):
         response = self.client.get(reverse('game_news_for_year',
