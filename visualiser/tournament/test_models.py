@@ -10718,6 +10718,14 @@ class GamePlayerTests(TestCase):
         gp = GamePlayer(player=p, game=g, power=self.austria)
         gp.clean()
 
+    def test_gameplayer_clean_tie_break_rank_non_top_board(self):
+        t = Tournament.objects.get(name='t1')
+        p = t.tournamentplayer_set.first().player
+        g = t.round_numbered(2).game_set.get(name='g13')
+        self.assertIs(False, g.is_top_board)
+        gp = GamePlayer(player=p, game=g, power=self.austria, tie_break_rank=1)
+        self.assertRaises(ValidationError, gp.clean)
+
     # GamePlayer.__str__()
     def test_gameplayer_str_with_power(self):
         gp = GamePlayer.objects.filter(power__isnull=False).first()
