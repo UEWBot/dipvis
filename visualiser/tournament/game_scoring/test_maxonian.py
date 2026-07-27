@@ -198,3 +198,15 @@ class MaxonianGameScoringTests(TestCase):
         tgs = SCChartGameState(self.powers, sc_counts)
         self.assertEqual(tgs.elimination_year_list(),
                          [1904, None, None, None, None, None, None])
+
+    def test_sc_chart_solo_year_none(self):
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902}
+        tgs = SCChartGameState(self.powers, sc_counts)
+        self.assertIsNone(tgs.solo_year())
+
+    def test_sc_chart_year_eliminated_none(self):
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902}
+        tgs = SCChartGameState(self.powers, sc_counts)
+        self.assertIsNone(tgs.year_eliminated(self.england))
