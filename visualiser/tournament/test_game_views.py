@@ -20,6 +20,7 @@ from urllib.parse import urlencode
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django.urls import reverse
 
@@ -1379,6 +1380,34 @@ class GameViewTests(TestCase):
         # Clean up
         dp.delete()
 
+    def test_post_secret_dias_draw_vote_uses_prior_year_survivors(self):
+        self.assertEqual(self.g1.drawproposal_set.count(), 0)
+        self.assertFalse(self.g1.centrecount_set.filter(year=1902).exists())
+        CentreCount.objects.create(power=self.austria, game=self.g1, year=1902, count=5)
+        CentreCount.objects.create(power=self.england, game=self.g1, year=1902, count=5)
+        CentreCount.objects.create(power=self.france, game=self.g1, year=1902, count=5)
+        CentreCount.objects.create(power=self.germany, game=self.g1, year=1902, count=5)
+        CentreCount.objects.create(power=self.italy, game=self.g1, year=1902, count=5)
+        CentreCount.objects.create(power=self.russia, game=self.g1, year=1902, count=5)
+        CentreCount.objects.create(power=self.turkey, game=self.g1, year=1902, count=4)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'passed': False,
+                          'proposer': str(self.austria)})
+        response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g1.name)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, self.g1.get_absolute_url())
+        self.assertEqual(self.g1.drawproposal_set.count(), 1)
+        dp = self.g1.drawproposal_set.get()
+        self.assertEqual(dp.draw_size(), 7)
+        # Cleanup
+        dp.delete()
+        self.g1.centrecount_set.filter(year=1902).delete()
+
     def test_post_secret_non_dias_draw_vote(self):
         self.assertEqual(self.g2.drawproposal_set.count(), 0)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
@@ -1442,6 +1471,44 @@ class GameViewTests(TestCase):
         self.assertEqual(self.g2.drawproposal_set.count(), 0)
         # Clean up
         self.g2.centrecount_set.filter(year=1901).delete()
+
+    def test_post_secret_non_dias_draw_vote_validation_unknown_field(self):
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'passed': False,
+                          'powers': [str(self.england), str(self.turkey)],
+                          'proposer': str(self.england)}, True)
+        with patch('tournament.game_views.DrawProposal.full_clean',
+                   side_effect=ValidationError({'mystery_field': ['oops']})):
+            response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g2.name)),
+                                        data,
+                                        secure=True,
+                                        content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/vote.html')
+        self.assertContains(response, 'oops')
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+
+    def test_post_secret_non_dias_draw_vote_validation_non_field_error(self):
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        data = urlencode({'year': '1902',
+                          'season': Seasons.SPRING,
+                          'passed': False,
+                          'powers': [str(self.england), str(self.turkey)],
+                          'proposer': str(self.england)}, True)
+        with patch('tournament.game_views.DrawProposal.full_clean',
+                   side_effect=ValidationError('oops')):
+            response = self.client.post(reverse('draw_vote', args=(self.t1.pk, self.g2.name)),
+                                        data,
+                                        secure=True,
+                                        content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/vote.html')
+        self.assertContains(response, 'oops')
+        self.assertEqual(self.g2.drawproposal_set.count(), 0)
 
     def test_post_secret_non_dias_draw_vote_passed_updates_scores_after_adding_powers(self):
         t = Tournament.objects.create(name='t_draw_size',
