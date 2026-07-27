@@ -10541,9 +10541,133 @@ class GamePlayerTests(TestCase):
         # Note that this will also delete all associated objects
         t.delete()
 
-    # TODO GamePlayer.result_str_long()
+    # GamePlayer.result_str()
+    def test_gameplayer_result_str_no_power(self):
+        g = Game.objects.first()
+        gp = GamePlayer.objects.create(player=self.p2, game=g)
+        self.assertEqual(gp.result_str(), '')
+        gp.delete()
 
-    # TODO GamePlayer.result_str(), including without power assigned
+    def test_gameplayer_result_str_eliminated(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        gp = g.gameplayer_set.get(power=self.italy)
+        self.assertEqual(gp.result_str(), 'Eliminated in 1903')
+        self.assertEqual(gp.result_str(include_power=True), 'Eliminated as Italy in 1903')
+
+    def test_gameplayer_result_str_solo_and_loss(self):
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        winner = g.gameplayer_set.get(power=self.germany)
+        loser = g.gameplayer_set.get(power=self.england)
+
+        self.assertEqual(winner.result_str(), 'Solo with 18 centres in 1904')
+        self.assertEqual(winner.result_str(include_power=True), 'Solo as Germany with 18 centres in 1904')
+        self.assertEqual(loser.result_str(), 'Loss with 4 centres in 1904')
+        self.assertEqual(loser.result_str(include_power=True), 'Loss as England with 4 centres in 1904')
+
+        with_name = loser.result_str(include_game_name=True)
+        self.assertIn('Loss with 4 centres in 1904 in <a href="', with_name)
+        self.assertIn('>g11</a>', with_name)
+        self.assertIn('[Ongoing]', with_name)
+
+    def test_gameplayer_result_str_passed_draw(self):
+        today = date.today()
+        t = Tournament.objects.create(name='gp_result_draw',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s2,
+                                 dias=True,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        g = Game.objects.create(name='gp-result-draw',
+                                started_at=r.start,
+                                the_round=r,
+                                is_finished=True,
+                                the_set=self.set1)
+
+        for p in [self.p1, self.p3, self.p4]:
+            TournamentPlayer.objects.create(player=p, tournament=t)
+            RoundPlayer.objects.create(player=p, the_round=r)
+
+        gp_a = GamePlayer.objects.create(player=self.p1, game=g, power=self.austria)
+        gp_e = GamePlayer.objects.create(player=self.p3, game=g, power=self.england)
+        gp_f = GamePlayer.objects.create(player=self.p4, game=g, power=self.france)
+
+        CentreCount.objects.create(power=self.austria, game=g, year=1904, count=10)
+        CentreCount.objects.create(power=self.england, game=g, year=1904, count=8)
+        CentreCount.objects.create(power=self.france, game=g, year=1904, count=6)
+        CentreCount.objects.create(power=self.germany, game=g, year=1904, count=4)
+        CentreCount.objects.create(power=self.italy, game=g, year=1904, count=3)
+        CentreCount.objects.create(power=self.russia, game=g, year=1904, count=2)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1904, count=1)
+
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=Seasons.FALL,
+                                         passed=True)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+
+        self.assertEqual(gp_a.result_str(), '2-way draw with 10 centres in 1904')
+        self.assertEqual(gp_e.result_str(include_power=True), '2-way draw as England with 8 centres in 1904')
+        self.assertEqual(gp_f.result_str(), 'Loss with 6 centres in 1904')
+        self.assertEqual(gp_f.result_str(include_power=True), 'Loss as France with 6 centres in 1904')
+
+        t.delete()
+
+    def test_gameplayer_result_str_topper_tied_top_and_game_name(self):
+        today = date.today()
+        t = Tournament.objects.create(name='gp_result_topper',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=s2,
+                                 dias=True,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        g = Game.objects.create(name='gp-result-top',
+                                started_at=r.start,
+                                the_round=r,
+                                is_finished=False,
+                                is_top_board=True,
+                                the_set=self.set1)
+
+        for p in [self.p1, self.p3, self.p4]:
+            TournamentPlayer.objects.create(player=p, tournament=t)
+            RoundPlayer.objects.create(player=p, the_round=r)
+
+        gp_a = GamePlayer.objects.create(player=self.p1, game=g, power=self.austria)
+        gp_e = GamePlayer.objects.create(player=self.p3, game=g, power=self.england)
+        gp_f = GamePlayer.objects.create(player=self.p4, game=g, power=self.france)
+
+        CentreCount.objects.create(power=self.austria, game=g, year=1904, count=10)
+        CentreCount.objects.create(power=self.england, game=g, year=1904, count=10)
+        CentreCount.objects.create(power=self.france, game=g, year=1904, count=5)
+        CentreCount.objects.create(power=self.germany, game=g, year=1904, count=3)
+        CentreCount.objects.create(power=self.italy, game=g, year=1904, count=3)
+        CentreCount.objects.create(power=self.russia, game=g, year=1904, count=2)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1904, count=1)
+
+        tied_top = gp_a.result_str(include_power=True)
+        self.assertIn('10 centres (2-way tied board top) as ', tied_top)
+        self.assertIn(f'{self.austria.name} in 1904', tied_top)
+
+        not_top = gp_f.result_str()
+        self.assertEqual(not_top, '5 centres in 1904')
+
+        with_name = gp_e.result_str(include_game_name=True)
+        self.assertIn('10 centres (2-way tied board top) in 1904 in <a href="', with_name)
+        self.assertIn('>gp-result-top</a>', with_name)
+        self.assertIn('[Top Board]', with_name)
+        self.assertIn('[Ongoing]', with_name)
+
+        t.delete()
 
     # GamePlayer.clean()
     def test_gameplayer_clean_player_not_in_tournament(self):
