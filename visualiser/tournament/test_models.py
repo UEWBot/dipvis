@@ -9550,6 +9550,39 @@ class DrawProposalTests(TestCase):
         dp.clean()
         dp.delete()
 
+    def test_draw_proposal_clean_votes_all_no_existing_success(self):
+        """votes_in_favour==survivors with no passed proposal should validate."""
+        t = Tournament.objects.get(name='t1')
+        g = t.round_numbered(1).game_set.get(name='g11')
+        existing_failed = DrawProposal.objects.create(game=g,
+                                                      year=1904,
+                                                      season=Seasons.FALL,
+                                                      passed=False,
+                                                      proposer=self.england)
+        existing_failed.drawing_powers.add(self.austria)
+        existing_failed.drawing_powers.add(self.england)
+        existing_failed.drawing_powers.add(self.france)
+        existing_failed.drawing_powers.add(self.germany)
+        existing_failed.drawing_powers.add(self.russia)
+        existing_failed.drawing_powers.add(self.turkey)
+
+        dp = DrawProposal.objects.create(game=g,
+                                         year=1905,
+                                         season=Seasons.FALL,
+                                         passed=False,
+                                         votes_in_favour=6,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+        dp.drawing_powers.add(self.france)
+        dp.drawing_powers.add(self.germany)
+        dp.drawing_powers.add(self.russia)
+        dp.drawing_powers.add(self.turkey)
+        # This should exercise the "no existing passed proposal" path.
+        dp.clean()
+        dp.delete()
+        existing_failed.delete()
+
     def test_draw_proposal_clean_after_win(self):
         """DrawProposal.clean() after Game has been won"""
         t = Tournament.objects.get(name='t1')
