@@ -16,6 +16,7 @@
 
 from datetime import date, datetime, timedelta
 from datetime import timezone as datetime_timezone
+from unittest.mock import patch
 
 from django.test import TestCase, tag
 
@@ -24,7 +25,8 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import (MASK_ALL_BG, PlayerAward, PlayerGameResult,
                                 PlayerRanking, PlayerTitle,
-                                PlayerTournamentRanking, WDDPlayer)
+                                PlayerTournamentRanking, WDDPlayer,
+                                WDRNotAccessible)
 
 from . import Player, player_picture_location
 
@@ -300,6 +302,16 @@ class PlayerTests(TestCase):
         p = Player.objects.create(first_name='John', last_name='Smith', wdr_player_id=CHRIS_BRAND_WDR_ID)
         res = p.wdr_name()
         self.assertEqual(res, 'Chris Brand')
+        # Cleanup
+        p.delete()
+
+    def test_player_wdr_name_not_accessible(self):
+        p = Player.objects.create(first_name='John',
+                                  last_name='Smith',
+                                  wdr_player_id=1234)
+        with patch('tournament.players.player.WDRBackground', side_effect=WDRNotAccessible):
+            res = p.wdr_name()
+        self.assertEqual(res, '')
         # Cleanup
         p.delete()
 
