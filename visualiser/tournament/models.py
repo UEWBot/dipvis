@@ -1195,16 +1195,6 @@ class Tournament(models.Model):
         """
         return self.awards.filter(power=None)
 
-    def award_number(self, award):
-        """
-        Returns the number (1..n) for the specified (non-best country) award at the tournament
-        """
-        assert award.power is None
-        for i, a in enumerate(self.awards.filter(power=None), 1):
-            if a == award:
-                return i
-        raise AssertionError(f'award {award} not found in {self}')
-
     def _calculated_scores(self, for_players=None):
         """
         Calculates the tournament scores for players who have attended
