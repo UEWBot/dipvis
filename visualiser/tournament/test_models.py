@@ -3664,6 +3664,60 @@ class TournamentTests(TestCase):
         self.g31.gameplayer_set.all().delete()
         self.g32.gameplayer_set.all().delete()
 
+    def test_tournament_positions_and_scores_round_with_top_pool_fallback(self):
+        """after_round_num should still work when a top pool exists."""
+        today = date.today()
+        t = Tournament.objects.create(name='t_ps_fallback',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date,
+                                                         time(hour=8,
+                                                              tzinfo=datetime_timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=r1.start + HOURS_8)
+        r3 = Round.objects.create(tournament=t,
+                                  scoring_system=G_SCORING_SYSTEMS[0].name,
+                                  dias=True,
+                                  start=r1.start + HOURS_16)
+        Pool.objects.create(the_round=r3,
+                            name='Top Board',
+                            board_count=1,
+                            determines_top_rankings=1)
+
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        TournamentPlayer.objects.create(player=self.p3, tournament=t)
+
+        RoundPlayer.objects.create(player=self.p1,
+                                   the_round=r1,
+                                   tournament_score=10.0)
+        RoundPlayer.objects.create(player=self.p2,
+                                   the_round=r1,
+                                   tournament_score=20.0)
+        RoundPlayer.objects.create(player=self.p1,
+                                   the_round=r2,
+                                   tournament_score=30.0)
+        RoundPlayer.objects.create(player=self.p2,
+                       the_round=r3,
+                       tournament_score=999.0)
+
+        p_and_s = t.positions_and_scores(after_round_num=2)
+
+        self.assertEqual(p_and_s[self.p1], (1, 30.0))
+        self.assertEqual(p_and_s[self.p2], (2, 20.0))
+        self.assertEqual(p_and_s[self.p3], (3, 0.0))
+
+        # Cleanup
+        t.delete()
+
     def test_tournament_positions_and_scores_round_rank_ordering(self):
         """after_round_num path should preserve competition ranking semantics."""
         t = Tournament.objects.get(name='t1')
