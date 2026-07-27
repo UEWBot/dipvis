@@ -10399,8 +10399,41 @@ class GamePlayerTests(TestCase):
             self.assertIs(True, tp.unranked)
             self.assertIs(False, gp.is_best_country())
 
-    # TODO GamePlayer.is_best_country() for unranked player when they scored
-    #      best but a ranked player played the same power
+    def test_gameplayer_is_best_country_unranked_loses_to_ranked(self):
+        today = date.today()
+        t = Tournament.objects.create(name='gp_best_country_unranked',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=r1.start + HOURS_8)
+        g1 = Game.objects.create(name='g-unranked-1',
+                                 started_at=r1.start,
+                                 the_round=r1,
+                                 the_set=self.set1)
+        g2 = Game.objects.create(name='g-unranked-2',
+                                 started_at=r2.start,
+                                 the_round=r2,
+                                 the_set=self.set1)
+        TournamentPlayer.objects.create(player=self.p1, tournament=t, unranked=False)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t, unranked=True)
+        gp_ranked = GamePlayer.objects.create(player=self.p1, game=g1, power=self.austria, score=1)
+        gp_unranked = GamePlayer.objects.create(player=self.p2, game=g2, power=self.austria, score=99)
+        CentreCount.objects.create(power=self.austria, game=g1, year=1901, count=1)
+        CentreCount.objects.create(power=self.austria, game=g2, year=1901, count=18)
+
+        self.assertIs(False, gp_unranked.is_best_country())
+
+        # Cleanup
+        t.delete()
 
     def test_gameplayer_is_best_country_score(self):
         t = Tournament.objects.get(name='t1')
@@ -10413,8 +10446,42 @@ class GamePlayerTests(TestCase):
         for gp in gps:
             self.assertIs(False, gp.is_best_country())
 
-    # TODO GamePlayer.is_best_country() with criteria SCORE where two players
-    #      have equal scores and dots are used to tie break
+    def test_gameplayer_is_best_country_score_tie_break_on_dots(self):
+        today = date.today()
+        t = Tournament.objects.create(name='gp_best_country_score_tie',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=r1.start + HOURS_8)
+        g1 = Game.objects.create(name='g-score-tie-1',
+                                 started_at=r1.start,
+                                 the_round=r1,
+                                 the_set=self.set1)
+        g2 = Game.objects.create(name='g-score-tie-2',
+                                 started_at=r2.start,
+                                 the_round=r2,
+                                 the_set=self.set1)
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        gp_high_dots = GamePlayer.objects.create(player=self.p2, game=g2, power=self.austria, score=10)
+        gp_low_dots = GamePlayer.objects.create(player=self.p1, game=g1, power=self.austria, score=10)
+        CentreCount.objects.create(power=self.austria, game=g1, year=1901, count=5)
+        CentreCount.objects.create(power=self.austria, game=g2, year=1901, count=7)
+
+        self.assertIs(False, gp_low_dots.is_best_country())
+        self.assertIs(True, gp_high_dots.is_best_country())
+
+        # Cleanup
+        t.delete()
 
     def test_gameplayer_is_best_country_dots(self):
         t = Tournament.objects.get(name='t1')
@@ -10432,8 +10499,43 @@ class GamePlayerTests(TestCase):
         t.best_country_criterion = BestCountryCriteria.SCORE
         t.save(update_fields=['best_country_criterion'])
 
-    # TODO GamePlayer.is_best_country() with criteria DOTS where two players
-    #      have equal dots and scores are used to tie break
+    def test_gameplayer_is_best_country_dots_tie_break_on_score(self):
+        today = date.today()
+        t = Tournament.objects.create(name='gp_best_country_dots_tie',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      best_country_criterion=BestCountryCriteria.DOTS)
+        r1 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        r2 = Round.objects.create(tournament=t,
+                                  scoring_system=s2,
+                                  dias=True,
+                                  start=r1.start + HOURS_8)
+        g1 = Game.objects.create(name='g-dots-tie-1',
+                                 started_at=r1.start,
+                                 the_round=r1,
+                                 the_set=self.set1)
+        g2 = Game.objects.create(name='g-dots-tie-2',
+                                 started_at=r2.start,
+                                 the_round=r2,
+                                 the_set=self.set1)
+        TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        gp_high_score = GamePlayer.objects.create(player=self.p2, game=g1, power=self.austria, score=12)
+        gp_low_score = GamePlayer.objects.create(player=self.p1, game=g2, power=self.austria, score=10)
+        CentreCount.objects.create(power=self.austria, game=g1, year=1901, count=6)
+        CentreCount.objects.create(power=self.austria, game=g2, year=1901, count=6)
+
+        self.assertIs(False, gp_low_score.is_best_country())
+        self.assertIs(True, gp_high_score.is_best_country())
+
+        # Cleanup
+        t.delete()
 
     # GamePlayer.roundplayer()
     def test_gameplayer_roundplayer(self):
