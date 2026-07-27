@@ -15,11 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from django_countries.fields import Country
+from unittest.mock import patch
+import importlib
 
 from django.test import TestCase, tag
 
 from tournament.diplomacy import GreatPower
-from tournament.players import Player, WDDPlayer
+from tournament.players import Player, WDDPlayer, WDRNotAccessible
 
 from . import add_player_bg
 
@@ -80,6 +82,20 @@ class AddPlayerBgTests(TestCase):
         self.assertIsNone(p.wdr_player_id)
         add_player_bg(p)
         # TODO Validate results
+
+    def test_add_player_bg_wdr_not_accessible(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='Unavailable',
+                                  wdr_player_id=9999)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module,
+                              '_add_player_bg_from_wdr',
+                              side_effect=WDRNotAccessible):
+                add_player_bg(p)
+        # Cleanup
+        p.delete()
 
     @tag('wdr')
     def test_add_player_bg_wdr(self):
