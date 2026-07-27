@@ -26,7 +26,8 @@ from tournament.email import (send_board_call_email, send_prefs_email,
 from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
                                T_SCORING_SYSTEMS, DrawSecrecy, Game,
                                GamePlayer, PowerAssignMethods, Round,
-                               RoundPlayer, Tournament, TournamentPlayer)
+                               RoundPlayer, Pool, Tournament,
+                               TournamentPlayer)
 from tournament.players import Player
 
 
@@ -324,6 +325,61 @@ class EmailTests(TestCase):
             self.assertNotIn('(', m.body)
 
     # TODO Test board call email for a Round with Pools
+
+    @override_settings(EMAIL_HOST_USER=TD_EMAIL)
+    def test_send_board_call_email_single_game(self):
+        r = Round.objects.get(game__name='g4')
+        self.assertEqual(r.game_set.count(), 1)
+        send_board_call_email(r)
+        # Single game, so we expect one email
+        self.assertEqual(len(mail.outbox), 1)
+        m = mail.outbox[0]
+        self.assertEqual(m.from_email, TD_EMAIL)
+        self.assertEqual(m.to, [TD_EMAIL])
+        # 7 players assigned to g4, one with no email => 6 recipients
+        self.assertEqual(len(m.bcc), 6)
+        # p13 is not in Round 2
+        self.assertNotIn(self.p13.email, m.bcc)
+        # Single-game wording should be used
+        self.assertIn('The game:\n', m.body)
+        self.assertNotIn('Your game:\n', m.body)
+        self.assertNotIn('The full round:\n', m.body)
+
+    @override_settings(EMAIL_HOST_USER=TD_EMAIL)
+    def test_send_board_call_email_with_pools(self):
+        r = Round.objects.get(game__name='g1')
+        self.assertEqual(r.game_set.count(), 3)
+        p1 = Pool.objects.create(the_round=r, name='A')
+        p2 = Pool.objects.create(the_round=r, name='B')
+        g1 = r.game_set.get(name='g1')
+        g2 = r.game_set.get(name='g2')
+        g3 = r.game_set.get(name='g3')
+        g1.pool = p1
+        g1.save(update_fields=['pool'])
+        g2.pool = p2
+        g2.save(update_fields=['pool'])
+        g3.pool = p2
+        g3.save(update_fields=['pool'])
+
+        send_board_call_email(r)
+        # 3 games, but one with no mailable recipients => 2 emails
+        self.assertEqual(len(mail.outbox), 2)
+        for m in mail.outbox:
+            self.assertEqual(m.from_email, TD_EMAIL)
+            self.assertEqual(m.to, [TD_EMAIL])
+            self.assertEqual(len(m.cc), 0)
+            self.assertEqual(len(m.bcc), 6)
+            self.assertIn('The full round:\n', m.body)
+
+        # Cleanup
+        g1.pool = None
+        g2.pool = None
+        g3.pool = None
+        g1.save(update_fields=['pool'])
+        g2.save(update_fields=['pool'])
+        g3.save(update_fields=['pool'])
+        p1.delete()
+        p2.delete()
 
     @override_settings(EMAIL_HOST_USER=TD_EMAIL)
     def test_send_board_call_no_email(self):
