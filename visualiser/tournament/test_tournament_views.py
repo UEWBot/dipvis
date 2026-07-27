@@ -15,6 +15,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import uuid
+import warnings
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
 from urllib.parse import urlencode
@@ -1161,9 +1162,13 @@ class TournamentViewTests(TestCase):
 
     def test_graph(self):
         """Just the graph itself"""
-        response = self.client.get(reverse('graph_img_score',
-                                           args=(self.t4.pk,)),
-                                   secure=True)
+        with warnings.catch_warnings():
+            warnings.filterwarnings('ignore',
+                                    message=r'Attempting to set identical low and high [xy]lims makes transformation singular; automatically expanding',
+                        category=UserWarning)
+            response = self.client.get(reverse('graph_img_score',
+                               args=(self.t4.pk,)),
+                           secure=True)
         self.assertEqual(response.status_code, 200)
         # Should be a PNG image
         self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
