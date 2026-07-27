@@ -1008,6 +1008,11 @@ class Tournament(models.Model):
                                                                null=True,
                                                                validators=[MinValueValidator(1)],
                                                                help_text=_('The number of team round game scores that contribute. If the team has more, the lowest will be dropped. Blank means "all"'))
+    default_game_set = models.ForeignKey(GameSet,
+                                         on_delete=models.PROTECT,
+                                         null=True,
+                                         blank=True,
+                                         help_text=_('Default GameSet used when seeding games for rounds'))
 
     class Meta:
         ordering = ['-start_date']

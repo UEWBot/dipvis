@@ -2527,3 +2527,39 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/board_call_by_player.html')
+
+    def test_seed_games_uses_default_game_set(self):
+        """seed_games uses Tournament.default_game_set when set"""
+        self.assertEqual(self.r32.game_set.count(), 0)
+        # Set default_game_set to Avalon Hill
+        self.t3.default_game_set = self.ah
+        self.t3.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t3.pk, 2)),
+                                   secure=True)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
+        # Game should be created with the specified GameSet
+        g = self.t3.round_numbered(2).game_set.get()
+        self.assertEqual(g.the_set, self.ah)
+        # Clean up
+        g.delete()
+        self.t3.default_game_set = None
+        self.t3.save()
+
+    def test_seed_games_fallback_when_default_game_set_null(self):
+        """seed_games falls back to hardcoded defaults when default_game_set is None"""
+        self.assertEqual(self.r32.game_set.count(), 0)
+        # Ensure default_game_set is None
+        self.t3.default_game_set = None
+        self.t3.save()
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('seed_games',
+                                           args=(self.t3.pk, 2)),
+                                   secure=True)
+        self.assertTemplateUsed(response, 'rounds/seeded_games.html')
+        # Game should use pk=1 (default Gibsons) since t3 is not virtual
+        g = self.t3.round_numbered(2).game_set.get()
+        self.assertEqual(g.the_set.pk, 1)
+        # Clean up
+        g.delete()

@@ -324,7 +324,7 @@ class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
               ('team_size', 'num_games_in_team_score'),
-              ('seed_games', 'power_assignment'),
+              ('seed_games', 'default_game_set', 'power_assignment'),
               ('tournament_scoring_system', 'handicaps', 'round_scoring_system',
                'non_player_round_score', 'non_player_round_score_once'),
               ('show_current_scores', 'draw_secrecy', 'best_country_criterion'),

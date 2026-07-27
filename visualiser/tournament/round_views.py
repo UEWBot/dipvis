@@ -568,8 +568,10 @@ def seed_games(request, tournament_id, round_num):
                                                       round_num)))
         # Delete any existing Games and GamePlayers for this round
         r.game_set.all().delete()
-        # TODO It's a bit hokey to have a fixed default GameSet here
-        if t.is_virtual():
+        # Use the tournament's default GameSet, or fall back to sensible defaults
+        if t.default_game_set:
+            default_set = t.default_game_set
+        elif t.is_virtual():
             default_set = GameSet.objects.get(name='Backstabbr')
         else:
             default_set = GameSet.objects.get(pk=1)
