@@ -557,6 +557,72 @@ class PlayerViewTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_upload_players_post_invalid_wdr_id_validation(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,WDR Id,Backstabbr Username\n'
+            'Wes,ValidateWdr,123,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.validate_wdr_player_id',
+                   side_effect=ValidationError('bad id')):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Wes', last_name='ValidateWdr')
+        self.assertIsNone(p.wdr_player_id)
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_invalid_wdr_url_validation(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        csv_data = (
+            'First Name,Last Name,WDR URL,Backstabbr Username\n'
+            'Wendy,UrlValidateWdr,https://www.world-diplomacy-reference.com/players/4173,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.validate_wdr_player_id',
+                   side_effect=ValidationError('bad url id')):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p = Player.objects.get(first_name='Wendy', last_name='UrlValidateWdr')
+        self.assertIsNone(p.wdr_player_id)
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_existing_player_different_wdr_id(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        p = Player.objects.create(first_name='Dana',
+                                  last_name='DiffWdr',
+                                  wdr_player_id=1001)
+        csv_data = (
+            'First Name,Last Name,WDR Id,Backstabbr Username\n'
+            'Dana,DiffWdr,2002,\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.validate_wdr_player_id',
+                   return_value=None):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p.refresh_from_db()
+        self.assertEqual(p.wdr_player_id, 1001)
+        # Cleanup
+        p.delete()
+
     def test_upload_players_post_invalid_wdd_id_validation(self):
         self.client.login(username=self.USERNAME, password=self.PWORD)
         csv_data = (
@@ -682,6 +748,56 @@ class PlayerViewTests(TestCase):
         p.refresh_from_db()
         self.assertEqual(p.email, 'nadia@example.com')
         self.assertEqual(p.backstabbr_username, 'nadia_bs')
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_existing_player_mismatch_fields(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        p = Player.objects.create(first_name='Mira',
+                                  last_name='Mismatch',
+                                  email='old@example.com',
+                                  backstabbr_username='old_bs')
+        csv_data = (
+            'First Name,Last Name,Email Address,Backstabbr Username\n'
+            'Mira,Mismatch,new@example.com,new_bs\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.Player.objects.update_or_create',
+                   return_value=(p, False)):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p.refresh_from_db()
+        self.assertEqual(p.email, 'old@example.com')
+        self.assertEqual(p.backstabbr_username, 'old_bs')
+        # Cleanup
+        p.delete()
+
+    def test_upload_players_post_existing_player_adds_missing_info_branch(self):
+        self.client.login(username=self.USERNAME, password=self.PWORD)
+        p = Player.objects.create(first_name='Alma',
+                                  last_name='Addinfo')
+        csv_data = (
+            'First Name,Last Name,Email Address,Backstabbr Username\n'
+            'Alma,Addinfo,alma@example.com,alma_bs\n'
+        )
+        csv_file = SimpleUploadedFile('players.csv',
+                                      csv_data.encode('utf-8'),
+                                      content_type='text/csv')
+        with patch('tournament.player_views.Player.objects.update_or_create',
+                   return_value=(p, False)):
+            response = self.client.post(reverse('upload_players'),
+                                        {'csv_file': csv_file},
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('upload_players'))
+        p.refresh_from_db()
+        self.assertEqual(p.email, 'alma@example.com')
+        self.assertEqual(p.backstabbr_username, 'alma_bs')
         # Cleanup
         p.delete()
 
