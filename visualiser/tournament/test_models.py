@@ -1202,6 +1202,9 @@ class TournamentScoringTests(TestCase):
         self.assertRaises(ValueError,
                           TScoringSumGames,
                           'Test system', 3, 0.0, 1)
+        self.assertRaises(ValueError,
+                          TScoringSumGames,
+                          'Test system', 3, 0.5, None, 1/3)
 
     # TScoringSumGames.__str__()
     def test_tscoringsumgames_str(self):
