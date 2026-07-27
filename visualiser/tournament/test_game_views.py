@@ -1314,6 +1314,38 @@ class GameViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'games/info_ticker.html')
 
+    def test_news_ticker_renders_content_lines(self):
+        # Ensure game news has real content to render in the ticker loop.
+        players = []
+        power_player_data = [
+            (self.austria, 'Abbey', 'Artichoke', 0),
+            (self.england, 'Brian', 'Balderdash', 5),
+            (self.france, 'Charlene', 'Cat', 5),
+            (self.germany, 'Doug', 'Dog', 6),
+            (self.italy, 'Eliza', 'Elephant', 6),
+            (self.russia, 'Freddie', 'Femur', 6),
+            (self.turkey, 'Ginny', 'Grape', 6),
+        ]
+
+        for power, first_name, last_name, count in power_player_data:
+            p = Player.objects.create(first_name=first_name, last_name=last_name)
+            players.append(p)
+            TournamentPlayer.objects.create(player=p, tournament=self.t1)
+            RoundPlayer.objects.create(player=p, the_round=self.r1)
+            GamePlayer.objects.create(player=p, game=self.g1, power=power)
+            CentreCount.objects.create(game=self.g1, year=1903, power=power, count=count)
+
+        response = self.client.get(reverse('game_news_ticker',
+                                           args=(self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'games/info_ticker.html')
+        self.assertContains(response, 'Highest SC count')
+        # Cleanup
+        self.g1.centrecount_set.filter(year=1903).all().delete()
+        for p in players:
+            p.delete()
+
     def test_background(self):
         response = self.client.get(reverse('game_background',
                                            args=(self.t1.pk, self.g1.name)),
