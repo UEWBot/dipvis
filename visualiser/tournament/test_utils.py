@@ -25,8 +25,11 @@ from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                Award, DrawSecrecy, Game, GamePlayer, Round,
                                RoundPlayer, Tournament, TournamentPlayer)
-from tournament.players import Player
+from tournament.players import Player, WDDPlayer
 from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
+                              check_wdd_player_ids,
+                              clean_duplicate_player,
+                              find_players_missing_wdd_ids,
                               nuke_invalid_email,
                               player_emails,
                               upcoming_rounds,
@@ -250,3 +253,74 @@ class UtilsTests(TestCase):
         # Cleanup
         t_pub.delete()
         t_unpub.delete()
+
+    def test_find_players_missing_wdd_ids(self):
+        now = django_timezone.now()
+        t = Tournament.objects.create(name='util-find-missing-wdd',
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True,
+                                      wdd_tournament_id=12345)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 is_finished=False,
+                                 start=now)
+        p_missing = Player.objects.create(first_name='Mia',
+                                          last_name='MissingWdd')
+        p_has_wdd = Player.objects.create(first_name='Wade',
+                                          last_name='WithWdd')
+        p_no_round = Player.objects.create(first_name='Rita',
+                                           last_name='RegisteredOnly')
+        TournamentPlayer.objects.create(player=p_missing, tournament=t)
+        TournamentPlayer.objects.create(player=p_has_wdd, tournament=t)
+        TournamentPlayer.objects.create(player=p_no_round, tournament=t)
+        RoundPlayer.objects.create(player=p_missing, the_round=r)
+        RoundPlayer.objects.create(player=p_has_wdd, the_round=r)
+        WDDPlayer.objects.create(wdd_player_id=987654, player=p_has_wdd)
+
+        with patch('builtins.print') as mock_print:
+            find_players_missing_wdd_ids()
+        self.assertEqual(mock_print.call_count, 1)
+        self.assertEqual(str(mock_print.call_args_list[0].args[0]), str(p_missing))
+        # Cleanup
+        t.delete()
+        p_missing.delete()
+        p_has_wdd.delete()
+        p_no_round.delete()
+
+    @patch('tournament.utils.add_missing_wdd_player_ids')
+    def test_check_wdd_player_ids(self, mock_add_missing):
+        check_wdd_player_ids()
+        mock_add_missing.assert_called_once_with(dry_run=True)
+
+    def test_clean_duplicate_player_first_name_mismatch(self):
+        keep_player = Player.objects.create(first_name='Alex',
+                                            last_name='Merge')
+        del_player = Player.objects.create(first_name='Blake',
+                                           last_name='Merge')
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with("Player first names don't match!")
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_del_player_email_guard(self):
+        keep_player = Player.objects.create(first_name='Casey',
+                                            last_name='Merge',
+                                            email='keep@example.com')
+        del_player = Player.objects.create(first_name='Casey',
+                                           last_name='Merge',
+                                           email='del@example.com')
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with('Player to delete has an email address!')
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
