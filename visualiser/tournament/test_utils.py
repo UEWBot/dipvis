@@ -21,11 +21,16 @@ from unittest.mock import patch
 from django.test import TestCase
 from django.utils import timezone as django_timezone
 
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
-                               DrawSecrecy, Round, Tournament, TournamentPlayer)
+                               Award, DrawSecrecy, Game, GamePlayer, Round,
+                               RoundPlayer, Tournament, TournamentPlayer)
 from tournament.players import Player
-from tournament.utils import (map_to_backstabbr_power, nuke_invalid_email,
-                              player_emails, upcoming_rounds)
+from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
+                              nuke_invalid_email,
+                              player_emails,
+                              upcoming_rounds,
+                              _power_award_to_gameplayers)
 
 
 class UtilsTests(TestCase):
@@ -74,6 +79,108 @@ class UtilsTests(TestCase):
         p.refresh_from_db()
         self.assertEqual(p.email, '')
         # Cleanup
+        p.delete()
+
+    def test_nuke_invalid_email_missing_player_raises(self):
+        self.assertRaises(Player.DoesNotExist,
+                          nuke_invalid_email,
+                          'missing@example.com')
+
+    def test_archive_tournaments(self):
+        today = django_timezone.now().date()
+        t_archived = Tournament.objects.create(name='util-archive-target',
+                                               start_date=today - timedelta(days=2),
+                                               end_date=today - timedelta(days=1),
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=True,
+                                               editable=True)
+        t_unpublished = Tournament.objects.create(name='util-archive-unpub',
+                                                  start_date=today - timedelta(days=2),
+                                                  end_date=today - timedelta(days=1),
+                                                  round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                  tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                  draw_secrecy=DrawSecrecy.SECRET,
+                                                  is_published=False,
+                                                  editable=True)
+        t_future = Tournament.objects.create(name='util-archive-future',
+                                             start_date=today,
+                                             end_date=today + timedelta(days=5),
+                                             round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                             tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                             draw_secrecy=DrawSecrecy.SECRET,
+                                             is_published=True,
+                                             editable=True)
+
+        archive_tournaments(dry_run=False)
+
+        t_archived.refresh_from_db()
+        t_unpublished.refresh_from_db()
+        t_future.refresh_from_db()
+        self.assertFalse(t_archived.editable)
+        self.assertTrue(t_unpublished.editable)
+        self.assertTrue(t_future.editable)
+        # Cleanup
+        t_archived.delete()
+        t_unpublished.delete()
+        t_future.delete()
+
+    def test_archive_tournaments_dry_run(self):
+        today = django_timezone.now().date()
+        t = Tournament.objects.create(name='util-archive-dry-run',
+                                      start_date=today - timedelta(days=2),
+                                      end_date=today - timedelta(days=1),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True,
+                                      editable=True)
+
+        archive_tournaments(dry_run=True)
+
+        t.refresh_from_db()
+        self.assertTrue(t.editable)
+        # Cleanup
+        t.delete()
+
+    def test_power_award_to_gameplayers(self):
+        today = django_timezone.now().date()
+        t = Tournament.objects.create(name='util-award-gps',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 is_finished=False,
+                                 start=django_timezone.now())
+        a_set = GameSet.objects.first()
+        g = Game.objects.create(name='U1',
+                                the_round=r,
+                    the_set=a_set,
+                                started_at=r.start)
+        power = GreatPower.objects.get(abbreviation='A')
+        award = Award.objects.create(name='Best Austria Util',
+                                     description='Best Austria for util test',
+                                     power=power)
+        p = Player.objects.create(first_name='Amy',
+                                  last_name='Awarded')
+        tp = TournamentPlayer.objects.create(player=p, tournament=t)
+        tp.awards.add(award)
+        RoundPlayer.objects.create(player=p, the_round=r)
+        gp = GamePlayer.objects.create(player=p,
+                                       game=g,
+                                       power=power,
+                                       score=1.5)
+
+        gps = _power_award_to_gameplayers(t, award)
+        self.assertEqual(gps, [gp])
+        # Cleanup
+        t.delete()
+        award.delete()
         p.delete()
 
     def test_upcoming_rounds_published_only(self):
