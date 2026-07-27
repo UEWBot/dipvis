@@ -100,7 +100,7 @@ class SCChartGameState(GameState):
         counts = self.sc_counts[self.final_year]
         for p in self.powers:
             if counts[p]:
-                retval.append[None]
+                retval.append(None)
             else:
                 retval.append(self.year_eliminated(p))
         return retval

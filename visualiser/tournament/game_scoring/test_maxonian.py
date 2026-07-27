@@ -190,3 +190,11 @@ class MaxonianGameScoringTests(TestCase):
                   self.turkey: (3 + 2 + 1) / 3}
         tgs = SCChartGameState(self.powers, sc_counts)
         check_score_for_state(self, tgs, self.MAXONIAN, EXPECT)
+
+    def test_sc_chart_elimination_year_list(self):
+        sc_counts = {1901: self.year1901,
+                     1902: self.year1902,
+                     1904: self.year1904}
+        tgs = SCChartGameState(self.powers, sc_counts)
+        self.assertEqual(tgs.elimination_year_list(),
+                         [1904, None, None, None, None, None, None])

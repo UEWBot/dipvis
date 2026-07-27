@@ -84,3 +84,19 @@ class SimpleGameStateTests(TestCase):
             with self.subTest(power=p):
                 # Should not raise DotCountUnknown
                 self.assertEqual(c, sgs.dot_count(p, year=1907))
+
+    def test_elimination_year_list(self):
+        sgs = SimpleGameState(sc_counts={self.austria: 0,
+                                         self.england: 10,
+                                         self.france: 0,
+                                         self.germany: 2,
+                                         self.italy: 10,
+                                         self.russia: 10,
+                                         self.turkey: 0},
+                              final_year=1907,
+                              elimination_years={self.austria: 1903,
+                                                 self.france: 1907,
+                                                 self.turkey: 1905},
+                              draw=[self.italy])
+        self.assertEqual(sgs.elimination_year_list(),
+                         [1903, None, 1907, None, None, None, 1905])
