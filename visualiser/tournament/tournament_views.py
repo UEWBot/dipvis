@@ -29,6 +29,7 @@ import matplotlib.ticker as ticker
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
 from django.forms import modelformset_factory
 from django.forms.formsets import formset_factory
@@ -52,6 +53,7 @@ from tournament.news import news
 
 # Redirect times are specified in seconds
 REFRESH_TIME = 60
+TOURNAMENTS_PER_PAGE = 25
 
 
 def tournament_index(request):
@@ -70,7 +72,11 @@ def tournament_index(request):
     else:
         # None at all
         unpublished_list = Tournament.objects.none()
-    context = {'tournament_list': main_list, 'unpublished_list': unpublished_list}
+    paginator = Paginator(main_list, TOURNAMENTS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get('page'))
+    context = {'tournament_list': page_obj.object_list,
+               'page_obj': page_obj,
+               'unpublished_list': unpublished_list}
     return render(request, 'tournaments/index.html', context)
 
 

@@ -21,6 +21,23 @@
         </li>
       {% endfor %}
     </ul>
+    <div class="pagination">
+      <span class="setp-links">
+        {% if page_obj.has_previous %}
+          <a href="?page=1">&laquo; {% trans "first" %}</a>
+          <a href="?page={{page_obj.previous_page_number}}">{% trans "previous" %}</a>
+        {% endif %}
+
+        <span class="current">
+          {% blocktrans with current=page_obj.number total=page_obj.paginator.num_pages %}Page {{ current }} of {{ total }}{% endblocktrans %}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{page_obj.next_page_number}}">{% trans "next" %}</a>
+          <a href="?page={{page_obj.paginator.num_pages}}">{% trans "last" %} &raquo;</a>
+        {% endif %}
+      </span>
+    </div>
   {% else %}
     <p>{% trans "No tournaments are available." %}</p>
   {% endif %}

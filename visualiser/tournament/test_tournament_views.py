@@ -386,6 +386,59 @@ class TournamentViewTests(TestCase):
         # Cleanup
         rp.delete()
 
+    def test_index_pagination_first_page(self):
+        today = date.today()
+        extra_tournaments = []
+        for i in range(30):
+            extra_tournaments.append(
+                Tournament.objects.create(name=f'pub-page-{i:02d}',
+                                          start_date=today + timedelta(days=i + 2),
+                                          end_date=today + timedelta(days=i + 3),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system='Sum all round scores',
+                                          draw_secrecy=DrawSecrecy.SECRET,
+                                          is_published=True)
+            )
+        response = self.client.get(reverse('index'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/index.html')
+        self.assertEqual(response.context['page_obj'].number, 1)
+        self.assertTrue(response.context['page_obj'].has_next())
+        self.assertEqual(len(response.context['tournament_list']), 25)
+        self.assertContains(response, 'Page 1 of 2')
+
+        # Cleanup
+        for tournament in extra_tournaments:
+            tournament.delete()
+
+    def test_index_pagination_second_page(self):
+        today = date.today()
+        extra_tournaments = []
+        for i in range(30):
+            extra_tournaments.append(
+                Tournament.objects.create(name=f'pub-page-{i:02d}',
+                                          start_date=today + timedelta(days=i + 2),
+                                          end_date=today + timedelta(days=i + 3),
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system='Sum all round scores',
+                                          draw_secrecy=DrawSecrecy.SECRET,
+                                          is_published=True)
+            )
+        response = self.client.get(f"{reverse('index')}?page=2",
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/index.html')
+        self.assertEqual(response.context['page_obj'].number, 2)
+        self.assertTrue(response.context['page_obj'].has_previous())
+        self.assertFalse(response.context['page_obj'].has_next())
+        self.assertEqual(len(response.context['tournament_list']), 7)
+        self.assertContains(response, 'Page 2 of 2')
+
+        # Cleanup
+        for tournament in extra_tournaments:
+            tournament.delete()
+
     def test_detail_invalid_tournament(self):
         self.assertFalse(Tournament.objects.filter(pk=self.INVALID_T_PK).exists())
         response = self.client.get(reverse('tournament_detail',
