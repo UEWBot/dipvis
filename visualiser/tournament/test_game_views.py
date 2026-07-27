@@ -2196,6 +2196,31 @@ class GameViewTests(TestCase):
         self.g1.supplycentreownership_set.filter(year=1903).delete()
         self.g1.centrecount_set.filter(year=1903).delete()
 
+    def test_api_with_passed_draw(self):
+        self.assertEqual(self.g1.drawproposal_set.count(), 0)
+        dp = DrawProposal.objects.create(game=self.g1,
+                                         year=1901,
+                                         season=Seasons.SPRING,
+                                         passed=True,
+                                         proposer=self.austria)
+        dp.drawing_powers.add(self.austria)
+        dp.drawing_powers.add(self.england)
+
+        response = self.client.get(reverse('api_game', args=(1, self.t1.pk, self.g1.name)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        data = response.json()
+        self.assertIn('draw', data)
+        self.assertIsNotNone(data['draw'])
+        self.assertEqual(data['draw']['season'], dp.get_season_display())
+        self.assertEqual(data['draw']['year'], dp.year)
+        self.assertEqual(set(data['draw']['powers']),
+                         {str(self.austria), str(self.england)})
+
+        # Cleanup
+        self.g1.drawproposal_set.all().delete()
+
     def test_api_invalid_version(self):
         response = self.client.get(reverse('api_game', args=(7, self.t1.pk, self.g1.name)),
                                    secure=True)
