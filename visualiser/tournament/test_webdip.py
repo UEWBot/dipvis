@@ -42,6 +42,7 @@ class WebDiplomacyTests(TestCase):
         url = urlunparse(('https', 'google.com', path, '', '', ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
+    @tag('webdip')
     def test_webdip_game_invalid_game_id(self):
         """Invalid game id."""
         path = 'board.php'
@@ -49,6 +50,7 @@ class WebDiplomacyTests(TestCase):
         url = urlunparse(('https', WEBDIPLOMACY_NETLOC, path, '', urlencode(query), ''))
         self.assertRaises(InvalidGameUrl, Game, url)
 
+    @tag('webdip')
     def test_webdip_variant_game(self):
         """Variant game id."""
         path = 'board.php'
