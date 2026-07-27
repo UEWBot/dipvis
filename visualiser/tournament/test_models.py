@@ -6056,25 +6056,101 @@ class TournamentPlayerTests(TestCase):
         self.assertIs(True, tp.score_is_final())
 
     def test_tournamentplayer_score_is_final_before_last_round(self):
-        # TODO More round(s) to go
-        pass
+        t = Tournament.objects.get(name='t1')
+        self.assertIs(False, t.is_finished)
+        final_round = t.round_set.last()
+        self.assertIsNotNone(final_round)
+        self.assertIs(False, final_round.in_progress())
+        tp = t.tournamentplayer_set.get(player=self.p1)
+        self.assertIs(False, tp.score_is_final())
 
     def test_tournamentplayer_score_is_final_not_playing_last_round(self):
-        # TODO Final round in progress, but this person isn't playing in it
-        pass
+        t = Tournament.objects.get(name='t1')
+        final_round = t.round_set.last()
+        self.assertIsNotNone(final_round)
+        RoundPlayer.objects.create(player=self.p8, the_round=final_round)
+        self.assertIs(True, final_round.in_progress())
+
+        tp = t.tournamentplayer_set.get(player=self.p1)
+        self.assertIs(True, tp.score_is_final())
+
+        # Cleanup
+        final_round.roundplayer_set.filter(player=self.p8).delete()
 
     def test_tournamentplayer_score_is_final_playing_last_round(self):
-        # TODO Final round in progress, and this person is playing in it
-        pass
+        t = Tournament.objects.get(name='t1')
+        final_round = t.round_set.last()
+        self.assertIsNotNone(final_round)
+        game = Game.objects.create(name='t1-final-ongoing',
+                                   started_at=final_round.start,
+                                   the_round=final_round,
+                                   is_finished=False,
+                                   the_set=self.set1)
+        RoundPlayer.objects.create(player=self.p1, the_round=final_round)
+        gp = GamePlayer.objects.create(player=self.p1,
+                                       game=game,
+                                       power=self.austria,
+                                       score=0.0)
+
+        tp = t.tournamentplayer_set.get(player=self.p1)
+        self.assertIs(False, tp.score_is_final())
+
+        # Cleanup
+        gp.delete()
+        final_round.roundplayer_set.filter(player=self.p1).delete()
+        game.delete()
 
     def test_tournamentplayer_score_is_final_handicap_not_finished(self):
-        # TODO Check that a TP whose score would otherwise be final is not
-        # if there's a handicap and any game is still ongoing
-        pass
+        t = Tournament.objects.get(name='t1')
+        old_handicaps = t.handicaps
+        t.handicaps = True
+        t.save(update_fields=['handicaps'])
+
+        tp = t.tournamentplayer_set.get(player=self.p1)
+        self.assertIs(False, tp.score_is_final())
+
+        # Cleanup
+        t.handicaps = old_handicaps
+        t.save(update_fields=['handicaps'])
 
     def test_tournamentplayer_score_is_final_sum_games(self):
-        # TODO Tournament using TScoringSumGames scoring system
-        pass
+        today = date.today()
+        tss = _find_t_scoring_system(TScoringSumGames, 1)
+        t = Tournament.objects.create(name='tp-score-final-sum-games',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=NO_SCORING_SYSTEM_STR,
+                                      tournament_scoring_system=tss.name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=G_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=datetime.combine(t.start_date,
+                                                        time(hour=8,
+                                                             tzinfo=datetime_timezone.utc)))
+        # Make the final round in progress and register two players
+        tp_with_game = TournamentPlayer.objects.create(player=self.p1, tournament=t)
+        tp_without_game = TournamentPlayer.objects.create(player=self.p2, tournament=t)
+        RoundPlayer.objects.create(player=self.p1, the_round=r)
+        RoundPlayer.objects.create(player=self.p2, the_round=r)
+
+        g = Game.objects.create(name='sum-games-ongoing',
+                                started_at=r.start,
+                                the_round=r,
+                                is_finished=False,
+                                the_set=self.set1)
+        gp = GamePlayer.objects.create(player=self.p1,
+                                       game=g,
+                                       power=self.england,
+                                       score=0.0)
+
+        self.assertIs(False, tp_with_game.score_is_final())
+        self.assertIs(True, tp_without_game.score_is_final())
+
+        # Cleanup
+        gp.delete()
+        g.delete()
+        t.delete()
 
     # TournamentPlayer.score_to_show()
     def test_tournamentplayer_score_to_show_finished(self):
