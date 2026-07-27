@@ -2142,6 +2142,7 @@ class GameViewTests(TestCase):
     def test_scrape_webdip_success(self):
         self.assertEqual(len(self.g1.external_url), 0)
         self.assertEqual(self.g1.centrecount_set.count(), 7)
+        self.assertIs(False, self.g1.is_finished)
         # Give g1 a webdip URL
         self.g1.external_url = VALID_WD_URL
         self.g1.save(update_fields=['external_url'])
@@ -2154,10 +2155,14 @@ class GameViewTests(TestCase):
         # We should have added CentreCounts for 1911
         ccs = self.g1.centrecount_set.filter(year=1911)
         self.assertEqual(len(ccs), 7)
+        # This WebDip game is finished, so local game should be marked finished
+        self.g1.refresh_from_db()
+        self.assertIs(True, self.g1.is_finished)
         # Clean up
         self.g1.external_url = ''
+        self.g1.is_finished = False
         ccs.delete()
-        self.g1.save(update_fields=['external_url'])
+        self.g1.save(update_fields=['external_url', 'is_finished'])
         self.g1.refresh_from_db()
 
     def test_scrape_webdip_not_accessible(self):

@@ -801,8 +801,11 @@ def _scrape_webdip(request, tournament, game, webdip_game):
     # Add the appropriate CentreCounts
     _sc_counts_to_cc(game, year, wg.sc_counts)
     game.set_is_finished(year)
+    # If WebDip reports that the game is over, flag it as finished
+    if not wg.ongoing:
+        game.is_finished = True
+        game.save(update_fields=['is_finished'])
     game.update_scores()
-    # TODO There's more information in wg - like whether the game is over...
     # Report what was done
     return render(request,
                   'games/scrape_external_site.html',
