@@ -53,6 +53,11 @@ class UnsupportedVariant(Exception):
     pass
 
 
+class WebDipNotAccessible(Exception):
+    """The WebDiplomacy website cannot currently be accessed."""
+    pass
+
+
 def is_webdiplomacy_url(url):
     """Returns True if the specified URL points to the webdiplomacy domain"""
     parsed_url = urlparse(url)
@@ -118,14 +123,24 @@ class Game():
                 parsed = parsed._replace(query=urlencode(qs, doseq=True))
                 url = urlunparse(parsed)
         # TODO Ideally, I think we should pass the gameID in params
-        page = requests.get(url,
-                            headers={'User-Agent': settings.USER_AGENT,
-                                     'Accept-Encoding': 'gzip'},
-                            allow_redirects=False,
-                            timeout=2.0)
-        if page.status_code != requests.codes.ok:
-            raise InvalidGameUrl(url)
-        return BeautifulSoup(page.text, "html.parser")
+        last_status = None
+        for _ in range(2):
+            try:
+                page = requests.get(url,
+                                    headers={'User-Agent': settings.USER_AGENT,
+                                             'Accept-Encoding': 'gzip'},
+                                    allow_redirects=False,
+                                    timeout=2.0)
+            except requests.exceptions.RequestException as e:
+                raise WebDipNotAccessible(url) from e
+            if page.status_code == requests.codes.ok:
+                return BeautifulSoup(page.text, "html.parser")
+            if page.status_code == requests.codes.not_found:
+                raise InvalidGameUrl(url)
+            last_status = page.status_code
+            if page.status_code != requests.codes.internal_server_error:
+                raise WebDipNotAccessible(f'{last_status} {url}')
+        raise WebDipNotAccessible(f'{last_status} {url}')
 
     def _parse_page(self):
         """

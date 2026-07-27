@@ -17,6 +17,7 @@
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
 from urllib.parse import urlencode
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.test import TestCase, tag
@@ -25,6 +26,7 @@ from django.urls import reverse
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.game_views import _graph_end_year
+from tournament import webdip
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                CentreCount, DrawProposal, DrawSecrecy, Game,
                                GamePlayer, Round, RoundPlayer, Seasons,
@@ -2155,6 +2157,20 @@ class GameViewTests(TestCase):
         # Clean up
         self.g1.external_url = ''
         ccs.delete()
+        self.g1.save(update_fields=['external_url'])
+        self.g1.refresh_from_db()
+
+    def test_scrape_webdip_not_accessible(self):
+        self.g1.external_url = VALID_WD_URL
+        self.g1.save(update_fields=['external_url'])
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with patch('tournament.models.Game.webdiplomacy_game', side_effect=webdip.WebDipNotAccessible):
+            response = self.client.get(reverse('scrape_external_site',
+                                               args=(self.t1.pk, self.g1.name)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 404)
+        # Cleanup
+        self.g1.external_url = ''
         self.g1.save(update_fields=['external_url'])
         self.g1.refresh_from_db()
 

@@ -2586,7 +2586,8 @@ class Game(models.Model):
         """
         Returns a webdip.Game for the Game
 
-        May raise webdip.InvalidGameUrl if self.external_url isn't a parseable backstabbr game page
+        May raise webdip.InvalidGameUrl if self.external_url isn't a parseable webdiplomacy game page
+        May raise webdip.WebDipNotAccessible if an error occurs reading the game from webdiplomacy
         """
         return webdip.Game(self.external_url)
 

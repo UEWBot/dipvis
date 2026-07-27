@@ -16,6 +16,7 @@
 
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
+from unittest.mock import patch
 
 from django.contrib.admin.sites import AdminSite
 from django.contrib.auth.models import Permission
@@ -7635,6 +7636,16 @@ class GameTests(TestCase):
                  the_set=self.set1,
                  external_url='https://webdiplomacy.net/board.php?gameID=436906')
         self.assertNotEqual(g.webdiplomacy_game(), None)
+
+    def test_game_webdiplomacy_game_not_accessible(self):
+        g = Game(name='newgame1',
+                 started_at=self.r32.start,
+                 the_round=self.r32,
+                 is_finished=True,
+                 the_set=self.set1,
+                 external_url='https://webdiplomacy.net/board.php?gameID=436906')
+        with patch('tournament.models.webdip.Game', side_effect=webdip.WebDipNotAccessible):
+            self.assertRaises(webdip.WebDipNotAccessible, g.webdiplomacy_game)
 
     def test_game_webdiplomacy_game_empty_external_url(self):
         g = Game(name='newgame1',

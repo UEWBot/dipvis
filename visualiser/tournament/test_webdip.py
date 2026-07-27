@@ -16,11 +16,13 @@
 
 from unittest.mock import Mock, patch
 from urllib.parse import urlencode, urlunparse
+import requests
 
 from django.test import TestCase, tag
 
 from tournament.webdip import (FALL, POWERS, SPRING, WEBDIPLOMACY_NETLOC, Game,
-                               InvalidGameUrl, UnsupportedVariant)
+                               InvalidGameUrl, UnsupportedVariant,
+                               WebDipNotAccessible)
 
 
 INVALID_GAME_ID = 1
@@ -243,13 +245,39 @@ class WebDiplomacyTests(TestCase):
 
 
 class WebDiplomacyUnitTests(TestCase):
-    def test_url_to_soup_non_200_raises_invalid_game_url(self):
+    def test_url_to_soup_404_raises_invalid_game_url(self):
+        g = Game.__new__(Game)
+        response = Mock()
+        response.status_code = 404
+        response.text = '<html></html>'
+        with patch('tournament.webdip.requests.get', return_value=response):
+            self.assertRaises(InvalidGameUrl, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+
+    def test_url_to_soup_non_200_raises_not_accessible(self):
         g = Game.__new__(Game)
         response = Mock()
         response.status_code = 503
         response.text = '<html></html>'
         with patch('tournament.webdip.requests.get', return_value=response):
-            self.assertRaises(InvalidGameUrl, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+            self.assertRaises(WebDipNotAccessible, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+
+    def test_url_to_soup_timeout_raises_not_accessible(self):
+        g = Game.__new__(Game)
+        with patch('tournament.webdip.requests.get', side_effect=requests.exceptions.Timeout):
+            self.assertRaises(WebDipNotAccessible, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+
+    def test_url_to_soup_retries_after_500_then_succeeds(self):
+        g = Game.__new__(Game)
+        first = Mock()
+        first.status_code = 500
+        first.text = '<html></html>'
+        second = Mock()
+        second.status_code = 200
+        second.text = '<html><head><title>ok</title></head><body></body></html>'
+        with patch('tournament.webdip.requests.get', side_effect=[first, second]) as get_mock:
+            soup = g._url_to_soup('https://webdiplomacy.net/board.php?gameID=334382')
+        self.assertEqual(get_mock.call_count, 2)
+        self.assertEqual(soup.title.string, 'ok')
 
     def test_url_to_soup_forces_legacy_dropdown_view(self):
         g = Game.__new__(Game)
