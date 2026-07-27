@@ -6138,6 +6138,26 @@ class TournamentPlayerTests(TestCase):
         self.assertEqual(tp1.position(), 1)
         self.assertEqual(tp2.position(), 2)
 
+    # TournamentPlayer.team()
+    def test_tournamentplayer_team(self):
+        t = Tournament.objects.get(name='t1')
+        original_team_size = t.team_size
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        tp_in_team = t.tournamentplayer_set.get(player=self.p1)
+        tp_not_in_team = t.tournamentplayer_set.get(player=self.p2)
+
+        team = Team.objects.create(tournament=t, name='Team Alpha')
+        team.players.add(tp_in_team.player)
+
+        self.assertEqual(tp_in_team.team(), team)
+        self.assertIsNone(tp_not_in_team.team())
+
+        # Cleanup
+        team.delete()
+        t.team_size = original_team_size
+        t.save(update_fields=['team_size'])
+
     # TournamentPlayer.roundplayers()
     def test_tournamentplayer_roundplayers(self):
         t = Tournament.objects.get(name='t3')
