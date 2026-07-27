@@ -15,12 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from urllib.parse import urlunparse
+from unittest.mock import Mock, patch
 
 from django.test import TestCase, tag
 
 from tournament.backstabbr import (BACKSTABBR_NETLOC, BACKSTABBR_NETLOCS, FALL,
-                                   POWERS, SPRING, WINTER, Game,
-                                   InvalidGameUrl, NoSuchSeason,
+                                   POWERS, SPRING, WINTER, BackstabbrNotAccessible,
+                                   Game, InvalidGameUrl, NoSuchSeason,
                                    is_backstabbr_url)
 
 
@@ -380,3 +381,46 @@ class BackstabbrTests(TestCase):
     # TODO Would be nice test in-progress games, both anonymous and not
 
     # TODO Test games where power(s) survive but vote themselves out of a draw
+
+
+class BackstabbrUnitTests(TestCase):
+    def test_url_to_soup_404_raises_invalid_game_url(self):
+        g = Game.__new__(Game)
+        response = Mock()
+        response.status_code = 404
+        response.text = '<html></html>'
+        with patch('tournament.backstabbr.requests.get', return_value=response):
+            self.assertRaises(InvalidGameUrl, g._url_to_soup, 'https://www.backstabbr.com/game/1')
+
+    def test_url_to_soup_non_500_raises_not_accessible(self):
+        g = Game.__new__(Game)
+        response = Mock()
+        response.status_code = 429
+        response.text = '<html></html>'
+        with patch('tournament.backstabbr.requests.get', return_value=response):
+            self.assertRaises(BackstabbrNotAccessible, g._url_to_soup, 'https://www.backstabbr.com/game/1')
+
+    def test_url_to_soup_retries_after_500_then_succeeds(self):
+        g = Game.__new__(Game)
+        first = Mock()
+        first.status_code = 500
+        first.text = '<html></html>'
+        second = Mock()
+        second.status_code = 200
+        second.text = '<html><head><title>ok</title></head><body></body></html>'
+        with patch('tournament.backstabbr.requests.get', side_effect=[first, second]) as get_mock:
+            soup = g._url_to_soup('https://www.backstabbr.com/game/1')
+        self.assertEqual(get_mock.call_count, 2)
+        self.assertEqual(soup.title.string, 'ok')
+
+    def test_url_to_soup_two_500s_raises_not_accessible(self):
+        g = Game.__new__(Game)
+        first = Mock()
+        first.status_code = 500
+        first.text = '<html></html>'
+        second = Mock()
+        second.status_code = 500
+        second.text = '<html></html>'
+        with patch('tournament.backstabbr.requests.get', side_effect=[first, second]) as get_mock:
+            self.assertRaises(BackstabbrNotAccessible, g._url_to_soup, 'https://www.backstabbr.com/game/1')
+        self.assertEqual(get_mock.call_count, 2)

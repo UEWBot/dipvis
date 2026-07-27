@@ -243,6 +243,14 @@ class WebDiplomacyTests(TestCase):
 
 
 class WebDiplomacyUnitTests(TestCase):
+    def test_url_to_soup_non_200_raises_invalid_game_url(self):
+        g = Game.__new__(Game)
+        response = Mock()
+        response.status_code = 503
+        response.text = '<html></html>'
+        with patch('tournament.webdip.requests.get', return_value=response):
+            self.assertRaises(InvalidGameUrl, g._url_to_soup, 'https://webdiplomacy.net/board.php?gameID=334382')
+
     def test_url_to_soup_forces_legacy_dropdown_view(self):
         g = Game.__new__(Game)
         response = Mock()
