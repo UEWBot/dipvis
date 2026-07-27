@@ -55,7 +55,7 @@ MASK_GAMES_PLAYED = 1 << 5
 MASK_BEST_SC_COUNT = 1 << 6
 MASK_SOLO_COUNT = 1 << 7
 MASK_ELIM_COUNT = 1 << 8
-MASK_BOARD_TOP_COUNT = 1 << 9
+MASK_BOARDS_TOPPED = 1 << 9
 MASK_ROUND_ENDPOINTS = 1 << 10
 MASK_BEST_COUNTRY = 1 << 11
 MASK_OTHER_AWARDS = 1 << 12
@@ -374,7 +374,7 @@ class Player(models.Model):
                 results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.')
                                % {'name': self,
                                   'power': c_str})
-        if (mask & MASK_BOARD_TOP_COUNT) != 0:
+        if (mask & MASK_BOARDS_TOPPED) != 0:
             query = Q(result=GameResults.WIN) | Q(position=1)
             board_tops = results_set.filter(query).count()
             if board_tops > 0:

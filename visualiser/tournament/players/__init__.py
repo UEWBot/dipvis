@@ -4,7 +4,7 @@ from .add_player_bg import _split_wdd_game_name  # for old migrations
 from .add_player_bg import add_player_bg
 from .game_results import GameResults
 from .player import (MASK_ALL_BG, MASK_BEST_COUNTRY, MASK_BEST_SC_COUNT,
-                     MASK_BEST_TOURNEY_RESULT, MASK_BOARD_TOP_COUNT,
+                     MASK_BEST_TOURNEY_RESULT, MASK_BOARDS_TOPPED,
                      MASK_ELIM_COUNT, MASK_FIRST_TOURNEY, MASK_GAMES_PLAYED,
                      MASK_LAST_TOURNEY, MASK_OTHER_AWARDS, MASK_RANKINGS,
                      MASK_ROUND_ENDPOINTS, MASK_SERIES_WINS, MASK_SOLO_COUNT,
