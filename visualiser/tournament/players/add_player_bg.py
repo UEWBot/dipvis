@@ -227,7 +227,8 @@ def _add_player_bg_from_wdr(player, wdr_id):
             print(t_id)
             continue
         defaults = {'tournament_name': t['tournament_name'],
-                    'position': b['board_rank']}
+                    'position': b['board_rank'],
+                    'is_top_board': bool(b.get('board_is_top'))}
         if not b['board_rank']:
             # This seems like a bug in WDR, but sometimes we don't get a rank
             print("No board_rank")

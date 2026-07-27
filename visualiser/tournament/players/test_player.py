@@ -23,7 +23,8 @@ from django.test import TestCase, tag
 from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
-from tournament.players import (MASK_ALL_BG, PlayerAward, PlayerGameResult,
+from tournament.players import (MASK_ALL_BG, MASK_BOARDS_TOPPED,
+                                MASK_TOP_BOARDS_PLAYED, PlayerAward, PlayerGameResult,
                                 PlayerRanking, PlayerTitle,
                                 PlayerTournamentRanking, WDDPlayer,
                                 WDRNotAccessible)
@@ -564,6 +565,66 @@ class PlayerTests(TestCase):
         self.assertIn('Joe Bloggs has soloed 1 of 2 tournament games played (50.00%).', bg)
         self.assertIn('Joe Bloggs was eliminated in 1 of 2 tournament games played (50.00%).', bg)
         self.assertIn('Joe Bloggs topped the board in 1 of 2 tournament games played (50.00%).', bg)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_top_board_count(self):
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='Topboard')
+        PlayerGameResult.objects.create(tournament_name='WDC Tournament',
+                                        round_number=7,
+                                        game_number=1,
+                                        player=p,
+                                        power=self.austria,
+                                        date=date.today(),
+                                        position=2,
+                                        is_top_board=True)
+        PlayerGameResult.objects.create(tournament_name='WDC Tournament',
+                                        round_number=6,
+                                        game_number=2,
+                                        player=p,
+                                        power=self.germany,
+                                        date=date.today(),
+                                        position=5,
+                                        is_top_board=False)
+        bg = p.background()
+        self.assertIn('Joe Topboard has played 1 top board game.', bg)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_top_board_masks_are_independent(self):
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='DualTop')
+        # Board topped but not marked as top-board game.
+        PlayerGameResult.objects.create(tournament_name='Tournament A',
+                                        round_number=1,
+                                        game_number=1,
+                                        player=p,
+                                        power=self.austria,
+                                        date=date.today(),
+                                        position=1,
+                                        is_top_board=False)
+        # Top-board game that was not topped.
+        PlayerGameResult.objects.create(tournament_name='Tournament B',
+                                        round_number=1,
+                                        game_number=2,
+                                        player=p,
+                                        power=self.germany,
+                                        date=date.today(),
+                                        position=5,
+                                        is_top_board=True)
+
+        bg_topped_only = p.background(mask=MASK_BOARDS_TOPPED)
+        self.assertIn('Joe DualTop topped the board in 1 of 2 tournament games played (50.00%).',
+                      bg_topped_only)
+        self.assertNotIn('Joe DualTop has played 1 top board game.',
+                         bg_topped_only)
+
+        bg_top_boards_only = p.background(mask=MASK_TOP_BOARDS_PLAYED)
+        self.assertIn('Joe DualTop has played 1 top board game.',
+                      bg_top_boards_only)
+        self.assertNotIn('Joe DualTop topped the board in 1 of 2 tournament games played (50.00%).',
+                         bg_top_boards_only)
         # Cleanup
         p.delete()
 

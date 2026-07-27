@@ -97,6 +97,50 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_add_player_bg_wdr_sets_top_board_flag(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='TopBoard',
+                                  wdr_player_id=9998)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [{
+                'tournament_id': 7001,
+                'tournament_wdd_id': -1,
+                'tournament_name': 'WDC Test',
+                'tournament_start_date': '2024-08-01',
+                'tournament_end_date': '2024-08-04',
+                'tournament_kind': 'WDC',
+                'tournament_player_rank': 9,
+            }],
+            'boards': [{
+                'board_round': 7,
+                'board_number': 1,
+                'board_is_top': True,
+                'board_tournament': 7001,
+                'board_power': 'Austria',
+                'board_centers': 8,
+                'board_score': 8.0,
+                'board_rank': 2,
+                'board_year_of_elimination': None,
+                'board_url': '',
+                'board_variant': 'Classic',
+            }],
+        }
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = []
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+        pgr = p.playergameresult_set.get(round_number=7, game_number=1)
+        self.assertIs(True, pgr.is_top_board)
+        # Cleanup
+        p.delete()
+
     @tag('wdr')
     def test_add_player_bg_wdr(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)

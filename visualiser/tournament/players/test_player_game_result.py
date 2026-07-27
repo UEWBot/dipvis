@@ -203,3 +203,16 @@ class PlayerGameResultTests(TestCase):
         self.assertIn(p.first_name, p_str)
         self.assertIn(p.last_name, p_str)
         self.assertIn(pgr.power.name, p_str)
+
+    def test_playergameresult_top_board_default_false(self):
+        p = Player.objects.first()
+        pgr = PlayerGameResult.objects.create(tournament_name='Best Tournament',
+                                              round_number=2,
+                                              game_number=2,
+                                              player=p,
+                                              power=self.austria,
+                                              date=date.today(),
+                                              position=3)
+        self.assertIs(False, pgr.is_top_board)
+        # Cleanup
+        pgr.delete()

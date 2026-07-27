@@ -65,6 +65,8 @@ class PlayerGameResult(models.Model):
     year_eliminated = models.PositiveSmallIntegerField(blank=True,
                                                        null=True,
                                                        validators=[validate_year])
+    is_top_board = models.BooleanField(default=False,
+                                       help_text=_('Whether this game was on a top board'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,

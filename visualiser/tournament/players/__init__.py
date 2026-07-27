@@ -8,7 +8,8 @@ from .player import (MASK_ALL_BG, MASK_BEST_COUNTRY, MASK_BEST_SC_COUNT,
                      MASK_ELIM_COUNT, MASK_FIRST_TOURNEY, MASK_GAMES_PLAYED,
                      MASK_LAST_TOURNEY, MASK_OTHER_AWARDS, MASK_RANKINGS,
                      MASK_ROUND_ENDPOINTS, MASK_SERIES_WINS, MASK_SOLO_COUNT,
-                     MASK_TITLES, MASK_TOURNEY_COUNT, Player,
+                     MASK_TITLES, MASK_TOP_BOARDS_PLAYED,
+                     MASK_TOURNEY_COUNT, Player,
                      player_picture_location)
 from .player_award import PlayerAward
 from .player_game_result import PlayerGameResult

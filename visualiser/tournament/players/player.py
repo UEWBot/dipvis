@@ -61,7 +61,8 @@ MASK_BEST_COUNTRY = 1 << 11
 MASK_OTHER_AWARDS = 1 << 12
 MASK_RANKINGS = 1 << 13
 MASK_SERIES_WINS = 1 << 14
-MASK_ALL_BG = (1 << 15) - 1
+MASK_TOP_BOARDS_PLAYED = 1 << 15
+MASK_ALL_BG = (1 << 16) - 1
 
 
 def player_picture_location(instance, filename):
@@ -390,6 +391,15 @@ class Player(models.Model):
                 results.append(_(u'%(name)s has yet to top the board%(power)s at a tournament.')
                                % {'name': self,
                                   'power': c_str})
+        if (mask & MASK_TOP_BOARDS_PLAYED) != 0:
+            top_board_games = results_set.filter(is_top_board=True).count()
+            if top_board_games > 0:
+                msg = ngettext('%(name)s has played %(count)d top board game%(power)s.',
+                               '%(name)s has played %(count)d top board games%(power)s.',
+                               top_board_games)
+                results.append(msg % {'name': self,
+                                      'count': top_board_games,
+                                      'power': c_str})
         return results
 
     def background(self, power=None, mask=MASK_ALL_BG):
