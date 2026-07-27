@@ -17,7 +17,7 @@
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.players import Player
+from tournament.players import Player, WDDPlayer
 
 from . import PlayerTournamentRanking
 
@@ -38,6 +38,25 @@ class PlayerTournamentRankingTests(TestCase):
         # TODO verify result
         # Also check wdr_url() for a PTR with no WDR id
         self.assertEqual('', ptr.wdr_url())
+
+    def test_playertournamentranking_wdd_url_with_wdd_player(self):
+        p = Player.objects.create(first_name='PTR',
+                                  last_name='WDDURL')
+        wdd = WDDPlayer.objects.create(player=p,
+                                       wdd_player_id=990001)
+        ptr = PlayerTournamentRanking(player=p,
+                                      tournament='Some tournament',
+                                      position=3,
+                                      year=1974,
+                                      wdd_tournament_id=369)
+        url = ptr.wdd_url()
+        self.assertIn('https://', url)
+        self.assertIn('tournament_player.php', url)
+        self.assertIn('id_tournament=369', url)
+        self.assertIn('id_player=990001', url)
+        # Cleanup
+        wdd.delete()
+        p.delete()
 
     # PlayerTournamentRanking.wdr_url()
     def test_playertournamentranking_wdr_url(self):
