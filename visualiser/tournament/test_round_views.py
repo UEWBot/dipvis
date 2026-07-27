@@ -627,6 +627,8 @@ class RoundViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/roll_call.html')
+        self.assertContains(response, 'id="select-all-present"')
+        self.assertContains(response, 'name$="-present"')
 
     def test_roll_call_post_current_round_no_seeding(self):
         """roll_call() POST for t1, which only has a single Round"""

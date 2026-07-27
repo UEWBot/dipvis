@@ -12,6 +12,31 @@
 <form method="post" action={{ post_url }}>
     <h2>{% trans "Players checked in" %}</h2>
     <p>{% trans "If a player doesn't appear in the dropdown, you'll first have to add them to the database, which you can do from" %} <a href="{% url 'admin:tournament_player_add' %}">{% trans "this page" %}</a>.</p>
+    <p>
+        <label for="select-all-present">
+            <input type="checkbox" id="select-all-present" />
+            {% trans "Mark all players as present" %}
+        </label>
+    </p>
     {% include "formset_table.html" %}
 </form>
+<script>
+(() => {
+    const selectAll = document.getElementById('select-all-present');
+    if (!selectAll) {
+        return;
+    }
+
+    const getPresentCheckboxes = () => Array.from(
+        document.querySelectorAll('input[type="checkbox"][name$="-present"]')
+    );
+
+    selectAll.addEventListener('change', () => {
+        const checked = selectAll.checked;
+        getPresentCheckboxes().forEach((checkbox) => {
+            checkbox.checked = checked;
+        });
+    });
+})();
+</script>
 {% endblock content %}
