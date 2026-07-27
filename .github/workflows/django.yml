@@ -48,6 +48,42 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         python -m pip install -r requirements.txt
+    - name: Probe WebDiplomacy Access
+      run: |
+        python - <<'PY'
+        import requests
+        from bs4 import BeautifulSoup
+
+        ua = 'DipvisBot/0.0 (https://github.com/UEWBot/dipvis/; user@example.com)'
+        urls = [
+            ('invalid', 'https://webdiplomacy.net/board.php?gameID=1&view=dropDown'),
+            ('variant', 'https://webdiplomacy.net/board.php?gameID=457652&view=dropDown'),
+            ('solo', 'https://webdiplomacy.net/board.php?gameID=334382&view=dropDown'),
+        ]
+
+        for label, url in urls:
+            try:
+                response = requests.get(
+                    url,
+                    headers={'User-Agent': ua, 'Accept-Encoding': 'gzip'},
+                    allow_redirects=False,
+                    timeout=4.0,
+                )
+                soup = BeautifulSoup(response.text, 'html.parser')
+                title = ''
+                if soup.title and soup.title.string:
+                    title = soup.title.string.strip()
+                has_game_type = bool(soup.find('span', {'class': 'gamePotType'}))
+                has_game_name = bool(soup.find('span', {'class': 'gameName'}))
+                print(
+                    f'{label}: status={response.status_code} len={len(response.text)} '
+                    f'server={response.headers.get("server")} '
+                    f'has_game_type={has_game_type} has_game_name={has_game_name} '
+                    f'title={title[:120]!r}'
+                )
+            except Exception as exc:
+                print(f'{label}: error={type(exc).__name__} {exc}')
+        PY
     - name: Run Backstabbr and WebDiplomacy Tests
       run: |
         cd visualiser
