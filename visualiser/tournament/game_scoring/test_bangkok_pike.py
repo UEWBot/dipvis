@@ -135,6 +135,25 @@ class BangkokPikeGameScoringTests(TestCase):
                   self.turkey: 3 + 9 + 6}
         check_score_for_state(self, sgs, self.BANGKOK_PIKE, EXPECT)
 
+    def test_g_scoring_bangkok_pike_no_solo_lone_topper_more_than_two_ahead(self):
+        sgs = SimpleGameState(sc_counts={self.austria: 0,
+                                         self.england: 8,
+                                         self.france: 6,
+                                         self.germany: 12,
+                                         self.italy: 4,
+                                         self.russia: 3,
+                                         self.turkey: 1},
+                              final_year=1904,
+                              elimination_years={self.austria: 1904})
+        EXPECT = {self.austria: 0.1 * 4,
+                  self.england: 3 + 8 + 0,
+                  self.france: 3 + 6 + 0,
+                  self.germany: 3 + 12 + 6 + 4 + 2,
+                  self.italy: 3 + 4 + 0,
+                  self.russia: 3 + 3 + 0,
+                  self.turkey: 3 + 1 + 0}
+        check_score_for_state(self, sgs, self.BANGKOK_PIKE, EXPECT)
+
     def test_g_scoring_bangkok_pike_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
                                          self.england: 4,
