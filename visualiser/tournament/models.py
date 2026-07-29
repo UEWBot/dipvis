@@ -138,6 +138,21 @@ class InvalidPowerAssignmentMethod(Exception):
     pass
 
 
+def _save_score(obj, score):
+    """
+    Save a score in an object (Team, TournamentPlayer, RoundPlayer, or GamePlayer).
+
+    Always sets the calculated_score attribute.
+    Also sets the score attribute if it equals calculated_score.
+    """
+    fields=['calculated_score']
+    if obj.calculated_score == obj.score:
+        obj.score = score
+        fields.append('score')
+    obj.calculated_score = score
+    obj.save(update_fields=fields)
+
+
 class RoundScoringSystem(ABC):
     """
     A scoring system for a Round.
@@ -1371,7 +1386,9 @@ class Tournament(models.Model):
 
     def _store_score(self, tp, scores, add_handicap):
         """
-        Update tp.score in the database
+        Update tp.calculated_score in the database
+
+        Also updates score if it was previously equal to calculated_score.
 
         tp is a TournamentPlayer
         scores is a dict, keyed by Player, of tournament scores for players who have played
@@ -1385,12 +1402,14 @@ class Tournament(models.Model):
             scores[tp.player] = 0.0
         elif add_handicap:
             scores[tp.player] += tp.handicap
-        tp.score = scores[tp.player]
-        tp.save(update_fields=['score'])
+        _save_score(tp, scores[tp.player])
 
     def update_scores(self, for_players=None):
         """
         Recalculate the scores for the Tournament and store them in the TournamentPlayers.
+
+        Always sets calculated_score. Also updates score if it was previously equal
+        to calculated_score.
 
         If the Tournament has now ended, add Best Country awards to
         the appropriate TournamentPlayers.
@@ -1419,7 +1438,9 @@ class Tournament(models.Model):
 
     def update_team_scores(self, for_players=None):
         """
-        Recalculate the scores for Teams and store them in the Teams
+        Recalculate the scores for Teams and store them in the Teams.
+        Always updates calculated_score. Also updates score if it was previously
+        equal to calculated_score.
 
         for_players is an optional QuerySet or list of Players that have changed.
         """
@@ -1430,11 +1451,11 @@ class Tournament(models.Model):
         for team in teams:
             if self.num_games_in_team_score is None:
                 gps = team.gameplayers()
-                team.score = gps.aggregate(Sum('score', default=0))['score__sum']
+                team_score = gps.aggregate(Sum('score', default=0))['score__sum']
             else:
                 gps = team.gameplayers().order_by('-score')
-                team.score = sum(gp.score for gp in gps[:self.num_games_in_team_score])
-            team.save(update_fields=['score'])
+                team_score = sum(gp.score for gp in gps[:self.num_games_in_team_score])
+            _save_score(team, team_score)
 
     def winner(self):
         """
@@ -1738,7 +1759,10 @@ class Team(models.Model):
                                    on_delete=models.CASCADE)
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             help_text=_(u'Must be unique within the tournament'))
-    score = models.FloatField(default=0.0)
+    score = models.FloatField(default=0.0,
+                              help_text=_('Score for the team'))
+    calculated_score = models.FloatField(default=0.0,
+                                         help_text=_('Score as calculated by the system'))
     players = models.ManyToManyField(Player)
 
     class Meta:
@@ -1853,7 +1877,10 @@ class TournamentPlayer(models.Model):
 
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    score = models.FloatField(default=0.0)
+    score = models.FloatField(default=0.0,
+                              help_text=_("Player's score for the tournament as a whole"))
+    calculated_score = models.FloatField(default=0.0,
+                                         help_text=_('Score as calculated by the system'))
     handicap = models.FloatField(default=0.0,
                                  help_text=_('Secret bonus score added after all games end. Only used if enabled for the Tournament'))
     unranked = TPUnrankedField(default=False,
@@ -2261,6 +2288,8 @@ class Round(models.Model):
         If for_players is provided, it should be a list or QuerySet of Players
         whose scores should change.
         Just the scores of the RoundPlayers corresponding to those Players will be updated.
+        Always updates calculated_score. Also updates score if if was previously equal to
+        calculated_score.
         If for_players is not provided, every RoundPlayer's score will be updated.
         This method also calls to update the corresponding TournamentPlayers' scores.
         """
@@ -2273,19 +2302,26 @@ class Round(models.Model):
             rps = rps.filter(player__in=for_players)
         rps = list(rps.select_related('player'))
         changed_score_rps = {}
+        fields = ['calculated_score']
         if system:
             scores = system.scores(gps)
             missing = object()
             for rp in rps:
                 score = scores.get(rp.player, missing)
                 if score is not missing and rp.score != score:
-                    rp.score = score
+                    if rp.calculated_score == rp.score:
+                        rp.score = score
+                        fields = ['score', 'calculated_score']
+                    rp.calculated_score = score
                     changed_score_rps[rp.pk] = rp
         else:
             # Clear out any old scores, in case the scoring system changed
             for rp in rps:
                 if rp.score != 0.0:
-                    rp.score = 0.0
+                    if rp.calculated_score == rp.score:
+                        rp.score = 0.0
+                        fields = ['score', 'calculated_score']
+                    rp.calculated_score = 0.0
                     changed_score_rps[rp.pk] = rp
         # Identify any players who were checked in but didn't play
         gp_player_ids = set(gps.values_list('player_id', flat=True))
@@ -2295,10 +2331,13 @@ class Round(models.Model):
         for rp in non_players:
             score = scores[rp.player]
             if rp.score != score:
-                rp.score = score
+                if rp.calculated_score == rp.score:
+                    rp.score = score
+                    fields = ['score', 'calculated_score']
+                rp.calculated_score = score
                 changed_score_rps[rp.pk] = rp
         if changed_score_rps:
-            RoundPlayer.objects.bulk_update(changed_score_rps.values(), ['score'])
+            RoundPlayer.objects.bulk_update(changed_score_rps.values(), fields)
         # That could change the Tournament scoring for those Players
         self.tournament.update_scores(for_players)
         if self.is_team_round:
@@ -2732,15 +2771,15 @@ class Game(models.Model):
         Calculate Game scores and set the GamePlayer's score attributes
 
         Calculates the scores for the game using the specified ScoringSystem,
-        and stores them in the GamePlayers.
+        and stores them in the GamePlayers. Always updates calculated_score.
+        Also updates score if if was previously equal to calculated_score.
         Then calls the equivalent function for the Round this Game is in, unless update_round is False.
         """
         scores = self._calc_scores()
         gps = self.gameplayer_set.select_related('power').order_by()
         for gp in gps:
             if gp.power:
-                gp.score = scores[gp.power]
-                gp.save(update_fields=['score'])
+                _save_score(gp, scores[gp.power])
         if update_round:
             # Only the scores for this Game's players can have changed
             players = [gp.player for gp in gps]
@@ -3119,6 +3158,8 @@ class RoundPlayer(models.Model):
                               help_text=_("If the tournament doesn't use round scores, this stores any sitting-out bonus for the round"))
     score_dropped = models.BooleanField(default=False,
                                         help_text=_('Set if this score does not contribute towards the tournament score'))
+    calculated_score = models.FloatField(default=0.0,
+                                         help_text=_('Score as calculated by the system'))
     game_count = models.PositiveIntegerField(default=1,
                                              help_text=_('number of games to play this round'))
     sandboxer = models.BooleanField(default=False,
@@ -3207,9 +3248,12 @@ class GamePlayer(models.Model):
                                                       null=True,
                                                       validators=[MinValueValidator(1)],
                                                       help_text=_("If all players have the same score, what rank does this player get?"))
-    score = models.FloatField(default=0.0)
+    score = models.FloatField(default=0.0,
+                              help_text=_("Player's score for this game"))
     score_dropped = models.BooleanField(default=False,
                                         help_text=_('Set if this score does not contribute towards the round score'))
+    calculated_score = models.FloatField(default=0.0,
+                                         help_text=_('Score as calculated by the system'))
     after_action_report = models.TextField(blank=True,
                                            help_text=_("This player's account of the game"))
 

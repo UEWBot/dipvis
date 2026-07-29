@@ -3103,111 +3103,142 @@ class TournamentTests(TestCase):
         GamePlayer.objects.create(player=cls.p1,
                                   game=g11,
                                   power=cls.austria,
-                                  score=1.0)
+                                  score=1.0,
+                                  calculated_score=1.0)
         GamePlayer.objects.create(player=cls.p3, game=g11, power=cls.england,
-                                  score=1.1)
+                                  score=1.1,
+                                  calculated_score=1.1)
         GamePlayer.objects.create(player=cls.p4, game=g11, power=cls.france,
-                                  score=1.2)
+                                  score=1.2,
+                                  calculated_score=1.2)
         GamePlayer.objects.create(player=cls.p5, game=g11, power=cls.germany,
-                                  score=1.3)
+                                  score=1.3,
+                                  calculated_score=1.3)
         GamePlayer.objects.create(player=cls.p6, game=g11, power=cls.italy,
-                                  score=1.4)
+                                  score=1.4,
+                                  calculated_score=1.4)
         GamePlayer.objects.create(player=cls.p7, game=g11, power=cls.russia,
-                                  score=1.6)
+                                  score=1.6,
+                                  calculated_score=1.6)
         GamePlayer.objects.create(player=cls.p8, game=g11, power=cls.turkey,
-                                  score=1.5)
+                                  score=1.5,
+                                  calculated_score=1.5)
         # Add GamePlayers to g12
         GamePlayer.objects.create(player=cls.p7, game=g12, power=cls.austria,
-                                  score=2.5)
+                                  score=2.5,
+                                  calculated_score=2.5)
         GamePlayer.objects.create(player=cls.p6, game=g12, power=cls.england,
-                                  score=2.4)
+                                  score=2.4,
+                                  calculated_score=2.4)
         GamePlayer.objects.create(player=cls.p5, game=g12, power=cls.france,
-                                  score=2.2)
+                                  score=2.2,
+                                  calculated_score=2.2)
         GamePlayer.objects.create(player=cls.p4, game=g12, power=cls.germany,
-                                  score=2.3)
+                                  score=2.3,
+                                  calculated_score=2.3)
         GamePlayer.objects.create(player=cls.p3, game=g12, power=cls.italy,
-                                  score=2.1)
+                                  score=2.1,
+                                  calculated_score=2.1)
         GamePlayer.objects.create(player=cls.p2, game=g12, power=cls.russia,
-                                  score=2.0)
+                                  score=2.0,
+                                  calculated_score=2.0)
         GamePlayer.objects.create(player=cls.p1, game=g12, power=cls.turkey,
-                                  score=2.6)
+                                  score=2.6,
+                                  calculated_score=2.6)
         # Add GamePlayers to g13
         GamePlayer.objects.create(player=cls.p1,
                                   game=g13,
                                   power=cls.austria,
-                                  score=3.2)
+                                  score=3.2,
+                                  calculated_score=3.2)
         GamePlayer.objects.create(player=cls.p3, game=g13, power=cls.england,
-                                  score=3.5)
+                                  score=3.5,
+                                  calculated_score=3.5)
         GamePlayer.objects.create(player=cls.p4, game=g13, power=cls.france,
-                                  score=3.1)
+                                  score=3.1,
+                                  calculated_score=3.1)
         GamePlayer.objects.create(player=cls.p5, game=g13, power=cls.germany,
-                                  score=3.6)
+                                  score=3.6,
+                                  calculated_score=3.6)
         GamePlayer.objects.create(player=cls.p6, game=g13, power=cls.italy,
-                                  score=3.3)
+                                  score=3.3,
+                                  calculated_score=3.3)
         GamePlayer.objects.create(player=cls.p7, game=g13, power=cls.russia,
-                                  score=3.0)
+                                  score=3.0,
+                                  calculated_score=3.0)
         GamePlayer.objects.create(player=cls.p8, game=g13, power=cls.turkey,
-                                  score=3.4)
+                                  score=3.4,
+                                  calculated_score=3.4)
         # Add GamePlayers to g14
         GamePlayer.objects.create(player=cls.p7, game=g14, power=cls.austria,
-                                  score=4.4)
+                                  score=4.4,
+                                  calculated_score=4.4)
         GamePlayer.objects.create(player=cls.p6, game=g14, power=cls.england,
-                                  score=4.1)
+                                  score=4.1,
+                                  calculated_score=4.1)
         GamePlayer.objects.create(player=cls.p5, game=g14, power=cls.france,
-                                  score=4.0)
+                                  score=4.0,
+                                  calculated_score=4.0)
         GamePlayer.objects.create(player=cls.p4, game=g14, power=cls.germany,
-                                  score=4.2)
+                                  score=4.2,
+                                  calculated_score=4.2)
         GamePlayer.objects.create(player=cls.p3, game=g14, power=cls.italy,
-                                  score=4.6)
+                                  score=4.6,
+                                  calculated_score=4.6)
         GamePlayer.objects.create(player=cls.p2, game=g14, power=cls.russia,
-                                  score=4.3)
+                                  score=4.3,
+                                  calculated_score=4.3)
         GamePlayer.objects.create(player=cls.p1, game=g14, power=cls.turkey,
-                                  score=4.5)
+                                  score=4.5,
+                                  calculated_score=4.5)
         # And the corresponding RoundPlayers
-        RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=111.0)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=112.0)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r11, score=113.0)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r11, score=114.0)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r11, score=115.0)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r11, score=116.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r11, score=117.0)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r11, score=118.0)
-        RoundPlayer.objects.create(player=cls.p1, the_round=r12, score=121.0)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r12, score=122.0)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r12, score=123.0)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r12, score=124.0)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r12, score=125.0)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r12, score=126.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r12, score=127.0)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r12, score=128.0)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=111.0, calculated_score=111.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=112.0, calculated_score=112.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11, score=113.0, calculated_score=113.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11, score=114.0, calculated_score=114.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11, score=115.0, calculated_score=115.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11, score=116.0, calculated_score=116.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11, score=117.0, calculated_score=117.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11, score=118.0, calculated_score=118.0)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12, score=121.0, calculated_score=121.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12, score=122.0, calculated_score=122.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12, score=123.0, calculated_score=123.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12, score=124.0, calculated_score=124.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12, score=125.0, calculated_score=125.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12, score=126.0, calculated_score=126.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12, score=127.0, calculated_score=127.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12, score=128.0, calculated_score=128.0)
         # And TournamentPlayers
-        TournamentPlayer.objects.create(player=cls.p1, tournament=t1, score=1.0)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1, score=1.0, calculated_score=1.0)
         TournamentPlayer.objects.create(player=cls.p2,
                                         tournament=t1,
                                         score=2.0,
+                                        calculated_score=2.0,
                                         backstabbr_username='nobody')
-        TournamentPlayer.objects.create(player=cls.p3, tournament=t1, score=3.0)
-        TournamentPlayer.objects.create(player=cls.p4, tournament=t1, score=4.0)
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1, score=3.0, calculated_score=3.0)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1, score=4.0, calculated_score=4.0)
         TournamentPlayer.objects.create(player=cls.p5,
                                         tournament=t1,
                                         score=5.0,
+                                        calculated_score=5.0,
                                         unranked=True)
-        TournamentPlayer.objects.create(player=cls.p6, tournament=t1, score=6.0)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1, score=6.0, calculated_score=6.0)
         TournamentPlayer.objects.create(player=cls.p7,
                                         tournament=t1,
                                         score=7.0,
+                                        calculated_score=7.0,
                                         location='The Moon')
-        TournamentPlayer.objects.create(player=cls.p8, tournament=t1, score=8.0)
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1, score=8.0, calculated_score=8.0)
 
         # Add TournamentPlayers to t3
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3, calculated_score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3, calculated_score=47.3)
         # Add RoundPlayers to r31
-        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r31, score=0.1)
-        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r31, score=5.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r31, score=0.1, calculated_score=0.1)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r31, score=5.0, calculated_score=5.0)
         # Add RoundPlayers to r32
-        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
-        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=57.3)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3, calculated_score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=57.3, calculated_score=57.3)
 
     # Tournament.powers_assigned_from_prefs()
     def test_tournament_powers_assigned_from_prefs_false(self):
@@ -4023,16 +4054,19 @@ class TournamentTests(TestCase):
         # three teams, two tied for first place
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
+                                  calculated_score=10.0,
                                   name='Test team 1')
         tm1.players.add(self.p3)
         tm1.players.add(self.p5)
         tm2 = Team.objects.create(tournament=t,
                                   score=5.0,
+                                  calculated_score=5.0,
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
         tm3 = Team.objects.create(tournament=t,
                                   score=10.0,
+                                  calculated_score=10.0,
                                   name='Test team 3')
         tm3.players.add(self.p2)
         tm3.players.add(self.p8)
@@ -4069,11 +4103,13 @@ class TournamentTests(TestCase):
         r2.save(update_fields=['is_team_round'])
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
+                                  calculated_score=10.0,
                                   name='Test team 1')
         tm1.players.add(self.p3)
         tm1.players.add(self.p5)
         tm2 = Team.objects.create(tournament=t,
                                   score=5.0,
+                                  calculated_score=5.0,
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
@@ -4109,11 +4145,13 @@ class TournamentTests(TestCase):
         r2.save(update_fields=['is_team_round'])
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
+                                  calculated_score=10.0,
                                   name='Test team 1')
         tm1.players.add(self.p3)
         tm1.players.add(self.p5)
         tm2 = Team.objects.create(tournament=t,
                                   score=5.0,
+                                  calculated_score=5.0,
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
@@ -4152,11 +4190,13 @@ class TournamentTests(TestCase):
         r2.save(update_fields=['is_team_round'])
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
+                                  calculated_score=10.0,
                                   name='Test team 1')
         tm1.players.add(self.p3)
         tm1.players.add(self.p5)
         tm2 = Team.objects.create(tournament=t,
                                   score=5.0,
+                                  calculated_score=5.0,
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
@@ -4198,11 +4238,13 @@ class TournamentTests(TestCase):
         r2.save(update_fields=['is_team_round'])
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
+                                  calculated_score=10.0,
                                   name='Test team 1')
         tm1.players.add(self.p3)
         tm1.players.add(self.p5)
         tm2 = Team.objects.create(tournament=t,
                                   score=5.0,
+                                  calculated_score=5.0,
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
@@ -4242,10 +4284,10 @@ class TournamentTests(TestCase):
         self.assertEqual(t.tournamentplayer_set.count(), 0)
         self.assertEqual(RoundPlayer.objects.filter(the_round__tournament=t).count(), 0)
         # Add some TournamentPlayers with non-zero scores
-        TournamentPlayer.objects.create(player=self.p5, tournament=t, score=147.3)
-        TournamentPlayer.objects.create(player=self.p7, tournament=t, score=47.3)
+        TournamentPlayer.objects.create(player=self.p5, tournament=t, score=147.3, calculated_score=147.3)
+        TournamentPlayer.objects.create(player=self.p7, tournament=t, score=47.3, calculated_score=47.3)
         t.update_scores()
-        # Verify that all TournamentPlayers' scores are updated. although there are no RoundPlayers
+        # Verify that all TournamentPlayers' scores are updated, although there are no RoundPlayers
         for tp in t.tournamentplayer_set.all():
             self.assertEqual(tp.score, 0.0)
         # Clean up
@@ -4254,12 +4296,13 @@ class TournamentTests(TestCase):
     def test_tournament_update_scores_with_non_player(self):
         t = Tournament.objects.get(name='t1')
         # Add an extra player, who didn't actually play, with a non-zero score
-        tp = TournamentPlayer(tournament=t, player=self.p10, score=76.3)
+        tp = TournamentPlayer(tournament=t, player=self.p10, score=76.3, calculated_score=76.3)
         tp.save()
         t.update_scores()
         # Players who didn't play should get a score of zero
         tp.refresh_from_db()
         self.assertEqual(tp.score, 0.0)
+        # Clean up
         tp.delete()
 
     def test_tournament_update_scores(self):
@@ -4271,41 +4314,41 @@ class TournamentTests(TestCase):
                        tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
-        tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
+        tp = TournamentPlayer(tournament=t, player=self.p1, score=1, calculated_score=1)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p2, score=2)
+        tp = TournamentPlayer(tournament=t, player=self.p2, score=2, calculated_score=2)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p3, score=3)
+        tp = TournamentPlayer(tournament=t, player=self.p3, score=3, calculated_score=3)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p4, score=4)
+        tp = TournamentPlayer(tournament=t, player=self.p4, score=4, calculated_score=4)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p5, score=5)
+        tp = TournamentPlayer(tournament=t, player=self.p5, score=5, calculated_score=5)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p6, score=6)
+        tp = TournamentPlayer(tournament=t, player=self.p6, score=6, calculated_score=6)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p7, score=7)
+        tp = TournamentPlayer(tournament=t, player=self.p7, score=7, calculated_score=7)
         tp.save()
         # Include a player who didn't play any games
-        tp = TournamentPlayer(tournament=t, player=self.p8, score=8)
+        tp = TournamentPlayer(tournament=t, player=self.p8, score=8, calculated_score=8)
         tp.save()
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
                   start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r.save()
-        rp = RoundPlayer(the_round=r, player=self.p1, score=7)
+        rp = RoundPlayer(the_round=r, player=self.p1, score=7, calculated_score=7)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p2, score=6)
+        rp = RoundPlayer(the_round=r, player=self.p2, score=6, calculated_score=6)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p3, score=5)
+        rp = RoundPlayer(the_round=r, player=self.p3, score=5, calculated_score=5)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p4, score=4)
+        rp = RoundPlayer(the_round=r, player=self.p4, score=4, calculated_score=4)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p5, score=3)
+        rp = RoundPlayer(the_round=r, player=self.p5, score=3, calculated_score=3)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p6, score=2)
+        rp = RoundPlayer(the_round=r, player=self.p6, score=2, calculated_score=2)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p7, score=1)
+        rp = RoundPlayer(the_round=r, player=self.p7, score=1, calculated_score=1)
         rp.save()
         # We need a finished Game in the Round so the Round is finished
         g = Game(name='newgame2',
@@ -4325,6 +4368,7 @@ class TournamentTests(TestCase):
                     self.assertEqual(tp.score, rp.score)
                 except RoundPlayer.DoesNotExist:
                     self.assertEqual(tp.score, 0.0)
+        # Clean up
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
@@ -4337,43 +4381,43 @@ class TournamentTests(TestCase):
                        tournament_scoring_system='Sum all round scores',
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
-        tp = TournamentPlayer(tournament=t, player=self.p1, score=1)
+        tp = TournamentPlayer(tournament=t, player=self.p1, score=1, calculated_score=1)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p2, score=2)
+        tp = TournamentPlayer(tournament=t, player=self.p2, score=2, calculated_score=2)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p3, score=3)
+        tp = TournamentPlayer(tournament=t, player=self.p3, score=3, calculated_score=3)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p4, score=4)
+        tp = TournamentPlayer(tournament=t, player=self.p4, score=4, calculated_score=4)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p5, score=5)
+        tp = TournamentPlayer(tournament=t, player=self.p5, score=5, calculated_score=5)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p6, score=6)
+        tp = TournamentPlayer(tournament=t, player=self.p6, score=6, calculated_score=6)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p7, score=7)
+        tp = TournamentPlayer(tournament=t, player=self.p7, score=7, calculated_score=7)
         tp.save()
         # Include two players who didn't play any games
-        tp = TournamentPlayer(tournament=t, player=self.p8, score=8)
+        tp = TournamentPlayer(tournament=t, player=self.p8, score=8, calculated_score=8)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p9, score=9)
+        tp = TournamentPlayer(tournament=t, player=self.p9, score=9, calculated_score=9)
         tp.save()
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
                   start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r.save()
-        rp = RoundPlayer(the_round=r, player=self.p1, score=7)
+        rp = RoundPlayer(the_round=r, player=self.p1, score=7, calculated_score=7)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p2, score=6)
+        rp = RoundPlayer(the_round=r, player=self.p2, score=6, calculated_score=6)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p3, score=5)
+        rp = RoundPlayer(the_round=r, player=self.p3, score=5, calculated_score=5)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p4, score=4)
+        rp = RoundPlayer(the_round=r, player=self.p4, score=4, calculated_score=4)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p5, score=3)
+        rp = RoundPlayer(the_round=r, player=self.p5, score=3, calculated_score=3)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p6, score=2)
+        rp = RoundPlayer(the_round=r, player=self.p6, score=2, calculated_score=2)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p7, score=1)
+        rp = RoundPlayer(the_round=r, player=self.p7, score=1, calculated_score=1)
         rp.save()
         # Which players to update - include some but not all who
         # played and some but not all who didn't
@@ -4416,41 +4460,41 @@ class TournamentTests(TestCase):
                        handicaps=True,
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
-        tp = TournamentPlayer(tournament=t, player=self.p1, score=1, handicap=10)
+        tp = TournamentPlayer(tournament=t, player=self.p1, score=1, calculated_score=1, handicap=10)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p2, score=2, handicap=10)
+        tp = TournamentPlayer(tournament=t, player=self.p2, score=2, calculated_score=2, handicap=10)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p3, score=3, handicap=10)
+        tp = TournamentPlayer(tournament=t, player=self.p3, score=3, calculated_score=3, handicap=10)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p4, score=4, handicap=20)
+        tp = TournamentPlayer(tournament=t, player=self.p4, score=4, calculated_score=4, handicap=20)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p5, score=5, handicap=20)
+        tp = TournamentPlayer(tournament=t, player=self.p5, score=5, calculated_score=5, handicap=20)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p6, score=6, handicap=20)
+        tp = TournamentPlayer(tournament=t, player=self.p6, score=6, calculated_score=6, handicap=20)
         tp.save()
-        tp = TournamentPlayer(tournament=t, player=self.p7, score=7, handicap=10)
+        tp = TournamentPlayer(tournament=t, player=self.p7, score=7, calculated_score=7, handicap=10)
         tp.save()
         # Include a player who didn't play any games
-        tp = TournamentPlayer(tournament=t, player=self.p8, score=8, handicap=30)
+        tp = TournamentPlayer(tournament=t, player=self.p8, score=8, calculated_score=8, handicap=30)
         tp.save()
         r = Round(tournament=t,
                   scoring_system='Sum of Squares',
                   dias=True,
                   start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r.save()
-        rp = RoundPlayer(the_round=r, player=self.p1, score=7)
+        rp = RoundPlayer(the_round=r, player=self.p1, score=7, calculated_score=7)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p2, score=6)
+        rp = RoundPlayer(the_round=r, player=self.p2, score=6, calculated_score=6)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p3, score=5)
+        rp = RoundPlayer(the_round=r, player=self.p3, score=5, calculated_score=5)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p4, score=4)
+        rp = RoundPlayer(the_round=r, player=self.p4, score=4, calculated_score=4)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p5, score=3)
+        rp = RoundPlayer(the_round=r, player=self.p5, score=3, calculated_score=3)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p6, score=2)
+        rp = RoundPlayer(the_round=r, player=self.p6, score=2, calculated_score=2)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p7, score=1)
+        rp = RoundPlayer(the_round=r, player=self.p7, score=1, calculated_score=1)
         rp.save()
         # We need a finished Game in the Round so the Round is finished
         g = Game(name='newgame2',
@@ -4484,7 +4528,39 @@ class TournamentTests(TestCase):
                     self.assertEqual(tp.score, rp.score + tp.handicap)
                 except RoundPlayer.DoesNotExist:
                     self.assertEqual(tp.score, 0.0)
+        # Clean up
         # Note that this will also delete all other objects for the Tournament
+        t.delete()
+
+    def test_tournament_update_scores_preserves_manual_score(self):
+        """A manually-set TournamentPlayer score is not overwritten when scores are recalculated"""
+        today = date.today()
+        t = Tournament.objects.create(name='t5',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        # calculated_score differs from score - simulates a manual override
+        tp1 = TournamentPlayer.objects.create(tournament=t, player=self.p1, score=99.0, calculated_score=0.0)
+        tp2 = TournamentPlayer.objects.create(tournament=t, player=self.p2, score=2.0, calculated_score=2.0)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Sum of Squares',
+                                 dias=True,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        RoundPlayer.objects.create(the_round=r, player=self.p1, score=10.0, calculated_score=10.0)
+        RoundPlayer.objects.create(the_round=r, player=self.p2, score=20.0, calculated_score=20.0)
+        t.update_scores()
+        tp1.refresh_from_db()
+        tp2.refresh_from_db()
+        # tp1 score was manually changed, so it should be preserved
+        self.assertAlmostEqual(tp1.score, 99.0)
+        # tp1 calculated_score should be updated
+        self.assertAlmostEqual(tp1.calculated_score, 10.0)
+        # tp2 score and calculated_score were equal, so both should be updated
+        self.assertAlmostEqual(tp2.score, 20.0)
+        self.assertAlmostEqual(tp2.calculated_score, 20.0)
+        # Clean up
         t.delete()
 
     def test_tournament_update_scores_awards(self):
@@ -4556,6 +4632,7 @@ class TournamentTests(TestCase):
         # Clean up
         for a in t.awards.all():
             a.delete()
+        # Clean up
         # Note that this will also delete all other objects for the Tournament
         t.delete()
 
@@ -4570,6 +4647,7 @@ class TournamentTests(TestCase):
         r1.save(update_fields=['is_team_round'])
         tm = Team.objects.create(tournament=t,
                                  score=10.0,
+                                 calculated_score=10.0,
                                  name='Test team')
         tm.players.add(self.p3)
         tm.players.add(self.p4)
@@ -4594,6 +4672,7 @@ class TournamentTests(TestCase):
         r1.save(update_fields=['is_team_round'])
         tm = Team.objects.create(tournament=t,
                                  score=10.0,
+                                 calculated_score=10.0,
                                  name='Test team')
         tm.players.add(self.p5)
         tm.players.add(self.p7)
@@ -4627,6 +4706,7 @@ class TournamentTests(TestCase):
         r1.save(update_fields=['is_team_round'])
         tm = Team.objects.create(tournament=t,
                                  score=10.0,
+                                 calculated_score=10.0,
                                  name='Test team')
         tm.players.add(self.p3)
         tm.players.add(self.p4)
@@ -4653,6 +4733,7 @@ class TournamentTests(TestCase):
         r1.save(update_fields=['is_team_round'])
         tm = Team.objects.create(tournament=t,
                                  score=10.0,
+                                 calculated_score=10.0,
                                  name='Test team')
         tm.players.add(self.p3)
         tm.players.add(self.p4)
@@ -4686,6 +4767,46 @@ class TournamentTests(TestCase):
         self.assertAlmostEqual(tm.score, 10.0)
         # Cleanup
         tm.delete()
+        t.team_size = None
+        t.save()
+        r1.is_team_round = False
+        r1.save()
+
+    def test_tournament_update_team_scores_preserves_manual_score(self):
+        """A manually-set team score is not overwritten when team scores are recalculated"""
+        t = Tournament.objects.get(name='t1')
+        t.team_size = 2
+        t.save(update_fields=['team_size'])
+        r1 = t.round_numbered(1)
+        r1.is_team_round = True
+        r1.save(update_fields=['is_team_round'])
+        # calculated_score differs from score - simulates a manual override
+        tm = Team.objects.create(tournament=t,
+                                 score=99.0,
+                                 calculated_score=0.0,
+                                 name='Test team')
+        tm.players.add(self.p3)
+        tm.players.add(self.p5)
+        # score == calculated_score - no manual override
+        tm2 = Team.objects.create(tournament=t,
+                                  score=0.0,
+                                  calculated_score=0.0,
+                                  name='Test team 2')
+        tm2.players.add(self.p1)
+        tm2.players.add(self.p6)
+        t.update_team_scores()
+        tm.refresh_from_db()
+        tm2.refresh_from_db()
+        # calculated_score should be updated to the sum of gameplayer scores
+        self.assertNotEqual(tm.calculated_score, 0.0)
+        # score should be preserved since it was manually changed
+        self.assertAlmostEqual(tm.score, 99.0)
+        # tm2 had no manual override, so both score and calculated_score should be updated
+        self.assertNotAlmostEqual(tm2.score, 0.0)
+        self.assertAlmostEqual(tm2.score, tm2.calculated_score)
+        # Cleanup
+        tm.delete()
+        tm2.delete()
         t.team_size = None
         t.save()
         r1.is_team_round = False
@@ -5047,6 +5168,8 @@ class TournamentTests(TestCase):
                                       tournament_scoring_system='Sum all round scores')
         t.set_is_finished()
         self.assertIs(False, t.is_finished)
+        # Cleanup
+        t.delete()
 
     # Tournament.in_progress()
     def test_tourney_in_progress_some_rounds_over(self):
@@ -5069,6 +5192,8 @@ class TournamentTests(TestCase):
                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
                                       tournament_scoring_system='Sum all round scores')
         self.assertIs(False, t.in_progress())
+        # Cleanup
+        t.delete()
 
     def test_tourney_in_progress_rounds_not_started(self):
         today = date.today()
@@ -6770,71 +6895,71 @@ class RoundTests(TestCase):
         cls.p11 = Player.objects.create(first_name='Ursula', last_name='Vampire')
 
         # And some corresponding GamePlayers
-        GamePlayer.objects.create(player=cls.p2, game=cls.g11, score=3.0, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=cls.g11, score=3.0, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=cls.g11, score=3.0, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=cls.g11, score=3.0, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=cls.g11, score=3.0, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=cls.g11, score=3.0, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=cls.g11, score=3.0, power=cls.turkey)
-        GamePlayer.objects.create(player=cls.p2, game=cls.g12, score=3.0, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=cls.g12, score=3.0, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=cls.g12, score=3.0, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=cls.g12, score=3.0, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=cls.g12, score=3.0, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=cls.g12, score=3.0, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=cls.g12, score=3.0, power=cls.turkey)
-        GamePlayer.objects.create(player=cls.p2, game=cls.g13, score=3.0, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=cls.g13, score=3.0, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=cls.g13, score=3.0, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=cls.g13, score=3.0, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=cls.g13, score=3.0, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=cls.g13, score=3.0, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=cls.g13, score=3.0, power=cls.turkey)
-        GamePlayer.objects.create(player=cls.p2, game=cls.g14, score=3.0, power=cls.austria)
-        GamePlayer.objects.create(player=cls.p3, game=cls.g14, score=3.0, power=cls.england)
-        GamePlayer.objects.create(player=cls.p4, game=cls.g14, score=3.0, power=cls.france)
-        GamePlayer.objects.create(player=cls.p5, game=cls.g14, score=3.0, power=cls.germany)
-        GamePlayer.objects.create(player=cls.p6, game=cls.g14, score=3.0, power=cls.italy)
-        GamePlayer.objects.create(player=cls.p7, game=cls.g14, score=3.0, power=cls.russia)
-        GamePlayer.objects.create(player=cls.p8, game=cls.g14, score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g11, score=3.0, calculated_score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g12, score=3.0, calculated_score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g13, score=3.0, calculated_score=3.0, power=cls.turkey)
+        GamePlayer.objects.create(player=cls.p2, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.austria)
+        GamePlayer.objects.create(player=cls.p3, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.england)
+        GamePlayer.objects.create(player=cls.p4, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.france)
+        GamePlayer.objects.create(player=cls.p5, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.germany)
+        GamePlayer.objects.create(player=cls.p6, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.italy)
+        GamePlayer.objects.create(player=cls.p7, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.russia)
+        GamePlayer.objects.create(player=cls.p8, game=cls.g14, score=3.0, calculated_score=3.0, power=cls.turkey)
         # And the corresponding RoundPlayers
-        RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r11, score=30.0)
-        RoundPlayer.objects.create(player=cls.p1, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p2, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p3, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p5, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p6, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p8, the_round=r12, score=30.0)
-        RoundPlayer.objects.create(player=cls.p4, the_round=r13, score=30.0)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r11, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p1, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p2, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p3, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p6, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p8, the_round=r12, score=30.0, calculated_score=30.0)
+        RoundPlayer.objects.create(player=cls.p4, the_round=r13, score=30.0, calculated_score=30.0)
         # And TournamentPlayers
-        TournamentPlayer.objects.create(player=cls.p1, tournament=t1, score=300.0)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, score=300.0, backstabbr_username='nobody')
-        TournamentPlayer.objects.create(player=cls.p3, tournament=t1, score=300.0)
-        TournamentPlayer.objects.create(player=cls.p4, tournament=t1, score=300.0)
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, score=300.0, unranked=True)
-        TournamentPlayer.objects.create(player=cls.p6, tournament=t1, score=300.0)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, score=300.0, location='The Moon')
-        TournamentPlayer.objects.create(player=cls.p8, tournament=t1, score=300.0)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t1, score=300.0, calculated_score=300.0)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t1, score=300.0, calculated_score=300.0, backstabbr_username='nobody')
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t1, score=300.0, calculated_score=300.0)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t1, score=300.0, calculated_score=300.0)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t1, score=300.0, calculated_score=300.0, unranked=True)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t1, score=300.0, calculated_score=300.0)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t1, score=300.0, calculated_score=300.0, location='The Moon')
+        TournamentPlayer.objects.create(player=cls.p8, tournament=t1, score=300.0, calculated_score=300.0)
 
         # Add TournamentPlayers to t3
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3, calculated_score=147.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3, calculated_score=47.3)
         # Add RoundPlayers to r31
-        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0)
-        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
+        RoundPlayer.objects.create(player=cls.p5, the_round=r31, score=0.0, calculated_score=0.0)
+        RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0, calculated_score=0.0)
         # Add RoundPlayers to r32
-        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3)
-        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3)
+        RoundPlayer.objects.create(player=cls.p5, the_round=cls.r32, score=47.3, calculated_score=47.3)
+        RoundPlayer.objects.create(player=cls.p7, the_round=cls.r32, score=47.3, calculated_score=47.3)
 
     # Round uniqueness
     def test_two_rounds_same_start(self):
@@ -6948,22 +7073,22 @@ class RoundTests(TestCase):
                   dias=True,
                   start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r.save()
-        rp = RoundPlayer(the_round=r, player=self.p1, score=40.0)
+        rp = RoundPlayer(the_round=r, player=self.p1, score=40.0, calculated_score=40.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p2, score=35.0)
+        rp = RoundPlayer(the_round=r, player=self.p2, score=35.0, calculated_score=35.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p3, score=30.0)
+        rp = RoundPlayer(the_round=r, player=self.p3, score=30.0, calculated_score=30.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p4, score=25.0)
+        rp = RoundPlayer(the_round=r, player=self.p4, score=25.0, calculated_score=25.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p5, score=20.0)
+        rp = RoundPlayer(the_round=r, player=self.p5, score=20.0, calculated_score=20.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p6, score=15.0)
+        rp = RoundPlayer(the_round=r, player=self.p6, score=15.0, calculated_score=15.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p7, score=10.0)
+        rp = RoundPlayer(the_round=r, player=self.p7, score=10.0, calculated_score=10.0)
         rp.save()
         # One RoundPlayer who didn't play
-        rp = RoundPlayer(the_round=r, player=self.p8, score=5.0)
+        rp = RoundPlayer(the_round=r, player=self.p8, score=5.0, calculated_score=5.0)
         rp.save()
         g = Game(name='newgame1',
                  started_at=r.start,
@@ -6994,6 +7119,60 @@ class RoundTests(TestCase):
                     self.assertEqual(rp.score, 0.0)
                 else:
                     self.assertEqual(rp.score, gp.score)
+        # Clean up
+        t.delete()
+
+    def test_round_update_scores_preserves_manual_score(self):
+        """A manually-set RoundPlayer score is not overwritten when round scores are recalculated"""
+        today = date.today()
+        t = Tournament.objects.create(name='t5',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        TournamentPlayer.objects.create(tournament=t, player=self.p1)
+        TournamentPlayer.objects.create(tournament=t, player=self.p2)
+        TournamentPlayer.objects.create(tournament=t, player=self.p3)
+        TournamentPlayer.objects.create(tournament=t, player=self.p4)
+        TournamentPlayer.objects.create(tournament=t, player=self.p5)
+        TournamentPlayer.objects.create(tournament=t, player=self.p6)
+        TournamentPlayer.objects.create(tournament=t, player=self.p7)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Sum of Squares',
+                                 dias=True,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        # p1 has a manually-set score (score != calculated_score)
+        rp1 = RoundPlayer.objects.create(the_round=r, player=self.p1, score=99.0, calculated_score=0.0)
+        # p2 has no manual override (score == calculated_score)
+        rp2 = RoundPlayer.objects.create(the_round=r, player=self.p2, score=0.0, calculated_score=0.0)
+        RoundPlayer.objects.create(the_round=r, player=self.p3)
+        RoundPlayer.objects.create(the_round=r, player=self.p4)
+        RoundPlayer.objects.create(the_round=r, player=self.p5)
+        RoundPlayer.objects.create(the_round=r, player=self.p6)
+        RoundPlayer.objects.create(the_round=r, player=self.p7)
+        g = Game.objects.create(name='newgame1',
+                                started_at=r.start,
+                                the_round=r,
+                                is_finished=True,
+                                the_set=self.set1)
+        GamePlayer.objects.create(game=g, player=self.p1, power=self.austria, score=1)
+        GamePlayer.objects.create(game=g, player=self.p2, power=self.england, score=2)
+        GamePlayer.objects.create(game=g, player=self.p3, power=self.france, score=3)
+        GamePlayer.objects.create(game=g, player=self.p4, power=self.germany, score=4)
+        GamePlayer.objects.create(game=g, player=self.p5, power=self.italy, score=5)
+        GamePlayer.objects.create(game=g, player=self.p6, power=self.russia, score=6)
+        GamePlayer.objects.create(game=g, player=self.p7, power=self.turkey, score=7)
+        r.update_scores()
+        rp1.refresh_from_db()
+        rp2.refresh_from_db()
+        # p1 score was manually changed, so it should be preserved
+        self.assertAlmostEqual(rp1.score, 99.0)
+        # p1 calculated_score should be updated to the game score
+        self.assertAlmostEqual(rp1.calculated_score, 1.0)
+        # p2 had no manual override, so both score and calculated_score should be updated
+        self.assertAlmostEqual(rp2.score, 2.0)
+        self.assertAlmostEqual(rp2.calculated_score, 2.0)
         # Clean up
         t.delete()
 
@@ -7039,24 +7218,24 @@ class RoundTests(TestCase):
                   dias=True,
                   start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
         r.save()
-        rp = RoundPlayer(the_round=r, player=self.p1, score=40.0)
+        rp = RoundPlayer(the_round=r, player=self.p1, score=40.0, calculated_score=40.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p2, score=35.0)
+        rp = RoundPlayer(the_round=r, player=self.p2, score=35.0, calculated_score=35.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p3, score=30.0)
+        rp = RoundPlayer(the_round=r, player=self.p3, score=30.0, calculated_score=30.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p4, score=25.0)
+        rp = RoundPlayer(the_round=r, player=self.p4, score=25.0, calculated_score=25.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p5, score=20.0)
+        rp = RoundPlayer(the_round=r, player=self.p5, score=20.0, calculated_score=20.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p6, score=15.0)
+        rp = RoundPlayer(the_round=r, player=self.p6, score=15.0, calculated_score=15.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p7, score=10.0)
+        rp = RoundPlayer(the_round=r, player=self.p7, score=10.0, calculated_score=10.0)
         rp.save()
         # Two RoundPlayers who didn't play
-        rp = RoundPlayer(the_round=r, player=self.p8, score=5.0)
+        rp = RoundPlayer(the_round=r, player=self.p8, score=5.0, calculated_score=5.0)
         rp.save()
-        rp = RoundPlayer(the_round=r, player=self.p9, score=45.0)
+        rp = RoundPlayer(the_round=r, player=self.p9, score=45.0, calculated_score=45.0)
         rp.save()
         # Which players to update - include some but not all who
         # played and some but not all who didn't
@@ -7071,19 +7250,19 @@ class RoundTests(TestCase):
                  is_finished=True,
                  the_set=self.set1)
         g.save()
-        gp = GamePlayer(game=g, player=self.p1, power=self.austria, score=1)
+        gp = GamePlayer(game=g, player=self.p1, power=self.austria, score=1, calculated_score=1)
         gp.save()
-        gp = GamePlayer(game=g, player=self.p2, power=self.england, score=2)
+        gp = GamePlayer(game=g, player=self.p2, power=self.england, score=2, calculated_score=2)
         gp.save()
-        gp = GamePlayer(game=g, player=self.p3, power=self.france, score=3)
+        gp = GamePlayer(game=g, player=self.p3, power=self.france, score=3, calculated_score=3)
         gp.save()
-        gp = GamePlayer(game=g, player=self.p4, power=self.germany, score=4)
+        gp = GamePlayer(game=g, player=self.p4, power=self.germany, score=4, calculated_score=4)
         gp.save()
-        gp = GamePlayer(game=g, player=self.p5, power=self.italy, score=5)
+        gp = GamePlayer(game=g, player=self.p5, power=self.italy, score=5, calculated_score=5)
         gp.save()
-        gp = GamePlayer(game=g, player=self.p6, power=self.russia, score=6)
+        gp = GamePlayer(game=g, player=self.p6, power=self.russia, score=6, calculated_score=6)
         gp.save()
-        gp = GamePlayer(game=g, player=self.p7, power=self.turkey, score=7)
+        gp = GamePlayer(game=g, player=self.p7, power=self.turkey, score=7, calculated_score=7)
         gp.save()
         r.update_scores(player_list)
         for rp in r.roundplayer_set.all():
@@ -8284,6 +8463,68 @@ class GameTests(TestCase):
         for rp in g.the_round.roundplayer_set.all():
             with self.subTest(player=rp.player):
                 self.assertEqual(rp.score, 0.0)
+
+    def test_game_update_scores_preserves_manual_score(self):
+        """A manually-set GamePlayer score is not overwritten when game scores are recalculated"""
+        today = date.today()
+        t = Tournament.objects.create(name='t5',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        TournamentPlayer.objects.create(tournament=t, player=self.p1)
+        TournamentPlayer.objects.create(tournament=t, player=self.p2)
+        TournamentPlayer.objects.create(tournament=t, player=self.p3)
+        TournamentPlayer.objects.create(tournament=t, player=self.p4)
+        TournamentPlayer.objects.create(tournament=t, player=self.p5)
+        TournamentPlayer.objects.create(tournament=t, player=self.p6)
+        TournamentPlayer.objects.create(tournament=t, player=self.p7)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system='Sum of Squares',
+                                 dias=True,
+                                 start=datetime.combine(t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        RoundPlayer.objects.create(the_round=r, player=self.p1)
+        RoundPlayer.objects.create(the_round=r, player=self.p2)
+        RoundPlayer.objects.create(the_round=r, player=self.p3)
+        RoundPlayer.objects.create(the_round=r, player=self.p4)
+        RoundPlayer.objects.create(the_round=r, player=self.p5)
+        RoundPlayer.objects.create(the_round=r, player=self.p6)
+        RoundPlayer.objects.create(the_round=r, player=self.p7)
+        g = Game.objects.create(name='newgame1',
+                                started_at=r.start,
+                                the_round=r,
+                                is_finished=True,
+                                the_set=self.set1)
+        # p1's GamePlayer has a manually-set score (score != calculated_score)
+        gp1 = GamePlayer.objects.create(game=g, player=self.p1, power=self.austria, score=99.0, calculated_score=0.0)
+        # p2's GamePlayer has no manual override (score == calculated_score)
+        gp2 = GamePlayer.objects.create(game=g, player=self.p2, power=self.england, score=0.0, calculated_score=0.0)
+        GamePlayer.objects.create(game=g, player=self.p3, power=self.france)
+        GamePlayer.objects.create(game=g, player=self.p4, power=self.germany)
+        GamePlayer.objects.create(game=g, player=self.p5, power=self.italy)
+        GamePlayer.objects.create(game=g, player=self.p6, power=self.russia)
+        GamePlayer.objects.create(game=g, player=self.p7, power=self.turkey)
+        # Add CentreCounts so the scoring system has data
+        CentreCount.objects.create(power=self.austria, game=g, year=1901, count=4)
+        CentreCount.objects.create(power=self.england, game=g, year=1901, count=4)
+        CentreCount.objects.create(power=self.france, game=g, year=1901, count=4)
+        CentreCount.objects.create(power=self.germany, game=g, year=1901, count=4)
+        CentreCount.objects.create(power=self.italy, game=g, year=1901, count=4)
+        CentreCount.objects.create(power=self.russia, game=g, year=1901, count=4)
+        CentreCount.objects.create(power=self.turkey, game=g, year=1901, count=6)
+        g.update_scores(update_round=False)
+        gp1.refresh_from_db()
+        gp2.refresh_from_db()
+        # p1 score was manually changed, so it should be preserved
+        self.assertAlmostEqual(gp1.score, 99.0)
+        # p1 calculated_score should be updated to the calculated value
+        self.assertNotAlmostEqual(gp1.calculated_score, 0.0)
+        # p2 had no manual override, so both score and calculated_score should be updated
+        self.assertNotAlmostEqual(gp2.score, 0.0)
+        self.assertAlmostEqual(gp2.score, gp2.calculated_score)
+        # Clean up
+        t.delete()
 
     # Game.positions()
     def test_game_positions(self):
