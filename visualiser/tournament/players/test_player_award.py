@@ -50,7 +50,8 @@ class PlayerAwardTests(TestCase):
                          wdd_tournament_id=369,
                          power=self.france)
         url = pa.wdd_url()
-        # TODO verify result
+        self.assertIn('https://world-diplomacy-database.com/php/results/tournament_best_countries.php', url)
+        self.assertIn('id_tournament=369', url)
         # Also check wdr_url() for a PA with no WDR id
         self.assertEqual('', pa.wdr_url())
 
@@ -62,7 +63,8 @@ class PlayerAwardTests(TestCase):
                          name='Nicest Person',
                          wdd_tournament_id=369)
         url = pa.wdd_url()
-        # TODO verify result
+        self.assertIn('https://world-diplomacy-database.com/php/results/tournament_award.php', url)
+        self.assertIn('id_tournament=369', url)
 
     # PlayerAward.wdr_url()
     def test_playeraward_wdr_url(self):
@@ -73,7 +75,7 @@ class PlayerAwardTests(TestCase):
                          name='Nicest Person',
                          wdr_tournament_id=369)
         url = pa.wdr_url()
-        # TODO verify result
+        self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369', url)
         # Also check wdd_url() for a PA with no WDD id
         self.assertEqual('', pa.wdd_url())
 

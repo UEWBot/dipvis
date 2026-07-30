@@ -50,7 +50,8 @@ class WDDPlayerTests(TestCase):
     def test_wddplayer_wdd_url(self):
         wdd = WDDPlayer.objects.first()
         url = wdd.wdd_url()
-        # TODO verify result
+        self.assertIn('https://world-diplomacy-database.com/php/results/player_fiche.php', url)
+        self.assertIn(f'id_player={wdd.wdd_player_id}', url)
 
     # WDDPlayer.delete()
     def test_wddplayer_delete(self):
@@ -146,4 +147,6 @@ class WDDPlayerTests(TestCase):
     def test_wddplayer_str(self):
         wdd = WDDPlayer.objects.first()
         string = str(wdd)
-        # TODO Verify result
+        self.assertIn(wdd.player.first_name, string)
+        self.assertIn(wdd.player.last_name, string)
+        self.assertIn(str(wdd.wdd_player_id), string)

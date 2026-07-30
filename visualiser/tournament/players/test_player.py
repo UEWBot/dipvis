@@ -39,7 +39,7 @@ class PlayerPictureLocationTests(TestCase):
     # player_picture_location()
     def test_player_picture_location(self):
         res = player_picture_location(None, 'pretty_boy.jpg')
-        # TODO validate result
+        self.assertEqual('player_pictures/pretty_boy.jpg', str(res))
 
 
 class PlayerTests(TestCase):
@@ -61,13 +61,17 @@ class PlayerTests(TestCase):
     def test_wddplayer_str(self):
         p = Player.objects.first()
         string = str(p)
-        # TODO Verify result
+        self.assertIn(p.first_name, string)
+        self.assertIn(p.last_name, string)
 
     # Player.sortable_str()
     def test_wddplayer_sortable_str(self):
         p = Player.objects.first()
         string = p.sortable_str()
-        # TODO Verify result
+        self.assertIn(p.first_name, string)
+        self.assertIn(p.last_name, string)
+        # sortable form is "Last, First"
+        self.assertEqual(f'{p.last_name}, {p.first_name}', string)
 
     # Player._clear_background()
     def test_player_clear_background(self):

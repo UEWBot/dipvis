@@ -165,7 +165,10 @@ class PlayerGameResultTests(TestCase):
                                position=2,
                                wdd_tournament_id=369)
         url = pgr.wdd_url()
-        # TODO verify result
+        self.assertIn('https://world-diplomacy-database.com/php/results/tournament_board.php', url)
+        self.assertIn('id_tournament=369', url)
+        self.assertIn('id_round=1', url)
+        self.assertIn('id_board=3', url)
         # Check wdr_url() for a PGR with no WDR id
         self.assertIsNone(pgr.wdr_tournament_id)
         url = pgr.wdr_url()
@@ -183,7 +186,7 @@ class PlayerGameResultTests(TestCase):
                                position=2,
                                wdr_tournament_id=369)
         url = pgr.wdr_url()
-        # TODO verify result
+        self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369/boards', url)
         # Check wdr_url() for a PGR with no WDR id
         self.assertIsNotNone(pgr.wdr_tournament_id)
         url = pgr.wdr_url()

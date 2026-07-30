@@ -35,7 +35,8 @@ class PlayerTournamentRankingTests(TestCase):
                                       year=1974,
                                       wdd_tournament_id=369)
         url = ptr.wdd_url()
-        # TODO verify result
+        # Player.objects.first() has no WDDPlayer, so no URL can be formed
+        self.assertEqual('', url)
         # Also check wdr_url() for a PTR with no WDR id
         self.assertEqual('', ptr.wdr_url())
 
@@ -67,7 +68,7 @@ class PlayerTournamentRankingTests(TestCase):
                                       year=1974,
                                       wdr_tournament_id=369)
         url = ptr.wdr_url()
-        # TODO verify result
+        self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369', url)
         # Also check wdd_url() for a PTR with no WDD id
         self.assertEqual('', ptr.wdd_url())
 
