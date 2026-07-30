@@ -25,11 +25,10 @@ from django.utils.translation import gettext as _
 
 
 class GameScoringSystem(ABC):
-    # TODO This doesn't deal with multiple players playing one power
     """
     A scoring system for a Game.
 
-    Provides a method to calculate a score for each player of one game.
+    Provides a method to calculate a score for each power of one game.
     """
     MAX_NAME_LENGTH = 40
     name = u''
