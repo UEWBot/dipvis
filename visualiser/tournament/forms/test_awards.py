@@ -108,6 +108,9 @@ class AwardsFormsetTest(TestCase):
         cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
         cls.tp2 = TournamentPlayer.objects.create(player=p2, tournament=cls.t)
         cls.tp3 = TournamentPlayer.objects.create(player=p3, tournament=cls.t)
+        cls.tp_unranked = TournamentPlayer.objects.create(player=Player.objects.create(first_name='Zara', last_name='Zzzz'),
+                                                          tournament=cls.t,
+                                                          unranked=True)
         cls.a1 = Award.objects.create(name='Nicest Player',
                                       description='Player who was the nicest')
         cls.a2 = Award.objects.create(name='Best Austria',
@@ -142,6 +145,14 @@ class AwardsFormsetTest(TestCase):
         self.assertIn(self.a1.id, awards)
         self.assertIn(self.a2.id, awards)
         self.assertIn(self.a3.id, awards)
+
+    def test_awards_formset_excludes_unranked_players(self):
+        """Unranked TournamentPlayers should not appear as choices in any formset form"""
+        formset = self.AwardsFormset(tournament=self.t)
+        for form in formset:
+            with self.subTest(award=form['award'].initial):
+                player_pks = [choice[0].value for choice in form.fields['players'].choices]
+                self.assertNotIn(self.tp_unranked.pk, player_pks)
 
     def test_awards_formset_initial(self):
         awards = list(self.t.awards.all())

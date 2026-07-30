@@ -37,9 +37,11 @@ class AwardForm(forms.Form):
         # Remove our special kwargs from the list
         tournament = kwargs.pop('tournament')
         award_name = kwargs.pop('award_name')
+        players_queryset = kwargs.pop('players_queryset', None)
         super().__init__(*args, **kwargs)
-        # TODO we could create this queryset just once, in the formset
-        self.fields['players'].queryset = tournament.tournamentplayer_set.filter(unranked=False)
+        if players_queryset is None:
+            players_queryset = tournament.tournamentplayer_set.filter(unranked=False)
+        self.fields['players'].queryset = players_queryset
         # Set the label to the award's name
         self.fields['players'].label = award_name
 
@@ -51,6 +53,8 @@ class BaseAwardsFormset(BaseFormSet):
         self.tournament = kwargs.pop('tournament')
         # Get the list of Awards
         self.awards = list(self.tournament.awards.all())
+        # Pre-compute the players queryset once to share across all forms
+        self._players_queryset = self.tournament.tournamentplayer_set.filter(unranked=False)
         # Create initial if not provided
         if 'initial' not in kwargs.keys():
             # And construct initial data from it
@@ -66,4 +70,5 @@ class BaseAwardsFormset(BaseFormSet):
         # Pass the special kwargs down to the form itself
         kwargs['tournament'] = self.tournament
         kwargs['award_name'] = str(self.awards[index])
+        kwargs['players_queryset'] = self._players_queryset
         return super()._construct_form(index, **kwargs)
