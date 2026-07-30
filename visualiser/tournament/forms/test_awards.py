@@ -19,7 +19,7 @@ Award Forms Tests for the Diplomacy Tournament Visualiser.
 """
 from datetime import date, timedelta
 
-from django.forms.formsets import formset_factory
+from django.forms import modelformset_factory
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
@@ -56,18 +56,14 @@ class AwardFormTest(TestCase):
 
     def test_init_needs_tournament(self):
         with self.assertRaises(KeyError):
-            AwardForm(award_name=str(self.a1))
-
-    def test_init_needs_award_name(self):
-        with self.assertRaises(KeyError):
-            AwardForm(tournament=self.t)
+            AwardForm(instance=self.a1)
 
     def test_awards_form_player_field_label(self):
-        form = AwardForm(tournament=self.t, award_name=str(self.a1))
+        form = AwardForm(tournament=self.t, instance=self.a1)
         self.assertEqual(form.fields['players'].label, str(self.a1))
 
     def test_awards_form_player_choices(self):
-        form = AwardForm(tournament=self.t, award_name=str(self.a1))
+        form = AwardForm(tournament=self.t, instance=self.a1)
         the_choices = list(form.fields['players'].choices)
         # We should have one per TournamentPlayer
         self.assertEqual(len(the_choices), self.t.tournamentplayer_set.filter(unranked=False).count())
@@ -80,10 +76,9 @@ class AwardFormTest(TestCase):
     def test_award_form_has_changed(self):
         self.tp3.awards.add(self.a1)
         form = AwardForm(tournament=self.t,
-                         award_name=str(self.a1),
-                         initial={'award': self.a1.id,
-                                  'players': [self.tp3.id]},
-                         data={'award': str(self.a1.id),
+                         instance=self.a1,
+                         initial={'players': [self.tp3.id]},
+                         data={
                                'players': [str(self.tp3.id)]})
         self.assertIs(False, form.has_changed())
         # Cleanup
@@ -126,20 +121,24 @@ class AwardsFormsetTest(TestCase):
         cls.tp2.awards.add(cls.a2)
         cls.tp3.awards.add(cls.a2)
 
-        cls.AwardsFormset = formset_factory(AwardForm, extra=0, formset=BaseAwardsFormset)
+        cls.AwardsFormset = modelformset_factory(Award,
+                                                 form=AwardForm,
+                                                 extra=0,
+                                                 formset=BaseAwardsFormset)
 
     def test_awards_formset_creation(self):
-        formset = self.AwardsFormset(tournament=self.t)
+        formset = self.AwardsFormset(tournament=self.t,
+                                     queryset=self.t.awards.all())
         awards = set()
         for form in formset:
-            with self.subTest(award=form['award'].initial):
-                if form['award'].initial == self.a1.id:
+            with self.subTest(award=form.instance.id):
+                if form.instance.id == self.a1.id:
                     self.assertEqual(form['players'].initial, [self.tp1.id])
-                elif form['award'].initial == self.a2.id:
+                elif form.instance.id == self.a2.id:
                     self.assertEqual(form['players'].initial, [self.tp2.id, self.tp3.id])
                 else:
                     self.assertEqual(form['players'].initial, [])
-            awards.add(form['award'].initial)
+            awards.add(form.instance.id)
         # All three Awards should be present
         self.assertEqual(len(formset), 3)
         self.assertIn(self.a1.id, awards)
@@ -148,9 +147,10 @@ class AwardsFormsetTest(TestCase):
 
     def test_awards_formset_excludes_unranked_players(self):
         """Unranked TournamentPlayers should not appear as choices in any formset form"""
-        formset = self.AwardsFormset(tournament=self.t)
+        formset = self.AwardsFormset(tournament=self.t,
+                                     queryset=self.t.awards.all())
         for form in formset:
-            with self.subTest(award=form['award'].initial):
+            with self.subTest(award=form.instance.id):
                 player_pks = [choice[0].value for choice in form.fields['players'].choices]
                 self.assertNotIn(self.tp_unranked.pk, player_pks)
 
@@ -163,10 +163,17 @@ class AwardsFormsetTest(TestCase):
         for award in awards:
             initial.append({'award': award.id,
                             'players': expected_players[award.id]})
-        formset = self.AwardsFormset(tournament=self.t, initial=initial)
-        # Explicit initial should override implicit
+        formset = self.AwardsFormset(tournament=self.t,
+                                     queryset=self.t.awards.all(),
+                                     initial=initial)
+        # For model formsets, initial does not override existing instances.
         for i, form in enumerate(formset):
             award_id = awards[i].id
-            self.assertEqual(form['award'].initial, award_id)
-            self.assertEqual(form['players'].initial, expected_players[award_id])
+            self.assertEqual(form.instance.id, award_id)
+            if award_id == self.a1.id:
+                self.assertEqual(form['players'].initial, [self.tp1.id])
+            elif award_id == self.a2.id:
+                self.assertEqual(form['players'].initial, [self.tp2.id, self.tp3.id])
+            else:
+                self.assertEqual(form['players'].initial, [])
         self.assertEqual(len(formset), len(initial))

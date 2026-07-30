@@ -2470,7 +2470,7 @@ class TournamentViewTests(TestCase):
         data = {'form-MAX_NUM_FORMS': '1000'}
         expected = {}
         for i, a in enumerate(self.t1.awards.all()):
-            data[f'form-{i}-award'] = str(a.id)
+            data[f'form-{i}-id'] = str(a.id)
             players = [str(tps[i % len(tps)].id)]
             expected[a.id] = {int(players[0])}
             data[f'form-{i}-players'] = players
@@ -2497,7 +2497,7 @@ class TournamentViewTests(TestCase):
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, a in enumerate(self.t1.awards.all()):
-            data[f'form-{i}-award'] = str(a.id)
+            data[f'form-{i}-id'] = str(a.id)
             if i == 0:
                 data[f'form-{i}-players'] = ['999999']
         data['form-TOTAL_FORMS'] = str(i + 1)
@@ -2517,9 +2517,9 @@ class TournamentViewTests(TestCase):
         tp = self.t1.tournamentplayer_set.first()
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, a in enumerate(self.t1.awards.all()):
-            # Omit one hidden award field to trigger a hidden-field validation error.
+            # Omit one hidden id field to trigger a hidden-field validation error.
             if i != 0:
-                data[f'form-{i}-award'] = str(a.id)
+                data[f'form-{i}-id'] = str(a.id)
             data[f'form-{i}-players'] = [str(tp.id)]
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'

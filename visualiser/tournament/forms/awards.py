@@ -19,56 +19,51 @@ Forms for Awards in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
-from django.forms.formsets import BaseFormSet
+from django.forms.models import BaseModelFormSet
 
 from tournament.models import Award, TournamentPlayer
 
 from .fields import TournamentPlayerMultipleChoiceField
 
 
-class AwardForm(forms.Form):
+class AwardForm(forms.ModelForm):
     """Form to give one Award to TournamentPlayers"""
-    award = forms.ModelChoiceField(queryset=Award.objects.all(),
-                                   widget=forms.HiddenInput())
     players = TournamentPlayerMultipleChoiceField(queryset=TournamentPlayer.objects.none(),
                                                   required=False)
 
+    class Meta:
+        model = Award
+        fields = ()
+
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
-        tournament = kwargs.pop('tournament')
-        award_name = kwargs.pop('award_name')
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament')
         players_queryset = kwargs.pop('players_queryset', None)
         super().__init__(*args, **kwargs)
         if players_queryset is None:
-            players_queryset = tournament.tournamentplayer_set.filter(unranked=False)
+            players_queryset = self.tournament.tournamentplayer_set.filter(unranked=False)
         self.fields['players'].queryset = players_queryset
-        # Set the label to the award's name
-        self.fields['players'].label = award_name
+        # Set the label to the award name for this row.
+        self.fields['players'].label = str(self.instance)
+        # Populate initial player selection from current award recipients in this tournament.
+        if self.instance.pk and ('players' not in self.initial):
+            tps = [tp.id for tp in self.instance.tournamentplayer_set.filter(tournament=self.tournament).order_by()]
+            self.initial['players'] = tps
 
 
-class BaseAwardsFormset(BaseFormSet):
+class BaseAwardsFormset(BaseModelFormSet):
     """Formset for giving Awards to TournamentPlayers"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
-        # Get the list of Awards
-        self.awards = list(self.tournament.awards.all())
         # Pre-compute the players queryset once to share across all forms
         self._players_queryset = self.tournament.tournamentplayer_set.filter(unranked=False)
-        # Create initial if not provided
-        if 'initial' not in kwargs.keys():
-            # And construct initial data from it
-            # __init__() uses len(initial) to decide how many forms to create
-            initial = []
-            for award in self.awards:
-                tps = [tp.id for tp in award.tournamentplayer_set.filter(tournament=self.tournament).order_by()]
-                initial.append({'award': award.id, 'players': tps})
-            kwargs['initial'] = initial
+        if 'queryset' not in kwargs:
+            kwargs['queryset'] = self.tournament.awards.all()
         super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
         # Pass the special kwargs down to the form itself
         kwargs['tournament'] = self.tournament
-        kwargs['award_name'] = str(self.awards[index])
         kwargs['players_queryset'] = self._players_queryset
         return super()._construct_form(index, **kwargs)

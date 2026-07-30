@@ -46,7 +46,7 @@ from tournament.forms import (AwardForm, BaseAwardsFormset,
                               BaseTeamsFormset, EnableCheckInForm,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
                               SeederBiasForm, TeamForm)
-from tournament.models import (GamePlayer, InvalidPreferenceList, RoundPlayer,
+from tournament.models import (Award, GamePlayer, InvalidPreferenceList, RoundPlayer,
                                SeederBias, Team, Tournament, TournamentPlayer)
 from tournament.news import news
 
@@ -711,10 +711,13 @@ def seeder_bias(request, tournament_id):
 def enter_awards(request, tournament_id):
     """Enter awards for the Tournament"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    AwardsFormset = formset_factory(AwardForm,
-                                    extra=0,
-                                    formset=BaseAwardsFormset)
-    formset = AwardsFormset(request.POST or None, tournament=t)
+    AwardsFormset = modelformset_factory(Award,
+                                         form=AwardForm,
+                                         extra=0,
+                                         formset=BaseAwardsFormset)
+    formset = AwardsFormset(request.POST or None,
+                            tournament=t,
+                            queryset=t.awards.all())
     if formset.is_valid():
         with transaction.atomic():
             # Delete any existing awards
@@ -722,7 +725,7 @@ def enter_awards(request, tournament_id):
                 tp.awards.clear()
                 tp.save()
             for form in formset:
-                award = form.cleaned_data['award']
+                award = form.instance
                 tps = form.cleaned_data['players']
                 for tp in tps:
                     tp.awards.add(award)
