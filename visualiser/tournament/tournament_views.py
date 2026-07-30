@@ -42,7 +42,7 @@ from django.utils.translation import gettext as _
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_roll_call_emails
 from tournament.forms import (AwardForm, BaseAwardsFormset,
-                              BasePlayerRoundScoreFormset, BasePrefsFormset,
+                              BasePlayerRoundScoreFormset,
                               BaseTeamsFormset, EnableCheckInForm,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
                               SeederBiasForm, TeamForm)
@@ -536,10 +536,11 @@ def enter_prefs(request, tournament_id):
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
     if not t.powers_assigned_from_prefs():
         raise Http404('Tournament does not use power preferences')
-    PrefsFormset = formset_factory(PrefsForm,
-                                   extra=0,
-                                   formset=BasePrefsFormset)
-    formset = PrefsFormset(request.POST or None, tournament=t)
+    PrefsFormset = modelformset_factory(TournamentPlayer,
+                                        form=PrefsForm,
+                                        extra=0)
+    queryset = t.tournamentplayer_set.select_related('player').order_by('player')
+    formset = PrefsFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         for form in formset:
             if form.has_changed():

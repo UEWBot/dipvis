@@ -2125,6 +2125,7 @@ class TournamentViewTests(TestCase):
         for i, tp2 in enumerate(tps):
             prefs = pref_values[i % len(pref_values)]
             expected[tp2.id] = prefs
+            data[f'form-{i}-id'] = str(tp2.id)
             data[f'form-{i}-prefs'] = prefs
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
@@ -2151,6 +2152,7 @@ class TournamentViewTests(TestCase):
         players = list(self.t2.tournamentplayer_set.all())
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, _tp in enumerate(players):
+            data[f'form-{i}-id'] = str(_tp.id)
             if i == 0:
                 data[f'form-{i}-prefs'] = 'X'
             else:

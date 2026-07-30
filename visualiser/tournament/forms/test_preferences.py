@@ -19,14 +19,14 @@ Preference Forms Tests for the Diplomacy Tournament Visualiser.
 """
 from datetime import date, timedelta
 
-from django.forms.formsets import formset_factory
+from django.forms import modelformset_factory
 from django.test import TestCase
 
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import Player
 
-from . import BasePrefsFormset, PrefsForm
+from . import PrefsForm
 
 
 class PrefsFormTest(TestCase):
@@ -111,10 +111,13 @@ class PrefsFormsetTest(TestCase):
         cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
         cls.tp2 = TournamentPlayer.objects.create(player=p2, tournament=cls.t)
 
-        cls.PrefsFormset = formset_factory(PrefsForm, extra=0, formset=BasePrefsFormset)
+        cls.PrefsFormset = modelformset_factory(TournamentPlayer,
+                            form=PrefsForm,
+                            extra=0)
 
     def test_prefs_formset_creation(self):
-        formset = self.PrefsFormset(tournament=self.t)
+        queryset = self.t.tournamentplayer_set.order_by('player')
+        formset = self.PrefsFormset(queryset=queryset)
         tps = set()
         for form in formset:
             self.assertEqual(form['prefs'].initial, form.instance.prefs_string())
@@ -127,8 +130,9 @@ class PrefsFormsetTest(TestCase):
     def test_prefs_formset_initial(self):
         initial = [{'prefs': 'EF'},
                    {'prefs': 'AT'}]
-        formset = self.PrefsFormset(tournament=self.t, initial=initial)
-        # Explicit initial should override implicit
-        for i, form in enumerate(formset):
-            self.assertEqual(form['prefs'].initial, initial[i]['prefs'])
+        queryset = self.t.tournamentplayer_set.order_by('player')
+        formset = self.PrefsFormset(queryset=queryset, initial=initial)
+        # For model formsets, initial does not override existing instances.
+        for form in formset:
+            self.assertEqual(form['prefs'].initial, form.instance.prefs_string())
         self.assertEqual(len(formset), len(initial))

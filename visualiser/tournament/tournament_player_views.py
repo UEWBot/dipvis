@@ -154,12 +154,10 @@ def player_prefs(request, tournament_id, uuid):
         raise Http404 from e
 
     prefs_form = PrefsForm(request.POST or None,
-                           tp=tp)
+                           instance=tp)
 
     if prefs_form.is_valid() and prefs_form.has_changed():
-        ps = prefs_form.cleaned_data['prefs']
-        # Set preferences for this TournamentPlayer
-        tp.create_preferences_from_string(ps)
+        prefs_form.save()
 
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('player_prefs',
