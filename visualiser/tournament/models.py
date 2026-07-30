@@ -1434,6 +1434,12 @@ class Tournament(models.Model):
                 for award in self.awards.filter(power=power).all():
                     for gp in gp_list:
                         # TODO What if this gets called more than once?
+                        #      The simplistic approach is to nuke any pre-existing
+                        #      Best Country awards, but that assumes that those
+                        #      awards were assigned here. They may instead have
+                        #      been done by hand by the TD, in which case we need
+                        #      to keep them (and presumably not also give the award
+                        #      to another player)
                         gp.tournamentplayer().awards.add(award)
 
     def update_team_scores(self, for_players=None):
