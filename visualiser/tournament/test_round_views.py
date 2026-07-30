@@ -648,6 +648,25 @@ class RoundViewTests(TestCase):
         self.assertContains(response, 'id="select-all-present"')
         self.assertContains(response, 'name$="-present"')
 
+    def test_roll_call_get_player_field_rendering(self):
+        """Pre-populated rows show player name as text; blank extra rows show a select."""
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        response = self.client.get(reverse('round_roll_call',
+                                           args=(self.t3.pk, 2)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        # Every t3 round-2 player name should appear as plain text (not inside a select)
+        for tp in self.t3.tournamentplayer_set.select_related('player'):
+            name = str(tp.player)
+            self.assertIn(name, content)
+        # The player select widget should only appear for the blank extra rows,
+        # not for any pre-populated slot.  A select is identifiable by its id
+        # matching id_form-{n}-player. There should be exactly 2 extra selects.
+        import re
+        selects = re.findall(r'id="id_form-\d+-player"', content)
+        self.assertEqual(2, len(selects))
+
     def test_roll_call_post_current_round_no_seeding(self):
         """roll_call() POST for t1, which only has a single Round"""
         self.assertEqual(self.t1.current_round().number(), 1)
@@ -902,6 +921,50 @@ class RoundViewTests(TestCase):
         # Should re-load the same page
         self.assertEqual(response.context['post_url'], url)
         # No clean up needed because there was an error
+
+    def test_roll_call_post_tampered_player_ignored(self):
+        """A tampered player value in a pre-populated row is ignored; the server
+        uses the initial (disabled) player value instead."""
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # Submit all 9 tournament players for t3 round 2, but replace p1 (form-0)
+        # with p14 in the POST payload.  Because player is disabled for pre-populated
+        # rows, p14 must be silently discarded and p1 must remain in the round.
+        data = urlencode({'form-TOTAL_FORMS': '11',
+                          'form-INITIAL_FORMS': '9',
+                          'form-MAX_NUM_FORMS': '1000',
+                          'form-MIN_NUM_FORMS': '0',
+                          'form-0-player': str(self.p14.pk),  # tampered - should be ignored
+                          'form-0-present': 'ok',
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
+                          'form-2-present': 'ok',
+                          'form-3-player': str(self.p4.pk),
+                          'form-3-present': 'ok',
+                          'form-4-player': str(self.p5.pk),
+                          'form-4-present': 'ok',
+                          'form-5-player': str(self.p6.pk),
+                          'form-5-present': 'ok',
+                          'form-6-player': str(self.p7.pk),
+                          'form-6-present': 'ok',
+                          'form-7-player': str(self.p8.pk),
+                          'form-7-present': 'ok',
+                          'form-8-player': str(self.p9.pk),
+                          'form-8-present': 'ok',
+                          'form-9-player': '',
+                          'form-10-player': ''})
+        response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
+                                    data,
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        # Formset accepted (redirect), not a validation error
+        self.assertEqual(response.status_code, 302)
+        # p1 is still in the round (tamper was ignored)
+        self.assertTrue(RoundPlayer.objects.filter(player=self.p1,
+                                                    the_round=self.r32).exists())
+        # p14 was never added to the round
+        self.assertFalse(RoundPlayer.objects.filter(player=self.p14,
+                                                     the_round=self.r32).exists())
+        # No clean up needed - nothing was modified
 
     def test_get_seven_not_logged_in(self):
         response = self.client.get(reverse('get_seven',

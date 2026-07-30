@@ -18,7 +18,43 @@
             {% trans "Mark all players as present" %}
         </label>
     </p>
-    {% include "formset_table.html" %}
+    {% csrf_token %}
+    {{ formset.management_form }}
+    {{ formset.non_form_errors.as_ul }}
+    <table class="form">
+    {% for form in formset.forms %}
+        {% if forloop.first %}
+            <thead><tr>
+            {% for field in form.visible_fields %}
+                <th>{% trans field.label %}</th>
+            {% endfor %}
+            </tr></thead><tbody>
+        {% endif %}
+        <tr class="{% cycle 'odd_row' 'even_row' %}">
+            <td>
+                {% for hidden in form.hidden_fields %}
+                    {{ hidden.errors.as_ul }}
+                    {{ hidden }}
+                {% endfor %}
+                {{ form.player.errors.as_ul }}
+                {% if form.player.field.disabled %}
+                    {{ form.initial.player }}
+                {% else %}
+                    {{ form.player }}
+                {% endif %}
+            </td>
+            {% for field in form.visible_fields|slice:"1:" %}
+            <td>
+                {{ field.errors.as_ul }}
+                {{ field }}
+            </td>
+            {% endfor %}
+            <td>{{ form.non_field_errors }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+    <input type="submit" value={% trans "Submit" %} />
 </form>
 <script>
 (() => {

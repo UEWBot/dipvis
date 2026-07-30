@@ -47,6 +47,13 @@ class PlayerRoundForm(forms.Form):
                                        widget=forms.TextInput(attrs={'class': 'readonly-look'}),
                                        min_value=0)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-populated rows are display-only for the player field; blank extra
+        # rows keep the select dropdown so a new player can be chosen.
+        if self.initial.get('player'):
+            self.fields['player'].disabled = True
+
     def clean(self):
         """Checks that standby players and sandboxers are present"""
         cleaned_data = super().clean()
