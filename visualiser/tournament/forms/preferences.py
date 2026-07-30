@@ -34,13 +34,13 @@ class PrefsForm(forms.Form):
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         # Store the TournamentPlayer so the view can set the right one
-        self.tp = kwargs.pop('tp')
+        self.instance = kwargs.pop('instance')
         # Overridable default initial value, like ModelForm
         if 'initial' not in kwargs.keys():
-            kwargs['initial'] = {'prefs': self.tp.prefs_string()}
+            kwargs['initial'] = {'prefs': self.instance.prefs_string()}
         super().__init__(*args, **kwargs)
         # Set the label to the player's name
-        self.fields['prefs'].label = str(self.tp.player)
+        self.fields['prefs'].label = str(self.instance.player)
 
 
 class BasePrefsFormset(BaseFormSet):
@@ -62,5 +62,5 @@ class BasePrefsFormset(BaseFormSet):
 
     def _construct_form(self, index, **kwargs):
         # Pass the special arg down to the form itself
-        kwargs['tp'] = self.tps[index]
+        kwargs['instance'] = self.tps[index]
         return super()._construct_form(index, **kwargs)

@@ -45,51 +45,51 @@ class PrefsFormTest(TestCase):
         cls.tp = TournamentPlayer.objects.create(player=p, tournament=t)
 
     def test_prefs_form_prefs_field_label(self):
-        form = PrefsForm(tp=self.tp)
+        form = PrefsForm(instance=self.tp)
         self.assertEqual(form.fields['prefs'].label, 'Arthur Bottom')
 
     def test_prefs_form_prefs_help_text(self):
-        form = PrefsForm(tp=self.tp)
+        form = PrefsForm(instance=self.tp)
         self.assertEqual(form.fields['prefs'].help_text, '')
 
     def test_prefs_form_prefs_none(self):
-        form = PrefsForm(tp=self.tp)
+        form = PrefsForm(instance=self.tp)
         self.assertEqual(form['prefs'].initial, '')
 
     def test_prefs_form_prefs_initial(self):
-        form = PrefsForm(tp=self.tp, initial={'prefs': 'A'})
+        form = PrefsForm(instance=self.tp, initial={'prefs': 'A'})
         # Explicit initial should override implicit
         self.assertEqual(form['prefs'].initial, 'A')
 
     def test_prefs_form_prefs_some(self):
         """Add preferences for the TournamentPlayer"""
         self.tp.create_preferences_from_string('AEF')
-        form = PrefsForm(tp=self.tp)
+        form = PrefsForm(instance=self.tp)
         self.assertEqual(form['prefs'].initial, 'AEF')
         self.tp.preference_set.all().delete()
 
     def test_prefs_form_prefs_delete(self):
         """Remove preferences for the TournamentPlayer"""
         self.tp.create_preferences_from_string('AEF')
-        form = PrefsForm(tp=self.tp, data={'prefs': ''})
+        form = PrefsForm(instance=self.tp, data={'prefs': ''})
         self.assertIs(True, form.is_valid())
         self.assertEqual(form.cleaned_data['prefs'], '')
         self.tp.preference_set.all().delete()
 
     def test_prefs_form_prefs_enter_some(self):
-        form = PrefsForm(tp=self.tp, data={'prefs': 'EFG'})
+        form = PrefsForm(instance=self.tp, data={'prefs': 'EFG'})
         self.assertIs(True, form.is_valid())
         self.assertEqual(form.cleaned_data['prefs'], 'EFG')
 
     def test_prefs_form_has_changed_implicit_initial(self):
         self.tp.create_preferences_from_string('AEF')
-        form = PrefsForm(tp=self.tp, data={'prefs': 'AEF'})
+        form = PrefsForm(instance=self.tp, data={'prefs': 'AEF'})
         self.assertIs(False, form.has_changed())
         # Cleanup
         self.tp.preference_set.all().delete()
 
     def test_prefs_form_has_changed_explicit_initial(self):
-        form = PrefsForm(tp=self.tp,
+        form = PrefsForm(instance=self.tp,
                          data={'prefs': 'EFG'},
                          initial={'prefs': 'EFG'})
         self.assertIs(False, form.has_changed())
@@ -117,8 +117,8 @@ class PrefsFormsetTest(TestCase):
         formset = self.PrefsFormset(tournament=self.t)
         tps = set()
         for form in formset:
-            self.assertEqual(form['prefs'].initial, form.tp.prefs_string())
-            tps.add(form.tp)
+            self.assertEqual(form['prefs'].initial, form.instance.prefs_string())
+            tps.add(form.instance)
         # Both TournamentPlayers should be present
         self.assertEqual(len(formset), 2)
         self.assertIn(self.tp1, tps)
