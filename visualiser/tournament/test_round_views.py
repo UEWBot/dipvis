@@ -1755,6 +1755,8 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        self._set_emails_for_roundplayers(self.r32.roundplayer_set.all())
+        outbox_before = len(mail.outbox)
         data = {'form-TOTAL_FORMS': '1',
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
@@ -1770,10 +1772,17 @@ class RoundViewTests(TestCase):
                                     content_type='application/x-www-form-urlencoded')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('board_call', args=(self.t3.pk, 2)))
-        # TODO Initial game, round, and tournament scores should have been calculated
         for gp in g.gameplayer_set.all():
             self.assertNotEqual(gp.score, 0.0)
-        # TODO Check that board call email was sent out
+            rp = RoundPlayer.objects.get(player=gp.player,
+                                         the_round=self.r32)
+            self.assertNotEqual(rp.score, 0.0)
+            tp = TournamentPlayer.objects.get(player=gp.player,
+                                              tournament=self.t3)
+            self.assertNotEqual(tp.score, 0.0)
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertIn('Board call for', mail.outbox[-1].subject)
+        self.assertEqual(7, len(mail.outbox[-1].bcc))
         # Clean up
         g.delete()
 
@@ -1795,6 +1804,8 @@ class RoundViewTests(TestCase):
         gp5 = GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         gp6 = GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         gp7 = GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        self._set_emails_for_roundplayers(self.r32.roundplayer_set.all())
+        outbox_before = len(mail.outbox)
         powers = {gp1: self.austria,
                   gp2: self.turkey,
                   gp3: self.england,
@@ -1821,7 +1832,9 @@ class RoundViewTests(TestCase):
         for gp, p in powers.items():
             gp.refresh_from_db()
             self.assertEqual(gp.power, p)
-        # TODO Check that board call email was sent out
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertIn('Board call for', mail.outbox[-1].subject)
+        self.assertEqual(7, len(mail.outbox[-1].bcc))
         # Clean up
         g.delete()
 
@@ -1843,6 +1856,8 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=self.p6, game=g, power=self.france)
         GamePlayer.objects.create(player=self.p7, game=g, power=self.england)
         GamePlayer.objects.create(player=self.p9, game=g, power=self.austria)
+        self._set_emails_for_roundplayers(self.r32.roundplayer_set.all())
+        outbox_before = len(mail.outbox)
         data = {'form-TOTAL_FORMS': '1',
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
@@ -1862,7 +1877,9 @@ class RoundViewTests(TestCase):
         g.refresh_from_db()
         self.assertEqual(g.name, 'NewName')
         self.assertEqual(g.the_set, self.gibsons)
-        # TODO Check that board call email was sent out
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertIn('Board call for', mail.outbox[-1].subject)
+        self.assertEqual(7, len(mail.outbox[-1].bcc))
         # Clean up
         g.delete()
 
