@@ -2740,7 +2740,7 @@ class Game(models.Model):
         Return value is a dict, indexed by power id, of scores.
         """
         system = self.the_round.game_scoring_system_obj()
-        tgs = TournamentGameState(self.centrecount_set.order_by())
+        tgs = TournamentGameState(self)
         scores = system.scores(tgs)
         if (self.pool is None) or (self.pool.game_score_multiplier is None):
             return scores

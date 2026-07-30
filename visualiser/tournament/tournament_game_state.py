@@ -27,22 +27,19 @@ class TournamentGameState(GameState):
     Abstraction of a single Game in a Tournament, for scoring purposes.
     """
 
-    # TODO This version makes more sense, but the tests are currently written
-    #      to score games at various points rather than always at the end
-    #def __init__(self, game):
-    #    """Create the object corresponding to the specific Game."""
-    #    self.game = game
-    #    self.scs = game.supplycentre_set.all()
-    #    self.draw = game.passed_draw()
-    #    self.final_year = self.scs.order_by('-year')[0].year
-    #    self.final_year_scs = return self.scs.filter(year=self.final_year).order_by('-count')
+    def __init__(self, game, year=None):
+        """Create the object corresponding to the specific Game.
 
-    def __init__(self, scs):
-        """Create the object corresponding to the specific Game."""
-        self.scs = scs
-        self.game = scs.first().game
-        self.draw = self.game.passed_draw()
-        self.final_year = self.scs.order_by('-year')[0].year
+        If year is provided, the state is calculated as of that year.
+        Otherwise, the current/final state is used.
+        """
+        self.game = game
+        self.scs = game.centrecount_set.order_by()
+        self.draw = game.passed_draw()
+        if year is None:
+            self.final_year = self.scs.order_by('-year')[0].year
+        else:
+            self.final_year = year
         self.final_year_scs = self.scs.filter(year=self.final_year).order_by('-count')
 
     def _validate_year(self, year):
@@ -116,7 +113,7 @@ class TournamentGameState(GameState):
     def year_eliminated(self, power):
         """Returns the year in which the specified power was eliminated, or None."""
         try:
-            return self.scs.filter(power=power).filter(count=0).order_by('year').first().year
+            return self.scs.filter(power=power, count=0, year__lte=self.final_year).order_by('year').first().year
         except AttributeError:
             return None
 
