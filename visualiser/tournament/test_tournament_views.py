@@ -955,8 +955,12 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('team_scores',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        # TODO Check result
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team')
+        self.assertContains(response, 'Total')
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '123.40')
+        self.assertNotContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
         for g in self.r41.game_set.all():
@@ -983,8 +987,11 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('team_scores_refresh',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        # TODO Check result
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team')
+        self.assertContains(response, 'Total')
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '123.40')
         self.assertNotContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
@@ -1008,8 +1015,11 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('team_scores_refresh',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        # TODO Check result
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team')
+        self.assertContains(response, 'Total')
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '123.40')
         self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
@@ -1035,9 +1045,11 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_overview_4',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        # TODO Check result
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team')
+        self.assertContains(response, 'Total')
         self.assertContains(response, TEAM_NAME)
-        self.assertNotContains(response, '123.4')
+        self.assertNotContains(response, '123.40')
         self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
@@ -1076,8 +1088,11 @@ class TournamentViewTests(TestCase):
         response = self.client.get(reverse('tournament_overview_4',
                                            args=(self.t4.pk,)),
                                    secure=True)
-        # TODO Check result
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Team')
+        self.assertContains(response, 'Total')
         self.assertContains(response, TEAM_NAME)
+        self.assertContains(response, '123.40')
         self.assertContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
