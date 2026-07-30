@@ -81,7 +81,10 @@ class AddPlayerBgTests(TestCase):
         p = wdd.player
         self.assertIsNone(p.wdr_player_id)
         add_player_bg(p)
-        # TODO Validate results
+        # Without a WDR player ID, no tournament rankings or game results should
+        # be added (those come exclusively from WDR).
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playergameresult_set.count())
 
     def test_add_player_bg_wdr_not_accessible(self):
         p = Player.objects.create(first_name='Wdr',
@@ -150,8 +153,12 @@ class AddPlayerBgTests(TestCase):
         p.wdr_player_id = CHRIS_BRAND_WDR_ID
         p.save()
         p = Player.objects.get(wdr_player_id = CHRIS_BRAND_WDR_ID)
+        ptr_count_before = p.playertournamentranking_set.count()
+        pgr_count_before = p.playergameresult_set.count()
         add_player_bg(p)
-        # TODO Validate results
+        # WDR data should have been loaded on top of whatever was already present.
+        self.assertGreater(p.playertournamentranking_set.count(), ptr_count_before)
+        self.assertGreater(p.playergameresult_set.count(), pgr_count_before)
         # Cleanup
         WDDPlayer.objects.create(wdd_player_id=CHRIS_BRAND_WDD_ID,
                                  player=p)
@@ -184,7 +191,39 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    # TODO Test handling of invalid dates (PlayerTournamentRanking and PlayerAward)
+    def test_add_player_bg_invalid_dates(self):
+        """Tournaments and awards with no dates are skipped without crashing."""
+        p = Player.objects.create(first_name='Test', last_name='InvalidDate',
+                                  wdr_player_id=9997)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_tournaments = [{
+            'tournament_id': 8001,
+            'tournament_wdd_id': -1,
+            'tournament_name': 'No Date Tournament',
+            'tournament_start_date': None,
+            'tournament_end_date': None,
+            'tournament_kind': 'Standard',
+            'tournament_player_rank': 1,
+        }]
+        fake_awards = [{
+            'award_country': 'France',
+            'award_tournament': 8001,
+        }]
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_tournaments
+                mock_wdr.return_value.boards.return_value = []
+                mock_wdr.return_value.awards.return_value = fake_awards
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)  # must not raise
+        # The records with invalid dates should be silently skipped.
+        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playeraward_set.count())
+        # Cleanup
+        p.delete()
 
     @tag('slow', 'wdr')
     def test_add_player_bg_td(self):
@@ -203,9 +242,51 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    # TODO Test filtering out variant games
-    #      There is a variant game in the Windy City Weasels 2012 league,
-    #      but we only look at tournament games
+    def test_add_player_bg_variant_games_filtered(self):
+        """Boards for non-standard variants are excluded; standard boards are kept."""
+        p = Player.objects.create(first_name='Test', last_name='Variant',
+                                  wdr_player_id=9996)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_tournaments = [{
+            'tournament_id': 9001,
+            'tournament_wdd_id': -1,
+            'tournament_name': 'Mix Tournament',
+            'tournament_start_date': '2012-01-01',
+            'tournament_end_date': '2012-01-02',
+            'tournament_kind': 'Standard',
+            'tournament_player_rank': 3,
+        }]
+        fake_boards = [
+            {
+                'board_round': 1, 'board_number': 1, 'board_is_top': False,
+                'board_tournament': 9001, 'board_power': 'Austria',
+                'board_centers': 8, 'board_score': 8.0, 'board_rank': 2,
+                'board_year_of_elimination': None, 'board_url': '',
+                'board_variant': 'Standard',
+            },
+            {
+                'board_round': 2, 'board_number': 1, 'board_is_top': False,
+                'board_tournament': 9001, 'board_power': 'France',
+                'board_centers': 5, 'board_score': 5.0, 'board_rank': 3,
+                'board_year_of_elimination': None, 'board_url': '',
+                'board_variant': 'Empire',  # variant - should be excluded
+            },
+        ]
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_tournaments
+                mock_wdr.return_value.boards.return_value = fake_boards
+                mock_wdr.return_value.awards.return_value = []
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+        pgrs = p.playergameresult_set.all()
+        self.assertEqual(1, pgrs.count())
+        self.assertEqual(1, pgrs.first().round_number)  # only the Standard board
+        # Cleanup
+        p.delete()
 
     @tag('slow', 'wdr')
     def test_add_player_bg_unranked(self):
