@@ -122,7 +122,6 @@ class Game():
                 qs['view'] = ['dropDown']
                 parsed = parsed._replace(query=urlencode(qs, doseq=True))
                 url = urlunparse(parsed)
-        # TODO Ideally, I think we should pass the gameID in params
         last_status = None
         for _ in range(2):
             try:
