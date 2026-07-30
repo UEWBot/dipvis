@@ -22,25 +22,32 @@ from django import forms
 from django.forms.formsets import BaseFormSet
 
 from tournament.diplomacy import validate_preference_string
+from tournament.models import TournamentPlayer
 
 
-class PrefsForm(forms.Form):
+class PrefsForm(forms.ModelForm):
     """Form for one TournamentPlayer's Preferences"""
     prefs = forms.CharField(max_length=7,
                             strip=True,
                             required=False,
                             validators=[validate_preference_string])
 
+    class Meta:
+        model = TournamentPlayer
+        fields = ()
+
     def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
-        # Store the TournamentPlayer so the view can set the right one
-        self.instance = kwargs.pop('instance')
-        # Overridable default initial value, like ModelForm
-        if 'initial' not in kwargs.keys():
-            kwargs['initial'] = {'prefs': self.instance.prefs_string()}
         super().__init__(*args, **kwargs)
+        # Overridable default initial value, like ModelForm
+        if 'prefs' not in self.initial:
+            self.initial['prefs'] = self.instance.prefs_string()
         # Set the label to the player's name
         self.fields['prefs'].label = str(self.instance.player)
+
+    def save(self, commit=True):
+        tp = super().save(commit=commit)
+        tp.create_preferences_from_string(self.cleaned_data['prefs'])
+        return tp
 
 
 class BasePrefsFormset(BaseFormSet):

@@ -543,10 +543,7 @@ def enter_prefs(request, tournament_id):
     if formset.is_valid():
         for form in formset:
             if form.has_changed():
-                tp = form.instance
-                ps = form.cleaned_data['prefs']
-                # Set preferences for this TournamentPlayer
-                tp.create_preferences_from_string(ps)
+                form.save()
         # If all went well, re-direct
         return HttpResponseRedirect(reverse('tournament_detail',
                                             args=(tournament_id,)))
