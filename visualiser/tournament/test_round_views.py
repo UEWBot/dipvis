@@ -708,32 +708,33 @@ class RoundViewTests(TestCase):
         """roll_call POST for current round of a tournament with seeding"""
         self.assertEqual(self.t3.current_round().number(), 2)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        # TODO Why doesn't this work?
-        #data = urlencode({'form-TOTAL_FORMS': '10',
-        data = urlencode({'form-TOTAL_FORMS': '8',
-                          'form-INITIAL_FORMS': '8',
+        # INITIAL_FORMS matches the number of tournament players the view puts in
+        # the initial list (all 9, ordered by last_name/first_name). p2 is not a
+        # RoundPlayer for this round so is submitted as not-present.
+        # Forms 9-10 are blank extra rows (omitting present key = unchecked).
+        data = urlencode({'form-TOTAL_FORMS': '11',
+                          'form-INITIAL_FORMS': '9',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
                           'form-0-present': 'ok',
-                          'form-1-player': str(self.p3.pk),
-                          'form-1-present': 'ok',
-                          'form-2-player': str(self.p4.pk),
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
                           'form-2-present': 'ok',
-                          'form-3-player': str(self.p5.pk),
+                          'form-3-player': str(self.p4.pk),
                           'form-3-present': 'ok',
-                          'form-4-player': str(self.p6.pk),
+                          'form-4-player': str(self.p5.pk),
                           'form-4-present': 'ok',
-                          'form-5-player': str(self.p7.pk),
+                          'form-5-player': str(self.p6.pk),
                           'form-5-present': 'ok',
-                          'form-6-player': str(self.p8.pk),
+                          'form-6-player': str(self.p7.pk),
                           'form-6-present': 'ok',
-                          'form-7-player': str(self.p9.pk),
+                          'form-7-player': str(self.p8.pk),
                           'form-7-present': 'ok',
-                          'form-8-player': '',
-                          'form-8-present': '',
+                          'form-8-player': str(self.p9.pk),
+                          'form-8-present': 'ok',
                           'form-9-player': '',
-                          'form-9-present': ''})
+                          'form-10-player': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
                                     data,
                                     secure=True,
@@ -753,32 +754,30 @@ class RoundViewTests(TestCase):
         Pool.objects.create(the_round=r,
                             name='Variable')
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        # TODO Why doesn't this work?
-        #data = urlencode({'form-TOTAL_FORMS': '10',
-        data = urlencode({'form-TOTAL_FORMS': '8',
-                          'form-INITIAL_FORMS': '8',
+        # Same player ordering and blank-row logic as test_roll_call_post_current_round_with_seeding.
+        data = urlencode({'form-TOTAL_FORMS': '11',
+                          'form-INITIAL_FORMS': '9',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
                           'form-0-present': 'ok',
-                          'form-1-player': str(self.p3.pk),
-                          'form-1-present': 'ok',
-                          'form-2-player': str(self.p4.pk),
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
                           'form-2-present': 'ok',
-                          'form-3-player': str(self.p5.pk),
+                          'form-3-player': str(self.p4.pk),
                           'form-3-present': 'ok',
-                          'form-4-player': str(self.p6.pk),
+                          'form-4-player': str(self.p5.pk),
                           'form-4-present': 'ok',
-                          'form-5-player': str(self.p7.pk),
+                          'form-5-player': str(self.p6.pk),
                           'form-5-present': 'ok',
-                          'form-6-player': str(self.p8.pk),
+                          'form-6-player': str(self.p7.pk),
                           'form-6-present': 'ok',
-                          'form-7-player': str(self.p9.pk),
+                          'form-7-player': str(self.p8.pk),
                           'form-7-present': 'ok',
-                          'form-8-player': '',
-                          'form-8-present': '',
+                          'form-8-player': str(self.p9.pk),
+                          'form-8-present': 'ok',
                           'form-9-player': '',
-                          'form-9-present': ''})
+                          'form-10-player': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 2)),
                                     data,
                                     secure=True,
@@ -792,32 +791,30 @@ class RoundViewTests(TestCase):
         """POST of roll_call() for a Round that is finished"""
         self.assertIs(True, self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        # TODO Why doesn't this work?
-        #data = urlencode({'form-TOTAL_FORMS': '9',
         # This just confirms the actual players.
-        # Note that one who didn't play is flagged as "not present"
-        data = urlencode({'form-TOTAL_FORMS': '8',
-                          'form-INITIAL_FORMS': '7',
+        # Players not in this round (p2 and p9) are submitted without a present flag.
+        data = urlencode({'form-TOTAL_FORMS': '11',
+                          'form-INITIAL_FORMS': '9',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
                           'form-0-present': 'ok',
-                          'form-1-player': str(self.p3.pk),
-                          'form-1-present': 'ok',
-                          'form-2-player': str(self.p4.pk),
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
                           'form-2-present': 'ok',
-                          'form-3-player': str(self.p5.pk),
+                          'form-3-player': str(self.p4.pk),
                           'form-3-present': 'ok',
-                          'form-4-player': str(self.p6.pk),
+                          'form-4-player': str(self.p5.pk),
                           'form-4-present': 'ok',
-                          'form-5-player': str(self.p7.pk),
+                          'form-5-player': str(self.p6.pk),
                           'form-5-present': 'ok',
-                          'form-6-player': str(self.p8.pk),
+                          'form-6-player': str(self.p7.pk),
                           'form-6-present': 'ok',
-                          'form-7-player': str(self.p2.pk),
-                          'form-7-present': '',
-                          'form-8-player': '',
-                          'form-8-present': ''})
+                          'form-7-player': str(self.p8.pk),
+                          'form-7-present': 'ok',
+                          'form-8-player': str(self.p9.pk),
+                          'form-9-player': '',
+                          'form-10-player': ''})
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,
@@ -834,30 +831,29 @@ class RoundViewTests(TestCase):
         self.assertIs(True, r.is_finished)
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        # TODO Why doesn't this work?
-        #data = urlencode({'form-TOTAL_FORMS': '9',
-        data = urlencode({'form-TOTAL_FORMS': '7',
-                          'form-INITIAL_FORMS': '7',
+        # p3 is submitted as not-present; the view should refuse because p3 played a game.
+        # p2 and p9 are not in the round and submitted without a present flag.
+        data = urlencode({'form-TOTAL_FORMS': '11',
+                          'form-INITIAL_FORMS': '9',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
                           'form-0-present': 'ok',
-                          'form-1-player': str(self.p3.pk),
-                          'form-1-present': '',
-                          'form-2-player': str(self.p4.pk),
-                          'form-2-present': 'ok',
-                          'form-3-player': str(self.p5.pk),
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
+                          'form-3-player': str(self.p4.pk),
                           'form-3-present': 'ok',
-                          'form-4-player': str(self.p6.pk),
+                          'form-4-player': str(self.p5.pk),
                           'form-4-present': 'ok',
-                          'form-5-player': str(self.p7.pk),
+                          'form-5-player': str(self.p6.pk),
                           'form-5-present': 'ok',
-                          'form-6-player': str(self.p8.pk),
+                          'form-6-player': str(self.p7.pk),
                           'form-6-present': 'ok',
-                          'form-7-player': str(self.p9.pk),
+                          'form-7-player': str(self.p8.pk),
                           'form-7-present': 'ok',
-                          'form-8-player': '',
-                          'form-8-present': ''})
+                          'form-8-player': str(self.p9.pk),
+                          'form-9-player': '',
+                          'form-10-player': ''})
         response = self.client.post(reverse('round_roll_call', args=(self.t3.pk, 1)),
                                     data,
                                     secure=True,
@@ -865,37 +861,36 @@ class RoundViewTests(TestCase):
         self.assertContains(response, ' did play this round')
         self.assertTemplateUsed(response, 'rounds/roll_call.html')
         self.assertTrue(GamePlayer.objects.filter(game__the_round=r, player=self.p3).exists())
-        # Clean up
-        GamePlayer.objects.filter(game__the_round=r, player=self.p9).delete()
 
     def test_roll_call_post_add_duplicate_player(self):
         """POST of roll_call() where we add a TournamentPlayer who's already playing"""
         self.assertIs(True, self.t3.round_numbered(1).is_finished)
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
-        # TODO Why doesn't this work?
-        #data = urlencode({'form-TOTAL_FORMS': '9',
-        data = urlencode({'form-TOTAL_FORMS': '8',
-                          'form-INITIAL_FORMS': '7',
+        # All 9 tournament players in initial order; p3 also appears in the first
+        # blank extra row (form-9) to trigger the duplicate-player error.
+        data = urlencode({'form-TOTAL_FORMS': '11',
+                          'form-INITIAL_FORMS': '9',
                           'form-MAX_NUM_FORMS': '1000',
                           'form-MIN_NUM_FORMS': '0',
                           'form-0-player': str(self.p1.pk),
                           'form-0-present': 'ok',
-                          'form-1-player': str(self.p3.pk),
-                          'form-1-present': 'ok',
-                          'form-2-player': str(self.p4.pk),
+                          'form-1-player': str(self.p2.pk),
+                          'form-2-player': str(self.p3.pk),
                           'form-2-present': 'ok',
-                          'form-3-player': str(self.p5.pk),
+                          'form-3-player': str(self.p4.pk),
                           'form-3-present': 'ok',
-                          'form-4-player': str(self.p6.pk),
+                          'form-4-player': str(self.p5.pk),
                           'form-4-present': 'ok',
-                          'form-5-player': str(self.p7.pk),
+                          'form-5-player': str(self.p6.pk),
                           'form-5-present': 'ok',
-                          'form-6-player': str(self.p8.pk),
+                          'form-6-player': str(self.p7.pk),
                           'form-6-present': 'ok',
-                          'form-7-player': str(self.p3.pk),
+                          'form-7-player': str(self.p8.pk),
                           'form-7-present': 'ok',
-                          'form-8-player': '',
-                          'form-8-present': ''})
+                          'form-8-player': str(self.p9.pk),
+                          'form-9-player': str(self.p3.pk),
+                          'form-9-present': 'ok',
+                          'form-10-player': ''})
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
                                     data,
