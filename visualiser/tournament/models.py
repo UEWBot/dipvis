@@ -2538,6 +2538,14 @@ class Pool(models.Model):
                 raise ValidationError({'determines_top_rankings': _('Not enough players in the pool')})
 
 
+class GameManager(models.Manager):
+    """Manager for game query patterns shared by forms and views."""
+
+    def for_power_assignment(self):
+        """Games in stable power-assignment order."""
+        return self.get_queryset().order_by('name')
+
+
 class Game(models.Model):
     """
     A single game of Diplomacy, within a Round
@@ -2561,6 +2569,8 @@ class Game(models.Model):
     notes = models.CharField(max_length=MAX_NOTES_LENGTH,
                              blank=True,
                              help_text=_('Will be included in board call emails and game page'))
+
+    objects = GameManager()
 
     class Meta:
         ordering = ['name']

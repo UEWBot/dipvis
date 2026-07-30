@@ -97,7 +97,7 @@ class BasePowerAssignFormset(BaseFormSet):
         # Remove our special kwarg from the list
         self.the_round = kwargs.pop('the_round')
         super().__init__(*args, **kwargs)
-        self.games = self.the_round.game_set.order_by('name')
+        self.games = Game.objects.for_power_assignment().filter(the_round=self.the_round)
         assert self.games
 
     def _construct_form(self, index, **kwargs):

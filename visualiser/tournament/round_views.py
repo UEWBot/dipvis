@@ -492,7 +492,7 @@ def seed_games(request, tournament_id, round_num):
     if request.method == 'POST':
         data = []
         # Ordering must match that used inside the formset
-        for g in r.game_set.order_by('name'):
+        for g in Game.objects.for_power_assignment().filter(the_round=r):
             current = {'name': g.name,
                        'the_set': g.the_set,
                        'top_board': g.is_top_board,

@@ -1848,6 +1848,101 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
+    def test_seed_games_post_multi_game_order_alignment(self):
+        """POST updates should stay aligned with the formset game ordering."""
+        self.assertEqual(self.r32.game_set.count(), 0)
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        # Create in reverse name order so ordering is driven by queryset, not creation order.
+        g2 = Game.objects.create(name='T3R2G2',
+                                 started_at=self.r32.start,
+                                 is_finished=True,
+                                 the_round=self.r32,
+                                 the_set=self.ah)
+        g1 = Game.objects.create(name='T3R2G1',
+                                 started_at=self.r32.start,
+                                 is_finished=True,
+                                 the_round=self.r32,
+                                 the_set=self.ah)
+
+        game_players = {
+            g1: [
+                GamePlayer.objects.create(player=self.p1, game=g1, power=self.turkey),
+                GamePlayer.objects.create(player=self.p3, game=g1, power=self.russia),
+                GamePlayer.objects.create(player=self.p4, game=g1, power=self.italy),
+                GamePlayer.objects.create(player=self.p5, game=g1, power=self.germany),
+                GamePlayer.objects.create(player=self.p6, game=g1, power=self.france),
+                GamePlayer.objects.create(player=self.p7, game=g1, power=self.england),
+                GamePlayer.objects.create(player=self.p9, game=g1, power=self.austria),
+            ],
+            g2: [
+                GamePlayer.objects.create(player=self.p1, game=g2, power=self.austria),
+                GamePlayer.objects.create(player=self.p3, game=g2, power=self.england),
+                GamePlayer.objects.create(player=self.p4, game=g2, power=self.france),
+                GamePlayer.objects.create(player=self.p5, game=g2, power=self.germany),
+                GamePlayer.objects.create(player=self.p6, game=g2, power=self.italy),
+                GamePlayer.objects.create(player=self.p7, game=g2, power=self.russia),
+                GamePlayer.objects.create(player=self.p9, game=g2, power=self.turkey),
+            ],
+        }
+
+        expected_updates = {
+            g1.pk: {
+                'name': 'T3R2GA',
+                'the_set': self.gibsons,
+                'top_board': True,
+                'external_url': 'https://example.com/alpha',
+                'notes': 'alpha notes',
+            },
+            g2.pk: {
+                'name': 'T3R2GB',
+                'the_set': self.ah,
+                'top_board': False,
+                'external_url': 'https://example.com/beta',
+                'notes': 'beta notes',
+            },
+        }
+
+        data = {
+            'form-TOTAL_FORMS': '2',
+            'form-INITIAL_FORMS': '2',
+            'form-MAX_NUM_FORMS': '1000',
+            'form-MIN_NUM_FORMS': '0',
+        }
+        for i, game in enumerate(Game.objects.for_power_assignment().filter(the_round=self.r32)):
+            expected = expected_updates[game.pk]
+            data[f'form-{i}-name'] = expected['name']
+            data[f'form-{i}-the_set'] = str(expected['the_set'].pk)
+            if expected['top_board']:
+                data[f'form-{i}-top_board'] = 'on'
+            data[f'form-{i}-external_url'] = expected['external_url']
+            data[f'form-{i}-notes'] = expected['notes']
+            for gp in game_players[game]:
+                data[f'form-{i}-{gp.pk}'] = str(gp.power.pk)
+
+        response = self.client.post(reverse('seed_games', args=(self.t3.pk, 2)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('board_call', args=(self.t3.pk, 2)))
+
+        g1.refresh_from_db()
+        g2.refresh_from_db()
+        self.assertEqual(g1.name, expected_updates[g1.pk]['name'])
+        self.assertEqual(g1.the_set, expected_updates[g1.pk]['the_set'])
+        self.assertEqual(g1.is_top_board, expected_updates[g1.pk]['top_board'])
+        self.assertEqual(g1.external_url, expected_updates[g1.pk]['external_url'])
+        self.assertEqual(g1.notes, expected_updates[g1.pk]['notes'])
+        self.assertEqual(g2.name, expected_updates[g2.pk]['name'])
+        self.assertEqual(g2.the_set, expected_updates[g2.pk]['the_set'])
+        self.assertEqual(g2.is_top_board, expected_updates[g2.pk]['top_board'])
+        self.assertEqual(g2.external_url, expected_updates[g2.pk]['external_url'])
+        self.assertEqual(g2.notes, expected_updates[g2.pk]['notes'])
+
+        # Clean up
+        g1.delete()
+        g2.delete()
+
     def test_seed_games_post_invalid_game_name(self):
         """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
