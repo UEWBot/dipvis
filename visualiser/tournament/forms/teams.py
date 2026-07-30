@@ -100,7 +100,7 @@ class BaseTeamsFormset(BaseFormSet):
     def _construct_form(self, index, **kwargs):
         # Pass the special args down to the form itself
         kwargs['tournament'] = self.tournament
-        # TODO is the if statement needed?
+        # Extra blank forms (index >= len(self.teams)) have no existing team
         if index < len(self.teams):
             kwargs['team'] = self.teams[index]
         return super()._construct_form(index, **kwargs)
