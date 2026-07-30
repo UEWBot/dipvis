@@ -1757,17 +1757,19 @@ class TournamentViewTests(TestCase):
         # Submit two existing teams but change team #2 to duplicate team #1's name.
         # Formset validation should catch duplicate names before model save.
         data = {'form-TOTAL_FORMS': '2',
-            'form-INITIAL_FORMS': '2',
+                'form-INITIAL_FORMS': '2',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
-            'form-0-name': tm1.name,
-            'form-0-player_0': str(players[0].player.pk),
-            'form-0-player_1': str(players[1].player.pk),
-            'form-0-player_2': str(players[2].player.pk),
-            'form-1-name': tm1.name,
-            'form-1-player_0': str(players[3].player.pk),
-            'form-1-player_1': str(players[4].player.pk),
-            'form-1-player_2': str(players[5].player.pk),
+                'form-0-id': str(tm1.pk),
+                'form-0-name': tm1.name,
+                'form-0-player_0': str(players[0].player.pk),
+                'form-0-player_1': str(players[1].player.pk),
+                'form-0-player_2': str(players[2].player.pk),
+                'form-1-id': str(tm2.pk),
+                'form-1-name': tm1.name,
+                'form-1-player_0': str(players[3].player.pk),
+                'form-1-player_1': str(players[4].player.pk),
+                'form-1-player_2': str(players[5].player.pk),
                }
         response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
                                     urlencode(data),
@@ -1807,6 +1809,7 @@ class TournamentViewTests(TestCase):
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(tm1.pk),
                 'form-0-name': tm1.name,
                 'form-0-player_0': str(players[0].player.pk),
                 'form-0-player_1': str(players[1].player.pk),
@@ -1851,7 +1854,7 @@ class TournamentViewTests(TestCase):
                 data[f'form-{i}-player_{n}'] = str(p.pk)
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
-        data['form-INITIAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = '0'
         data = urlencode(data)
         response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
                                     data,
@@ -1892,10 +1895,12 @@ class TournamentViewTests(TestCase):
         data = {'form-MAX_NUM_FORMS': '1000'}
         # Leave one team unchanged, modify another, and create a new one
         i = 0
+        data[f'form-{i}-id'] = str(tm1.pk)
         data[f'form-{i}-name'] = tm1.name
         for n, p in enumerate(tm1.players.all()):
             data[f'form-{i}-player_{n}'] = str(p.pk)
         i += 1
+        data[f'form-{i}-id'] = str(tm2.pk)
         data[f'form-{i}-name'] = tm2.name
         for n, p in enumerate(tm2.players.all()):
             if n == 2:
@@ -1919,7 +1924,7 @@ class TournamentViewTests(TestCase):
                 data[f'form-{i}-player_{n}'] = str(p.pk)
         i += 1
         data['form-TOTAL_FORMS'] = f'{i}'
-        data['form-INITIAL_FORMS'] = f'{i}'
+        data['form-INITIAL_FORMS'] = '2'
         data = urlencode(data)
         response = self.client.post(reverse('enter_teams', args=(self.t2.pk,)),
                                     data,

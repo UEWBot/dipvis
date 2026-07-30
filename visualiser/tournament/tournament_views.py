@@ -776,17 +776,20 @@ def enter_teams(request, tournament_id):
         raise Http404('Tournament does not use teams')
     # Calculate a sensible number of teams
     expected_teams = t.tournamentplayer_set.count() // t.team_size
-    TeamsFormset = formset_factory(TeamForm,
-                                   extra=max(1, expected_teams - t.team_set.count()),
-                                   formset=BaseTeamsFormset)
-    formset = TeamsFormset(request.POST or None, tournament=t)
+    TeamsFormset = modelformset_factory(Team,
+                                        form=TeamForm,
+                                        extra=max(1, expected_teams - t.team_set.count()),
+                                        formset=BaseTeamsFormset)
+    formset = TeamsFormset(request.POST or None,
+                           tournament=t,
+                           queryset=t.team_set.all())
     if formset.is_valid():
         try:
             with transaction.atomic():
                 for form in formset:
                     if form.has_changed():
-                        tm = form.team
-                        if tm:
+                        tm = form.instance
+                        if tm.pk:
                             tm.name = form.cleaned_data['name']
                         else:
                             tm = Team(tournament=t,

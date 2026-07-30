@@ -19,7 +19,7 @@ Team Forms Tests for the Diplomacy Tournament Visualiser.
 """
 from datetime import date, timedelta
 
-from django.forms.formsets import formset_factory
+from django.forms import modelformset_factory
 from django.test import TestCase
 
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
@@ -66,8 +66,8 @@ class TeamFormTest(TestCase):
         self.assertIs(True, form.is_valid())
 
     def test_team_form_existing_team(self):
-        """team kwarg should be supported"""
-        TeamForm(tournament=self.t, team=self.tm)
+        """existing team instance should be supported"""
+        TeamForm(tournament=self.t, instance=self.tm)
 
     def test_team_repeated_player(self):
         """Same player can't appear more than once in a team"""
@@ -105,7 +105,7 @@ class TeamFormTest(TestCase):
 
     def test_team_form_has_changed_implicit_initial_1(self):
         form = TeamForm(tournament=self.t,
-                        team=self.tm,
+                        instance=self.tm,
                         data={'name': 'The Team',
                               'player_0': str(self.p2.id)})
         self.assertIs(False, form.has_changed())
@@ -151,13 +151,17 @@ class TeamsFormsetTest(TestCase):
         cls.tm = Team.objects.create(tournament=cls.t, name='The Team')
         cls.tm.players.add(cls.p2)
 
-        cls.TeamsFormset = formset_factory(TeamForm, extra=2, formset=BaseTeamsFormset)
+        cls.TeamsFormset = modelformset_factory(Team,
+                            form=TeamForm,
+                            extra=2,
+                            formset=BaseTeamsFormset)
 
     def test_teams_success(self):
         data = {'form-TOTAL_FORMS': '2',
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(self.tm.pk),
                 'form-0-name': 'Team 0',
                 'form-0-player_0': str(self.p1.pk),
                 'form-0-player_1': str(self.p2.pk),
@@ -165,7 +169,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_0': str(self.p3.pk),
                 'form-1-player_1': str(self.p4.pk),
                }
-        formset = self.TeamsFormset(data, tournament=self.t)
+        formset = self.TeamsFormset(data, tournament=self.t, queryset=self.t.team_set.all())
         self.assertIs(True, formset.is_valid())
 
     def test_teams_formset_initial(self):
@@ -175,11 +179,13 @@ class TeamsFormsetTest(TestCase):
                    {'name': 'Bravo',
                     'player_0': self.p3.id,
                     'player_1': self.p4.id}]
-        formset = self.TeamsFormset(tournament=self.t, initial=initial)
-        for i in range(len(initial)):
-            self.assertEqual(formset[i]['name'].initial, initial[i]['name'])
-            self.assertEqual(formset[i]['player_0'].initial, initial[i]['player_0'])
-            self.assertEqual(formset[i]['player_1'].initial, initial[i]['player_1'])
+        formset = self.TeamsFormset(tournament=self.t,
+                                    queryset=Team.objects.none(),
+                                    initial=initial)
+        for i, row in enumerate(initial):
+            self.assertEqual(formset[i]['name'].initial, row['name'])
+            self.assertEqual(formset[i]['player_0'].initial, row['player_0'])
+            self.assertEqual(formset[i]['player_1'].initial, row['player_1'])
 
     def test_teams_invalid_form(self):
         """One form fails validation"""
@@ -187,6 +193,7 @@ class TeamsFormsetTest(TestCase):
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(self.tm.pk),
                 'form-0-name': 'Team 0',
                 'form-0-player_0': str(self.p1.pk),
                 'form-0-player_1': str(self.p1.pk),
@@ -194,7 +201,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_0': str(self.p3.pk),
                 'form-1-player_1': str(self.p2.pk),
                }
-        formset = self.TeamsFormset(data, tournament=self.t)
+        formset = self.TeamsFormset(data, tournament=self.t, queryset=self.t.team_set.all())
         self.assertIs(False, formset.is_valid())
         # Should have one form error, and that's it
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
@@ -206,6 +213,7 @@ class TeamsFormsetTest(TestCase):
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(self.tm.pk),
                 'form-0-name': 'Team 0',
                 'form-0-player_0': str(self.p1.pk),
                 'form-0-player_1': str(self.p5.pk),
@@ -213,7 +221,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_0': str(self.p3.pk),
                 'form-1-player_1': str(self.p2.pk),
                }
-        formset = self.TeamsFormset(data, tournament=self.t)
+        formset = self.TeamsFormset(data, tournament=self.t, queryset=self.t.team_set.all())
         self.assertIs(False, formset.is_valid())
         # Should have one form error, and that's it
         self.assertEqual(sum(len(err) for err in formset.errors), 1)
@@ -225,6 +233,7 @@ class TeamsFormsetTest(TestCase):
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(self.tm.pk),
                 'form-0-name': 'Team 0',
                 'form-0-player_0': str(self.p1.pk),
                 'form-0-player_1': str(self.p2.pk),
@@ -232,7 +241,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_0': str(self.p3.pk),
                 'form-1-player_1': str(self.p1.pk),
                }
-        formset = self.TeamsFormset(data, tournament=self.t)
+        formset = self.TeamsFormset(data, tournament=self.t, queryset=self.t.team_set.all())
         self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)
@@ -245,6 +254,7 @@ class TeamsFormsetTest(TestCase):
                 'form-INITIAL_FORMS': '1',
                 'form-MAX_NUM_FORMS': '1000',
                 'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(self.tm.pk),
                 'form-0-name': 'Team 0',
                 'form-0-player_0': str(self.p1.pk),
                 'form-0-player_1': str(self.p2.pk),
@@ -252,7 +262,7 @@ class TeamsFormsetTest(TestCase):
                 'form-1-player_0': str(self.p3.pk),
                 'form-1-player_1': str(self.p4.pk),
                }
-        formset = self.TeamsFormset(data, tournament=self.t)
+        formset = self.TeamsFormset(data, tournament=self.t, queryset=self.t.team_set.all())
         self.assertIs(False, formset.is_valid())
         # Should have no form errors, one formset error
         self.assertEqual(sum(len(err) for err in formset.errors), 0)

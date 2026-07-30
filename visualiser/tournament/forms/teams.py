@@ -19,7 +19,7 @@ Forms for teams in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
-from django.forms.formsets import BaseFormSet
+from django.forms.models import BaseModelFormSet
 from django.utils.translation import gettext as _
 
 from tournament.models import Team
@@ -28,32 +28,38 @@ from tournament.players import Player
 from .fields import PlayerChoiceField
 
 
-class TeamForm(forms.Form):
+class TeamForm(forms.ModelForm):
     """Form to create/edit one Team"""
-    name = forms.CharField(max_length=Team.MAX_NAME_LENGTH,
-                           strip=True,
-                           required=True)
+
+    class Meta:
+        model = Team
+        fields = ('name',)
 
     def __init__(self, *args, **kwargs):
-        # Remove our special kwargs from the list
-        self.tournament = kwargs.pop('tournament')
-        self.team = kwargs.pop('team', None)
+        # Remove our special kwarg from the list
+        self.tournament = kwargs.pop('tournament', None)
+        super().__init__(*args, **kwargs)
+
+        # Existing rows can infer tournament from instance.
+        if self.tournament is None and self.instance.pk:
+            self.tournament = self.instance.tournament
+        if self.tournament is None:
+            raise ValueError('TeamForm requires tournament or an existing Team instance')
+        if not self.instance.pk:
+            self.instance.tournament = self.tournament
+
         # Create an appropriate number of player fields
         queryset = Player.objects.filter(tournamentplayer__tournament=self.tournament,
                          tournamentplayer__unranked=False).distinct()
-        # Overridable default initial value, like ModelForm
-        # TODO This is dead code if we only ever use the formset
-        if 'initial' not in kwargs.keys():
-            if self.team:
-                initial = {'name': self.team.name}
-                for i, p in enumerate(self.team.players.all()):
-                    initial[f'player_{i}'] = p
-                kwargs['initial'] = initial
-        super().__init__(*args, **kwargs)
         for n in range(self.tournament.team_size):
             # We allow Teams with as few as one player
             self.fields[f'player_{n}'] = PlayerChoiceField(queryset=queryset,
                                                            required=(n == 0))
+
+        # Populate dynamic player initial values for existing teams.
+        if self.instance.pk:
+            for i, p in enumerate(self.instance.players.all()):
+                self.initial.setdefault(f'player_{i}', p.pk)
 
     def clean(self):
         """
@@ -77,32 +83,18 @@ class TeamForm(forms.Form):
         return cleaned_data
 
 
-class BaseTeamsFormset(BaseFormSet):
+class BaseTeamsFormset(BaseModelFormSet):
     """Formset for editing Teams"""
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
         self.tournament = kwargs.pop('tournament')
-        # Get the list of Teams
-        self.teams = list(self.tournament.team_set.all())
-        # Create initial if not provided
-        if 'initial' not in kwargs.keys():
-            # And construct initial data from it
-            # __init__() uses len(initial) to decide how many forms to create
-            initial = []
-            for tm in self.teams:
-                d = {'name': tm.name}
-                for i, p in enumerate(tm.players.all()):
-                    d[f'player_{i}'] = p
-                initial.append(d)
-            kwargs['initial'] = initial
+        if 'queryset' not in kwargs:
+            kwargs['queryset'] = self.tournament.team_set.all()
         super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
-        # Pass the special args down to the form itself
+        # Pass the special arg down to the form itself
         kwargs['tournament'] = self.tournament
-        # Extra blank forms (index >= len(self.teams)) have no existing team
-        if index < len(self.teams):
-            kwargs['team'] = self.teams[index]
         return super()._construct_form(index, **kwargs)
 
     def clean(self):
