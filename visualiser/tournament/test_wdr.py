@@ -60,4 +60,7 @@ class WDRTests(TestCase):
     @tag('wdr')
     def test_wdr_tournament_as_json(self):
         json = wdr_tournament_as_json(1545)
-        # TODO Validate result
+        self.assertIsInstance(json, dict)
+        self.assertEqual(1545, json.get('tournament_id'))
+        self.assertEqual('CODCon Open 2016', json.get('tournament_name'))
+        self.assertIn('tournament_classifications', json)

@@ -596,15 +596,27 @@ class NewsTests(TestCase):
     # news()
     def test_news_for_tournament(self):
         t = Tournament.objects.first()
-        # TODO Validate results
         res = news(t)
+        strings = [s for s in res if isinstance(s, str)]
+        self.assertIsInstance(res, list)
+        self.assertTrue(res)
+        self.assertTrue(any('registered to play in the tournament' in s for s in strings))
+        self.assertTrue(any('registered to play in the round' in s for s in strings))
 
     def test_news_for_round(self):
         r = Round.objects.first()
-        # TODO Validate results
         res = news(r)
+        strings = [s for s in res if isinstance(s, str)]
+        self.assertIsInstance(res, list)
+        self.assertTrue(res)
+        self.assertTrue(any('registered to play in the round' in s for s in strings))
+        self.assertTrue(any('game g11' in s.lower() or 'game g12' in s.lower() for s in strings))
 
     def test_news_for_game(self):
         g = Game.objects.first()
-        # TODO Validate results
         res = news(g)
+        strings = [s for s in res if isinstance(s, str)]
+        self.assertIsInstance(res, list)
+        self.assertTrue(res)
+        self.assertTrue(any('draw votes have been taken' in s for s in strings))
+        self.assertTrue(any('highest sc count' in s.lower() for s in strings))

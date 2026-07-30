@@ -35,7 +35,9 @@ class PlayerRankingTests(TestCase):
                            international_rank='8',
                            national_rank='3')
         url = pr.wdd_url()
-        # TODO Validate results
+        self.assertIn('https://world-diplomacy-database.com/php/ranking/ranking_player.php', url)
+        self.assertIn('id_ranking=2', url)
+        self.assertIn(f'id_player={wdd.wdd_player_id}', url)
 
     def test_playerranking_wdd_url_dip_pouch(self):
         wdd = WDDPlayer.objects.first()
@@ -45,7 +47,9 @@ class PlayerRankingTests(TestCase):
                            international_rank='8',
                            national_rank='3')
         url = pr.wdd_url()
-        # TODO Validate results
+        self.assertIn('https://world-diplomacy-database.com/php/ranking/ranking_player.php', url)
+        self.assertIn('id_ranking=3', url)
+        self.assertIn(f'id_player={wdd.wdd_player_id}', url)
 
     def test_playerranking_wdd_url_sdr(self):
         wdd = WDDPlayer.objects.first()
@@ -55,7 +59,9 @@ class PlayerRankingTests(TestCase):
                            international_rank='8',
                            national_rank='3')
         url = pr.wdd_url()
-        # TODO Validate results
+        self.assertIn('https://world-diplomacy-database.com/php/ranking/ranking_player.php', url)
+        self.assertIn('id_ranking=16', url)
+        self.assertIn(f'id_player={wdd.wdd_player_id}', url)
 
     def test_playerranking_wdd_url_other(self):
         wdd = WDDPlayer.objects.first()
@@ -65,7 +71,7 @@ class PlayerRankingTests(TestCase):
                            international_rank='8',
                            national_rank='3')
         url = pr.wdd_url()
-        # TODO Validate results
+        self.assertEqual('', url)
 
     @tag('slow', 'wdd')
     def test_playerranking_wdd_url_no_id(self):
@@ -90,7 +96,7 @@ class PlayerRankingTests(TestCase):
                            international_rank='8',
                            national_rank='3')
         url = pr.wdr_url()
-        # TODO Validate results
+        self.assertEqual('https://www.world-diplomacy-reference.com/rankings/wpe7', url)
 
     def test_playerranking_wdr_url_wpe2(self):
         p = Player.objects.first()
@@ -99,7 +105,7 @@ class PlayerRankingTests(TestCase):
                            international_rank='8',
                            national_rank='3')
         url = pr.wdr_url()
-        # TODO Validate results
+        self.assertEqual('', url)
 
     # PlayerRanking.national_str()
     def test_playerranking_national_str(self):
@@ -108,8 +114,7 @@ class PlayerRankingTests(TestCase):
                            system='World Performance Evaluation',
                            international_rank='8',
                            national_rank='3')
-        # TODO Validate results
-        pr.national_str()
+        self.assertEqual(f'{p} is ranked 3 in their country in the World Performance Evaluation', pr.national_str())
 
     # PlayerRanking.__str__()
     def test_playerranking_str(self):
@@ -118,5 +123,4 @@ class PlayerRankingTests(TestCase):
                            system='World Performance Evaluation',
                            international_rank='8',
                            national_rank='3')
-        # TODO Validate results
-        str(pr)
+        self.assertEqual(f'{p} is ranked 8 internationally in the World Performance Evaluation', str(pr))
