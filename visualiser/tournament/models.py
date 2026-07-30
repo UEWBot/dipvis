@@ -2990,7 +2990,6 @@ class SupplyCentreOwnership(models.Model):
             models.UniqueConstraint(fields=['sc', 'game', 'year'],
                                     name='unique_sc_game_year'),
         ]
-        ordering = ['game', 'year']
 
     def __str__(self):
         return _("%(dot)s in %(game)s was owned by %(power)s at the end of %(year)d") % {'dot': self.sc,
@@ -3574,7 +3573,6 @@ class GameImage(models.Model):
             models.CheckConstraint(check=~(Q(season=Seasons.SPRING) & Q(phase=Phases.ADJUSTMENTS)),
                                    name="phase_season_combo_valid"),
         ]
-        ordering = ['game', 'year', '-season', 'phase']
 
     def __str__(self):
         return _(u'%(game)s %(turn)s image') % {'game': self.game,
