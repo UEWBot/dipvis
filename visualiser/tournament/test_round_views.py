@@ -19,6 +19,7 @@ from datetime import timezone as datetime_timezone
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.test import TestCase
 from django.urls import reverse
 
@@ -336,6 +337,23 @@ class RoundViewTests(TestCase):
         GamePlayer.objects.create(player=cls.p8, game=g2, power=cls.england, score=6)
         GamePlayer.objects.create(player=cls.p9, game=g2, power=cls.austria, score=7)
         cls.r41.set_is_finished()
+
+    def _set_emails_for_roundplayers(self, roundplayers):
+        """Assign deterministic email addresses and restore original values at test cleanup."""
+        players = {rp.player for rp in roundplayers}
+        original_emails = {player.pk: player.email for player in players}
+
+        def restore_emails():
+            for player in players:
+                player.refresh_from_db(fields=['email'])
+                player.email = original_emails[player.pk]
+                player.save(update_fields=['email'])
+
+        self.addCleanup(restore_emails)
+
+        for player in players:
+            player.email = f'player{player.pk}@example.com'
+            player.save(update_fields=['email'])
 
     def test_detail(self):
         response = self.client.get(reverse('round_detail',
@@ -2223,6 +2241,8 @@ class RoundViewTests(TestCase):
                   self.italy: self.rp16,
                   self.france: self.rp17,
                   self.germany: self.rp19}
+        self._set_emails_for_roundplayers(powers.values())
+        outbox_before = len(mail.outbox)
         URL = 'http://example.com/test.html'
         NOTE = 'New Game notes'
         data = {'form-TOTAL_FORMS': '2',
@@ -2262,7 +2282,9 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
-        # TODO Verify that email is sent
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertIn('Board call for', mail.outbox[-1].subject)
+        self.assertEqual(7, len(mail.outbox[-1].bcc))
         # Clean up
         self.r11.game_set.all().delete()
 
@@ -2307,6 +2329,8 @@ class RoundViewTests(TestCase):
                   self.italy: self.rp16,
                   self.france: self.rp17,
                   self.germany: self.rp19}
+        self._set_emails_for_roundplayers(powers.values())
+        outbox_before = len(mail.outbox)
         g = Game.objects.create(the_round=self.r11,
                                 name='Existing',
                                 the_set=self.gibsons,
@@ -2358,7 +2382,9 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
-        # TODO Verify that email is sent
+        self.assertEqual(len(mail.outbox), outbox_before + 1)
+        self.assertIn('Board call for', mail.outbox[-1].subject)
+        self.assertEqual(7, len(mail.outbox[-1].bcc))
         # Clean up
         self.r11.game_set.all().delete()
 
@@ -2372,6 +2398,8 @@ class RoundViewTests(TestCase):
                   self.italy: self.rp16,
                   self.france: self.rp17,
                   self.germany: self.rp19}
+        self._set_emails_for_roundplayers(powers.values())
+        outbox_before = len(mail.outbox)
         g = Game.objects.create(the_round=self.r11,
                                 name='Existing',
                                 the_set=self.gibsons,
@@ -2419,7 +2447,7 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.gameplayer_set.count(), 7)
         for p, rp in powers.items():
             self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
-        # TODO Verify that email is NOT sent
+        self.assertEqual(len(mail.outbox), outbox_before)
         # Clean up
         self.r11.game_set.all().delete()
 
@@ -2433,6 +2461,8 @@ class RoundViewTests(TestCase):
                   self.italy: self.rp16,
                   self.france: self.rp17,
                   self.germany: self.rp19}
+        self._set_emails_for_roundplayers(powers.values())
+        outbox_before = len(mail.outbox)
         g1 = Game.objects.create(the_round=self.r11,
                                  name='Existing1',
                                  the_set=self.gibsons,
@@ -2492,7 +2522,9 @@ class RoundViewTests(TestCase):
             self.assertEqual(g.gameplayer_set.count(), 7)
             for p, rp in powers.items():
                 self.assertEqual(g.gameplayer_set.filter(power=p, player=rp.player).count(), 1)
-        # TODO Verify that email is sent
+        self.assertEqual(len(mail.outbox), outbox_before + 2)
+        self.assertTrue(all('Board call for' in msg.subject for msg in mail.outbox[-2:]))
+        self.assertTrue(all(len(msg.bcc) == 7 for msg in mail.outbox[-2:]))
         # Clean up
         self.r11.game_set.all().delete()
 
