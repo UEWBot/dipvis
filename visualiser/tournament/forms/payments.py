@@ -34,3 +34,5 @@ class PaidForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.pk:
             self.fields['paid'].label = str(self.instance.player)
+        else:
+            self.fields['paid'].label = 'Player'

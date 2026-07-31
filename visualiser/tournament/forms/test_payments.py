@@ -47,6 +47,11 @@ class PaidFormTest(TestCase):
         form = PaidForm(instance=self.tp)
         self.assertEqual(form.fields['paid'].label, 'Arthur Bottom')
 
+    def test_paid_form_paid_field_label_unsaved_instance(self):
+        """An unsaved instance (no pk) should get the generic 'Player' label."""
+        form = PaidForm(instance=TournamentPlayer())
+        self.assertEqual(form.fields['paid'].label, 'Player')
+
     def test_paid_form_none(self):
         form = PaidForm(instance=self.tp)
         self.assertEqual(form['paid'].initial, False)
