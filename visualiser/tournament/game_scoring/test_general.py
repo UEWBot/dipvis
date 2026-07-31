@@ -22,7 +22,7 @@ from tournament.diplomacy import GreatPower
 from tournament.models import find_game_scoring_system
 
 from .g_scoring_systems import G_SCORING_SYSTEMS
-from .sc_chart_game_state import SCChartGameState
+from .sc_chart_game_state import InvalidState, SCChartGameState
 from .simple_game_state import SimpleGameState
 
 
@@ -150,6 +150,15 @@ class GameScoringTests(TestCase):
                                                                  cls.germany: 1905,
                                                                  cls.turkey: 1905},
                                               draw=None)
+
+    def test_sc_chart_game_state_init_too_many_scs(self):
+        """SCChartGameState raises InvalidState when a year has more than TOTAL_SCS centres."""
+        powers = [self.austria, self.england, self.france,
+                  self.germany, self.italy, self.russia, self.turkey]
+        # Give each power 5 SCs — 35 total, one over the limit
+        bad_counts = {1901: {p: 5 for p in powers}}
+        with self.assertRaises(InvalidState):
+            SCChartGameState(powers=powers, sc_counts=bad_counts)
 
     def test_no_corruption(self):
         """Ensure that calls to calculate scores are independent"""
