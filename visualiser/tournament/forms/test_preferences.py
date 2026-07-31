@@ -48,6 +48,11 @@ class PrefsFormTest(TestCase):
         form = PrefsForm(instance=self.tp)
         self.assertEqual(form.fields['prefs'].label, 'Arthur Bottom')
 
+    def test_prefs_form_prefs_field_label_unsaved_instance(self):
+        """An unsaved instance (no pk) should get the generic 'Player' label."""
+        form = PrefsForm(instance=TournamentPlayer())
+        self.assertEqual(form.fields['prefs'].label, 'Player')
+
     def test_prefs_form_prefs_help_text(self):
         form = PrefsForm(instance=self.tp)
         self.assertEqual(form.fields['prefs'].help_text, '')
