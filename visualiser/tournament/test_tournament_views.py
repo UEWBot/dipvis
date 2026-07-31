@@ -2166,6 +2166,34 @@ class TournamentViewTests(TestCase):
         # Clean up
         Preference.objects.filter(player__tournament=self.t2).all().delete()
 
+    def test_enter_prefs_no_change(self):
+        """Submitting unchanged preferences does not recreate Preference objects."""
+        # Set up initial preferences for all players
+        tps = list(self.t2.tournamentplayer_set.order_by('player'))
+        pref_strings = ['ART', 'FART', 'GRIT']
+        for i, tp in enumerate(tps):
+            tp.create_preferences_from_string(pref_strings[i % len(pref_strings)])
+        # Record PK of every Preference so we can detect delete/recreate
+        original_pks = set(Preference.objects.filter(player__tournament=self.t2).values_list('pk', flat=True))
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        # POST the same prefs back
+        data = {'form-MAX_NUM_FORMS': '1000',
+                'form-TOTAL_FORMS': str(len(tps)),
+                'form-INITIAL_FORMS': str(len(tps))}
+        for i, tp in enumerate(tps):
+            data[f'form-{i}-id'] = str(tp.id)
+            data[f'form-{i}-prefs'] = pref_strings[i % len(pref_strings)]
+        response = self.client.post(reverse('enter_prefs', args=(self.t2.pk,)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        # Preference PKs must be identical — save() was not called on unchanged forms
+        current_pks = set(Preference.objects.filter(player__tournament=self.t2).values_list('pk', flat=True))
+        self.assertEqual(original_pks, current_pks)
+        # Clean up
+        Preference.objects.filter(player__tournament=self.t2).delete()
+
     def test_enter_prefs_form_errors_rendered(self):
         """Invalid preference strings should be shown as field errors."""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
