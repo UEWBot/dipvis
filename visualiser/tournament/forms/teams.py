@@ -120,7 +120,7 @@ class BaseTeamsFormset(BaseModelFormSet):
         players = []
         for form in self.forms:
             for n in range(self.tournament.team_size):
-                players.append(form.cleaned_data[f'player_{n}'])
+                players.append(form.cleaned_data.get(f'player_{n}'))
         for p in players:
             if p and (players.count(p) > 1):
                 raise forms.ValidationError(_('Player %(player)s appears in multiple teams'),

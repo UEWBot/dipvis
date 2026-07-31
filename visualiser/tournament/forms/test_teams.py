@@ -69,6 +69,22 @@ class TeamFormTest(TestCase):
         """existing team instance should be supported"""
         TeamForm(tournament=self.t, instance=self.tm)
 
+    def test_team_form_no_tournament_inferred_from_instance(self):
+        """Tournament can be inferred from an existing Team instance."""
+        form = TeamForm(instance=self.tm)
+        self.assertEqual(form.tournament, self.t)
+
+    def test_team_form_no_tournament_raises(self):
+        """TeamForm raises ValueError when no tournament can be determined."""
+        with self.assertRaises(ValueError):
+            TeamForm()
+
+    def test_team_form_player_initial_values(self):
+        """Players of an existing team are pre-populated as form initial values."""
+        form = TeamForm(tournament=self.t, instance=self.tm)
+        # self.tm has only p2 as a player
+        self.assertEqual(form.initial.get('player_0'), self.p2.pk)
+
     def test_team_repeated_player(self):
         """Same player can't appear more than once in a team"""
         form = TeamForm(tournament=self.t, data={'name': 'Sausages',
@@ -155,6 +171,27 @@ class TeamsFormsetTest(TestCase):
                             form=TeamForm,
                             extra=2,
                             formset=BaseTeamsFormset)
+
+    def test_teams_formset_no_queryset(self):
+        """Without an explicit queryset, the formset defaults to tournament.team_set.all()."""
+        formset = self.TeamsFormset(tournament=self.t)
+        initial_ids = {form.instance.id for form in formset.forms[:formset.initial_form_count()]}
+        self.assertIn(self.tm.pk, initial_ids)
+
+    def test_teams_formset_clean_blank_extra_form(self):
+        """A blank extra form is accepted; the empty name and absent players are skipped."""
+        data = {'form-TOTAL_FORMS': '2',
+                'form-INITIAL_FORMS': '1',
+                'form-MAX_NUM_FORMS': '1000',
+                'form-MIN_NUM_FORMS': '0',
+                'form-0-id': str(self.tm.pk),
+                'form-0-name': 'Team 0',
+                'form-0-player_0': str(self.p1.pk),
+                'form-0-player_1': str(self.p2.pk),
+                # form-1 is left entirely blank (extra form)
+               }
+        formset = self.TeamsFormset(data, tournament=self.t, queryset=self.t.team_set.all())
+        self.assertIs(True, formset.is_valid())
 
     def test_teams_success(self):
         data = {'form-TOTAL_FORMS': '2',
