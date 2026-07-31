@@ -154,6 +154,15 @@ class AwardsFormsetTest(TestCase):
                 player_pks = [choice[0].value for choice in form.fields['players'].choices]
                 self.assertNotIn(self.tp_unranked.pk, player_pks)
 
+    def test_awards_formset_no_queryset(self):
+        """When no queryset is supplied, BaseAwardsFormset defaults to tournament.awards.all()."""
+        formset = self.AwardsFormset(tournament=self.t)
+        award_ids = {form.instance.id for form in formset}
+        self.assertEqual(len(formset), 3)
+        self.assertIn(self.a1.id, award_ids)
+        self.assertIn(self.a2.id, award_ids)
+        self.assertIn(self.a3.id, award_ids)
+
     def test_awards_formset_initial(self):
         awards = list(self.t.awards.all())
         expected_players = {self.a1.id: [self.tp1.id],
