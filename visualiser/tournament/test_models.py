@@ -5874,6 +5874,60 @@ class TournamentTests(TestCase):
             self.assertIn(published_round.pk, superuser_ids)
             self.assertIn(unpublished_round.pk, superuser_ids)
         finally:
+            unpublished_tournament.delete()
+            published_tournament.delete()
+            manager.delete()
+            other_user.delete()
+            superuser.delete()
+
+    def test_tournament_admin_queryset_hides_unpublished_for_non_managers(self):
+        today = date.today()
+        manager = User.objects.create_user(username='tournament-list-manager',
+                                           is_staff=True)
+        other_user = User.objects.create_user(username='tournament-list-non-manager',
+                                              is_staff=True)
+        superuser = User.objects.create_user(username='tournament-list-superuser',
+                                             is_staff=True,
+                                             is_superuser=True)
+
+        published_tournament = Tournament.objects.create(name='Published tournament list test',
+                                                         start_date=today,
+                                                         end_date=today + HOURS_24,
+                                                         round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                         tournament_scoring_system='Sum all round scores',
+                                                         draw_secrecy=DrawSecrecy.SECRET,
+                                                         is_published=True)
+        unpublished_tournament = Tournament.objects.create(name='Unpublished tournament list test',
+                                                           start_date=today,
+                                                           end_date=today + HOURS_24,
+                                                           round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                           tournament_scoring_system='Sum all round scores',
+                                                           draw_secrecy=DrawSecrecy.SECRET,
+                                                           is_published=False)
+
+        try:
+            unpublished_tournament.managers.add(manager)
+            admin_instance = TournamentAdmin(Tournament, AdminSite())
+
+            manager_request = RequestFactory().get('/admin/tournament/tournament/')
+            manager_request.user = manager
+            other_request = RequestFactory().get('/admin/tournament/tournament/')
+            other_request.user = other_user
+            superuser_request = RequestFactory().get('/admin/tournament/tournament/')
+            superuser_request.user = superuser
+
+            manager_ids = list(admin_instance.get_queryset(manager_request).values_list('pk', flat=True))
+            self.assertIn(published_tournament.pk, manager_ids)
+            self.assertIn(unpublished_tournament.pk, manager_ids)
+
+            other_ids = list(admin_instance.get_queryset(other_request).values_list('pk', flat=True))
+            self.assertIn(published_tournament.pk, other_ids)
+            self.assertNotIn(unpublished_tournament.pk, other_ids)
+
+            superuser_ids = list(admin_instance.get_queryset(superuser_request).values_list('pk', flat=True))
+            self.assertIn(published_tournament.pk, superuser_ids)
+            self.assertIn(unpublished_tournament.pk, superuser_ids)
+        finally:
             published_tournament.delete()
             unpublished_tournament.delete()
             manager.delete()

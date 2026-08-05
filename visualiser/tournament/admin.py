@@ -337,6 +337,15 @@ class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     def get_tournament_for_permission(self, obj):
         return obj
 
+    def get_queryset(self, request):
+        """Tournament IS the tournament — filter directly on its own fields."""
+        qs = admin.ModelAdmin.get_queryset(self, request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(
+            Q(managers=request.user) | Q(is_published=True)
+        ).distinct()
+
     def has_tournament_change_permission(self, request, obj, tournament):
         # Tournament managers may always edit the Tournament object itself,
         # including toggling editable.
