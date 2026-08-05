@@ -3,7 +3,7 @@
 from django.db import migrations
 
 
-def _update_one_model(model_name):
+def _update_one_model(apps, model_name):
     model = apps.get_model("tournament", model_name)
     for row in model.objects.all():
         row.calculated_score = row.score
@@ -15,10 +15,10 @@ def set_calculated_score(apps, schema_editor):
     # Now, the system sets calculated_score
     # If they don't match, the system will not update score
     # and it will use score as the actual score
-    _update_one_model("GamePlayer")
-    _update_one_model("RoundPlayer")
-    _update_one_model("TournamentPlayer")
-    _update_one_model("Team")
+    _update_one_model(apps, "GamePlayer")
+    _update_one_model(apps, "RoundPlayer")
+    _update_one_model(apps, "TournamentPlayer")
+    _update_one_model(apps, "Team")
 
 class Migration(migrations.Migration):
 
@@ -26,4 +26,6 @@ class Migration(migrations.Migration):
         ("tournament", "0176_alter_gameimage_options_and_more"),
     ]
 
-    operations = []
+    operations = [
+        migrations.RunPython(set_calculated_score, migrations.RunPython.noop),
+    ]
