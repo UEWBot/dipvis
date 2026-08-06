@@ -174,9 +174,10 @@ def _validate_wdd_id(url, param, value):
         # Assume the id is ok
         return
     if r.status_code != requests.codes.ok:
-        raise ValidationError(_(u'%(value)d is not a valid WDD %(param)s'),
+        raise ValidationError(_(u'%(value)d is not a valid WDD %(param)s, code %(status)d'),
                               params={'value': value,
-                                      'param': param})
+                                      'param': param,
+                                      'status': r.status_code})
 
 
 def validate_wdd_player_id(value):

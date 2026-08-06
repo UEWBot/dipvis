@@ -45,9 +45,10 @@ def _validate_wdr_id(path, param, value):
         # Assume the id is ok
         return
     if r.status_code != requests.codes.ok:
-        raise ValidationError(_(u'%(value)d is not a valid WDR %(param)s'),
+        raise ValidationError(_(u'%(value)d is not a valid WDR %(param)s, code %(status)d'),
                               params={'value': value,
-                                      'param': param})
+                                      'param': param,
+                                      'status': r.status_code})
 
 
 def validate_wdr_player_id(value):
