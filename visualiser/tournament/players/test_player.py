@@ -24,10 +24,10 @@ from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import (MASK_ALL_BG, MASK_BOARDS_TOPPED,
-                                MASK_TOP_BOARDS_PLAYED, PlayerAward, PlayerGameResult,
-                                PlayerRanking, PlayerTitle,
-                                PlayerTournamentRanking, WDDPlayer,
-                                WDRNotAccessible)
+                                MASK_TOP_BOARDS_PLAYED, InvalidWDRId,
+                                PlayerAward, PlayerGameResult, PlayerRanking,
+                                PlayerTitle, PlayerTournamentRanking,
+                                WDDPlayer, WDRNotAccessible)
 
 from . import Player, player_picture_location
 
@@ -317,6 +317,16 @@ class PlayerTests(TestCase):
         with patch('tournament.players.player.WDRBackground', side_effect=WDRNotAccessible):
             res = p.wdr_name()
         self.assertEqual(res, '')
+        # Cleanup
+        p.delete()
+
+    def test_player_wdr_name_invalid_id(self):
+        p = Player.objects.create(first_name='John',
+                                  last_name='Smith',
+                                  wdr_player_id=1234)
+        with patch('tournament.players.player.WDRBackground', side_effect=InvalidWDRId):
+            res = p.wdr_name()
+        self.assertEqual(res, '(Invalid WDR Id)')
         # Cleanup
         p.delete()
 

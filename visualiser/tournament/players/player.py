@@ -42,7 +42,7 @@ from tournament.wdr import WDR_BASE_URL, validate_wdr_player_id
 
 from .game_results import GameResults
 from .position_str import position_str
-from .wdr_background import WDRBackground, WDRNotAccessible
+from .wdr_background import InvalidWDRId, WDRBackground, WDRNotAccessible
 
 
 # Mask values to choose which background strings to include
@@ -165,11 +165,18 @@ class Player(models.Model):
         return ''
 
     def wdr_name(self):
-        """Returns the name of the player in the WDR as a string"""
+        """
+        Returns the name of the player in the WDR as a string
+
+        If the WDR is inaccessible, returns "".
+        If the Player's WDR id is invalid, returns "(Invalid WDR Id)".
+        """
         try:
             bg = WDRBackground(self.wdr_player_id)
         except WDRNotAccessible:
             return ''
+        except InvalidWDRId:
+            return '(Invalid WDR Id)'
         names = bg.firstname_lastname()
         return f'{names[0]} {names[1]}'
 
