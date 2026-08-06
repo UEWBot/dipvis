@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "DipTV - Circuit Index" %}{% endblock title %}
+
+{% block content %}
+<h1>{% trans "Circuit Index" %}</h1>
+{% if object_list %}
+  <ul>
+  {% for c in object_list %}
+    <li><a href="{{ c.get_absolute_url }}">{{ c }}</a></li>
+  {% endfor %}
+  </ul>
+{% else %}
+  <p>{% trans "No circuits exist in the database." %}</p>
+{% endif %}
+{% endblock content %}

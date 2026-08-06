@@ -24,6 +24,16 @@
   {% endfor %}
 </ul>
 <p>{% trans "Italics indicate position may change" %}</p>
+
+<h2>{% trans "Circuits" %}</h2>
+<ul>
+  {% for cp in player.circuitplayer_set.all %}
+    <li><a href="{{ cp.circuit.get_absolute_url }}">{{ cp.circuit }}</a></li>
+  {% empty %}
+    <li>{% trans "No circuits in the database" %}</li>
+  {% endfor %}
+</ul>
+
 <h2>{% trans "Background" %}</h2>
 <p>{% blocktrans with wdd_url="http://www.world-diplomacy-database.com/" wdr_url="http://www.world-diplomacy-reference.com/" %}From the <a href="{{wdr_url}}">World Diplomacy Reference</a> and/or the <a href="{{wdd_url}}">World Diplomacy Database</a></p>{% endblocktrans %}
 <p>{% blocktrans with datetime=player.background_updated %}Last retrieved {{datetime}}{% endblocktrans %}</p>

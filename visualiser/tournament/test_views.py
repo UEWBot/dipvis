@@ -28,6 +28,12 @@ from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
 class ViewIndexTests(TestCase):
     """Test the various index views with no objects of that type"""
 
+    def test_circuit_index(self):
+        response = self.client.get(reverse('circuit_index'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'circuits/index.html')
+
     def test_series_index(self):
         response = self.client.get(reverse('series_index'),
                                    secure=True)

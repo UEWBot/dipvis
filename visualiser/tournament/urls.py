@@ -16,7 +16,7 @@
 
 from django.urls import include, path, register_converter
 
-from tournament import (game_views, round_views, series_views,
+from tournament import (circuit_views, game_views, round_views, series_views,
                         tournament_player_views, tournament_views)
 from tournament.diplomacy import FIRST_YEAR
 
@@ -171,6 +171,18 @@ series_patterns = [
          {'include_vftf': False}, name='series_players_ftf'),
 ]
 
+circuits_patterns = [
+    path('', circuit_views.CircuitIndexView.as_view(), name='circuit_index'),
+    path('series/<slug:slug>/', circuit_views.CircuitSeriesDetailView.as_view(),
+         name='circuit_series_detail'),
+    path('<int:circuit_id>/', circuit_views.CircuitDetailView.as_view(),
+         name='circuit_detail'),
+    path('<int:circuit_id>/scores/', circuit_views.circuit_scores,
+         name='circuit_scores'),
+    path('<int:circuit_id>/players/<int:circuit_player_id>/',
+         circuit_views.circuit_player_detail, name='circuit_player_detail'),
+]
+
 tournament_patterns = [
     path('', tournament_views.tournament_simple,
          {'template': 'detail'}, name='tournament_detail'),
@@ -272,6 +284,7 @@ api_patterns = [
 
 urlpatterns = [
     path('', tournament_views.tournament_index, name='index'),
+     path('circuits/', include(circuits_patterns)),
     path('series/', include(series_patterns)),
     path('api/v<int:version>/', include(api_patterns)),
     path('<int:tournament_id>/', include(tournament_patterns)),

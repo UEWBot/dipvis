@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load humanize %}
+
+{% block title %}{% blocktrans with circuit=circuit %}DipTV - {{ circuit }} Scores{% endblocktrans %}{% endblock title %}
+
+{% block content %}
+<h1><a href="{{ circuit.get_absolute_url }}">{{ circuit }}</a> {% trans "Scores" %}</h1>
+
+<table class="form">
+  <thead>
+    <tr>
+      <th>{% trans "Position" %}</th>
+      <th>{% trans "Player" %}</th>
+      {% for t in tournaments %}
+        <th><a href="{{ t.get_absolute_url }}">{{ t }}</a></th>
+      {% endfor %}
+      <th>{% trans "Circuit" %}</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in scores %}
+      <tr class="{% cycle 'odd_row' 'even_row' %}">
+        <td style="text-align:right">{{ row.rank|ordinal }}</td>
+        <td style="text-align:right"><a href="{{ row.player.get_absolute_url }}">{{ row.player.player }}</a></td>
+        {% for c in row.contributions %}
+          <td style="text-align:right">
+            {% if c.tp %}
+              {% if not c.counts %}<del>{% endif %}
+              {{ c.percentile|floatformat:3 }} (<a href="{{ c.tp.get_absolute_url }}">{{ c.tp.score|floatformat:2 }}</a>)
+              {% if not c.counts %}</del>{% endif %}
+            {% endif %}
+          </td>
+        {% endfor %}
+        <td style="text-align:right">{{ row.score|floatformat:3 }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p>0.00 (0.00) - {% trans "percentile contribution (tournament score)" %}<br>
+<del>0.00 (0.00)</del> - {% trans "contribution dropped from the best N count" %}</p>
+{% endblock content %}

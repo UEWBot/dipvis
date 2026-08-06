@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}DipTV - {{ object }}{% endblock title %}
+
+{% block content %}
+<h1>{{ object }}</h1>
+<p>{{ object.description|urlize }}</p>
+
+<h2>{% trans "Circuits" %}</h2>
+<ul>
+  {% for c in object.circuits.all %}
+    <li><a href="{{ c.get_absolute_url }}">{{ c }}</a></li>
+  {% empty %}
+    <li>{% trans "No circuits in the database" %}</li>
+  {% endfor %}
+</ul>
+{% endblock content %}

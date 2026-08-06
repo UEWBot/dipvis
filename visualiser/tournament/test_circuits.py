@@ -23,7 +23,7 @@ from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django.urls import NoReverseMatch
+from django.urls import reverse
 
 from tournament.circuits import (_percentiles, Circuit, CircuitPlayer,
                                  CircuitSeries,
@@ -301,13 +301,13 @@ class CircuitTests(TestCase):
                                          scoring_system='Sum best 3 tournament percentiles')
         self.assertEqual(str(circuit), f'String circuit {self.today.year}')
 
-    def test_circuit_get_absolute_url_raises_when_route_missing(self):
+    def test_circuit_get_absolute_url(self):
         circuit = Circuit.objects.create(name='Missing route circuit',
                                          start_date=self.today,
                                          end_date=self.today,
                                          scoring_system='Sum best 3 tournament percentiles')
-        with self.assertRaises(NoReverseMatch):
-            circuit.get_absolute_url()
+        self.assertEqual(circuit.get_absolute_url(),
+                         reverse('circuit_detail', args=(circuit.id,)))
 
     def test_scoring_system_obj_invalid_raises(self):
         circuit = Circuit.objects.create(name='Invalid scoring obj circuit',
@@ -599,14 +599,14 @@ class CircuitTests(TestCase):
         self.assertIn(str(self.p1), str(cp))
         self.assertIn(str(circuit), str(cp))
 
-    def test_circuit_player_get_absolute_url_raises_when_route_missing(self):
+    def test_circuit_player_get_absolute_url(self):
         circuit = Circuit.objects.create(name='CP URL circuit',
                                          start_date=self.today,
                                          end_date=self.today,
                                          scoring_system='Sum best 3 tournament percentiles')
         cp = CircuitPlayer.objects.create(player=self.p1, circuit=circuit)
-        with self.assertRaises(NoReverseMatch):
-            cp.get_absolute_url()
+        self.assertEqual(cp.get_absolute_url(),
+                         reverse('circuit_player_detail', args=(circuit.id, cp.id)))
 
     def test_positions_and_scores_assigns_tied_ranks(self):
         circuit = Circuit.objects.create(name='Position tie circuit',
@@ -720,6 +720,6 @@ class CircuitTests(TestCase):
     def test_circuit_series_get_absolute_url(self):
         series = CircuitSeries.objects.create(name='Euro Circuit',
                                               description='Annual euro circuit')
-        with self.assertRaises(NoReverseMatch):
-            series.get_absolute_url()
+        self.assertEqual(series.get_absolute_url(),
+                         reverse('circuit_series_detail', args=(series.slug,)))
 

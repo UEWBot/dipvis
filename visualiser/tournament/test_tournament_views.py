@@ -24,6 +24,7 @@ from django.contrib.auth.models import Permission, User
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
+from tournament.circuits import Circuit
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
                                R_SCORING_SYSTEMS, Award, CentreCount,
@@ -532,6 +533,11 @@ class TournamentViewTests(TestCase):
 
         series = Series.objects.create(name='Coverage Series')
         series.tournaments.add(t)
+        circuit = Circuit.objects.create(name='Coverage Circuit',
+                         start_date=t.start_date,
+                         end_date=t.end_date,
+                         scoring_system='Sum best 3 tournament percentiles')
+        circuit.tournaments.add(t)
 
         dbn = DBNCoverage.objects.create(tournament=t,
                                          dbn_url='https://example.com/dbn-test',
@@ -556,6 +562,8 @@ class TournamentViewTests(TestCase):
         self.assertContains(response, 'View on WDR')
         self.assertContains(response, 'Part of the following series:')
         self.assertContains(response, 'Coverage Series')
+        self.assertContains(response, 'Part of the following circuits:')
+        self.assertContains(response, 'Coverage Circuit')
         self.assertContains(response, 'Counts of votes in favour of and against draws are revealed.')
         self.assertContains(response, 'Teams of 3 players')
         self.assertContains(response, 'Team round:')
@@ -574,6 +582,7 @@ class TournamentViewTests(TestCase):
         r.is_team_round = False
         r.save(update_fields=['is_team_round'])
         dbn.delete()
+        circuit.delete()
         series.delete()
         t.wdr_tournament_id = old_wdr
         t.wdd_tournament_id = old_wdd

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}DipTV - {{ object }}{% endblock title %}
+
+{% block content %}
+<h1>{{ object }}</h1>
+<p>{{ object.start_date }} - {{ object.end_date }}</p>
+
+{% if object.wdr_circuit_id %}
+  <p><a href="{{ object.wdr_url }}">{% trans "View on WDR" %}</a></p>
+{% elif object.wdd_circuit_id %}
+  <p><a href="{{ object.wdd_url }}">{% trans "View on WDD" %}</a></p>
+{% endif %}
+
+<p>{% trans "Scoring system:" %} {{ object.scoring_system_obj }}</p>
+
+{% if object.circuitseries_set.exists %}
+<h2>{% trans "Series" %}</h2>
+  <p>{% trans "Part of the following series:" %}</p>
+  <ul>
+    {% for series in object.circuitseries_set.all %}
+      <li><a href="{{ series.get_absolute_url }}">{{ series }}</a></li>
+    {% endfor %}
+  </ul>
+{% endif %}
+
+<h2>{% trans "Tournaments" %}</h2>
+<ul>
+  {% for t in object.tournaments.all %}
+    <li><a href="{{ t.get_absolute_url }}">{{ t }}</a></li>
+  {% empty %}
+    <li>{% trans "No tournaments in this circuit yet." %}</li>
+  {% endfor %}
+</ul>
+
+<h2>{% trans "Views" %}</h2>
+<ul>
+  <li><a href="{% url 'circuit_scores' object.id %}">{% trans "Scores" %}</a></li>
+</ul>
+
+{% endblock content %}

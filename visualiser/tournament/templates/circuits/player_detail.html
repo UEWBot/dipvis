@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}DipTV - {{ circuit_player }}{% endblock title %}
+
+{% block content %}
+<h1>{{ circuit_player }}</h1>
+<p><a href="{{ circuit.get_absolute_url }}">{{ circuit }}</a></p>
+<p>{% trans "Score:" %} {{ circuit_player.score|floatformat:2 }}</p>
+<p><a href="{{circuit_player.player.get_absolute_url }}">{% trans "Player Background" %}</a></p>
+{% endblock content %}

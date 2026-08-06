@@ -26,6 +26,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, tag
 from django.urls import reverse
 
+from tournament.circuits import Circuit, CircuitPlayer
 from tournament.diplomacy import GreatPower
 from tournament.models import DrawSecrecy, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Tournament, TournamentPlayer
 from tournament.players import Player, PlayerGameResult, WDDPlayer
@@ -73,8 +74,42 @@ class PlayerViewTests(TestCase):
         self.assertTemplateUsed(response, 'players/detail.html')
         self.assertContains(response, str(self.p1))
         self.assertContains(response, 'No tournaments in the database')
+        self.assertContains(response, 'No circuits in the database')
         self.assertContains(response, 'WPE7 Scores')
         self.assertContains(response, 'Compare With Another Player')
+
+    def test_detail_shows_circuit_participation_links(self):
+        today = date.today()
+        t = Tournament.objects.create(name='Circuit Participation Test',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True)
+        tp = TournamentPlayer.objects.create(player=self.p1,
+                                             tournament=t,
+                                             score=9.5)
+        circuit = Circuit.objects.create(name='Player Circuit',
+                                         start_date=today,
+                                         end_date=today,
+                                         scoring_system='Sum best 3 tournament percentiles')
+        circuit.tournaments.add(t)
+        cp = CircuitPlayer.objects.get(player=self.p1,
+                           circuit=circuit)
+        cp.tournamentplayers.add(tp)
+
+        response = self.client.get(reverse('player_detail',
+                                           args=(self.p1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'players/detail.html')
+        self.assertContains(response, 'Player Circuit')
+        self.assertContains(response, circuit.get_absolute_url())
+
+        # Cleanup
+        circuit.delete()
+        t.delete()
 
     def test_detail_location_hidden_when_blank(self):
         self.assertEqual(self.p1.location, '')
