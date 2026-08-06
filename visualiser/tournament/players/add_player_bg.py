@@ -149,6 +149,7 @@ def _wdr_tournament_should_be_included(t):
                   'EGP',   # European Grand Prix
                   'NAGP',  # North American Grand Prix
                   'BIC',   # Bismark Cup
+                  'GHOST', # Simulated (retroactive) circuit
                   'nCIR',  # National Circuit
                   'NCIR',  # National Circuit
                   'CIR']:  # Circuit
