@@ -9941,23 +9941,22 @@ class RoundPlayerTests(TestCase):
 
         # This next block will only work in Django 4.1 and above,
         # where we can use signals
-        if False:
-            # Check that we have the scores we expect
-            tp1 = t.tournamentplayer_set.get(player=self.p9)
-            self.assertEqual(tp1.score, 4005)
-            tp2 = t.tournamentplayer_set.get(player=self.p10)
-            self.assertEqual(tp2.score, 4005)
+        # Check that we have the scores we expect
+        tp1 = t.tournamentplayer_set.get(player=self.p9)
+        self.assertEqual(tp1.score, 4005)
+        tp2 = t.tournamentplayer_set.get(player=self.p10)
+        self.assertEqual(tp2.score, 4005)
 
-            # Delete the other two RoundPlayers who are sitting out, using QuerySet.delete()
-            qs = r.roundplayer_set.filter(score=4005)
-            self.assertEqual(len(qs), 2)
-            qs.delete()
+        # Delete the other two RoundPlayers who are sitting out, using QuerySet.delete()
+        qs = r.roundplayer_set.filter(score=4005)
+        self.assertEqual(len(qs), 2)
+        qs.delete()
 
-            # Validate their scores
-            tp1.refresh_from_db()
-            self.assertEqual(tp1.score, 0)
-            tp2.refresh_from_db()
-            self.assertEqual(tp2.score, 0)
+        # Validate their scores
+        tp1.refresh_from_db()
+        self.assertEqual(tp1.score, 0)
+        tp2.refresh_from_db()
+        self.assertEqual(tp2.score, 0)
 
         # Clean up
         t.delete()

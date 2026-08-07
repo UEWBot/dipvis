@@ -34,7 +34,9 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import F, Max, Q, Sum
+from django.db.models.signals import post_delete
 from django.db.models.functions import Coalesce, Rank
+from django.dispatch import receiver
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.utils.text import slugify
@@ -3195,13 +3197,6 @@ class RoundPlayer(models.Model):
         return _(u'%(player)s in %(round)s') % {'player': self.player,
                                                 'round': self.the_round}
 
-    def delete(self, *args, **kwargs):
-        ret = super().delete(*args, **kwargs)
-        # Force a recalculation of scores, if necessary
-        if self.score != 0.0:
-            self.the_round.tournament.update_scores([self.player])
-        return ret
-
     def clean(self):
         """
         Validate the object.
@@ -3246,6 +3241,19 @@ class RoundPlayer(models.Model):
         Returns a QuerySet for the corresponding GamePlayers.
         """
         return self.player.gameplayer_set.filter(game__the_round=self.the_round).distinct()
+
+
+@receiver(post_delete, sender=RoundPlayer)
+def _update_scores_after_roundplayer_delete(sender, instance, **kwargs):
+    """Keep tournament scores in sync when RoundPlayers are deleted via QuerySet.delete()."""
+    if instance.score != 0.0:
+        try:
+            instance.tournamentplayer()
+        except TournamentPlayer.DoesNotExist:
+            # Don't do anything if the player is no longer in the tournament
+            pass
+        else:
+            instance.the_round.tournament.update_scores([instance.player])
 
 
 class GamePlayer(models.Model):
