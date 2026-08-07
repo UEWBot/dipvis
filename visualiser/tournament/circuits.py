@@ -19,6 +19,7 @@ Circuit models for the Diplomacy Tournament Visualiser.
 """
 
 from abc import ABC, abstractmethod
+from collections import defaultdict
 from operator import itemgetter
 
 from django.core.exceptions import ValidationError
@@ -110,32 +111,68 @@ class CScoringSumPercentiles(CircuitScoringSystem):
         """
         Returns the circuit scores.
 
-        circuit_players must be circuit.circuitplayer_set.all().
+        circuit_players must be circuit.circuitplayer_set.all(), fetched with
+        select_related('player') so that cp.player lookups are free.
 
         Returns a dict, indexed by player key, of circuit scores.
         """
+        # Build the set of Player objects for all CircuitPlayers.
+        # Relies on select_related('player') being applied by the caller so
+        # this set comprehension issues no extra queries.
         players = {cp.player for cp in circuit_players}
+
         tournaments = circuit.tournaments.all()
-        # First we need the percentiles for every tournament
+
+        # Query 1: PKs of every TournamentPlayer explicitly linked to a
+        # CircuitPlayer in this circuit.  Materialising as a frozenset means
+        # we pay for this lookup exactly once.  The previous implementation
+        # rebuilt an equivalent subquery inside the tournament loop, causing it
+        # to be re-evaluated once per INTERSECT.
+        linked_tp_ids = frozenset(
+            TournamentPlayer.objects
+            .filter(circuitplayer__in=circuit_players)
+            .values_list('id', flat=True)
+        )
+
+        # Query 2: fetch all qualifying TournamentPlayers across every circuit
+        # tournament in a single round-trip, then group in Python.
+        # select_related('player') avoids an N+1 when _percentiles accesses
+        # tp.player for each row.  The previous INTERSECT approach prevented
+        # chaining select_related, causing a separate Player fetch per TP.
+        # player__in=players is a safety guard against data inconsistency where
+        # a CircuitPlayer might be linked to a TP belonging to a different player.
+        all_tps = (
+            TournamentPlayer.objects
+            .filter(tournament__in=tournaments, player__in=players, id__in=linked_tp_ids)
+            .select_related('player')
+            .order_by()
+        )
+
+        # Group the fetched TPs by tournament_id so _percentiles can be called
+        # per tournament without issuing any further queries.
+        tps_by_tournament = defaultdict(list)
+        for tp in all_tps:
+            tps_by_tournament[tp.tournament_id].append(tp)
+
+        # Calculate the percentile each player achieved in each tournament.
         percentiles = {}
         for t in tournaments:
-            # All the interesting players of this tournament
-            tps1 = t.tournamentplayer_set.filter(player__in=players).order_by()
-            # All the TPs included in circuit_players.tournamentplayers
-            tps2 = TournamentPlayer.objects.filter(circuitplayer__in=circuit_players).order_by()
-            # TPs in both QuerySets
-            tps = tps1.intersection(tps2)
-            percentiles[t] = _percentiles(tps)
-        # Now we can add up the top N for each player
+            # tps_by_tournament.get returns [] for tournaments with no linked
+            # TPs (e.g. a newly added tournament with no players yet).
+            percentiles[t] = _percentiles(tps_by_tournament.get(t.id, []))
+
+        # Sum the best scored_rounds percentiles for each player.
         retval = {}
         for p in players:
-            # Get this player's percentiles, in order
+            # Collect this player's percentile from every tournament where they
+            # have a linked TournamentPlayer, then sort best-first.
             p_scores = []
             for t in tournaments:
                 if p in percentiles[t]:
                     p_scores.append(percentiles[t][p])
             p_scores.sort(reverse=True)
-            # Sum the first N
+
+            # Accumulate the top scored_rounds values; any extras are ignored.
             retval[p] = 0.0
             for n, score in enumerate(p_scores):
                 if n < self.scored_rounds:
@@ -245,7 +282,7 @@ class Circuit(models.Model):
           (1 for first place, etc) and float circuit scores.
         """
         scores = {}
-        for cp in self.circuitplayer_set.all():
+        for cp in self.circuitplayer_set.select_related('player').all():
             scores[cp.player] = cp.score
         result = {}
         last_score = None
@@ -263,7 +300,10 @@ class Circuit(models.Model):
         Recalculate the scores for the Circuit and store them in CircuitPlayers
         """
         system = self.scoring_system_obj()
-        cps = self.circuitplayer_set.all()
+        # select_related('player') so that scores() can build the players set
+        # and the loop below can call scores.get(cp.player) without issuing an
+        # extra query per CircuitPlayer.
+        cps = self.circuitplayer_set.select_related('player').all()
         scores = system.scores(self, cps)
         to_update = []
         for cp in cps:
@@ -281,12 +321,36 @@ class Circuit(models.Model):
         For any missing Tournaments, add them.
         Also update all CircuitPlayer scores.
         """
-        for t in self.tournaments.all():
-            # Add all ranked TournamentPlayers to CircuitPlayers
-            for tp in t.tournamentplayer_set.filter(unranked=False):
-                cp, _ = CircuitPlayer.objects.get_or_create(player=tp.player,
-                                                            circuit=self)
-                cp.tournamentplayers.add(tp)
+        ranked_tps = TournamentPlayer.objects.filter(
+            tournament__circuit=self,
+            unranked=False
+        ).select_related('player').distinct()
+
+        existing_cp_by_player = {
+            cp.player_id: cp.id
+            for cp in self.circuitplayer_set.only('id', 'player_id')
+        }
+
+        missing_player_ids = {
+            tp.player_id for tp in ranked_tps
+        } - set(existing_cp_by_player.keys())
+        if missing_player_ids:
+            CircuitPlayer.objects.bulk_create([
+                CircuitPlayer(player_id=player_id, circuit=self)
+                for player_id in missing_player_ids
+            ])
+            existing_cp_by_player = {
+                cp.player_id: cp.id
+                for cp in self.circuitplayer_set.only('id', 'player_id')
+            }
+
+        through = CircuitPlayer.tournamentplayers.through
+        through.objects.bulk_create([
+            through(circuitplayer_id=existing_cp_by_player[tp.player_id],
+                    tournamentplayer_id=tp.id)
+            for tp in ranked_tps
+        ], ignore_conflicts=True)
+
         try:
             validate_circuit_scoring_system(self.scoring_system)
         except ValidationError:
@@ -296,17 +360,14 @@ class Circuit(models.Model):
 
     def remove_orphan_circuit_players(self):
         """Drop TournamentPlayer links and CircuitPlayers no longer in this Circuit."""
-        valid_tp_ids = set(TournamentPlayer.objects.filter(
-            tournament__in=self.tournaments.all()
-        ).values_list('id', flat=True))
+        through = CircuitPlayer.tournamentplayers.through
+        through.objects.filter(
+            circuitplayer__circuit=self
+        ).exclude(
+            tournamentplayer__tournament__circuit=self
+        ).delete()
 
-        for cp in self.circuitplayer_set.all():
-            stale_ids = list(cp.tournamentplayers.exclude(id__in=valid_tp_ids).values_list('id', flat=True))
-            if stale_ids:
-                cp.tournamentplayers.remove(*stale_ids)
-
-            if not cp.tournamentplayers.exists():
-                cp.delete()
+        self.circuitplayer_set.filter(tournamentplayers__isnull=True).delete()
 
         # Removing a CircuitPlayer may change other players scores
         try:
@@ -433,5 +494,5 @@ def _sync_circuit_scores_on_tournament_completion(sender, instance, created, **k
     if getattr(instance, '_editable_before_save', None) is not True:
         return
 
-    for circuit in Circuit.objects.filter(tournaments=instance).distinct():
+    for circuit in Circuit.objects.filter(tournaments=instance).only('id', 'scoring_system').distinct():
         circuit.add_or_update_circuit_players()

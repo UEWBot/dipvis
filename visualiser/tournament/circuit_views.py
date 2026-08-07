@@ -40,9 +40,9 @@ class CircuitDetailView(DetailView):
 def circuit_player_detail(request, circuit_id, circuit_player_id):
     """Circuit player detail."""
     circuit = get_object_or_404(Circuit, pk=circuit_id)
-    cp = get_object_or_404(CircuitPlayer, pk=circuit_player_id)
-    if cp.circuit_id != circuit.id:
-        raise Http404
+    cp = get_object_or_404(CircuitPlayer.objects.select_related('player', 'circuit'),
+                           pk=circuit_player_id,
+                           circuit_id=circuit_id)
     return render(request, 'circuits/player_detail.html',
                   {'circuit': circuit, 'circuit_player': cp})
 
@@ -54,24 +54,26 @@ def circuit_scores(request, circuit_id):
     cps = list(circuit.circuitplayer_set.select_related('player').order_by('-score',
                                                                             'player__last_name',
                                                                             'player__first_name'))
+    rankings = circuit.positions_and_scores()
 
     tps = CircuitPlayer.tournamentplayers.through.objects.filter(
         circuitplayer__circuit=circuit
     ).select_related('tournamentplayer',
+                     'tournamentplayer__player',
                      'circuitplayer__player',
                      'tournamentplayer__tournament')
 
     tp_by_cp_and_tournament = {}
-    tp_qs = []
+    tp_by_tournament = {}
     for link in tps:
         tp = link.tournamentplayer
         tp_by_cp_and_tournament[(link.circuitplayer_id, tp.tournament_id)] = tp
-        tp_qs.append(tp)
+        tp_by_tournament.setdefault(tp.tournament_id, []).append(tp)
 
     percentiles_by_tournament = {}
     # _percentiles expects TournamentPlayers from one Tournament.
     for tournament in tournaments:
-        tp_subset = [tp for tp in tp_qs if tp.tournament_id == tournament.id]
+        tp_subset = tp_by_tournament.get(tournament.id, [])
         percentiles_by_tournament[tournament.id] = _percentiles(tp_subset)
 
     scored_rounds = circuit.scoring_system_obj().scored_rounds
@@ -97,7 +99,7 @@ def circuit_scores(request, circuit_id):
         for c in scored[:scored_rounds]:
             c['counts'] = True
 
-        rows.append({'rank': circuit.positions_and_scores().get(cp.player, ('-', cp.score))[0],
+        rows.append({'rank': rankings.get(cp.player, ('-', cp.score))[0],
                      'player': cp,
                      'contributions': contributions,
                      'score': cp.score})

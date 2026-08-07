@@ -3,7 +3,9 @@
 
 from datetime import date, timedelta
 
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from tournament.circuits import Circuit, CircuitPlayer, CircuitSeries
@@ -115,3 +117,28 @@ class CircuitViewTests(TestCase):
         response = self.client.get(reverse('circuit_player_detail', args=(other.id, cp.id)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_circuit_scores_query_count_scales_well_with_more_players(self):
+        url = reverse('circuit_scores', args=(self.circuit.id,))
+
+        with CaptureQueriesContext(connection) as baseline_ctx:
+            response = self.client.get(url, secure=True)
+            self.assertEqual(response.status_code, 200)
+        baseline_queries = len(baseline_ctx)
+
+        extra_players = [
+            Player.objects.create(first_name=f'Extra{i}', last_name='Player')
+            for i in range(10)
+        ]
+        for i, player in enumerate(extra_players):
+            TournamentPlayer.objects.create(player=player, tournament=self.t1, score=20.0 + i)
+            TournamentPlayer.objects.create(player=player, tournament=self.t2, score=10.0 + i)
+        self.circuit.add_or_update_circuit_players()
+
+        with CaptureQueriesContext(connection) as expanded_ctx:
+            response = self.client.get(url, secure=True)
+            self.assertEqual(response.status_code, 200)
+        expanded_queries = len(expanded_ctx)
+
+        # Rendering more rows should not trigger N+1 database behaviour.
+        self.assertLessEqual(expanded_queries, baseline_queries + 2)

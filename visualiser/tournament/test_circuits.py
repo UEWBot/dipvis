@@ -22,7 +22,9 @@ from datetime import date
 from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from tournament.circuits import (_percentiles, Circuit, CircuitPlayer,
@@ -424,6 +426,39 @@ class CircuitTests(TestCase):
                           if q['sql'].upper().startswith('UPDATE')]
         self.assertEqual(len(update_queries), 0)
 
+    def test_update_scores_query_count_does_not_scale_with_tournament_count(self):
+        """update_scores() should use a fixed number of queries regardless of
+        how many tournaments or circuit players are involved."""
+        def _make_circuit_with_n_tournaments(name, n):
+            circuit = Circuit.objects.create(name=name,
+                                             start_date=self.today,
+                                             end_date=self.today,
+                                             scoring_system='Sum best 3 tournament percentiles')
+            for i in range(n):
+                t = self._new_tournament(f'{name} t{i}')
+                tp1 = t.tournamentplayer_set.create(player=self.p1, score=10.0 * (i + 1))
+                tp2 = t.tournamentplayer_set.create(player=self.p2, score=5.0 * (i + 1))
+                tp3 = t.tournamentplayer_set.create(player=self.p3, score=1.0 * (i + 1))
+                circuit.tournaments.add(t)
+                # Link TPs to their CircuitPlayers (created by the m2m signal)
+                for player, tp in [(self.p1, tp1), (self.p2, tp2), (self.p3, tp3)]:
+                    cp = CircuitPlayer.objects.get(circuit=circuit, player=player)
+                    cp.tournamentplayers.add(tp)
+            return circuit
+
+        small = _make_circuit_with_n_tournaments('Query count small', 2)
+        large = _make_circuit_with_n_tournaments('Query count large', 6)
+
+        with CaptureQueriesContext(connection) as small_ctx:
+            small.update_scores()
+        with CaptureQueriesContext(connection) as large_ctx:
+            large.update_scores()
+
+        # Query count must be identical: the optimised implementation fetches
+        # all tournaments' TPs in two fixed queries rather than one per tournament.
+        self.assertEqual(len(small_ctx), len(large_ctx),
+                         msg=f'small={len(small_ctx)} queries, large={len(large_ctx)} queries')
+
     def test_add_or_update_circuit_players_adds_ranked_only_and_is_idempotent(self):
         t = self._new_tournament('Add CP tournament')
         circuit = Circuit.objects.create(name='CP creation circuit',
@@ -443,6 +478,26 @@ class CircuitTests(TestCase):
         cp = cps.get(player=self.p1)
         self.assertEqual(cp.tournamentplayers.count(), 1)
         self.assertEqual(cp.tournamentplayers.first(), ranked_tp)
+
+    def test_add_or_update_circuit_players_second_run_is_not_more_expensive(self):
+        t1 = self._new_tournament('Sync query budget tournament 1')
+        t2 = self._new_tournament('Sync query budget tournament 2')
+        for idx, player in enumerate([self.p1, self.p2, self.p3], start=1):
+            t1.tournamentplayer_set.create(player=player, score=10.0 * idx, unranked=False)
+            t2.tournamentplayer_set.create(player=player, score=7.0 * idx, unranked=False)
+
+        circuit = Circuit.objects.create(name='Sync query budget circuit',
+                                         start_date=self.today,
+                                         end_date=self.today,
+                                         scoring_system='Sum best 3 tournament percentiles')
+        circuit.tournaments.add(t1, t2)
+
+        with CaptureQueriesContext(connection) as first_ctx:
+            circuit.add_or_update_circuit_players()
+        with CaptureQueriesContext(connection) as second_ctx:
+            circuit.add_or_update_circuit_players()
+
+        self.assertLessEqual(len(second_ctx), len(first_ctx))
 
     def test_tournaments_m2m_post_add_triggers_circuitplayer_sync(self):
         t = self._new_tournament('Signal sync tournament')
