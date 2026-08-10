@@ -146,7 +146,7 @@ class CircuitScoringTests(TestCase):
         circuit.tournaments.set(tournaments)
 
         scoring = circuit.scoring_system_obj()
-        scores = scoring.scores(circuit, circuit.circuitplayer_set.all())
+        scores = scoring.scores(circuit)
 
         # p1 beats p2 in each tournament -> percentile 0.5 each time. Best 3 count.
         self.assertEqual(scores[p1], 1.5)
@@ -185,7 +185,7 @@ class CircuitScoringTests(TestCase):
         cp2.tournamentplayers.set([tp2_t1])
 
         scoring = circuit.scoring_system_obj()
-        scores = scoring.scores(circuit, circuit.circuitplayer_set.all())
+        scores = scoring.scores(circuit)
 
         # p1 is the only circuit player in t2, so percentile there is 0.0.
         # In t1, p1 beats p2, so p1's percentile is 0.5, p2's is 0.0.
@@ -226,7 +226,7 @@ class CircuitScoringTests(TestCase):
         cp2 = CircuitPlayer.objects.create(player=p2, circuit=circuit)
         cp2.tournamentplayers.set([tp2_t1, tp2_t2])
         scoring = circuit.scoring_system_obj()
-        scores = scoring.scores(circuit, circuit.circuitplayer_set.all())
+        scores = scoring.scores(circuit)
         # p1 beats p2 in both; percentile 0.5 each time; scored_rounds=3 but only 2 available
         self.assertAlmostEqual(scores[p1], 1.0)
         self.assertAlmostEqual(scores[p2], 0.0)
@@ -250,7 +250,7 @@ class CircuitScoringTests(TestCase):
         cp1 = CircuitPlayer.objects.create(player=p1, circuit=circuit)
         cp1.tournamentplayers.add(tp1)
         scoring = CScoringSumPercentiles('Zero rounds', scored_rounds=0)
-        scores = scoring.scores(circuit, circuit.circuitplayer_set.all())
+        scores = scoring.scores(circuit)
         self.assertEqual(scores[p1], 0.0)
 
 

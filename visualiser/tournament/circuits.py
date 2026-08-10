@@ -48,11 +48,9 @@ class CircuitScoringSystem(ABC):
     name = ''
 
     @abstractmethod
-    def scores(self, circuit, circuit_players):
+    def scores(self, circuit):
         """
         Returns the circuit scores.
-
-        circuit_players must be circuit.circuitplayer_set.all().
 
         Returns a dict, indexed by player key, of circuit scores.
         """
@@ -107,18 +105,18 @@ class CScoringSumPercentiles(CircuitScoringSystem):
         self.name = name
         self.scored_rounds = scored_rounds
 
-    def scores(self, circuit, circuit_players):
+    def scores(self, circuit):
         """
         Returns the circuit scores.
 
-        circuit_players must be circuit.circuitplayer_set.all(), fetched with
-        select_related('player') so that cp.player lookups are free.
-
         Returns a dict, indexed by player key, of circuit scores.
         """
+        # Fetch CircuitPlayers once with select_related('player') so that
+        # the players-set build and all subsequent tp.player lookups inside
+        # _percentiles are query-free.
+        circuit_players = circuit.circuitplayer_set.select_related('player').all()
+
         # Build the set of Player objects for all CircuitPlayers.
-        # Relies on select_related('player') being applied by the caller so
-        # this set comprehension issues no extra queries.
         players = {cp.player for cp in circuit_players}
 
         tournaments = circuit.tournaments.all()
@@ -300,14 +298,14 @@ class Circuit(models.Model):
         Recalculate the scores for the Circuit and store them in CircuitPlayers
         """
         system = self.scoring_system_obj()
-        # select_related('player') so that scores() can build the players set
-        # and the loop below can call scores.get(cp.player) without issuing an
-        # extra query per CircuitPlayer.
+        # scores() owns its own CircuitPlayer fetch internally.
+        new_scores = system.scores(self)
+        # Fetch CircuitPlayers separately for the update loop; select_related
+        # avoids N+1 on cp.player in the scores.get() call below.
         cps = self.circuitplayer_set.select_related('player').all()
-        scores = system.scores(self, cps)
         to_update = []
         for cp in cps:
-            new_score = scores.get(cp.player, 0.0)
+            new_score = new_scores.get(cp.player, 0.0)
             if cp.score != new_score:
                 cp.score = new_score
                 to_update.append(cp)
