@@ -22,6 +22,8 @@ A Round may optionally be divided into two Pools, one with a set number of Games
 Each Game is played with a GameSet (e.g. the Avalon Hill edition).
 Tournaments may be part of a Series, for example an annual tournament or an
 event like DipCon that is hosted by different tournaments in different years.
+They may also be part of Circuits, which are meta-tournaments, usually
+geographic (e.g. "Tour of Britain 2015"). Circuits can be part of Circuit Series.
 A Tournament hands out Awards to deserving Players based on various criteria.
 By default, these are just seven "Best Country" awards.
 A Team is a group of players whose scores in certain Round(s) are added to give
@@ -154,7 +156,7 @@ https://example.com/admin/tournament/player/add/ where you can add them. Please
 do check before adding them - de-duplicating players who are in the system twice has
 to be done by hand and is quite tricky! Note that email address, if provided, will
 be used to send board calls to, and also to send a link to enter power preferences
-if that's how Great Powers are assigned in your Tournament. The "WDD id" is used to
+if that's how Great Powers are assigned in your Tournament. The "WDR id" is used to
 provide background information about the Player. The "picture" is for future use.
 Any "Backstabbr username" will be displayed in board calls for vFTF Tournaments.
 "Backstabbr profile URL" is still a work-in-progress.
@@ -284,10 +286,10 @@ change the "Best Country" recipients if needed on the "Awards" page for the Tour
 
 Once the Tournament is over and all the data has been entered, please uncheck the "Editable"
 checkbox for the Tournament (and Save it). This will help prevent inadvertant changes.
+This will also trigger updates of any Circuits the Tournament is part of.
 
-Upload to WDD
+Upload to WDR
 -------------
 
-Once your Tournament is complete, the system can generate the two CSV files needed to
-upload the results to the WDD. Once your Tournament is actually on the WDD, please take
-a moment to set its "WDD Id" (and Save it) to help with cross-referencing.
+Once your Tournament has been added to the WDR, please take a moment to set its "WDR Id"
+(and Save it) to help with cross-referencing.
