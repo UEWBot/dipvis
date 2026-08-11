@@ -284,7 +284,7 @@ api_patterns = [
 
 urlpatterns = [
     path('', tournament_views.tournament_index, name='index'),
-     path('circuits/', include(circuits_patterns)),
+    path('circuits/', include(circuits_patterns)),
     path('series/', include(series_patterns)),
     path('api/v<int:version>/', include(api_patterns)),
     path('<int:tournament_id>/', include(tournament_patterns)),
