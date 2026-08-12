@@ -1,6 +1,7 @@
 from .awards import AwardForm, BaseAwardsFormset
 from .backstabbr import BackstabbrUrlForm
 from .check_in import BaseCheckInFormset, SelfCheckInForm
+from .circuit_player_admin import CircuitPlayerAdminForm
 from .draws import DrawForm
 from .fields import (PlayerChoiceField, RoundPlayerChoiceField,
                      TournamentPlayerChoiceField,

@@ -19,6 +19,7 @@ from django.db.models import Q
 
 from tournament.circuits import Circuit, CircuitPlayer, CircuitSeries
 from tournament.diplomacy import GameSet, GreatPower, SetPower, SupplyCentre
+from tournament.forms import CircuitPlayerAdminForm
 from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
                                Game, GameImage, GamePlayer, Pool, Round,
                                RoundPlayer, SeederBias, Series,
@@ -114,6 +115,7 @@ class CentreCountAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
 
 @admin.register(CircuitPlayer)
 class CircuitPlayerAdmin(admin.ModelAdmin):
+    form = CircuitPlayerAdminForm
     list_filter = ['circuit', 'player']
     ordering = ['circuit', 'player']
 
