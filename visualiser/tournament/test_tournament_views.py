@@ -2456,6 +2456,9 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards.html')
+        self.assertContains(response, self.a1.description)
+        self.assertContains(response, self.a2.description)
+        self.assertContains(response, self.a3.description)
 
     def test_tournament_awards_afterwards(self):
         """For a finished Tournament, it should show who received the awards"""
@@ -2481,6 +2484,23 @@ class TournamentViewTests(TestCase):
         self.t4.awards.clear()
         self.tp41.awards.clear()
         tp.awards.clear()
+
+    def test_tournament_awards_finished_with_no_players(self):
+        today = date.today()
+        t = Tournament.objects.create(name='t-awards-empty',
+                                      start_date=today,
+                                      end_date=today + timedelta(hours=24),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system='Sum all round scores',
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True,
+                                      is_finished=True)
+        response = self.client.get(reverse('tournament_awards',
+                                           args=(t.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tournaments/awards.html')
+        self.assertContains(response, 'No players')
 
     def test_enter_awards_post_not_logged_in(self):
         response = self.client.get(reverse('enter_awards',
@@ -2592,3 +2612,8 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards.html')
+        # WDD awards view uses numbered_list=True, so only non-power awards should be listed.
+        self.assertContains(response, '<ol>', html=False)
+        self.assertContains(response, str(self.a1))
+        self.assertContains(response, str(self.a2))
+        self.assertNotContains(response, str(self.a3))

@@ -20,6 +20,7 @@ from unittest.mock import patch
 
 from django_countries import countries
 
+from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -58,6 +59,57 @@ class PlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'players/index.html')
         self.assertContains(response, str(self.p1))
+
+    def test_index_shows_pagination_controls(self):
+        response = self.client.get(reverse('player_index'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Page 1 of 1')
+        self.assertNotContains(response, 'first')
+        self.assertNotContains(response, 'previous')
+
+    def test_index_middle_page_has_previous_and_next(self):
+        for i in range(60):
+            Player.objects.create(first_name=f'Page{i:02d}',
+                                  last_name='Nav')
+
+        response = self.client.get(reverse('player_index') + '?page=2',
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Page 2 of 3')
+        self.assertContains(response, 'first')
+        self.assertContains(response, 'previous')
+        self.assertContains(response, 'next')
+        self.assertContains(response, 'last')
+
+    def test_index_shows_add_player_links_for_authorized_user(self):
+        username = 'player-index-adder'
+        password = 'L33tPassw0rd'
+        user = User.objects.create_user(username=username,
+                                        password=password,
+                                        is_staff=True)
+        user.user_permissions.add(Permission.objects.get(codename='add_player'))
+        self.client.login(username=username, password=password)
+
+        response = self.client.get(reverse('player_index'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Add a single player')
+        self.assertContains(response, 'Upload CSV file of players')
+
+    def test_index_hides_add_player_links_for_unauthorized_user(self):
+        username = 'player-index-noadd'
+        password = 'NoAddPassw0rd'
+        user = User.objects.create_user(username=username,
+                                        password=password,
+                                        is_staff=True)
+        self.client.login(username=username, password=password)
+
+        response = self.client.get(reverse('player_index'),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'Add a single player')
+        self.assertNotContains(response, 'Upload CSV file of players')
 
     def test_detail_invalid_player(self):
         response = self.client.get(reverse('player_detail',
