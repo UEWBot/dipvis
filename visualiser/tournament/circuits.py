@@ -24,6 +24,7 @@ from operator import itemgetter
 
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import F, Q
 from django.db.models.signals import m2m_changed
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
@@ -237,6 +238,8 @@ class Circuit(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['name', 'start_date'],
                                     name='circuit_unique_name_date'),
+            models.CheckConstraint(check=Q(end_date__gte=F('start_date')),
+                                   name='%(class)s_starts_before_end'),
         ]
 
     def __str__(self):
@@ -426,7 +429,7 @@ class CircuitSeries(models.Model):
     MAX_NAME_LENGTH = 60
     MAX_DESC_LENGTH = 2000
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    name = models.CharField(max_length=MAX_NAME_LENGTH, unique=True)
     description = models.CharField(max_length=MAX_DESC_LENGTH, null=True)
     circuits = models.ManyToManyField(Circuit, blank=True)
     slug = NameSlugField(unique=True)

@@ -1712,7 +1712,7 @@ class Series(models.Model):
     """
     MAX_NAME_LENGTH = 60
 
-    name = models.CharField(max_length=MAX_NAME_LENGTH)
+    name = models.CharField(max_length=MAX_NAME_LENGTH, unique=True)
     description = models.TextField(blank=True)
     tournaments = models.ManyToManyField(Tournament)
     slug = NameSlugField(unique=True)
