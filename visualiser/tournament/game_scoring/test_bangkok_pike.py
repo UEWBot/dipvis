@@ -154,6 +154,27 @@ class BangkokPikeGameScoringTests(TestCase):
                   self.turkey: 3 + 1 + 0}
         check_score_for_state(self, sgs, self.BANGKOK_PIKE, EXPECT)
 
+    def test_g_scoring_bangkok_pike_lone_topper_gets_four_not_two_bonus(self):
+        """Lone topper gets +4 when nobody is one behind, but not +2 if someone is two behind."""
+        sgs = SimpleGameState(sc_counts={self.austria: 0,
+                                         self.england: 10,
+                                         self.france: 6,
+                                         self.germany: 12,
+                                         self.italy: 4,
+                                         self.russia: 2,
+                                         self.turkey: 0},
+                              final_year=1904,
+                              elimination_years={self.austria: 1904,
+                                                 self.turkey: 1904})
+        EXPECT = {self.austria: 0.1 * 4,
+                  self.england: 3 + 10 + 2,
+                  self.france: 3 + 6 + 0,
+                  self.germany: 3 + 12 + 6 + 4,
+                  self.italy: 3 + 4 + 0,
+                  self.russia: 3 + 2 + 0,
+                  self.turkey: 0.1 * 4}
+        check_score_for_state(self, sgs, self.BANGKOK_PIKE, EXPECT)
+
     def test_g_scoring_bangkok_pike_solo(self):
         sgs = SimpleGameState(sc_counts={self.austria: 0,
                                          self.england: 4,
