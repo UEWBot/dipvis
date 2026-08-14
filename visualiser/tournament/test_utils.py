@@ -18,20 +18,25 @@ from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import patch
 
+from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone as django_timezone
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
-                               Award, DrawSecrecy, Game, GamePlayer, Round,
+                               Award, CentreCount, DrawSecrecy,
+                               Game, GamePlayer, Round,
                                RoundPlayer, Tournament, TournamentPlayer)
 from tournament.players import Player, WDDPlayer
 from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
+                              add_missing_player_wdr_ids,
                               check_wdd_player_ids,
                               clean_duplicate_player,
+                              find_tournaments_missing_wdr_ids,
                               find_players_missing_wdd_ids,
                               nuke_invalid_email,
                               player_emails,
+                              populate_missed_years,
                               upcoming_rounds,
                               _power_award_to_gameplayers)
 
@@ -292,6 +297,157 @@ class UtilsTests(TestCase):
         p_has_wdd.delete()
         p_no_round.delete()
 
+    @patch('tournament.utils.wdr_tournament_as_json')
+    def test_add_missing_player_wdr_ids_sets_matching_player_id(self, mock_wdr_json):
+        now = django_timezone.now()
+        t = Tournament.objects.create(name='util-missing-wdr',
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_published=True,
+                                      wdr_tournament_id=321)
+        p_match = Player.objects.create(first_name='Match',
+                                        last_name='Player')
+        p_zero = Player.objects.create(first_name='Zero',
+                                       last_name='Player')
+        TournamentPlayer.objects.create(player=p_match, tournament=t, score=12.5)
+        TournamentPlayer.objects.create(player=p_zero, tournament=t, score=0.0)
+        mock_wdr_json.return_value = {
+            'tournament_classifications': [
+                {
+                    'player_id': 111,
+                    'player_full_name': 'Match Player',
+                    'player_score': 12.5,
+                    'player_rank': 1,
+                },
+                {
+                    'player_id': 222,
+                    'player_full_name': 'Zero Player',
+                    'player_score': 0.0,
+                    'player_rank': 2,
+                },
+            ]
+        }
+
+        add_missing_player_wdr_ids(dry_run=False)
+
+        p_match.refresh_from_db()
+        p_zero.refresh_from_db()
+        self.assertEqual(p_match.wdr_player_id, 111)
+        self.assertIsNone(p_zero.wdr_player_id)
+        # Cleanup
+        t.delete()
+        p_match.delete()
+        p_zero.delete()
+
+    def test_find_tournaments_missing_wdr_ids_finished_only(self):
+        today = django_timezone.now().date()
+        t_finished_missing = Tournament.objects.create(name='util-missing-wdr-finished',
+                                                       start_date=today,
+                                                       end_date=today,
+                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                       draw_secrecy=DrawSecrecy.SECRET,
+                                                       is_finished=True,
+                                                       wdr_tournament_id=None)
+        t_unfinished_missing = Tournament.objects.create(name='util-missing-wdr-unfinished',
+                                                         start_date=today,
+                                                         end_date=today,
+                                                         round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                         tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                         draw_secrecy=DrawSecrecy.SECRET,
+                                                         is_finished=False,
+                                                         wdr_tournament_id=None)
+        Tournament.objects.create(name='util-has-wdr-finished',
+                                  start_date=today,
+                                  end_date=today,
+                                  round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                  tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                  draw_secrecy=DrawSecrecy.SECRET,
+                                  is_finished=True,
+                                  wdr_tournament_id=999)
+
+        with patch('builtins.print') as mock_print:
+            find_tournaments_missing_wdr_ids()
+
+        self.assertEqual(mock_print.call_count, 1)
+        self.assertEqual(str(mock_print.call_args_list[0].args[0]), str(t_finished_missing))
+        # Cleanup
+        t_finished_missing.delete()
+        t_unfinished_missing.delete()
+
+    @patch('tournament.utils._sc_counts_to_cc')
+    @patch('tournament.utils._bs_ownerships_to_sco')
+    def test_populate_missed_years_fills_missing_year(self, mock_to_sco, mock_to_cc):
+        now = django_timezone.now()
+        t = Tournament.objects.create(name='util-populate-years',
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 is_finished=False,
+                                 start=now)
+        g = Game.objects.create(name='PopulateYearsGame',
+                                the_round=r,
+                                the_set=GameSet.objects.first(),
+                                started_at=r.start,
+                                external_url='https://www.backstabbr.com/game/test')
+        for power in GreatPower.objects.order_by()[:7]:
+            CentreCount.objects.create(power=power,
+                                       game=g,
+                                       year=1901,
+                                       count=3)
+
+        bg = SimpleNamespace(
+            year=1903,
+            sc_ownership=[('PAR', 'F')],
+            turn_details=lambda season, year: ({'A': 3}, None, {'PAR': 'F'})
+        )
+
+        with patch.object(g, 'backstabbr_game', return_value=bg):
+            with patch.object(g, 'create_or_update_sc_counts_from_ownerships') as mock_update:
+                populate_missed_years(g, dry_run=False)
+
+        mock_to_sco.assert_called_once_with(g, 1902, {'PAR': 'F'})
+        mock_update.assert_called_once_with(1902)
+        mock_to_cc.assert_not_called()
+        # Cleanup
+        t.delete()
+
+    def test_populate_missed_years_dry_run_skips_updates(self):
+        now = django_timezone.now()
+        t = Tournament.objects.create(name='util-populate-years-dry',
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 is_finished=False,
+                                 start=now)
+        g = Game.objects.create(name='PopulateYearsDryRunGame',
+                                the_round=r,
+                                the_set=GameSet.objects.first(),
+                                started_at=r.start,
+                                external_url='https://www.backstabbr.com/game/test2')
+        bg = SimpleNamespace(year=1902)
+
+        with patch.object(g, 'backstabbr_game', return_value=bg):
+            with patch('builtins.print') as mock_print:
+                populate_missed_years(g, dry_run=True)
+
+        mock_print.assert_called_with('Reading results for 1901')
+        # Cleanup
+        t.delete()
+
     @patch('tournament.utils.add_missing_wdd_player_ids')
     def test_check_wdd_player_ids(self, mock_add_missing):
         check_wdd_player_ids()
@@ -321,6 +477,138 @@ class UtilsTests(TestCase):
         with patch('builtins.print') as mock_print:
             clean_duplicate_player(del_player, keep_player, dry_run=True)
         mock_print.assert_called_once_with('Player to delete has an email address!')
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_wdd_id_guard(self):
+        keep_player = Player.objects.create(first_name='Robin',
+                                            last_name='Merge')
+        del_player = Player.objects.create(first_name='Robin',
+                                           last_name='Merge')
+        WDDPlayer.objects.create(wdd_player_id=777001, player=del_player)
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with('Player to delete has a WDD player id!')
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_backstabbr_username_guard(self):
+        keep_player = Player.objects.create(first_name='Taylor',
+                                            last_name='Merge',
+                                            backstabbr_username='')
+        del_player = Player.objects.create(first_name='Taylor',
+                                           last_name='Merge',
+                                           backstabbr_username='delete-me')
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with('Player to delete has a backstabbr username!')
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_backstabbr_profile_url_guard(self):
+        keep_player = Player.objects.create(first_name='Jordan',
+                                            last_name='Merge',
+                                            backstabbr_profile_url='')
+        del_player = Player.objects.create(first_name='Jordan',
+                                           last_name='Merge',
+                                           backstabbr_profile_url='https://backstabbr.com/u/delete-me')
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with('Player to delete has a backstabbr profile URL!')
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_user_account_guard(self):
+        keep_player = Player.objects.create(first_name='Morgan',
+                                            last_name='Merge')
+        user = User.objects.create_user(username='duplicate-clean-user')
+        del_player = Player.objects.create(first_name='Morgan',
+                                           last_name='Merge',
+                                           user=user)
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with('Player to delete has an account!')
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+        user.delete()
+
+    def test_clean_duplicate_player_moves_related_rows_when_not_dry_run(self):
+        now = django_timezone.now()
+        keep_player = Player.objects.create(first_name='Sam',
+                                            last_name='Merge',
+                                            email='same@example.com')
+        del_player = Player.objects.create(first_name='Sam',
+                                           last_name='Merge',
+                                           email='same@example.com')
+        t = Tournament.objects.create(name='util-clean-duplicate',
+                                      start_date=now.date(),
+                                      end_date=now.date(),
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        r = Round.objects.create(tournament=t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 is_finished=False,
+                                 start=now)
+        g = Game.objects.create(name='DuplicateMoveGame',
+                                the_round=r,
+                                the_set=GameSet.objects.first(),
+                                started_at=r.start)
+        tp = TournamentPlayer.objects.create(player=del_player, tournament=t)
+        rp = RoundPlayer.objects.create(player=del_player, the_round=r)
+        gp = GamePlayer.objects.create(player=del_player,
+                                       game=g,
+                                       power=GreatPower.objects.get(abbreviation='A'))
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=False)
+
+        tp.refresh_from_db()
+        rp.refresh_from_db()
+        gp.refresh_from_db()
+        self.assertEqual(tp.player, keep_player)
+        self.assertEqual(rp.player, keep_player)
+        self.assertEqual(gp.player, keep_player)
+        self.assertTrue(any('ready to delete from the admin' in c.args[0] for c in mock_print.call_args_list))
+        # Cleanup
+        t.delete()
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_last_name_mismatch(self):
+        keep_player = Player.objects.create(first_name='Alex',
+                                            last_name='Keeper')
+        del_player = Player.objects.create(first_name='Alex',
+                                           last_name='Different')
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with("Player last names don't match!")
+        # Cleanup
+        keep_player.delete()
+        del_player.delete()
+
+    def test_clean_duplicate_player_dry_run_no_issues(self):
+        keep_player = Player.objects.create(first_name='Jamie',
+                                            last_name='Merge',
+                                            email='same@example.com')
+        del_player = Player.objects.create(first_name='Jamie',
+                                           last_name='Merge',
+                                           email='same@example.com')
+
+        with patch('builtins.print') as mock_print:
+            clean_duplicate_player(del_player, keep_player, dry_run=True)
+        mock_print.assert_called_once_with('No issues found')
         # Cleanup
         keep_player.delete()
         del_player.delete()
