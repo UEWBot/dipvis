@@ -96,18 +96,7 @@ def _tournament_news(t):
             results.append(_('%(player)s won %(awards)s.') % {'player': tp.player,
                                                               'awards': awards_str})
     else:
-        # which rounds have been played ?
-        rds = t.round_set.order_by()
-        played_rounds = rds.filter(is_finished=True).count()
-        if played_rounds == 0:
-            results.append(_(u'Tournament has yet to start.'))
-        else:
-            results.append(ngettext('One of %(rounds)d has been played.',
-                                    '%(r_num)d of %(rounds)d have been played.',
-                                    played_rounds) % {'r_num': played_rounds,
-                                                      'rounds': rds.count()})
-            # Include who is leading the tournament
-            include_leader = True
+        results.append(_(u'Tournament has yet to start.'))
     if include_leader:
         if t.show_current_scores:
             the_scores = t.scores_detail()
