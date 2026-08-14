@@ -17,6 +17,7 @@
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
 from urllib.parse import urlencode
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core import mail
@@ -30,6 +31,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                PowerAssignMethods, Round, RoundPlayer,
                                SeederBias, Team, Tournament, TournamentPlayer)
 from tournament.players import Player
+from tournament.round_views import _send_board_call_to_discord
 
 
 class RoundViewTests(TestCase):
@@ -2765,3 +2767,21 @@ class RoundViewTests(TestCase):
         self.assertEqual(g.the_set.pk, 1)
         # Clean up
         g.delete()
+
+    @patch('tournament.round_views.requests.post')
+    def test_send_board_call_to_discord_no_url_does_not_post(self, mock_post):
+        self.t1.discord_url = ''
+        self.t1.save(update_fields=['discord_url'])
+        _send_board_call_to_discord(self.r11)
+        mock_post.assert_not_called()
+
+    @patch('tournament.round_views.requests.post')
+    def test_send_board_call_to_discord_posts_expected_payload(self, mock_post):
+        self.t1.discord_url = 'https://discord.example/webhook'
+        self.t1.save(update_fields=['discord_url'])
+        _send_board_call_to_discord(self.r11)
+        mock_post.assert_called_once()
+        self.assertEqual(mock_post.call_args.args[0], 'https://discord.example/webhook')
+        self.assertIn('json', mock_post.call_args.kwargs)
+        self.assertEqual(mock_post.call_args.kwargs['json']['username'], 'Diplomacy TV')
+        self.assertIn('content', mock_post.call_args.kwargs['json'])
