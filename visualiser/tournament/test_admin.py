@@ -140,6 +140,40 @@ class TournamentAdminTests(TestCase):
             tournament.delete()
             superuser.delete()
 
+    def test_round_admin_has_delete_permission_requires_editable_tournament(self):
+        today = date.today()
+        manager = User.objects.create_user(username='round-delete-manager',
+                                           is_staff=True)
+        delete_round_perm = Permission.objects.get(codename='delete_round')
+        manager.user_permissions.add(delete_round_perm)
+
+        tournament = Tournament.objects.create(name='Round delete permission test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               editable=True)
+        round_obj = Round.objects.create(tournament=tournament,
+                                         scoring_system=G_SCORING_SYSTEMS[0].name,
+                                         dias=True,
+                                         start=datetime.combine(tournament.start_date,
+                                                                time(hour=8, tzinfo=datetime_timezone.utc)))
+        try:
+            tournament.managers.add(manager)
+            request = RequestFactory().get('/admin/tournament/round/')
+            request.user = manager
+            round_admin = RoundAdmin(Round, AdminSite())
+
+            self.assertTrue(round_admin.has_delete_permission(request, round_obj))
+
+            tournament.editable = False
+            tournament.save(update_fields=['editable'])
+            self.assertFalse(round_admin.has_delete_permission(request, round_obj))
+        finally:
+            tournament.delete()
+            manager.delete()
+
     def test_tournament_admin_has_view_permission_published_for_non_manager(self):
         today = date.today()
         user = User.objects.create_user(username='admin-view-user',
@@ -201,6 +235,32 @@ class TournamentAdminTests(TestCase):
             manager.delete()
             other_user.delete()
             superuser.delete()
+
+    def test_tournament_permission_mixin_obj_none_uses_model_permissions(self):
+        staff_with_perms = User.objects.create_user(username='admin-obj-none-allowed',
+                                                    is_staff=True)
+        staff_without_perms = User.objects.create_user(username='admin-obj-none-denied',
+                                                       is_staff=True)
+        staff_with_perms.user_permissions.add(
+            Permission.objects.get(codename='view_round'),
+            Permission.objects.get(codename='change_round'),
+            Permission.objects.get(codename='delete_round')
+        )
+
+        admin_instance = RoundAdmin(Round, AdminSite())
+
+        allow_request = RequestFactory().get('/admin/tournament/round/')
+        allow_request.user = staff_with_perms
+        deny_request = RequestFactory().get('/admin/tournament/round/')
+        deny_request.user = staff_without_perms
+
+        self.assertTrue(admin_instance.has_view_permission(allow_request, None))
+        self.assertTrue(admin_instance.has_change_permission(allow_request, None))
+        self.assertTrue(admin_instance.has_delete_permission(allow_request, None))
+
+        self.assertFalse(admin_instance.has_view_permission(deny_request, None))
+        self.assertFalse(admin_instance.has_change_permission(deny_request, None))
+        self.assertFalse(admin_instance.has_delete_permission(deny_request, None))
 
     def test_score_model_admin_view_hidden_scores_limited_to_managers(self):
         today = date.today()
