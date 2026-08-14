@@ -27,7 +27,8 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                SupplyCentreOwnership, Tournament,
                                TournamentPlayer)
 from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
-                             _round_news, _tournament_news, news)
+                             _round_news, _sc_gains_and_losses,
+                             _tournament_news, news)
 from tournament.players import Player
 
 
@@ -331,6 +332,69 @@ class NewsTests(TestCase):
         res = _tournament_news(t)
         self.assertIn('Tournament has yet to start.', res)
 
+    def test_tournament_news_finished_no_players(self):
+        today = date.today()
+        t = Tournament.objects.create(name='t-finished-empty',
+                                      start_date=today,
+                                      end_date=today + HOURS_24,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      is_finished=True)
+        res = _tournament_news(t)
+        self.assertIn('0 players were registered to play in the tournament.', res)
+        self.assertFalse(any('came 1st' in s for s in res))
+
+    def test_sc_gains_and_losses_returns_empty_without_both_years(self):
+        class FakeScoSet:
+            def __init__(self, rows):
+                self._rows = rows
+
+            def exists(self):
+                return bool(self._rows)
+
+            def all(self):
+                return self._rows
+
+        gains, losses = _sc_gains_and_losses(FakeScoSet([]), FakeScoSet([]))
+        self.assertEqual(gains, {})
+        self.assertEqual(losses, {})
+
+    def test_sc_gains_and_losses_maps_previous_and_new_owners(self):
+        class FakeScoSet:
+            def __init__(self, rows):
+                self._rows = rows
+
+            def exists(self):
+                return bool(self._rows)
+
+            def all(self):
+                return self._rows
+
+        class FakeSco:
+            def __init__(self, sc, owner):
+                self.sc = sc
+                self.owner = owner
+
+        sc1 = 'PAR'
+        sc2 = 'MUN'
+        power_a = 'A'
+        power_e = 'E'
+        power_f = 'F'
+
+        prev = FakeScoSet([
+            FakeSco(sc1, power_a),
+            FakeSco(sc2, power_e),
+        ])
+        current = FakeScoSet([
+            FakeSco(sc1, power_f),
+            FakeSco(sc2, power_e),
+        ])
+
+        gains, losses = _sc_gains_and_losses(prev, current)
+        self.assertEqual(gains[power_f][0], (sc1, power_a))
+        self.assertEqual(losses[power_a][0], (sc1, power_f))
+
     # _round_leader_str()
     def test_round_leader_str_unfinished(self):
         t = Tournament.objects.get(name='t1')
@@ -620,3 +684,7 @@ class NewsTests(TestCase):
         self.assertTrue(res)
         self.assertTrue(any('draw votes have been taken' in s for s in strings))
         self.assertTrue(any('highest sc count' in s.lower() for s in strings))
+
+    def test_news_for_unsupported_type_raises(self):
+        with self.assertRaises(NotImplementedError):
+            news(object())
