@@ -30,6 +30,7 @@ from django.urls import reverse
 from tournament.circuits import (_percentiles, Circuit, CircuitPlayer,
                                  CircuitSeries,
                                  CScoringSumPercentiles,
+                                 _remember_tournament_editable_before_save,
                                  _sync_circuit_players_on_tournament_m2m_change,
                                  find_circuit_scoring_system,
                                  validate_circuit_scoring_system)
@@ -256,6 +257,12 @@ class CircuitScoringTests(TestCase):
 
 class CircuitUtilsTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
+
+    def test_remember_tournament_editable_pre_save_missing_row(self):
+        # Simulate pre_save for an object with a PK that no longer exists.
+        t = Tournament(pk=987654321, editable=False)
+        _remember_tournament_editable_before_save(Tournament, t)
+        self.assertIsNone(t._editable_before_save)
 
     def test_find_c_scoring_system_invalid(self):
         self.assertIsNone(find_circuit_scoring_system('not-a-system'))

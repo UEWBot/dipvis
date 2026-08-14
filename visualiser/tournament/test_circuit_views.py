@@ -66,11 +66,21 @@ class CircuitViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'circuits/series_detail.html')
         self.assertContains(response, 'Test Circuit')
+        self.assertContains(response, 'Series for tests')
 
     def test_circuit_series_detail_invalid(self):
         response = self.client.get(reverse('circuit_series_detail', args=('missing-series',)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_circuit_series_detail_shows_empty_circuits_message(self):
+        empty_series = CircuitSeries.objects.create(name='Empty circuit series',
+                                                    description='No circuits yet')
+        response = self.client.get(reverse('circuit_series_detail',
+                                           args=(empty_series.slug,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No circuits in the database')
 
     def test_circuit_detail(self):
         response = self.client.get(reverse('circuit_detail', args=(self.circuit.id,)),
@@ -79,6 +89,35 @@ class CircuitViewTests(TestCase):
         self.assertTemplateUsed(response, 'circuits/detail.html')
         self.assertContains(response, 'Test Circuit')
         self.assertContains(response, 'Scores')
+        self.assertContains(response, 'Part of the following series:')
+        self.assertContains(response, self.series.get_absolute_url())
+
+    def test_circuit_detail_shows_empty_tournaments_message(self):
+        empty_circuit = Circuit.objects.create(name='Empty Circuit',
+                                               start_date=self.today,
+                                               end_date=self.today,
+                                               scoring_system='Sum best 3 tournament percentiles')
+        response = self.client.get(reverse('circuit_detail', args=(empty_circuit.id,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'No tournaments in this circuit yet.')
+
+    def test_circuit_detail_prefers_wdr_link_over_wdd(self):
+        self.circuit.wdr_circuit_id = 456
+        self.circuit.wdd_circuit_id = 123
+        self.circuit.save(update_fields=['wdr_circuit_id', 'wdd_circuit_id'])
+        response = self.client.get(reverse('circuit_detail', args=(self.circuit.id,)),
+                                   secure=True)
+        self.assertContains(response, 'View on WDR')
+        self.assertNotContains(response, 'View on WDD')
+
+    def test_circuit_detail_shows_wdd_link_when_no_wdr(self):
+        self.circuit.wdr_circuit_id = None
+        self.circuit.wdd_circuit_id = 123
+        self.circuit.save(update_fields=['wdr_circuit_id', 'wdd_circuit_id'])
+        response = self.client.get(reverse('circuit_detail', args=(self.circuit.id,)),
+                                   secure=True)
+        self.assertContains(response, 'View on WDD')
 
     def test_circuit_detail_invalid(self):
         response = self.client.get(reverse('circuit_detail', args=(999999,)), secure=True)
@@ -98,6 +137,18 @@ class CircuitViewTests(TestCase):
         self.assertContains(response, '>7.00<')
         self.assertContains(response, '0.500 ')
         self.assertContains(response, '>9.00<')
+
+    def test_circuit_scores_handles_missing_tp_link(self):
+        cp = CircuitPlayer.objects.get(circuit=self.circuit, player=self.p1)
+        dropped_tp = TournamentPlayer.objects.get(player=self.p1, tournament=self.t2)
+        cp.tournamentplayers.remove(dropped_tp)
+
+        response = self.client.get(reverse('circuit_scores', args=(self.circuit.id,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'circuits/scores.html')
+        self.assertContains(response, 'Circuit Tournament 2')
+        self.assertNotContains(response, dropped_tp.get_absolute_url())
 
     def test_circuit_player_detail(self):
         cp = CircuitPlayer.objects.filter(circuit=self.circuit, player=self.p1).first()
