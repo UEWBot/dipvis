@@ -44,14 +44,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_name='Best Tournament',
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
@@ -64,14 +64,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_name='Best Tournament',
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(tournament_name='Worst Tournament',
+        pgr2 = PlayerGameResult(event_name='Worst Tournament',
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
@@ -84,14 +84,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_name='Best Tournament',
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
                                 round_number=2,
                                 game_number=1,
                                 player=p2,
@@ -104,14 +104,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_name='Best Tournament',
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
                                 round_number=1,
                                 game_number=2,
                                 player=p2,
@@ -124,14 +124,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(tournament_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_name='Best Tournament',
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(tournament_name=pgr1.tournament_name,
+        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
@@ -143,7 +143,7 @@ class PlayerGameResultTests(TestCase):
     # PlayeGameResult.game_name()
     def test_playergameresult_game_name(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult(tournament_name='Best Tournament',
+        pgr = PlayerGameResult(event_name='Best Tournament',
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -156,7 +156,7 @@ class PlayerGameResultTests(TestCase):
     # PlayerGameResult.wdd_url()
     def test_playergameresult_wdd_url(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult(tournament_name='Best Tournament',
+        pgr = PlayerGameResult(event_name='Best Tournament',
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -177,7 +177,7 @@ class PlayerGameResultTests(TestCase):
     def test_playergameresult_wdr_url(self):
         wdd = WDDPlayer.objects.first()
         p = wdd.player
-        pgr = PlayerGameResult(tournament_name='Best Tournament',
+        pgr = PlayerGameResult(event_name='Best Tournament',
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -194,7 +194,7 @@ class PlayerGameResultTests(TestCase):
     # PlayerGameResult.__str__()
     def test_playergameresult_str(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult(tournament_name='Best Tournament',
+        pgr = PlayerGameResult(event_name='Best Tournament',
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -209,7 +209,7 @@ class PlayerGameResultTests(TestCase):
 
     def test_playergameresult_top_board_default_false(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult.objects.create(tournament_name='Best Tournament',
+        pgr = PlayerGameResult.objects.create(event_name='Best Tournament',
                                               round_number=2,
                                               game_number=2,
                                               player=p,

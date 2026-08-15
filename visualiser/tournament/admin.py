@@ -231,14 +231,14 @@ class PlayerAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerAward)
 class PlayerAwardAdmin(admin.ModelAdmin):
-    list_filter = ['player', 'tournament', 'name', 'power']
-    ordering = ['tournament', 'player']
+    list_filter = ['player', 'event_name', 'name', 'power']
+    ordering = ['event_name', 'player']
 
 
 @admin.register(PlayerGameResult)
 class PlayerGameResultAdmin(admin.ModelAdmin):
-    list_filter = ['player', 'tournament_name', 'power', 'position', 'result']
-    ordering = ['tournament_name', 'player']
+    list_filter = ['player', 'event_name', 'power', 'position', 'result']
+    ordering = ['event_name', 'player']
 
 
 @admin.register(PlayerRanking)
@@ -255,8 +255,8 @@ class PlayerTitleAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerEventRanking)
 class PlayerEventRanking(admin.ModelAdmin):
-    list_filter = ['player', 'tournament', 'position', 'year']
-    ordering = ['tournament', 'player']
+    list_filter = ['player', 'event_name', 'position', 'year']
+    ordering = ['event_name', 'player']
 
 
 @admin.register(Pool)

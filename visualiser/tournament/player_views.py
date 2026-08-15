@@ -79,7 +79,7 @@ def player_versus(request, pk1, pk2):
     matches = []
     r1 = None
     for r in PlayerGameResult.objects.filter(player__in=[p1, p2]).order_by('-date',
-                                                                           'tournament_name',
+                                                                           'event_name',
                                                                            'round_number',
                                                                            'game_number'):
         if r1 and r1.for_same_game(r):

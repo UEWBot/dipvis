@@ -321,7 +321,7 @@ class PlayerViewTests(TestCase):
         # Add a shared game
         # Add in another result for a non-shared game
         today = date.today()
-        pgr1 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
+        pgr1 = PlayerGameResult.objects.create(event_name='Galaxy Championship',
                                                round_number=2,
                                                game_number=1,
                                                date=today,
@@ -329,7 +329,7 @@ class PlayerViewTests(TestCase):
                                                power=germany,
                                                position=2)
         # One with lots of blanks
-        pgr2 = PlayerGameResult.objects.create(tournament_name='Galaxy Championship',
+        pgr2 = PlayerGameResult.objects.create(event_name='Galaxy Championship',
                                                round_number=3,
                                                game_number=2,
                                                date=today,
@@ -337,7 +337,7 @@ class PlayerViewTests(TestCase):
                                                power=england,
                                                position=3)
         # One with lots of detail
-        PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+        PlayerGameResult.objects.create(event_name=pgr1.event_name,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         date=pgr1.date,
@@ -370,7 +370,7 @@ class PlayerViewTests(TestCase):
         p2 = Player.objects.create(first_name='Wendy',
                                    last_name='West')
         today = date.today()
-        pgr1 = PlayerGameResult.objects.create(tournament_name='Nebula Classic',
+        pgr1 = PlayerGameResult.objects.create(event_name='Nebula Classic',
                                                round_number=4,
                                                game_number=5,
                                                date=today,
@@ -378,7 +378,7 @@ class PlayerViewTests(TestCase):
                                                power=france,
                                                position=1,
                                                wdr_tournament_id=4173)
-        PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+        PlayerGameResult.objects.create(event_name=pgr1.event_name,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         date=pgr1.date,
@@ -404,7 +404,7 @@ class PlayerViewTests(TestCase):
         p2 = Player.objects.create(first_name='Waldo',
                                    last_name='White')
         today = date.today()
-        pgr1 = PlayerGameResult.objects.create(tournament_name='Comet Open',
+        pgr1 = PlayerGameResult.objects.create(event_name='Comet Open',
                                                round_number=1,
                                                game_number=3,
                                                date=today,
@@ -412,7 +412,7 @@ class PlayerViewTests(TestCase):
                                                power=austria,
                                                position=4,
                                                wdd_tournament_id=9001)
-        PlayerGameResult.objects.create(tournament_name=pgr1.tournament_name,
+        PlayerGameResult.objects.create(event_name=pgr1.event_name,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         date=pgr1.date,

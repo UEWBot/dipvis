@@ -44,7 +44,7 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_wdd_url_power(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         tournament='Some tournament',
+                         event_name='Some tournament',
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Player of France',
                          wdd_tournament_id=369,
@@ -58,7 +58,7 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_wdd_url_no_power(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         tournament='Some tournament',
+                         event_name='Some tournament',
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person',
                          wdd_tournament_id=369)
@@ -70,7 +70,7 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_wdr_url(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         tournament='Some tournament',
+                         event_name='Some tournament',
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person',
                          wdr_tournament_id=369)
@@ -83,12 +83,12 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_str(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         tournament='Some tournament',
+                         event_name='Some tournament',
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person')
         p_str = str(pa)
-        # We expect to find player name, award name, and tournament name
+        # We expect to find player name, award name, and event name
         self.assertIn(p.first_name, p_str)
         self.assertIn(p.last_name, p_str)
         self.assertIn(pa.name, p_str)
-        self.assertIn(pa.tournament, p_str)
+        self.assertIn(pa.event_name, p_str)

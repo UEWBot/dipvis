@@ -223,29 +223,29 @@ class Player(models.Model):
                                           'power': p,
                                           'count': award_count})
                 a = power_award_set.first()
-                s = _('%(name)s first won %(award)s in %(year)d at %(tourney)s') % {'name': self,
-                                                                                    'award': a.name,
-                                                                                    'year': a.date.year,
-                                                                                    'tourney': a.tournament}
+                s = _('%(name)s first won %(award)s in %(year)d at %(event)s') % {'name': self,
+                                                                                  'award': a.name,
+                                                                                  'year': a.date.year,
+                                                                                  'event': a.event_name}
                 if a.final_sc_count:
                     s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
                 s += '.'
                 results.append(s)
                 a = power_award_set.last()
-                s = _('%(name)s most recently won %(award)s in %(year)d at %(tourney)s') % {'name': self,
-                                                                                            'award': a.name,
-                                                                                            'year': a.date.year,
-                                                                                            'tourney': a.tournament}
+                s = _('%(name)s most recently won %(award)s in %(year)d at %(event)s') % {'name': self,
+                                                                                          'award': a.name,
+                                                                                          'year': a.date.year,
+                                                                                          'event': a.event_name}
                 if a.final_sc_count:
                     s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
                 s += '.'
                 results.append(s)
         if (mask & MASK_OTHER_AWARDS) != 0:
             for a in award_set.filter(power=None):
-                results.append(_('%(name)s won %(award)s at %(tourney)s.')
+                results.append(_('%(name)s won %(award)s at %(event)s.')
                                % {'name': self,
                                   'award': a.name,
-                                  'tourney': a.tournament})
+                                  'event': a.event_name})
         return results
 
     def _titles(self, mask=MASK_ALL_BG):
@@ -278,15 +278,15 @@ class Player(models.Model):
                            % {'name': self, 'number': plays})
         if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
-            results.append(_(u'%(name)s first competed in a tournament (%(tournament)s) in %(year)d.')
+            results.append(_(u'%(name)s first competed in a tournament (%(event)s) in %(year)d.')
                            % {'name': self,
-                              'tournament': first.tournament,
+                              'event': first.event_name,
                               'year': first.year})
         if (mask & MASK_LAST_TOURNEY) != 0:
             last = ranking_set.last()
-            results.append(_(u'%(name)s most recently competed in a tournament (%(tournament)s) in %(year)d.')
+            results.append(_(u'%(name)s most recently competed in a tournament (%(event)s) in %(year)d.')
                            % {'name': self,
-                              'tournament': last.tournament,
+                              'event': last.event_name,
                               'year': last.year})
         if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
             wins_set = ranking_set.filter(position=1)
@@ -298,14 +298,14 @@ class Player(models.Model):
                                   'percentage': 100.0 * float(wins) / float(plays),
                                   'wins': wins})
                 w = wins_set.first()
-                results.append(_('%(name)s won their first tournament (%(tourney)s) in %(year)d.')
+                results.append(_('%(name)s won their first tournament (%(event)s) in %(year)d.')
                                % {'name': self,
-                                  'tourney': w.tournament,
+                                  'event': w.event_name,
                                   'year': w.year})
                 w = wins_set.last()
-                results.append(_('%(name)s most recently won a tournament (%(tourney)s) in %(year)d.')
+                results.append(_('%(name)s most recently won a tournament (%(event)s) in %(year)d.')
                                % {'name': self,
-                                  'tourney': w.tournament,
+                                  'event': w.event_name,
                                   'year': w.year})
             else:
                 best = ranking_set.aggregate(Min('position'))['position__min']

@@ -78,21 +78,21 @@ class PlayerTests(TestCase):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
         # Create one of each type of background record
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -118,14 +118,14 @@ class PlayerTests(TestCase):
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -133,7 +133,7 @@ class PlayerTests(TestCase):
                                      international_rank='8',
                                      national_rank='3')
         ptr = PlayerEventRanking.objects.create(player=p,
-                                                tournament='Some tournament',
+                                                event_name='Some tournament',
                                                 position=3,
                                                 year=1974)
         end = datetime.now(datetime_timezone.utc)
@@ -149,18 +149,18 @@ class PlayerTests(TestCase):
         start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerTitle last
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -183,14 +183,14 @@ class PlayerTests(TestCase):
         start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerGameResult last
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -198,7 +198,7 @@ class PlayerTests(TestCase):
                                      international_rank='8',
                                      national_rank='3')
         pgr = PlayerGameResult.objects.create(player=p,
-                                              tournament_name='Some tournament',
+                                              event_name='Some tournament',
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
@@ -217,14 +217,14 @@ class PlayerTests(TestCase):
         start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerAward last
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
@@ -235,7 +235,7 @@ class PlayerTests(TestCase):
                                      international_rank='8',
                                      national_rank='3')
         pa = PlayerAward.objects.create(player=p,
-                                        tournament='Some tournament',
+                                        event_name='Some tournament',
                                         date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         end = datetime.now(datetime_timezone.utc)
@@ -251,21 +251,21 @@ class PlayerTests(TestCase):
         start = datetime.now(datetime_timezone.utc)
         # Create one of each type of background record, with PlayerRanking last
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
@@ -386,21 +386,21 @@ class PlayerTests(TestCase):
         self.assertEqual(0, p.playerranking_set.count())
         # Add one of each type of background object
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -421,21 +421,21 @@ class PlayerTests(TestCase):
         self.assertEqual(0, p.playerranking_set.count())
         # Add one of each type of background object
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -462,21 +462,21 @@ class PlayerTests(TestCase):
         self.assertEqual(0, p.playerranking_set.count())
         # Add one of each type of background object
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -503,21 +503,21 @@ class PlayerTests(TestCase):
         # Add one of each type of background object
         today = datetime.today()
         PlayerEventRanking.objects.create(player=p,
-                                          tournament='Some tournament',
+                                          event_name='Some tournament',
                                           position=3,
                                           year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        tournament_name='Some tournament',
+                                        event_name='Some tournament',
                                         round_number=4,
                                         game_number=17,
                                         power=self.germany,
                                         date=today,
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=today,
                                    name='Best German',
                                    power=self.germany)
@@ -542,7 +542,7 @@ class PlayerTests(TestCase):
         p = Player.objects.create(first_name='Joe',
                                   last_name='Bloggs')
         # No final_sc_count (or other optional fields)
-        PlayerGameResult.objects.create(tournament_name='Best Tournament',
+        PlayerGameResult.objects.create(event_name='Best Tournament',
                                         round_number=1,
                                         game_number=1,
                                         player=p,
@@ -557,7 +557,7 @@ class PlayerTests(TestCase):
     def test_player_background_game_count(self):
         p = Player.objects.create(first_name='Joe',
                                   last_name='Bloggs')
-        PlayerGameResult.objects.create(tournament_name='Best Tournament',
+        PlayerGameResult.objects.create(event_name='Best Tournament',
                                         round_number=1,
                                         game_number=1,
                                         player=p,
@@ -565,7 +565,7 @@ class PlayerTests(TestCase):
                                         date=date.today(),
                                         position=1,
                                         final_sc_count=19)
-        PlayerGameResult.objects.create(tournament_name='Worst Tournament',
+        PlayerGameResult.objects.create(event_name='Worst Tournament',
                                         round_number=1,
                                         game_number=1,
                                         player=p,
@@ -585,7 +585,7 @@ class PlayerTests(TestCase):
     def test_player_background_top_board_count(self):
         p = Player.objects.create(first_name='Joe',
                                   last_name='Topboard')
-        PlayerGameResult.objects.create(tournament_name='WDC Tournament',
+        PlayerGameResult.objects.create(event_name='WDC Tournament',
                                         round_number=7,
                                         game_number=1,
                                         player=p,
@@ -593,7 +593,7 @@ class PlayerTests(TestCase):
                                         date=date.today(),
                                         position=2,
                                         is_top_board=True)
-        PlayerGameResult.objects.create(tournament_name='WDC Tournament',
+        PlayerGameResult.objects.create(event_name='WDC Tournament',
                                         round_number=6,
                                         game_number=2,
                                         player=p,
@@ -610,7 +610,7 @@ class PlayerTests(TestCase):
         p = Player.objects.create(first_name='Joe',
                                   last_name='DualTop')
         # Board topped but not marked as top-board game.
-        PlayerGameResult.objects.create(tournament_name='Tournament A',
+        PlayerGameResult.objects.create(event_name='Tournament A',
                                         round_number=1,
                                         game_number=1,
                                         player=p,
@@ -619,7 +619,7 @@ class PlayerTests(TestCase):
                                         position=1,
                                         is_top_board=False)
         # Top-board game that was not topped.
-        PlayerGameResult.objects.create(tournament_name='Tournament B',
+        PlayerGameResult.objects.create(event_name='Tournament B',
                                         round_number=1,
                                         game_number=2,
                                         player=p,
@@ -648,13 +648,13 @@ class PlayerTests(TestCase):
         today = datetime.today()
         yesterday = today - timedelta(days=1)
         PlayerAward.objects.create(player=p,
-                                   tournament='Some tournament',
+                                   event_name='Some tournament',
                                    date=yesterday,
                                    name='Best Germany',
                                    power=self.germany,
                                    final_sc_count=10)
         PlayerAward.objects.create(player=p,
-                                   tournament='Another tournament',
+                                   event_name='Another tournament',
                                    date=today,
                                    name='Best Germany',
                                    power=self.germany,
@@ -675,19 +675,19 @@ class PlayerTests(TestCase):
         self.assertEqual(0, p.playeraward_set.count())
         self.assertEqual(0, p.playerranking_set.count())
         ptr = PlayerEventRanking.objects.create(player=p,
-                                                tournament='Alpha',
+                                                event_name='Alpha',
                                                 position=3,
                                                 year=1994)
         ptr = PlayerEventRanking.objects.create(player=p,
-                                                tournament='Bravo',
+                                                event_name='Bravo',
                                                 position=1,
                                                 year=2004)
         ptr = PlayerEventRanking.objects.create(player=p,
-                                                tournament='Charlie',
+                                                event_name='Charlie',
                                                 position=1,
                                                 year=2014)
         ptr = PlayerEventRanking.objects.create(player=p,
-                                                tournament='Delta',
+                                                event_name='Delta',
                                                 position=5,
                                                 year=2024)
         res = p.background()

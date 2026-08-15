@@ -47,7 +47,7 @@ class PlayerAward(models.Model):
     Used to import background information.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=100)
+    event_name = models.CharField(max_length=100)
     date = models.DateField()
     name = models.CharField(max_length=50)
     power = models.ForeignKey(GreatPower,
@@ -71,14 +71,14 @@ class PlayerAward(models.Model):
         constraints = [
             models.CheckConstraint(check=Q(final_sc_count__lte=TOTAL_SCS) | Q(final_sc_count__isnull=True),
                                    name='%(class)s_final_sc_count_valid'),
-            models.UniqueConstraint(fields=['player', 'tournament', 'date', 'name'],
-                                    name='unique_player_tournament_date_name'),
+            models.UniqueConstraint(fields=['player', 'event_name', 'date', 'name'],
+                                    name='unique_player_event_name_date_name'),
         ]
 
     def __str__(self):
         return _('%(player)s won %(award)s at %(tourney)s') % {'player': self.player,
                                                                'award': self.name,
-                                                               'tourney': self.tournament}
+                                                               'tourney': self.event_name}
 
     def wdd_url(self):
         """WDD URL where this award can be seen"""

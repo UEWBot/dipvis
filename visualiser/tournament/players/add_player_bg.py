@@ -181,7 +181,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
         if not _wdr_tournament_should_be_included(t):
             continue
         defaults = {'position': t['tournament_player_rank'],
-                    'tournament': t['tournament_name']}
+                    'event_name': t['tournament_name']}
         if t['tournament_end_date']:
             defaults['date'] = t['tournament_end_date']
         else:
@@ -196,7 +196,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerEventRanking')
-                print(f'player={str(player)}, tournament={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
+                print(f'player={str(player)}, event_name={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t['tournament_id']
@@ -209,7 +209,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerEventRanking')
-                print(f'player={str(player)}, tournament={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
+                print(f'player={str(player)}, event_name={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
                 traceback.print_exc()
     # Boards
     for b in bg.boards():
@@ -227,7 +227,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
             print(b)
             print(t_id)
             continue
-        defaults = {'tournament_name': t['tournament_name'],
+        defaults = {'event_name': t['tournament_name'],
                     'position': b['board_rank'],
                     'is_top_board': bool(b.get('board_is_top'))}
         if not b['board_rank']:
@@ -258,7 +258,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
+                print(f'player={str(player)}, event_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t_id
@@ -273,7 +273,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, tournament_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
+                print(f'player={str(player)}, event_name={t["tournament_name"]}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
                 traceback.print_exc()
     # Awards
     for a in bg.awards():
@@ -282,7 +282,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
         # What was the tournament?
         t_id = a['award_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
-        defaults = {'tournament': t['tournament_name']}
+        defaults = {'event_name': t['tournament_name']}
         if t['tournament_end_date']:
             defaults['date'] = t['tournament_end_date']
         else:
@@ -298,7 +298,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerAward')
-                print(f'player={str(player)}, tournament={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
+                print(f'player={str(player)}, event_name={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t_id
@@ -312,7 +312,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerAward')
-                print(f'player={str(player)}, tournament={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
+                print(f'player={str(player)}, event_name={t["tournament_name"]}, date={t["tournament_end_date"]}, name={award_name}')
                 traceback.print_exc()
     # WPE scores (and other Rankings)
     ranks = bg.rankings()

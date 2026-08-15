@@ -44,12 +44,12 @@ from .player import Player
 
 class PlayerGameResult(models.Model):
     """
-    One player's result for a tournament game.
+    One player's result for a game at an event.
 
     Used to import background information from external sites.
     """
 
-    tournament_name = models.CharField(max_length=100)
+    event_name = models.CharField(max_length=100)
     round_number = models.PositiveSmallIntegerField()
     game_number = models.PositiveSmallIntegerField()
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -85,20 +85,20 @@ class PlayerGameResult(models.Model):
                                    name='%(class)s_result_valid'),
             models.CheckConstraint(check=Q(year_eliminated__gte=FIRST_YEAR) | Q(year_eliminated__isnull=True),
                                    name='%(class)s_year_eliminated_valid'),
-            models.UniqueConstraint(fields=['tournament_name', 'round_number', 'game_number', 'player', 'power'],
+            models.UniqueConstraint(fields=['event_name', 'round_number', 'game_number', 'player', 'power'],
                                     name='unique_names_player_power'),
         ]
 
     def __str__(self):
-        return _(u'%(player)s played %(power)s in R %(r_num)d B %(g_num)d at %(tourney)s') % {'player': self.player,
-                                                                                              'power': self.power,
-                                                                                              'r_num': self.round_number,
-                                                                                              'g_num': self.game_number,
-                                                                                              'tourney': self.tournament_name}
+        return _(u'%(player)s played %(power)s in R %(r_num)d B %(g_num)d at %(event)s') % {'player': self.player,
+                                                                                            'power': self.power,
+                                                                                            'r_num': self.round_number,
+                                                                                            'g_num': self.game_number,
+                                                                                            'event': self.event_name}
 
     def for_same_game(self, pgr):
         """Returns True if the two PlayerGameResults are for the same game"""
-        return ((self.tournament_name == pgr.tournament_name) and
+        return ((self.event_name == pgr.event_name) and
                 (self.round_number == pgr.round_number) and
                 (self.game_number == pgr.game_number) and
                 (self.date == pgr.date))

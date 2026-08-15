@@ -234,10 +234,10 @@ class AddPlayerBgTests(TestCase):
         add_player_bg(p)
         # Validate results
         # Tournament should not be included
-        ptrs = p.playereventranking_set.filter(tournament='WAC 10 2013')
+        ptrs = p.playereventranking_set.filter(event_name='WAC 10 2013')
         self.assertEqual(0, ptrs.count())
         # WAC 10 he played Germany and Turkey, and we want to include those games
-        pgrs = p.playergameresult_set.filter(tournament_name='WAC 10 2013')
+        pgrs = p.playergameresult_set.filter(event_name='WAC 10 2013')
         self.assertEqual(2, pgrs.count())
         # Cleanup
         p.delete()
@@ -296,9 +296,9 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=MELINDA_HOLLEY_WDR_ID)
         add_player_bg(p)
         # Validate results
-        pgrs = p.playergameresult_set.filter(tournament_name__contains='DipCon')
+        pgrs = p.playergameresult_set.filter(event_name__contains='DipCon')
         self.assertNotEqual(0, pgrs.count())
-        pgrs = pgrs.filter(tournament_name__contains='DipCon 27')
+        pgrs = pgrs.filter(event_name__contains='DipCon 27')
         self.assertEqual(0, pgrs.count())
         # Cleanup
         p.delete()

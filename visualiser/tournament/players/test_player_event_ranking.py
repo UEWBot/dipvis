@@ -30,7 +30,7 @@ class PlayerEventRankingTests(TestCase):
     def test_playereventranking_wdd_url(self):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
-                                 tournament='Some tournament',
+                                 event_name='Some tournament',
                                  position=3,
                                  year=1974,
                                  wdd_tournament_id=369)
@@ -46,7 +46,7 @@ class PlayerEventRankingTests(TestCase):
         wdd = WDDPlayer.objects.create(player=p,
                                        wdd_player_id=990001)
         ptr = PlayerEventRanking(player=p,
-                                 tournament='Some tournament',
+                                 event_name='Some tournament',
                                  position=3,
                                  year=1974,
                                  wdd_tournament_id=369)
@@ -63,7 +63,7 @@ class PlayerEventRankingTests(TestCase):
     def test_playereventranking_wdr_url(self):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
-                                 tournament='Some tournament',
+                                 event_name='Some tournament',
                                  position=3,
                                  year=1974,
                                  wdr_tournament_id=369)
@@ -76,25 +76,25 @@ class PlayerEventRankingTests(TestCase):
     def test_playereventranking_str(self):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
-                                 tournament='Some tournament',
+                                 event_name='Some tournament',
                                  position=3,
                                  year=1974)
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
         self.assertIn(p.first_name, p_str)
         self.assertIn(p.last_name, p_str)
-        self.assertIn(ptr.tournament, p_str)
+        self.assertIn(ptr.event_name, p_str)
         self.assertIn(str(ptr.year), p_str)
 
     def test_playereventranking_str_with_year(self):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
-                                 tournament='Some tournament 1974',
+                                 event_name='Some tournament 1974',
                                  position=3,
                                  year=1974)
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
         self.assertIn(p.first_name, p_str)
         self.assertIn(p.last_name, p_str)
-        self.assertIn(ptr.tournament, p_str)
+        self.assertIn(ptr.event_name, p_str)
         self.assertIn(str(ptr.year), p_str)

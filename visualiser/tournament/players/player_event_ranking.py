@@ -47,7 +47,7 @@ class PlayerEventRanking(models.Model):
     Used to import background information from external sites.
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.CharField(max_length=100)
+    event_name = models.CharField(max_length=100)
     position = models.PositiveSmallIntegerField()
     year = models.PositiveSmallIntegerField()
     date = models.DateField(blank=True, null=True)
@@ -66,16 +66,16 @@ class PlayerEventRanking(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['player', 'tournament', 'year'],
-                                    name='unique_player_tournament_year'),
+            models.UniqueConstraint(fields=['player', 'event_name', 'year'],
+                                    name='unique_player_event_name_year'),
         ]
 
     def __str__(self):
         pos = position_str(self.position)
-        s = _(u'%(player)s came %(position)s at %(tournament)s') % {'player': self.player,
+        s = _(u'%(player)s came %(position)s at %(event_name)s') % {'player': self.player,
                                                                     'position': pos,
-                                                                    'tournament': self.tournament}
-        if self.tournament[-4:] != str(self.year):
+                                                                    'event_name': self.event_name}
+        if self.event_name[-4:] != str(self.year):
             s += _(u' in %(year)d') % {'year': self.year}
         return s
 
