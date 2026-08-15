@@ -10,8 +10,9 @@
 Circuit views for the Diplomacy Tournament Visualiser.
 """
 
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
@@ -108,3 +109,40 @@ def circuit_scores(request, circuit_id):
                'tournaments': tournaments,
                'scores': rows}
     return render(request, 'circuits/scores.html', context)
+
+def api(request, circuit_id, version):
+    """JSON API to retrieve data"""
+    if version != 1:
+        raise Http404(f'Invalid API version {version}')
+    c = get_object_or_404(Circuit, pk=circuit_id)
+    tournaments = []
+    for t in c.tournaments.all():
+        entry = {'name': t.name,
+                 'year': t.start_date.year,
+                 'wdr_id': t.wdr_tournament_id,
+                 'start_date': t.start_date,
+                 'end_date': t.end_date,
+                 'api_url': request.build_absolute_uri(reverse('api_tournament',
+                                                               args=(version, t.pk,)))}
+        tournaments.append(entry)
+    results = []
+    for player, (rank, score) in c.positions_and_scores().items():
+        # TODO add 'score_breakdown' array
+        entry = {'player_name': str(player),
+                 'player_wdr_id': player.wdr_player_id,
+                 'ranking': rank,
+                 'score': score}
+        cp = CircuitPlayer.objects.get(circuit=c, player=player)
+        entry['events_played'] = cp.tournamentplayers.count()
+        results.append(entry)
+    data = {'name': c.name,
+            'year': c.start_date.year,
+            'start_date': c.start_date,
+            'end_date': c.end_date,
+            'url': request.build_absolute_uri(c.get_absolute_url()),
+            'wdd_id': c.wdd_circuit_id,
+            'wdr_id': c.wdr_circuit_id,
+            'scoring_system': c.scoring_system,
+            'tournaments': tournaments,
+            'results': results}
+    return JsonResponse(data)

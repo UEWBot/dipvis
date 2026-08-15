@@ -193,3 +193,14 @@ class CircuitViewTests(TestCase):
 
         # Rendering more rows should not trigger N+1 database behaviour.
         self.assertLessEqual(expanded_queries, baseline_queries + 2)
+
+    def test_api(self):
+        response = self.client.get(reverse('api_circuit', args=(1, self.circuit.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+
+    def test_api_invalid_version(self):
+        response = self.client.get(reverse('api_circuit', args=(1000, self.circuit.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)

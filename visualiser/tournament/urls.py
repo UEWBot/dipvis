@@ -280,6 +280,7 @@ api_patterns = [
          name='api_tournament'),
     path('tournament/<int:tournament_id>/game/<str:game_name>/', game_views.api,
          name='api_game'),
+    path('circuit/<int:circuit_id>/', circuit_views.api, name='api_circuit'),
 ]
 
 urlpatterns = [
