@@ -30,7 +30,7 @@ from django.db import models
 from django.utils.translation import gettext as _
 
 from .player import Player
-from .player_tournament_ranking import PlayerTournamentRanking
+from .player_event_ranking import PlayerEventRanking
 
 
 class PlayerTitle(models.Model):
@@ -44,7 +44,7 @@ class PlayerTitle(models.Model):
     year = models.PositiveSmallIntegerField()
     updated = models.DateTimeField(auto_now=True)
     # Cross-reference to more information about the tournament where the title was won
-    ranking = models.ForeignKey(PlayerTournamentRanking,
+    ranking = models.ForeignKey(PlayerEventRanking,
                                 on_delete=models.SET_NULL,
                                 blank=True,
                                 null=True)

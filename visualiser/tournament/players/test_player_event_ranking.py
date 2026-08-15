@@ -19,37 +19,37 @@ from django.test import TestCase
 from tournament.diplomacy import GreatPower
 from tournament.players import Player, WDDPlayer
 
-from . import PlayerTournamentRanking
+from . import PlayerEventRanking
 
 
-class PlayerTournamentRankingTests(TestCase):
-    """Test the PlayerTournamentRanking class"""
+class PlayerEventRankingTests(TestCase):
+    """Test the PlayerEventRanking class"""
     fixtures = ['players.json']
 
-    # PlayerTournamentRanking.wdd_url()
-    def test_playertournamentranking_wdd_url(self):
+    # PlayerEventRanking.wdd_url()
+    def test_playereventranking_wdd_url(self):
         p = Player.objects.first()
-        ptr = PlayerTournamentRanking(player=p,
-                                      tournament='Some tournament',
-                                      position=3,
-                                      year=1974,
-                                      wdd_tournament_id=369)
+        ptr = PlayerEventRanking(player=p,
+                                 tournament='Some tournament',
+                                 position=3,
+                                 year=1974,
+                                 wdd_tournament_id=369)
         url = ptr.wdd_url()
         # Player.objects.first() has no WDDPlayer, so no URL can be formed
         self.assertEqual('', url)
         # Also check wdr_url() for a PTR with no WDR id
         self.assertEqual('', ptr.wdr_url())
 
-    def test_playertournamentranking_wdd_url_with_wdd_player(self):
+    def test_playereventranking_wdd_url_with_wdd_player(self):
         p = Player.objects.create(first_name='PTR',
                                   last_name='WDDURL')
         wdd = WDDPlayer.objects.create(player=p,
                                        wdd_player_id=990001)
-        ptr = PlayerTournamentRanking(player=p,
-                                      tournament='Some tournament',
-                                      position=3,
-                                      year=1974,
-                                      wdd_tournament_id=369)
+        ptr = PlayerEventRanking(player=p,
+                                 tournament='Some tournament',
+                                 position=3,
+                                 year=1974,
+                                 wdd_tournament_id=369)
         url = ptr.wdd_url()
         self.assertIn('https://', url)
         self.assertIn('tournament_player.php', url)
@@ -59,26 +59,26 @@ class PlayerTournamentRankingTests(TestCase):
         wdd.delete()
         p.delete()
 
-    # PlayerTournamentRanking.wdr_url()
-    def test_playertournamentranking_wdr_url(self):
+    # PlayerEventRanking.wdr_url()
+    def test_playereventranking_wdr_url(self):
         p = Player.objects.first()
-        ptr = PlayerTournamentRanking(player=p,
-                                      tournament='Some tournament',
-                                      position=3,
-                                      year=1974,
-                                      wdr_tournament_id=369)
+        ptr = PlayerEventRanking(player=p,
+                                 tournament='Some tournament',
+                                 position=3,
+                                 year=1974,
+                                 wdr_tournament_id=369)
         url = ptr.wdr_url()
         self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369', url)
         # Also check wdd_url() for a PTR with no WDD id
         self.assertEqual('', ptr.wdd_url())
 
-    # PlayerTournamentRanking.__str__()
-    def test_playertournamentranking_str(self):
+    # PlayerEventRanking.__str__()
+    def test_playereventranking_str(self):
         p = Player.objects.first()
-        ptr = PlayerTournamentRanking(player=p,
-                                      tournament='Some tournament',
-                                      position=3,
-                                      year=1974)
+        ptr = PlayerEventRanking(player=p,
+                                 tournament='Some tournament',
+                                 position=3,
+                                 year=1974)
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
         self.assertIn(p.first_name, p_str)
@@ -86,12 +86,12 @@ class PlayerTournamentRankingTests(TestCase):
         self.assertIn(ptr.tournament, p_str)
         self.assertIn(str(ptr.year), p_str)
 
-    def test_playertournamentranking_str_with_year(self):
+    def test_playereventranking_str_with_year(self):
         p = Player.objects.first()
-        ptr = PlayerTournamentRanking(player=p,
-                                      tournament='Some tournament 1974',
-                                      position=3,
-                                      year=1974)
+        ptr = PlayerEventRanking(player=p,
+                                 tournament='Some tournament 1974',
+                                 position=3,
+                                 year=1974)
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
         self.assertIn(p.first_name, p_str)

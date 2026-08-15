@@ -20,8 +20,8 @@ from datetime import timezone as datetime_timezone
 from django.test import TestCase, tag
 
 from tournament.diplomacy import GreatPower
-from tournament.players import (PlayerAward, PlayerGameResult, PlayerRanking,
-                                PlayerTitle, PlayerTournamentRanking)
+from tournament.players import (PlayerAward, PlayerEventRanking,
+                                PlayerGameResult, PlayerRanking, PlayerTitle)
 
 from . import WDDPlayer
 
@@ -57,17 +57,17 @@ class WDDPlayerTests(TestCase):
     def test_wddplayer_delete(self):
         wdd = WDDPlayer.objects.first()
         p = wdd.player
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playertitle_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
         self.assertEqual(0, p.playeraward_set.count())
         self.assertEqual(0, p.playerranking_set.count())
         wdd_id = wdd.wdd_player_id
         # Create one of each type of background record
-        PlayerTournamentRanking.objects.create(player=p,
-                                               tournament='Some tournament',
-                                               position=3,
-                                               year=1974)
+        PlayerEventRanking.objects.create(player=p,
+                                          tournament='Some tournament',
+                                          position=3,
+                                          year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -88,7 +88,7 @@ class WDDPlayerTests(TestCase):
                                      national_rank='3')
         wdd.delete()
         # Deletion should trigger clearing of background
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playertitle_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
         self.assertEqual(0, p.playeraward_set.count())
@@ -102,17 +102,17 @@ class WDDPlayerTests(TestCase):
     def test_wddplayer_save(self):
         wdd = WDDPlayer.objects.first()
         p = wdd.player
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playertitle_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
         self.assertEqual(0, p.playeraward_set.count())
         self.assertEqual(0, p.playerranking_set.count())
         wdd_id = wdd.wdd_player_id
         # Create one of each type of background record
-        PlayerTournamentRanking.objects.create(player=p,
-                                               tournament='Some tournament',
-                                               position=3,
-                                               year=1974)
+        PlayerEventRanking.objects.create(player=p,
+                                          tournament='Some tournament',
+                                          position=3,
+                                          year=1974)
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -134,7 +134,7 @@ class WDDPlayerTests(TestCase):
         wdd.wdd_player_id = MELINDA_HOLLEY_WDD_ID
         wdd.save(update_fields=['wdd_player_id'])
         # Change in wdd_player_id should trigger clearing of background
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playertitle_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
         self.assertEqual(0, p.playeraward_set.count())

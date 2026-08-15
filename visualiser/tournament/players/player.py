@@ -121,7 +121,7 @@ class Player(models.Model):
         self.playertitle_set.all().delete()
         self.playerranking_set.all().delete()
         self.playeraward_set.all().delete()
-        self.playertournamentranking_set.all().delete()
+        self.playereventranking_set.all().delete()
         self.playergameresult_set.all().delete()
 
     def background_updated(self):
@@ -138,7 +138,7 @@ class Player(models.Model):
         elif latest is not None:
             result = max(result, latest)
 
-        latest = self.playertournamentranking_set.aggregate(Max('updated'))['updated__max']
+        latest = self.playereventranking_set.aggregate(Max('updated'))['updated__max']
         if result is None:
             result = latest
         elif latest is not None:
@@ -264,7 +264,7 @@ class Player(models.Model):
     def _tourney_rankings(self, mask=MASK_ALL_BG):
         """List of tournament rankings"""
         results = []
-        ranking_set = self.playertournamentranking_set.order_by('year')
+        ranking_set = self.playereventranking_set.order_by('year')
         plays = ranking_set.count()
         if plays == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:

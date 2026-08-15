@@ -83,7 +83,7 @@ class AddPlayerBgTests(TestCase):
         add_player_bg(p)
         # Without a WDR player ID, no tournament rankings or game results should
         # be added (those come exclusively from WDR).
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
 
     def test_add_player_bg_wdr_not_accessible(self):
@@ -153,11 +153,11 @@ class AddPlayerBgTests(TestCase):
         p.wdr_player_id = CHRIS_BRAND_WDR_ID
         p.save()
         p = Player.objects.get(wdr_player_id = CHRIS_BRAND_WDR_ID)
-        ptr_count_before = p.playertournamentranking_set.count()
+        ptr_count_before = p.playereventranking_set.count()
         pgr_count_before = p.playergameresult_set.count()
         add_player_bg(p)
         # WDR data should have been loaded on top of whatever was already present.
-        self.assertGreater(p.playertournamentranking_set.count(), ptr_count_before)
+        self.assertGreater(p.playereventranking_set.count(), ptr_count_before)
         self.assertGreater(p.playergameresult_set.count(), pgr_count_before)
         # Cleanup
         WDDPlayer.objects.create(wdd_player_id=CHRIS_BRAND_WDD_ID,
@@ -173,7 +173,7 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=SPIROS_BOBETSIS_WDR_ID)
         add_player_bg(p)
         # Validate results
-        ptrs = p.playertournamentranking_set.all()
+        ptrs = p.playereventranking_set.all()
         self.assertEqual(2, ptrs.count())
         # Cleanup
         p.delete()
@@ -186,7 +186,7 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=MATT_SHIELDS_WDR_ID)
         add_player_bg(p)
         # Validate results (mostly check that no tournaments get double-counted)
-        ptrs = p.playertournamentranking_set.filter(year=2008)
+        ptrs = p.playereventranking_set.filter(year=2008)
         self.assertEqual(4, ptrs.count())
         # Cleanup
         p.delete()
@@ -220,7 +220,7 @@ class AddPlayerBgTests(TestCase):
                 mock_wdr.return_value.location.return_value = ''
                 add_player_bg(p)  # must not raise
         # The records with invalid dates should be silently skipped.
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playeraward_set.count())
         # Cleanup
         p.delete()
@@ -234,7 +234,7 @@ class AddPlayerBgTests(TestCase):
         add_player_bg(p)
         # Validate results
         # Tournament should not be included
-        ptrs = p.playertournamentranking_set.filter(tournament='WAC 10 2013')
+        ptrs = p.playereventranking_set.filter(tournament='WAC 10 2013')
         self.assertEqual(0, ptrs.count())
         # WAC 10 he played Germany and Turkey, and we want to include those games
         pgrs = p.playergameresult_set.filter(tournament_name='WAC 10 2013')
@@ -307,7 +307,7 @@ class AddPlayerBgTests(TestCase):
         p = Player.objects.create(first_name='Unknown', last_name='Player')
         add_player_bg(p)
         # Validate results
-        self.assertEqual(0, p.playertournamentranking_set.count())
+        self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playertitle_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
         self.assertEqual(0, p.playeraward_set.count())

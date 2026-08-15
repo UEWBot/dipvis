@@ -40,7 +40,7 @@ from .player_award import PlayerAward
 from .player_game_result import PlayerGameResult
 from .player_ranking import PlayerRanking
 from .player_title import PlayerTitle
-from .player_tournament_ranking import PlayerTournamentRanking
+from .player_event_ranking import PlayerEventRanking
 from .wdr_background import WDRBackground, WDRNotAccessible
 from .wikipedia_background import WikipediaBackground
 
@@ -188,27 +188,27 @@ def _add_player_bg_from_wdr(player, wdr_id):
             defaults['date'] = t['tournament_start_date']
         if t['tournament_wdd_id'] == -1:
             try:
-                PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                                 wdr_tournament_id=t['tournament_id'],
-                                                                 year=defaults['date'][:4],
-                                                                 defaults=defaults)
+                PlayerEventRanking.objects.update_or_create(player=player,
+                                                            wdr_tournament_id=t['tournament_id'],
+                                                            year=defaults['date'][:4],
+                                                            defaults=defaults)
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print('Failed to save PlayerTournamentRanking')
+                print('Failed to save PlayerEventRanking')
                 print(f'player={str(player)}, tournament={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t['tournament_id']
             try:
-                PlayerTournamentRanking.objects.update_or_create(player=player,
-                                                                 wdd_tournament_id=t['tournament_wdd_id'],
-                                                                 year=defaults['date'][:4],
-                                                                 defaults=defaults)
+                PlayerEventRanking.objects.update_or_create(player=player,
+                                                            wdd_tournament_id=t['tournament_wdd_id'],
+                                                            year=defaults['date'][:4],
+                                                            defaults=defaults)
             except Exception:
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
-                print('Failed to save PlayerTournamentRanking')
+                print('Failed to save PlayerEventRanking')
                 print(f'player={str(player)}, tournament={t["tournament_name"]}, position={t["tournament_player_rank"]}, year={defaults["date"][:4]}')
                 traceback.print_exc()
     # Boards

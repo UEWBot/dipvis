@@ -25,9 +25,9 @@ from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
                                RoundPlayer, SeederBias, Series,
                                SupplyCentreOwnership, Team, Tournament,
                                TournamentPlayer)
-from tournament.players import (Player, PlayerAward, PlayerGameResult,
-                                PlayerRanking, PlayerTitle,
-                                PlayerTournamentRanking, WDDPlayer)
+from tournament.players import (Player, PlayerAward, PlayerEventRanking,
+                                PlayerGameResult, PlayerRanking, PlayerTitle,
+                                WDDPlayer)
 
 
 class TournamentPermissionAdminMixin:
@@ -253,8 +253,8 @@ class PlayerTitleAdmin(admin.ModelAdmin):
     ordering = ['player', 'year']
 
 
-@admin.register(PlayerTournamentRanking)
-class PlayerTournamentRankingAdmin(admin.ModelAdmin):
+@admin.register(PlayerEventRanking)
+class PlayerEventRanking(admin.ModelAdmin):
     list_filter = ['player', 'tournament', 'position', 'year']
     ordering = ['tournament', 'player']
 

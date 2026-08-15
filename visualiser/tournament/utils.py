@@ -42,7 +42,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
                                SupplyCentreOwnership, Team, Tournament,
                                TournamentPlayer)
 from tournament.players import (InvalidWDRId, Player, PlayerAward,
-                                PlayerGameResult, PlayerTournamentRanking,
+                                PlayerEventRanking, PlayerGameResult,
                                 WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
@@ -799,7 +799,7 @@ def add_wdr_player_ids(csv_filename, dry_run=False):
 
 def add_wdr_tournament_ids(csv_filename, dry_run=False):
     """
-    Add wdr_tournament_id attributes to Tournaments, PlayerTournamentRankings,
+    Add wdr_tournament_id attributes to Tournaments, PlayerEventRanking,
     PlayerGameResults, and PlayerAwards
 
     csv_filename is the name of a CSV file giving the mapping
@@ -817,7 +817,7 @@ def add_wdr_tournament_ids(csv_filename, dry_run=False):
                     t.wdr_tournament_id = row['id']
                     if not dry_run:
                         t.save(update_fields=['wdr_tournament_id'])
-                for ptr in PlayerTournamentRanking.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+                for ptr in PlayerEventRanking.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
                     print(f'Setting wdr_tournament_id for {ptr} to {row["id"]}')
                     ptr.wdr_tournament_id = row['id']
                     if not dry_run:

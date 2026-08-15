@@ -106,7 +106,7 @@ def wpe(request, pk, years=7, count=7):
     now = django_timezone.now()
     start_date = now.replace(year=now.year - years)
     # TODO If I append [:count] here, the template doesn't work properly
-    rankings = player.playertournamentranking_set.filter(date__gte=start_date).order_by('-wpe_score')
+    rankings = player.playereventranking_set.filter(date__gte=start_date).order_by('-wpe_score')
     return render(request,
                   'players/wpe.html',
                   {'start_date': start_date,

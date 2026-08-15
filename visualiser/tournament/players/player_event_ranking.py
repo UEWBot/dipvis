@@ -40,9 +40,9 @@ from .position_str import position_str
 from .wdd_player import WDDPlayer
 
 
-class PlayerTournamentRanking(models.Model):
+class PlayerEventRanking(models.Model):
     """
-    A tournament ranking for a player.
+    An event ranking for a player.
 
     Used to import background information from external sites.
     """
