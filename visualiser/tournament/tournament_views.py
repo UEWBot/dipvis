@@ -890,6 +890,7 @@ def api(request, tournament_id, version):
                  'player_wdr_id': player.wdr_player_id,
                  'ranking': res[0],
                  'score': res[1],
+                 'awards': [],
                  'score_breakdown': []}
         if entry['ranking'] == Tournament.UNRANKED:
             entry['ranking'] = None
@@ -910,13 +911,31 @@ def api(request, tournament_id, version):
                                                      'game': gp.game.name,
                                                      'score': gp.score,
                                                      'dropped': gp.score_dropped})
+        tp = player.tournamentplayer_set.get(tournament=t)
+        for award in tp.awards.all():
+            award_entry = {'name': award.name,
+                           'power': str(award.power)}
+            entry['awards'].append(award_entry)
         results.append(entry)
+    managers = []
+    for u in t.managers.all():
+        player = u.player
+        entry = {'name': str(player),
+                 'wdr_id': player.wdr_player_id}
+        managers.append(entry)
     data = {'name': t.name,
             'year': t.start_date.year,
             'url': request.build_absolute_uri(t.get_absolute_url()),
+            'format': t.get_format_display(),
             'wdr_id': t.wdr_tournament_id,
             'wdd_id': t.wdd_tournament_id,
+            'start_date': t.start_date,
+            'end_date': t.end_date,
+            'location': t.location,
+            'tournament_scoring_system': t.tournament_scoring_system,
+            'round_scoring_system': t.round_scoring_system,
             'dbn_coverage': [d.dbn_url for d in t.dbncoverage_set.all()],
+            'managers': managers,
             'rounds': rounds,
             'results': results}
     return JsonResponse(data)

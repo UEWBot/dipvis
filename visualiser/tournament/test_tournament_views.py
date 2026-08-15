@@ -2433,16 +2433,30 @@ class TournamentViewTests(TestCase):
         self.t4.tournament_scoring_system = 'Sum best 3 games in any rounds'
         self.t4.round_scoring_system = 'None'
         self.t4.save()
+        # Give out a couple of awards
+        a1 = Award.objects.create(name='Best Haircut')
+        a2 = Award.objects.create(name='Best France', power=self.france)
+        self.t4.awards.set([a1, a2])
+        self.t4.tournamentplayer_set.first().awards.add(a1)
+        self.t4.tournamentplayer_set.last().awards.add(a2)
         response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
         # Cleanup
+        self.t4.awards.all().delete()
         g.is_finished = True
         g.save()
         self.t4.tournament_scoring_system = tss
         self.t4.round_scoring_system = rss
         self.t4.save()
+
+    def test_api_with_manager(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        response = self.client.get(reverse('api_tournament', args=(1, self.t2.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
 
     def test_api_invalid_version(self):
         response = self.client.get(reverse('api_tournament', args=(7, self.t4.pk,)),
