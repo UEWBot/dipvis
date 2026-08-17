@@ -30,7 +30,7 @@ from django.urls import reverse
 from tournament.circuits import Circuit, CircuitPlayer
 from tournament.diplomacy import GreatPower
 from tournament.models import DrawSecrecy, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Tournament, TournamentPlayer
-from tournament.players import Player, PlayerGameResult, WDDPlayer
+from tournament.players import Player, PlayerEventRanking, PlayerGameResult, WDDPlayer
 
 
 class PlayerViewTests(TestCase):
@@ -321,7 +321,13 @@ class PlayerViewTests(TestCase):
         # Add a shared game
         # Add in another result for a non-shared game
         today = date.today()
-        pgr1 = PlayerGameResult.objects.create(event_name='Galaxy Championship',
+        ranking1 = PlayerEventRanking.objects.create(player=self.p1,
+                                 event_name='Galaxy Championship',
+                                 date=today)
+        ranking2 = PlayerEventRanking.objects.create(player=p2,
+                                 event_name='Galaxy Championship',
+                                 date=today)
+        pgr1 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=2,
                                                game_number=1,
                                                date=today,
@@ -329,7 +335,7 @@ class PlayerViewTests(TestCase):
                                                power=germany,
                                                position=2)
         # One with lots of blanks
-        pgr2 = PlayerGameResult.objects.create(event_name='Galaxy Championship',
+        pgr2 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=3,
                                                game_number=2,
                                                date=today,
@@ -337,7 +343,7 @@ class PlayerViewTests(TestCase):
                                                power=england,
                                                position=3)
         # One with lots of detail
-        PlayerGameResult.objects.create(event_name=pgr1.event_name,
+        PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         date=pgr1.date,
@@ -370,7 +376,15 @@ class PlayerViewTests(TestCase):
         p2 = Player.objects.create(first_name='Wendy',
                                    last_name='West')
         today = date.today()
-        pgr1 = PlayerGameResult.objects.create(event_name='Nebula Classic',
+        ranking1 = PlayerEventRanking.objects.create(player=self.p1,
+                                 event_name='Nebula Classic',
+                                 date=today,
+                                 wdr_tournament_id=4173)
+        ranking2 = PlayerEventRanking.objects.create(player=p2,
+                                 event_name='Nebula Classic',
+                                 date=today,
+                                 wdr_tournament_id=4173)
+        pgr1 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=4,
                                                game_number=5,
                                                date=today,
@@ -378,7 +392,7 @@ class PlayerViewTests(TestCase):
                                                power=france,
                                                position=1,
                                                wdr_tournament_id=4173)
-        PlayerGameResult.objects.create(event_name=pgr1.event_name,
+        PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         date=pgr1.date,
@@ -404,7 +418,15 @@ class PlayerViewTests(TestCase):
         p2 = Player.objects.create(first_name='Waldo',
                                    last_name='White')
         today = date.today()
-        pgr1 = PlayerGameResult.objects.create(event_name='Comet Open',
+        ranking1 = PlayerEventRanking.objects.create(player=self.p1,
+                                 event_name='Comet Open',
+                                 date=today,
+                                 wdd_tournament_id=9001)
+        ranking2 = PlayerEventRanking.objects.create(player=p2,
+                                 event_name='Comet Open',
+                                 date=today,
+                                 wdd_tournament_id=9001)
+        pgr1 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=1,
                                                game_number=3,
                                                date=today,
@@ -412,7 +434,7 @@ class PlayerViewTests(TestCase):
                                                power=austria,
                                                position=4,
                                                wdd_tournament_id=9001)
-        PlayerGameResult.objects.create(event_name=pgr1.event_name,
+        PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         date=pgr1.date,

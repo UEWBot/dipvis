@@ -40,6 +40,7 @@ from tournament.wdr import WDR_BASE_URL, validate_wdr_tournament_id
 
 from .game_results import GameResults
 from .player import Player
+from .player_event_ranking import PlayerEventRanking
 
 
 class PlayerGameResult(models.Model):
@@ -48,8 +49,9 @@ class PlayerGameResult(models.Model):
 
     Used to import background information from external sites.
     """
-
-    event_name = models.CharField(max_length=100)
+    event_ranking = models.ForeignKey(PlayerEventRanking,
+                                      on_delete=models.CASCADE,
+                                      )
     round_number = models.PositiveSmallIntegerField()
     game_number = models.PositiveSmallIntegerField()
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -85,8 +87,8 @@ class PlayerGameResult(models.Model):
                                    name='%(class)s_result_valid'),
             models.CheckConstraint(check=Q(year_eliminated__gte=FIRST_YEAR) | Q(year_eliminated__isnull=True),
                                    name='%(class)s_year_eliminated_valid'),
-            models.UniqueConstraint(fields=['event_name', 'round_number', 'game_number', 'player', 'power'],
-                                    name='unique_names_player_power'),
+            models.UniqueConstraint(fields=['event_ranking', 'round_number', 'game_number', 'player', 'power'],
+                                    name='unique_eventranking_player_power'),
         ]
 
     def __str__(self):
@@ -94,11 +96,11 @@ class PlayerGameResult(models.Model):
                                                                                             'power': self.power,
                                                                                             'r_num': self.round_number,
                                                                                             'g_num': self.game_number,
-                                                                                            'event': self.event_name}
+                                                                                            'event': self.event_ranking.event_name}
 
     def for_same_game(self, pgr):
         """Returns True if the two PlayerGameResults are for the same game"""
-        return ((self.event_name == pgr.event_name) and
+        return ((self.event_ranking.event_name == pgr.event_ranking.event_name) and
                 (self.round_number == pgr.round_number) and
                 (self.game_number == pgr.game_number) and
                 (self.date == pgr.date))

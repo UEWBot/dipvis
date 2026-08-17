@@ -22,7 +22,7 @@ from django.test import TestCase
 from tournament.diplomacy import GreatPower
 from tournament.players import Player
 
-from . import PlayerAward
+from . import PlayerAward, PlayerEventRanking
 
 
 class PlayerAwardTests(TestCase):
@@ -39,12 +39,15 @@ class PlayerAwardTests(TestCase):
         cls.italy = GreatPower.objects.get(abbreviation='I')
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
+        cls.ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
+                                                        event_name='Some tournament',
+                                                        date=datetime.now())
 
     # PlayerAward.wdd_url()
     def test_playeraward_wdd_url_power(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         event_name='Some tournament',
+                         event_ranking=self.ranking,
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Player of France',
                          wdd_tournament_id=369,
@@ -58,7 +61,7 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_wdd_url_no_power(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         event_name='Some tournament',
+                         event_ranking=self.ranking,
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person',
                          wdd_tournament_id=369)
@@ -70,7 +73,7 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_wdr_url(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         event_name='Some tournament',
+                         event_ranking=self.ranking,
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person',
                          wdr_tournament_id=369)
@@ -83,7 +86,7 @@ class PlayerAwardTests(TestCase):
     def test_playeraward_str(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
-                         event_name='Some tournament',
+                         event_ranking=self.ranking,
                          date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person')
         p_str = str(pa)
@@ -91,4 +94,4 @@ class PlayerAwardTests(TestCase):
         self.assertIn(p.first_name, p_str)
         self.assertIn(p.last_name, p_str)
         self.assertIn(pa.name, p_str)
-        self.assertIn(pa.event_name, p_str)
+        self.assertIn(pa.event_ranking.event_name, p_str)

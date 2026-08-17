@@ -89,6 +89,18 @@ class PlayerEventRankingTests(TestCase):
         self.assertIn(ptr.event_name, p_str)
         self.assertIn(str(ptr.date.year), p_str)
 
+    def test_playereventranking_str_unranked(self):
+        p = Player.objects.first()
+        ptr = PlayerEventRanking(player=p,
+                                 event_name='Some tournament',
+                                 position=None,
+                                 date=datetime.now(datetime_timezone.utc))
+        p_str = str(ptr)
+        self.assertIn(p.first_name, p_str)
+        self.assertIn(p.last_name, p_str)
+        self.assertIn(ptr.event_name, p_str)
+        self.assertIn('unranked', p_str)
+
     def test_playereventranking_str_with_year(self):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,

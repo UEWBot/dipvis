@@ -64,22 +64,22 @@ class WDDPlayerTests(TestCase):
         self.assertEqual(0, p.playerranking_set.count())
         wdd_id = wdd.wdd_player_id
         # Create one of each type of background record
-        PlayerEventRanking.objects.create(player=p,
-                                          event_name='Some tournament',
-                                          position=3,
-                                          date=datetime.now(datetime_timezone.utc))
+        per = PlayerEventRanking.objects.create(player=p,
+                                                event_name='Some tournament',
+                                                position=3,
+                                                date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        event_name='Some tournament',
+                                        event_ranking=per,
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   event_name='Some tournament',
+                                   event_ranking=per,
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
@@ -109,22 +109,22 @@ class WDDPlayerTests(TestCase):
         self.assertEqual(0, p.playerranking_set.count())
         wdd_id = wdd.wdd_player_id
         # Create one of each type of background record
-        PlayerEventRanking.objects.create(player=p,
-                                          event_name='Some tournament',
-                                          position=3,
-                                          date=datetime.now(datetime_timezone.utc))
+        per = PlayerEventRanking.objects.create(player=p,
+                                                event_name='Some tournament',
+                                                position=3,
+                                                date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
         PlayerGameResult.objects.create(player=p,
-                                        event_name='Some tournament',
+                                        event_ranking=per,
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
                                         date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
-                                   event_name='Some tournament',
+                                   event_ranking=per,
                                    date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,

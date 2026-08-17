@@ -226,7 +226,7 @@ class Player(models.Model):
                 s = _('%(name)s first won %(award)s in %(year)d at %(event)s') % {'name': self,
                                                                                   'award': a.name,
                                                                                   'year': a.date.year,
-                                                                                  'event': a.event_name}
+                                                                                  'event': a.event_ranking.event_name}
                 if a.final_sc_count:
                     s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
                 s += '.'
@@ -235,7 +235,7 @@ class Player(models.Model):
                 s = _('%(name)s most recently won %(award)s in %(year)d at %(event)s') % {'name': self,
                                                                                           'award': a.name,
                                                                                           'year': a.date.year,
-                                                                                          'event': a.event_name}
+                                                                                          'event': a.event_ranking.event_name}
                 if a.final_sc_count:
                     s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
                 s += '.'
@@ -245,7 +245,7 @@ class Player(models.Model):
                 results.append(_('%(name)s won %(award)s at %(event)s.')
                                % {'name': self,
                                   'award': a.name,
-                                  'event': a.event_name})
+                                  'event': a.event_ranking.event_name})
         return results
 
     def _titles(self, mask=MASK_ALL_BG):
@@ -264,11 +264,11 @@ class Player(models.Model):
     def _tourney_rankings(self, mask=MASK_ALL_BG):
         """List of tournament rankings"""
         results = []
-        ranking_set = self.playereventranking_set.order_by('date')
+        ranking_set = self.playereventranking_set.filter(position__isnull=False).order_by('date')
         plays = ranking_set.count()
         if plays == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:
-                results.append(_(u'This is the first tournament for %(name)s.')
+                results.append(_(u'This is the first tournament %(name)s has competed in.')
                                % {'name': self})
             return results
         if (mask & MASK_TOURNEY_COUNT) != 0:

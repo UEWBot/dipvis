@@ -48,7 +48,7 @@ class PlayerEventRanking(models.Model):
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     event_name = models.CharField(max_length=100)
-    position = models.PositiveSmallIntegerField()
+    position = models.PositiveSmallIntegerField(blank=True, null=True)
     date = models.DateField()
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
@@ -70,10 +70,13 @@ class PlayerEventRanking(models.Model):
         ]
 
     def __str__(self):
-        pos = position_str(self.position)
-        s = _(u'%(player)s came %(position)s at %(event_name)s') % {'player': self.player,
-                                                                    'position': pos,
-                                                                    'event_name': self.event_name}
+        if self.position is None:
+            s = _(u'%(player)s was unranked at %(event_name)s') % {'player': self.player,
+                                                                   'event_name': self.event_name}
+        else:
+            s = _(u'%(player)s came %(position)s at %(event_name)s') % {'player': self.player,
+                                                                        'position': position_str(self.position),
+                                                                        'event_name': self.event_name}
         if self.event_name[-4:] != str(self.date.year):
             s += _(u' in %(year)d') % {'year': self.date.year}
         return s

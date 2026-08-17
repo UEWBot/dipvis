@@ -21,7 +21,7 @@ from django.test import TestCase
 from tournament.diplomacy import GreatPower
 from tournament.players import Player, WDDPlayer
 
-from . import PlayerGameResult
+from . import PlayerEventRanking, PlayerGameResult
 
 
 class PlayerGameResultTests(TestCase):
@@ -38,20 +38,26 @@ class PlayerGameResultTests(TestCase):
         cls.italy = GreatPower.objects.get(abbreviation='I')
         cls.russia = GreatPower.objects.get(abbreviation='R')
         cls.turkey = GreatPower.objects.get(abbreviation='T')
+        cls.best_ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
+                                                             event_name='Best Tournament',
+                                                             date=date.today())
+        cls.worst_ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
+                                                              event_name='Worst Tournament',
+                                                              date=date.today())
 
     # PlayerGameResult.for_same_game()
     def test_playergameresult_same(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(event_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
+        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
@@ -64,14 +70,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(event_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_name='Worst Tournament',
+        pgr2 = PlayerGameResult(event_ranking=self.worst_ranking,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
@@ -84,14 +90,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(event_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
+        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
                                 round_number=2,
                                 game_number=1,
                                 player=p2,
@@ -104,14 +110,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(event_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
+        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
                                 round_number=1,
                                 game_number=2,
                                 player=p2,
@@ -124,14 +130,14 @@ class PlayerGameResultTests(TestCase):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
         # No final_sc_count (or other optional fields)
-        pgr1 = PlayerGameResult(event_name='Best Tournament',
+        pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
                                 date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_name=pgr1.event_name,
+        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
@@ -143,7 +149,7 @@ class PlayerGameResultTests(TestCase):
     # PlayeGameResult.game_name()
     def test_playergameresult_game_name(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult(event_name='Best Tournament',
+        pgr = PlayerGameResult(event_ranking=self.best_ranking,
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -156,7 +162,7 @@ class PlayerGameResultTests(TestCase):
     # PlayerGameResult.wdd_url()
     def test_playergameresult_wdd_url(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult(event_name='Best Tournament',
+        pgr = PlayerGameResult(event_ranking=self.best_ranking,
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -177,7 +183,7 @@ class PlayerGameResultTests(TestCase):
     def test_playergameresult_wdr_url(self):
         wdd = WDDPlayer.objects.first()
         p = wdd.player
-        pgr = PlayerGameResult(event_name='Best Tournament',
+        pgr = PlayerGameResult(event_ranking=self.best_ranking,
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -194,7 +200,7 @@ class PlayerGameResultTests(TestCase):
     # PlayerGameResult.__str__()
     def test_playergameresult_str(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult(event_name='Best Tournament',
+        pgr = PlayerGameResult(event_ranking=self.best_ranking,
                                round_number=1,
                                game_number=3,
                                player=p,
@@ -209,7 +215,7 @@ class PlayerGameResultTests(TestCase):
 
     def test_playergameresult_top_board_default_false(self):
         p = Player.objects.first()
-        pgr = PlayerGameResult.objects.create(event_name='Best Tournament',
+        pgr = PlayerGameResult.objects.create(event_ranking=self.best_ranking,
                                               round_number=2,
                                               game_number=2,
                                               player=p,

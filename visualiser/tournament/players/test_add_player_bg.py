@@ -141,6 +141,60 @@ class AddPlayerBgTests(TestCase):
                 add_player_bg(p)
         pgr = p.playergameresult_set.get(round_number=7, game_number=1)
         self.assertIs(True, pgr.is_top_board)
+        self.assertIsNotNone(pgr.event_ranking)
+        self.assertEqual('WDC Test', pgr.event_ranking.event_name)
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_wdr_links_awards_and_results_to_event_ranking(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='Linked',
+                                  wdr_player_id=9994)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [{
+                'tournament_id': 7002,
+                'tournament_wdd_id': -1,
+                'tournament_name': 'WDC Linked Test',
+                'tournament_start_date': '2023-08-01',
+                'tournament_end_date': '2023-08-04',
+                'tournament_kind': 'WDC',
+                'tournament_player_rank': 3,
+            }],
+            'boards': [{
+                'board_round': 2,
+                'board_number': 4,
+                'board_is_top': False,
+                'board_tournament': 7002,
+                'board_power': 'Austria',
+                'board_centers': 10,
+                'board_score': 10.0,
+                'board_rank': 2,
+                'board_year_of_elimination': None,
+                'board_url': '',
+                'board_variant': 'Classic',
+            }],
+            'awards': [{
+                'award_country': 'Austria',
+                'award_tournament': 7002,
+            }],
+        }
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+        pgr = p.playergameresult_set.get(round_number=2, game_number=4)
+        pa = p.playeraward_set.get(name='Best Austria')
+        self.assertIsNotNone(pgr.event_ranking)
+        self.assertIsNotNone(pa.event_ranking)
+        self.assertEqual(pgr.event_ranking, pa.event_ranking)
+        self.assertEqual('WDC Linked Test', pgr.event_ranking.event_name)
         # Cleanup
         p.delete()
 
@@ -233,12 +287,14 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=MATT_SHIELDS_WDR_ID)
         add_player_bg(p)
         # Validate results
-        # Tournament should not be included
+        # The event is retained even though WDR has no tournament rank.
         ptrs = p.playereventranking_set.filter(event_name='WAC 10 2013')
-        self.assertEqual(0, ptrs.count())
+        self.assertEqual(1, ptrs.count())
+        self.assertIsNone(ptrs.first().position)
         # WAC 10 he played Germany and Turkey, and we want to include those games
-        pgrs = p.playergameresult_set.filter(event_name='WAC 10 2013')
+        pgrs = p.playergameresult_set.filter(event_ranking__event_name='WAC 10 2013')
         self.assertEqual(2, pgrs.count())
+        self.assertEqual(2, pgrs.exclude(event_ranking__isnull=True).count())
         # Cleanup
         p.delete()
 
@@ -296,9 +352,9 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=MELINDA_HOLLEY_WDR_ID)
         add_player_bg(p)
         # Validate results
-        pgrs = p.playergameresult_set.filter(event_name__contains='DipCon')
+        pgrs = p.playergameresult_set.filter(event_ranking__event_name__contains='DipCon')
         self.assertNotEqual(0, pgrs.count())
-        pgrs = pgrs.filter(event_name__contains='DipCon 27')
+        pgrs = pgrs.filter(event_ranking__event_name__contains='DipCon 27')
         self.assertEqual(0, pgrs.count())
         # Cleanup
         p.delete()
