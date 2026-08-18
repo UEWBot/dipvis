@@ -34,6 +34,7 @@ from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
                               clean_duplicate_player,
                               find_tournaments_missing_wdr_ids,
                               find_players_missing_wdd_ids,
+                              find_users_without_players,
                               nuke_invalid_email,
                               player_emails,
                               populate_missed_years,
@@ -296,6 +297,28 @@ class UtilsTests(TestCase):
         p_missing.delete()
         p_has_wdd.delete()
         p_no_round.delete()
+
+    def test_find_users_without_players(self):
+        u1 = User.objects.create_user(username='player')
+        u2 = User.objects.create_user(username='non-player')
+        p1 = Player.objects.create(first_name='Uma',
+                                   last_name='UtilsOne',
+                                   email='uma1@example.com')
+        p2 = Player.objects.create(first_name='Uri',
+                                   last_name='UtilsTwo',
+                                   email='uri2@example.com')
+        p1.user = u1
+        p1.save()
+
+        with patch('builtins.print') as mock_print:
+            find_users_without_players()
+        self.assertEqual(mock_print.call_count, 1)
+        self.assertEqual(str(mock_print.call_args_list[0].args[0]), str(u2))
+        # Cleanup
+        p2.delete()
+        p1.delete()
+        u2.delete()
+        u1.delete()
 
     @patch('tournament.utils.wdr_tournament_as_json')
     def test_add_missing_player_wdr_ids_sets_matching_player_id(self, mock_wdr_json):

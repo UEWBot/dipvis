@@ -31,6 +31,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.utils import timezone as django_timezone
 
 from tournament import backstabbr
@@ -329,6 +330,11 @@ def populate_missed_years(game, dry_run=False):
 
 
 # Reports - Summarise data
+
+def find_users_without_players():
+    """List Users that aren't associated with Players"""
+    for u in User.objects.filter(player__isnull=True):
+        print(u)
 
 def find_tournaments_missing_wdd_ids():
     """List completed tournaments without WDD ids (they should probably have one)"""
