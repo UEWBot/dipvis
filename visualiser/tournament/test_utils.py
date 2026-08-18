@@ -32,6 +32,7 @@ from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
                               add_missing_player_wdr_ids,
                               check_wdd_player_ids,
                               clean_duplicate_player,
+                              find_tournaments_missing_wdd_ids,
                               find_tournaments_missing_wdr_ids,
                               find_players_missing_wdd_ids,
                               find_users_without_players,
@@ -364,6 +365,42 @@ class UtilsTests(TestCase):
         t.delete()
         p_match.delete()
         p_zero.delete()
+
+    def test_find_tournaments_missing_wdd_ids_finished_only(self):
+        today = django_timezone.now().date()
+        t_finished_missing = Tournament.objects.create(name='util-missing-wdd-finished',
+                                                       start_date=today,
+                                                       end_date=today,
+                                                       round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                       tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                       draw_secrecy=DrawSecrecy.SECRET,
+                                                       is_finished=True,
+                                                       wdd_tournament_id=None)
+        t_unfinished_missing = Tournament.objects.create(name='util-missing-wdd-unfinished',
+                                                         start_date=today,
+                                                         end_date=today,
+                                                         round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                         tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                         draw_secrecy=DrawSecrecy.SECRET,
+                                                         is_finished=False,
+                                                         wdd_tournament_id=None)
+        Tournament.objects.create(name='util-has-wdd-finished',
+                                  start_date=today,
+                                  end_date=today,
+                                  round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                  tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                  draw_secrecy=DrawSecrecy.SECRET,
+                                  is_finished=True,
+                                  wdd_tournament_id=999)
+
+        with patch('builtins.print') as mock_print:
+            find_tournaments_missing_wdd_ids()
+
+        self.assertEqual(mock_print.call_count, 1)
+        self.assertEqual(str(mock_print.call_args_list[0].args[0]), str(t_finished_missing))
+        # Cleanup
+        t_finished_missing.delete()
+        t_unfinished_missing.delete()
 
     def test_find_tournaments_missing_wdr_ids_finished_only(self):
         today = django_timezone.now().date()

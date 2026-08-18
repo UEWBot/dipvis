@@ -338,17 +338,13 @@ def find_users_without_players():
 
 def find_tournaments_missing_wdd_ids():
     """List completed tournaments without WDD ids (they should probably have one)"""
-    for t in Tournament.objects.filter(wdd_tournament_id=None):
-        if not t.is_finished:
-            continue
+    for t in Tournament.objects.filter(wdd_tournament_id=None).filter(is_finished=True):
         print(t)
 
 
 def find_tournaments_missing_wdr_ids():
     """List completed tournaments without WDR ids (they should probably have one)"""
-    for t in Tournament.objects.filter(wdr_tournament_id=None):
-        if not t.is_finished:
-            continue
+    for t in Tournament.objects.filter(wdr_tournament_id=None).filter(is_finished=True):
         print(t)
 
 
