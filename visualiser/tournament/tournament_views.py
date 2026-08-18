@@ -28,6 +28,7 @@ import matplotlib.ticker as ticker
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
@@ -919,10 +920,14 @@ def api(request, tournament_id, version):
         results.append(entry)
     managers = []
     for u in t.managers.all():
-        player = u.player
-        entry = {'name': str(player),
-                 'wdr_id': player.wdr_player_id}
-        managers.append(entry)
+        try:
+            player = u.player
+        except User.player.RelatedObjectDoesNotExist:
+            print(f"User {u} does not have an associated Player")
+        else:
+            entry = {'name': str(player),
+                     'wdr_id': player.wdr_player_id}
+            managers.append(entry)
     data = {'name': t.name,
             'year': t.start_date.year,
             'url': request.build_absolute_uri(t.get_absolute_url()),

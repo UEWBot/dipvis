@@ -2458,6 +2458,19 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
 
+    def test_api_with_manager_without_player(self):
+        u = User.objects.create_user(username='manager_without_player',
+                                    password='MyPassword')
+        self.t4.managers.add(u)
+        self.client.login(username='manager_without_player', password='MyPassword')
+        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        self.assertEqual(response.json()['managers'], [])
+        self.t4.managers.remove(u)
+        u.delete()
+
     def test_api_invalid_version(self):
         response = self.client.get(reverse('api_tournament', args=(7, self.t4.pk,)),
                                    secure=True)
