@@ -25,6 +25,7 @@ jobs:
           python ./manage.py test \
             --tag=wikipedia_live \
             --tag=backstabbr \
-            --tag=webdip \
+            # Webdip doesn't like being accessed from github
+            #--tag=webdip \
             --tag=wdr \
             --tag=wdd
