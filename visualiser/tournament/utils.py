@@ -333,7 +333,7 @@ def populate_missed_years(game, dry_run=False):
 
 def find_users_without_players():
     """List Users that aren't associated with Players"""
-    for u in User.objects.filter(player__isnull=True):
+    for u in User.objects.filter(is_active=True).filter(player__isnull=True):
         print(u)
 
 def find_tournaments_missing_wdd_ids():
