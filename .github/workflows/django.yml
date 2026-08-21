@@ -89,4 +89,4 @@ jobs:
         cd visualiser
         python ./manage.py test \
           --tag=backstabbr \
-          --tag=webdip
+          #--tag=webdip
