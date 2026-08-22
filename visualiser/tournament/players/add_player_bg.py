@@ -278,6 +278,10 @@ def _add_player_bg_from_wdr(player, wdr_id):
         # What was the tournament?
         t_id = a['award_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
+        if not t:
+            # This seems like a bug in WDR - sometimes tournaments are missing from the list
+            print(f"Failed to find tournament with id {t_id} for award {a}")
+            continue
         defaults = {'event_name': t['tournament_name']}
         if t['tournament_end_date']:
             defaults['date'] = t['tournament_end_date']
