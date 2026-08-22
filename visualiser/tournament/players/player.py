@@ -264,7 +264,7 @@ class Player(models.Model):
     def _tourney_rankings(self, mask=MASK_ALL_BG):
         """List of tournament rankings"""
         results = []
-        ranking_set = self.playereventranking_set.order_by('year')
+        ranking_set = self.playereventranking_set.order_by('date')
         plays = ranking_set.count()
         if plays == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:
@@ -281,13 +281,13 @@ class Player(models.Model):
             results.append(_(u'%(name)s first competed in a tournament (%(event)s) in %(year)d.')
                            % {'name': self,
                               'event': first.event_name,
-                              'year': first.year})
+                              'year': first.date.year})
         if (mask & MASK_LAST_TOURNEY) != 0:
             last = ranking_set.last()
             results.append(_(u'%(name)s most recently competed in a tournament (%(event)s) in %(year)d.')
                            % {'name': self,
                               'event': last.event_name,
-                              'year': last.year})
+                              'year': last.date.year})
         if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
             wins_set = ranking_set.filter(position=1)
             wins = wins_set.count()
@@ -301,12 +301,12 @@ class Player(models.Model):
                 results.append(_('%(name)s won their first tournament (%(event)s) in %(year)d.')
                                % {'name': self,
                                   'event': w.event_name,
-                                  'year': w.year})
+                                  'year': w.date.year})
                 w = wins_set.last()
                 results.append(_('%(name)s most recently won a tournament (%(event)s) in %(year)d.')
                                % {'name': self,
                                   'event': w.event_name,
-                                  'year': w.year})
+                                  'year': w.date.year})
             else:
                 best = ranking_set.aggregate(Min('position'))['position__min']
                 pos = position_str(best)

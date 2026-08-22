@@ -49,8 +49,7 @@ class PlayerEventRanking(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     event_name = models.CharField(max_length=100)
     position = models.PositiveSmallIntegerField()
-    year = models.PositiveSmallIntegerField()
-    date = models.DateField(blank=True, null=True)
+    date = models.DateField()
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,
@@ -66,8 +65,8 @@ class PlayerEventRanking(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['player', 'event_name', 'year'],
-                                    name='unique_player_event_name_year'),
+            models.UniqueConstraint(fields=['player', 'event_name', 'date'],
+                                    name='unique_player_event_name_date'),
         ]
 
     def __str__(self):
@@ -75,8 +74,8 @@ class PlayerEventRanking(models.Model):
         s = _(u'%(player)s came %(position)s at %(event_name)s') % {'player': self.player,
                                                                     'position': pos,
                                                                     'event_name': self.event_name}
-        if self.event_name[-4:] != str(self.year):
-            s += _(u' in %(year)d') % {'year': self.year}
+        if self.event_name[-4:] != str(self.date.year):
+            s += _(u' in %(year)d') % {'year': self.date.year}
         return s
 
     def wdd_url(self):

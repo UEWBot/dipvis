@@ -186,7 +186,7 @@ class AddPlayerBgTests(TestCase):
                                   wdr_player_id=MATT_SHIELDS_WDR_ID)
         add_player_bg(p)
         # Validate results (mostly check that no tournaments get double-counted)
-        ptrs = p.playereventranking_set.filter(year=2008)
+        ptrs = p.playereventranking_set.filter(date__year=2008)
         self.assertEqual(4, ptrs.count())
         # Cleanup
         p.delete()

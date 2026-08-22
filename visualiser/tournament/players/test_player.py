@@ -80,7 +80,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -135,7 +135,7 @@ class PlayerTests(TestCase):
         ptr = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
                                                 position=3,
-                                                year=1974)
+                                                date=datetime.now(datetime_timezone.utc))
         end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
         self.assertLess(start, updated)
@@ -151,7 +151,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerGameResult.objects.create(player=p,
                                         event_name='Some tournament',
                                         round_number=4,
@@ -185,7 +185,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -219,7 +219,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -253,7 +253,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -388,7 +388,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -423,7 +423,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -464,7 +464,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -505,7 +505,7 @@ class PlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -677,19 +677,19 @@ class PlayerTests(TestCase):
         ptr = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Alpha',
                                                 position=3,
-                                                year=1994)
+                                                date=datetime(day=1, month=6, year=1994, tzinfo=datetime_timezone.utc))
         ptr = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Bravo',
                                                 position=1,
-                                                year=2004)
+                                                date=datetime(day=1, month=6, year=2004, tzinfo=datetime_timezone.utc))
         ptr = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Charlie',
                                                 position=1,
-                                                year=2014)
+                                                date=datetime(day=1, month=6, year=2014, tzinfo=datetime_timezone.utc))
         ptr = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Delta',
                                                 position=5,
-                                                year=2024)
+                                                date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
         res = p.background()
         self.assertIn('Chris Brand has won 2 of 4 tournaments (50.00%).', res)
         self.assertIn('Chris Brand won their first tournament (Bravo) in 2004.', res)

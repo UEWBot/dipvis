@@ -67,7 +67,7 @@ class WDDPlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)
@@ -112,7 +112,7 @@ class WDDPlayerTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='Some tournament',
                                           position=3,
-                                          year=1974)
+                                          date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
                                    year=1976)

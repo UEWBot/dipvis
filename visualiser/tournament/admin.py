@@ -255,7 +255,7 @@ class PlayerTitleAdmin(admin.ModelAdmin):
 
 @admin.register(PlayerEventRanking)
 class PlayerEventRanking(admin.ModelAdmin):
-    list_filter = ['player', 'event_name', 'position', 'year']
+    list_filter = ['player', 'event_name', 'position']
     ordering = ['event_name', 'player']
 
 
