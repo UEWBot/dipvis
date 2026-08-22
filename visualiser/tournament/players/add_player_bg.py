@@ -215,25 +215,21 @@ def _add_player_bg_from_wdr(player, wdr_id):
     for b in bg.boards():
         # Skip variant boards because they don't factor well into the statistics
         if b['board_variant'] not in ['Classic', 'Standard (7)', 'Standard']:
-            print('Skipping variant board')
-            print(b)
+            print(f'Skipping board with variant {b["board_variant"]}')
             continue
         # What was the tournament?
         t_id = b['board_tournament']
         t = _find_wdr_tournament(t_id, tournaments)
         if not t:
             # This seems like a bug in WDR - sometimes tournaments are missing from the list
-            print("Failed to find tournament")
-            print(b)
-            print(t_id)
+            print(f"Failed to find tournament with id {t_id} for board {b}")
             continue
         defaults = {'event_name': t['tournament_name'],
                     'position': b['board_rank'],
                     'is_top_board': bool(b.get('board_is_top'))}
         if not b['board_rank']:
             # This seems like a bug in WDR, but sometimes we don't get a rank
-            print("No board_rank")
-            print(b)
+            print(f"No board_rank in board {b}")
             continue
         if t['tournament_end_date']:
             defaults['date'] = t['tournament_end_date']
