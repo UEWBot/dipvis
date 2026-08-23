@@ -56,7 +56,6 @@ class PlayerGameResult(models.Model):
     game_number = models.PositiveSmallIntegerField()
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    date = models.DateField()
     position = models.PositiveSmallIntegerField()
     position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
@@ -69,14 +68,6 @@ class PlayerGameResult(models.Model):
                                                        validators=[validate_year])
     is_top_board = models.BooleanField(default=False,
                                        help_text=_('Whether this game was on a top board'))
-    wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
-                                                    verbose_name=_(u'WDD tournament id'),
-                                                    blank=True,
-                                                    null=True)
-    wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
-                                                    verbose_name=_(u'WDR tournament id'),
-                                                    blank=True,
-                                                    null=True)
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -101,9 +92,9 @@ class PlayerGameResult(models.Model):
     def for_same_game(self, pgr):
         """Returns True if the two PlayerGameResults are for the same game"""
         return ((self.event_ranking.event_name == pgr.event_ranking.event_name) and
+                (self.event_ranking.date == pgr.event_ranking.date) and
                 (self.round_number == pgr.round_number) and
-                (self.game_number == pgr.game_number) and
-                (self.date == pgr.date))
+                (self.game_number == pgr.game_number))
 
     def game_name(self):
         """Returns a string representing the round and board numbers"""
@@ -111,9 +102,9 @@ class PlayerGameResult(models.Model):
 
     def wdd_url(self):
         """WDD URL where this result can be seen"""
-        if not self.wdd_tournament_id:
+        if not self.event_ranking.wdd_tournament_id:
             return ''
-        query = {'id_tournament': self.wdd_tournament_id,
+        query = {'id_tournament': self.event_ranking.wdd_tournament_id,
                  'id_round': self.round_number,
                  'id_board': self.game_number}
         url = urlunparse(('https',
@@ -126,6 +117,6 @@ class PlayerGameResult(models.Model):
 
     def wdr_url(self):
         """WDR URL where this ranking can be seen"""
-        if not self.wdr_tournament_id:
+        if not self.event_ranking.wdr_tournament_id:
             return ''
-        return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}/boards'
+        return f'{WDR_BASE_URL}tournaments/{self.event_ranking.wdr_tournament_id}/boards'

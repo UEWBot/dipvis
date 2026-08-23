@@ -322,15 +322,14 @@ class PlayerViewTests(TestCase):
         # Add in another result for a non-shared game
         today = date.today()
         ranking1 = PlayerEventRanking.objects.create(player=self.p1,
-                                 event_name='Galaxy Championship',
-                                 date=today)
+                                                     event_name='Galaxy Championship',
+                                                     date=today)
         ranking2 = PlayerEventRanking.objects.create(player=p2,
-                                 event_name='Galaxy Championship',
-                                 date=today)
+                                                     event_name='Galaxy Championship',
+                                                     date=today)
         pgr1 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=2,
                                                game_number=1,
-                                               date=today,
                                                player=self.p1,
                                                power=germany,
                                                position=2)
@@ -338,7 +337,6 @@ class PlayerViewTests(TestCase):
         pgr2 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=3,
                                                game_number=2,
-                                               date=today,
                                                player=self.p1,
                                                power=england,
                                                position=3)
@@ -346,7 +344,6 @@ class PlayerViewTests(TestCase):
         PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
-                                        date=pgr1.date,
                                         player=p2,
                                         power=germany,
                                         position=6,
@@ -377,29 +374,25 @@ class PlayerViewTests(TestCase):
                                    last_name='West')
         today = date.today()
         ranking1 = PlayerEventRanking.objects.create(player=self.p1,
-                                 event_name='Nebula Classic',
-                                 date=today,
-                                 wdr_tournament_id=4173)
+                                                     event_name='Nebula Classic',
+                                                     date=today,
+                                                     wdr_tournament_id=4173)
         ranking2 = PlayerEventRanking.objects.create(player=p2,
-                                 event_name='Nebula Classic',
-                                 date=today,
-                                 wdr_tournament_id=4173)
+                                                     event_name='Nebula Classic',
+                                                     date=today,
+                                                     wdr_tournament_id=4173)
         pgr1 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=4,
                                                game_number=5,
-                                               date=today,
                                                player=self.p1,
                                                power=france,
-                                               position=1,
-                                               wdr_tournament_id=4173)
+                                               position=1)
         PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
-                                        date=pgr1.date,
                                         player=p2,
                                         power=turkey,
-                                        position=7,
-                                        wdr_tournament_id=4173)
+                                        position=7)
         response = self.client.get(reverse('player_versus',
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)
@@ -419,29 +412,25 @@ class PlayerViewTests(TestCase):
                                    last_name='White')
         today = date.today()
         ranking1 = PlayerEventRanking.objects.create(player=self.p1,
-                                 event_name='Comet Open',
-                                 date=today,
-                                 wdd_tournament_id=9001)
+                                                     event_name='Comet Open',
+                                                     date=today,
+                                                     wdd_tournament_id=9001)
         ranking2 = PlayerEventRanking.objects.create(player=p2,
-                                 event_name='Comet Open',
-                                 date=today,
-                                 wdd_tournament_id=9001)
+                                                     event_name='Comet Open',
+                                                     date=today,
+                                                     wdd_tournament_id=9001)
         pgr1 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=1,
                                                game_number=3,
-                                               date=today,
                                                player=self.p1,
                                                power=austria,
-                                               position=4,
-                                               wdd_tournament_id=9001)
+                                               position=4)
         PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
-                                        date=pgr1.date,
                                         player=p2,
                                         power=russia,
-                                        position=5,
-                                        wdd_tournament_id=9001)
+                                        position=5)
         response = self.client.get(reverse('player_versus',
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)

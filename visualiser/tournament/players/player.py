@@ -200,7 +200,7 @@ class Player(models.Model):
     def _awards(self, power=None, mask=MASK_ALL_BG):
         """List of all awards won, optionally as a specified power"""
         results = []
-        award_set = self.playeraward_set.order_by('date')
+        award_set = self.playeraward_set.order_by('event_ranking__date')
         powers = GreatPower.objects.all()
         if power is not None:
             award_set = award_set.filter(power=power)
@@ -225,7 +225,7 @@ class Player(models.Model):
                 a = power_award_set.first()
                 s = _('%(name)s first won %(award)s in %(year)d at %(event)s') % {'name': self,
                                                                                   'award': a.name,
-                                                                                  'year': a.date.year,
+                                                                                  'year': a.event_ranking.date.year,
                                                                                   'event': a.event_ranking.event_name}
                 if a.final_sc_count:
                     s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
@@ -234,7 +234,7 @@ class Player(models.Model):
                 a = power_award_set.last()
                 s = _('%(name)s most recently won %(award)s in %(year)d at %(event)s') % {'name': self,
                                                                                           'award': a.name,
-                                                                                          'year': a.date.year,
+                                                                                          'year': a.event_ranking.date.year,
                                                                                           'event': a.event_ranking.event_name}
                 if a.final_sc_count:
                     s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}

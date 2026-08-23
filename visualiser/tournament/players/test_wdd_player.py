@@ -76,11 +76,9 @@ class WDDPlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -121,11 +119,9 @@ class WDDPlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',

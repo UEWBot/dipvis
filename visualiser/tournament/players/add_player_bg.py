@@ -209,15 +209,12 @@ def _add_player_bg_from_wdr(player, wdr_id):
         event_ranking = rankings_by_wdr_tournament_id.get(t_id)
         if event_ranking is None:
             continue
-        defaults = {'event_ranking': event_ranking,
-                    'position': b['board_rank'],
+        defaults = {'position': b['board_rank'],
                     'is_top_board': bool(b.get('board_is_top'))}
         if not b['board_rank']:
             # This seems like a bug in WDR, but sometimes we don't get a rank
             print(f"No board_rank in board {b}")
             continue
-        if event_ranking.date is not None:
-            defaults['date'] = event_ranking.date
         # Ignore any of these that aren't present
         if b['board_score']:
             defaults['score'] = b['board_score']
@@ -225,35 +222,19 @@ def _add_player_bg_from_wdr(player, wdr_id):
             defaults['final_sc_count'] = b['board_centers']
         if b['board_year_of_elimination']:
             defaults['year_eliminated'] = b['board_year_of_elimination']
-        if event_ranking.wdd_tournament_id is None:
-            try:
-                PlayerGameResult.objects.update_or_create(wdr_tournament_id=t_id,
-                                                          round_number=b['board_round'],
-                                                          game_number=b['board_number'],
-                                                          player=player,
-                                                          power=wdr_power_name_to_greatpower(b['board_power']),
-                                                          defaults=defaults)
-            except Exception:
-                # Handle all exceptions
-                # This way, we fail to add/update the single ranking rather than all the background
-                print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, event_name={event_ranking.event_name}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
-                traceback.print_exc()
-        else:
-            defaults['wdr_tournament_id'] = t_id
-            try:
-                PlayerGameResult.objects.update_or_create(wdd_tournament_id=event_ranking.wdd_tournament_id,
-                                                          round_number=b['board_round'],
-                                                          game_number=b['board_number'],
-                                                          player=player,
-                                                          power=wdr_power_name_to_greatpower(b['board_power']),
-                                                          defaults=defaults)
-            except Exception:
-                # Handle all exceptions
-                # This way, we fail to add/update the single ranking rather than all the background
-                print('Failed to save PlayerGameResult')
-                print(f'player={str(player)}, event_name={event_ranking.event_name}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
-                traceback.print_exc()
+        try:
+            PlayerGameResult.objects.update_or_create(event_ranking=event_ranking,
+                                                      round_number=b['board_round'],
+                                                      game_number=b['board_number'],
+                                                      player=player,
+                                                      power=wdr_power_name_to_greatpower(b['board_power']),
+                                                      defaults=defaults)
+        except Exception:
+            # Handle all exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print('Failed to save PlayerGameResult')
+            print(f'player={str(player)}, event_name={event_ranking.event_name}, round_number={b["board_round"]}, game_number={b["board_number"]}, power={b["board_power"]}, position={b["board_rank"]}, defaults={defaults}')
+            traceback.print_exc()
     # Awards
     for a in bg.awards():
         # WDR only stores best country awards at present
@@ -263,36 +244,17 @@ def _add_player_bg_from_wdr(player, wdr_id):
         event_ranking = rankings_by_wdr_tournament_id.get(t_id)
         if event_ranking is None:
             continue
-        defaults = {'event_ranking': event_ranking}
-        if event_ranking.date is not None:
-            defaults['date'] = event_ranking.date
-        if event_ranking.wdd_tournament_id is None:
-            try:
-                PlayerAward.objects.update_or_create(player=player,
-                                                     wdr_tournament_id=t_id,
-                                                     name=award_name,
-                                                     power=wdr_power_name_to_greatpower(a['award_country']),
-                                                     defaults=defaults)
-            except Exception:
-                # Handle all exceptions
-                # This way, we fail to add/update the single ranking rather than all the background
-                print('Failed to save PlayerAward')
-                print(f'player={str(player)}, event_name={event_ranking.event_name}, date={event_ranking.date}, name={award_name}')
-                traceback.print_exc()
-        else:
-            defaults['wdr_tournament_id'] = t_id
-            try:
-                PlayerAward.objects.update_or_create(player=player,
-                                                     wdd_tournament_id=event_ranking.wdd_tournament_id,
-                                                     name=award_name,
-                                                     power=wdr_power_name_to_greatpower(a['award_country']),
-                                                     defaults=defaults)
-            except Exception:
-                # Handle all exceptions
-                # This way, we fail to add/update the single ranking rather than all the background
-                print('Failed to save PlayerAward')
-                print(f'player={str(player)}, event_name={event_ranking.event_name}, date={event_ranking.date}, name={award_name}')
-                traceback.print_exc()
+        try:
+            PlayerAward.objects.update_or_create(event_ranking=event_ranking,
+                                                 player=player,
+                                                 name=award_name,
+                                                 power=wdr_power_name_to_greatpower(a['award_country']))
+        except Exception:
+            # Handle all exceptions
+            # This way, we fail to add/update the single ranking rather than all the background
+            print('Failed to save PlayerAward')
+            print(f'player={str(player)}, event_name={event_ranking.event_name}, date={event_ranking.date}, name={award_name}')
+            traceback.print_exc()
     # WPE scores (and other Rankings)
     ranks = bg.rankings()
     for k, v in ranks.items():

@@ -48,23 +48,40 @@ class PlayerAwardTests(TestCase):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          event_ranking=self.ranking,
-                         date=datetime.now(datetime_timezone.utc),
                          name='Nicest Player of France',
-                         wdd_tournament_id=369,
+                         power=self.france)
+        # check wdd_url() for a PA with no WDD id
+        self.assertIsNone(pa.event_ranking.wdd_tournament_id)
+        self.assertEqual('', pa.wdd_url())
+
+        ranking = PlayerEventRanking.objects.create(player=p,
+                                                    event_name='WDD Linked Tournament',
+                                                    date=datetime.now(),
+                                                    wdd_tournament_id=369)
+        pa = PlayerAward(player=p,
+                         event_ranking=ranking,
+                         name='Nicest Player of France',
                          power=self.france)
         url = pa.wdd_url()
         self.assertIn('https://world-diplomacy-database.com/php/results/tournament_best_countries.php', url)
         self.assertIn('id_tournament=369', url)
-        # Also check wdr_url() for a PA with no WDR id
-        self.assertEqual('', pa.wdr_url())
 
     def test_playeraward_wdd_url_no_power(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          event_ranking=self.ranking,
-                         date=datetime.now(datetime_timezone.utc),
-                         name='Nicest Person',
-                         wdd_tournament_id=369)
+                         name='Nicest Person')
+        # check wdd_url() for a PA with no WDD id
+        self.assertIsNone(pa.event_ranking.wdd_tournament_id)
+        self.assertEqual('', pa.wdd_url())
+
+        ranking = PlayerEventRanking.objects.create(player=p,
+                                                    event_name='WDD Linked Tournament',
+                                                    date=datetime.now(),
+                                                    wdd_tournament_id=369)
+        pa = PlayerAward(player=p,
+                         event_ranking=ranking,
+                         name='Nicest Person')
         url = pa.wdd_url()
         self.assertIn('https://world-diplomacy-database.com/php/results/tournament_award.php', url)
         self.assertIn('id_tournament=369', url)
@@ -74,20 +91,26 @@ class PlayerAwardTests(TestCase):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          event_ranking=self.ranking,
-                         date=datetime.now(datetime_timezone.utc),
-                         name='Nicest Person',
-                         wdr_tournament_id=369)
+                         name='Nicest Person')
+        # check wdr_url() for a PA with no WDR id
+        self.assertIsNone(pa.event_ranking.wdr_tournament_id)
+        self.assertEqual('', pa.wdr_url())
+
+        ranking = PlayerEventRanking.objects.create(player=p,
+                                                    event_name='WDR Linked Tournament',
+                                                    date=datetime.now(),
+                                                    wdr_tournament_id=369)
+        pa = PlayerAward(player=p,
+                         event_ranking=ranking,
+                         name='Nicest Person')
         url = pa.wdr_url()
         self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369', url)
-        # Also check wdd_url() for a PA with no WDD id
-        self.assertEqual('', pa.wdd_url())
 
     # PlayerAward.__str__()
     def test_playeraward_str(self):
         p = Player.objects.first()
         pa = PlayerAward(player=p,
                          event_ranking=self.ranking,
-                         date=datetime.now(datetime_timezone.utc),
                          name='Nicest Person')
         p_str = str(pa)
         # We expect to find player name, award name, and event name

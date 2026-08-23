@@ -42,8 +42,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
                                Preference, Round, RoundPlayer, SeederBias,
                                SupplyCentreOwnership, Team, Tournament,
                                TournamentPlayer)
-from tournament.players import (InvalidWDRId, Player, PlayerAward,
-                                PlayerEventRanking, PlayerGameResult,
+from tournament.players import (InvalidWDRId, Player, PlayerEventRanking,
                                 WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
 from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
@@ -801,8 +800,7 @@ def add_wdr_player_ids(csv_filename, dry_run=False):
 
 def add_wdr_tournament_ids(csv_filename, dry_run=False):
     """
-    Add wdr_tournament_id attributes to Tournaments, PlayerEventRanking,
-    PlayerGameResults, and PlayerAwards
+    Add wdr_tournament_id attributes to Tournaments and PlayerEventRanking.
 
     csv_filename is the name of a CSV file giving the mapping
       columns are:
@@ -813,24 +811,15 @@ def add_wdr_tournament_ids(csv_filename, dry_run=False):
     with open(csv_filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            if row['tournament_wdd_id'] != -1:
-                for t in Tournament.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+            tournament_wdd_id = int(row['tournament_wdd_id'])
+            if tournament_wdd_id != -1:
+                for t in Tournament.objects.filter(wdd_tournament_id=tournament_wdd_id):
                     print(f'Setting wdr_tournament_id for {t} to {row["id"]}')
                     t.wdr_tournament_id = row['id']
                     if not dry_run:
                         t.save(update_fields=['wdr_tournament_id'])
-                for ptr in PlayerEventRanking.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
+                for ptr in PlayerEventRanking.objects.filter(wdd_tournament_id=tournament_wdd_id):
                     print(f'Setting wdr_tournament_id for {ptr} to {row["id"]}')
                     ptr.wdr_tournament_id = row['id']
                     if not dry_run:
                         ptr.save(update_fields=['wdr_tournament_id'])
-                for pgr in PlayerGameResult.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
-                    print(f'Setting wdr_tournament_id for {pgr} to {row["id"]}')
-                    pgr.wdr_tournament_id = row['id']
-                    if not dry_run:
-                        pgr.save(update_fields=['wdr_tournament_id'])
-                for pa in PlayerAward.objects.filter(wdd_tournament_id=int(row['tournament_wdd_id'])):
-                    print(f'Setting wdr_tournament_id for {pa} to {row["id"]}')
-                    pa.wdr_tournament_id = row['id']
-                    if not dry_run:
-                        pa.save(update_fields=['wdr_tournament_id'])

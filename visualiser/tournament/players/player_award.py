@@ -51,7 +51,6 @@ class PlayerAward(models.Model):
     event_ranking = models.ForeignKey(PlayerEventRanking,
                                       on_delete=models.CASCADE,
                                       )
-    date = models.DateField()
     name = models.CharField(max_length=50)
     power = models.ForeignKey(GreatPower,
                               related_name='+',
@@ -60,22 +59,14 @@ class PlayerAward(models.Model):
                               null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True, null=True)
-    wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
-                                                    verbose_name=_(u'WDD tournament id'),
-                                                    blank=True,
-                                                    null=True)
-    wdr_tournament_id = models.PositiveIntegerField(validators=[validate_wdr_tournament_id],
-                                                    verbose_name=_(u'WDR tournament id'),
-                                                    blank=True,
-                                                    null=True)
     updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
             models.CheckConstraint(check=Q(final_sc_count__lte=TOTAL_SCS) | Q(final_sc_count__isnull=True),
                                    name='%(class)s_final_sc_count_valid'),
-            models.UniqueConstraint(fields=['player', 'event_ranking', 'date', 'name'],
-                                    name='unique_player_eventranking_date_name'),
+            models.UniqueConstraint(fields=['player', 'event_ranking', 'name'],
+                                    name='unique_player_eventranking_name'),
         ]
 
     def __str__(self):
@@ -85,13 +76,13 @@ class PlayerAward(models.Model):
 
     def wdd_url(self):
         """WDD URL where this award can be seen"""
-        if not self.wdd_tournament_id:
+        if not self.event_ranking.wdd_tournament_id:
             return ''
         if self.power is None:
             path = 'tournament_award.php'
         else:
             path = 'tournament_best_countries.php'
-        query = {'id_tournament': self.wdd_tournament_id}
+        query = {'id_tournament': self.event_ranking.wdd_tournament_id}
         url = urlunparse(('https',
                           WDD_NETLOC,
                           f'{WDD_BASE_RESULTS_PATH}{path}',
@@ -102,6 +93,6 @@ class PlayerAward(models.Model):
 
     def wdr_url(self):
         """WDR URL where this ranking can be seen"""
-        if not self.wdr_tournament_id:
+        if not self.event_ranking.wdr_tournament_id:
             return ''
-        return f'{WDR_BASE_URL}tournaments/{self.wdr_tournament_id}'
+        return f'{WDR_BASE_URL}tournaments/{self.event_ranking.wdr_tournament_id}'

@@ -15,6 +15,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta
+import os
+import tempfile
 from types import SimpleNamespace
 from unittest.mock import patch
 
@@ -27,8 +29,9 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                Award, CentreCount, DrawSecrecy,
                                Game, GamePlayer, Round,
                                RoundPlayer, Tournament, TournamentPlayer)
-from tournament.players import Player, WDDPlayer
+from tournament.players import Player, PlayerEventRanking, WDDPlayer
 from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
+                              add_wdr_tournament_ids,
                               add_missing_player_wdr_ids,
                               check_wdd_player_ids,
                               clean_duplicate_player,
@@ -45,6 +48,16 @@ from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
 
 class UtilsTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
+
+    def _write_wdr_tournament_mapping_csv(self, rows):
+        tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+        try:
+            tmp.write('id,tournament_wdd_id,tournament_name\n')
+            for row in rows:
+                tmp.write(f"{row['id']},{row['tournament_wdd_id']},{row['tournament_name']}\n")
+            return tmp.name
+        finally:
+            tmp.close()
 
     def test_map_to_backstabbr_power(self):
         from tournament.diplomacy import GreatPower
@@ -373,6 +386,71 @@ class UtilsTests(TestCase):
         t.delete()
         p_match.delete()
         p_zero.delete()
+
+    def test_add_wdr_tournament_ids_updates_tournament_and_event_rankings(self):
+        today = django_timezone.now().date()
+        t = Tournament.objects.create(name='util-add-wdr-tournament-id',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      wdd_tournament_id=2222,
+                                      wdr_tournament_id=None)
+        p = Player.objects.create(first_name='Tori',
+                                  last_name='TournamentId')
+        ptr = PlayerEventRanking.objects.create(player=p,
+                                                event_name='util-add-wdr-id-event',
+                                                date=today,
+                                                wdd_tournament_id=2222,
+                                                wdr_tournament_id=None)
+        csv_file = self._write_wdr_tournament_mapping_csv([
+            {'id': 7777, 'tournament_wdd_id': 2222, 'tournament_name': 'util-add-wdr-tournament-id'},
+            {'id': 8888, 'tournament_wdd_id': -1, 'tournament_name': 'ignored-row'},
+        ])
+
+        try:
+            add_wdr_tournament_ids(csv_file, dry_run=False)
+            t.refresh_from_db()
+            ptr.refresh_from_db()
+            self.assertEqual(7777, t.wdr_tournament_id)
+            self.assertEqual(7777, ptr.wdr_tournament_id)
+        finally:
+            os.unlink(csv_file)
+            t.delete()
+            p.delete()
+
+    def test_add_wdr_tournament_ids_dry_run_does_not_update(self):
+        today = django_timezone.now().date()
+        t = Tournament.objects.create(name='util-add-wdr-tournament-id-dry',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      wdd_tournament_id=3333,
+                                      wdr_tournament_id=None)
+        p = Player.objects.create(first_name='Dora',
+                                  last_name='DryRun')
+        ptr = PlayerEventRanking.objects.create(player=p,
+                                                event_name='util-add-wdr-id-event-dry',
+                                                date=today,
+                                                wdd_tournament_id=3333,
+                                                wdr_tournament_id=None)
+        csv_file = self._write_wdr_tournament_mapping_csv([
+            {'id': 9999, 'tournament_wdd_id': 3333, 'tournament_name': 'util-add-wdr-tournament-id-dry'},
+        ])
+
+        try:
+            add_wdr_tournament_ids(csv_file, dry_run=True)
+            t.refresh_from_db()
+            ptr.refresh_from_db()
+            self.assertIsNone(t.wdr_tournament_id)
+            self.assertIsNone(ptr.wdr_tournament_id)
+        finally:
+            os.unlink(csv_file)
+            t.delete()
+            p.delete()
 
     def test_find_tournaments_missing_wdd_ids_finished_only(self):
         today = django_timezone.now().date()

@@ -89,11 +89,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -125,11 +123,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -160,11 +156,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -194,7 +188,6 @@ class PlayerTests(TestCase):
                                    year=1976)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -205,7 +198,6 @@ class PlayerTests(TestCase):
                                               round_number=4,
                                               game_number=17,
                                               power=self.austria,
-                                              date=datetime.now(datetime_timezone.utc),
                                               position=2)
         end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
@@ -231,7 +223,6 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -239,7 +230,6 @@ class PlayerTests(TestCase):
                                      national_rank='3')
         pa = PlayerAward.objects.create(player=p,
                                         event_ranking=per,
-                                        date=datetime.now(datetime_timezone.utc),
                                         name='Nicest Person')
         end = datetime.now(datetime_timezone.utc)
         updated = p.background_updated()
@@ -265,11 +255,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         pr = PlayerRanking.objects.create(player=p,
                                           system='Who Chris Likes Most',
@@ -400,11 +388,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -435,11 +421,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -476,11 +460,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        date=datetime.now(datetime_timezone.utc),
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=datetime.now(datetime_timezone.utc),
                                    name='Nicest Person')
         PlayerRanking.objects.create(player=p,
                                      system='Who Chris Likes Most',
@@ -517,11 +499,9 @@ class PlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.germany,
-                                        date=today,
                                         position=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=today,
                                    name='Best German',
                                    power=self.germany)
         PlayerRanking.objects.create(player=p,
@@ -554,7 +534,6 @@ class PlayerTests(TestCase):
                                         game_number=1,
                                         player=p,
                                         power=self.austria,
-                                        date=date.today(),
                                         position=2)
         bg = p.background()
         self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
@@ -577,7 +556,6 @@ class PlayerTests(TestCase):
                                         game_number=1,
                                         player=p,
                                         power=self.austria,
-                                        date=date.today(),
                                         position=1,
                                         final_sc_count=19)
         PlayerGameResult.objects.create(event_ranking=per2,
@@ -585,7 +563,6 @@ class PlayerTests(TestCase):
                                         game_number=1,
                                         player=p,
                                         power=self.germany,
-                                        date=date.today(),
                                         position=6,
                                         final_sc_count=0)
         bg = p.background()
@@ -609,7 +586,6 @@ class PlayerTests(TestCase):
                                         game_number=1,
                                         player=p,
                                         power=self.austria,
-                                        date=date.today(),
                                         position=2,
                                         is_top_board=True)
         PlayerGameResult.objects.create(event_ranking=per,
@@ -617,7 +593,6 @@ class PlayerTests(TestCase):
                                         game_number=2,
                                         player=p,
                                         power=self.germany,
-                                        date=date.today(),
                                         position=5,
                                         is_top_board=False)
         bg = p.background()
@@ -638,7 +613,6 @@ class PlayerTests(TestCase):
                                         game_number=1,
                                         player=p,
                                         power=self.austria,
-                                        date=date.today(),
                                         position=1,
                                         is_top_board=False)
         # Top-board game that was not topped.
@@ -651,7 +625,6 @@ class PlayerTests(TestCase):
                                         game_number=2,
                                         player=p,
                                         power=self.germany,
-                                        date=date.today(),
                                         position=5,
                                         is_top_board=True)
 
@@ -680,7 +653,6 @@ class PlayerTests(TestCase):
                                                 date=yesterday)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=yesterday,
                                    name='Best Germany',
                                    power=self.germany,
                                    final_sc_count=10)
@@ -690,7 +662,6 @@ class PlayerTests(TestCase):
                                                 date=today)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
-                                   date=today,
                                    name='Best Germany',
                                    power=self.germany,
                                    final_sc_count=12)

@@ -43,106 +43,111 @@ class PlayerGameResultTests(TestCase):
                                                              date=date.today())
         cls.worst_ranking = PlayerEventRanking.objects.create(player=Player.objects.first(),
                                                               event_name='Worst Tournament',
-                                                              date=date.today())
+                                                              date=date.today() - timedelta(days=1))
 
     # PlayerGameResult.for_same_game()
     def test_playergameresult_same(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
+        per2 = PlayerEventRanking.objects.create(player=p2,
+                                                 event_name=self.best_ranking.event_name,
+                                                 date=self.best_ranking.date)
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
+        pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
-                                date=pgr1.date,
                                 position=4)
         self.assertIs(True, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_tournament(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
+        per2 = PlayerEventRanking.objects.create(player=p2,
+                                                 event_name=self.worst_ranking.event_name,
+                                                 date=self.best_ranking.date)
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_ranking=self.worst_ranking,
+        pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
-                                date=pgr1.date,
                                 position=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_round(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
+        per2 = PlayerEventRanking.objects.create(player=p2,
+                                                 event_name=self.best_ranking.event_name,
+                                                 date=self.best_ranking.date)
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
+        pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=2,
                                 game_number=1,
                                 player=p2,
                                 power=self.russia,
-                                date=pgr1.date,
                                 position=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_game(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
+        per2 = PlayerEventRanking.objects.create(player=p2,
+                                                 event_name=self.best_ranking.event_name,
+                                                 date=self.best_ranking.date)
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
+        pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=1,
                                 game_number=2,
                                 player=p2,
                                 power=self.russia,
-                                date=pgr1.date,
                                 position=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_date(self):
         p1 = Player.objects.first()
         p2 = Player.objects.last()
+        per2 = PlayerEventRanking.objects.create(player=p2,
+                                                 event_name=self.best_ranking.event_name,
+                                                 date=self.worst_ranking.date)
         # No final_sc_count (or other optional fields)
         pgr1 = PlayerGameResult(event_ranking=self.best_ranking,
                                 round_number=1,
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                date=date.today(),
                                 position=2)
-        pgr2 = PlayerGameResult(event_ranking=pgr1.event_ranking,
+        pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
-                                date=date.today() + timedelta(hours=24),
                                 position=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
@@ -154,7 +159,6 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               date=date.today(),
                                position=2)
         name = pgr.game_name()
         self.assertEqual(name, 'R 1 B 3')
@@ -167,17 +171,26 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               date=date.today(),
-                               position=2,
-                               wdd_tournament_id=369)
+                               position=2)
+        # Check wdd_url() for a PGR with no WDD id
+        self.assertIsNone(pgr.event_ranking.wdd_tournament_id)
+        self.assertEqual('', pgr.wdd_url())
+
+        ranking = PlayerEventRanking.objects.create(player=p,
+                                event_name='WDD Linked Tournament',
+                                date=date.today(),
+                                wdd_tournament_id=369)
+        pgr = PlayerGameResult(event_ranking=ranking,
+                       round_number=1,
+                       game_number=3,
+                       player=p,
+                       power=self.austria,
+                       position=2)
         url = pgr.wdd_url()
         self.assertIn('https://world-diplomacy-database.com/php/results/tournament_board.php', url)
         self.assertIn('id_tournament=369', url)
         self.assertIn('id_round=1', url)
         self.assertIn('id_board=3', url)
-        # Check wdr_url() for a PGR with no WDR id
-        self.assertIsNone(pgr.wdr_tournament_id)
-        url = pgr.wdr_url()
 
     # PlayerGameResult.wdr_url()
     def test_playergameresult_wdr_url(self):
@@ -188,14 +201,23 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               date=date.today(),
-                               position=2,
-                               wdr_tournament_id=369)
+                               position=2)
+        # Check wdr_url() for a PGR with no WDR id
+        self.assertIsNone(pgr.event_ranking.wdr_tournament_id)
+        self.assertEqual('', pgr.wdr_url())
+
+        ranking = PlayerEventRanking.objects.create(player=p,
+                                event_name='WDR Linked Tournament',
+                                date=date.today(),
+                                wdr_tournament_id=369)
+        pgr = PlayerGameResult(event_ranking=ranking,
+                       round_number=1,
+                       game_number=3,
+                       player=p,
+                       power=self.austria,
+                       position=2)
         url = pgr.wdr_url()
         self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369/boards', url)
-        # Check wdr_url() for a PGR with no WDR id
-        self.assertIsNotNone(pgr.wdr_tournament_id)
-        url = pgr.wdr_url()
 
     # PlayerGameResult.__str__()
     def test_playergameresult_str(self):
@@ -205,7 +227,6 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               date=date.today(),
                                position=2)
         p_str = str(pgr)
         # We expect to find player name and power name
@@ -220,7 +241,6 @@ class PlayerGameResultTests(TestCase):
                                               game_number=2,
                                               player=p,
                                               power=self.austria,
-                                              date=date.today(),
                                               position=3)
         self.assertIs(False, pgr.is_top_board)
         # Cleanup
