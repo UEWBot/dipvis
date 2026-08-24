@@ -5082,23 +5082,29 @@ class TournamentTests(TestCase):
     # Tournament.background()
     def test_tournament_background_without_players(self):
         t = Tournament.objects.get(name='t1')
-        # TODO Validate results
-        t.background()
+        results = t.background()
+        self.assertTrue(results)
+        self.assertTrue(all(isinstance(result, str) for result in results))
+        self.assertTrue(any('tournament' in result for result in results))
 
     def test_tournament_background_with_players(self):
         t = Tournament.objects.get(name='t3')
-        # TODO Validate results
-        t.background()
+        results = t.background()
+        self.assertTrue(results)
+        self.assertTrue(all(isinstance(result, str) for result in results))
+        self.assertTrue(any('tournament' in result for result in results))
 
     def test_tournament_background_mask(self):
         t = Tournament.objects.get(name='t3')
+        all_results = t.background()
         # Test each mask bit individually
         mask = 1
         while mask <= MASK_ALL_BG:
             with self.subTest(mask=mask):
-                # TODO Validate results
-                t.background(mask=mask)
+                results = t.background(mask=mask)
+                self.assertTrue(all(result in all_results for result in results))
             mask *= 2
+        self.assertEqual([], t.background(mask=0))
 
     def test_tournament_background_series(self):
         s = Series(name="Test Series", description="Text")
@@ -8112,18 +8118,22 @@ class GameTests(TestCase):
     # Game.background()
     def test_game_background(self):
         g = Game.objects.first()
-        # TODO Validate results
-        g.background()
+        results = g.background()
+        self.assertTrue(results)
+        self.assertTrue(all(isinstance(result, str) for result in results))
+        self.assertTrue(any('tournament' in result for result in results))
 
     def test_game_background_mask(self):
         g = Game.objects.first()
+        all_results = g.background()
         # Test each mask bit individually
         mask = 1
         while mask <= MASK_ALL_BG:
             with self.subTest(mask=mask):
-                # TODO Validate results
-                g.background(mask=mask)
+                results = g.background(mask=mask)
+                self.assertTrue(all(result in all_results for result in results))
             mask *= 2
+        self.assertEqual([], g.background(mask=0))
 
     # Game.passed_draw()
     def test_game_passed_draw_none(self):
