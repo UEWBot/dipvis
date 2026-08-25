@@ -44,6 +44,31 @@ class AwardRecipientForm(forms.ModelForm):
         self.fields['tournament_player'].queryset = tournament.tournamentplayer_set.filter(unranked=False)
         self.fields['game'].queryset = Game.objects.filter(the_round__tournament=tournament)
 
+        selected_player = None
+        if self.data:
+            player_key = f'{self.prefix}-tournament_player' if self.prefix else 'tournament_player'
+            player_id = self.data.get(player_key)
+            if player_id:
+                selected_player = tournament.tournamentplayer_set.filter(pk=player_id).select_related('player').first()
+        elif self.instance and self.instance.tournament_player_id:
+            selected_player = self.instance.tournament_player
+
+        if selected_player is not None:
+            valid_game_ids = Game.objects.filter(
+                gameplayer__player=selected_player.player,
+                the_round__tournament=tournament,
+            ).values_list('id', flat=True)
+            self.fields['game'].queryset = self.fields['game'].queryset.filter(id__in=valid_game_ids)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        tournament_player = cleaned_data.get('tournament_player')
+        game = cleaned_data.get('game')
+        if tournament_player and game:
+            if not game.gameplayer_set.filter(player=tournament_player.player).exists():
+                raise forms.ValidationError('This player did not play in that game')
+        return cleaned_data
+
 
 class BaseAwardRecipientFormSet(BaseInlineFormSet):
     """Inline formset of AwardRecipients for a single TournamentAward"""

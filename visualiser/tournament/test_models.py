@@ -2564,6 +2564,7 @@ class AwardRecipientTests(TestCase):
         ar.delete()
 
     def test_award_recipient_game_in_same_tournament(self):
+        GamePlayer.objects.create(player=self.tp.player, game=self.g)
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.g)
         ar.full_clean()
         ar.save()
@@ -2573,6 +2574,10 @@ class AwardRecipientTests(TestCase):
 
     def test_award_recipient_game_in_other_tournament_invalid(self):
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.other_g)
+        self.assertRaises(ValidationError, ar.full_clean)
+
+    def test_award_recipient_game_not_played_by_player_invalid(self):
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.g)
         self.assertRaises(ValidationError, ar.full_clean)
 
     def test_award_recipient_player_in_other_tournament_invalid(self):

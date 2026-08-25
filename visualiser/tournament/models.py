@@ -974,6 +974,10 @@ class AwardRecipient(models.Model):
         if self.game_id and self.tournament_award_id:
             if self.game.the_round.tournament_id != self.tournament_award.tournament_id:
                 raise ValidationError(_('The Game and TournamentAward must be for the same Tournament'))
+            if self.tournament_player_id:
+                if not GamePlayer.objects.filter(game=self.game,
+                                                 player=self.tournament_player.player).exists():
+                    raise ValidationError(_('This player did not play in that game'))
 
     def __str__(self):
         return _('%(player)s won %(award)s') % {'player': self.tournament_player,

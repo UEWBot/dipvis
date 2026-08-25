@@ -24,8 +24,9 @@ from django.test import TestCase
 
 from tournament.diplomacy import GameSet
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
-                               AwardRecipient, DrawSecrecy, Game, Round,
-                               Tournament, TournamentAward, TournamentPlayer)
+                               AwardRecipient, DrawSecrecy, Game, GamePlayer,
+                               Round, Tournament, TournamentAward,
+                               TournamentPlayer)
 from tournament.players import Player
 
 from . import AwardRecipientForm, AwardRecipientFormSet
@@ -98,6 +99,38 @@ class AwardRecipientFormTest(TestCase):
     def test_game_field_not_required(self):
         form = AwardRecipientForm(tournament_award=self.ta1)
         self.assertFalse(form.fields['game'].required)
+
+    def test_game_choices_restricted_to_games_player_played(self):
+        other_r = Round.objects.create(tournament=self.t,
+                                       scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       dias=True,
+                                       start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+        other_g = Game.objects.create(name='g2',
+                                      started_at=other_r.start,
+                                      the_round=other_r,
+                                      the_set=GameSet.objects.first())
+        GamePlayer.objects.create(player=self.tp1.player, game=self.g)
+        form = AwardRecipientForm(data={'tournament_player': str(self.tp1.pk),
+                                        'game': str(other_g.pk)},
+                                  tournament_award=self.ta1)
+        choices = {str(choice[0]) for choice in form.fields['game'].choices if choice[0]}
+        self.assertIn(str(self.g.pk), choices)
+        self.assertNotIn(str(other_g.pk), choices)
+
+    def test_game_not_played_by_player_fails_validation(self):
+        other_r = Round.objects.create(tournament=self.t,
+                                       scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       dias=True,
+                                       start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+        other_g = Game.objects.create(name='g2',
+                                      started_at=other_r.start,
+                                      the_round=other_r,
+                                      the_set=GameSet.objects.first())
+        form = AwardRecipientForm(data={'tournament_player': str(self.tp1.pk),
+                                        'game': str(other_g.pk)},
+                                  tournament_award=self.ta1)
+        self.assertFalse(form.is_valid())
+        self.assertTrue(any('Select a valid choice' in message for message in form.errors['game']))
 
 
 class AwardRecipientFormSetTest(TestCase):
