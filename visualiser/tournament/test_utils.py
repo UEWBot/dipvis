@@ -26,9 +26,10 @@ from django.utils import timezone as django_timezone
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
-                               Award, CentreCount, DrawSecrecy,
+                               Award, AwardRecipient, CentreCount, DrawSecrecy,
                                Game, GamePlayer, Round,
-                               RoundPlayer, Tournament, TournamentPlayer)
+                               RoundPlayer, Tournament, TournamentAward,
+                               TournamentPlayer)
 from tournament.players import Player, PlayerEventRanking, WDDPlayer
 from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
                               add_wdr_tournament_ids,
@@ -198,7 +199,8 @@ class UtilsTests(TestCase):
         p = Player.objects.create(first_name='Amy',
                                   last_name='Awarded')
         tp = TournamentPlayer.objects.create(player=p, tournament=t)
-        tp.awards.add(award)
+        tournament_award = TournamentAward.objects.create(tournament=t, award=award)
+        AwardRecipient.objects.create(tournament_award=tournament_award, tournament_player=tp)
         RoundPlayer.objects.create(player=p, the_round=r)
         gp = GamePlayer.objects.create(player=p,
                                        game=g,

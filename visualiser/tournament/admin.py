@@ -20,11 +20,12 @@ from django.db.models import Q
 from tournament.circuits import Circuit, CircuitPlayer, CircuitSeries
 from tournament.diplomacy import GameSet, GreatPower, SetPower, SupplyCentre
 from tournament.forms import CircuitPlayerAdminForm
-from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
-                               Game, GameImage, GamePlayer, Pool, Round,
-                               RoundPlayer, SeederBias, Series,
-                               SupplyCentreOwnership, Team, Tournament,
-                               TournamentAward, TournamentPlayer)
+from tournament.models import (Award, AwardRecipient, CentreCount,
+                               DBNCoverage, DrawProposal, Game, GameImage,
+                               GamePlayer, Pool, Round, RoundPlayer,
+                               SeederBias, Series, SupplyCentreOwnership,
+                               Team, Tournament, TournamentAward,
+                               TournamentPlayer)
 from tournament.players import (Player, PlayerAward, PlayerEventRanking,
                                 PlayerGameResult, PlayerRanking, PlayerTitle,
                                 WDDPlayer)
@@ -104,6 +105,12 @@ class TournamentPermissionAdminMixin:
 class AwardAdmin(admin.ModelAdmin):
     list_filter = ['power']
     ordering = ['name']
+
+
+@admin.register(AwardRecipient)
+class AwardRecipientAdmin(admin.ModelAdmin):
+    list_filter = ['tournament_award__tournament', 'tournament_award__award']
+    ordering = ['tournament_award']
 
 
 class TournamentAwardInline(admin.TabularInline):

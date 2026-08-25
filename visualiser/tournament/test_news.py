@@ -22,10 +22,10 @@ from django.test import TestCase
 from tournament.diplomacy import GameSet, GreatPower, SupplyCentre
 from tournament.game_scoring import G_SCORING_SYSTEMS
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
-                               CentreCount, DrawProposal, DrawSecrecy, Game,
-                               GamePlayer, Round, RoundPlayer, Seasons,
-                               SupplyCentreOwnership, Tournament,
-                               TournamentAward, TournamentPlayer)
+                               AwardRecipient, CentreCount, DrawProposal,
+                               DrawSecrecy, Game, GamePlayer, Round,
+                               RoundPlayer, Seasons, SupplyCentreOwnership,
+                               Tournament, TournamentAward, TournamentPlayer)
 from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
                              _round_news, _sc_gains_and_losses,
                              _tournament_news, news)
@@ -304,11 +304,14 @@ class NewsTests(TestCase):
         a3 = Award.objects.create(name='Best Germany', power=self.germany)
         TournamentAward.objects.bulk_create([TournamentAward(tournament=t, award=award)
                               for award in (a1, a2, a3)])
+        ta1 = TournamentAward.objects.get(tournament=t, award=a1)
+        ta2 = TournamentAward.objects.get(tournament=t, award=a2)
+        ta3 = TournamentAward.objects.get(tournament=t, award=a3)
         tp = t.tournamentplayer_set.get(player__first_name='Iris')
-        tp.awards.add(a1)
-        tp.awards.add(a2)
+        AwardRecipient.objects.create(tournament_award=ta1, tournament_player=tp)
+        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=tp)
         tp = t.tournamentplayer_set.get(player__first_name='George')
-        tp.awards.add(a3)
+        AwardRecipient.objects.create(tournament_award=ta3, tournament_player=tp)
         res = _tournament_news(t)
         self.assertIn('Michelle Nobody came 1st, with a score of 147.30.', res)
         self.assertIn('Kevin Lame came 2nd, with a score of 137.30.', res)

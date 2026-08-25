@@ -28,8 +28,8 @@ from django.urls import reverse
 from tournament.circuits import Circuit
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
-                               R_SCORING_SYSTEMS, Award, CentreCount,
-                               DBNCoverage,
+                               R_SCORING_SYSTEMS, Award, AwardRecipient,
+                               CentreCount, DBNCoverage,
                                DrawProposal, DrawSecrecy, Game, GamePlayer,
                                PowerAssignMethods, Preference, Round,
                                RoundPlayer, Seasons, SeederBias, Series, Team,
@@ -1294,6 +1294,7 @@ class TournamentViewTests(TestCase):
         self.assertFalse(self.t4.tournamentaward_set.filter(award=self.a3).exists())
         self.assertEqual(self.t4.tournamentaward_set.count(), 0)
         TournamentAward.objects.create(tournament=self.t4, award=self.a3)
+        tournament_award = TournamentAward.objects.get(tournament=self.t4, award=self.a3)
         gps = []
         for r in self.t4.round_set.all():
             for g in r.game_set.all():
@@ -1301,7 +1302,8 @@ class TournamentViewTests(TestCase):
                     gps.append(gp)
         gps.sort(key=lambda gp: gp.score)
         # Add the best country award to the player with the lowest score
-        gps[0].tournamentplayer().awards.add(self.a3)
+        AwardRecipient.objects.create(tournament_award=tournament_award,
+                                     tournament_player=gps[0].tournamentplayer())
         response = self.client.get(reverse('tournament_best_countries',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -1317,7 +1319,8 @@ class TournamentViewTests(TestCase):
                             self.assertEqual(gp, gps[0])
                             found = True
         # Cleanup
-        gps[0].tournamentplayer().awards.clear()
+        AwardRecipient.objects.filter(tournament_award=tournament_award,
+                                     tournament_player=gps[0].tournamentplayer()).delete()
         self.t4.tournamentaward_set.all().delete()
 
     def test_best_countries_in_progress_uses_italics_for_non_final_values(self):
@@ -2438,8 +2441,12 @@ class TournamentViewTests(TestCase):
         a2 = Award.objects.create(name='Best France', power=self.france)
         TournamentAward.objects.bulk_create([TournamentAward(tournament=self.t4, award=award)
                               for award in (a1, a2)])
-        self.t4.tournamentplayer_set.first().awards.add(a1)
-        self.t4.tournamentplayer_set.last().awards.add(a2)
+        ta1 = TournamentAward.objects.get(tournament=self.t4, award=a1)
+        ta2 = TournamentAward.objects.get(tournament=self.t4, award=a2)
+        AwardRecipient.objects.create(tournament_award=ta1,
+                                      tournament_player=self.t4.tournamentplayer_set.first())
+        AwardRecipient.objects.create(tournament_award=ta2,
+                                      tournament_player=self.t4.tournamentplayer_set.last())
         response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
@@ -2499,12 +2506,12 @@ class TournamentViewTests(TestCase):
         # Give some awards out
         TournamentAward.objects.bulk_create([TournamentAward(tournament=self.t4, award=award)
                               for award in (self.a1, self.a2)])
-        self.tp41.awards.add(self.a1)
-        self.tp41.awards.add(self.a2)
-        self.tp41.save()
+        ta1 = TournamentAward.objects.get(tournament=self.t4, award=self.a1)
+        ta2 = TournamentAward.objects.get(tournament=self.t4, award=self.a2)
+        AwardRecipient.objects.create(tournament_award=ta1, tournament_player=self.tp41)
+        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=self.tp41)
         tp = self.t4.tournamentplayer_set.get(player__first_name='Derek')
-        tp.awards.add(self.a2)
-        tp.save()
+        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=tp)
         response = self.client.get(reverse('tournament_awards',
                                            args=(self.t4.pk,)),
                                    secure=True)
@@ -2512,8 +2519,6 @@ class TournamentViewTests(TestCase):
         self.assertTemplateUsed(response, 'tournaments/awards.html')
         # Clean up
         self.t4.tournamentaward_set.all().delete()
-        self.tp41.awards.clear()
-        tp.awards.clear()
 
     def test_tournament_awards_finished_with_no_players(self):
         today = date.today()
@@ -2566,8 +2571,12 @@ class TournamentViewTests(TestCase):
     def test_enter_awards_post(self):
         # Give some awards to players beforehand
         awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
-        self.t1.tournamentplayer_set.last().awards.add(awards[0])
-        self.t1.tournamentplayer_set.first().awards.add(awards[-1])
+        ta_first = TournamentAward.objects.get(tournament=self.t1, award=awards[0])
+        ta_last = TournamentAward.objects.get(tournament=self.t1, award=awards[-1])
+        AwardRecipient.objects.create(tournament_award=ta_first,
+                                      tournament_player=self.t1.tournamentplayer_set.last())
+        AwardRecipient.objects.create(tournament_award=ta_last,
+                                      tournament_player=self.t1.tournamentplayer_set.first())
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         tps = list(self.t1.tournamentplayer_set.all())
         data = {'form-MAX_NUM_FORMS': '1000'}
@@ -2589,11 +2598,11 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.url, reverse('tournament_awards', args=(self.t1.pk,)))
         # Check each award has exactly the player submitted for that row.
         for a in awards:
-            actual = set(a.tournamentplayer_set.values_list('id', flat=True))
+            tournament_award = TournamentAward.objects.get(tournament=self.t1, award=a)
+            actual = set(tournament_award.awardrecipient_set.values_list('tournament_player_id', flat=True))
             self.assertEqual(actual, expected[a.id])
         # Cleanup
-        for tp in tps:
-            tp.awards.clear()
+        AwardRecipient.objects.filter(tournament_player__in=tps).delete()
 
     def test_enter_awards_form_errors_rendered(self):
         """Invalid award player selection should be shown as a field error."""

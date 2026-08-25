@@ -47,7 +47,8 @@ from tournament.forms import (AwardForm, BaseAwardsFormset,
                               BaseTeamsFormset, EnableCheckInForm,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
                               SeederBiasForm, TeamForm)
-from tournament.models import (Award, GamePlayer, InvalidPreferenceList, RoundPlayer,
+from tournament.models import (Award, AwardRecipient, GamePlayer,
+                               InvalidPreferenceList, RoundPlayer,
                                SeederBias, Team, Tournament, TournamentAward,
                                TournamentPlayer)
 from tournament.news import news
@@ -365,9 +366,9 @@ def tournament_best_countries(request,
     for p in GreatPower.objects.all():
         # Find the GamePlayers for the Players given this award at this Tournament
         for tournament_award in t.tournamentaward_set.filter(award__power=p).select_related('award'):
-            award = tournament_award.award
             gameplayers = []
-            for tp in award.tournamentplayer_set.filter(tournament=t).order_by():
+            for ar in tournament_award.awardrecipient_set.select_related('tournament_player').order_by():
+                tp = ar.tournament_player
                 for rp in tp.roundplayers().all():
                     for gp in rp.gameplayers().filter(power=p):
                         gameplayers.append(gp)
@@ -723,16 +724,15 @@ def enter_awards(request, tournament_id):
                             queryset=Award.objects.filter(tournamentaward__tournament=t))
     if formset.is_valid():
         with transaction.atomic():
-            # Delete any existing awards
-            for tp in t.tournamentplayer_set.exclude(awards=None).order_by():
-                tp.awards.clear()
-                tp.save()
+            # Delete any existing award recipients for this Tournament
+            AwardRecipient.objects.filter(tournament_player__tournament=t).delete()
             for form in formset:
                 award = form.instance
+                tournament_award = TournamentAward.objects.get(tournament=t, award=award)
                 tps = form.cleaned_data['players']
                 for tp in tps:
-                    tp.awards.add(award)
-                    tp.save()
+                    AwardRecipient.objects.create(tournament_award=tournament_award,
+                                                  tournament_player=tp)
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_awards',
                                             args=(tournament_id,)))

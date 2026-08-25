@@ -950,6 +950,23 @@ class TournamentAward(models.Model):
         ]
 
 
+class AwardRecipient(models.Model):
+    """A TournamentPlayer who received a particular TournamentAward."""
+
+    tournament_award = models.ForeignKey(TournamentAward, on_delete=models.CASCADE)
+    tournament_player = models.ForeignKey('TournamentPlayer', on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['tournament_award', 'tournament_player'],
+                                    name='unique_award_recipient'),
+        ]
+
+    def __str__(self):
+        return _('%(player)s won %(award)s') % {'player': self.tournament_player,
+                                                 'award': self.tournament_award.award}
+
+
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -1450,7 +1467,6 @@ class Tournament(models.Model):
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
                 for tournament_award in self.tournamentaward_set.filter(award__power=power).select_related('award'):
-                    award = tournament_award.award
                     for gp in gp_list:
                         # TODO What if this gets called more than once?
                         #      The simplistic approach is to nuke any pre-existing
@@ -1459,7 +1475,8 @@ class Tournament(models.Model):
                         #      been done by hand by the TD, in which case we need
                         #      to keep them (and presumably not also give the award
                         #      to another player)
-                        gp.tournamentplayer().awards.add(award)
+                        AwardRecipient.objects.get_or_create(tournament_award=tournament_award,
+                                                             tournament_player=gp.tournamentplayer())
 
     def update_team_scores(self, for_players=None):
         """
@@ -1921,7 +1938,6 @@ class TournamentPlayer(models.Model):
     location = TPPlayerField(max_length=60, blank=True)
     paid = models.BooleanField(default=False,
                                help_text=_('Have they paid any registration fee?'))
-    awards = models.ManyToManyField(Award, blank=True)
 
     class Meta:
         ordering = ['player']
@@ -1934,6 +1950,11 @@ class TournamentPlayer(models.Model):
     def __str__(self):
         return _('%(player)s at %(tourney)s') % {'tourney': self.tournament,
                                                  'player': self.player}
+
+    @property
+    def awards(self):
+        """QuerySet of Awards received by this TournamentPlayer."""
+        return Award.objects.filter(tournamentaward__awardrecipient__tournament_player=self)
 
     def save(self, *args, **kwargs):
         """Store the TournamentPlayer in the database"""

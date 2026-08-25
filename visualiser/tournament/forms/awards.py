@@ -21,7 +21,7 @@ Forms for Awards in the Diplomacy Tournament Visualiser.
 from django import forms
 from django.forms.models import BaseModelFormSet
 
-from tournament.models import Award, TournamentPlayer
+from tournament.models import Award, TournamentAward, TournamentPlayer
 
 from .fields import TournamentPlayerMultipleChoiceField
 
@@ -47,7 +47,12 @@ class AwardForm(forms.ModelForm):
         self.fields['players'].label = str(self.instance)
         # Populate initial player selection from current award recipients in this tournament.
         if self.instance.pk and ('players' not in self.initial):
-            tps = [tp.id for tp in self.instance.tournamentplayer_set.filter(tournament=self.tournament).order_by()]
+            tournament_award = TournamentAward.objects.filter(tournament=self.tournament,
+                                                               award=self.instance).first()
+            if tournament_award is None:
+                tps = []
+            else:
+                tps = [ar.tournament_player_id for ar in tournament_award.awardrecipient_set.order_by()]
             self.initial['players'] = tps
 
 

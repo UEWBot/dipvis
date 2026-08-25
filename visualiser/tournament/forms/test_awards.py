@@ -24,8 +24,8 @@ from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
-                               DrawSecrecy, Tournament, TournamentAward,
-                               TournamentPlayer)
+                               AwardRecipient, DrawSecrecy, Tournament,
+                               TournamentAward, TournamentPlayer)
 from tournament.players import Player
 
 from . import AwardForm, BaseAwardsFormset
@@ -75,7 +75,8 @@ class AwardFormTest(TestCase):
         self.assertEqual(the_choices[1][1], self.tp1.player.sortable_str())
 
     def test_award_form_has_changed(self):
-        self.tp3.awards.add(self.a1)
+        tournament_award = TournamentAward.objects.get(tournament=self.t, award=self.a1)
+        AwardRecipient.objects.create(tournament_award=tournament_award, tournament_player=self.tp3)
         form = AwardForm(tournament=self.t,
                          instance=self.a1,
                          initial={'players': [self.tp3.id]},
@@ -83,7 +84,7 @@ class AwardFormTest(TestCase):
                                'players': [str(self.tp3.id)]})
         self.assertIs(False, form.has_changed())
         # Cleanup
-        self.tp3.awards.remove(self.a1)
+        AwardRecipient.objects.filter(tournament_award=tournament_award, tournament_player=self.tp3).delete()
 
 
 class AwardsFormsetTest(TestCase):
@@ -117,9 +118,11 @@ class AwardsFormsetTest(TestCase):
         TournamentAward.objects.bulk_create([TournamentAward(tournament=cls.t, award=award)
                               for award in (cls.a1, cls.a2, cls.a3)])
         cls.t.save()
-        cls.tp1.awards.add(cls.a1)
-        cls.tp2.awards.add(cls.a2)
-        cls.tp3.awards.add(cls.a2)
+        ta1 = TournamentAward.objects.get(tournament=cls.t, award=cls.a1)
+        ta2 = TournamentAward.objects.get(tournament=cls.t, award=cls.a2)
+        AwardRecipient.objects.create(tournament_award=ta1, tournament_player=cls.tp1)
+        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=cls.tp2)
+        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=cls.tp3)
 
         cls.AwardsFormset = modelformset_factory(Award,
                                                  form=AwardForm,

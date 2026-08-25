@@ -37,11 +37,12 @@ from django.utils import timezone as django_timezone
 from tournament import backstabbr
 from tournament.diplomacy import FIRST_YEAR, GameSet, GreatPower
 from tournament.game_views import _bs_ownerships_to_sco, _sc_counts_to_cc
-from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
-                               DrawProposal, Game, GameImage, GamePlayer, Pool,
-                               Preference, Round, RoundPlayer, SeederBias,
-                               SupplyCentreOwnership, Team, Tournament,
-                               TournamentAward, TournamentPlayer)
+from tournament.models import (NO_SCORING_SYSTEM_STR, Award, AwardRecipient,
+                               CentreCount, DrawProposal, Game, GameImage,
+                               GamePlayer, Pool, Preference, Round,
+                               RoundPlayer, SeederBias, SupplyCentreOwnership,
+                               Team, Tournament, TournamentAward,
+                               TournamentPlayer)
 from tournament.players import (InvalidWDRId, Player, PlayerEventRanking,
                                 WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
@@ -69,7 +70,11 @@ def _power_award_to_gameplayers(tournament, award):
     assert award.power is not None
     ret = []
     # First find the TournamentPlayers who got the specified award at this tournament
-    for tp in award.tournamentplayer_set.filter(tournament=tournament).order_by():
+    tournament_award = award.tournamentaward_set.filter(tournament=tournament).first()
+    if tournament_award is None:
+        return ret
+    for ar in tournament_award.awardrecipient_set.select_related('tournament_player').order_by():
+        tp = ar.tournament_player
         # Find the corresponding GamePlayer
         for rp in tp.roundplayers().all():
             for gp in rp.gameplayers().filter(power=award.power):
@@ -518,7 +523,7 @@ def clean_best_country_awards(dry_run=False):
         for tournament_award in t.tournamentaward_set.filter(award__power__isnull=False).select_related('award'):
             a = tournament_award.award
             best = t.best_countries()[a.power]
-            tps = a.tournamentplayer_set.filter(tournament=t)
+            tps = TournamentPlayer.objects.filter(awardrecipient__tournament_award=tournament_award)
             if len(tps) > 1:
                 # We have a best country award with multple recipients
                 gps = _power_award_to_gameplayers(t, a)
@@ -532,17 +537,17 @@ def clean_best_country_awards(dry_run=False):
                     if not tp_gp:
                         print(f"{tp} didn't play {a.power}")
                         if not dry_run:
-                            tp.awards.remove(a)
+                            AwardRecipient.objects.filter(tournament_award=tournament_award, tournament_player=tp).delete()
                     # Was any recipient outplayed as that power?
                     if tp_gp not in best:
                         print(f'{tp} was outplayed as {a.power}')
                         if not dry_run:
-                            tp.awards.remove(a)
+                            AwardRecipient.objects.filter(tournament_award=tournament_award, tournament_player=tp).delete()
                     # Are any recipients unranked?
                     if tp.unranked:
                         print(f'Removing {a} from unranked {tp}')
                         if not dry_run:
-                            tp.awards.remove(a)
+                            AwardRecipient.objects.filter(tournament_award=tournament_award, tournament_player=tp).delete()
 
 
 # Testing utilities - useful for bug investigation
@@ -591,9 +596,11 @@ def clone_tournament(t):
                                       num_games_in_team_score=t.num_games_in_team_score)
     for m in t.managers.order_by():
         new_t.managers.add(m)
+    award_map = {}
     for tournament_award in t.tournamentaward_set.select_related('award').order_by():
-        TournamentAward.objects.create(tournament=new_t,
-                                        award=tournament_award.award)
+        new_tournament_award = TournamentAward.objects.create(tournament=new_t,
+                                                               award=tournament_award.award)
+        award_map[tournament_award.award_id] = new_tournament_award
 
     # Copy TournamentPlayers and Preferences
     for tp in t.tournamentplayer_set.order_by():
@@ -613,7 +620,8 @@ def clone_tournament(t):
                                       power=p.power,
                                       ranking=p.ranking)
         for a in tp.awards.order_by():
-            new_tp.awards.add(a)
+            AwardRecipient.objects.create(tournament_award=award_map[a.id],
+                                          tournament_player=new_tp)
 
     # Copy Teams
     for tm in t.team_set.order_by():
@@ -755,14 +763,15 @@ def add_best_country_awards_to_tournament(tournament, dry_run=False):
         # First, add the Award to the Tournament
         print(f'Adding award "{a}" to {tournament}')
         if not dry_run:
-            TournamentAward.objects.get_or_create(tournament=tournament,
-                                                   award=a)
+            tournament_award, _ = TournamentAward.objects.get_or_create(tournament=tournament,
+                                                                        award=a)
         # Then give to the appropriate TournamentPlayers
         for gp in gp_list:
             tp = gp.tournamentplayer()
             print(f'  Adding award "{a}" to {tp}')
             if not dry_run:
-                tp.awards.add(a)
+                AwardRecipient.objects.get_or_create(tournament_award=tournament_award,
+                                                     tournament_player=tp)
 
 
 def add_best_country_awards(dry_run=False):

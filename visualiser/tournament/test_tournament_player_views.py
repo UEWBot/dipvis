@@ -26,10 +26,11 @@ from django.urls import reverse
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
-                               T_SCORING_SYSTEMS, Award, CentreCount, DrawProposal,
-                               DrawSecrecy, Formats, Game, GamePlayer,
-                               PowerAssignMethods, Round, RoundPlayer, Seasons,
-                               Tournament, TournamentAward, TournamentPlayer)
+                               T_SCORING_SYSTEMS, Award, AwardRecipient,
+                               CentreCount, DrawProposal, DrawSecrecy,
+                               Formats, Game, GamePlayer, PowerAssignMethods,
+                               Round, RoundPlayer, Seasons, Tournament,
+                               TournamentAward, TournamentPlayer)
 from tournament.players import Player
 
 
@@ -125,6 +126,8 @@ class TournamentPlayerViewTests(TestCase):
                       power=cls.turkey)
         TournamentAward.objects.bulk_create([TournamentAward(tournament=cls.t1, award=award)
                               for award in (a0, a1, a2)])
+        ta1 = TournamentAward.objects.get(tournament=cls.t1, award=a1)
+        ta2 = TournamentAward.objects.get(tournament=cls.t1, award=a2)
         Round.objects.create(tournament=cls.t1,
                              start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,
@@ -137,8 +140,8 @@ class TournamentPlayerViewTests(TestCase):
         cls.tp12 = TournamentPlayer.objects.create(player=cls.p3,
                                                    tournament=cls.t1,
                                                    backstabbr_username='player_3')
-        cls.tp11.awards.add(a1)
-        cls.tp11.awards.add(a2)
+        AwardRecipient.objects.create(tournament_award=ta1, tournament_player=cls.tp11)
+        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=cls.tp11)
 
         # Unpublished Tournament, with a manager (u3)
         cls.t2 = Tournament.objects.create(name='t2',
