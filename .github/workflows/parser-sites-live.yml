@@ -22,10 +22,9 @@ jobs:
       - name: Run Live Parser Tests
         run: |
           cd visualiser
+          # TODO: Add --tag=webdip once webdip can be accessed from github
           python ./manage.py test \
             --tag=wikipedia_live \
             --tag=backstabbr \
-            # Webdip doesn't like being accessed from github \
-            #--tag=webdip \
             --tag=wdr \
             --tag=wdd
