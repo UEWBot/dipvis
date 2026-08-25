@@ -955,12 +955,25 @@ class AwardRecipient(models.Model):
 
     tournament_award = models.ForeignKey(TournamentAward, on_delete=models.CASCADE)
     tournament_player = models.ForeignKey('TournamentPlayer', on_delete=models.CASCADE)
+    game = models.ForeignKey('Game',
+                             blank=True,
+                             null=True,
+                             on_delete=models.SET_NULL,
+                             help_text=_(u'Set if this award is for something that happened in a specific Game'))
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['tournament_award', 'tournament_player'],
                                     name='unique_award_recipient'),
         ]
+
+    def clean(self):
+        if self.tournament_player_id and self.tournament_award_id:
+            if self.tournament_player.tournament_id != self.tournament_award.tournament_id:
+                raise ValidationError(_('The TournamentPlayer and TournamentAward must be for the same Tournament'))
+        if self.game_id and self.tournament_award_id:
+            if self.game.the_round.tournament_id != self.tournament_award.tournament_id:
+                raise ValidationError(_('The Game and TournamentAward must be for the same Tournament'))
 
     def __str__(self):
         return _('%(player)s won %(award)s') % {'player': self.tournament_player,

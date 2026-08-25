@@ -40,7 +40,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                RoundPlayer, SCOwnershipsNotFound, Seasons,
                                SeederBias, Series, SupplyCentreOwnership, Team,
                                Tournament, TournamentPlayer, TScoringSumGames,
-                               TournamentAward, TScoringSumRounds,
+                               AwardRecipient, TournamentAward, TScoringSumRounds,
                                find_game_scoring_system,
                                find_round_scoring_system,
                                find_tournament_scoring_system,
@@ -2512,6 +2512,88 @@ class AwardTests(TestCase):
         a = Award(name="Test Award", description="The best")
         # TODO validate results
         str(a)
+
+
+class AwardRecipientTests(TestCase):
+    fixtures = ['game_sets.json', 'players.json']
+
+    @classmethod
+    def setUpTestData(cls):
+        today = date.today()
+        cls.t = Tournament.objects.create(name='award-recipient-t',
+                                          start_date=today,
+                                          end_date=today + HOURS_24,
+                                          round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                          tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                          draw_secrecy=DrawSecrecy.SECRET)
+        cls.other_t = Tournament.objects.create(name='award-recipient-other-t',
+                                                start_date=today,
+                                                end_date=today + HOURS_24,
+                                                round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                                tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                                draw_secrecy=DrawSecrecy.SECRET)
+        cls.a = Award.objects.create(name='Best Achievement', description='')
+        cls.ta = TournamentAward.objects.create(tournament=cls.t, award=cls.a)
+        p = Player.objects.create(first_name='Amy', last_name='Awarded')
+        cls.tp = TournamentPlayer.objects.create(player=p, tournament=cls.t)
+        other_p = Player.objects.create(first_name='Beth', last_name='Bereft')
+        cls.other_tp = TournamentPlayer.objects.create(player=other_p, tournament=cls.other_t)
+        r = Round.objects.create(tournament=cls.t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        cls.g = Game.objects.create(name='g1',
+                                    started_at=r.start,
+                                    the_round=r,
+                                    the_set=GameSet.objects.first())
+        other_r = Round.objects.create(tournament=cls.other_t,
+                                       scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       dias=True,
+                                       start=datetime.combine(cls.other_t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        cls.other_g = Game.objects.create(name='g2',
+                                          started_at=other_r.start,
+                                          the_round=other_r,
+                                          the_set=GameSet.objects.first())
+
+    def test_award_recipient_game_optional(self):
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp)
+        ar.full_clean()
+        ar.save()
+        self.assertIsNone(ar.game)
+        # Cleanup
+        ar.delete()
+
+    def test_award_recipient_game_in_same_tournament(self):
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.g)
+        ar.full_clean()
+        ar.save()
+        self.assertEqual(ar.game, self.g)
+        # Cleanup
+        ar.delete()
+
+    def test_award_recipient_game_in_other_tournament_invalid(self):
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.other_g)
+        self.assertRaises(ValidationError, ar.full_clean)
+
+    def test_award_recipient_player_in_other_tournament_invalid(self):
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.other_tp)
+        self.assertRaises(ValidationError, ar.full_clean)
+
+    def test_award_recipient_game_set_null_on_game_delete(self):
+        r = Round.objects.create(tournament=self.t,
+                                 scoring_system=R_SCORING_SYSTEMS[0].name,
+                                 dias=True,
+                                 start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+        g = Game.objects.create(name='g-to-delete',
+                                started_at=r.start,
+                                the_round=r,
+                                the_set=GameSet.objects.first())
+        ar = AwardRecipient.objects.create(tournament_award=self.ta, tournament_player=self.tp, game=g)
+        g.delete()
+        ar.refresh_from_db()
+        self.assertIsNone(ar.game)
+        # Cleanup
+        ar.delete()
 
 
 class SeriesTests(TestCase):
