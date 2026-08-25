@@ -24,7 +24,8 @@ from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
-                               DrawSecrecy, Tournament, TournamentPlayer)
+                               DrawSecrecy, Tournament, TournamentAward,
+                               TournamentPlayer)
 from tournament.players import Player
 
 from . import AwardForm, BaseAwardsFormset
@@ -51,7 +52,7 @@ class AwardFormTest(TestCase):
         # Include one unranked player, who shouldn't be pickable
         cls.tp2 = TournamentPlayer.objects.create(player=p4, tournament=cls.t, unranked=True)
         cls.tp3 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
-        cls.t.awards.add(cls.a1)
+        TournamentAward.objects.create(tournament=cls.t, award=cls.a1)
         cls.t.save()
 
     def test_init_needs_tournament(self):
@@ -113,9 +114,8 @@ class AwardsFormsetTest(TestCase):
                                       power=GreatPower.objects.get(abbreviation='A'))
         cls.a3 = Award.objects.create(name='Tallest Player',
                                       description='Player of unusual size')
-        cls.t.awards.add(cls.a1)
-        cls.t.awards.add(cls.a2)
-        cls.t.awards.add(cls.a3)
+        TournamentAward.objects.bulk_create([TournamentAward(tournament=cls.t, award=award)
+                              for award in (cls.a1, cls.a2, cls.a3)])
         cls.t.save()
         cls.tp1.awards.add(cls.a1)
         cls.tp2.awards.add(cls.a2)
@@ -128,7 +128,7 @@ class AwardsFormsetTest(TestCase):
 
     def test_awards_formset_creation(self):
         formset = self.AwardsFormset(tournament=self.t,
-                                     queryset=self.t.awards.all())
+                                     queryset=Award.objects.filter(tournamentaward__tournament=self.t))
         awards = set()
         for form in formset:
             with self.subTest(award=form.instance.id):
@@ -148,14 +148,14 @@ class AwardsFormsetTest(TestCase):
     def test_awards_formset_excludes_unranked_players(self):
         """Unranked TournamentPlayers should not appear as choices in any formset form"""
         formset = self.AwardsFormset(tournament=self.t,
-                                     queryset=self.t.awards.all())
+                                     queryset=Award.objects.filter(tournamentaward__tournament=self.t))
         for form in formset:
             with self.subTest(award=form.instance.id):
                 player_pks = [choice[0].value for choice in form.fields['players'].choices]
                 self.assertNotIn(self.tp_unranked.pk, player_pks)
 
     def test_awards_formset_no_queryset(self):
-        """When no queryset is supplied, BaseAwardsFormset defaults to tournament.awards.all()."""
+        """When no queryset is supplied, BaseAwardsFormset defaults to the tournament's planned awards."""
         formset = self.AwardsFormset(tournament=self.t)
         award_ids = {form.instance.id for form in formset}
         self.assertEqual(len(formset), 3)
@@ -164,7 +164,7 @@ class AwardsFormsetTest(TestCase):
         self.assertIn(self.a3.id, award_ids)
 
     def test_awards_formset_initial(self):
-        awards = list(self.t.awards.all())
+        awards = list(Award.objects.filter(tournamentaward__tournament=self.t))
         expected_players = {self.a1.id: [self.tp1.id],
                             self.a2.id: [self.tp2.id],
                             self.a3.id: [self.tp3.id]}
@@ -173,7 +173,7 @@ class AwardsFormsetTest(TestCase):
             initial.append({'award': award.id,
                             'players': expected_players[award.id]})
         formset = self.AwardsFormset(tournament=self.t,
-                                     queryset=self.t.awards.all(),
+                                     queryset=Award.objects.filter(tournamentaward__tournament=self.t),
                                      initial=initial)
         # For model formsets, initial does not override existing instances.
         for i, form in enumerate(formset):

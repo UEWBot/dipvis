@@ -24,7 +24,7 @@ from tournament.models import (Award, CentreCount, DBNCoverage, DrawProposal,
                                Game, GameImage, GamePlayer, Pool, Round,
                                RoundPlayer, SeederBias, Series,
                                SupplyCentreOwnership, Team, Tournament,
-                               TournamentPlayer)
+                               TournamentAward, TournamentPlayer)
 from tournament.players import (Player, PlayerAward, PlayerEventRanking,
                                 PlayerGameResult, PlayerRanking, PlayerTitle,
                                 WDDPlayer)
@@ -104,6 +104,11 @@ class TournamentPermissionAdminMixin:
 class AwardAdmin(admin.ModelAdmin):
     list_filter = ['power']
     ordering = ['name']
+
+
+class TournamentAwardInline(admin.TabularInline):
+    model = TournamentAward
+    extra = 0
 
 
 @admin.register(CentreCount)
@@ -329,7 +334,7 @@ class TeamAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
 @admin.register(Tournament)
 class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
     """Include Round as part of Tournament"""
-    inlines = [RoundInline]
+    inlines = [RoundInline, TournamentAwardInline]
     fields = (('name', 'format', 'location'),
               ('start_date', 'end_date'),
               ('team_size', 'num_games_in_team_score'),
@@ -339,8 +344,7 @@ class TournamentAdmin(TournamentPermissionAdminMixin, admin.ModelAdmin):
               ('show_current_scores', 'draw_secrecy', 'best_country_criterion'),
               ('discord_url', 'is_published', 'delay_game_url_publication'),
               ('managers', 'editable', 'no_email'),
-              ('wdd_tournament_id', 'wdr_tournament_id'),
-              'awards')
+              ('wdd_tournament_id', 'wdr_tournament_id'))
     ordering = ['-start_date']
 
     def get_tournament_for_permission(self, obj):

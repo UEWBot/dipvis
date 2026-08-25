@@ -25,9 +25,9 @@
       {% trans "No players" %}
     {% endfor %}
   {% else %}
-    {% for a in tournament.awards.all %}
-      <dt>{{ a }}</dt>
-      <dd>{{ a.description }}</dd>
+    {% for tournament_award in tournament.tournamentaward_set.all %}
+      <dt>{{ tournament_award.award }}</dt>
+      <dd>{{ tournament_award.award.description }}</dd>
     {% endfor %}
   {% endif %}
 </dl>

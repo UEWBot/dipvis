@@ -48,7 +48,8 @@ from tournament.forms import (AwardForm, BaseAwardsFormset,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
                               SeederBiasForm, TeamForm)
 from tournament.models import (Award, GamePlayer, InvalidPreferenceList, RoundPlayer,
-                               SeederBias, Team, Tournament, TournamentPlayer)
+                               SeederBias, Team, Tournament, TournamentAward,
+                               TournamentPlayer)
 from tournament.news import news
 
 
@@ -363,7 +364,8 @@ def tournament_best_countries(request,
     # Move players with "best country" awards to the head of their respective list
     for p in GreatPower.objects.all():
         # Find the GamePlayers for the Players given this award at this Tournament
-        for award in t.awards.filter(power=p):
+        for tournament_award in t.tournamentaward_set.filter(award__power=p).select_related('award'):
+            award = tournament_award.award
             gameplayers = []
             for tp in award.tournamentplayer_set.filter(tournament=t).order_by():
                 for rp in tp.roundplayers().all():
@@ -718,7 +720,7 @@ def enter_awards(request, tournament_id):
                                          formset=BaseAwardsFormset)
     formset = AwardsFormset(request.POST or None,
                             tournament=t,
-                            queryset=t.awards.all())
+                            queryset=Award.objects.filter(tournamentaward__tournament=t))
     if formset.is_valid():
         with transaction.atomic():
             # Delete any existing awards

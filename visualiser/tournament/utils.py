@@ -41,7 +41,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, CentreCount,
                                DrawProposal, Game, GameImage, GamePlayer, Pool,
                                Preference, Round, RoundPlayer, SeederBias,
                                SupplyCentreOwnership, Team, Tournament,
-                               TournamentPlayer)
+                               TournamentAward, TournamentPlayer)
 from tournament.players import (InvalidWDRId, Player, PlayerEventRanking,
                                 WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
@@ -515,7 +515,8 @@ def clean_best_country_awards(dry_run=False):
     Check for spurious "Best Country" awards and remove them.
     """
     for t in Tournament.objects.all():
-        for a in t.awards.filter(power__isnull=False):
+        for tournament_award in t.tournamentaward_set.filter(award__power__isnull=False).select_related('award'):
+            a = tournament_award.award
             best = t.best_countries()[a.power]
             tps = a.tournamentplayer_set.filter(tournament=t)
             if len(tps) > 1:
@@ -590,8 +591,9 @@ def clone_tournament(t):
                                       num_games_in_team_score=t.num_games_in_team_score)
     for m in t.managers.order_by():
         new_t.managers.add(m)
-    for a in t.awards.order_by():
-        new_t.awards.add(a)
+    for tournament_award in t.tournamentaward_set.select_related('award').order_by():
+        TournamentAward.objects.create(tournament=new_t,
+                                        award=tournament_award.award)
 
     # Copy TournamentPlayers and Preferences
     for tp in t.tournamentplayer_set.order_by():
@@ -753,7 +755,8 @@ def add_best_country_awards_to_tournament(tournament, dry_run=False):
         # First, add the Award to the Tournament
         print(f'Adding award "{a}" to {tournament}')
         if not dry_run:
-            tournament.awards.add(a)
+            TournamentAward.objects.get_or_create(tournament=tournament,
+                                                   award=a)
         # Then give to the appropriate TournamentPlayers
         for gp in gp_list:
             tp = gp.tournamentplayer()

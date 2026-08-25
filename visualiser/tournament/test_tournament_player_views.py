@@ -26,10 +26,10 @@ from django.urls import reverse
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (G_SCORING_SYSTEMS, R_SCORING_SYSTEMS,
-                               T_SCORING_SYSTEMS, CentreCount, DrawProposal,
+                               T_SCORING_SYSTEMS, Award, CentreCount, DrawProposal,
                                DrawSecrecy, Formats, Game, GamePlayer,
                                PowerAssignMethods, Round, RoundPlayer, Seasons,
-                               Tournament, TournamentPlayer)
+                               Tournament, TournamentAward, TournamentPlayer)
 from tournament.players import Player
 
 
@@ -116,13 +116,15 @@ class TournamentPlayerViewTests(TestCase):
                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
-        cls.t1.awards.create(name='Whitest Teeth',
-                             description='Tom Cruise award')
-        a1 = cls.t1.awards.create(name='Reddest Hair',
-                                  description='Gingers need love too')
-        a2 = cls.t1.awards.create(name='Best Turkey',
-                                  description='They cook a great Christmas dinner',
-                                  power=cls.turkey)
+        a0 = Award.objects.create(name='Whitest Teeth',
+                      description='Tom Cruise award')
+        a1 = Award.objects.create(name='Reddest Hair',
+                      description='Gingers need love too')
+        a2 = Award.objects.create(name='Best Turkey',
+                      description='They cook a great Christmas dinner',
+                      power=cls.turkey)
+        TournamentAward.objects.bulk_create([TournamentAward(tournament=cls.t1, award=award)
+                              for award in (a0, a1, a2)])
         Round.objects.create(tournament=cls.t1,
                              start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
                              scoring_system=G_SCORING_SYSTEMS[0].name,

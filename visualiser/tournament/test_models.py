@@ -40,7 +40,8 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                RoundPlayer, SCOwnershipsNotFound, Seasons,
                                SeederBias, Series, SupplyCentreOwnership, Team,
                                Tournament, TournamentPlayer, TScoringSumGames,
-                               TScoringSumRounds, find_game_scoring_system,
+                               TournamentAward, TScoringSumRounds,
+                               find_game_scoring_system,
                                find_round_scoring_system,
                                find_tournament_scoring_system,
                                scoring_systems_are_compatible,
@@ -4569,13 +4570,12 @@ class TournamentTests(TestCase):
                        is_finished=True,
                        draw_secrecy=DrawSecrecy.SECRET)
         t.save()
-        t.awards.create(name='Best Austria', power=self.austria, description='')
-        t.awards.create(name='Best England', power=self.england, description='')
-        t.awards.create(name='Best France', power=self.france, description='')
-        t.awards.create(name='Best Germany', power=self.germany, description='')
-        t.awards.create(name='Best Italy', power=self.italy, description='')
-        t.awards.create(name='Best Russia', power=self.russia, description='')
-        t.awards.create(name='Best Turkey', power=self.turkey, description='')
+        for power in (self.austria, self.england, self.france, self.germany,
+                      self.italy, self.russia, self.turkey):
+            award = Award.objects.create(name=f'Best {power}',
+                                         power=power,
+                                         description='')
+            TournamentAward.objects.create(tournament=t, award=award)
         TournamentPlayer.objects.create(tournament=t, player=self.p1, score=1)
         TournamentPlayer.objects.create(tournament=t, player=self.p2, score=2)
         TournamentPlayer.objects.create(tournament=t, player=self.p3, score=3)
@@ -4625,8 +4625,7 @@ class TournamentTests(TestCase):
                     self.assertEqual(tp.awards.count(), 0)
 
         # Clean up
-        for a in t.awards.all():
-            a.delete()
+        t.tournamentaward_set.all().delete()
         # Clean up
         # Note that this will also delete all other objects for the Tournament
         t.delete()

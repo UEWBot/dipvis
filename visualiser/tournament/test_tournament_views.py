@@ -33,7 +33,7 @@ from tournament.models import (G_SCORING_SYSTEMS, NO_SCORING_SYSTEM_STR,
                                DrawProposal, DrawSecrecy, Game, GamePlayer,
                                PowerAssignMethods, Preference, Round,
                                RoundPlayer, Seasons, SeederBias, Series, Team,
-                               Tournament, TournamentPlayer)
+                               Tournament, TournamentAward, TournamentPlayer)
 from tournament.players import Player
 
 
@@ -138,9 +138,8 @@ class TournamentViewTests(TestCase):
                                            tournament_scoring_system='Sum all round scores',
                                            draw_secrecy=DrawSecrecy.SECRET,
                                            is_published=True)
-        cls.t1.awards.add(cls.a1)
-        cls.t1.awards.add(cls.a2)
-        cls.t1.awards.add(cls.a3)
+        TournamentAward.objects.bulk_create([TournamentAward(tournament=cls.t1, award=award)
+                              for award in (cls.a1, cls.a2, cls.a3)])
         cls.t1.save()
         Round.objects.create(tournament=cls.t1,
                              start=datetime.combine(cls.t1.start_date, time(hour=8, tzinfo=datetime_timezone.utc)),
@@ -1292,9 +1291,9 @@ class TournamentViewTests(TestCase):
         t.save()
 
     def test_best_countries_with_awards(self):
-        self.assertFalse(self.a3.tournament_set.contains(self.t4))
-        self.assertEqual(self.t4.awards.count(), 0)
-        self.t4.awards.add(self.a3)
+        self.assertFalse(self.t4.tournamentaward_set.filter(award=self.a3).exists())
+        self.assertEqual(self.t4.tournamentaward_set.count(), 0)
+        TournamentAward.objects.create(tournament=self.t4, award=self.a3)
         gps = []
         for r in self.t4.round_set.all():
             for g in r.game_set.all():
@@ -1319,7 +1318,7 @@ class TournamentViewTests(TestCase):
                             found = True
         # Cleanup
         gps[0].tournamentplayer().awards.clear()
-        self.t4.awards.clear()
+        self.t4.tournamentaward_set.all().delete()
 
     def test_best_countries_in_progress_uses_italics_for_non_final_values(self):
         """In-progress games show tentative score and centre count in italics"""
@@ -2437,7 +2436,8 @@ class TournamentViewTests(TestCase):
         # Give out a couple of awards
         a1 = Award.objects.create(name='Best Haircut')
         a2 = Award.objects.create(name='Best France', power=self.france)
-        self.t4.awards.set([a1, a2])
+        TournamentAward.objects.bulk_create([TournamentAward(tournament=self.t4, award=award)
+                              for award in (a1, a2)])
         self.t4.tournamentplayer_set.first().awards.add(a1)
         self.t4.tournamentplayer_set.last().awards.add(a2)
         response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
@@ -2445,7 +2445,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
         # Cleanup
-        self.t4.awards.all().delete()
+        self.t4.tournamentaward_set.all().delete()
         g.is_finished = True
         g.save()
         self.t4.tournament_scoring_system = tss
@@ -2493,13 +2493,12 @@ class TournamentViewTests(TestCase):
 
     def test_tournament_awards_afterwards(self):
         """For a finished Tournament, it should show who received the awards"""
-        self.assertEqual(self.t4.awards.count(), 0)
+        self.assertEqual(self.t4.tournamentaward_set.count(), 0)
         for tp in self.t4.tournamentplayer_set.all():
             self.assertEqual(tp.awards.count(), 0)
         # Give some awards out
-        self.t4.awards.add(self.a1)
-        self.t4.awards.add(self.a2)
-        self.t4.save()
+        TournamentAward.objects.bulk_create([TournamentAward(tournament=self.t4, award=award)
+                              for award in (self.a1, self.a2)])
         self.tp41.awards.add(self.a1)
         self.tp41.awards.add(self.a2)
         self.tp41.save()
@@ -2512,7 +2511,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards.html')
         # Clean up
-        self.t4.awards.clear()
+        self.t4.tournamentaward_set.all().delete()
         self.tp41.awards.clear()
         tp.awards.clear()
 
@@ -2566,13 +2565,14 @@ class TournamentViewTests(TestCase):
 
     def test_enter_awards_post(self):
         # Give some awards to players beforehand
-        self.t1.tournamentplayer_set.last().awards.add(self.t1.awards.first())
-        self.t1.tournamentplayer_set.first().awards.add(self.t1.awards.last())
+        awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
+        self.t1.tournamentplayer_set.last().awards.add(awards[0])
+        self.t1.tournamentplayer_set.first().awards.add(awards[-1])
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         tps = list(self.t1.tournamentplayer_set.all())
         data = {'form-MAX_NUM_FORMS': '1000'}
         expected = {}
-        for i, a in enumerate(self.t1.awards.all()):
+        for i, a in enumerate(awards):
             data[f'form-{i}-id'] = str(a.id)
             players = [str(tps[i % len(tps)].id)]
             expected[a.id] = {int(players[0])}
@@ -2588,7 +2588,7 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_awards', args=(self.t1.pk,)))
         # Check each award has exactly the player submitted for that row.
-        for a in self.t1.awards.all():
+        for a in awards:
             actual = set(a.tournamentplayer_set.values_list('id', flat=True))
             self.assertEqual(actual, expected[a.id])
         # Cleanup
@@ -2598,8 +2598,9 @@ class TournamentViewTests(TestCase):
     def test_enter_awards_form_errors_rendered(self):
         """Invalid award player selection should be shown as a field error."""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
         data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, a in enumerate(self.t1.awards.all()):
+        for i, a in enumerate(awards):
             data[f'form-{i}-id'] = str(a.id)
             if i == 0:
                 data[f'form-{i}-players'] = ['999999']
@@ -2617,9 +2618,10 @@ class TournamentViewTests(TestCase):
     def test_enter_awards_hidden_field_errors_rendered(self):
         """Hidden field validation errors should be visible to users."""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
         tp = self.t1.tournamentplayer_set.first()
         data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, a in enumerate(self.t1.awards.all()):
+        for i, a in enumerate(awards):
             # Omit one hidden id field to trigger a hidden-field validation error.
             if i != 0:
                 data[f'form-{i}-id'] = str(a.id)

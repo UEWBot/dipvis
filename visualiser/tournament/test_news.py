@@ -25,7 +25,7 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                CentreCount, DrawProposal, DrawSecrecy, Game,
                                GamePlayer, Round, RoundPlayer, Seasons,
                                SupplyCentreOwnership, Tournament,
-                               TournamentPlayer)
+                               TournamentAward, TournamentPlayer)
 from tournament.news import (MASK_ALL_NEWS, _game_news, _round_leader_str,
                              _round_news, _sc_gains_and_losses,
                              _tournament_news, news)
@@ -302,9 +302,8 @@ class NewsTests(TestCase):
         a1 = Award.objects.create(name='Longest Hair')
         a2 = Award.objects.create(name='Best France', power=self.france)
         a3 = Award.objects.create(name='Best Germany', power=self.germany)
-        t.awards.add(a1)
-        t.awards.add(a2)
-        t.awards.add(a3)
+        TournamentAward.objects.bulk_create([TournamentAward(tournament=t, award=award)
+                              for award in (a1, a2, a3)])
         tp = t.tournamentplayer_set.get(player__first_name='Iris')
         tp.awards.add(a1)
         tp.awards.add(a2)
@@ -318,7 +317,7 @@ class NewsTests(TestCase):
         self.assertIn('Iris Jackson won Best France (with 3 centres and a score of 0.00 in game g31 of round 1), Longest Hair.', res)
         self.assertIn('George Hotel won Best Germany (with 3 centres and a score of 0.00 in game g31 of round 1).', res)
         # Cleanup
-        t.awards.all().delete()
+        t.tournamentaward_set.all().delete()
 
     def test_tournament_news_not_started(self):
         # TODO is a Tournament with no rounds the only way to get this message?

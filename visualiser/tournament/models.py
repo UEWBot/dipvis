@@ -937,6 +937,19 @@ class Award(models.Model):
         return _(f'{self.name}')
 
 
+class TournamentAward(models.Model):
+    """An Award that may be given out at a particular Tournament."""
+
+    tournament = models.ForeignKey('Tournament', on_delete=models.CASCADE)
+    award = models.ForeignKey(Award, on_delete=models.CASCADE)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['tournament', 'award'],
+                                    name='unique_tournament_award'),
+        ]
+
+
 class Tournament(models.Model):
     """
     A Diplomacy tournament
@@ -1016,8 +1029,6 @@ class Tournament(models.Model):
     delay_game_url_publication = models.BooleanField(default=False,
                                                      verbose_name=_('Delay publishing game URL'),
                                                      help_text=_('Check to keep game URL secret until after the tournament completes'))
-    awards = models.ManyToManyField(Award,
-                                    help_text=_('Which achievements may be recognised.'))
     discord_url = models.URLField(verbose_name=_('Discord webhook URL'),
                                   blank=True,
                                   help_text=_('Board calls will be posted here'))
@@ -1219,7 +1230,8 @@ class Tournament(models.Model):
         """
         Returns a QuerySet of all awards other than "Best Country" awards.
         """
-        return self.awards.filter(power=None)
+        return Award.objects.filter(tournamentaward__tournament=self,
+                                    power=None)
 
     def _calculated_scores(self, for_players=None):
         """
@@ -1437,7 +1449,8 @@ class Tournament(models.Model):
         if self.is_finished:
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
-                for award in self.awards.filter(power=power).all():
+                for tournament_award in self.tournamentaward_set.filter(award__power=power).select_related('award'):
+                    award = tournament_award.award
                     for gp in gp_list:
                         # TODO What if this gets called more than once?
                         #      The simplistic approach is to nuke any pre-existing

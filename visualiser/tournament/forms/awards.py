@@ -59,7 +59,7 @@ class BaseAwardsFormset(BaseModelFormSet):
         # Pre-compute the players queryset once to share across all forms
         self._players_queryset = self.tournament.tournamentplayer_set.filter(unranked=False)
         if 'queryset' not in kwargs:
-            kwargs['queryset'] = self.tournament.awards.all()
+            kwargs['queryset'] = Award.objects.filter(tournamentaward__tournament=self.tournament)
         super().__init__(*args, **kwargs)
 
     def _construct_form(self, index, **kwargs):
