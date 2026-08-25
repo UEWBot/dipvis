@@ -21,6 +21,12 @@ Fields for the Diplomacy Tournament Visualiser.
 from django import forms
 
 
+class GameChoiceField(forms.ModelChoiceField):
+    """Field to pick a Game"""
+    def label_from_instance(self, obj):
+        return obj.name
+
+
 class PlayerChoiceField(forms.ModelChoiceField):
     """Field to pick a Player"""
     def label_from_instance(self, obj):

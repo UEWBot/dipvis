@@ -18,8 +18,8 @@
     {% endif %}
     <h2>{% trans "Awards" %}</h2>
     <ul>
-      {% for award in player.awards.all %}
-        <li>{{ award.name }}</li>
+      {% for ar in player.awardrecipient_set.all %}
+        <li>{{ ar.tournament_award.award.name }}{% if ar.game %} ({{ ar.game }}){% endif %}</li>
       {% empty %}
         <li>{% trans "None" %}</li>
       {% endfor %}

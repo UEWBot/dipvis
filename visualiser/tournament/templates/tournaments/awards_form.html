@@ -7,30 +7,36 @@
 <h1>{% blocktrans with tournament=tournament %}{{ tournament }} Awards{% endblocktrans %}</h1>
 <form method="post" action={% url 'enter_awards' tournament.id %}>
   {% csrf_token %}
-  {{ formset.management_form }}
-  {{ formset.non_form_errors.as_ul }}
-  <table class="form">
-    {% for form in formset.forms %}
+  {% for tournament_award, formset in award_formsets %}
+    <h2>{{ tournament_award.award }}</h2>
+    <p>{{ tournament_award.award.description }}</p>
+    {{ formset.management_form }}
+    {{ formset.non_form_errors.as_ul }}
+    <table class="form">
       <thead><tr>
-        {% for field in form.visible_fields %}
+        {% for field in formset.empty_form.visible_fields %}
           <th>{{ field.label }}</th>
         {% endfor %}
       </tr></thead>
-      <tbody<tr>
-        {{ form.non_field_errors }}
-        {% for hidden in form.hidden_fields %}
-          {{ hidden.errors.as_ul }}
-          {{ hidden }}
+      <tbody>
+        {% for form in formset.forms %}
+          <tr>
+            {{ form.non_field_errors }}
+            {% for hidden in form.hidden_fields %}
+              {{ hidden.errors.as_ul }}
+              {{ hidden }}
+            {% endfor %}
+            {% for field in form.visible_fields %}
+              <td>
+                {{ field.errors.as_ul }}
+                {{ field }}
+              </td>
+            {% endfor %}
+          </tr>
         {% endfor %}
-        {% for field in form.visible_fields %}
-          <td>
-            {{ field.errors.as_ul }}
-            {{ field }}
-          </td>
-        {% endfor %}
-      </tr></tbody>
-    {% endfor %}
-  </table>
+      </tbody>
+    </table>
+  {% endfor %}
   <input type="submit" value={% trans "Submit" %} />
 </form>
 {% endblock content %}

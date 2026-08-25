@@ -2570,25 +2570,38 @@ class TournamentViewTests(TestCase):
 
     def test_enter_awards_post(self):
         # Give some awards to players beforehand
-        awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
-        ta_first = TournamentAward.objects.get(tournament=self.t1, award=awards[0])
-        ta_last = TournamentAward.objects.get(tournament=self.t1, award=awards[-1])
+        tournament_awards = list(self.t1.tournamentaward_set.select_related('award').order_by('award__name'))
+        ta_first = tournament_awards[0]
+        ta_last = tournament_awards[-1]
         AwardRecipient.objects.create(tournament_award=ta_first,
                                       tournament_player=self.t1.tournamentplayer_set.last())
         AwardRecipient.objects.create(tournament_award=ta_last,
                                       tournament_player=self.t1.tournamentplayer_set.first())
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
         tps = list(self.t1.tournamentplayer_set.all())
-        data = {'form-MAX_NUM_FORMS': '1000'}
+        data = {}
         expected = {}
-        for i, a in enumerate(awards):
-            data[f'form-{i}-id'] = str(a.id)
-            players = [str(tps[i % len(tps)].id)]
-            expected[a.id] = {int(players[0])}
-            data[f'form-{i}-players'] = players
-        i += 1
-        data['form-TOTAL_FORMS'] = f'{i}'
-        data['form-INITIAL_FORMS'] = f'{i}'
+        for i, ta in enumerate(tournament_awards):
+            prefix = f'ta-{ta.pk}'
+            existing = list(ta.awardrecipient_set.all())
+            data[f'{prefix}-TOTAL_FORMS'] = str(len(existing) + 2)
+            data[f'{prefix}-INITIAL_FORMS'] = str(len(existing))
+            data[f'{prefix}-MIN_NUM_FORMS'] = '0'
+            data[f'{prefix}-MAX_NUM_FORMS'] = '1000'
+            tp = tps[i % len(tps)]
+            # Replace any existing recipient with the chosen player, or use
+            # the first blank row if there's no existing recipient.
+            if existing:
+                data[f'{prefix}-0-id'] = str(existing[0].pk)
+            else:
+                data[f'{prefix}-0-id'] = ''
+            data[f'{prefix}-0-tournament_player'] = str(tp.id)
+            data[f'{prefix}-0-game'] = ''
+            for j in range(1, len(existing) + 2):
+                data[f'{prefix}-{j}-id'] = str(existing[j].pk) if j < len(existing) else ''
+                data[f'{prefix}-{j}-tournament_player'] = ''
+                data[f'{prefix}-{j}-game'] = ''
+            expected[ta.pk] = {tp.id}
         data = urlencode(data, doseq=True)
         response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
                                     data,
@@ -2597,24 +2610,29 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('tournament_awards', args=(self.t1.pk,)))
         # Check each award has exactly the player submitted for that row.
-        for a in awards:
-            tournament_award = TournamentAward.objects.get(tournament=self.t1, award=a)
-            actual = set(tournament_award.awardrecipient_set.values_list('tournament_player_id', flat=True))
-            self.assertEqual(actual, expected[a.id])
+        for ta in tournament_awards:
+            actual = set(ta.awardrecipient_set.values_list('tournament_player_id', flat=True))
+            self.assertEqual(actual, expected[ta.pk])
         # Cleanup
-        AwardRecipient.objects.filter(tournament_player__in=tps).delete()
+        AwardRecipient.objects.filter(tournament_award__in=tournament_awards).delete()
 
     def test_enter_awards_form_errors_rendered(self):
-        """Invalid award player selection should be shown as a field error."""
+        """Invalid award recipient selection should be shown as a field error."""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
-        data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, a in enumerate(awards):
-            data[f'form-{i}-id'] = str(a.id)
-            if i == 0:
-                data[f'form-{i}-players'] = ['999999']
-        data['form-TOTAL_FORMS'] = str(i + 1)
-        data['form-INITIAL_FORMS'] = str(i + 1)
+        tournament_awards = list(self.t1.tournamentaward_set.select_related('award').order_by('award__name'))
+        data = {}
+        for i, ta in enumerate(tournament_awards):
+            prefix = f'ta-{ta.pk}'
+            data[f'{prefix}-TOTAL_FORMS'] = '2'
+            data[f'{prefix}-INITIAL_FORMS'] = '0'
+            data[f'{prefix}-MIN_NUM_FORMS'] = '0'
+            data[f'{prefix}-MAX_NUM_FORMS'] = '1000'
+            data[f'{prefix}-0-id'] = ''
+            data[f'{prefix}-0-tournament_player'] = '999999' if i == 0 else ''
+            data[f'{prefix}-0-game'] = ''
+            data[f'{prefix}-1-id'] = ''
+            data[f'{prefix}-1-tournament_player'] = ''
+            data[f'{prefix}-1-game'] = ''
         data = urlencode(data, doseq=True)
         response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
                                     data,
@@ -2627,17 +2645,38 @@ class TournamentViewTests(TestCase):
     def test_enter_awards_hidden_field_errors_rendered(self):
         """Hidden field validation errors should be visible to users."""
         self.client.login(username=self.USERNAME2, password=self.PWORD2)
-        awards = list(Award.objects.filter(tournamentaward__tournament=self.t1))
+        tournament_awards = list(self.t1.tournamentaward_set.select_related('award').order_by('award__name'))
+        ta = tournament_awards[0]
         tp = self.t1.tournamentplayer_set.first()
-        data = {'form-MAX_NUM_FORMS': '1000'}
-        for i, a in enumerate(awards):
-            # Omit one hidden id field to trigger a hidden-field validation error.
-            if i != 0:
-                data[f'form-{i}-id'] = str(a.id)
-            data[f'form-{i}-players'] = [str(tp.id)]
-        i += 1
-        data['form-TOTAL_FORMS'] = f'{i}'
-        data['form-INITIAL_FORMS'] = f'{i}'
+        existing = AwardRecipient.objects.create(tournament_award=ta, tournament_player=tp)
+        data = {}
+        for other_ta in tournament_awards:
+            prefix = f'ta-{other_ta.pk}'
+            if other_ta.pk == ta.pk:
+                data[f'{prefix}-TOTAL_FORMS'] = '3'
+                data[f'{prefix}-INITIAL_FORMS'] = '1'
+                data[f'{prefix}-MIN_NUM_FORMS'] = '0'
+                data[f'{prefix}-MAX_NUM_FORMS'] = '1000'
+                # Omit the hidden id field to trigger a hidden-field validation error.
+                data[f'{prefix}-0-tournament_player'] = str(tp.id)
+                data[f'{prefix}-0-game'] = ''
+                data[f'{prefix}-1-id'] = ''
+                data[f'{prefix}-1-tournament_player'] = ''
+                data[f'{prefix}-1-game'] = ''
+                data[f'{prefix}-2-id'] = ''
+                data[f'{prefix}-2-tournament_player'] = ''
+                data[f'{prefix}-2-game'] = ''
+            else:
+                data[f'{prefix}-TOTAL_FORMS'] = '2'
+                data[f'{prefix}-INITIAL_FORMS'] = '0'
+                data[f'{prefix}-MIN_NUM_FORMS'] = '0'
+                data[f'{prefix}-MAX_NUM_FORMS'] = '1000'
+                data[f'{prefix}-0-id'] = ''
+                data[f'{prefix}-0-tournament_player'] = ''
+                data[f'{prefix}-0-game'] = ''
+                data[f'{prefix}-1-id'] = ''
+                data[f'{prefix}-1-tournament_player'] = ''
+                data[f'{prefix}-1-game'] = ''
         data = urlencode(data, doseq=True)
         response = self.client.post(reverse('enter_awards', args=(self.t1.pk,)),
                                     data,
@@ -2646,6 +2685,8 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards_form.html')
         self.assertContains(response, 'This field is required.')
+        # Cleanup
+        existing.delete()
 
     def test_tournament_wdd_awards(self):
         """Should be viewable without logging in"""

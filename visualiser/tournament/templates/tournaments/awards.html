@@ -15,10 +15,10 @@
 <dl>
   {% if tournament.is_finished %}
     {% for tp in tournament.tournamentplayer_set.all %}
-      {% if tp.awards.count %}
+      {% if tp.awardrecipient_set.count %}
         <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
-          {% for a in tp.awards.all %}
-            <dd>{{ a }}</dd>
+          {% for ar in tp.awardrecipient_set.all %}
+            <dd>{{ ar.tournament_award.award }}{% if ar.game %} ({{ ar.game }}){% endif %}</dd>
           {% endfor %}
         {% endif %}
     {% empty %}

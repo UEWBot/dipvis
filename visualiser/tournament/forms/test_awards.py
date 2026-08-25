@@ -17,26 +17,26 @@
 """
 Award Forms Tests for the Diplomacy Tournament Visualiser.
 """
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
+from datetime import timezone as datetime_timezone
 
-from django.forms import modelformset_factory
 from django.test import TestCase
 
-from tournament.diplomacy import GreatPower
+from tournament.diplomacy import GameSet
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
-                               AwardRecipient, DrawSecrecy, Tournament,
-                               TournamentAward, TournamentPlayer)
+                               AwardRecipient, DrawSecrecy, Game, Round,
+                               Tournament, TournamentAward, TournamentPlayer)
 from tournament.players import Player
 
-from . import AwardForm, BaseAwardsFormset
+from . import AwardRecipientForm, AwardRecipientFormSet
 
 
-class AwardFormTest(TestCase):
+class AwardRecipientFormTest(TestCase):
+    fixtures = ['game_sets.json']
+
     @classmethod
     def setUpTestData(cls):
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
-        # One Player who didn't participate
-        Player.objects.create(first_name='Charlotte', last_name='Dotty')
         p3 = Player.objects.create(first_name='Edward', last_name='Foxtrot')
         p4 = Player.objects.create(first_name='Georgette', last_name='Halitosis')
         today = date.today()
@@ -48,46 +48,59 @@ class AwardFormTest(TestCase):
                                           draw_secrecy=DrawSecrecy.SECRET)
         cls.a1 = Award.objects.create(name='Nicest Player',
                                       description='Player who was the nicest')
+        cls.ta1 = TournamentAward.objects.create(tournament=cls.t, award=cls.a1)
         cls.tp1 = TournamentPlayer.objects.create(player=p3, tournament=cls.t)
         # Include one unranked player, who shouldn't be pickable
         cls.tp2 = TournamentPlayer.objects.create(player=p4, tournament=cls.t, unranked=True)
         cls.tp3 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
-        TournamentAward.objects.create(tournament=cls.t, award=cls.a1)
-        cls.t.save()
+        cls.r = Round.objects.create(tournament=cls.t,
+                                     scoring_system=R_SCORING_SYSTEMS[0].name,
+                                     dias=True,
+                                     start=datetime.combine(cls.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        cls.g = Game.objects.create(name='g1',
+                                    started_at=cls.r.start,
+                                    the_round=cls.r,
+                                    the_set=GameSet.objects.first())
 
-    def test_init_needs_tournament(self):
+    def test_init_needs_tournament_award(self):
         with self.assertRaises(KeyError):
-            AwardForm(instance=self.a1)
+            AwardRecipientForm()
 
-    def test_awards_form_player_field_label(self):
-        form = AwardForm(tournament=self.t, instance=self.a1)
-        self.assertEqual(form.fields['players'].label, str(self.a1))
+    def test_tournament_player_choices_excludes_unranked(self):
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        player_pks = {str(choice[0]) for choice in form.fields['tournament_player'].choices if choice[0]}
+        self.assertNotIn(str(self.tp2.pk), player_pks)
+        self.assertIn(str(self.tp1.pk), player_pks)
+        self.assertIn(str(self.tp3.pk), player_pks)
 
-    def test_awards_form_player_choices(self):
-        form = AwardForm(tournament=self.t, instance=self.a1)
-        the_choices = list(form.fields['players'].choices)
-        # We should have one per TournamentPlayer
-        self.assertEqual(len(the_choices), self.t.tournamentplayer_set.filter(unranked=False).count())
-        # The keys should be the TournamentPlayer pks
-        self.assertEqual(the_choices[0][0].value, self.tp3.pk)
-        # and the values should be the Player names, in alphabetical order
-        self.assertEqual(the_choices[0][1], self.tp3.player.sortable_str())
-        self.assertEqual(the_choices[1][1], self.tp1.player.sortable_str())
-
-    def test_award_form_has_changed(self):
-        tournament_award = TournamentAward.objects.get(tournament=self.t, award=self.a1)
-        AwardRecipient.objects.create(tournament_award=tournament_award, tournament_player=self.tp3)
-        form = AwardForm(tournament=self.t,
-                         instance=self.a1,
-                         initial={'players': [self.tp3.id]},
-                         data={
-                               'players': [str(self.tp3.id)]})
-        self.assertIs(False, form.has_changed())
+    def test_game_choices_restricted_to_tournament(self):
+        other_t = Tournament.objects.create(name='t2',
+                                            start_date=self.t.start_date,
+                                            end_date=self.t.end_date,
+                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                            draw_secrecy=DrawSecrecy.SECRET)
+        other_r = Round.objects.create(tournament=other_t,
+                                       scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       dias=True,
+                                       start=datetime.combine(other_t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)))
+        other_g = Game.objects.create(name='g2',
+                                      started_at=other_r.start,
+                                      the_round=other_r,
+                                      the_set=GameSet.objects.first())
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        game_pks = {str(choice[0]) for choice in form.fields['game'].choices if choice[0]}
+        self.assertIn(str(self.g.pk), game_pks)
+        self.assertNotIn(str(other_g.pk), game_pks)
         # Cleanup
-        AwardRecipient.objects.filter(tournament_award=tournament_award, tournament_player=self.tp3).delete()
+        other_t.delete()
+
+    def test_game_field_not_required(self):
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        self.assertFalse(form.fields['game'].required)
 
 
-class AwardsFormsetTest(TestCase):
+class AwardRecipientFormSetTest(TestCase):
     fixtures = ['game_sets.json']
 
     @classmethod
@@ -101,91 +114,63 @@ class AwardsFormsetTest(TestCase):
                                           draw_secrecy=DrawSecrecy.SECRET)
         p1 = Player.objects.create(first_name='Arthur', last_name='Bottom')
         p2 = Player.objects.create(first_name='Christina', last_name='Dragnet')
-        p3 = Player.objects.create(first_name='Edwin', last_name='Flubber')
         cls.tp1 = TournamentPlayer.objects.create(player=p1, tournament=cls.t)
         cls.tp2 = TournamentPlayer.objects.create(player=p2, tournament=cls.t)
-        cls.tp3 = TournamentPlayer.objects.create(player=p3, tournament=cls.t)
-        cls.tp_unranked = TournamentPlayer.objects.create(player=Player.objects.create(first_name='Zara', last_name='Zzzz'),
-                                                          tournament=cls.t,
-                                                          unranked=True)
         cls.a1 = Award.objects.create(name='Nicest Player',
                                       description='Player who was the nicest')
-        cls.a2 = Award.objects.create(name='Best Austria',
-                                      description='Who got the best result playing Austria',
-                                      power=GreatPower.objects.get(abbreviation='A'))
-        cls.a3 = Award.objects.create(name='Tallest Player',
-                                      description='Player of unusual size')
-        TournamentAward.objects.bulk_create([TournamentAward(tournament=cls.t, award=award)
-                              for award in (cls.a1, cls.a2, cls.a3)])
-        cls.t.save()
-        ta1 = TournamentAward.objects.get(tournament=cls.t, award=cls.a1)
-        ta2 = TournamentAward.objects.get(tournament=cls.t, award=cls.a2)
-        AwardRecipient.objects.create(tournament_award=ta1, tournament_player=cls.tp1)
-        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=cls.tp2)
-        AwardRecipient.objects.create(tournament_award=ta2, tournament_player=cls.tp3)
+        cls.ta1 = TournamentAward.objects.create(tournament=cls.t, award=cls.a1)
 
-        cls.AwardsFormset = modelformset_factory(Award,
-                                                 form=AwardForm,
-                                                 extra=0,
-                                                 formset=BaseAwardsFormset)
+    def setUp(self):
+        self.ar1 = AwardRecipient.objects.create(tournament_award=self.ta1, tournament_player=self.tp1)
 
-    def test_awards_formset_creation(self):
-        formset = self.AwardsFormset(tournament=self.t,
-                                     queryset=Award.objects.filter(tournamentaward__tournament=self.t))
-        awards = set()
-        for form in formset:
-            with self.subTest(award=form.instance.id):
-                if form.instance.id == self.a1.id:
-                    self.assertEqual(form['players'].initial, [self.tp1.id])
-                elif form.instance.id == self.a2.id:
-                    self.assertEqual(form['players'].initial, [self.tp2.id, self.tp3.id])
-                else:
-                    self.assertEqual(form['players'].initial, [])
-            awards.add(form.instance.id)
-        # All three Awards should be present
-        self.assertEqual(len(formset), 3)
-        self.assertIn(self.a1.id, awards)
-        self.assertIn(self.a2.id, awards)
-        self.assertIn(self.a3.id, awards)
+    def tearDown(self):
+        AwardRecipient.objects.filter(tournament_award=self.ta1).delete()
 
-    def test_awards_formset_excludes_unranked_players(self):
-        """Unranked TournamentPlayers should not appear as choices in any formset form"""
-        formset = self.AwardsFormset(tournament=self.t,
-                                     queryset=Award.objects.filter(tournamentaward__tournament=self.t))
-        for form in formset:
-            with self.subTest(award=form.instance.id):
-                player_pks = [choice[0].value for choice in form.fields['players'].choices]
-                self.assertNotIn(self.tp_unranked.pk, player_pks)
+    def test_formset_lists_existing_recipients(self):
+        formset = AwardRecipientFormSet(instance=self.ta1)
+        recipients = {form.instance.pk for form in formset.forms if form.instance.pk}
+        self.assertIn(self.ar1.pk, recipients)
 
-    def test_awards_formset_no_queryset(self):
-        """When no queryset is supplied, BaseAwardsFormset defaults to the tournament's planned awards."""
-        formset = self.AwardsFormset(tournament=self.t)
-        award_ids = {form.instance.id for form in formset}
-        self.assertEqual(len(formset), 3)
-        self.assertIn(self.a1.id, award_ids)
-        self.assertIn(self.a2.id, award_ids)
-        self.assertIn(self.a3.id, award_ids)
+    def test_formset_has_extra_blank_forms(self):
+        formset = AwardRecipientFormSet(instance=self.ta1)
+        # One existing recipient, plus two blank extra forms
+        self.assertEqual(len(formset.forms), 3)
 
-    def test_awards_formset_initial(self):
-        awards = list(Award.objects.filter(tournamentaward__tournament=self.t))
-        expected_players = {self.a1.id: [self.tp1.id],
-                            self.a2.id: [self.tp2.id],
-                            self.a3.id: [self.tp3.id]}
-        initial = []
-        for award in awards:
-            initial.append({'award': award.id,
-                            'players': expected_players[award.id]})
-        formset = self.AwardsFormset(tournament=self.t,
-                                     queryset=Award.objects.filter(tournamentaward__tournament=self.t),
-                                     initial=initial)
-        # For model formsets, initial does not override existing instances.
-        for i, form in enumerate(formset):
-            award_id = awards[i].id
-            self.assertEqual(form.instance.id, award_id)
-            if award_id == self.a1.id:
-                self.assertEqual(form['players'].initial, [self.tp1.id])
-            elif award_id == self.a2.id:
-                self.assertEqual(form['players'].initial, [self.tp2.id, self.tp3.id])
-            else:
-                self.assertEqual(form['players'].initial, [])
-        self.assertEqual(len(formset), len(initial))
+    def test_formset_can_add_recipient(self):
+        data = {'awardrecipient_set-TOTAL_FORMS': '3',
+               'awardrecipient_set-INITIAL_FORMS': '1',
+               'awardrecipient_set-MIN_NUM_FORMS': '0',
+               'awardrecipient_set-MAX_NUM_FORMS': '1000',
+               'awardrecipient_set-0-id': str(self.ar1.pk),
+               'awardrecipient_set-0-tournament_player': str(self.tp1.id),
+               'awardrecipient_set-0-game': '',
+               'awardrecipient_set-1-id': '',
+               'awardrecipient_set-1-tournament_player': str(self.tp2.id),
+               'awardrecipient_set-1-game': '',
+               'awardrecipient_set-2-id': '',
+               'awardrecipient_set-2-tournament_player': '',
+               'awardrecipient_set-2-game': ''}
+        formset = AwardRecipientFormSet(data, instance=self.ta1)
+        self.assertTrue(formset.is_valid())
+        formset.save()
+        self.assertEqual(self.ta1.awardrecipient_set.count(), 2)
+
+    def test_formset_can_delete_recipient(self):
+        data = {'awardrecipient_set-TOTAL_FORMS': '3',
+               'awardrecipient_set-INITIAL_FORMS': '1',
+               'awardrecipient_set-MIN_NUM_FORMS': '0',
+               'awardrecipient_set-MAX_NUM_FORMS': '1000',
+               'awardrecipient_set-0-id': str(self.ar1.pk),
+               'awardrecipient_set-0-tournament_player': str(self.tp1.id),
+               'awardrecipient_set-0-game': '',
+               'awardrecipient_set-0-DELETE': 'on',
+               'awardrecipient_set-1-id': '',
+               'awardrecipient_set-1-tournament_player': '',
+               'awardrecipient_set-1-game': '',
+               'awardrecipient_set-2-id': '',
+               'awardrecipient_set-2-tournament_player': '',
+               'awardrecipient_set-2-game': ''}
+        formset = AwardRecipientFormSet(data, instance=self.ta1)
+        self.assertTrue(formset.is_valid())
+        formset.save()
+        self.assertEqual(self.ta1.awardrecipient_set.count(), 0)

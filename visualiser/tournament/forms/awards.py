@@ -19,56 +19,47 @@ Forms for Awards in the Diplomacy Tournament Visualiser.
 """
 
 from django import forms
-from django.forms.models import BaseModelFormSet
+from django.forms.models import BaseInlineFormSet, inlineformset_factory
 
-from tournament.models import Award, TournamentAward, TournamentPlayer
+from tournament.models import (AwardRecipient, Game, TournamentAward,
+                               TournamentPlayer)
 
-from .fields import TournamentPlayerMultipleChoiceField
+from .fields import GameChoiceField, TournamentPlayerChoiceField
 
 
-class AwardForm(forms.ModelForm):
-    """Form to give one Award to TournamentPlayers"""
-    players = TournamentPlayerMultipleChoiceField(queryset=TournamentPlayer.objects.none(),
-                                                  required=False)
+class AwardRecipientForm(forms.ModelForm):
+    """Form to record one recipient of a TournamentAward, and optionally the Game it was for"""
+    tournament_player = TournamentPlayerChoiceField(queryset=TournamentPlayer.objects.none())
+    game = GameChoiceField(queryset=Game.objects.none(), required=False)
 
     class Meta:
-        model = Award
-        fields = ()
+        model = AwardRecipient
+        fields = ['tournament_player', 'game']
 
     def __init__(self, *args, **kwargs):
         # Remove our special kwarg from the list
-        self.tournament = kwargs.pop('tournament')
-        players_queryset = kwargs.pop('players_queryset', None)
+        self.tournament_award = kwargs.pop('tournament_award')
         super().__init__(*args, **kwargs)
-        if players_queryset is None:
-            players_queryset = self.tournament.tournamentplayer_set.filter(unranked=False)
-        self.fields['players'].queryset = players_queryset
-        # Set the label to the award name for this row.
-        self.fields['players'].label = str(self.instance)
-        # Populate initial player selection from current award recipients in this tournament.
-        if self.instance.pk and ('players' not in self.initial):
-            tournament_award = TournamentAward.objects.filter(tournament=self.tournament,
-                                                               award=self.instance).first()
-            if tournament_award is None:
-                tps = []
-            else:
-                tps = [ar.tournament_player_id for ar in tournament_award.awardrecipient_set.order_by()]
-            self.initial['players'] = tps
+        tournament = self.tournament_award.tournament
+        self.fields['tournament_player'].queryset = tournament.tournamentplayer_set.filter(unranked=False)
+        self.fields['game'].queryset = Game.objects.filter(the_round__tournament=tournament)
 
 
-class BaseAwardsFormset(BaseModelFormSet):
-    """Formset for giving Awards to TournamentPlayers"""
-    def __init__(self, *args, **kwargs):
-        # Remove our special kwarg from the list
-        self.tournament = kwargs.pop('tournament')
-        # Pre-compute the players queryset once to share across all forms
-        self._players_queryset = self.tournament.tournamentplayer_set.filter(unranked=False)
-        if 'queryset' not in kwargs:
-            kwargs['queryset'] = Award.objects.filter(tournamentaward__tournament=self.tournament)
-        super().__init__(*args, **kwargs)
+class BaseAwardRecipientFormSet(BaseInlineFormSet):
+    """Inline formset of AwardRecipients for a single TournamentAward"""
+    def get_form_kwargs(self, index):
+        # Pass the special kwarg down to the form itself.
+        # Used for both regular forms and the empty_form.
+        kwargs = super().get_form_kwargs(index)
+        kwargs['tournament_award'] = self.instance
+        return kwargs
 
-    def _construct_form(self, index, **kwargs):
-        # Pass the special kwargs down to the form itself
-        kwargs['tournament'] = self.tournament
-        kwargs['players_queryset'] = self._players_queryset
-        return super()._construct_form(index, **kwargs)
+
+AwardRecipientFormSet = inlineformset_factory(TournamentAward,
+                                              AwardRecipient,
+                                              form=AwardRecipientForm,
+                                              formset=BaseAwardRecipientFormSet,
+                                              fields=['tournament_player', 'game'],
+                                              extra=2,
+                                              can_delete=True)
+

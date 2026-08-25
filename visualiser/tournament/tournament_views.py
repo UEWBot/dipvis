@@ -42,14 +42,13 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_roll_call_emails
-from tournament.forms import (AwardForm, BaseAwardsFormset,
+from tournament.forms import (AwardRecipientFormSet,
                               BasePlayerRoundScoreFormset,
                               BaseTeamsFormset, EnableCheckInForm,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
                               SeederBiasForm, TeamForm)
-from tournament.models import (Award, AwardRecipient, GamePlayer,
-                               InvalidPreferenceList, RoundPlayer,
-                               SeederBias, Team, Tournament, TournamentAward,
+from tournament.models import (GamePlayer, InvalidPreferenceList, RoundPlayer,
+                               SeederBias, Team, Tournament,
                                TournamentPlayer)
 from tournament.news import news
 
@@ -715,29 +714,20 @@ def seeder_bias(request, tournament_id):
 def enter_awards(request, tournament_id):
     """Enter awards for the Tournament"""
     t = get_modifiable_tournament_or_404(tournament_id, request.user)
-    AwardsFormset = modelformset_factory(Award,
-                                         form=AwardForm,
-                                         extra=0,
-                                         formset=BaseAwardsFormset)
-    formset = AwardsFormset(request.POST or None,
-                            tournament=t,
-                            queryset=Award.objects.filter(tournamentaward__tournament=t))
-    if formset.is_valid():
+    tournament_awards = list(t.tournamentaward_set.select_related('award').order_by('award__name'))
+    formsets = [AwardRecipientFormSet(request.POST or None,
+                                      instance=tournament_award,
+                                      prefix=f'ta-{tournament_award.pk}')
+               for tournament_award in tournament_awards]
+    if request.method == 'POST' and all(fs.is_valid() for fs in formsets):
         with transaction.atomic():
-            # Delete any existing award recipients for this Tournament
-            AwardRecipient.objects.filter(tournament_player__tournament=t).delete()
-            for form in formset:
-                award = form.instance
-                tournament_award = TournamentAward.objects.get(tournament=t, award=award)
-                tps = form.cleaned_data['players']
-                for tp in tps:
-                    AwardRecipient.objects.create(tournament_award=tournament_award,
-                                                  tournament_player=tp)
+            for fs in formsets:
+                fs.save()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_awards',
                                             args=(tournament_id,)))
     context = {'tournament': t,
-               'formset': formset}
+               'award_formsets': list(zip(tournament_awards, formsets))}
     return render(request, 'tournaments/awards_form.html', context)
 
 
