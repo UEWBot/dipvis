@@ -2580,6 +2580,13 @@ class AwardRecipientTests(TestCase):
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.g)
         self.assertRaises(ValidationError, ar.full_clean)
 
+    def test_award_recipient_game_not_played_as_power_invalid(self):
+        power = GreatPower.objects.get(abbreviation='A')
+        self.ta.award.power = power
+        self.ta.award.save()
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.g)
+        self.assertRaises(ValidationError, ar.full_clean)
+
     def test_award_recipient_player_in_other_tournament_invalid(self):
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.other_tp)
         self.assertRaises(ValidationError, ar.full_clean)

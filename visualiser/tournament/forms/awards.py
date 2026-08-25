@@ -54,11 +54,13 @@ class AwardRecipientForm(forms.ModelForm):
             selected_player = self.instance.tournament_player
 
         if selected_player is not None:
-            valid_game_ids = Game.objects.filter(
-                gameplayer__player=selected_player.player,
+            valid_games = Game.objects.filter(
                 the_round__tournament=tournament,
-            ).values_list('id', flat=True)
-            self.fields['game'].queryset = self.fields['game'].queryset.filter(id__in=valid_game_ids)
+            )
+            valid_games = valid_games.filter(gameplayer__player=selected_player.player)
+            if self.tournament_award.award.power_id:
+                valid_games = valid_games.filter(gameplayer__power=self.tournament_award.award.power)
+            self.fields['game'].queryset = self.fields['game'].queryset.filter(id__in=valid_games.values_list('id', flat=True))
 
     def clean(self):
         cleaned_data = super().clean()
@@ -67,6 +69,10 @@ class AwardRecipientForm(forms.ModelForm):
         if tournament_player and game:
             if not game.gameplayer_set.filter(player=tournament_player.player).exists():
                 raise forms.ValidationError('This player did not play in that game')
+            if self.tournament_award.award.power_id:
+                if not game.gameplayer_set.filter(player=tournament_player.player,
+                                                 power=self.tournament_award.award.power).exists():
+                    raise forms.ValidationError('This player did not play that Great Power in that game')
         return cleaned_data
 
 

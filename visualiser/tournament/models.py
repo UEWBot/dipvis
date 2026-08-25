@@ -978,6 +978,11 @@ class AwardRecipient(models.Model):
                 if not GamePlayer.objects.filter(game=self.game,
                                                  player=self.tournament_player.player).exists():
                     raise ValidationError(_('This player did not play in that game'))
+                if self.tournament_award.award.power_id:
+                    if not GamePlayer.objects.filter(game=self.game,
+                                                     player=self.tournament_player.player,
+                                                     power=self.tournament_award.award.power).exists():
+                        raise ValidationError(_('This player did not play that Great Power in that game'))
 
     def __str__(self):
         return _('%(player)s won %(award)s') % {'player': self.tournament_player,

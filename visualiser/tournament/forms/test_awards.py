@@ -22,7 +22,7 @@ from datetime import timezone as datetime_timezone
 
 from django.test import TestCase
 
-from tournament.diplomacy import GameSet
+from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                AwardRecipient, DrawSecrecy, Game, GamePlayer,
                                Round, Tournament, TournamentAward,
@@ -131,6 +131,27 @@ class AwardRecipientFormTest(TestCase):
                                   tournament_award=self.ta1)
         self.assertFalse(form.is_valid())
         self.assertTrue(any('Select a valid choice' in message for message in form.errors['game']))
+
+    def test_power_specific_award_game_choices_restrict_to_that_power(self):
+        power = GreatPower.objects.get(abbreviation='A')
+        self.ta1.award.power = power
+        self.ta1.award.save()
+        other_r = Round.objects.create(tournament=self.t,
+                                       scoring_system=R_SCORING_SYSTEMS[0].name,
+                                       dias=True,
+                                       start=datetime.combine(self.t.start_date, time(hour=8, tzinfo=datetime_timezone.utc)) + timedelta(hours=1))
+        other_g = Game.objects.create(name='g2',
+                                      started_at=other_r.start,
+                                      the_round=other_r,
+                                      the_set=GameSet.objects.first())
+        GamePlayer.objects.create(player=self.tp1.player, game=self.g, power=power)
+        GamePlayer.objects.create(player=self.tp1.player, game=other_g, power=GreatPower.objects.get(abbreviation='E'))
+        form = AwardRecipientForm(data={'tournament_player': str(self.tp1.pk),
+                                        'game': str(other_g.pk)},
+                                  tournament_award=self.ta1)
+        choices = {str(choice[0]) for choice in form.fields['game'].choices if choice[0]}
+        self.assertIn(str(self.g.pk), choices)
+        self.assertNotIn(str(other_g.pk), choices)
 
 
 class AwardRecipientFormSetTest(TestCase):
