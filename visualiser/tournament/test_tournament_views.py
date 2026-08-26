@@ -2517,6 +2517,10 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/awards.html')
+        # ta1 has a single recipient, ta2 has two, so is shared
+        self.assertContains(response, self.a1.name)
+        self.assertNotContains(response, f'{self.a1.name} (shared)')
+        self.assertContains(response, f'{self.a2.name} (shared)')
         # Clean up
         self.t4.tournamentaward_set.all().delete()
 

@@ -19,7 +19,7 @@
     <h2>{% trans "Awards" %}</h2>
     <ul>
       {% for ar in player.awardrecipient_set.all %}
-        <li>{{ ar.tournament_award.award.name }}{% if ar.game %} ({{ ar.game }}){% endif %}</li>
+        <li>{{ ar.tournament_award.award.name }}{% if ar.game %} ({{ ar.game }}){% endif %}{% if ar.is_shared %} {% trans "(shared)" %}{% endif %}</li>
       {% empty %}
         <li>{% trans "None" %}</li>
       {% endfor %}

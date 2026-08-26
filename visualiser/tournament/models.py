@@ -984,6 +984,11 @@ class AwardRecipient(models.Model):
                                                      power=self.tournament_award.award.power).exists():
                         raise ValidationError(_('This player did not play that Great Power in that game'))
 
+    @property
+    def is_shared(self):
+        """Whether this TournamentAward has more than one AwardRecipient."""
+        return self.tournament_award.awardrecipient_set.count() > 1
+
     def __str__(self):
         return _('%(player)s won %(award)s') % {'player': self.tournament_player,
                                                  'award': self.tournament_award.award}

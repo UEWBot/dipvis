@@ -18,7 +18,7 @@
       {% if tp.awardrecipient_set.count %}
         <dt><a href="{{ tp.get_absolute_url }}">{{ tp.player }}</a></dt>
           {% for ar in tp.awardrecipient_set.all %}
-            <dd>{{ ar.tournament_award.award }}{% if ar.game %} ({{ ar.game }}){% endif %}</dd>
+            <dd>{{ ar.tournament_award.award }}{% if ar.game %} ({{ ar.game }}){% endif %}{% if ar.is_shared %} {% trans "(shared)" %}{% endif %}</dd>
           {% endfor %}
         {% endif %}
     {% empty %}

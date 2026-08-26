@@ -2607,6 +2607,24 @@ class AwardRecipientTests(TestCase):
         # Cleanup
         ar.delete()
 
+    def test_award_recipient_is_shared_false_for_sole_recipient(self):
+        ar = AwardRecipient.objects.create(tournament_award=self.ta, tournament_player=self.tp)
+        self.assertFalse(ar.is_shared)
+        # Cleanup
+        ar.delete()
+
+    def test_award_recipient_is_shared_true_for_multiple_recipients(self):
+        other_p = Player.objects.create(first_name='Cara', last_name='Cowinner')
+        other_tp = TournamentPlayer.objects.create(player=other_p, tournament=self.t)
+        ar1 = AwardRecipient.objects.create(tournament_award=self.ta, tournament_player=self.tp)
+        ar2 = AwardRecipient.objects.create(tournament_award=self.ta, tournament_player=other_tp)
+        self.assertTrue(ar1.is_shared)
+        self.assertTrue(ar2.is_shared)
+        # Cleanup
+        ar1.delete()
+        ar2.delete()
+        other_tp.delete()
+
 
 class SeriesTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']

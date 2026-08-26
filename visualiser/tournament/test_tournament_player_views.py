@@ -815,6 +815,25 @@ class TournamentPlayerViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournament_players/detail.html')
 
+    def test_details_award_not_shared(self):
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp11.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Reddest Hair')
+        self.assertNotContains(response, 'Reddest Hair (shared)')
+
+    def test_details_award_shared(self):
+        ta1 = TournamentAward.objects.get(tournament=self.t1, award__name='Reddest Hair')
+        ar = AwardRecipient.objects.create(tournament_award=ta1, tournament_player=self.tp12)
+        response = self.client.get(reverse('tournament_player_detail',
+                                           args=(self.t1.pk, self.tp11.pk)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Reddest Hair (shared)')
+        # Cleanup
+        ar.delete()
+
     def test_details_unranked(self):
         self.assertIs(False, self.tp11.unranked)
         self.tp11.unranked = True
