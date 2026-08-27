@@ -202,7 +202,7 @@ class AddPlayerBgTests(TestCase):
             'tournament_name': 'No Date Tournament',
             'tournament_start_date': None,
             'tournament_end_date': None,
-            'tournament_kind': 'Standard',
+            'tournament_kind': 'CUP',
             'tournament_player_rank': 1,
         }]
         fake_awards = [{
@@ -253,7 +253,7 @@ class AddPlayerBgTests(TestCase):
             'tournament_name': 'Mix Tournament',
             'tournament_start_date': '2012-01-01',
             'tournament_end_date': '2012-01-02',
-            'tournament_kind': 'Standard',
+            'tournament_kind': 'CUP',
             'tournament_player_rank': 3,
         }]
         fake_boards = [
