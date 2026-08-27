@@ -145,6 +145,8 @@ def _wdr_tournament_should_be_included(t):
                 'OPEN',
                 'WDC']:     # World Championship
         return True
+    elif kind.startswith("CUP "):
+        return True
     elif kind in ['LEAGUE',
                   'EGP',   # European Grand Prix
                   'NAGP',  # North American Grand Prix
