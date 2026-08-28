@@ -414,11 +414,11 @@ class Player(models.Model):
                                       'power': c_str})
         return results
 
-    def background(self, power=None, mask=MASK_ALL_BG, event_kind=EventKinds.TOURNAMENT):
+    def background(self, power=None, mask=MASK_ALL_BG, event_kind=None):
         """
         List of background strings about the player, optionally as a specific Great Power
 
-        If event_kind is not supplied, only tournaments are included.
+        If event_kind is not supplied, all event kinds are included.
         """
         ranking_set = self._ranking_queryset(event_kind)
         if power is None:

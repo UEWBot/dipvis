@@ -742,20 +742,22 @@ class PlayerTests(TestCase):
 
         mask = MASK_TOURNEY_COUNT | MASK_GAMES_PLAYED | MASK_OTHER_AWARDS
         default_bg = p.background(mask=mask)
-        self.assertIn('Joe Bloggs has competed in one tournament.', default_bg)
-        self.assertIn('Joe Bloggs has played 1 tournament game.', default_bg)
+        self.assertIn('Joe Bloggs has competed in 2 tournaments.', default_bg)
+        self.assertIn('Joe Bloggs has played 2 tournament games.', default_bg)
         self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', default_bg)
-        self.assertNotIn('Joe Bloggs won League Prize at League Event.', default_bg)
+        self.assertIn('Joe Bloggs won League Prize at League Event.', default_bg)
+
+        tournament_bg = p.background(mask=mask, event_kind=EventKinds.TOURNAMENT)
+        self.assertIn('Joe Bloggs has competed in one tournament.', tournament_bg)
+        self.assertIn('Joe Bloggs has played 1 tournament game.', tournament_bg)
+        self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', tournament_bg)
+        self.assertNotIn('Joe Bloggs won League Prize at League Event.', tournament_bg)
 
         league_bg = p.background(mask=mask, event_kind=EventKinds.LEAGUE)
         self.assertIn('Joe Bloggs has competed in one tournament.', league_bg)
         self.assertIn('Joe Bloggs has played 1 tournament game.', league_bg)
         self.assertIn('Joe Bloggs won League Prize at League Event.', league_bg)
         self.assertNotIn('Joe Bloggs won Default Prize at Worlds Event.', league_bg)
-
-        all_bg = p.background(mask=mask, event_kind=None)
-        self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', all_bg)
-        self.assertIn('Joe Bloggs won League Prize at League Event.', all_bg)
 
         # Cleanup
         p.delete()

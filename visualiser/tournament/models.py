@@ -54,7 +54,7 @@ from tournament.diplomacy import (FIRST_YEAR, TOTAL_SCS, WINNING_SCS, GameSet,
                                   validate_year_including_start)
 from tournament.email import send_prefs_email
 from tournament.game_scoring import G_SCORING_SYSTEMS, GameScoringSystem
-from tournament.players import (MASK_ALL_BG, MASK_ROUND_ENDPOINTS,
+from tournament.players import (EventKinds, MASK_ALL_BG, MASK_ROUND_ENDPOINTS,
                                 MASK_SERIES_WINS, Player, add_player_bg)
 from tournament.tournament_game_state import TournamentGameState
 from tournament.wdd import WDD_BASE_RESULTS_URL, validate_wdd_tournament_id
@@ -1590,7 +1590,8 @@ class Tournament(models.Model):
         """
         results = []
         for tp in self.tournamentplayer_set.select_related('player').order_by():
-            results += tp.player.background(mask=mask)
+            results += tp.player.background(mask=mask,
+                                            event_kind=EventKinds.TOURNAMENT)
         if (mask & MASK_SERIES_WINS) != 0:
             # Add in background for any series this Tournament is in
             for s in self.series_set.all():
@@ -2833,7 +2834,9 @@ class Game(models.Model):
         gps = self.gameplayer_set.select_related('power').order_by()
         results = []
         for gp in gps:
-            results += gp.player.background(gp.power, mask=mask)
+            results += gp.player.background(gp.power,
+                                            mask=mask,
+                                            event_kind=EventKinds.TOURNAMENT)
         # Shuffle the resulting list
         random.shuffle(results)
         return results
