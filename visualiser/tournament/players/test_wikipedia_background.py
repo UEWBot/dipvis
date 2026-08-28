@@ -70,11 +70,13 @@ class WikipediaBackgroundTests(TestCase):
         self.assertEqual(old_revision, cache.revision)
         self.assertGreaterEqual(cache.last_read, old_last_read)
 
-    def test_wikipedia_titles_when_page_unavailable(self):
+    @patch('builtins.print')
+    def test_wikipedia_titles_when_page_unavailable(self, mock_print):
         bg = WikipediaBackground('Someone Unreachable')
         with patch('tournament.players.wikipedia_background.cache.soup',
                    side_effect=WikipediaNotAccessible):
             self.assertEqual([], bg.titles())
+        mock_print.assert_called_with('Unable to read wikipedia')
 
     def test_wikipedia_background_titles(self):
         name = 'Cyrille Sevin'

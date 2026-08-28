@@ -109,7 +109,8 @@ class UtilsTests(TestCase):
                           nuke_invalid_email,
                           'missing@example.com')
 
-    def test_archive_tournaments(self):
+    @patch('builtins.print')
+    def test_archive_tournaments(self, mock_print):
         today = django_timezone.now().date()
         t_archived = Tournament.objects.create(name='util-archive-target',
                                                start_date=today - timedelta(days=2),
@@ -138,6 +139,8 @@ class UtilsTests(TestCase):
 
         archive_tournaments(dry_run=False)
 
+        mock_print.assert_called_with(f'Archiving util-archive-target {today.year}')
+
         t_archived.refresh_from_db()
         t_unpublished.refresh_from_db()
         t_future.refresh_from_db()
@@ -149,7 +152,8 @@ class UtilsTests(TestCase):
         t_unpublished.delete()
         t_future.delete()
 
-    def test_archive_tournaments_dry_run(self):
+    @patch('builtins.print')
+    def test_archive_tournaments_dry_run(self, mock_print):
         today = django_timezone.now().date()
         t = Tournament.objects.create(name='util-archive-dry-run',
                                       start_date=today - timedelta(days=2),
@@ -161,6 +165,8 @@ class UtilsTests(TestCase):
                                       editable=True)
 
         archive_tournaments(dry_run=True)
+
+        mock_print.assert_called_with(f'Archiving util-archive-dry-run {today.year}')
 
         t.refresh_from_db()
         self.assertTrue(t.editable)
@@ -342,8 +348,9 @@ class UtilsTests(TestCase):
         u2.delete()
         u1.delete()
 
+    @patch('builtins.print')
     @patch('tournament.utils.wdr_tournament_as_json')
-    def test_add_missing_player_wdr_ids_sets_matching_player_id(self, mock_wdr_json):
+    def test_add_missing_player_wdr_ids_sets_matching_player_id(self, mock_wdr_json, mock_print):
         now = django_timezone.now()
         t = Tournament.objects.create(name='util-missing-wdr',
                                       start_date=now.date(),
@@ -378,6 +385,8 @@ class UtilsTests(TestCase):
 
         add_missing_player_wdr_ids(dry_run=False)
 
+        mock_print.assert_called_with(f'Adding WDR id 111 to Match Player (from util-missing-wdr {now.year})')
+
         p_match.refresh_from_db()
         p_zero.refresh_from_db()
         self.assertEqual(p_match.wdr_player_id, 111)
@@ -387,7 +396,8 @@ class UtilsTests(TestCase):
         p_match.delete()
         p_zero.delete()
 
-    def test_add_wdr_tournament_ids_updates_tournament_and_event_rankings(self):
+    @patch('builtins.print')
+    def test_add_wdr_tournament_ids_updates_tournament_and_event_rankings(self, mock_print):
         today = django_timezone.now().date()
         t = Tournament.objects.create(name='util-add-wdr-tournament-id',
                                       start_date=today,
@@ -411,6 +421,8 @@ class UtilsTests(TestCase):
 
         try:
             add_wdr_tournament_ids(csv_file, dry_run=False)
+            mock_print.assert_any_call(f'Setting wdr_tournament_id for util-add-wdr-tournament-id {today.year} to 7777')
+            mock_print.assert_any_call(f'Setting wdr_tournament_id for Tori TournamentId was unranked at util-add-wdr-id-event in {today.year} to 7777')
             t.refresh_from_db()
             ptr.refresh_from_db()
             self.assertEqual(7777, t.wdr_tournament_id)
@@ -420,7 +432,8 @@ class UtilsTests(TestCase):
             t.delete()
             p.delete()
 
-    def test_add_wdr_tournament_ids_dry_run_does_not_update(self):
+    @patch('builtins.print')
+    def test_add_wdr_tournament_ids_dry_run_does_not_update(self, mock_print):
         today = django_timezone.now().date()
         t = Tournament.objects.create(name='util-add-wdr-tournament-id-dry',
                                       start_date=today,
@@ -443,6 +456,8 @@ class UtilsTests(TestCase):
 
         try:
             add_wdr_tournament_ids(csv_file, dry_run=True)
+            mock_print.assert_any_call(f'Setting wdr_tournament_id for util-add-wdr-tournament-id-dry {today.year} to 9999')
+            mock_print.assert_any_call(f'Setting wdr_tournament_id for Dora DryRun was unranked at util-add-wdr-id-event-dry in {today.year} to 9999')
             t.refresh_from_db()
             ptr.refresh_from_db()
             self.assertIsNone(t.wdr_tournament_id)
@@ -524,9 +539,10 @@ class UtilsTests(TestCase):
         t_finished_missing.delete()
         t_unfinished_missing.delete()
 
+    @patch('builtins.print')
     @patch('tournament.utils._sc_counts_to_cc')
     @patch('tournament.utils._bs_ownerships_to_sco')
-    def test_populate_missed_years_fills_missing_year(self, mock_to_sco, mock_to_cc):
+    def test_populate_missed_years_fills_missing_year(self, mock_to_sco, mock_to_cc, mock_print):
         now = django_timezone.now()
         t = Tournament.objects.create(name='util-populate-years',
                                       start_date=now.date(),
@@ -560,6 +576,7 @@ class UtilsTests(TestCase):
             with patch.object(g, 'create_or_update_sc_counts_from_ownerships') as mock_update:
                 populate_missed_years(g, dry_run=False)
 
+        mock_print.assert_called_with('Reading results for 1902')
         mock_to_sco.assert_called_once_with(g, 1902, {'PAR': 'F'})
         mock_update.assert_called_once_with(1902)
         mock_to_cc.assert_not_called()
