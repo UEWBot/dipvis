@@ -18,6 +18,7 @@ import uuid
 import warnings
 from datetime import date, datetime, time, timedelta
 from datetime import timezone as datetime_timezone
+from unittest.mock import patch
 from urllib.parse import urlencode
 
 from django.contrib.auth.models import Permission, User
@@ -2460,11 +2461,14 @@ class TournamentViewTests(TestCase):
 
     def test_api_with_manager_without_player(self):
         u = User.objects.create_user(username='manager_without_player',
-                                    password='MyPassword')
+                                     password='MyPassword')
         self.t4.managers.add(u)
         self.client.login(username='manager_without_player', password='MyPassword')
-        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
-                                   secure=True)
+        with patch('builtins.print') as mock_print:
+            response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                       secure=True)
+        # The missing player link should be reported
+        self.assertEqual(mock_print.call_count, 1)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
         self.assertEqual(response.json()['managers'], [])
