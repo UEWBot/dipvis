@@ -946,6 +946,10 @@ class Tournament(models.Model):
 
     MAX_NAME_LENGTH = 60
 
+    def is_league(self):
+        """Return whether this event looks like a league rather than a tournament."""
+        return (self.end_date - self.start_date).days > 30 or self.round_set.count() > 7
+
     name = models.CharField(max_length=MAX_NAME_LENGTH,
                             validators=[validate_no_newlines],
                             help_text='Year will be appended based on start date')
@@ -1589,9 +1593,11 @@ class Tournament(models.Model):
         Returns a list of background strings for the tournament
         """
         results = []
+        is_league = self.is_league()
+        event_kind = EventKinds.LEAGUE if is_league else EventKinds.TOURNAMENT
         for tp in self.tournamentplayer_set.select_related('player').order_by():
             results += tp.player.background(mask=mask,
-                                            event_kind=EventKinds.TOURNAMENT)
+                                            event_kind=event_kind)
         if (mask & MASK_SERIES_WINS) != 0:
             # Add in background for any series this Tournament is in
             for s in self.series_set.all():
@@ -2833,10 +2839,13 @@ class Game(models.Model):
         """
         gps = self.gameplayer_set.select_related('power').order_by()
         results = []
+        tournament = self.the_round.tournament
+        is_league = tournament.is_league()
+        event_kind = EventKinds.LEAGUE if is_league else EventKinds.TOURNAMENT
         for gp in gps:
             results += gp.player.background(gp.power,
                                             mask=mask,
-                                            event_kind=EventKinds.TOURNAMENT)
+                                            event_kind=event_kind)
         # Shuffle the resulting list
         random.shuffle(results)
         return results

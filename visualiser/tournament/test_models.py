@@ -50,7 +50,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                validate_round_scoring_system,
                                validate_tournament_scoring_system,
                                validate_vote_count)
-from tournament.players import MASK_ALL_BG, Player
+from tournament.players import EventKinds, MASK_ALL_BG, Player
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
@@ -5087,6 +5087,34 @@ class TournamentTests(TestCase):
         self.assertTrue(all(isinstance(result, str) for result in results))
         self.assertTrue(any('tournament' in result for result in results))
 
+    def test_tournament_is_league(self):
+        t = Tournament.objects.get(name='t1')
+        self.assertFalse(t.is_league())
+        t.end_date = t.start_date + timedelta(days=30)
+        self.assertFalse(t.is_league())
+        t.end_date = t.start_date + timedelta(days=31)
+        self.assertTrue(t.is_league())
+        t.end_date = t.start_date + timedelta(days=30)
+        extra_rounds = [Round.objects.create(tournament=t,
+                                              scoring_system=s1,
+                                              dias=True,
+                                              start=datetime.combine(t.start_date,
+                                                                     time(hour=8,
+                                                                          tzinfo=datetime_timezone.utc)) + timedelta(days=day))
+                        for day in range(2, 6)]
+        self.assertTrue(t.is_league())
+        for extra_round in extra_rounds:
+            extra_round.delete()
+
+    def test_tournament_background_league(self):
+        t = Tournament.objects.get(name='t3')
+        with patch.object(Tournament, 'is_league', return_value=True), \
+                patch.object(Player, 'background', return_value=[]) as background:
+            t.background()
+        self.assertTrue(background.call_count > 0)
+        for call in background.call_args_list:
+            self.assertEqual(EventKinds.LEAGUE, call.kwargs['event_kind'])
+
     def test_tournament_background_with_players(self):
         t = Tournament.objects.get(name='t3')
         results = t.background()
@@ -8122,6 +8150,15 @@ class GameTests(TestCase):
         self.assertTrue(results)
         self.assertTrue(all(isinstance(result, str) for result in results))
         self.assertTrue(any('tournament' in result for result in results))
+
+    def test_game_background_league(self):
+        g = Game.objects.first()
+        with patch.object(Tournament, 'is_league', return_value=True), \
+                patch.object(Player, 'background', return_value=[]) as background:
+            g.background()
+        self.assertTrue(background.call_count > 0)
+        for call in background.call_args_list:
+            self.assertEqual(EventKinds.LEAGUE, call.kwargs['event_kind'])
 
     def test_game_background_mask(self):
         g = Game.objects.first()
