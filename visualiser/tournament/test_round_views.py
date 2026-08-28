@@ -1437,10 +1437,14 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('get_seven', args=(self.t1.pk, 1)))
 
-    def test_seed_games_preferences_good_number(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_preferences_good_number(self, mock_seed_games):
         """Simple case with exactly seven players with PREFERENCES power assignment"""
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
+        tps = [self.t2.tournamentplayer_set.get(player=rp.player)
+               for rp in self.t2.round_numbered(3).roundplayer_set.all()]
+        mock_seed_games.return_value = [(None, {(tp, None) for tp in tps}, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t2.pk, 3)),
@@ -1456,13 +1460,17 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
-    def test_seed_games_manual_good_number(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_manual_good_number(self, mock_seed_games):
         """Simple case with exactly seven players with MANUAL power assignment"""
         self.assertEqual(self.t2.round_numbered(3).roundplayer_set.count(), 7)
         self.assertEqual(self.t2.round_numbered(3).game_set.count(), 0)
         self.assertEqual(self.t2.power_assignment, PowerAssignMethods.PREFERENCES)
         self.t2.power_assignment = PowerAssignMethods.MANUAL
         self.t2.save(update_fields=['power_assignment'])
+        tps = [self.t2.tournamentplayer_set.get(player=rp.player)
+               for rp in self.t2.round_numbered(3).roundplayer_set.all()]
+        mock_seed_games.return_value = [(None, {(tp, None) for tp in tps}, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t2.pk, 3)),
@@ -1484,9 +1492,15 @@ class RoundViewTests(TestCase):
         self.t2.power_assignment = PowerAssignMethods.PREFERENCES
         self.t2.save(update_fields=['power_assignment'])
 
-    def test_seed_games_auto_good_number_with_sitters(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_auto_good_number_with_sitters(self, mock_seed_games):
         """Eight players, one sitting out, AUTO power assignment"""
         self.assertEqual(self.r32.game_set.count(), 0)
+        tps = [self.t3.tournamentplayer_set.get(player=rp.player)
+               for rp in self.r32.roundplayer_set.all()[:7]]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(None, set(zip(tps, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t3.pk, 2)),
@@ -1506,12 +1520,21 @@ class RoundViewTests(TestCase):
         # Clean up
         g.delete()
 
-    def test_seed_games_auto_good_number_with_doublers(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_auto_good_number_with_doublers(self, mock_seed_games):
         """13 players, one playing two games, AUTO power assignment"""
         self.assertEqual(self.r11.game_set.count(), 0)
         # Tweak initial data for this test
         self.rp112.game_count = 1
         self.rp112.save(update_fields=['game_count'])
+        tps = [self.t1.tournamentplayer_set.get(player=p)
+               for p in [self.p1, self.p2, self.p3, self.p4, self.p5, self.p6, self.p7,
+                         self.p8, self.p9, self.p10, self.p11, self.p12, self.p13]]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        game1 = set(zip(tps[:6] + [tps[12]], powers))
+        game2 = set(zip(tps[6:], powers))
+        mock_seed_games.return_value = [(None, game1, []), (None, game2, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -1533,7 +1556,8 @@ class RoundViewTests(TestCase):
         self.rp112.game_count = 0
         self.rp112.save(update_fields=['game_count'])
 
-    def test_seed_games_with_teams(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_with_teams(self, mock_seed_games):
         """14 players, AUTO power assignment"""
         self.assertEqual(self.r11.game_set.count(), 0)
         tp = TournamentPlayer.objects.create(player=self.p14,
@@ -1559,6 +1583,16 @@ class RoundViewTests(TestCase):
                                   name="Test team 2")
         tm2.players.add(self.p3)
         tm2.players.add(self.p14)
+
+        tps_game1 = [self.t1.tournamentplayer_set.get(player=p)
+                     for p in [self.p1, self.p2, self.p3, self.p5, self.p6, self.p7, self.p8]]
+        tps_game2 = [self.t1.tournamentplayer_set.get(player=p)
+                     for p in [self.p4, self.p9, self.p10, self.p11, self.p12, self.p13, self.p14]]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(None, set(zip(tps_game1, powers)), []),
+                                        (None, set(zip(tps_game2, powers)), [])]
+
         # Tweak initial data for this test
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
@@ -1597,7 +1631,8 @@ class RoundViewTests(TestCase):
         self.t1.team_size = None
         self.t1.save(update_fields=['team_size'])
 
-    def test_seed_games_with_pools(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_with_pools(self, mock_seed_games):
         self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
         self.t1.power_assignment = PowerAssignMethods.MANUAL
         self.t1.save()
@@ -1624,6 +1659,12 @@ class RoundViewTests(TestCase):
         for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
             rp.pool = pool2
             rp.save()
+        tps1 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool1.roundplayer_set.all()]
+        tps2 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool2.roundplayer_set.all()]
+        mock_seed_games.return_value = [(pool1, {(t, None) for t in tps1}, []),
+                                        (pool2, {(t, None) for t in tps2}, [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -1647,7 +1688,8 @@ class RoundViewTests(TestCase):
         self.t1.power_assignment = PowerAssignMethods.AUTO
         self.t1.save()
 
-    def test_seed_games_and_powers_with_pools(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_and_powers_with_pools(self, mock_seed_games):
         self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
         r = self.t1.round_numbered(1)
         self.assertFalse(r.game_set.exists())
@@ -1672,6 +1714,14 @@ class RoundViewTests(TestCase):
         for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
             rp.pool = pool2
             rp.save()
+        tps1 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool1.roundplayer_set.all()]
+        tps2 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool2.roundplayer_set.all()]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(pool1, set(zip(tps1, powers)), []),
+                                        (pool2, set(zip(tps2, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -1693,7 +1743,8 @@ class RoundViewTests(TestCase):
         self.rp113.game_count = 2
         self.rp113.save(update_fields=['game_count'])
 
-    def test_seed_games_override_power_assignment(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_override_power_assignment(self, mock_seed_games):
         self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
         r = self.t1.round_numbered(1)
         self.assertFalse(r.game_set.exists())
@@ -1719,6 +1770,14 @@ class RoundViewTests(TestCase):
         for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
             rp.pool = pool2
             rp.save()
+        tps1 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool1.roundplayer_set.all()]
+        tps2 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool2.roundplayer_set.all()]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(pool1, {(t, None) for t in tps1}, []),
+                                        (pool2, set(zip(tps2, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -1746,7 +1805,8 @@ class RoundViewTests(TestCase):
         self.rp113.game_count = 2
         self.rp113.save(update_fields=['game_count'])
 
-    def test_seed_games_set_is_top_board(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_set_is_top_board(self, mock_seed_games):
         self.assertEqual(self.t1.power_assignment, PowerAssignMethods.AUTO)
         r = self.t1.round_numbered(1)
         self.assertFalse(r.game_set.exists())
@@ -1772,6 +1832,14 @@ class RoundViewTests(TestCase):
         for rp in [self.rp12, self.rp14, self.rp16, self.rp18, self.rp110, self.rp112, new_rp]:
             rp.pool = pool2
             rp.save()
+        tps1 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool1.roundplayer_set.all()]
+        tps2 = [self.t1.tournamentplayer_set.get(player=rp.player)
+                for rp in pool2.roundplayer_set.all()]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(pool1, set(zip(tps1, powers)), []),
+                                        (pool2, set(zip(tps2, powers)), [])]
         self.client.login(username=self.USERNAME1, password=self.PWORD1)
         response = self.client.get(reverse('seed_games',
                                            args=(self.t1.pk, 1)),
@@ -2732,9 +2800,15 @@ class RoundViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'rounds/board_call_by_player.html')
 
-    def test_seed_games_uses_default_game_set(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_uses_default_game_set(self, mock_seed_games):
         """seed_games uses Tournament.default_game_set when set"""
         self.assertEqual(self.r32.game_set.count(), 0)
+        tps = [self.t3.tournamentplayer_set.get(player=rp.player)
+               for rp in self.r32.roundplayer_set.all()[:7]]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(None, set(zip(tps, powers)), [])]
         # Set default_game_set to Avalon Hill
         self.t3.default_game_set = self.ah
         self.t3.save()
@@ -2751,9 +2825,15 @@ class RoundViewTests(TestCase):
         self.t3.default_game_set = None
         self.t3.save()
 
-    def test_seed_games_fallback_when_default_game_set_null(self):
+    @patch('tournament.round_views._seed_games')
+    def test_seed_games_fallback_when_default_game_set_null(self, mock_seed_games):
         """seed_games falls back to hardcoded defaults when default_game_set is None"""
         self.assertEqual(self.r32.game_set.count(), 0)
+        tps = [self.t3.tournamentplayer_set.get(player=rp.player)
+               for rp in self.r32.roundplayer_set.all()[:7]]
+        powers = [self.austria, self.england, self.france, self.germany,
+                  self.italy, self.russia, self.turkey]
+        mock_seed_games.return_value = [(None, set(zip(tps, powers)), [])]
         # Ensure default_game_set is None
         self.t3.default_game_set = None
         self.t3.save()
