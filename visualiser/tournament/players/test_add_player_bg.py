@@ -86,7 +86,8 @@ class AddPlayerBgTests(TestCase):
         self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playergameresult_set.count())
 
-    def test_add_player_bg_wdr_not_accessible(self):
+    @patch('builtins.print')
+    def test_add_player_bg_wdr_not_accessible(self, mock_print):
         p = Player.objects.create(first_name='Wdr',
                                   last_name='Unavailable',
                                   wdr_player_id=9999)
@@ -97,6 +98,7 @@ class AddPlayerBgTests(TestCase):
                               '_add_player_bg_from_wdr',
                               side_effect=WDRNotAccessible):
                 add_player_bg(p)
+        mock_print.assert_called_with('Unable to read from WDR for id 9999')
         # Cleanup
         p.delete()
 
@@ -245,7 +247,8 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    def test_add_player_bg_invalid_dates(self):
+    @patch('builtins.print')
+    def test_add_player_bg_invalid_dates(self, mock_print):
         """Tournaments and awards with no dates are skipped without crashing."""
         p = Player.objects.create(first_name='Test', last_name='InvalidDate',
                                   wdr_player_id=9997)
@@ -273,6 +276,7 @@ class AddPlayerBgTests(TestCase):
                 mock_wdr.return_value.nationality.return_value = ''
                 mock_wdr.return_value.location.return_value = ''
                 add_player_bg(p)  # must not raise
+        mock_print.assert_called_with('Skipping No Date Tournament for Test InvalidDate with no date')
         # The records with invalid dates should be silently skipped.
         self.assertEqual(0, p.playereventranking_set.count())
         self.assertEqual(0, p.playeraward_set.count())
@@ -280,7 +284,8 @@ class AddPlayerBgTests(TestCase):
         p.delete()
 
     @tag('slow', 'wdr')
-    def test_add_player_bg_td(self):
+    @patch('builtins.print')
+    def test_add_player_bg_td(self, mock_print):
         # Matt has tournaments listings for tournaments when he was TD
         p = Player.objects.create(first_name='Matt',
                                   last_name='Shields',
@@ -298,7 +303,8 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
-    def test_add_player_bg_variant_games_filtered(self):
+    @patch('builtins.print')
+    def test_add_player_bg_variant_games_filtered(self, mock_print):
         """Boards for non-standard variants are excluded; standard boards are kept."""
         p = Player.objects.create(first_name='Test', last_name='Variant',
                                   wdr_player_id=9996)
@@ -338,6 +344,7 @@ class AddPlayerBgTests(TestCase):
                 mock_wdr.return_value.nationality.return_value = ''
                 mock_wdr.return_value.location.return_value = ''
                 add_player_bg(p)
+        mock_print.assert_called_with('Skipping board with variant Empire')
         pgrs = p.playergameresult_set.all()
         self.assertEqual(1, pgrs.count())
         self.assertEqual(1, pgrs.first().round_number)  # only the Standard board
@@ -345,7 +352,8 @@ class AddPlayerBgTests(TestCase):
         p.delete()
 
     @tag('slow', 'wdr')
-    def test_add_player_bg_unranked(self):
+    @patch('builtins.print')
+    def test_add_player_bg_unranked(self, mock_print):
         # Melinda has games listed with no ranking (n.c)
         p = Player.objects.create(first_name='Melinda',
                                   last_name='Holley',
