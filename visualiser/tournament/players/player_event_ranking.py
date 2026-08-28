@@ -35,6 +35,7 @@ from tournament.wdd import (WDD_BASE_RESULTS_PATH, WDD_NETLOC,
                             validate_wdd_tournament_id)
 from tournament.wdr import WDR_BASE_URL, validate_wdr_tournament_id
 
+from .event_kinds import EventKinds
 from .player import Player
 from .position_str import position_str
 from .wdd_player import WDDPlayer
@@ -50,6 +51,14 @@ class PlayerEventRanking(models.Model):
     event_name = models.CharField(max_length=100)
     position = models.PositiveSmallIntegerField(blank=True, null=True)
     date = models.DateField()
+    event_kind = models.CharField(max_length=1,
+                                  choices=EventKinds.choices,
+                                  default=EventKinds.TOURNAMENT,
+                                  help_text=_(u'Kind of event (tournament, league, circuit)'))
+    tournament_kind = models.CharField(max_length=20,
+                                       blank=True,
+                                       null=True,
+                                       help_text=_(u'Type of tournament on WDR/WDD'))
     wdd_tournament_id = models.PositiveIntegerField(validators=[validate_wdd_tournament_id],
                                                     verbose_name=_(u'WDD tournament id'),
                                                     blank=True,

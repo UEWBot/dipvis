@@ -40,6 +40,7 @@ from django_countries.fields import CountryField
 from tournament.diplomacy import WINNING_SCS, GreatPower
 from tournament.wdr import WDR_BASE_URL, validate_wdr_player_id
 
+from .event_kinds import EventKinds
 from .game_results import GameResults
 from .position_str import position_str
 from .wdr_background import InvalidWDRId, WDRBackground, WDRNotAccessible
@@ -197,10 +198,17 @@ class Player(models.Model):
             results.append(f'{str(r)}.')
         return results
 
-    def _awards(self, power=None, mask=MASK_ALL_BG):
-        """List of all awards won, optionally as a specified power"""
+    def _ranking_queryset(self, event_kind):
+        """Return the base filtered tournament-ranking queryset for the current background view."""
+        qs = self.playereventranking_set.filter(position__isnull=False)
+        if event_kind is not None:
+            qs = qs.filter(event_kind=event_kind)
+        return qs
+
+    def _awards(self, ranking_set, power=None, mask=MASK_ALL_BG):
+        """List of all awards won, optionally as a specified power."""
         results = []
-        award_set = self.playeraward_set.order_by('event_ranking__date')
+        award_set = self.playeraward_set.filter(event_ranking__in=ranking_set).order_by('event_ranking__date')
         powers = GreatPower.objects.all()
         if power is not None:
             award_set = award_set.filter(power=power)
@@ -261,10 +269,10 @@ class Player(models.Model):
                 results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         return results
 
-    def _tourney_rankings(self, mask=MASK_ALL_BG):
-        """List of tournament rankings"""
+    def _tourney_rankings(self, ranking_set, mask=MASK_ALL_BG):
+        """List of tournament rankings."""
         results = []
-        ranking_set = self.playereventranking_set.filter(position__isnull=False).order_by('date')
+        ranking_set = ranking_set.order_by('date')
         plays = ranking_set.count()
         if plays == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:
@@ -314,18 +322,15 @@ class Player(models.Model):
                                % {'name': self, 'position': pos})
         return results
 
-    def _results(self, power=None, mask=MASK_ALL_BG):
+    def _results(self, ranking_set, power=None, mask=MASK_ALL_BG):
         """
         List of tournament game achievements, optionally with one Great Power.
         """
         results = []
-        results_set = self.playergameresult_set.all()
-        # We can't report anything useful if we have no info on games played
-        if not results_set.exists():
-            return results
+        results_set = self.playergameresult_set.filter(event_ranking__in=ranking_set)
         if power is not None:
-            results_set = results_set.filter(power=power)
             c_str = _(u' as %(power)s') % {'power': power}
+            results_set = results_set.filter(power=power)
         else:
             c_str = u''
         games = results_set.count()
@@ -409,10 +414,13 @@ class Player(models.Model):
                                       'power': c_str})
         return results
 
-    def background(self, power=None, mask=MASK_ALL_BG):
+    def background(self, power=None, mask=MASK_ALL_BG, event_kind=EventKinds.TOURNAMENT):
         """
         List of background strings about the player, optionally as a specific Great Power
+
+        If event_kind is not supplied, only tournaments are included.
         """
+        ranking_set = self._ranking_queryset(event_kind)
         if power is None:
-            return self._titles(mask=mask) + self._tourney_rankings(mask=mask) + self._results(mask=mask) + self._awards(mask=mask) + self._rankings(mask=mask)
-        return self._results(power, mask=mask) + self._awards(power, mask=mask)
+            return self._titles(mask=mask) + self._tourney_rankings(ranking_set=ranking_set, mask=mask) + self._results(ranking_set=ranking_set, mask=mask) + self._awards(ranking_set=ranking_set, mask=mask) + self._rankings(mask=mask)
+        return self._results(ranking_set=ranking_set, power=power, mask=mask) + self._awards(ranking_set=ranking_set, power=power, mask=mask)

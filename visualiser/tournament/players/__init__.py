@@ -2,6 +2,7 @@ from ..wdd import validate_wdd_player_id  # for old migrations
 from ..wdd import validate_wdd_tournament_id  # for old migrations
 from .add_player_bg import _split_wdd_game_name  # for old migrations
 from .add_player_bg import add_player_bg
+from .event_kinds import EventKinds
 from .game_results import GameResults
 from .player import (MASK_ALL_BG, MASK_BEST_COUNTRY, MASK_BEST_SC_COUNT,
                      MASK_BEST_TOURNEY_RESULT, MASK_BOARDS_TOPPED,

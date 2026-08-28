@@ -36,6 +36,7 @@ from tournament.wdd import (UnrecognisedCountry, wdd_nation_to_country,
                             wdd_url_to_tournament_id)
 from tournament.wdr import wdr_power_name_to_greatpower
 
+from .event_kinds import EventKinds
 from .player_award import PlayerAward
 from .player_game_result import PlayerGameResult
 from .player_ranking import PlayerRanking
@@ -114,42 +115,48 @@ def _split_wdd_game_name(name):
     raise ValueError(name)
 
 
-def _wdr_tournament_should_be_included(t):
-    """
-    Is the WDR tournament actually a tournament?
+WDR_TOURNAMENT_KINDS = (
+    'EDC',
+    'DIPCON',
+    'APAC',
+    'NDC',
+    'MASTERS',
+    'DBNI',
+    'VDC',
+    'CUP',
+    'NCUP',
+    'OPEN',
+    'WDC',
+)
 
-    WDR tournaments include several events that are not tournaments per se.
+WDR_LEAGUE_KINDS = (
+    'LEAGUE',
+)
 
-    t should be the dict representing the tournament in the WDR.
-    Return True if t is an actual tournament that we want to include.
+WDR_CIRCUIT_KINDS = (
+    'EGP',
+    'NAGP',
+    'BIC',
+    'GHOST',
+    'nCIR',
+    'NCIR',
+    'CIR',
+)
+
+
+def _classify_wdr_tournament_kind(kind):
     """
-    kind = t['tournament_kind']
-    if kind in ['EDC',      # European Championship
-                'DIPCON',   # North American Championship
-                'APAC',     # Asia-Pacific Championship
-                'NDC',      # National Championship
-                'MASTERS',  # Invitational
-                'DBNI',     # DBN Invitational
-                'VDC',      # Virtual Championship
-                'CUP',
-                'NCUP',     # National Cup
-                'OPEN',
-                'WDC']:     # World Championship
-        return True
-    elif kind.startswith("CUP "):
-        return True
-    elif kind in ['LEAGUE',
-                  'EGP',   # European Grand Prix
-                  'NAGP',  # North American Grand Prix
-                  'BIC',   # Bismark Cup
-                  'GHOST', # Simulated (retroactive) circuit
-                  'nCIR',  # National Circuit
-                  'NCIR',  # National Circuit
-                  'CIR']:  # Circuit
-        return False
-    else:
-        print(f'Unrecognised tournament_kind {kind} in {t}')
-        return False
+    Classify a raw WDR tournament_kind string into an EventKinds choice.
+    """
+    if not kind:
+        return EventKinds.TOURNAMENT
+    if kind in WDR_TOURNAMENT_KINDS or kind.startswith('CUP '):
+        return EventKinds.TOURNAMENT
+    if kind in WDR_LEAGUE_KINDS:
+        return EventKinds.LEAGUE
+    if kind in WDR_CIRCUIT_KINDS:
+        return EventKinds.CIRCUIT
+    return EventKinds.OTHER
 
 
 def _add_player_bg_from_wdr(player, wdr_id):
@@ -164,14 +171,14 @@ def _add_player_bg_from_wdr(player, wdr_id):
     # Podium finishes and Tournaments
     tournaments = bg.tournaments()
     for t in tournaments:
-        if not _wdr_tournament_should_be_included(t):
-            continue
         event_date = t['tournament_end_date'] or t['tournament_start_date']
         if not event_date:
             print(f"Skipping {t['tournament_name']} for {player} with no date")
             continue
         defaults = {'position': t['tournament_player_rank'] if t['tournament_player_rank'] and t['tournament_player_rank'] > 0 else None,
-                    'event_name': t['tournament_name']}
+                    'event_name': t['tournament_name'],
+                    'tournament_kind': t.get('tournament_kind'),
+                    'event_kind': _classify_wdr_tournament_kind(t.get('tournament_kind'))}
         defaults['date'] = event_date
         if t['tournament_wdd_id'] == -1:
             try:

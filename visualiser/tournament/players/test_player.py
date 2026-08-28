@@ -24,7 +24,10 @@ from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import (MASK_ALL_BG, MASK_BOARDS_TOPPED,
-                                MASK_TOP_BOARDS_PLAYED, InvalidWDRId,
+                                MASK_GAMES_PLAYED, MASK_OTHER_AWARDS,
+                                MASK_TOURNEY_COUNT,
+                                MASK_TOP_BOARDS_PLAYED, EventKinds,
+                                InvalidWDRId,
                                 PlayerAward, PlayerEventRanking,
                                 PlayerGameResult, PlayerRanking, PlayerTitle,
                                 WDDPlayer, WDRNotAccessible)
@@ -702,6 +705,60 @@ class PlayerTests(TestCase):
         self.assertIn('Chris Brand most recently won a tournament (Charlie) in 2014.', res)
         # Cleanup
         p._clear_background()
+
+    def test_player_background_event_kind_filter(self):
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='Bloggs')
+        per_default = PlayerEventRanking.objects.create(player=p,
+                                                        event_name='Worlds Event',
+                                                        position=1,
+                                                        tournament_kind='WDC',
+                                                        event_kind=EventKinds.TOURNAMENT,
+                                                        date=datetime.now(datetime_timezone.utc))
+        per_league = PlayerEventRanking.objects.create(player=p,
+                                                       event_name='League Event',
+                                                       position=2,
+                                                       tournament_kind='LEAGUE',
+                                                       event_kind=EventKinds.LEAGUE,
+                                                       date=datetime.now(datetime_timezone.utc))
+        PlayerGameResult.objects.create(event_ranking=per_default,
+                                        round_number=1,
+                                        game_number=1,
+                                        player=p,
+                                        power=self.austria,
+                                        position=1)
+        PlayerGameResult.objects.create(event_ranking=per_league,
+                                        round_number=1,
+                                        game_number=2,
+                                        player=p,
+                                        power=self.austria,
+                                        position=2)
+        PlayerAward.objects.create(player=p,
+                                   event_ranking=per_default,
+                                   name='Default Prize')
+        PlayerAward.objects.create(player=p,
+                                   event_ranking=per_league,
+                                   name='League Prize')
+
+        mask = MASK_TOURNEY_COUNT | MASK_GAMES_PLAYED | MASK_OTHER_AWARDS
+        default_bg = p.background(mask=mask)
+        self.assertIn('Joe Bloggs has competed in one tournament.', default_bg)
+        self.assertIn('Joe Bloggs has played 1 tournament game.', default_bg)
+        self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', default_bg)
+        self.assertNotIn('Joe Bloggs won League Prize at League Event.', default_bg)
+
+        league_bg = p.background(mask=mask, event_kind=EventKinds.LEAGUE)
+        self.assertIn('Joe Bloggs has competed in one tournament.', league_bg)
+        self.assertIn('Joe Bloggs has played 1 tournament game.', league_bg)
+        self.assertIn('Joe Bloggs won League Prize at League Event.', league_bg)
+        self.assertNotIn('Joe Bloggs won Default Prize at Worlds Event.', league_bg)
+
+        all_bg = p.background(mask=mask, event_kind=None)
+        self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', all_bg)
+        self.assertIn('Joe Bloggs won League Prize at League Event.', all_bg)
+
+        # Cleanup
+        p.delete()
 
     # Player.get_absolute_url()
     def test_player_get_absolute_url(self):

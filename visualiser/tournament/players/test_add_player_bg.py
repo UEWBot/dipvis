@@ -21,7 +21,7 @@ import importlib
 from django.test import TestCase, tag
 
 from tournament.diplomacy import GreatPower
-from tournament.players import Player, WDDPlayer, WDRNotAccessible
+from tournament.players import EventKinds, Player, WDDPlayer, WDRNotAccessible
 
 from . import add_player_bg
 
@@ -200,6 +200,68 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_add_player_bg_stores_tournament_kind(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='Kinds',
+                                  wdr_player_id=9993)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [
+                {
+                    'tournament_id': 7003,
+                    'tournament_wdd_id': -1,
+                    'tournament_name': 'League Event',
+                    'tournament_start_date': '2024-01-01',
+                    'tournament_end_date': '2024-01-02',
+                    'tournament_kind': 'LEAGUE',
+                    'tournament_player_rank': 4,
+                },
+                {
+                    'tournament_id': 7004,
+                    'tournament_wdd_id': -1,
+                    'tournament_name': 'Cup Event',
+                    'tournament_start_date': '2024-02-01',
+                    'tournament_end_date': '2024-02-02',
+                    'tournament_kind': 'CUP Online',
+                    'tournament_player_rank': 1,
+                },
+            ],
+            'boards': [{
+                'board_round': 1,
+                'board_number': 2,
+                'board_is_top': False,
+                'board_tournament': 7003,
+                'board_power': 'Austria',
+                'board_centers': 9,
+                'board_score': 9.0,
+                'board_rank': 2,
+                'board_year_of_elimination': None,
+                'board_url': '',
+                'board_variant': 'Classic',
+            }],
+            'awards': [],
+        }
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+        per_league = p.playereventranking_set.get(wdr_tournament_id=7003)
+        self.assertEqual('LEAGUE', per_league.tournament_kind)
+        self.assertEqual(EventKinds.LEAGUE, per_league.event_kind)
+        per_cup = p.playereventranking_set.get(wdr_tournament_id=7004)
+        self.assertEqual('CUP Online', per_cup.tournament_kind)
+        self.assertEqual(EventKinds.TOURNAMENT, per_cup.event_kind)
+        pgr = p.playergameresult_set.get(round_number=1, game_number=2)
+        self.assertEqual(per_league, pgr.event_ranking)
+        # Cleanup
+        p.delete()
+
     @tag('wdr')
     def test_add_player_bg_wdr(self):
         wdd = WDDPlayer.objects.get(wdd_player_id=CHRIS_BRAND_WDD_ID)
@@ -230,7 +292,7 @@ class AddPlayerBgTests(TestCase):
         add_player_bg(p)
         # Validate results
         ptrs = p.playereventranking_set.all()
-        self.assertEqual(2, ptrs.count())
+        self.assertEqual(4, ptrs.count())
         # Cleanup
         p.delete()
 
@@ -243,7 +305,7 @@ class AddPlayerBgTests(TestCase):
         add_player_bg(p)
         # Validate results (mostly check that no tournaments get double-counted)
         ptrs = p.playereventranking_set.filter(date__year=2008)
-        self.assertEqual(4, ptrs.count())
+        self.assertEqual(6, ptrs.count())
         # Cleanup
         p.delete()
 
