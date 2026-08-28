@@ -269,60 +269,68 @@ class Player(models.Model):
                 results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
         return results
 
-    def _tourney_rankings(self, ranking_set, mask=MASK_ALL_BG):
+    def _tourney_rankings(self, ranking_set, an_event, event, events, mask=MASK_ALL_BG):
         """List of tournament rankings."""
         results = []
         ranking_set = ranking_set.order_by('date')
         plays = ranking_set.count()
         if plays == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:
-                results.append(_(u'This is the first tournament %(name)s has competed in.')
-                               % {'name': self})
+                results.append(_(u'This is the first %(event)s %(name)s has competed in.')
+                               % {'name': self, 'event': event})
             return results
         if (mask & MASK_TOURNEY_COUNT) != 0:
-            results.append(ngettext('%(name)s has competed in one tournament.',
-                                    '%(name)s has competed in %(number)d tournaments.',
+            results.append(ngettext('%(name)s has competed in one %(event)s.',
+                                    '%(name)s has competed in %(number)d %(events)s.',
                                     plays)
-                           % {'name': self, 'number': plays})
+                           % {'name': self,
+                              'number': plays,
+                              'event': event,
+                              'events': events})
         if (mask & MASK_FIRST_TOURNEY) != 0:
             first = ranking_set.first()
-            results.append(_(u'%(name)s first competed in a tournament (%(event)s) in %(year)d.')
+            results.append(_(u'%(name)s first competed in %(an_event)s (%(event_name)s) in %(year)d.')
                            % {'name': self,
-                              'event': first.event_name,
-                              'year': first.date.year})
+                              'event_name': first.event_name,
+                              'year': first.date.year,
+                              'an_event': an_event})
         if (mask & MASK_LAST_TOURNEY) != 0:
             last = ranking_set.last()
-            results.append(_(u'%(name)s most recently competed in a tournament (%(event)s) in %(year)d.')
+            results.append(_(u'%(name)s most recently competed in %(an_event)s (%(event_name)s) in %(year)d.')
                            % {'name': self,
-                              'event': last.event_name,
-                              'year': last.date.year})
+                              'event_name': last.event_name,
+                              'year': last.date.year,
+                              'an_event': an_event})
         if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
             wins_set = ranking_set.filter(position=1)
             wins = wins_set.count()
             if wins > 0:
-                results.append(_(u'%(name)s has won %(wins)d of %(plays)d tournaments (%(percentage).2f%%).')
+                results.append(_(u'%(name)s has won %(wins)d of %(plays)d %(events)s (%(percentage).2f%%).')
                                % {'name': self,
                                   'plays': plays,
                                   'percentage': 100.0 * float(wins) / float(plays),
-                                  'wins': wins})
+                                  'wins': wins,
+                                  'events': events})
                 w = wins_set.first()
-                results.append(_('%(name)s won their first tournament (%(event)s) in %(year)d.')
+                results.append(_('%(name)s won their first %(event)s (%(event_name)s) in %(year)d.')
                                % {'name': self,
-                                  'event': w.event_name,
-                                  'year': w.date.year})
+                                  'event_name': w.event_name,
+                                  'year': w.date.year,
+                                  'event': event})
                 w = wins_set.last()
-                results.append(_('%(name)s most recently won a tournament (%(event)s) in %(year)d.')
+                results.append(_('%(name)s most recently won %(an_event)s (%(event_name)s) in %(year)d.')
                                % {'name': self,
-                                  'event': w.event_name,
-                                  'year': w.date.year})
+                                  'event_name': w.event_name,
+                                  'year': w.date.year,
+                                  'an_event': an_event})
             else:
                 best = ranking_set.aggregate(Min('position'))['position__min']
                 pos = position_str(best)
-                results.append(_(u'The best tournament result for %(name)s is %(position)s.')
-                               % {'name': self, 'position': pos})
+                results.append(_(u'The best %(event)s result for %(name)s is %(position)s.')
+                               % {'name': self, 'position': pos, 'event': event})
         return results
 
-    def _results(self, ranking_set, power=None, mask=MASK_ALL_BG):
+    def _results(self, ranking_set, an_event, event, events, power=None, mask=MASK_ALL_BG):
         """
         List of tournament game achievements, optionally with one Great Power.
         """
@@ -336,73 +344,82 @@ class Player(models.Model):
         games = results_set.count()
         if games == 0:
             if (mask & MASK_GAMES_PLAYED) != 0:
-                results.append(_(u'%(name)s has never played%(power)s in a tournament before.')
+                results.append(_(u'%(name)s has never played%(power)s in %(an_event)s before.')
                                % {'name': self,
-                                  'power': c_str})
+                                  'power': c_str,
+                                  'an_event': an_event})
             return results
         if (mask & MASK_GAMES_PLAYED) != 0:
-            msg = ngettext('%(name)s has played %(games)d tournament game%(power)s.',
-                           '%(name)s has played %(games)d tournament games%(power)s.',
+            msg = ngettext('%(name)s has played %(games)d %(event)s game%(power)s.',
+                           '%(name)s has played %(games)d %(event)s games%(power)s.',
                            games)
             results.append(msg % {'name': self,
                                   'games': games,
-                                  'power': c_str})
+                                  'power': c_str,
+                                  'event': event})
         if (mask & MASK_BEST_SC_COUNT) != 0:
             best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
             # SC count is optional
             if best:
-                results.append(_(u'%(name)s has finished with as many as %(dots)d centres%(power)s in tournament games.')
+                results.append(_(u'%(name)s has finished with as many as %(dots)d centres%(power)s in %(event)s games.')
                                % {'name': self,
                                   'dots': best,
-                                  'power': c_str})
+                                  'power': c_str,
+                                  'event': event})
         if (mask & MASK_SOLO_COUNT) != 0:
             solos = results_set.filter(final_sc_count__gte=WINNING_SCS).count()
             if solos > 0:
-                msg = ngettext('%(name)s has soloed %(solos)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
-                               '%(name)s has soloed %(solos)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                msg = ngettext('%(name)s has soloed %(solos)d of %(games)d %(event)s game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s has soloed %(solos)d of %(games)d %(event)s games played%(power)s (%(percentage).2f%%).',
                                games)
                 results.append(msg % {'name': self,
                                       'solos': solos,
                                       'games': games,
                                       'power': c_str,
+                                      'event': event,
                                       'percentage': 100.0 * float(solos) / float(games)})
             else:
-                results.append(_(u'%(name)s has yet to solo%(power)s at a tournament.')
+                results.append(_(u'%(name)s has yet to solo%(power)s at %(an_event)s.')
                                % {'name': self,
-                                  'power': c_str})
+                                  'power': c_str,
+                                  'an_event': an_event})
         if (mask & MASK_ELIM_COUNT) != 0:
             query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
             eliminations_set = results_set.filter(query)
             eliminations = eliminations_set.count()
             if eliminations > 0:
-                msg = ngettext('%(name)s was eliminated in %(deaths)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
-                               '%(name)s was eliminated in %(deaths)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                msg = ngettext('%(name)s was eliminated in %(deaths)d of %(games)d %(event)s game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s was eliminated in %(deaths)d of %(games)d %(event)s games played%(power)s (%(percentage).2f%%).',
                                games)
                 results.append(msg % {'name': self,
                                       'deaths': eliminations,
                                       'games': games,
                                       'power': c_str,
+                                      'event': event,
                                       'percentage': 100.0 * float(eliminations) / float(games)})
             else:
-                results.append(_(u'%(name)s has yet to be eliminated%(power)s in a tournament.')
+                results.append(_(u'%(name)s has yet to be eliminated%(power)s in %(an_event)s.')
                                % {'name': self,
-                                  'power': c_str})
+                                  'power': c_str,
+                                  'an_event': an_event})
         if (mask & MASK_BOARDS_TOPPED) != 0:
             query = Q(result=GameResults.WIN) | Q(position=1)
             board_tops = results_set.filter(query).count()
             if board_tops > 0:
-                msg = ngettext('%(name)s topped the board in %(tops)d of %(games)d tournament game played%(power)s (%(percentage).2f%%).',
-                               '%(name)s topped the board in %(tops)d of %(games)d tournament games played%(power)s (%(percentage).2f%%).',
+                msg = ngettext('%(name)s topped the board in %(tops)d of %(games)d %(event)s game played%(power)s (%(percentage).2f%%).',
+                               '%(name)s topped the board in %(tops)d of %(games)d %(event)s games played%(power)s (%(percentage).2f%%).',
                                games)
                 results.append(msg % {'name': self,
                                       'tops': board_tops,
                                       'games': games,
                                       'power': c_str,
+                                      'event': event,
                                       'percentage': 100.0 * float(board_tops) / float(games)})
             else:
-                results.append(_(u'%(name)s has yet to top the board%(power)s at a tournament.')
+                results.append(_(u'%(name)s has yet to top the board%(power)s at %(an_event)s.')
                                % {'name': self,
-                                  'power': c_str})
+                                  'power': c_str,
+                                  'an_event': an_event})
         if (mask & MASK_TOP_BOARDS_PLAYED) != 0:
             top_board_games = results_set.filter(is_top_board=True).count()
             if top_board_games > 0:
@@ -411,7 +428,8 @@ class Player(models.Model):
                                top_board_games)
                 results.append(msg % {'name': self,
                                       'count': top_board_games,
-                                      'power': c_str})
+                                      'power': c_str,
+                                      'event': event})
         return results
 
     def background(self, power=None, mask=MASK_ALL_BG, event_kind=None):
@@ -420,7 +438,13 @@ class Player(models.Model):
 
         If event_kind is not supplied, all event kinds are included.
         """
+        an_event, event, events = EventKinds.event_words(event_kind)
         ranking_set = self._ranking_queryset(event_kind)
         if power is None:
-            return self._titles(mask=mask) + self._tourney_rankings(ranking_set=ranking_set, mask=mask) + self._results(ranking_set=ranking_set, mask=mask) + self._awards(ranking_set=ranking_set, mask=mask) + self._rankings(mask=mask)
-        return self._results(ranking_set=ranking_set, power=power, mask=mask) + self._awards(ranking_set=ranking_set, power=power, mask=mask)
+            return (self._titles(mask=mask) +
+                    self._tourney_rankings(ranking_set=ranking_set, an_event=an_event, event=event, events=events, mask=mask) +
+                    self._results(ranking_set=ranking_set, an_event=an_event, event=event, events=events, mask=mask) +
+                    self._awards(ranking_set=ranking_set, mask=mask) +
+                    self._rankings(mask=mask))
+        return (self._results(ranking_set=ranking_set, an_event=an_event, event=event, events=events, power=power, mask=mask) +
+                self._awards(ranking_set=ranking_set, power=power, mask=mask))

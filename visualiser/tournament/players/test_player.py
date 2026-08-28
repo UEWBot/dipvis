@@ -473,7 +473,7 @@ class PlayerTests(TestCase):
                                      national_rank='3')
         res = p.background(power=self.germany)
         self.assertEqual(2, len(res))
-        self.assertIn('Chris Brand has never played as Germany in a tournament before.', res)
+        self.assertIn('Chris Brand has never played as Germany in an event before.', res)
         self.assertIn('Chris Brand has never won Best Germany.', res)
         res = p.background(power=self.germany, mask=0)
         self.assertEqual([], res)
@@ -514,10 +514,10 @@ class PlayerTests(TestCase):
         res = p.background(power=self.germany)
         # The Award and the GameResult should be included
         self.assertEqual(7, len(res))
-        self.assertIn('Chris Brand has played 1 tournament game as Germany.', res)
-        self.assertIn('Chris Brand has yet to solo as Germany at a tournament.', res)
-        self.assertIn('Chris Brand has yet to be eliminated as Germany in a tournament.', res)
-        self.assertIn('Chris Brand has yet to top the board as Germany at a tournament.', res)
+        self.assertIn('Chris Brand has played 1 event game as Germany.', res)
+        self.assertIn('Chris Brand has yet to solo as Germany at an event.', res)
+        self.assertIn('Chris Brand has yet to be eliminated as Germany in an event.', res)
+        self.assertIn('Chris Brand has yet to top the board as Germany at an event.', res)
         self.assertIn('Chris Brand has won Best Germany once.', res)
         self.assertIn(f'Chris Brand first won Best German in {today.year} at Some tournament.', res)
         self.assertIn(f'Chris Brand most recently won Best German in {today.year} at Some tournament.', res)
@@ -539,7 +539,7 @@ class PlayerTests(TestCase):
                                         power=self.austria,
                                         position=2)
         bg = p.background()
-        self.assertIn('Joe Bloggs has played 1 tournament game.', bg)
+        self.assertIn('Joe Bloggs has played 1 event game.', bg)
         # Cleanup
         p.delete()
 
@@ -569,11 +569,51 @@ class PlayerTests(TestCase):
                                         position=6,
                                         final_sc_count=0)
         bg = p.background()
-        self.assertIn('Joe Bloggs has played 2 tournament games.', bg)
-        self.assertIn('Joe Bloggs has finished with as many as 19 centres in tournament games.', bg)
-        self.assertIn('Joe Bloggs has soloed 1 of 2 tournament games played (50.00%).', bg)
-        self.assertIn('Joe Bloggs was eliminated in 1 of 2 tournament games played (50.00%).', bg)
-        self.assertIn('Joe Bloggs topped the board in 1 of 2 tournament games played (50.00%).', bg)
+        self.assertIn('Joe Bloggs has played 2 event games.', bg)
+        self.assertIn('Joe Bloggs has finished with as many as 19 centres in event games.', bg)
+        self.assertIn('Joe Bloggs has soloed 1 of 2 event games played (50.00%).', bg)
+        self.assertIn('Joe Bloggs was eliminated in 1 of 2 event games played (50.00%).', bg)
+        self.assertIn('Joe Bloggs topped the board in 1 of 2 event games played (50.00%).', bg)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_event_word(self):
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='Bloggs')
+        per1 = PlayerEventRanking.objects.create(player=p,
+                                                 event_name='First event',
+                                                 position=3,
+                                                 event_kind=EventKinds.TOURNAMENT,
+                                                 date=datetime.now(datetime_timezone.utc))
+        PlayerGameResult.objects.create(event_ranking=per1,
+                                        round_number=1,
+                                        game_number=1,
+                                        player=p,
+                                        power=self.austria,
+                                        position=2)
+
+        mask = MASK_TOURNEY_COUNT | MASK_GAMES_PLAYED
+        event_bg = p.background(mask=mask)
+        tournament_bg = p.background(mask=mask, event_kind=EventKinds.TOURNAMENT)
+        self.assertIn('Joe Bloggs has competed in one event.', event_bg)
+        self.assertIn('Joe Bloggs has played 1 event game.', event_bg)
+        self.assertIn('Joe Bloggs has competed in one tournament.', tournament_bg)
+        self.assertIn('Joe Bloggs has played 1 tournament game.', tournament_bg)
+
+        per2 = PlayerEventRanking.objects.create(player=p,
+                                                 event_name='Second event',
+                                                 position=4,
+                                                 event_kind=EventKinds.TOURNAMENT,
+                                                 date=datetime.now(datetime_timezone.utc))
+        PlayerGameResult.objects.create(event_ranking=per2,
+                                        round_number=1,
+                                        game_number=2,
+                                        player=p,
+                                        power=self.germany,
+                                        position=3)
+        tournament_bg = p.background(mask=mask, event_kind=EventKinds.TOURNAMENT)
+        self.assertIn('Joe Bloggs has competed in 2 tournaments.', tournament_bg)
+        self.assertIn('Joe Bloggs has played 2 tournament games.', tournament_bg)
         # Cleanup
         p.delete()
 
@@ -632,7 +672,7 @@ class PlayerTests(TestCase):
                                         is_top_board=True)
 
         bg_topped_only = p.background(mask=MASK_BOARDS_TOPPED)
-        self.assertIn('Joe DualTop topped the board in 1 of 2 tournament games played (50.00%).',
+        self.assertIn('Joe DualTop topped the board in 1 of 2 event games played (50.00%).',
                       bg_topped_only)
         self.assertNotIn('Joe DualTop has played 1 top board game.',
                          bg_topped_only)
@@ -640,7 +680,7 @@ class PlayerTests(TestCase):
         bg_top_boards_only = p.background(mask=MASK_TOP_BOARDS_PLAYED)
         self.assertIn('Joe DualTop has played 1 top board game.',
                       bg_top_boards_only)
-        self.assertNotIn('Joe DualTop topped the board in 1 of 2 tournament games played (50.00%).',
+        self.assertNotIn('Joe DualTop topped the board in 1 of 2 event games played (50.00%).',
                          bg_top_boards_only)
         # Cleanup
         p.delete()
@@ -700,9 +740,9 @@ class PlayerTests(TestCase):
                                           position=5,
                                           date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
         res = p.background()
-        self.assertIn('Chris Brand has won 2 of 4 tournaments (50.00%).', res)
-        self.assertIn('Chris Brand won their first tournament (Bravo) in 2004.', res)
-        self.assertIn('Chris Brand most recently won a tournament (Charlie) in 2014.', res)
+        self.assertIn('Chris Brand has won 2 of 4 events (50.00%).', res)
+        self.assertIn('Chris Brand won their first event (Bravo) in 2004.', res)
+        self.assertIn('Chris Brand most recently won an event (Charlie) in 2014.', res)
         # Cleanup
         p._clear_background()
 
@@ -742,25 +782,31 @@ class PlayerTests(TestCase):
 
         mask = MASK_TOURNEY_COUNT | MASK_GAMES_PLAYED | MASK_OTHER_AWARDS
         default_bg = p.background(mask=mask)
-        self.assertIn('Joe Bloggs has competed in 2 tournaments.', default_bg)
-        self.assertIn('Joe Bloggs has played 2 tournament games.', default_bg)
+        self.assertIn('Joe Bloggs has competed in 2 events.', default_bg)
+        self.assertIn('Joe Bloggs has played 2 event games.', default_bg)
         self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', default_bg)
         self.assertIn('Joe Bloggs won League Prize at League Event.', default_bg)
 
-        tournament_bg = p.background(mask=mask, event_kind=EventKinds.TOURNAMENT)
-        self.assertIn('Joe Bloggs has competed in one tournament.', tournament_bg)
-        self.assertIn('Joe Bloggs has played 1 tournament game.', tournament_bg)
-        self.assertIn('Joe Bloggs won Default Prize at Worlds Event.', tournament_bg)
-        self.assertNotIn('Joe Bloggs won League Prize at League Event.', tournament_bg)
-
         league_bg = p.background(mask=mask, event_kind=EventKinds.LEAGUE)
-        self.assertIn('Joe Bloggs has competed in one tournament.', league_bg)
-        self.assertIn('Joe Bloggs has played 1 tournament game.', league_bg)
+        self.assertIn('Joe Bloggs has competed in one league.', league_bg)
+        self.assertIn('Joe Bloggs has played 1 league game.', league_bg)
         self.assertIn('Joe Bloggs won League Prize at League Event.', league_bg)
         self.assertNotIn('Joe Bloggs won Default Prize at Worlds Event.', league_bg)
 
         # Cleanup
         p.delete()
+
+    def test_event_kinds_event_words(self):
+        self.assertEqual(('a tournament', 'tournament', 'tournaments'),
+                         EventKinds.event_words(EventKinds.TOURNAMENT))
+        self.assertEqual(('a league', 'league', 'leagues'),
+                         EventKinds.event_words(EventKinds.LEAGUE))
+        self.assertEqual(('a circuit', 'circuit', 'circuits'),
+                         EventKinds.event_words(EventKinds.CIRCUIT))
+        self.assertEqual(('an event', 'event', 'events'),
+                         EventKinds.event_words(EventKinds.OTHER))
+        self.assertEqual(('an event', 'event', 'events'),
+                         EventKinds.event_words(None))
 
     # Player.get_absolute_url()
     def test_player_get_absolute_url(self):

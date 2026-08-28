@@ -32,16 +32,17 @@ class EventKinds(models.TextChoices):
     OTHER = 'O', _('Other')
 
     @classmethod
-    def event_word(cls, event_kind):
+    def event_words(cls, event_kind):
         """
-        Deduce the descriptive noun for a given event kind.
+        Return a 3-tuple of (an_event, event, events) for the given event kind.
 
-        Returns 'event' when event_kind is None (all events) or unrecognized.
+        Returns translations for ('an event', 'event', 'events') when event_kind
+        is None or unrecognized.
         """
         if event_kind == cls.TOURNAMENT:
-            return 'tournament'
+            return (_('a tournament'), _('tournament'), _('tournaments'))
         if event_kind == cls.LEAGUE:
-            return 'league'
+            return (_('a league'), _('league'), _('leagues'))
         if event_kind == cls.CIRCUIT:
-            return 'circuit'
-        return 'event'
+            return (_('a circuit'), _('circuit'), _('circuits'))
+        return (_('an event'), _('event'), _('events'))
