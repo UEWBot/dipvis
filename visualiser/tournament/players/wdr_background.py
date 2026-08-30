@@ -111,6 +111,7 @@ class WDRBackground():
             "tournament_start_date"
             "tournament_end_date"
             "tournament_kind" ("CUP", "WDC", "DIPCON", "EDC", ...)
+            "tournament_event_type" ("Tournament", "Circuit", or "League")
             "tournament_player_rank"
         """
         return self.data['player_tournaments_played']

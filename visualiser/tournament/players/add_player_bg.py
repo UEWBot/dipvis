@@ -115,48 +115,20 @@ def _split_wdd_game_name(name):
     raise ValueError(name)
 
 
-WDR_TOURNAMENT_KINDS = (
-    'EDC',
-    'DIPCON',
-    'APAC',
-    'NDC',
-    'MASTERS',
-    'DBNI',
-    'VDC',
-    'CUP',
-    'NCUP',
-    'OPEN',
-    'WDC',
-)
-
-WDR_LEAGUE_KINDS = (
-    'LEAGUE',
-)
-
-WDR_CIRCUIT_KINDS = (
-    'EGP',
-    'NAGP',
-    'BIC',
-    'GHOST',
-    'nCIR',
-    'NCIR',
-    'CIR',
-)
+WDR_EVENT_TYPE_MAP = {
+    "Circuit": EventKinds.CIRCUIT,
+    "League": EventKinds.LEAGUE,
+    "Tournament": EventKinds.TOURNAMENT,
+}
 
 
 def _classify_wdr_tournament_kind(kind):
     """
-    Classify a raw WDR tournament_kind string into an EventKinds choice.
+    Classify a raw WDR tournament_event_type string into an EventKinds choice.
     """
     if not kind:
-        return EventKinds.TOURNAMENT
-    if kind in WDR_TOURNAMENT_KINDS or kind.startswith('CUP '):
-        return EventKinds.TOURNAMENT
-    if kind in WDR_LEAGUE_KINDS:
-        return EventKinds.LEAGUE
-    if kind in WDR_CIRCUIT_KINDS:
-        return EventKinds.CIRCUIT
-    return EventKinds.OTHER
+        return EventKinds.OTHER
+    return WDR_EVENT_TYPE_MAP[kind]
 
 
 def _add_player_bg_from_wdr(player, wdr_id):
@@ -178,7 +150,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
         defaults = {'position': t['tournament_player_rank'] if t['tournament_player_rank'] and t['tournament_player_rank'] > 0 else None,
                     'event_name': t['tournament_name'],
                     'tournament_kind': t.get('tournament_kind'),
-                    'event_kind': _classify_wdr_tournament_kind(t.get('tournament_kind'))}
+                    'event_kind': _classify_wdr_tournament_kind(t.get('tournament_event_type'))}
         defaults['date'] = event_date
         if t['tournament_wdd_id'] == -1:
             try:

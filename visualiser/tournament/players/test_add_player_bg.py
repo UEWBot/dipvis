@@ -115,6 +115,7 @@ class AddPlayerBgTests(TestCase):
                 'tournament_start_date': '2024-08-01',
                 'tournament_end_date': '2024-08-04',
                 'tournament_kind': 'WDC',
+                'tournament_event_type': 'Tournament',
                 'tournament_player_rank': 9,
             }],
             'boards': [{
@@ -161,6 +162,7 @@ class AddPlayerBgTests(TestCase):
                 'tournament_start_date': '2023-08-01',
                 'tournament_end_date': '2023-08-04',
                 'tournament_kind': 'WDC',
+                'tournament_event_type': 'Tournament',
                 'tournament_player_rank': 3,
             }],
             'boards': [{
@@ -214,6 +216,7 @@ class AddPlayerBgTests(TestCase):
                     'tournament_start_date': '2024-01-01',
                     'tournament_end_date': '2024-01-02',
                     'tournament_kind': 'LEAGUE',
+                    'tournament_event_type': 'League',
                     'tournament_player_rank': 4,
                 },
                 {
@@ -223,6 +226,7 @@ class AddPlayerBgTests(TestCase):
                     'tournament_start_date': '2024-02-01',
                     'tournament_end_date': '2024-02-02',
                     'tournament_kind': 'CUP Online',
+                    'tournament_event_type': 'Tournament',
                     'tournament_player_rank': 1,
                 },
             ],
@@ -322,6 +326,7 @@ class AddPlayerBgTests(TestCase):
             'tournament_start_date': None,
             'tournament_end_date': None,
             'tournament_kind': 'CUP',
+            'tournament_event_type': 'Tournament',
             'tournament_player_rank': 1,
         }]
         fake_awards = [{
@@ -378,6 +383,7 @@ class AddPlayerBgTests(TestCase):
             'tournament_start_date': '2012-01-01',
             'tournament_end_date': '2012-01-02',
             'tournament_kind': 'CUP',
+            'tournament_event_type': 'Tournament',
             'tournament_player_rank': 3,
         }]
         fake_boards = [
