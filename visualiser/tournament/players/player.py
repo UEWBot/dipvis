@@ -198,6 +198,14 @@ class Player(models.Model):
             results.append(f'{str(r)}.')
         return results
 
+    def _title_data(self):
+        """Structured data for titles won."""
+        title_set = self.playertitle_set.order_by('year')
+        titles = {}
+        for title in title_set:
+            titles.setdefault(title.title, []).append(title.year)
+        return [{'title': title, 'years': years} for title, years in titles.items()]
+
     def _ranking_queryset(self, event_kind):
         """Return the base filtered tournament-ranking queryset for the current background view."""
         qs = self.playereventranking_set.filter(position__isnull=False)
@@ -259,14 +267,10 @@ class Player(models.Model):
     def _titles(self, mask=MASK_ALL_BG):
         """List of titles won"""
         results = []
-        title_set = self.playertitle_set.order_by('year')
-        if (mask & MASK_TITLES) != 0:
-            # Add summaries of actual titles
-            titles = {}
-            for title in title_set:
-                titles.setdefault(title.title, []).append(title.year)
-            for key, lst in titles.items():
-                results.append(str(self) + ' was ' + key + ' in ' + ', '.join(map(str, lst)) + '.')
+        if (mask & MASK_TITLES) == 0:
+            return results
+        for title_data in self._title_data():
+            results.append(str(self) + ' was ' + title_data['title'] + ' in ' + ', '.join(map(str, title_data['years'])) + '.')
         return results
 
     def _tourney_rankings(self, ranking_set, an_event, event, events, mask=MASK_ALL_BG):
@@ -448,3 +452,9 @@ class Player(models.Model):
                     self._rankings(mask=mask))
         return (self._results(ranking_set=ranking_set, an_event=an_event, event=event, events=events, power=power, mask=mask) +
                 self._awards(ranking_set=ranking_set, power=power, mask=mask))
+
+    def background_data(self, power=None, event_kind=None):
+        """
+        Structured background data for the player.
+        """
+        return {'titles': self._title_data()}

@@ -25,7 +25,7 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import (MASK_ALL_BG, MASK_BOARDS_TOPPED,
                                 MASK_GAMES_PLAYED, MASK_OTHER_AWARDS,
-                                MASK_TOURNEY_COUNT,
+                                MASK_TITLES, MASK_TOURNEY_COUNT,
                                 MASK_TOP_BOARDS_PLAYED, EventKinds,
                                 InvalidWDRId,
                                 PlayerAward, PlayerEventRanking,
@@ -75,6 +75,30 @@ class PlayerTests(TestCase):
         self.assertIn(p.last_name, string)
         # sortable form is "Last, First"
         self.assertEqual(f'{p.last_name}, {p.first_name}', string)
+
+    def test_player_background_data_titles(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        PlayerTitle.objects.create(player=p,
+                                   title='Canadian Beaver',
+                                   year=1976)
+        PlayerTitle.objects.create(player=p,
+                                   title='Canadian Beaver',
+                                   year=1977)
+        PlayerTitle.objects.create(player=p,
+                                   title='World Champion',
+                                   year=1978)
+
+        self.assertEqual([{'title': 'Canadian Beaver',
+                           'years': [1976, 1977]},
+                          {'title': 'World Champion',
+                           'years': [1978]}],
+                         p.background_data()['titles'])
+        self.assertIn('Unknown Player was Canadian Beaver in 1976, 1977.',
+                      p.background(mask=MASK_TITLES))
+        self.assertEqual([], p.background(mask=0))
+
+        # Cleanup
+        p.delete()
 
     # Player._clear_background()
     def test_player_clear_background(self):
