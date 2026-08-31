@@ -193,9 +193,11 @@ class Player(models.Model):
         results = []
         if (mask & MASK_RANKINGS) == 0:
             return results
-        rankings_set = self.playerranking_set.all()
-        for r in rankings_set:
-            results.append(f'{str(r)}.')
+        for ranking_data in self._ranking_data():
+            results.append(_('%(player)s is ranked %(ranking)s internationally in the %(system)s.')
+                           % {'player': self,
+                              'ranking': ranking_data['international_rank'],
+                              'system': ranking_data['system']})
         return results
 
     def _title_data(self):
@@ -205,6 +207,16 @@ class Player(models.Model):
         for title in title_set:
             titles.setdefault(title.title, []).append(title.year)
         return [{'title': title, 'years': years} for title, years in titles.items()]
+
+    def _ranking_data(self):
+        """Structured data for ranking systems."""
+        return [{'system': ranking.system,
+                 'score': ranking.score,
+                 'international_rank': ranking.international_rank,
+                 'national_rank': ranking.national_rank,
+                 'wdd_url': ranking.wdd_url(),
+                 'wdr_url': ranking.wdr_url()}
+                for ranking in self.playerranking_set.order_by()]
 
     def _ranking_queryset(self, event_kind):
         """Return the base filtered tournament-ranking queryset for the current background view."""
@@ -457,4 +469,5 @@ class Player(models.Model):
         """
         Structured background data for the player.
         """
-        return {'titles': self._title_data()}
+        return {'titles': self._title_data(),
+            'rankings': self._ranking_data()}

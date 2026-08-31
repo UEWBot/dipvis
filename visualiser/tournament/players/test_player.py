@@ -25,7 +25,7 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
 from tournament.players import (MASK_ALL_BG, MASK_BOARDS_TOPPED,
                                 MASK_GAMES_PLAYED, MASK_OTHER_AWARDS,
-                                MASK_TITLES, MASK_TOURNEY_COUNT,
+                                MASK_RANKINGS, MASK_TITLES, MASK_TOURNEY_COUNT,
                                 MASK_TOP_BOARDS_PLAYED, EventKinds,
                                 InvalidWDRId,
                                 PlayerAward, PlayerEventRanking,
@@ -95,6 +95,28 @@ class PlayerTests(TestCase):
                          p.background_data()['titles'])
         self.assertIn('Unknown Player was Canadian Beaver in 1976, 1977.',
                       p.background(mask=MASK_TITLES))
+        self.assertEqual([], p.background(mask=0))
+
+        # Cleanup
+        p.delete()
+
+    def test_player_background_data_rankings(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        PlayerRanking.objects.create(player=p,
+                                     system='Who Chris Likes Most',
+                                     score=8.5,
+                                     international_rank='8',
+                                     national_rank='3')
+
+        self.assertEqual([{'system': 'Who Chris Likes Most',
+                           'score': 8.5,
+                           'international_rank': '8',
+                           'national_rank': '3',
+                           'wdd_url': '',
+                           'wdr_url': ''}],
+                         p.background_data()['rankings'])
+        self.assertIn('Unknown Player is ranked 8 internationally in the Who Chris Likes Most.',
+                      p.background(mask=MASK_RANKINGS))
         self.assertEqual([], p.background(mask=0))
 
         # Cleanup
