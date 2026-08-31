@@ -23,11 +23,11 @@ from django.test import TestCase, tag
 from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
-from tournament.players import (MASK_ALL_BG, MASK_BEST_TOURNEY_RESULT,
-                                MASK_BOARDS_TOPPED, MASK_FIRST_TOURNEY,
-                                MASK_GAMES_PLAYED, MASK_LAST_TOURNEY,
-                                MASK_OTHER_AWARDS, MASK_RANKINGS, MASK_TITLES,
-                                MASK_TOURNEY_COUNT,
+from tournament.players import (MASK_ALL_BG, MASK_BEST_SC_COUNT,
+                                MASK_BEST_TOURNEY_RESULT, MASK_BOARDS_TOPPED,
+                                MASK_FIRST_TOURNEY, MASK_GAMES_PLAYED,
+                                MASK_LAST_TOURNEY, MASK_OTHER_AWARDS,
+                                MASK_RANKINGS, MASK_TITLES, MASK_TOURNEY_COUNT,
                                 MASK_TOP_BOARDS_PLAYED, EventKinds,
                                 InvalidWDRId,
                                 PlayerAward, PlayerEventRanking,
@@ -623,6 +623,15 @@ class PlayerTests(TestCase):
         self.assertEqual(2, len(res))
         self.assertIn('Chris Brand has never played as Germany in an event before.', res)
         self.assertIn('Chris Brand has never won Best Germany.', res)
+        game_results = p.background_data()['game_results']
+        self.assertEqual({'games': 0,
+                          'best_sc_count': None,
+                          'solos': {'count': 0, 'percentage': None},
+                          'eliminations': {'count': 0, 'percentage': None},
+                          'board_tops': {'count': 0, 'percentage': None},
+                          'top_board_games': 0},
+                         game_results[str(self.germany)])
+        self.assertEqual(1, game_results['total']['games'])
         res = p.background(power=self.germany, mask=0)
         self.assertEqual([], res)
         # Cleanup
@@ -716,12 +725,37 @@ class PlayerTests(TestCase):
                                         power=self.germany,
                                         position=6,
                                         final_sc_count=0)
+        game_results = p.background_data()['game_results']
+        self.assertEqual({'games': 2,
+                          'best_sc_count': 19,
+                          'solos': {'count': 1, 'percentage': 50.0},
+                          'eliminations': {'count': 1, 'percentage': 50.0},
+                          'board_tops': {'count': 1, 'percentage': 50.0},
+                          'top_board_games': 0},
+                         game_results['total'])
+        self.assertEqual({'games': 1,
+                          'best_sc_count': 19,
+                          'solos': {'count': 1, 'percentage': 100.0},
+                          'eliminations': {'count': 0, 'percentage': 0.0},
+                          'board_tops': {'count': 1, 'percentage': 100.0},
+                          'top_board_games': 0},
+                         game_results[str(self.austria)])
+        self.assertEqual({'games': 1,
+                          'best_sc_count': 0,
+                          'solos': {'count': 0, 'percentage': 0.0},
+                          'eliminations': {'count': 1, 'percentage': 100.0},
+                          'board_tops': {'count': 0, 'percentage': 0.0},
+                          'top_board_games': 0},
+                         game_results[str(self.germany)])
         bg = p.background()
         self.assertIn('Joe Bloggs has played 2 event games.', bg)
         self.assertIn('Joe Bloggs has finished with as many as 19 centres in event games.', bg)
         self.assertIn('Joe Bloggs has soloed 1 of 2 event games played (50.00%).', bg)
         self.assertIn('Joe Bloggs was eliminated in 1 of 2 event games played (50.00%).', bg)
         self.assertIn('Joe Bloggs topped the board in 1 of 2 event games played (50.00%).', bg)
+        best_sc_bg = p.background(mask=MASK_BEST_SC_COUNT)
+        self.assertIn('Joe Bloggs has finished with as many as 19 centres in event games.', best_sc_bg)
+        self.assertNotIn('Joe Bloggs has played 2 event games.', best_sc_bg)
         # Cleanup
         p.delete()
 

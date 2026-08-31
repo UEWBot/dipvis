@@ -254,6 +254,33 @@ class Player(models.Model):
                                 'year': latest_win.date.year}
         return data
 
+    def _game_result_data(self, ranking_set):
+        """Structured data for game result aggregates."""
+        results = list(self.playergameresult_set.filter(event_ranking__in=ranking_set).select_related('power'))
+
+        def aggregate(games):
+            game_count = len(games)
+            solos = sum(1 for game in games if game.final_sc_count is not None and game.final_sc_count >= WINNING_SCS)
+            eliminations = sum(1 for game in games if game.year_eliminated is not None or game.final_sc_count == 0)
+            board_tops = sum(1 for game in games if game.result == GameResults.WIN or game.position == 1)
+            top_board_games = sum(1 for game in games if game.is_top_board)
+            return {'games': game_count,
+                    'best_sc_count': max((game.final_sc_count for game in games
+                                          if game.final_sc_count is not None),
+                                         default=None),
+                    'solos': {'count': solos,
+                              'percentage': 100.0 * float(solos) / float(game_count) if game_count else None},
+                    'eliminations': {'count': eliminations,
+                                     'percentage': 100.0 * float(eliminations) / float(game_count) if game_count else None},
+                    'board_tops': {'count': board_tops,
+                                   'percentage': 100.0 * float(board_tops) / float(game_count) if game_count else None},
+                    'top_board_games': top_board_games}
+
+        data = {'total': aggregate(results)}
+        for power in GreatPower.objects.all():
+            data[str(power)] = aggregate([game for game in results if game.power_id == power.pk])
+        return data
+
     def _awards(self, ranking_set, power=None, mask=MASK_ALL_BG):
         """List of all awards won, optionally as a specified power."""
         results = []
@@ -376,13 +403,13 @@ class Player(models.Model):
         List of tournament game achievements, optionally with one Great Power.
         """
         results = []
-        results_set = self.playergameresult_set.filter(event_ranking__in=ranking_set)
         if power is not None:
             c_str = _(u' as %(power)s') % {'power': power}
-            results_set = results_set.filter(power=power)
         else:
             c_str = u''
-        games = results_set.count()
+        all_game_result_data = self._game_result_data(ranking_set)
+        game_result_data = all_game_result_data[str(power)] if power is not None else all_game_result_data['total']
+        games = game_result_data['games']
         if games == 0:
             if (mask & MASK_GAMES_PLAYED) != 0:
                 results.append(_(u'%(name)s has never played%(power)s in %(an_event)s before.')
@@ -399,7 +426,7 @@ class Player(models.Model):
                                   'power': c_str,
                                   'event': event})
         if (mask & MASK_BEST_SC_COUNT) != 0:
-            best = results_set.aggregate(Max('final_sc_count'))['final_sc_count__max']
+            best = game_result_data['best_sc_count']
             # SC count is optional
             if best:
                 results.append(_(u'%(name)s has finished with as many as %(dots)d centres%(power)s in %(event)s games.')
@@ -408,7 +435,7 @@ class Player(models.Model):
                                   'power': c_str,
                                   'event': event})
         if (mask & MASK_SOLO_COUNT) != 0:
-            solos = results_set.filter(final_sc_count__gte=WINNING_SCS).count()
+            solos = game_result_data['solos']['count']
             if solos > 0:
                 msg = ngettext('%(name)s has soloed %(solos)d of %(games)d %(event)s game played%(power)s (%(percentage).2f%%).',
                                '%(name)s has soloed %(solos)d of %(games)d %(event)s games played%(power)s (%(percentage).2f%%).',
@@ -418,16 +445,14 @@ class Player(models.Model):
                                       'games': games,
                                       'power': c_str,
                                       'event': event,
-                                      'percentage': 100.0 * float(solos) / float(games)})
+                                      'percentage': game_result_data['solos']['percentage']})
             else:
                 results.append(_(u'%(name)s has yet to solo%(power)s at %(an_event)s.')
                                % {'name': self,
                                   'power': c_str,
                                   'an_event': an_event})
         if (mask & MASK_ELIM_COUNT) != 0:
-            query = Q(year_eliminated__isnull=False) | Q(final_sc_count=0)
-            eliminations_set = results_set.filter(query)
-            eliminations = eliminations_set.count()
+            eliminations = game_result_data['eliminations']['count']
             if eliminations > 0:
                 msg = ngettext('%(name)s was eliminated in %(deaths)d of %(games)d %(event)s game played%(power)s (%(percentage).2f%%).',
                                '%(name)s was eliminated in %(deaths)d of %(games)d %(event)s games played%(power)s (%(percentage).2f%%).',
@@ -437,15 +462,14 @@ class Player(models.Model):
                                       'games': games,
                                       'power': c_str,
                                       'event': event,
-                                      'percentage': 100.0 * float(eliminations) / float(games)})
+                                      'percentage': game_result_data['eliminations']['percentage']})
             else:
                 results.append(_(u'%(name)s has yet to be eliminated%(power)s in %(an_event)s.')
                                % {'name': self,
                                   'power': c_str,
                                   'an_event': an_event})
         if (mask & MASK_BOARDS_TOPPED) != 0:
-            query = Q(result=GameResults.WIN) | Q(position=1)
-            board_tops = results_set.filter(query).count()
+            board_tops = game_result_data['board_tops']['count']
             if board_tops > 0:
                 msg = ngettext('%(name)s topped the board in %(tops)d of %(games)d %(event)s game played%(power)s (%(percentage).2f%%).',
                                '%(name)s topped the board in %(tops)d of %(games)d %(event)s games played%(power)s (%(percentage).2f%%).',
@@ -455,14 +479,14 @@ class Player(models.Model):
                                       'games': games,
                                       'power': c_str,
                                       'event': event,
-                                      'percentage': 100.0 * float(board_tops) / float(games)})
+                                      'percentage': game_result_data['board_tops']['percentage']})
             else:
                 results.append(_(u'%(name)s has yet to top the board%(power)s at %(an_event)s.')
                                % {'name': self,
                                   'power': c_str,
                                   'an_event': an_event})
         if (mask & MASK_TOP_BOARDS_PLAYED) != 0:
-            top_board_games = results_set.filter(is_top_board=True).count()
+            top_board_games = game_result_data['top_board_games']
             if top_board_games > 0:
                 msg = ngettext('%(name)s has played %(count)d top board game%(power)s.',
                                '%(name)s has played %(count)d top board games%(power)s.',
@@ -490,11 +514,12 @@ class Player(models.Model):
         return (self._results(ranking_set=ranking_set, an_event=an_event, event=event, events=events, power=power, mask=mask) +
                 self._awards(ranking_set=ranking_set, power=power, mask=mask))
 
-    def background_data(self, power=None, event_kind=None):
+    def background_data(self, event_kind=None):
         """
         Structured background data for the player.
         """
         ranking_set = self._ranking_queryset(event_kind)
         return {'titles': self._title_data(),
                 'event_rankings': self._event_ranking_data(ranking_set),
+                'game_results': self._game_result_data(ranking_set),
                 'rankings': self._ranking_data()}
