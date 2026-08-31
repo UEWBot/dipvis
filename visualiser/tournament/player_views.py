@@ -25,7 +25,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.http import HttpResponseRedirect
+from django.http import Http404, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone as django_timezone
@@ -68,6 +68,14 @@ def player_detail(request, pk):
                   'players/detail.html',
                   {'player': player,
                    'form': form})
+
+
+def api_background(request, player_id, version):
+    """JSON API to retrieve structured player background data."""
+    if version != 1:
+        raise Http404(f'Invalid API version {version}')
+    player = get_object_or_404(Player, pk=player_id)
+    return JsonResponse(player.background_data())
 
 
 def player_versus(request, pk1, pk2):

@@ -16,8 +16,9 @@
 
 from django.urls import include, path, register_converter
 
-from tournament import (circuit_views, game_views, round_views, series_views,
-                        tournament_player_views, tournament_views)
+from tournament import (circuit_views, game_views, player_views, round_views,
+                        series_views, tournament_player_views,
+                        tournament_views)
 from tournament.diplomacy import FIRST_YEAR
 
 
@@ -276,6 +277,8 @@ tournament_patterns = [
 ]
 
 api_patterns = [
+    path('player/<int:player_id>/background/', player_views.api_background,
+         name='api_player_background'),
     path('tournament/<int:tournament_id>/', tournament_views.api,
          name='api_tournament'),
     path('tournament/<int:tournament_id>/game/<str:game_name>/', game_views.api,

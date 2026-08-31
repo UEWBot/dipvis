@@ -14,7 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from datetime import date
+from datetime import date, datetime
+from datetime import timezone as datetime_timezone
 from urllib.parse import urlencode
 from unittest.mock import patch
 
@@ -30,7 +31,9 @@ from django.urls import reverse
 from tournament.circuits import Circuit, CircuitPlayer
 from tournament.diplomacy import GreatPower
 from tournament.models import DrawSecrecy, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Tournament, TournamentPlayer
-from tournament.players import Player, PlayerEventRanking, PlayerGameResult, WDDPlayer
+from tournament.players import (Player, PlayerAward, PlayerEventRanking,
+                                PlayerGameResult, PlayerRanking, PlayerTitle,
+                                WDDPlayer)
 
 
 class PlayerViewTests(TestCase):
@@ -114,6 +117,69 @@ class PlayerViewTests(TestCase):
     def test_detail_invalid_player(self):
         response = self.client.get(reverse('player_detail',
                                            args=(self.INVALID_P_PK,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_api_background(self):
+        event = PlayerEventRanking.objects.create(player=self.p1,
+                                                  event_name='Background Open',
+                                                  position=1,
+                                                  date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+        PlayerTitle.objects.create(player=self.p1,
+                                   title='World Champion',
+                                   year=2024)
+        PlayerRanking.objects.create(player=self.p1,
+                                     system='WPE7',
+                                     score=9.5,
+                                     international_rank='7',
+                                     national_rank='2')
+        austria = GreatPower.objects.get(abbreviation='A')
+        PlayerGameResult.objects.create(event_ranking=event,
+                                        round_number=1,
+                                        game_number=1,
+                                        player=self.p1,
+                                        power=austria,
+                                        position=1,
+                                        final_sc_count=18)
+        PlayerAward.objects.create(player=self.p1,
+                                   event_ranking=event,
+                                   name='Best Austria',
+                                   power=austria,
+                                   final_sc_count=18)
+        PlayerAward.objects.create(player=self.p1,
+                                   event_ranking=event,
+                                   name='Best Attitude')
+
+        response = self.client.get(reverse('api_player_background', args=(1, self.p1.pk,)),
+                                   secure=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
+        data = response.json()
+        self.assertEqual([{'title': 'World Champion', 'years': [2024]}],
+                         data['titles'])
+        self.assertEqual(1, data['event_rankings']['played'])
+        self.assertEqual(1, data['event_rankings']['wins'])
+        self.assertEqual(1, data['game_results']['total']['games'])
+        self.assertEqual(1, data['game_results'][str(austria)]['board_tops']['count'])
+        self.assertEqual(1, data['awards']['best_country'][str(austria)]['count'])
+        self.assertEqual([{'name': 'Best Attitude',
+                           'event': 'Background Open',
+                           'year': 2024}],
+                         data['awards']['other'])
+        self.assertEqual('WPE7', data['rankings'][0]['system'])
+
+        # Cleanup
+        self.p1._clear_background()
+
+    def test_api_background_invalid_player(self):
+        response = self.client.get(reverse('api_player_background',
+                                           args=(1, self.INVALID_P_PK,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_api_background_invalid_version(self):
+        response = self.client.get(reverse('api_player_background', args=(2, self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
 
