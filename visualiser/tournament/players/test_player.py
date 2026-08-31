@@ -23,7 +23,8 @@ from django.test import TestCase, tag
 from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
-from tournament.players import (MASK_ALL_BG, MASK_BEST_SC_COUNT,
+from tournament.players import (MASK_ALL_BG, MASK_BEST_COUNTRY,
+                                MASK_BEST_SC_COUNT,
                                 MASK_BEST_TOURNEY_RESULT, MASK_BOARDS_TOPPED,
                                 MASK_FIRST_TOURNEY, MASK_GAMES_PLAYED,
                                 MASK_LAST_TOURNEY, MASK_OTHER_AWARDS,
@@ -890,10 +891,51 @@ class PlayerTests(TestCase):
                                    name='Best Germany',
                                    power=self.germany,
                                    final_sc_count=12)
+        awards = p.background_data()['awards']
+        self.assertEqual({'count': 2,
+                          'first': {'name': 'Best Germany',
+                                    'event': 'Some tournament',
+                                    'year': yesterday.year,
+                                    'final_sc_count': 10},
+                          'latest': {'name': 'Best Germany',
+                                     'event': 'Another tournament',
+                                     'year': today.year,
+                                     'final_sc_count': 12}},
+                         awards['best_country'][str(self.germany)])
+        self.assertEqual({'count': 0,
+                          'first': None,
+                          'latest': None},
+                         awards['best_country'][str(self.austria)])
         bg = p.background()
         self.assertIn('Joe Bloggs has won Best Germany 2 times.', bg)
         self.assertIn(f'Joe Bloggs first won Best Germany in {yesterday.year} at Some tournament with 10 Supply Centres.', bg)
         self.assertIn(f'Joe Bloggs most recently won Best Germany in {today.year} at Another tournament with 12 Supply Centres.', bg)
+        best_country_bg = p.background(mask=MASK_BEST_COUNTRY)
+        self.assertIn('Joe Bloggs has won Best Germany 2 times.', best_country_bg)
+        self.assertNotIn('Joe Bloggs won Nicest Person at Some tournament.', best_country_bg)
+        # Cleanup
+        p.delete()
+
+    def test_player_background_data_other_awards(self):
+        p = Player.objects.create(first_name='Joe',
+                                  last_name='Bloggs')
+        per = PlayerEventRanking.objects.create(player=p,
+                                                event_name='Some tournament',
+                                                position=3,
+                                                date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+        PlayerAward.objects.create(player=p,
+                                   event_ranking=per,
+                                   name='Nicest Person')
+
+        awards = p.background_data()['awards']
+        self.assertEqual([{'name': 'Nicest Person',
+                           'event': 'Some tournament',
+                           'year': 2024}],
+                         awards['other'])
+        other_awards_bg = p.background(mask=MASK_OTHER_AWARDS)
+        self.assertIn('Joe Bloggs won Nicest Person at Some tournament.', other_awards_bg)
+        self.assertNotIn('Joe Bloggs has never won Best Germany.', other_awards_bg)
+
         # Cleanup
         p.delete()
 

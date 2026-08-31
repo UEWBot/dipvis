@@ -281,20 +281,43 @@ class Player(models.Model):
             data[str(power)] = aggregate([game for game in results if game.power_id == power.pk])
         return data
 
+    def _award_data(self, ranking_set):
+        """Structured data for awards."""
+        award_set = list(self.playeraward_set.filter(event_ranking__in=ranking_set)
+                         .select_related('event_ranking', 'power')
+                         .order_by('event_ranking__date'))
+
+        def award_details(award):
+            return {'name': award.name,
+                    'event': award.event_ranking.event_name,
+                    'year': award.event_ranking.date.year,
+                    'final_sc_count': award.final_sc_count}
+
+        best_country = {}
+        for power in GreatPower.objects.all():
+            power_awards = [award for award in award_set if award.power_id == power.pk]
+            best_country[str(power)] = {'count': len(power_awards),
+                                        'first': award_details(power_awards[0]) if power_awards else None,
+                                        'latest': award_details(power_awards[-1]) if power_awards else None}
+        return {'best_country': best_country,
+                'other': [{'name': award.name,
+                           'event': award.event_ranking.event_name,
+                           'year': award.event_ranking.date.year}
+                          for award in award_set if award.power_id is None]}
+
     def _awards(self, ranking_set, power=None, mask=MASK_ALL_BG):
         """List of all awards won, optionally as a specified power."""
         results = []
-        award_set = self.playeraward_set.filter(event_ranking__in=ranking_set).order_by('event_ranking__date')
+        award_data = self._award_data(ranking_set)
         powers = GreatPower.objects.all()
         if power is not None:
-            award_set = award_set.filter(power=power)
             powers = [power]
         if (mask & MASK_BEST_COUNTRY) != 0:
             # Look at each of the interesting powers
             for p in powers:
                 # Find all the awards related to the power of interest
-                power_award_set = award_set.filter(power=p)
-                award_count = power_award_set.count()
+                power_awards = award_data['best_country'][str(p)]
+                award_count = power_awards['count']
                 if award_count == 0:
                     results.append(_('%(name)s has never won Best %(power)s.')
                                    % {'name': self, 'power': p})
@@ -306,30 +329,30 @@ class Player(models.Model):
                     results.append(msg % {'name': self,
                                           'power': p,
                                           'count': award_count})
-                a = power_award_set.first()
+                a = power_awards['first']
                 s = _('%(name)s first won %(award)s in %(year)d at %(event)s') % {'name': self,
-                                                                                  'award': a.name,
-                                                                                  'year': a.event_ranking.date.year,
-                                                                                  'event': a.event_ranking.event_name}
-                if a.final_sc_count:
-                    s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
+                                                                                  'award': a['name'],
+                                                                                  'year': a['year'],
+                                                                                  'event': a['event']}
+                if a['final_sc_count']:
+                    s += _(' with %(dots)d Supply Centres') % {'dots': a['final_sc_count']}
                 s += '.'
                 results.append(s)
-                a = power_award_set.last()
+                a = power_awards['latest']
                 s = _('%(name)s most recently won %(award)s in %(year)d at %(event)s') % {'name': self,
-                                                                                          'award': a.name,
-                                                                                          'year': a.event_ranking.date.year,
-                                                                                          'event': a.event_ranking.event_name}
-                if a.final_sc_count:
-                    s += _(' with %(dots)d Supply Centres') % {'dots': a.final_sc_count}
+                                                                                          'award': a['name'],
+                                                                                          'year': a['year'],
+                                                                                          'event': a['event']}
+                if a['final_sc_count']:
+                    s += _(' with %(dots)d Supply Centres') % {'dots': a['final_sc_count']}
                 s += '.'
                 results.append(s)
-        if (mask & MASK_OTHER_AWARDS) != 0:
-            for a in award_set.filter(power=None):
+        if (mask & MASK_OTHER_AWARDS) != 0 and power is None:
+            for a in award_data['other']:
                 results.append(_('%(name)s won %(award)s at %(event)s.')
                                % {'name': self,
-                                  'award': a.name,
-                                  'event': a.event_ranking.event_name})
+                                  'award': a['name'],
+                                  'event': a['event']})
         return results
 
     def _titles(self, mask=MASK_ALL_BG):
@@ -522,4 +545,5 @@ class Player(models.Model):
         return {'titles': self._title_data(),
                 'event_rankings': self._event_ranking_data(ranking_set),
                 'game_results': self._game_result_data(ranking_set),
+                'awards': self._award_data(ranking_set),
                 'rankings': self._ranking_data()}
