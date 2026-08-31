@@ -225,6 +225,35 @@ class Player(models.Model):
             qs = qs.filter(event_kind=event_kind)
         return qs
 
+    def _event_ranking_data(self, ranking_set):
+        """Structured data for event ranking aggregates."""
+        ranking_set = ranking_set.order_by('date')
+        plays = ranking_set.count()
+        wins_set = ranking_set.filter(position=1)
+        wins = wins_set.count()
+        first = ranking_set.first() if plays else None
+        latest = ranking_set.last() if plays else None
+        data = {'played': plays,
+                'first': ({'event_name': first.event_name,
+                           'year': first.date.year}
+                          if first else None),
+                'latest': ({'event_name': latest.event_name,
+                            'year': latest.date.year}
+                           if latest else None),
+                'best_position': ranking_set.aggregate(Min('position'))['position__min'] if plays else None,
+                'wins': wins,
+                'percentage_won': 100.0 * float(wins) / float(plays) if plays else None,
+                'first_win': None,
+                'last_win': None}
+        if wins:
+            first_win = wins_set.first()
+            latest_win = wins_set.last()
+            data['first_win'] = {'event_name': first_win.event_name,
+                                 'year': first_win.date.year}
+            data['last_win'] = {'event_name': latest_win.event_name,
+                                'year': latest_win.date.year}
+        return data
+
     def _awards(self, ranking_set, power=None, mask=MASK_ALL_BG):
         """List of all awards won, optionally as a specified power."""
         results = []
@@ -288,14 +317,14 @@ class Player(models.Model):
     def _tourney_rankings(self, ranking_set, an_event, event, events, mask=MASK_ALL_BG):
         """List of tournament rankings."""
         results = []
-        ranking_set = ranking_set.order_by('date')
-        plays = ranking_set.count()
-        if plays == 0:
+        event_ranking_data = self._event_ranking_data(ranking_set)
+        if event_ranking_data.get('played') == 0:
             if (mask & MASK_TOURNEY_COUNT) != 0:
                 results.append(_(u'This is the first %(event)s %(name)s has competed in.')
                                % {'name': self, 'event': event})
             return results
-        if (mask & MASK_TOURNEY_COUNT) != 0:
+        if (mask & MASK_TOURNEY_COUNT) != 0 and 'played' in event_ranking_data:
+            plays = event_ranking_data['played']
             results.append(ngettext('%(name)s has competed in one %(event)s.',
                                     '%(name)s has competed in %(number)d %(events)s.',
                                     plays)
@@ -303,47 +332,43 @@ class Player(models.Model):
                               'number': plays,
                               'event': event,
                               'events': events})
-        if (mask & MASK_FIRST_TOURNEY) != 0:
-            first = ranking_set.first()
+        if (mask & MASK_FIRST_TOURNEY) != 0 and event_ranking_data.get('first') is not None:
+            first = event_ranking_data['first']
             results.append(_(u'%(name)s first competed in %(an_event)s (%(event_name)s) in %(year)d.')
                            % {'name': self,
-                              'event_name': first.event_name,
-                              'year': first.date.year,
+                              'event_name': first['event_name'],
+                              'year': first['year'],
                               'an_event': an_event})
-        if (mask & MASK_LAST_TOURNEY) != 0:
-            last = ranking_set.last()
+        if (mask & MASK_LAST_TOURNEY) != 0 and event_ranking_data.get('latest') is not None:
+            latest = event_ranking_data['latest']
             results.append(_(u'%(name)s most recently competed in %(an_event)s (%(event_name)s) in %(year)d.')
                            % {'name': self,
-                              'event_name': last.event_name,
-                              'year': last.date.year,
+                              'event_name': latest['event_name'],
+                              'year': latest['year'],
                               'an_event': an_event})
-        if (mask & MASK_BEST_TOURNEY_RESULT) != 0:
-            wins_set = ranking_set.filter(position=1)
-            wins = wins_set.count()
-            if wins > 0:
-                results.append(_(u'%(name)s has won %(wins)d of %(plays)d %(events)s (%(percentage).2f%%).')
-                               % {'name': self,
-                                  'plays': plays,
-                                  'percentage': 100.0 * float(wins) / float(plays),
-                                  'wins': wins,
-                                  'events': events})
-                w = wins_set.first()
-                results.append(_('%(name)s won their first %(event)s (%(event_name)s) in %(year)d.')
-                               % {'name': self,
-                                  'event_name': w.event_name,
-                                  'year': w.date.year,
-                                  'event': event})
-                w = wins_set.last()
-                results.append(_('%(name)s most recently won %(an_event)s (%(event_name)s) in %(year)d.')
-                               % {'name': self,
-                                  'event_name': w.event_name,
-                                  'year': w.date.year,
-                                  'an_event': an_event})
-            else:
-                best = ranking_set.aggregate(Min('position'))['position__min']
-                pos = position_str(best)
-                results.append(_(u'The best %(event)s result for %(name)s is %(position)s.')
-                               % {'name': self, 'position': pos, 'event': event})
+        if (mask & MASK_BEST_TOURNEY_RESULT) != 0 and event_ranking_data.get('wins', 0) > 0:
+            results.append(_(u'%(name)s has won %(wins)d of %(plays)d %(events)s (%(percentage).2f%%).')
+                           % {'name': self,
+                              'plays': event_ranking_data['played'],
+                              'percentage': event_ranking_data['percentage_won'],
+                              'wins': event_ranking_data['wins'],
+                              'events': events})
+            results.append(_('%(name)s won their first %(event)s (%(event_name)s) in %(year)d.')
+                           % {'name': self,
+                              'event_name': event_ranking_data['first_win']['event_name'],
+                              'year': event_ranking_data['first_win']['year'],
+                              'event': event})
+            results.append(_('%(name)s most recently won %(an_event)s (%(event_name)s) in %(year)d.')
+                           % {'name': self,
+                              'event_name': event_ranking_data['last_win']['event_name'],
+                              'year': event_ranking_data['last_win']['year'],
+                              'an_event': an_event})
+        elif ((mask & MASK_BEST_TOURNEY_RESULT) != 0 and
+              'wins' in event_ranking_data and
+              event_ranking_data['best_position'] is not None):
+            pos = position_str(event_ranking_data['best_position'])
+            results.append(_(u'The best %(event)s result for %(name)s is %(position)s.')
+                           % {'name': self, 'position': pos, 'event': event})
         return results
 
     def _results(self, ranking_set, an_event, event, events, power=None, mask=MASK_ALL_BG):
@@ -469,5 +494,7 @@ class Player(models.Model):
         """
         Structured background data for the player.
         """
+        ranking_set = self._ranking_queryset(event_kind)
         return {'titles': self._title_data(),
-            'rankings': self._ranking_data()}
+                'event_rankings': self._event_ranking_data(ranking_set),
+                'rankings': self._ranking_data()}

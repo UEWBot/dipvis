@@ -23,9 +23,11 @@ from django.test import TestCase, tag
 from tournament.diplomacy import GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                DrawSecrecy, Tournament, TournamentPlayer)
-from tournament.players import (MASK_ALL_BG, MASK_BOARDS_TOPPED,
-                                MASK_GAMES_PLAYED, MASK_OTHER_AWARDS,
-                                MASK_RANKINGS, MASK_TITLES, MASK_TOURNEY_COUNT,
+from tournament.players import (MASK_ALL_BG, MASK_BEST_TOURNEY_RESULT,
+                                MASK_BOARDS_TOPPED, MASK_FIRST_TOURNEY,
+                                MASK_GAMES_PLAYED, MASK_LAST_TOURNEY,
+                                MASK_OTHER_AWARDS, MASK_RANKINGS, MASK_TITLES,
+                                MASK_TOURNEY_COUNT,
                                 MASK_TOP_BOARDS_PLAYED, EventKinds,
                                 InvalidWDRId,
                                 PlayerAward, PlayerEventRanking,
@@ -118,6 +120,106 @@ class PlayerTests(TestCase):
         self.assertIn('Unknown Player is ranked 8 internationally in the Who Chris Likes Most.',
                       p.background(mask=MASK_RANKINGS))
         self.assertEqual([], p.background(mask=0))
+
+        # Cleanup
+        p.delete()
+
+    def test_player_background_data_event_rankings(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='Alpha',
+                                          position=3,
+                                          date=datetime(day=1, month=6, year=1994, tzinfo=datetime_timezone.utc))
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='Bravo',
+                                          position=1,
+                                          date=datetime(day=1, month=6, year=2004, tzinfo=datetime_timezone.utc))
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='Charlie',
+                                          position=1,
+                                          date=datetime(day=1, month=6, year=2014, tzinfo=datetime_timezone.utc))
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='Delta',
+                                          position=5,
+                                          date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+
+        self.assertEqual({'played': 4,
+                  'first': {'event_name': 'Alpha', 'year': 1994},
+                  'latest': {'event_name': 'Delta', 'year': 2024},
+                  'best_position': 1,
+                  'wins': 2,
+                  'first_win': {'event_name': 'Bravo', 'year': 2004},
+                  'last_win': {'event_name': 'Charlie', 'year': 2014},
+                  'percentage_won': 50.0},
+                 p.background_data()['event_rankings'])
+        self.assertEqual([], p.background(mask=0))
+        self.assertIn('Unknown Player has won 2 of 4 events (50.00%).',
+                      p.background())
+        best_result_bg = p.background(mask=MASK_BEST_TOURNEY_RESULT)
+        self.assertIn('Unknown Player has won 2 of 4 events (50.00%).',
+                             best_result_bg)
+        self.assertNotIn('Unknown Player has competed in 4 events.',
+                                 best_result_bg)
+        first_event_bg = p.background(mask=MASK_FIRST_TOURNEY)
+        self.assertIn('Unknown Player first competed in an event (Alpha) in 1994.',
+                             first_event_bg)
+        self.assertNotIn('Unknown Player has competed in 4 events.',
+                                 first_event_bg)
+        latest_event_bg = p.background(mask=MASK_LAST_TOURNEY)
+        self.assertIn('Unknown Player most recently competed in an event (Delta) in 2024.',
+                             latest_event_bg)
+        self.assertNotIn('Unknown Player has competed in 4 events.',
+                                 latest_event_bg)
+
+        # Cleanup
+        p.delete()
+
+    def test_player_background_data_event_rankings_no_wins(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='Alpha',
+                                          position=3,
+                                          date=datetime(day=1, month=6, year=1994, tzinfo=datetime_timezone.utc))
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='Bravo',
+                                          position=2,
+                                          date=datetime(day=1, month=6, year=2004, tzinfo=datetime_timezone.utc))
+
+        self.assertEqual({'played': 2,
+                  'first': {'event_name': 'Alpha', 'year': 1994},
+                          'latest': {'event_name': 'Bravo', 'year': 2004},
+                          'best_position': 2,
+                          'wins': 0,
+                          'first_win': None,
+                          'last_win': None,
+                          'percentage_won': 0.0},
+                         p.background_data()['event_rankings'])
+        self.assertIn('The best event result for Unknown Player is 2nd.',
+                      p.background())
+        best_result_bg = p.background(mask=MASK_BEST_TOURNEY_RESULT)
+        self.assertIn('The best event result for Unknown Player is 2nd.',
+                  best_result_bg)
+        self.assertNotIn('Unknown Player has competed in 2 events.',
+                 best_result_bg)
+
+        # Cleanup
+        p.delete()
+
+    def test_player_background_data_event_rankings_no_events(self):
+        p = Player.objects.create(first_name='Unknown', last_name='Player')
+
+        self.assertEqual({'played': 0,
+                          'first': None,
+                          'latest': None,
+                          'best_position': None,
+                          'wins': 0,
+                          'first_win': None,
+                          'last_win': None,
+                          'percentage_won': None},
+                         p.background_data()['event_rankings'])
+        self.assertIn('This is the first event Unknown Player has competed in.',
+                      p.background())
+        self.assertEqual([], p.background(mask=MASK_BEST_TOURNEY_RESULT))
 
         # Cleanup
         p.delete()
