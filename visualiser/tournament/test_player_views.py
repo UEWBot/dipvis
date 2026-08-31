@@ -31,7 +31,7 @@ from django.urls import reverse
 from tournament.circuits import Circuit, CircuitPlayer
 from tournament.diplomacy import GreatPower
 from tournament.models import DrawSecrecy, R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Tournament, TournamentPlayer
-from tournament.players import (Player, PlayerAward, PlayerEventRanking,
+from tournament.players import (EventKinds, Player, PlayerAward, PlayerEventRanking,
                                 PlayerGameResult, PlayerRanking, PlayerTitle,
                                 WDDPlayer)
 
@@ -124,7 +124,13 @@ class PlayerViewTests(TestCase):
         event = PlayerEventRanking.objects.create(player=self.p1,
                                                   event_name='Background Open',
                                                   position=1,
+                                                  event_kind=EventKinds.TOURNAMENT,
                                                   date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+        league_event = PlayerEventRanking.objects.create(player=self.p1,
+                                                         event_name='Background League',
+                                                         position=2,
+                                                         event_kind=EventKinds.LEAGUE,
+                                                         date=datetime(day=1, month=7, year=2024, tzinfo=datetime_timezone.utc))
         PlayerTitle.objects.create(player=self.p1,
                                    title='World Champion',
                                    year=2024)
@@ -141,6 +147,13 @@ class PlayerViewTests(TestCase):
                                         power=austria,
                                         position=1,
                                         final_sc_count=18)
+        PlayerGameResult.objects.create(event_ranking=league_event,
+                                        round_number=1,
+                                        game_number=2,
+                                        player=self.p1,
+                                        power=austria,
+                                        position=2,
+                                        final_sc_count=10)
         PlayerAward.objects.create(player=self.p1,
                                    event_ranking=event,
                                    name='Best Austria',
@@ -158,9 +171,9 @@ class PlayerViewTests(TestCase):
         data = response.json()
         self.assertEqual([{'title': 'World Champion', 'years': [2024]}],
                          data['titles'])
-        self.assertEqual(1, data['event_rankings']['played'])
+        self.assertEqual(2, data['event_rankings']['played'])
         self.assertEqual(1, data['event_rankings']['wins'])
-        self.assertEqual(1, data['game_results']['total']['games'])
+        self.assertEqual(2, data['game_results']['total']['games'])
         self.assertEqual(1, data['game_results'][str(austria)]['board_tops']['count'])
         self.assertEqual(1, data['awards']['best_country'][str(austria)]['count'])
         self.assertEqual([{'name': 'Best Attitude',
@@ -168,6 +181,52 @@ class PlayerViewTests(TestCase):
                            'year': 2024}],
                          data['awards']['other'])
         self.assertEqual('WPE7', data['rankings'][0]['system'])
+
+        # Cleanup
+        self.p1._clear_background()
+
+    def test_api_background_event_kind_filter(self):
+        tournament_event = PlayerEventRanking.objects.create(player=self.p1,
+                                                            event_name='Background Open',
+                                                            position=1,
+                                                            event_kind=EventKinds.TOURNAMENT,
+                                                            date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
+        league_event = PlayerEventRanking.objects.create(player=self.p1,
+                                                         event_name='Background League',
+                                                         position=2,
+                                                         event_kind=EventKinds.LEAGUE,
+                                                         date=datetime(day=1, month=7, year=2024, tzinfo=datetime_timezone.utc))
+        austria = GreatPower.objects.get(abbreviation='A')
+        PlayerGameResult.objects.create(event_ranking=tournament_event,
+                                        round_number=1,
+                                        game_number=1,
+                                        player=self.p1,
+                                        power=austria,
+                                        position=1)
+        PlayerGameResult.objects.create(event_ranking=league_event,
+                                        round_number=1,
+                                        game_number=2,
+                                        player=self.p1,
+                                        power=austria,
+                                        position=2)
+
+        response = self.client.get(reverse('api_player_background', args=(1, self.p1.pk,)) + '?event_kind=tournament',
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        tournament_data = response.json()
+        self.assertEqual(1, tournament_data['event_rankings']['played'])
+        self.assertEqual({'event_name': 'Background Open', 'year': 2024},
+                         tournament_data['event_rankings']['first'])
+        self.assertEqual(1, tournament_data['game_results']['total']['games'])
+
+        response = self.client.get(reverse('api_player_background', args=(1, self.p1.pk,)) + '?event_kind=league',
+                                   secure=True)
+        self.assertEqual(response.status_code, 200)
+        league_data = response.json()
+        self.assertEqual(1, league_data['event_rankings']['played'])
+        self.assertEqual({'event_name': 'Background League', 'year': 2024},
+                         league_data['event_rankings']['first'])
+        self.assertEqual(1, league_data['game_results']['total']['games'])
 
         # Cleanup
         self.p1._clear_background()
@@ -182,6 +241,11 @@ class PlayerViewTests(TestCase):
         response = self.client.get(reverse('api_player_background', args=(2, self.p1.pk,)),
                                    secure=True)
         self.assertEqual(response.status_code, 404)
+
+    def test_api_background_invalid_event_kind(self):
+        response = self.client.get(reverse('api_player_background', args=(1, self.p1.pk,)) + '?event_kind=bogus',
+                                   secure=True)
+        self.assertEqual(response.status_code, 400)
 
     def test_detail(self):
         """Don't have to be logged in to see a player"""

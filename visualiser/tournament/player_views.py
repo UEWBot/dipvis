@@ -25,14 +25,14 @@ from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.http import Http404, HttpResponseRedirect, JsonResponse
+from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.views import generic
 
 from tournament.forms import PlayerForm
-from tournament.players import (Player, PlayerGameResult, WDDPlayer,
+from tournament.players import (EventKinds, Player, PlayerGameResult, WDDPlayer,
                                 add_player_bg)
 from tournament.wdd import validate_wdd_player_id
 from tournament.wdr import validate_wdr_player_id
@@ -70,12 +70,29 @@ def player_detail(request, pk):
                    'form': form})
 
 
+def _event_kind_from_request(request):
+    value = request.GET.get('event_kind')
+    if value in (None, '', 'all'):
+        return None
+    by_name = {'tournament': EventKinds.TOURNAMENT,
+               'league': EventKinds.LEAGUE,
+               'circuit': EventKinds.CIRCUIT,
+               'other': EventKinds.OTHER}
+    if value.lower() in by_name:
+        return by_name[value.lower()]
+    by_value = {event_kind.value.lower(): event_kind for event_kind in EventKinds}
+    return by_value.get(value.lower())
+
+
 def api_background(request, player_id, version):
     """JSON API to retrieve structured player background data."""
     if version != 1:
         raise Http404(f'Invalid API version {version}')
+    event_kind = _event_kind_from_request(request)
+    if event_kind is None and request.GET.get('event_kind') not in (None, '', 'all'):
+        return HttpResponseBadRequest('Invalid event_kind')
     player = get_object_or_404(Player, pk=player_id)
-    return JsonResponse(player.background_data())
+    return JsonResponse(player.background_data(event_kind=event_kind))
 
 
 def player_versus(request, pk1, pk2):
