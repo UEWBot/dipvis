@@ -51,7 +51,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, R_SCORING_SYSTEMS,
                                validate_round_scoring_system,
                                validate_tournament_scoring_system,
                                validate_vote_count)
-from tournament.players import EventKinds, MASK_ALL_BG, Player
+from tournament.players import EventKinds, MASK_ALL_BG, MASK_SERIES_WINS, Player
 
 HOURS_8 = timedelta(hours=8)
 HOURS_9 = timedelta(hours=9)
@@ -5255,6 +5255,43 @@ class TournamentTests(TestCase):
         t1.background()
         # Clean up
         s.delete()
+
+    def test_tournament_background_series_defending_champion(self):
+        p = Player.objects.create(first_name='Defending',
+                                  last_name='Champion')
+        previous = Tournament.objects.create(name='Previous Series Event',
+                                             start_date=date(2024, 1, 1),
+                                             end_date=date(2024, 1, 2),
+                                             tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                             round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                             draw_secrecy=DrawSecrecy.SECRET,
+                                             is_finished=True)
+        current = Tournament.objects.create(name='Current Series Event',
+                                            start_date=date(2025, 1, 1),
+                                            end_date=date(2025, 1, 2),
+                                            tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                            round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                            draw_secrecy=DrawSecrecy.SECRET)
+        TournamentPlayer.objects.create(player=p,
+                                        tournament=previous,
+                                        score=100)
+        TournamentPlayer.objects.create(player=p,
+                                        tournament=current)
+        s = Series.objects.create(name='Defending Champion Series',
+                                  description='Text')
+        s.tournaments.add(previous, current)
+
+        results = current.background(mask=MASK_SERIES_WINS)
+
+        self.assertIn('Defending Champion is the defending Defending Champion Series champion, '
+                  'having won Previous Series Event 2024',
+                      results)
+
+        # Clean up
+        s.delete()
+        current.delete()
+        previous.delete()
+        p.delete()
 
     # Tournament.game_set()
     def test_tournament_game_set(self):

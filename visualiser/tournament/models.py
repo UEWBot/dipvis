@@ -1658,6 +1658,13 @@ class Tournament(models.Model):
         if (mask & MASK_SERIES_WINS) != 0:
             # Add in background for any series this Tournament is in
             for s in self.series_set.all():
+                defending_tournament = s.tournaments.filter(start_date__lt=self.start_date).order_by('-start_date').first()
+                if defending_tournament:
+                    p = defending_tournament.winner()
+                    if p and self.tournamentplayer_set.filter(player=p).exists():
+                        results.append(_('%(name)s is the defending %(series)s champion, having won %(tourney)s')
+                                       % {'name': p, 'series': s,
+                                          'tourney': defending_tournament})
                 for t in s.tournaments.all():
                     p = t.winner()
                     if not p:
