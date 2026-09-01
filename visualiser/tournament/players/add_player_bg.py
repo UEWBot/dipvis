@@ -60,36 +60,101 @@ TITLE_MAP = {
     'Runners-up': 2,
 }
 
+WIKIPEDIA_EVENT_KIND_MAP = {
+    'Asia Pacific Championships': EventKinds.TOURNAMENT,
+    'Bismark Cup': EventKinds.CIRCUIT,
+    'DipCon': EventKinds.TOURNAMENT,
+    'Diplomacy Broadcast Network Invitational (DBNI)': EventKinds.TOURNAMENT,
+    'Diplomacy World Cup': EventKinds.TOURNAMENT,
+    'EuroDipCon': EventKinds.TOURNAMENT,
+    'European Grand Prix': EventKinds.CIRCUIT,
+    'North American Grand Prix': EventKinds.CIRCUIT,
+    'Online Diplomacy Championship': EventKinds.TOURNAMENT,
+    'The World Diplomacy Championship': EventKinds.TOURNAMENT,
+    'Virtual Diplomacy Championship (VDC)': EventKinds.TOURNAMENT,
+    'Virtual Diplomacy League (VDL)': EventKinds.LEAGUE,
+}
+
+
+def _event_kind_for_wikipedia_event(title):
+    """
+    Return the EventKinds value for a Wikipedia title row.
+    """
+    tournament = title.get('Tournament')
+    try:
+        return WIKIPEDIA_EVENT_KIND_MAP[tournament]
+    except KeyError:
+        print(f'Unrecognised Wikipedia event {tournament} in {title}')
+        return None
+
+
+def _playertitles_from_wiki_entry(player, title):
+    """
+    Return (title, position) tuples from a Wikipedia result row.
+    """
+    titles = []
+    for key, position in TITLE_MAP.items():
+        try:
+            if title[key] != str(player):
+                continue
+        except KeyError:
+            continue
+        the_title = None
+        if key == 'Champion':
+            the_title = f'{title["Tournament"]} Champion'
+        elif key == 'Diplomat of the Year':
+            the_title = 'DBNI Diplomat of the Year'
+        elif key == 'Winner':
+            the_title = f'{title["Tournament"]} Winner'
+        elif 'Champion' in key:
+            the_title = key
+        if the_title:
+            titles.append((the_title, position))
+    return titles
+
+
+def _event_ranking_for_wiki_title(player, title, position):
+    """
+    Return the unambiguous PlayerEventRanking for a Wikipedia title row.
+    """
+    event_kind = _event_kind_for_wikipedia_event(title)
+    candidates = PlayerEventRanking.objects.filter(player=player,
+                                                   position=position)
+    if event_kind is not None:
+        candidates = candidates.filter(event_kind=event_kind)
+    candidates = list(candidates)
+
+    def plausible_year(ranking):
+        return (ranking.date.year == title['Year'] or
+                str(title['Year']) in ranking.event_name)
+
+    if len(candidates) == 1:
+        return candidates[0] if plausible_year(candidates[0]) else None
+    tournament = title.get('Tournament')
+    if not tournament:
+        return None
+    tournament = tournament.lower()
+    candidates = [ranking for ranking in candidates
+                  if tournament in ranking.event_name.lower() and plausible_year(ranking)]
+    if len(candidates) == 1:
+        return candidates[0]
+    return None
+
 
 def _update_or_create_playertitle_wiki(player, title):
     """
-    Creates or updates a PlayerTitle for the player
-
-    Given a Player and a dict with 'Tournament' and 'Year' keys,
-    and optional 'Champion' key, representing the Wikipedia page,
-    create or update a PlayerTitle
+    Creates or updates PlayerTitles for the player from a Wikipedia row.
     """
-    the_title = None
-    for key, val in TITLE_MAP.items():
+    for the_title, position in _playertitles_from_wiki_entry(player, title):
         try:
-            if title[key] == str(player):
-                if key == 'Champion':
-                    the_title = f'{title["Tournament"]} Champion'
-                elif key == 'Diplomat of the Year':
-                    the_title = 'DBNI Diplomat of the Year'
-                elif key == 'Winner':
-                    the_title = f'{title["Tournament"]} Winner'
-                elif 'Champion' in key:
-                    the_title = key
-                break
-        except KeyError:
-            pass
-    if the_title:
-        try:
-            # ranking is left unset
+            defaults = {}
+            ranking = _event_ranking_for_wiki_title(player, title, position)
+            if ranking is not None:
+                defaults['ranking'] = ranking
             PlayerTitle.objects.update_or_create(player=player,
                                                  title=the_title,
-                                                 year=title['Year'])
+                                                 year=title['Year'],
+                                                 defaults=defaults)
         except Exception:
             # Handle all exceptions
             # This way, we fail to add/update the single title rather than all the background
@@ -309,4 +374,3 @@ def add_player_bg(player):
         _update_or_create_playertitle_wiki(player, title)
     if fields:
         player.save(update_fields=fields)
-    # TODO Set PlayerTitle.ranking to cross-reference

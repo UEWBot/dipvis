@@ -24,6 +24,7 @@ from django.test import TestCase, tag
 
 from tournament.diplomacy import GreatPower
 from tournament.players import (EventKinds, Player, PlayerEventRanking,
+                                PlayerTitle,
                                 WDDPlayer, WDRNotAccessible)
 
 from . import add_player_bg
@@ -128,6 +129,239 @@ class AddPlayerBgTests(TestCase):
                 add_player_bg(p)
 
         self.assertEqual(['wdr', 'wikipedia'], calls)
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_links_wikipedia_title_to_event_ranking(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='TitleLink',
+                                  wdr_player_id=9991)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [{
+                'tournament_id': 7006,
+                'tournament_wdd_id': -1,
+                'tournament_name': 'WDC 2016',
+                'tournament_start_date': '2016-08-01',
+                'tournament_end_date': '2016-08-04',
+                'tournament_kind': 'WDC',
+                'tournament_event_type': 'Tournament',
+                'tournament_player_rank': 1,
+            }],
+            'boards': [],
+            'awards': [],
+        }
+        fake_titles = [{
+            'Tournament': 'The World Diplomacy Championship',
+            'Year': 2016,
+            'World Champion': str(p),
+        }]
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = fake_titles
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+
+        ranking = p.playereventranking_set.get(wdr_tournament_id=7006)
+        title = p.playertitle_set.get(title='World Champion', year=2016)
+        self.assertEqual(ranking, title.ranking)
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_links_multiple_titles_to_one_event_ranking(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='MultiTitle',
+                                  wdr_player_id=9990)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [{
+                'tournament_id': 7007,
+                'tournament_wdd_id': -1,
+                'tournament_name': 'WDC 2017',
+                'tournament_start_date': '2017-08-01',
+                'tournament_end_date': '2017-08-04',
+                'tournament_kind': 'WDC',
+                'tournament_event_type': 'Tournament',
+                'tournament_player_rank': 1,
+            }],
+            'boards': [],
+            'awards': [],
+        }
+        fake_titles = [{
+            'Tournament': 'The World Diplomacy Championship',
+            'Year': 2017,
+            'World Champion': str(p),
+            'North American Champion': str(p),
+        }]
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = fake_titles
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+
+        ranking = p.playereventranking_set.get(wdr_tournament_id=7007)
+        titles = p.playertitle_set.order_by('title')
+        self.assertEqual(2, titles.count())
+        self.assertEqual({'North American Champion', 'World Champion'},
+                         {title.title for title in titles})
+        self.assertEqual({ranking}, {title.ranking for title in titles})
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_uses_wikipedia_event_kind_to_link_titles(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='CircuitTitle',
+                                  wdr_player_id=9989)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [
+                {
+                    'tournament_id': 7008,
+                    'tournament_wdd_id': -1,
+                    'tournament_name': 'Portland Diplomacy Open 2000',
+                    'tournament_start_date': '2000-07-08',
+                    'tournament_end_date': '2000-07-08',
+                    'tournament_kind': 'OPEN',
+                    'tournament_event_type': 'Tournament',
+                    'tournament_player_rank': 1,
+                },
+                {
+                    'tournament_id': 7009,
+                    'tournament_wdd_id': -1,
+                    'tournament_name': 'North American Grand Prix 2000',
+                    'tournament_start_date': '2000-01-08',
+                    'tournament_end_date': '2001-08-05',
+                    'tournament_kind': 'NAGP',
+                    'tournament_event_type': 'Circuit',
+                    'tournament_player_rank': 1,
+                },
+            ],
+            'boards': [],
+            'awards': [],
+        }
+        fake_titles = [{
+            'Tournament': 'North American Grand Prix',
+            'Year': 2000,
+            'Winner': str(p),
+        }]
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = fake_titles
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+
+        title = p.playertitle_set.get(title='North American Grand Prix Winner',
+                                      year=2000)
+        self.assertEqual(7009, title.ranking.wdr_tournament_id)
+        self.assertEqual(EventKinds.CIRCUIT, title.ranking.event_kind)
+        # Cleanup
+        p.delete()
+
+    @patch('builtins.print')
+    def test_wikipedia_event_kind_unknown_event(self, mock_print):
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        title = {'Tournament': 'Mystery Event',
+                 'Year': 2026}
+
+        self.assertIsNone(add_bg_module._event_kind_for_wikipedia_event(title))
+        mock_print.assert_called_once_with("Unrecognised Wikipedia event Mystery Event in {'Tournament': 'Mystery Event', 'Year': 2026}")
+
+    def test_event_ranking_for_wiki_title_rejects_implausible_year(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='WrongYear')
+        ranking = PlayerEventRanking.objects.create(player=p,
+                                                    event_name='The World Diplomacy Championship 2018',
+                                                    date=date(2018, 8, 4),
+                                                    position=1,
+                                                    event_kind=EventKinds.TOURNAMENT)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        title = {'Tournament': 'The World Diplomacy Championship',
+                 'Year': 2016,
+                 'World Champion': str(p)}
+
+        self.assertIsNone(add_bg_module._event_ranking_for_wiki_title(p, title, ranking.position))
+        # Cleanup
+        p.delete()
+
+    @patch('builtins.print')
+    def test_event_ranking_for_wiki_title_without_tournament_requires_unique_candidate(self, mock_print):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='NoTournament')
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='WDC 2016',
+                                          date=date(2016, 8, 4),
+                                          position=1,
+                                          event_kind=EventKinds.TOURNAMENT)
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='DipCon 2016',
+                                          date=date(2016, 7, 4),
+                                          position=1,
+                                          event_kind=EventKinds.TOURNAMENT)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        title = {'Year': 2016,
+                 'World Champion': str(p)}
+
+        self.assertIsNone(add_bg_module._event_ranking_for_wiki_title(p, title, 1))
+        mock_print.assert_called_once_with("Unrecognised Wikipedia event None in {'Year': 2016, 'World Champion': 'Wdr NoTournament'}")
+        # Cleanup
+        p.delete()
+
+    def test_event_ranking_for_wiki_title_rejects_ambiguous_name_matches(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='AmbiguousCircuit')
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='North American Grand Prix 2000 East',
+                                          date=date(2001, 8, 5),
+                                          position=1,
+                                          event_kind=EventKinds.CIRCUIT)
+        PlayerEventRanking.objects.create(player=p,
+                                          event_name='North American Grand Prix 2000 West',
+                                          date=date(2000, 12, 31),
+                                          position=1,
+                                          event_kind=EventKinds.CIRCUIT)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        title = {'Tournament': 'North American Grand Prix',
+                 'Year': 2000,
+                 'Winner': str(p)}
+
+        self.assertIsNone(add_bg_module._event_ranking_for_wiki_title(p, title, 1))
+        # Cleanup
+        p.delete()
+
+    @patch('builtins.print')
+    def test_update_or_create_playertitle_wiki_handles_save_exception(self, mock_print):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='TitleError')
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        title = {'Tournament': 'The World Diplomacy Championship',
+                 'Year': 2016,
+                 'World Champion': str(p)}
+
+        with patch.object(add_bg_module.traceback, 'print_exc') as mock_traceback:
+            with patch.object(add_bg_module.PlayerTitle.objects,
+                              'update_or_create',
+                              side_effect=Exception('boom')):
+                add_bg_module._update_or_create_playertitle_wiki(p, title)
+
+        self.assertEqual('Failed to save PlayerTitle', mock_print.call_args_list[0].args[0])
+        self.assertEqual('player=Wdr TitleError, title=World Champion, year=2016',
+                         mock_print.call_args_list[1].args[0])
+        mock_traceback.assert_called_once_with()
         # Cleanup
         p.delete()
 

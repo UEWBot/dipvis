@@ -20,8 +20,9 @@ from bs4 import BeautifulSoup
 
 from django.test import TestCase, tag
 
+from .add_player_bg import WIKIPEDIA_EVENT_KIND_MAP
 from . import WikipediaBackground
-from .wikipedia_background import WikipediaCache, WikipediaNotAccessible
+from .wikipedia_background import WikipediaCache, WikipediaNotAccessible, cache
 
 
 class WikipediaBackgroundTests(TestCase):
@@ -135,3 +136,19 @@ class WikipediaBackgroundTests(TestCase):
         bg = WikipediaBackground('Cyrille Sevin')
         titles = bg.titles()
         self.assertGreater(len(titles), 0)
+
+    @tag('wikipedia_live')
+    def test_wikipedia_event_kind_map_covers_live_events(self):
+        """Live integration check that all current Wikipedia events are mapped."""
+        soup = cache.soup()
+        events = set()
+        last_hdr = None
+        for table in soup.find_all('table'):
+            hdr = table.find_previous('h3')
+            if (not hdr) or (hdr == last_hdr):
+                hdr = table.find_previous('h2')
+            last_hdr = hdr
+            events.add(hdr.get_text())
+
+        self.assertGreater(len(events), 0)
+        self.assertEqual(set(), events - set(WIKIPEDIA_EVENT_KIND_MAP))
