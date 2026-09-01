@@ -14,14 +14,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from django_countries.fields import Country
-from unittest.mock import patch
 import importlib
+from datetime import date
+from unittest.mock import patch
+
+from django_countries.fields import Country
 
 from django.test import TestCase, tag
 
 from tournament.diplomacy import GreatPower
-from tournament.players import EventKinds, Player, WDDPlayer, WDRNotAccessible
+from tournament.players import (EventKinds, Player, PlayerEventRanking,
+                                WDDPlayer, WDRNotAccessible)
 
 from . import add_player_bg
 
@@ -263,6 +266,61 @@ class AddPlayerBgTests(TestCase):
         self.assertEqual(EventKinds.TOURNAMENT, per_cup.event_kind)
         pgr = p.playergameresult_set.get(round_number=1, game_number=2)
         self.assertEqual(per_league, pgr.event_ranking)
+        # Cleanup
+        p.delete()
+
+    def test_add_player_bg_updates_existing_event_ranking_by_name_and_date(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='Existing',
+                                  wdr_player_id=9992)
+        existing = PlayerEventRanking.objects.create(player=p,
+                                                     event_name='Thailand Diplomacy Championship 2022-2023',
+                                                     date=date(2023, 12, 15),
+                                                     position=2)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [{
+                'tournament_id': 7005,
+                'tournament_wdd_id': -1,
+                'tournament_name': 'Thailand Diplomacy Championship 2022-2023',
+                'tournament_start_date': '2022-01-01',
+                'tournament_end_date': '2023-12-15',
+                'tournament_kind': 'LEAGUE',
+                'tournament_event_type': 'League',
+                'tournament_player_rank': 4,
+            }],
+            'boards': [{
+                'board_round': 1,
+                'board_number': 2,
+                'board_is_top': False,
+                'board_tournament': 7005,
+                'board_power': 'Austria',
+                'board_centers': 9,
+                'board_score': 9.0,
+                'board_rank': 2,
+                'board_year_of_elimination': None,
+                'board_url': '',
+                'board_variant': 'Classic',
+            }],
+            'awards': [],
+        }
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = []
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+        existing.refresh_from_db()
+        self.assertEqual(1, p.playereventranking_set.count())
+        self.assertEqual(7005, existing.wdr_tournament_id)
+        self.assertEqual(EventKinds.LEAGUE, existing.event_kind)
+        self.assertEqual(4, existing.position)
+        pgr = p.playergameresult_set.get(round_number=1, game_number=2)
+        self.assertEqual(existing, pgr.event_ranking)
         # Cleanup
         p.delete()
 
