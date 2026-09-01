@@ -293,12 +293,6 @@ def add_player_bg(player):
     Cache background data for the player in the database
     """
     fields = []
-    # First check wikipedia
-    bg = WikipediaBackground(f'{player.first_name} {player.last_name}')
-    # Titles won
-    titles = bg.titles()
-    for title in titles:
-        _update_or_create_playertitle_wiki(player, title)
     # Do we have a WDR id for this player?
     wdr = player.wdr_player_id
     if wdr:
@@ -307,6 +301,12 @@ def add_player_bg(player):
         except WDRNotAccessible:
             print(f'Unable to read from WDR for id {wdr}')
             wdr = None
+    # Check wikipedia after WDR so titles can be linked to imported events.
+    bg = WikipediaBackground(f'{player.first_name} {player.last_name}')
+    # Titles won
+    titles = bg.titles()
+    for title in titles:
+        _update_or_create_playertitle_wiki(player, title)
     if fields:
         player.save(update_fields=fields)
     # TODO Set PlayerTitle.ranking to cross-reference

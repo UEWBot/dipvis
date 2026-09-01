@@ -105,6 +105,32 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_add_player_bg_reads_wdr_before_wikipedia(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='ThenWiki',
+                                  wdr_player_id=9998)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        calls = []
+
+        def fake_add_player_bg_from_wdr(player, wdr_id):
+            calls.append('wdr')
+            return []
+
+        def fake_titles():
+            calls.append('wikipedia')
+            return []
+
+        with patch.object(add_bg_module,
+                          '_add_player_bg_from_wdr',
+                          side_effect=fake_add_player_bg_from_wdr):
+            with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+                mock_wiki.return_value.titles.side_effect = fake_titles
+                add_player_bg(p)
+
+        self.assertEqual(['wdr', 'wikipedia'], calls)
+        # Cleanup
+        p.delete()
+
     def test_add_player_bg_wdr_sets_top_board_flag(self):
         p = Player.objects.create(first_name='Wdr',
                                   last_name='TopBoard',
