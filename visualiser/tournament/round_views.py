@@ -589,6 +589,7 @@ def seed_games(request, tournament_id, round_num):
                                            the_set=default_set)
             current = {'name': new_game.name,
                        'the_set': new_game.the_set,
+                       'top_board': new_game.is_top_board,
                        'issues': '\n'.join(i)}
             for tp, power in g:
                 gp = GamePlayer.objects.create(player=tp.player,
