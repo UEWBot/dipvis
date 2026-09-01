@@ -28,6 +28,7 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from tournament.circuits import (_percentiles, Circuit, CircuitPlayer,
+                                 CircuitTournamentResult,
                                  CircuitSeries,
                                  CScoringSumPercentiles,
                                  _remember_tournament_editable_before_save,
@@ -151,6 +152,16 @@ class CircuitScoringTests(TestCase):
 
         # p1 beats p2 in each tournament -> percentile 0.5 each time. Best 3 count.
         self.assertEqual(scores[p1], 1.5)
+
+        circuit.update_scores()
+        results = CircuitTournamentResult.objects.filter(
+            circuit_player__circuit=circuit,
+            circuit_player__player=p1,
+        ).order_by('tournament_player__tournament__start_date',
+                   'tournament_player__tournament_id')
+        self.assertEqual([result.score for result in results], [0.5] * 4)
+        self.assertEqual([result.score_dropped for result in results],
+                         [False, False, False, True])
 
     def test_c_scoring_sum_percentiles_player_absent_from_some_tournaments(self):
         """A circuit player who didn't attend every tournament should score only from attended ones."""

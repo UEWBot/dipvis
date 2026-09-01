@@ -112,6 +112,11 @@ class CScoringSumPercentiles(CircuitScoringSystem):
 
         Returns a dict, indexed by player key, of circuit scores.
         """
+        scores, _ = self.scores_and_results(circuit)
+        return scores
+
+    def scores_and_results(self, circuit):
+        """Return circuit scores and contribution details keyed by TournamentPlayer id."""
         # Fetch CircuitPlayers once with select_related('player') so that
         # the players-set build and all subsequent tp.player lookups inside
         # _percentiles are query-free.
@@ -155,28 +160,36 @@ class CScoringSumPercentiles(CircuitScoringSystem):
 
         # Calculate the percentile each player achieved in each tournament.
         percentiles = {}
+        tp_by_tournament_and_player = {}
         for t in tournaments:
             # tps_by_tournament.get returns [] for tournaments with no linked
             # TPs (e.g. a newly added tournament with no players yet).
-            percentiles[t] = _percentiles(tps_by_tournament.get(t.id, []))
+            tournament_players = tps_by_tournament.get(t.id, [])
+            percentiles[t] = _percentiles(tournament_players)
+            for tp in tournament_players:
+                tp_by_tournament_and_player[(t.id, tp.player_id)] = tp
 
         # Sum the best scored_rounds percentiles for each player.
         retval = {}
+        results = {}
         for p in players:
             # Collect this player's percentile from every tournament where they
             # have a linked TournamentPlayer, then sort best-first.
             p_scores = []
             for t in tournaments:
                 if p in percentiles[t]:
-                    p_scores.append(percentiles[t][p])
-            p_scores.sort(reverse=True)
+                    tp = tp_by_tournament_and_player[(t.id, p.id)]
+                    p_scores.append((percentiles[t][p], t.start_date, t.id, tp.id))
+            p_scores.sort(key=lambda value: (-value[0], value[1], value[2]))
 
             # Accumulate the top scored_rounds values; any extras are ignored.
             retval[p] = 0.0
-            for n, score in enumerate(p_scores):
-                if n < self.scored_rounds:
+            for n, (score, _start_date, _tournament_id, tournament_player_id) in enumerate(p_scores):
+                score_dropped = n >= self.scored_rounds
+                results[tournament_player_id] = (score, score_dropped)
+                if not score_dropped:
                     retval[p] += score
-        return retval
+        return retval, results
 
 
 # All the supported circuit scoring systems
@@ -298,11 +311,10 @@ class Circuit(models.Model):
 
     def update_scores(self):
         """
-        Recalculate the scores for the Circuit and store them in CircuitPlayers
+        Recalculate and store CircuitPlayer scores and tournament contributions.
         """
         system = self.scoring_system_obj()
-        # scores() owns its own CircuitPlayer fetch internally.
-        new_scores = system.scores(self)
+        new_scores, result_details = system.scores_and_results(self)
         # Fetch CircuitPlayers separately for the update loop; select_related
         # avoids N+1 on cp.player in the scores.get() call below.
         cps = self.circuitplayer_set.select_related('player').all()
@@ -314,6 +326,20 @@ class Circuit(models.Model):
                 to_update.append(cp)
         if to_update:
             CircuitPlayer.objects.bulk_update(to_update, ['score'])
+
+        results = CircuitTournamentResult.objects.filter(
+            circuit_player__circuit=self
+        ).select_related('tournament_player')
+        results_to_update = []
+        for result in results:
+            score, score_dropped = result_details[result.tournament_player_id]
+            if result.score != score or result.score_dropped != score_dropped:
+                result.score = score
+                result.score_dropped = score_dropped
+                results_to_update.append(result)
+        if results_to_update:
+            CircuitTournamentResult.objects.bulk_update(results_to_update,
+                                                        ['score', 'score_dropped'])
 
     def add_or_update_circuit_players(self):
         """
