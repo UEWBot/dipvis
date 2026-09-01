@@ -163,6 +163,13 @@ class CircuitScoringTests(TestCase):
         self.assertEqual([result.score_dropped for result in results],
                          [False, False, False, True])
 
+        TournamentPlayer.objects.filter(id=p1_tp_ids[0]).update(score=0.0)
+        circuit.update_scores()
+        self.assertEqual(
+            list(results.values_list('score_dropped', flat=True)),
+            [True, False, False, False],
+        )
+
     def test_c_scoring_sum_percentiles_player_absent_from_some_tournaments(self):
         """A circuit player who didn't attend every tournament should score only from attended ones."""
         today = date.today()

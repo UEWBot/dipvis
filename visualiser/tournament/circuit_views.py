@@ -16,7 +16,8 @@ from django.urls import reverse
 from django.views.generic.detail import DetailView
 from django.views.generic.list import ListView
 
-from tournament.circuits import Circuit, CircuitPlayer, CircuitSeries, _percentiles
+from tournament.circuits import (Circuit, CircuitPlayer, CircuitSeries,
+                                 CircuitTournamentResult)
 
 
 class CircuitIndexView(ListView):
@@ -57,48 +58,30 @@ def circuit_scores(request, circuit_id):
                                                                             'player__first_name'))
     rankings = circuit.ranks_and_scores()
 
-    tps = CircuitPlayer.tournamentplayers.through.objects.filter(
-        circuitplayer__circuit=circuit
-    ).select_related('tournamentplayer',
-                     'tournamentplayer__player',
-                     'circuitplayer__player',
-                     'tournamentplayer__tournament')
+    results = CircuitTournamentResult.objects.filter(
+        circuit_player__circuit=circuit
+    ).select_related('tournament_player',
+                     'tournament_player__tournament')
+    result_by_cp_and_tournament = {
+        (result.circuit_player_id, result.tournament_player.tournament_id): result
+        for result in results
+    }
 
-    tp_by_cp_and_tournament = {}
-    tp_by_tournament = {}
-    for link in tps:
-        tp = link.tournamentplayer
-        tp_by_cp_and_tournament[(link.circuitplayer_id, tp.tournament_id)] = tp
-        tp_by_tournament.setdefault(tp.tournament_id, []).append(tp)
-
-    percentiles_by_tournament = {}
-    # _percentiles expects TournamentPlayers from one Tournament.
-    for tournament in tournaments:
-        tp_subset = tp_by_tournament.get(tournament.id, [])
-        percentiles_by_tournament[tournament.id] = _percentiles(tp_subset)
-
-    scored_rounds = circuit.scoring_system_obj().scored_rounds
     rows = []
     for cp in cps:
         contributions = []
         for tournament in tournaments:
-            tp = tp_by_cp_and_tournament.get((cp.id, tournament.id))
-            if tp is None:
+            result = result_by_cp_and_tournament.get((cp.id, tournament.id))
+            if result is None:
                 contributions.append({'tournament': tournament,
                                       'tp': None,
                                       'percentile': None,
                                       'counts': False})
                 continue
-            percentile = percentiles_by_tournament[tournament.id].get(cp.player)
             contributions.append({'tournament': tournament,
-                                  'tp': tp,
-                                  'percentile': percentile,
-                                  'counts': False})
-
-        scored = [c for c in contributions if c['percentile'] is not None]
-        scored.sort(key=lambda c: (-c['percentile'], c['tournament'].start_date, c['tournament'].id))
-        for c in scored[:scored_rounds]:
-            c['counts'] = True
+                                  'tp': result.tournament_player,
+                                  'percentile': result.score,
+                                  'counts': not result.score_dropped})
 
         rows.append({'rank': rankings.get(cp.player, ('-', cp.score))[0],
                      'player': cp,
