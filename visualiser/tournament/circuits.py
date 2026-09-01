@@ -128,9 +128,9 @@ class CScoringSumPercentiles(CircuitScoringSystem):
         # rebuilt an equivalent subquery inside the tournament loop, causing it
         # to be re-evaluated once per INTERSECT.
         linked_tp_ids = frozenset(
-            TournamentPlayer.objects
-            .filter(circuitplayer__in=circuit_players)
-            .values_list('id', flat=True)
+            CircuitTournamentResult.objects
+            .filter(circuit_player__in=circuit_players)
+            .values_list('tournament_player_id', flat=True)
         )
 
         # Query 2: fetch all qualifying TournamentPlayers across every circuit
@@ -347,8 +347,8 @@ class Circuit(models.Model):
 
         through = CircuitPlayer.tournamentplayers.through
         through.objects.bulk_create([
-            through(circuitplayer_id=existing_cp_by_player[tp.player_id],
-                    tournamentplayer_id=tp.id)
+            through(circuit_player_id=existing_cp_by_player[tp.player_id],
+                    tournament_player_id=tp.id)
             for tp in ranked_tps
         ], ignore_conflicts=True)
 
@@ -363,9 +363,9 @@ class Circuit(models.Model):
         """Drop TournamentPlayer links and CircuitPlayers no longer in this Circuit."""
         through = CircuitPlayer.tournamentplayers.through
         through.objects.filter(
-            circuitplayer__circuit=self
+            circuit_player__circuit=self
         ).exclude(
-            tournamentplayer__tournament__circuit=self
+            tournament_player__tournament__circuit=self
         ).delete()
 
         self.circuitplayer_set.filter(tournamentplayers__isnull=True).delete()
@@ -402,7 +402,9 @@ class CircuitPlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     circuit = models.ForeignKey(Circuit, on_delete=models.CASCADE)
     score = models.FloatField(default=0.0)
-    tournamentplayers = models.ManyToManyField(TournamentPlayer, blank=True)
+    tournamentplayers = models.ManyToManyField(TournamentPlayer,
+                                               through='CircuitTournamentResult',
+                                               blank=True)
 
     class Meta:
         # Each player can only be in each circuit once
@@ -420,6 +422,24 @@ class CircuitPlayer(models.Model):
         """Returns the canonical URL for the object."""
         return reverse('circuit_player_detail', args=[str(self.circuit.id),
                                                       str(self.id)])
+
+
+class CircuitTournamentResult(models.Model):
+    """A TournamentPlayer's contribution to one CircuitPlayer's score."""
+    circuit_player = models.ForeignKey(CircuitPlayer,
+                                       related_name='tournament_results',
+                                       on_delete=models.CASCADE)
+    tournament_player = models.ForeignKey(TournamentPlayer,
+                                          related_name='+',
+                                          on_delete=models.CASCADE)
+    score = models.FloatField(default=0.0)
+    score_dropped = models.BooleanField(default=False)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['circuit_player', 'tournament_player'],
+                                    name='unique_circuit_tournament_result'),
+        ]
 
 
 class CircuitSeries(models.Model):
