@@ -20,7 +20,8 @@ from bs4 import BeautifulSoup
 
 from django.test import TestCase, tag
 
-from .add_player_bg import WIKIPEDIA_EVENT_KIND_MAP
+from .add_player_bg import (WIKIPEDIA_EVENT_KIND_MAP,
+                            WIKIPEDIA_TOURNAMENT_KIND_MAP)
 from . import WikipediaBackground
 from .wikipedia_background import WikipediaCache, WikipediaNotAccessible, cache
 
@@ -152,3 +153,4 @@ class WikipediaBackgroundTests(TestCase):
 
         self.assertGreater(len(events), 0)
         self.assertEqual(set(), events - set(WIKIPEDIA_EVENT_KIND_MAP))
+        self.assertEqual(set(), events - set(WIKIPEDIA_TOURNAMENT_KIND_MAP))

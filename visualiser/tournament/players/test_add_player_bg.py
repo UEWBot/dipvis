@@ -173,6 +173,59 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_add_player_bg_uses_wikipedia_tournament_kind_to_link_wdc_title(self):
+        p = Player.objects.create(first_name='Wdr',
+                                  last_name='KindTitle',
+                                  wdr_player_id=9991)
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        fake_wdr = {
+            'tournaments': [
+                {
+                    'tournament_id': 7010,
+                    'tournament_wdd_id': -1,
+                    'tournament_name': 'Some Open 2016',
+                    'tournament_start_date': '2016-07-01',
+                    'tournament_end_date': '2016-07-03',
+                    'tournament_kind': 'OPEN',
+                    'tournament_event_type': 'Tournament',
+                    'tournament_player_rank': 1,
+                },
+                {
+                    'tournament_id': 7011,
+                    'tournament_wdd_id': -1,
+                    'tournament_name': 'World DipCon Chicago 2016 Weasel Moot',
+                    'tournament_start_date': '2016-08-01',
+                    'tournament_end_date': '2016-08-04',
+                    'tournament_kind': 'WDC',
+                    'tournament_event_type': 'Tournament',
+                    'tournament_player_rank': 1,
+                },
+            ],
+            'boards': [],
+            'awards': [],
+        }
+        fake_titles = [{
+            'Tournament': 'The World Diplomacy Championship',
+            'Year': 2016,
+            'World Champion': str(p),
+        }]
+        with patch.object(add_bg_module, 'WikipediaBackground') as mock_wiki:
+            mock_wiki.return_value.titles.return_value = fake_titles
+            with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+                mock_wdr.return_value.tournaments.return_value = fake_wdr['tournaments']
+                mock_wdr.return_value.boards.return_value = fake_wdr['boards']
+                mock_wdr.return_value.awards.return_value = fake_wdr['awards']
+                mock_wdr.return_value.rankings.return_value = {}
+                mock_wdr.return_value.nationality.return_value = ''
+                mock_wdr.return_value.location.return_value = ''
+                add_player_bg(p)
+
+        title = p.playertitle_set.get(title='World Champion', year=2016)
+        self.assertEqual(7011, title.ranking.wdr_tournament_id)
+        self.assertEqual('WDC', title.ranking.tournament_kind)
+        # Cleanup
+        p.delete()
+
     def test_add_player_bg_links_multiple_titles_to_one_event_ranking(self):
         p = Player.objects.create(first_name='Wdr',
                                   last_name='MultiTitle',

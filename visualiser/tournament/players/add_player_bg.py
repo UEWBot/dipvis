@@ -75,6 +75,21 @@ WIKIPEDIA_EVENT_KIND_MAP = {
     'Virtual Diplomacy League (VDL)': EventKinds.LEAGUE,
 }
 
+WIKIPEDIA_TOURNAMENT_KIND_MAP = {
+    'Asia Pacific Championships': ('APAC',),
+    'Bismark Cup': ('BIC',),
+    'DipCon': ('DIPCON', 'WDC'),
+    'Diplomacy Broadcast Network Invitational (DBNI)': ('DBNI',),
+    'Diplomacy World Cup': (),
+    'EuroDipCon': ('EDC',),
+    'European Grand Prix': ('EGP',),
+    'North American Grand Prix': ('NAGP',),
+    'Online Diplomacy Championship': (),
+    'The World Diplomacy Championship': ('WDC',),
+    'Virtual Diplomacy Championship (VDC)': ('VDC',),
+    'Virtual Diplomacy League (VDL)': ('LEAGUE',),
+}
+
 
 def _event_kind_for_wikipedia_event(title):
     """
@@ -86,6 +101,17 @@ def _event_kind_for_wikipedia_event(title):
     except KeyError:
         print(f'Unrecognised Wikipedia event {tournament} in {title}')
         return None
+
+
+def _tournament_kinds_for_wikipedia_event(title):
+    """
+    Return likely WDR tournament_kind values for a Wikipedia title row.
+    """
+    tournament = title.get('Tournament')
+    try:
+        return WIKIPEDIA_TOURNAMENT_KIND_MAP[tournament]
+    except KeyError:
+        return ()
 
 
 def _playertitles_from_wiki_entry(player, title):
@@ -118,10 +144,13 @@ def _event_ranking_for_wiki_title(player, title, position):
     Return the unambiguous PlayerEventRanking for a Wikipedia title row.
     """
     event_kind = _event_kind_for_wikipedia_event(title)
+    tournament_kinds = _tournament_kinds_for_wikipedia_event(title)
     candidates = PlayerEventRanking.objects.filter(player=player,
                                                    position=position)
     if event_kind is not None:
         candidates = candidates.filter(event_kind=event_kind)
+    if tournament_kinds:
+        candidates = candidates.filter(tournament_kind__in=tournament_kinds)
     candidates = list(candidates)
 
     def plausible_year(ranking):
