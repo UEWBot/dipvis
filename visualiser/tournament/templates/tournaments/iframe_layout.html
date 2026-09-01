@@ -1,0 +1,89 @@
+{% load i18n %}
+{% load static %}
+<!DOCTYPE html>
+{% get_current_language as LANGUAGE_CODE %}
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <link rel="icon" type="image/png" href="{% static 'diptv.png' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% trans "DipTV - Diplomacy Tournament Visualiser" %}</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      grid-template-rows: minmax(0, 19fr) minmax(0, 1fr);
+    }
+
+    .tournament-views {
+      display: grid;
+      min-height: 0;
+    }
+
+    .tournament-views iframe,
+    .tournament-ticker {
+      width: 100%;
+      height: 100%;
+      border: 1px solid;
+      box-sizing: border-box;
+    }
+
+    .layout-1x1 {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr;
+    }
+
+    .layout-2x2 {
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+    }
+
+    .layout-3x3 {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .layout-2-games,
+    .layout-3-games {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .layout-2-games {
+      grid-template-rows: repeat(2, 1fr);
+    }
+
+    .layout-3-games {
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .layout-2-games iframe:first-child,
+    .layout-3-games iframe:first-child {
+      grid-row: 1 / -1;
+    }
+
+    .layout-top-board {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .layout-top-board iframe:first-child {
+      grid-column: 1 / 3;
+      grid-row: 1 / 3;
+    }
+  </style>
+</head>
+<body>
+  <main class="tournament-views {% block layout_class %}{% endblock layout_class %}">
+    {% block tournament_views %}{% endblock tournament_views %}
+  </main>
+  <iframe class="tournament-ticker"
+          src="{% url 'tournament_ticker' tournament.id %}"
+          title="{% trans 'Tournament news ticker' %}"></iframe>
+</body>
+</html>

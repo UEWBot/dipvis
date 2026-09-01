@@ -1,17 +1,9 @@
+{% extends "tournaments/iframe_layout.html" %}
 {% load i18n %}
-{% load static %}
-<html lang="{{ LANGUAGE_CODE }}">
-<head>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <link rel="icon" type=image/png href="{% static 'diptv.png' %}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}{% trans "DipTV - Diplomacy Tournament Visualiser" %}{% endblock title %}</title>
-</head>
-  <frameset rows="*, 5%">
-    <frame src="{% url 'tournament_views' tournament.id %}">
-    <frame src="{% url 'tournament_ticker' tournament.id %}">
-    <noframes>
-      no frames
-    </noframes>
-  </frameset>
-</html>
+
+{% block layout_class %}layout-1x1{% endblock layout_class %}
+
+{% block tournament_views %}
+  <iframe src="{% url 'tournament_views' tournament.id %}"
+          title="{% trans 'Tournament view 1' %}"></iframe>
+{% endblock tournament_views %}

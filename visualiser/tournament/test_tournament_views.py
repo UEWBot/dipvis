@@ -603,6 +603,10 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/frameset_3x3.html')
+        self.assertContains(response, '<!DOCTYPE html>')
+        self.assertContains(response, '<iframe', count=10)
+        self.assertNotContains(response, '<frameset')
+        self.assertNotContains(response, '<frame ')
 
     def test_frameset_3_games(self):
         response = self.client.get(reverse('frameset_3_games',
@@ -610,6 +614,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/frameset_3_games.html')
+        self.assertContains(response, '<iframe', count=5)
 
     def test_frameset_2_games(self):
         response = self.client.get(reverse('frameset_2_games',
@@ -617,6 +622,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/frameset_2_games.html')
+        self.assertContains(response, '<iframe', count=4)
 
     def test_frameset_top_board(self):
         response = self.client.get(reverse('frameset_top_board',
@@ -624,6 +630,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/frameset_top_board.html')
+        self.assertContains(response, '<iframe', count=7)
 
     def test_frameset_2x2(self):
         response = self.client.get(reverse('frameset_2x2',
@@ -631,6 +638,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/frameset_2x2.html')
+        self.assertContains(response, '<iframe', count=5)
 
     def test_frameset_1x1(self):
         response = self.client.get(reverse('frameset_1x1',
@@ -638,6 +646,7 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/frameset_1x1.html')
+        self.assertContains(response, '<iframe', count=2)
 
     def test_views(self):
         response = self.client.get(reverse('tournament_views',
