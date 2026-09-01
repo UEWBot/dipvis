@@ -330,23 +330,33 @@ class Player(models.Model):
                                           'power': p,
                                           'count': award_count})
                 a = power_awards['first']
-                s = _('%(name)s first won %(award)s in %(year)d at %(event)s') % {'name': self,
-                                                                                  'award': a['name'],
-                                                                                  'year': a['year'],
-                                                                                  'event': a['event']}
                 if a['final_sc_count']:
-                    s += _(' with %(dots)d Supply Centres') % {'dots': a['final_sc_count']}
-                s += '.'
-                results.append(s)
+                    results.append(_('%(name)s first won %(award)s in %(year)d at %(event)s with %(dots)d Supply Centres.')
+                                   % {'name': self,
+                                      'award': a['name'],
+                                      'year': a['year'],
+                                      'event': a['event'],
+                                      'dots': a['final_sc_count']})
+                else:
+                    results.append(_('%(name)s first won %(award)s in %(year)d at %(event)s.')
+                                   % {'name': self,
+                                      'award': a['name'],
+                                      'year': a['year'],
+                                      'event': a['event']})
                 a = power_awards['latest']
-                s = _('%(name)s most recently won %(award)s in %(year)d at %(event)s') % {'name': self,
-                                                                                          'award': a['name'],
-                                                                                          'year': a['year'],
-                                                                                          'event': a['event']}
                 if a['final_sc_count']:
-                    s += _(' with %(dots)d Supply Centres') % {'dots': a['final_sc_count']}
-                s += '.'
-                results.append(s)
+                    results.append(_('%(name)s most recently won %(award)s in %(year)d at %(event)s with %(dots)d Supply Centres.')
+                                   % {'name': self,
+                                      'award': a['name'],
+                                      'year': a['year'],
+                                      'event': a['event'],
+                                      'dots': a['final_sc_count']})
+                else:
+                    results.append(_('%(name)s most recently won %(award)s in %(year)d at %(event)s.')
+                                   % {'name': self,
+                                      'award': a['name'],
+                                      'year': a['year'],
+                                      'event': a['event']})
         if (mask & MASK_OTHER_AWARDS) != 0 and power is None:
             for a in award_data['other']:
                 results.append(_('%(name)s won %(award)s at %(event)s.')
