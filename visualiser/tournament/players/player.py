@@ -361,7 +361,10 @@ class Player(models.Model):
         if (mask & MASK_TITLES) == 0:
             return results
         for title_data in self._title_data():
-            results.append(str(self) + ' was ' + title_data['title'] + ' in ' + ', '.join(map(str, title_data['years'])) + '.')
+            results.append(_('%(name)s was %(title)s in %(years)s.')
+                           % {'name': self,
+                              'title': title_data['title'],
+                              'years': ', '.join(map(str, title_data['years']))})
         return results
 
     def _tourney_rankings(self, ranking_set, an_event, event, events, mask=MASK_ALL_BG):
