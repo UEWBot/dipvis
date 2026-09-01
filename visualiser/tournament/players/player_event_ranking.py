@@ -98,14 +98,24 @@ class PlayerEventRanking(models.Model):
             wdd = WDDPlayer.objects.get(player=self.player)
         except (WDDPlayer.DoesNotExist, WDDPlayer.MultipleObjectsReturned):
             return ''
-        query = {'id_tournament': self.wdd_tournament_id,
-                 'id_player': wdd.wdd_player_id}
-        url = urlunparse(('https',
-                          WDD_NETLOC,
-                          f'{WDD_BASE_RESULTS_PATH}tournament_player.php',
-                          '',
-                          urlencode(query),
-                          ''))
+        if self.event_kind == EventKinds.CIRCUIT:
+            query = {'id_circuit': self.wdd_tournament_id,
+                     'id_player': wdd.wdd_player_id}
+            url = urlunparse(('https',
+                              WDD_NETLOC,
+                              f'{WDD_BASE_RESULTS_PATH}circuit_player.php',
+                              '',
+                              urlencode(query),
+                              ''))
+        else:
+            query = {'id_tournament': self.wdd_tournament_id,
+                     'id_player': wdd.wdd_player_id}
+            url = urlunparse(('https',
+                              WDD_NETLOC,
+                              f'{WDD_BASE_RESULTS_PATH}tournament_player.php',
+                              '',
+                              urlencode(query),
+                              ''))
         return url
 
     def wdr_url(self):

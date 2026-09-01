@@ -147,14 +147,15 @@ def _add_player_bg_from_wdr(player, wdr_id):
         if not event_date:
             print(f"Skipping {t['tournament_name']} for {player} with no date")
             continue
+        event_kind = _classify_wdr_tournament_kind(t.get('tournament_event_type'))
         defaults = {'position': t['tournament_player_rank'] if t['tournament_player_rank'] and t['tournament_player_rank'] > 0 else None,
                     'event_name': t['tournament_name'],
-                    'tournament_kind': t.get('tournament_kind'),
-                    'event_kind': _classify_wdr_tournament_kind(t.get('tournament_event_type'))}
+                    'tournament_kind': t.get('tournament_kind')}
         defaults['date'] = event_date
         if t['tournament_wdd_id'] == -1:
             try:
                 ptr, _ = PlayerEventRanking.objects.update_or_create(player=player,
+                                                                     event_kind=event_kind,
                                                                      wdr_tournament_id=t['tournament_id'],
                                                                      defaults=defaults)
                 rankings_by_wdr_tournament_id[t['tournament_id']] = ptr
@@ -162,12 +163,14 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerEventRanking')
-                print(f'player={str(player)}, event_name={t["tournament_name"]}, position={t["tournament_player_rank"]}, date={defaults["date"]}')
+                print(f'player={str(player)}, event_kind={event_kind}, wdr_tournament_id={t["tournament_wdr_id"]}, event_name={t["tournament_name"]}, position={t["tournament_player_rank"]}, defaults={defaults}')
                 traceback.print_exc()
         else:
             defaults['wdr_tournament_id'] = t['tournament_id']
             try:
+                # Note that WDD distinguishes tournaments and circuits, so the same id may identify one of each
                 ptr, _ = PlayerEventRanking.objects.update_or_create(player=player,
+                                                                     event_kind=event_kind,
                                                                      wdd_tournament_id=t['tournament_wdd_id'],
                                                                      defaults=defaults)
                 rankings_by_wdr_tournament_id[t['tournament_id']] = ptr
@@ -175,7 +178,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
                 # Handle all exceptions
                 # This way, we fail to add/update the single ranking rather than all the background
                 print('Failed to save PlayerEventRanking')
-                print(f'player={str(player)}, event_name={t["tournament_name"]}, position={t["tournament_player_rank"]}, date={defaults["date"]}')
+                print(f'player={str(player)}, event_kind={event_kind}, wdd_tournament_id={t["tournament_wdd_id"]}, event_name={t["tournament_name"]}, position={t["tournament_player_rank"]}, defaults={defaults}')
                 traceback.print_exc()
     # Boards
     for b in bg.boards():
