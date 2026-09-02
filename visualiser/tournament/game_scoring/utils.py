@@ -17,6 +17,11 @@
 """
 This module contains utility functions for scoring system classes.
 """
+from operator import itemgetter
+
+from tournament.diplomacy import FIRST_YEAR
+
+from .game_state import DotCountUnknown
 
 
 def _sorted_scores(scores, state):
@@ -37,6 +42,37 @@ def _normalise_scores(scores, total=100.0):
     old_total = sum(scores.values())
     for p in scores.keys():
         scores[p] = scores[p] * total / old_total
+
+
+def _countback_rank_scores(state, year, powers, rank_points):
+    """Allocate rank points, resolving tied centre counts by yearly count-back."""
+    if year < FIRST_YEAR:
+        shared_score = sum(rank_points) / len(powers)
+        return {power: shared_score for power in powers}
+
+    counts = [(power, state.dot_count(power, year)) for power in powers]
+    counts.sort(key=itemgetter(1), reverse=True)
+    scores = {}
+    for index, (power, centres) in enumerate(counts):
+        if power in scores:
+            continue
+        tied_powers = [candidate for candidate, count in counts if count == centres]
+        if len(tied_powers) == 1:
+            scores[power] = rank_points[index]
+            continue
+        previous_year = year - 1
+        while True:
+            try:
+                scores.update(_countback_rank_scores(
+                    state,
+                    previous_year,
+                    tied_powers,
+                    rank_points[index:index + len(tied_powers)],
+                ))
+                break
+            except DotCountUnknown:
+                previous_year -= 1
+    return scores
 
 
 def _adjust_rank_score(centre_counts, rank_points):

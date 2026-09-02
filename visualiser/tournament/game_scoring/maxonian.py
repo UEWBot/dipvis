@@ -17,15 +17,12 @@
 """
 This module contains a class that implements the Maxonian and 7Eleven scoring systems
 """
-from operator import itemgetter
-
 from django.utils.translation import gettext as _
 
-from tournament.diplomacy import FIRST_YEAR, WINNING_SCS
+from tournament.diplomacy import WINNING_SCS
 
 from .game_scoring_system import GameScoringSystem
-from .game_state import DotCountUnknown
-from .utils import _sorted_scores
+from .utils import _countback_rank_scores, _sorted_scores
 
 
 class GScoringMaxonian(GameScoringSystem):
@@ -65,71 +62,15 @@ class GScoringMaxonian(GameScoringSystem):
                  in which case only the soloer gets these points.
                  """) % {'threshold': self.bonus_threshold}
 
-    def _num_equal(self, state, dots, power_list, year):
-        """
-        How many of the specified powers had the specified dot count in the specified year?
-        """
-        count = 0
-        for p in power_list:
-            if state.dot_count(p, year) == dots:
-                count += 1
-        return count
-
-    def _scores_for_powers(self, state, year, power_list, points_list):
-        """
-        Recursive function to calculate rank points.
-
-        points_list must be ordered highest to lowest
-        """
-        retval = {}
-        if year < FIRST_YEAR:
-            # Powers are completely tied
-            pts = sum(points_list) / len(power_list)
-            for p in power_list:
-                retval[p] = pts
-            return retval
-
-        dots = [(p, state.dot_count(p, year)) for p in power_list]
-        dots.sort(key=itemgetter(1), reverse=True)
-
-        for n, (p, d) in enumerate(dots, start=0):
-
-            # We may already have done this power (if it's tied)
-            if p in retval:
-                continue
-
-            count = self._num_equal(state, d, power_list, year)
-            if count == 1:
-                retval[p] = points_list[n]
-            else:
-                # Recurse with the appropriate subsets
-                power_sublist = [p for p, d2 in dots if d2 == d]
-                yr = year - 1
-                while True:
-                    try:
-                        retval.update(self._scores_for_powers(state,
-                                                              yr,
-                                                              power_sublist,
-                                                              points_list[n:n+count]))
-                        break
-                    except DotCountUnknown:
-                        # Try the previous year
-                        # We always have 1900 counts,
-                        # and if for some reason we don't,
-                        # we'll get InvalidYear instead
-                        yr = yr - 1
-
-        return retval
-
     def scores(self, state):
         """
         Return a dict, indexed by power id, of scores.
         """
         # Get rank points for each power
-        retval = self._scores_for_powers(state,
-                                         state.last_full_year(),
-                                         state.all_powers(),
-                                         self.rank_points)
+        retval = _countback_rank_scores(state,
+                                        state.last_full_year(),
+                                        state.all_powers(),
+                                        self.rank_points)
         soloer = state.soloer()
 
         # add bonus points
