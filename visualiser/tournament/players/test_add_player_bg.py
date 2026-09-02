@@ -41,6 +41,86 @@ MELINDA_HOLLEY_WDR_ID = 8142
 class AddPlayerBgTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
 
+    def test_positive_rank_normalizes_wdr_values(self):
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        self.assertEqual(3, add_bg_module._positive_rank('3'))
+        self.assertEqual(3, add_bg_module._positive_rank(3))
+        self.assertIsNone(add_bg_module._positive_rank('-1'))
+        self.assertIsNone(add_bg_module._positive_rank(-1))
+        self.assertIsNone(add_bg_module._positive_rank(0))
+        self.assertIsNone(add_bg_module._positive_rank(None))
+        self.assertIsNone(add_bg_module._positive_rank(''))
+
+    def test_add_player_bg_keeps_wdr_tournament_with_null_rank(self):
+        player = Player.objects.create(first_name='Unranked', last_name='Player')
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        tournament = {
+            'tournament_id': 1352,
+            'tournament_wdd_id': None,
+            'tournament_name': 'NADF Masters 2011',
+            'tournament_start_date': '2011-01-14',
+            'tournament_end_date': '2011-01-16',
+            'tournament_kind': 'MASTERS',
+            'tournament_event_type': 'Tournament',
+            'tournament_player_rank': None,
+        }
+        with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+            mock_wdr.return_value.tournaments.return_value = [tournament]
+            mock_wdr.return_value.boards.return_value = []
+            mock_wdr.return_value.awards.return_value = []
+            mock_wdr.return_value.rankings.return_value = {}
+            mock_wdr.return_value.nationality.return_value = ''
+            mock_wdr.return_value.location.return_value = ''
+            add_bg_module._add_player_bg_from_wdr(player, 11753)
+
+        ranking = player.playereventranking_set.get(wdr_tournament_id=1352)
+        self.assertIsNone(ranking.rank)
+
+    def test_add_player_bg_keeps_partial_wdr_board(self):
+        player = Player.objects.create(first_name='Adam', last_name='Silverman')
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        tournament = {
+            'tournament_id': 2313,
+            'tournament_wdd_id': -1,
+            'tournament_name': 'World Masters Diplomacy 2004 S4 (2004-2005)',
+            'tournament_start_date': '2004-01-01',
+            'tournament_end_date': '2005-12-31',
+            'tournament_kind': 'CUP ☆☆☆',
+            'tournament_event_type': 'Tournament',
+            'tournament_player_rank': 35,
+        }
+        board = {
+            'board_round': 3,
+            'board_number': 1,
+            'board_is_top': False,
+            'board_tournament': 2313,
+            'board_power': 'England',
+            'board_centers': -1,
+            'board_score': None,
+            'board_rank': -1,
+            'board_year_of_elimination': None,
+            'board_url': None,
+            'board_variant': 'Standard',
+        }
+        with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+            mock_wdr.return_value.tournaments.return_value = [tournament]
+            mock_wdr.return_value.boards.return_value = [board]
+            mock_wdr.return_value.awards.return_value = []
+            mock_wdr.return_value.rankings.return_value = {}
+            mock_wdr.return_value.nationality.return_value = ''
+            mock_wdr.return_value.location.return_value = ''
+            add_bg_module._add_player_bg_from_wdr(player, 7213)
+
+        result = player.playergameresult_set.get()
+        self.assertEqual('England', str(result.power))
+        self.assertIsNone(result.rank)
+        self.assertIsNone(result.score)
+        self.assertIsNone(result.final_sc_count)
+        england = player.background_data()['game_results']['England']
+        self.assertEqual(1, england['games'])
+        self.assertEqual(0, england['solos']['count'])
+        self.assertEqual(0, england['board_tops']['count'])
+
     # add_player_bg()
     def test_add_player_bg_wiki1(self):
         """Test adding PlayerTitles based on Wikipedia"""

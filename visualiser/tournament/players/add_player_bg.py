@@ -216,6 +216,15 @@ WDR_EVENT_TYPE_MAP = {
 }
 
 
+def _positive_rank(value):
+    """Return a positive integer rank, or None for missing WDR values."""
+    try:
+        rank = int(value)
+    except (TypeError, ValueError):
+        return None
+    return rank if rank > 0 else None
+
+
 def _classify_wdr_tournament_kind(kind):
     """
     Classify a raw WDR tournament_event_type string into an EventKinds choice.
@@ -259,7 +268,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
             continue
         event_kind = _classify_wdr_tournament_kind(t.get('tournament_event_type'))
         defaults = {'event_kind': event_kind,
-                    'rank': t['tournament_player_rank'] if t['tournament_player_rank'] and t['tournament_player_rank'] > 0 else None,
+                    'rank': _positive_rank(t['tournament_player_rank']),
                     'event_name': t['tournament_name'],
                     'tournament_kind': t.get('tournament_kind')}
         defaults['date'] = event_date
@@ -301,12 +310,9 @@ def _add_player_bg_from_wdr(player, wdr_id):
         event_ranking = rankings_by_wdr_tournament_id.get(t_id)
         if event_ranking is None:
             continue
-        defaults = {'rank': b['board_rank'],
+        rank = _positive_rank(b['board_rank'])
+        defaults = {'rank': rank,
                     'is_top_board': bool(b.get('board_is_top'))}
-        if not b['board_rank']:
-            # This seems like a bug in WDR, but sometimes we don't get a rank
-            print(f"No board_rank in board {b}")
-            continue
         # Ignore any of these that aren't present
         if b['board_score']:
             defaults['score'] = b['board_score']

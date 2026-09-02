@@ -56,7 +56,8 @@ class PlayerGameResult(models.Model):
     game_number = models.PositiveSmallIntegerField()
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    rank = models.PositiveSmallIntegerField()
+    # WDR sometimes identifies the player and power but has no usable board rank.
+    rank = models.PositiveSmallIntegerField(blank=True, null=True)
     rank_equals = models.PositiveSmallIntegerField(blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True,
