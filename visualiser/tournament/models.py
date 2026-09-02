@@ -819,9 +819,9 @@ def add_ranks(to_scores, start=1):
     result = {}
     last_score = None
     for i, (k, score) in enumerate(sorted([(k, score) for k, score in to_scores.items()],
-                                      key=itemgetter(1),
-                                      reverse=True),
-                               start=start):
+                                          key=itemgetter(1),
+                                          reverse=True),
+                                   start=start):
         if score != last_score:
             place, last_score = i, score
         result[k] = (place, score)
