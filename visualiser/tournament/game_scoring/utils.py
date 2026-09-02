@@ -44,12 +44,12 @@ def _adjust_rank_score(centre_counts, rank_points):
     Allocate points for rank
 
     Takes a list of (power, centre count) 2-tuples for one year of one game,
-    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered highest-to-lowest, and a list of points for ranks,
     ordered from first place to last.
-    Returns a list of ranking points for positions, ordered to correspond to
-    the centre counts, having made adjustments for any tied positions.
+    Returns a list of points for ranks, ordered to correspond to
+    the centre counts, having made adjustments for any tied ranks.
     Where two or more powers have the same number of SCs, the ranking points
-    for their positions are shared evenly between them.
+    for their ranks are shared evenly between them.
     """
     if not rank_points:
         # The rest of them get zero points
@@ -82,10 +82,10 @@ def _adjust_rank_score_lower(centre_counts, rank_points):
     Allocate points for rank
 
     Takes a list of (power, centre count) 2-tuples for one year of one game,
-    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered highest-to-lowest, and a list of points for ranks,
     ordered from first place to last.
-    Returns a list of ranking points for positions, ordered to correspond to
-    the centre counts, having made adjustments for any tied positions.
+    Returns a list of points for ranks, ordered to correspond to
+    the centre counts, having made adjustments for any tied ranks.
     Where two or more powers have the same number of SCs, all tied players
     get the lower bonus points.
     """
@@ -120,13 +120,13 @@ def _adjust_rank_score_lower_special(centre_counts, rank_points, two_way_rank_po
     Allocate points for rank
 
     Takes a list of (power, centre count) 2-tuples for one year of one game,
-    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered highest-to-lowest, and a list of points for ranks,
     ordered from first place to last.
-    Also takes a second list of ranking points for positions, also
+    Also takes a second list of points for ranks, also
     ordered from first place to last, that is used if exactly two players are
     tied for a given rank.
-    Returns a list of ranking points for positions, ordered to correspond to
-    the centre counts, having made adjustments for any tied positions.
+    Returns a list of points for ranks, ordered to correspond to
+    the centre counts, having made adjustments for any tied ranks.
     Where three or more powers have the same number of SCs, all tied players
     get the lower bonus points.
     """
@@ -169,15 +169,15 @@ def _adjust_rank_score_lower_special2(centre_counts, rank_points, two_way_rank_p
     Allocate points for rank
 
     Takes a list of (power, centre count) 2-tuples for one year of one game,
-    ordered highest-to-lowest, and a list of ranking points for positions,
+    ordered highest-to-lowest, and a list of points for ranks,
     ordered from first place to last.
-    Also takes a second list of ranking points for positions, also
+    Also takes a second list of points for ranks, also
     ordered from first place to last, that is used if exactly two players are
     tied for a given rank.
-    Returns a list of ranking points for positions, ordered to correspond to
-    the centre counts, having made adjustments for any tied positions.
+    Returns a list of points for ranks, ordered to correspond to
+    the centre counts, having made adjustments for any tied ranks.
     Where three or more powers have the same number of SCs, all tied players
-    get points as if there was a 2-way tie for the second lowest position.
+    get points as if there was a 2-way tie for the second lowest rank.
     """
     if not rank_points:
         # The rest of them get zero points

@@ -743,20 +743,20 @@ def round_scores(request, tournament_id, round_num):
                                                'player__first_name').select_related('player'))
     rds = list(t.round_set.order_by('start'))
     if t.show_current_scores:
-        # Grab the tournament scores and positions after the specified round
-        t_positions_and_scores = t.positions_and_scores(after_round_num=round_num)
+        # Grab the tournament scores and ranks after the specified round
+        t_ranks_and_scores = t.ranks_and_scores(after_round_num=round_num)
     else:
         # Get the scores after the last finished Round, if any
         finished_round = next((rd for rd in reversed(rds) if rd.is_finished), None)
         if finished_round is None:
             # After Round 0, everyone had a score of zero
-            t_positions_and_scores = t.positions_and_scores(after_round_num=0)
+            t_ranks_and_scores = t.ranks_and_scores(after_round_num=0)
         else:
             finished_round_num = rds.index(finished_round) + 1
             if finished_round_num < round_num:
-                t_positions_and_scores = t.positions_and_scores(after_round_num=finished_round_num)
+                t_ranks_and_scores = t.ranks_and_scores(after_round_num=finished_round_num)
             else:
-                t_positions_and_scores = t.positions_and_scores(after_round_num=round_num)
+                t_ranks_and_scores = t.ranks_and_scores(after_round_num=round_num)
     # Discard any rounds after the one specified
     rds = rds[:round_num]
 
@@ -780,12 +780,12 @@ def round_scores(request, tournament_id, round_num):
             rs.append(rp)
             if rp is not None:
                 last_rp = rp
-        row = {'rank': f'{t_positions_and_scores[tp.player][0]}',
+        row = {'rank': f'{t_ranks_and_scores[tp.player][0]}',
                'player': tp,
                'last_rp': last_rp,
                'rounds': rs}
         scores.append(row)
-    # sort rows by position (they'll retain the alphabetic sorting if equal)
+    # Sort rows by rank (they retain alphabetic order when tied)
     scores.sort(key=lambda row: float(row['rank']))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:

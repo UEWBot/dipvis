@@ -62,7 +62,7 @@ class GScoringHaight(GameScoringSystem):
     """
     def __init__(self):
         self.name = _('Haight v1.0')
-        self.position_points = [66, 55, 44, 33, 22, 11]
+        self.rank_points = [66, 55, 44, 33, 22, 11]
         self.dead_score_can_change = True
 
     def scores(self, state):
@@ -88,7 +88,7 @@ class GScoringHaight(GameScoringSystem):
                     dots[i] = (p, (state.year_eliminated(p) - FIRST_YEAR)/100)
             dots.sort(key=itemgetter(1), reverse=True)
             # Tweak the ranking points to allow for ties
-            rank_pts = _adjust_rank_score_lower(dots, self.position_points)
+            rank_pts = _adjust_rank_score_lower(dots, self.rank_points)
             for i, (p, c) in enumerate(dots):
                 if c < 1:
                     retval[p] = 1 + state.year_eliminated(p) - FIRST_YEAR + rank_pts[i]

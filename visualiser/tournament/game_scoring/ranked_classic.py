@@ -49,7 +49,7 @@ class GScoringRankedClassic(GameScoringSystem):
        those players either receive the score for the lower of the rankings (i.e.,
        in a 3-way tie for 1st place, those players are all ranked third; in
        a 4-way tie for 4th, those players are ranked seventh, etc) or the 2-way tie
-       score for the second lowest position (so 3 people tying for first means
+    score for the second lowest rank (so 3 people tying for first means
        they're all ranked tied second, and 4 people tying for fourth means they're
        all ranked tied sixth).
     Games that end in solos score as follows:
@@ -58,8 +58,8 @@ class GScoringRankedClassic(GameScoringSystem):
     """
     def __init__(self, name, multi_way_ties_score_lower):
         self.name = name
-        self.position_points = [200, 90, 60, 40, 30, 20, 10]
-        self.position_points_2_tied = [135, 70, 50, 35, 25, 15]
+        self.rank_points = [200, 90, 60, 40, 30, 20, 10]
+        self.rank_points_2_tied = [135, 70, 50, 35, 25, 15]
         self.dead_score_can_change = False
         self.multi_way_ties_score_lower = multi_way_ties_score_lower
 
@@ -72,7 +72,7 @@ class GScoringRankedClassic(GameScoringSystem):
                                     a 4-way tie for 4th, those players are ranked seventh, etc)."""
         else:
             multi_way_tie_desc = """If a rank is tied by 3+ players, all players receive rank points as
-                                    if there was a two way tie for the second lowest position (so 3 people
+                                    if there was a two way tie for the second lowest rank (so 3 people
                                     tying for first means they're all ranked tied second, and 4 people
                                     tying for fourth means they're all ranked tied sixth)."""
         return _("""
@@ -116,12 +116,12 @@ class GScoringRankedClassic(GameScoringSystem):
             # Tweak the ranking points to allow for ties
             if self.multi_way_ties_score_lower:
                 rank_pts = _adjust_rank_score_lower_special(dots,
-                                                            self.position_points,
-                                                            self.position_points_2_tied)
+                                                            self.rank_points,
+                                                            self.rank_points_2_tied)
             else:
                 rank_pts = _adjust_rank_score_lower_special2(dots,
-                                                             self.position_points,
-                                                             self.position_points_2_tied)
+                                                             self.rank_points,
+                                                             self.rank_points_2_tied)
             for i, (p, c) in enumerate(dots):
                 if c < 1:
                     # Eliminated players only get participation points

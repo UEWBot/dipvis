@@ -103,7 +103,7 @@ class DuctTapeV2GameScoringTests(TestCase):
         check_score_for_state(self, sgs, self.DUCT_TAPE_DEAD_EQUAL, EXPECT, 75)
 
     def test_g_scoring_duct_tape_v2_eliminations(self):
-        # Eliminated powers all tie and split their position points equally,
+        # Eliminated powers all tie and split their rank points equally,
         # regardless of when they were eliminated
         sgs = SimpleGameState(sc_counts={self.austria: 0,
                                          self.england: 17,

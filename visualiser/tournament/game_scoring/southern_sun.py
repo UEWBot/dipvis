@@ -52,7 +52,7 @@ class GScoringSouthernSun(GameScoringSystem):
     """
     def __init__(self):
         self.name = _('Southern Sun')
-        self.position_points = [130, 80, 50, 30, 20, 10, 10]
+        self.rank_points = [130, 80, 50, 30, 20, 10, 10]
         self.dead_score_can_change = True
 
     def scores(self, state):
@@ -71,8 +71,8 @@ class GScoringSouthernSun(GameScoringSystem):
         else:
             dots = [(p, state.dot_count(p)) for p in all_powers]
             dots.sort(key=itemgetter(1), reverse=True)
-            # Allow for tied positions
-            rank_pts = _adjust_rank_score(dots, self.position_points[:len(state.survivors())])
+            # Allow for tied ranks
+            rank_pts = _adjust_rank_score(dots, self.rank_points[:len(state.survivors())])
             for i, (p, c) in enumerate(dots):
                 if c > 0:
                     # 30 plus 10/dot plus rank points

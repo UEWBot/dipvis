@@ -203,7 +203,7 @@ def add_missing_player_wdr_ids(dry_run=False):
     for t in Tournament.objects.filter(is_published=True).exclude(wdr_tournament_id=None):
         tps = t.tournamentplayer_set.filter(player__wdr_player_id=None)
         if len(tps):
-            results = t.positions_and_scores()
+            results = t.ranks_and_scores()
             data = wdr_tournament_as_json(t.wdr_tournament_id)
             for tp in tps:
                 p = tp.player

@@ -24,7 +24,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import ngettext
 
 from tournament.models import CentreCount, DrawSecrecy, Game, Round, Tournament
-from tournament.players import position_str
+from tournament.players import rank_str
 
 # Mask values to choose which news strings to include
 MASK_BOARD_TOP = 1 << 0
@@ -72,11 +72,11 @@ def _tournament_news(t):
         results += _round_news(current_round)
     # If the tournament is over, just report the top three players, plus awards
     elif t.is_finished:
-        for player, (rank, score) in t.positions_and_scores().items():
+        for player, (rank, score) in t.ranks_and_scores().items():
             if rank in [1, 2, 3]:
-                results.append(_(u'%(player)s came %(pos)s, with a score of %(score).2f.')
+                     results.append(_(u'%(player)s came %(rank)s, with a score of %(score).2f.')
                                % {'player': str(player),
-                                  'pos':  position_str(rank),
+                                             'rank': rank_str(rank),
                                   'score':  score})
         # Add all awards
         for tp in t.tournamentplayer_set.exclude(awardrecipient=None).order_by():

@@ -16,12 +16,11 @@
 
 from django.test import TestCase
 
-from . import position_str
+from . import rank_str
 
 
-class PositionStrTests(TestCase):
-    # position_str()
-    def test_position_str_first(self):
+class RankStrTests(TestCase):
+    def test_rank_str(self):
         tests = {1: '1st',
                  2: '2nd',
                  3: '3rd',
@@ -42,8 +41,7 @@ class PositionStrTests(TestCase):
                  24: '24th',
                  99: '99th',
                  100: '100th',
-                 101: '101st',
-                }
-        for k, v in tests.items():
-            with self.subTest(k):
-                self.assertEqual(position_str(k), v)
+                 101: '101st'}
+        for rank, ordinal in tests.items():
+            with self.subTest(rank):
+                self.assertEqual(rank_str(rank), ordinal)

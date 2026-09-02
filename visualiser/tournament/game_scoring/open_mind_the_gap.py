@@ -32,7 +32,7 @@ class GScoringOMG(GameScoringSystem):
     a) Each supply center (SC) is worth 1.5 points (total = 51 points)
     b) Surviving in a draw is worth 9 points (average = 40.5 points per game)
     c) Bonuses for the Top 3: 4.5 points for 1st, 3 points for 2nd, 1.5 points for 3rd.
-       If positions are tied, position points are shared between powers
+    If ranks are tied, rank points are shared between powers
        (e.g. a 2-way tie for second awards each player (3 + 1.5) / 2 = 2.25 points.
     d) Tribute paid to the board topper is equal to 1st place SCs - 2nd place SCs,
        capped at 50% of a players score from a, b, and c
@@ -66,7 +66,7 @@ class GScoringOMG(GameScoringSystem):
             # Plus the survival points
             if c:
                 retval[p] += 9
-            # and position points
+            # and rank points
             retval[p] += rank_pts[i]
             if num_leaders == 1:
                 # Leader(s) gets tribute from all the rest

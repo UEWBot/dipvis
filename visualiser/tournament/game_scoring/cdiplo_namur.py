@@ -48,7 +48,7 @@ class GScoringCDiploNamur(GameScoringSystem):
         self.name = _(u'C-Diplo Namur')
         # Losers to a solo don't get their participation point
         self.dead_score_can_change = True
-        self.position_pts = [38, 14, 7]
+        self.rank_pts = [38, 14, 7]
         self.sc_pts = [0, 5, 9, 12, 14, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
 
     def scores(self, state):
@@ -59,7 +59,7 @@ class GScoringCDiploNamur(GameScoringSystem):
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
         dots.sort(key=itemgetter(1), reverse=True)
         # Tweak the ranking points to allow for ties
-        rank_pts = _adjust_rank_score(dots, self.position_pts)
+        rank_pts = _adjust_rank_score(dots, self.rank_pts)
         for i, (p, c) in enumerate(dots):
             if dots[0][1] >= WINNING_SCS:
                 retval[p] = 0

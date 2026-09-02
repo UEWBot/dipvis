@@ -13,7 +13,7 @@
 
 <table class="form">
   <thead><tr>
-    <th>{% trans "Position" %}</th>
+    <th>{% trans "Rank" %}</th>
     <th>{% trans "Player" %}</th>
     {% for r in rounds %}
       <th><a href="{% url 'round_detail' tournament.id r.number %}">{% blocktrans with round=r.number %}Round {{ round }}{% endblocktrans %}</a></th>

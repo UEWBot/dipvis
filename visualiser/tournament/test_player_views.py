@@ -123,12 +123,12 @@ class PlayerViewTests(TestCase):
     def test_api_background(self):
         event = PlayerEventRanking.objects.create(player=self.p1,
                                                   event_name='Background Open',
-                                                  position=1,
+                                                  rank=1,
                                                   event_kind=EventKinds.TOURNAMENT,
                                                   date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
         league_event = PlayerEventRanking.objects.create(player=self.p1,
                                                          event_name='Background League',
-                                                         position=2,
+                                                         rank=2,
                                                          event_kind=EventKinds.LEAGUE,
                                                          date=datetime(day=1, month=7, year=2024, tzinfo=datetime_timezone.utc))
         PlayerTitle.objects.create(player=self.p1,
@@ -145,14 +145,14 @@ class PlayerViewTests(TestCase):
                                         game_number=1,
                                         player=self.p1,
                                         power=austria,
-                                        position=1,
+                                        rank=1,
                                         final_sc_count=18)
         PlayerGameResult.objects.create(event_ranking=league_event,
                                         round_number=1,
                                         game_number=2,
                                         player=self.p1,
                                         power=austria,
-                                        position=2,
+                                        rank=2,
                                         final_sc_count=10)
         PlayerAward.objects.create(player=self.p1,
                                    event_ranking=event,
@@ -188,12 +188,12 @@ class PlayerViewTests(TestCase):
     def test_api_background_event_kind_filter(self):
         tournament_event = PlayerEventRanking.objects.create(player=self.p1,
                                                             event_name='Background Open',
-                                                            position=1,
+                                                            rank=1,
                                                             event_kind=EventKinds.TOURNAMENT,
                                                             date=datetime(day=1, month=6, year=2024, tzinfo=datetime_timezone.utc))
         league_event = PlayerEventRanking.objects.create(player=self.p1,
                                                          event_name='Background League',
-                                                         position=2,
+                                                         rank=2,
                                                          event_kind=EventKinds.LEAGUE,
                                                          date=datetime(day=1, month=7, year=2024, tzinfo=datetime_timezone.utc))
         austria = GreatPower.objects.get(abbreviation='A')
@@ -202,13 +202,13 @@ class PlayerViewTests(TestCase):
                                         game_number=1,
                                         player=self.p1,
                                         power=austria,
-                                        position=1)
+                                        rank=1)
         PlayerGameResult.objects.create(event_ranking=league_event,
                                         round_number=1,
                                         game_number=2,
                                         player=self.p1,
                                         power=austria,
-                                        position=2)
+                                        rank=2)
 
         response = self.client.get(reverse('api_player_background', args=(1, self.p1.pk,)) + '?event_kind=tournament',
                                    secure=True)
@@ -462,22 +462,22 @@ class PlayerViewTests(TestCase):
                                                game_number=1,
                                                player=self.p1,
                                                power=germany,
-                                               position=2)
+                                               rank=2)
         # One with lots of blanks
         pgr2 = PlayerGameResult.objects.create(event_ranking=ranking1,
                                                round_number=3,
                                                game_number=2,
                                                player=self.p1,
                                                power=england,
-                                               position=3)
+                                               rank=3)
         # One with lots of detail
         PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         player=p2,
                                         power=germany,
-                                        position=6,
-                                        position_equals=2,
+                                        rank=6,
+                                        rank_equals=2,
                                         score=3.4,
                                         final_sc_count=1,
                                         result='D7')
@@ -516,13 +516,13 @@ class PlayerViewTests(TestCase):
                                                game_number=5,
                                                player=self.p1,
                                                power=france,
-                                               position=1)
+                                               rank=1)
         PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         player=p2,
                                         power=turkey,
-                                        position=7)
+                                        rank=7)
         response = self.client.get(reverse('player_versus',
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)
@@ -554,13 +554,13 @@ class PlayerViewTests(TestCase):
                                                game_number=3,
                                                player=self.p1,
                                                power=austria,
-                                               position=4)
+                                               rank=4)
         PlayerGameResult.objects.create(event_ranking=ranking2,
                                         round_number=pgr1.round_number,
                                         game_number=pgr1.game_number,
                                         player=p2,
                                         power=russia,
-                                        position=5)
+                                        rank=5)
         response = self.client.get(reverse('player_versus',
                                            args=(self.p1.pk, p2.pk)),
                                    secure=True)

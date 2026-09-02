@@ -51,7 +51,7 @@ class GScoringCDiplo(GameScoringSystem):
         self.dead_score_can_change = loss_pts != played_pts
         self.soloer_pts = soloer_pts
         self.played_pts = played_pts
-        self.position_pts = [first_pts, second_pts, third_pts]
+        self.rank_pts = [first_pts, second_pts, third_pts]
         self.loss_pts = loss_pts
 
     @property
@@ -69,9 +69,9 @@ class GScoringCDiplo(GameScoringSystem):
                  - if powers are tied for rank, they split the points for their ranks.
                  """) % {'soloer_pts': self.soloer_pts,
                         'played_pts': self.played_pts,
-                        'first_pts': self.position_pts[0],
-                        'second_pts': self.position_pts[1],
-                        'third_pts': self.position_pts[2],
+                        'first_pts': self.rank_pts[0],
+                        'second_pts': self.rank_pts[1],
+                        'third_pts': self.rank_pts[2],
                         'loss_pts': self.loss_pts}
 
     def scores(self, state):
@@ -82,7 +82,7 @@ class GScoringCDiplo(GameScoringSystem):
         dots = [(p, state.dot_count(p)) for p in state.all_powers()]
         dots.sort(key=itemgetter(1), reverse=True)
         # Tweak the ranking points to allow for ties
-        rank_pts = _adjust_rank_score(dots, self.position_pts)
+        rank_pts = _adjust_rank_score(dots, self.rank_pts)
         for i, (p, c) in enumerate(dots):
             if dots[0][1] >= WINNING_SCS:
                 retval[p] = self.loss_pts

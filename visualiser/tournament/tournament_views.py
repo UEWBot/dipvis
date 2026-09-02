@@ -130,16 +130,16 @@ def tournament_scores(request,
     # Round number is start-time order, so preserve that explicitly.
     rds = list(t.round_set.order_by('start'))
     if t.show_current_scores:
-        # Grab the tournament scores and positions, all "if it ended now"
-        t_positions_and_scores = t.positions_and_scores()
+        # Grab the tournament scores and ranks, all "if it ended now"
+        t_ranks_and_scores = t.ranks_and_scores()
     else:
         # Get the scores after the last finished Round, if any
         finished_round = next((rd for rd in reversed(rds) if rd.is_finished), None)
         if finished_round:
-            t_positions_and_scores = t.positions_and_scores(after_round_num=rds.index(finished_round) + 1)
+            t_ranks_and_scores = t.ranks_and_scores(after_round_num=rds.index(finished_round) + 1)
         else:
             # After Round 0, everyone had a score of zero
-            t_positions_and_scores = t.positions_and_scores(after_round_num=0)
+            t_ranks_and_scores = t.ranks_and_scores(after_round_num=0)
 
     round_player_map = {}
     if rds and tps:
@@ -157,11 +157,11 @@ def tournament_scores(request,
         for r in rds:
             # This player didn't play this round if the key is missing
             rs.append(round_player_map.get((r.id, tp.player_id)))
-        row = {'rank': f'{t_positions_and_scores[tp.player][0]}',
+        row = {'rank': f'{t_ranks_and_scores[tp.player][0]}',
                'player': tp,
                'rounds': rs}
         scores.append(row)
-    # sort rows by position (they'll retain the alphabetic sorting if equal)
+    # Sort rows by rank (they retain alphabetic order when tied)
     scores.sort(key=lambda row: float(row['rank']))
     # After sorting, replace UNRANKED with suitable text
     for row in scores:
@@ -209,7 +209,7 @@ def team_scores(request,
         return HttpResponseRedirect(reverse(redirect_url_name, args=(tournament_id,)))
     scores = []
     if t.show_current_scores:
-        # Grab the team scores and positions, all "if it ended now"
+        # Grab the team scores and ranks, all "if it ended now"
         team_scores = t.team_scores()
     else:
         # Get the scores after the last finished Round, if any
@@ -247,7 +247,7 @@ def graph(request, tournament_id):
         max_score = 0.0
         for n, r in enumerate(rounds, start=1):
             if r.show_scores():
-                for p, (rank, score) in t.positions_and_scores(after_round_num=n).items():
+                for p, (rank, score) in t.ranks_and_scores(after_round_num=n).items():
                     all_scores[p].append((n, score))
                     if rank == 1:
                         max_score = score
@@ -877,7 +877,7 @@ def api(request, tournament_id, version):
         rounds[num] = {'scoring_system': r.scoring_system,
                        'games': games}
     results = []
-    p_and_s = t.positions_and_scores()
+    p_and_s = t.ranks_and_scores()
     for player, res in p_and_s.items():
         entry = {'player_name': str(player),
                  'player_wdr_id': player.wdr_player_id,

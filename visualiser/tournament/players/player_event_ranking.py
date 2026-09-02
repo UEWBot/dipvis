@@ -37,7 +37,7 @@ from tournament.wdr import WDR_BASE_URL, validate_wdr_tournament_id
 
 from .event_kinds import EventKinds
 from .player import Player
-from .position_str import position_str
+from .rank_str import rank_str
 from .wdd_player import WDDPlayer
 
 
@@ -49,7 +49,7 @@ class PlayerEventRanking(models.Model):
     """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     event_name = models.CharField(max_length=100)
-    position = models.PositiveSmallIntegerField(blank=True, null=True)
+    rank = models.PositiveSmallIntegerField(blank=True, null=True)
     date = models.DateField()
     event_kind = models.CharField(max_length=1,
                                   choices=EventKinds.choices,
@@ -79,12 +79,12 @@ class PlayerEventRanking(models.Model):
         ]
 
     def __str__(self):
-        if self.position is None:
+        if self.rank is None:
             s = _(u'%(player)s was unranked at %(event_name)s') % {'player': self.player,
                                                                    'event_name': self.event_name}
         else:
-            s = _(u'%(player)s came %(position)s at %(event_name)s') % {'player': self.player,
-                                                                        'position': position_str(self.position),
+            s = _(u'%(player)s came %(rank)s at %(event_name)s') % {'player': self.player,
+                                                                        'rank': rank_str(self.rank),
                                                                         'event_name': self.event_name}
         if self.event_name[-4:] != str(self.date.year):
             s += _(u' in %(year)d') % {'year': self.date.year}

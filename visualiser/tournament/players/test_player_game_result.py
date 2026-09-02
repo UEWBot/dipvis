@@ -58,13 +58,13 @@ class PlayerGameResultTests(TestCase):
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                position=2)
+                                rank=2)
         pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
-                                position=4)
+                                rank=4)
         self.assertIs(True, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_tournament(self):
@@ -79,13 +79,13 @@ class PlayerGameResultTests(TestCase):
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                position=2)
+                                rank=2)
         pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
-                                position=4)
+                                rank=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_round(self):
@@ -100,13 +100,13 @@ class PlayerGameResultTests(TestCase):
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                position=2)
+                                rank=2)
         pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=2,
                                 game_number=1,
                                 player=p2,
                                 power=self.russia,
-                                position=4)
+                                rank=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_game(self):
@@ -121,13 +121,13 @@ class PlayerGameResultTests(TestCase):
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                position=2)
+                                rank=2)
         pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=1,
                                 game_number=2,
                                 player=p2,
                                 power=self.russia,
-                                position=4)
+                                rank=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     def test_playergameresult_same_wrong_date(self):
@@ -142,13 +142,13 @@ class PlayerGameResultTests(TestCase):
                                 game_number=1,
                                 player=p1,
                                 power=self.austria,
-                                position=2)
+                                rank=2)
         pgr2 = PlayerGameResult(event_ranking=per2,
                                 round_number=pgr1.round_number,
                                 game_number=pgr1.game_number,
                                 player=p2,
                                 power=self.russia,
-                                position=4)
+                                rank=4)
         self.assertIs(False, pgr1.for_same_game(pgr2))
 
     # PlayeGameResult.game_name()
@@ -159,7 +159,7 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               position=2)
+                               rank=2)
         name = pgr.game_name()
         self.assertEqual(name, 'R 1 B 3')
 
@@ -171,7 +171,7 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               position=2)
+                               rank=2)
         # Check wdd_url() for a PGR with no WDD id
         self.assertIsNone(pgr.event_ranking.wdd_tournament_id)
         self.assertEqual('', pgr.wdd_url())
@@ -185,7 +185,7 @@ class PlayerGameResultTests(TestCase):
                        game_number=3,
                        player=p,
                        power=self.austria,
-                       position=2)
+                       rank=2)
         url = pgr.wdd_url()
         self.assertIn('https://world-diplomacy-database.com/php/results/tournament_board.php', url)
         self.assertIn('id_tournament=369', url)
@@ -201,7 +201,7 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               position=2)
+                               rank=2)
         # Check wdr_url() for a PGR with no WDR id
         self.assertIsNone(pgr.event_ranking.wdr_tournament_id)
         self.assertEqual('', pgr.wdr_url())
@@ -215,7 +215,7 @@ class PlayerGameResultTests(TestCase):
                        game_number=3,
                        player=p,
                        power=self.austria,
-                       position=2)
+                       rank=2)
         url = pgr.wdr_url()
         self.assertEqual('https://www.world-diplomacy-reference.com/tournaments/369/boards', url)
 
@@ -227,7 +227,7 @@ class PlayerGameResultTests(TestCase):
                                game_number=3,
                                player=p,
                                power=self.austria,
-                               position=2)
+                               rank=2)
         p_str = str(pgr)
         # We expect to find player name and power name
         self.assertIn(p.first_name, p_str)
@@ -241,7 +241,7 @@ class PlayerGameResultTests(TestCase):
                                               game_number=2,
                                               player=p,
                                               power=self.austria,
-                                              position=3)
+                                              rank=3)
         self.assertIs(False, pgr.is_top_board)
         # Cleanup
         pgr.delete()

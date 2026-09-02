@@ -3536,40 +3536,40 @@ class TournamentTests(TestCase):
         p1.delete()
         p2.delete()
 
-    # Tournament.positions_and_scores()
-    def test_tournament_positions_and_scores_finished(self):
+    # Tournament.ranks_and_scores()
+    def test_tournament_ranks_and_scores_finished(self):
         t = Tournament.objects.get(name='t3')
         # Record expected results
         scores = {}
         for tp in t.tournamentplayer_set.all():
             scores[tp] = tp.score
-        p_and_s = t.positions_and_scores()
+        p_and_s = t.ranks_and_scores()
         # This should just read the TournamentPlayer attributes
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
                 self.assertAlmostEqual(p_and_s[tp.player][1], scores[tp])
 
-    def test_tournament_positions_and_scores_unfinished(self):
+    def test_tournament_ranks_and_scores_unfinished(self):
         t = Tournament.objects.get(name='t1')
         # Record expected results
         scores = {}
         for tp in t.tournamentplayer_set.all():
             scores[tp] = tp.score
-        p_and_s = t.positions_and_scores()
+        p_and_s = t.ranks_and_scores()
         # This should just read the TournamentPlayer attributes
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
                 self.assertAlmostEqual(p_and_s[tp.player][1], scores[tp])
 
-    def test_tournament_positions_and_scores_with_unranked(self):
+    def test_tournament_ranks_and_scores_with_unranked(self):
         t = Tournament.objects.get(name='t1')
         scores = {}
         for tp in t.tournamentplayer_set.all():
             scores[tp] = tp.score
             tp.score = 0.0
             tp.save()
-        p_and_s = t.positions_and_scores()
-        # The unranked player should have a special position
+        p_and_s = t.ranks_and_scores()
+        # The unranked player should have a special rank
         self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
         # As everyone else has the same score, they should all be ranked (joint) first
         for k in p_and_s:
@@ -3581,7 +3581,7 @@ class TournamentTests(TestCase):
             tp.score = scores[tp]
             tp.save()
 
-    def test_tournament_positions_and_scores_rank_ordering(self):
+    def test_tournament_ranks_and_scores_rank_ordering(self):
         t = Tournament.objects.get(name='t1')
         original_scores = {}
         values = {
@@ -3600,7 +3600,7 @@ class TournamentTests(TestCase):
             tp.score = values[tp.player]
             tp.save(update_fields=['score'])
 
-        p_and_s = t.positions_and_scores()
+        p_and_s = t.ranks_and_scores()
         self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
         self.assertEqual(p_and_s[self.p1][0], 1)
         self.assertEqual(p_and_s[self.p2][0], 2)
@@ -3614,7 +3614,7 @@ class TournamentTests(TestCase):
             tp.score = original_scores[tp]
             tp.save(update_fields=['score'])
 
-    def test_tournament_positions_and_scores_round_zero(self):
+    def test_tournament_ranks_and_scores_round_zero(self):
         t = Tournament.objects.get(name='t3')
         # Store the current scores
         scores = {}
@@ -3642,7 +3642,7 @@ class TournamentTests(TestCase):
                 scores[rp] = rp.score
             # Call update_scores() to set rp.tournament_score
             r.update_scores()
-        p_and_s = t.positions_and_scores(after_round_num=0)
+        p_and_s = t.ranks_and_scores(after_round_num=0)
         # All scores should be zero before the first round
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
@@ -3656,7 +3656,7 @@ class TournamentTests(TestCase):
         self.g31.gameplayer_set.all().delete()
         self.g32.gameplayer_set.all().delete()
 
-    def test_tournament_positions_and_scores_round(self):
+    def test_tournament_ranks_and_scores_round(self):
         t = Tournament.objects.get(name='t3')
         # Store the current scores
         scores = {}
@@ -3684,7 +3684,7 @@ class TournamentTests(TestCase):
                 scores[rp] = rp.score
             # Call update_scores() to set rp.tournament_score
             r.update_scores()
-        p_and_s = t.positions_and_scores(after_round_num=1)
+        p_and_s = t.ranks_and_scores(after_round_num=1)
         # Just the first round should count
         rps = t.round_numbered(1).roundplayer_set.all()
         for tp in t.tournamentplayer_set.all():
@@ -3698,7 +3698,7 @@ class TournamentTests(TestCase):
         self.g31.gameplayer_set.all().delete()
         self.g32.gameplayer_set.all().delete()
 
-    def test_tournament_positions_and_scores_middle_round(self):
+    def test_tournament_ranks_and_scores_middle_round(self):
         """Neither the first nor the last round"""
         t = Tournament.objects.get(name='t3')
         # Store the current scores
@@ -3774,8 +3774,8 @@ class TournamentTests(TestCase):
                 scores[rp] = rp.score
             # Call update_scores() to set rp.tournament_score
             r.update_scores()
-        # Get the positions and scores
-        p_and_s = t.positions_and_scores(after_round_num=2)
+        # Get the ranks and scores
+        p_and_s = t.ranks_and_scores(after_round_num=2)
         # Just the first two rounds should count
         rps1 = t.round_numbered(1).roundplayer_set.all()
         rps2 = t.round_numbered(2).roundplayer_set.all()
@@ -3803,7 +3803,7 @@ class TournamentTests(TestCase):
         self.g31.gameplayer_set.all().delete()
         self.g32.gameplayer_set.all().delete()
 
-    def test_tournament_positions_and_scores_round_with_top_pool_fallback(self):
+    def test_tournament_ranks_and_scores_round_with_top_pool_fallback(self):
         """after_round_num should still work when a top pool exists."""
         today = date.today()
         t = Tournament.objects.create(name='t_ps_fallback',
@@ -3848,7 +3848,7 @@ class TournamentTests(TestCase):
                        the_round=r3,
                        tournament_score=999.0)
 
-        p_and_s = t.positions_and_scores(after_round_num=2)
+        p_and_s = t.ranks_and_scores(after_round_num=2)
 
         self.assertEqual(p_and_s[self.p1], (1, 30.0))
         self.assertEqual(p_and_s[self.p2], (2, 20.0))
@@ -3857,7 +3857,7 @@ class TournamentTests(TestCase):
         # Cleanup
         t.delete()
 
-    def test_tournament_positions_and_scores_round_rank_ordering(self):
+    def test_tournament_ranks_and_scores_round_rank_ordering(self):
         """after_round_num path should preserve competition ranking semantics."""
         t = Tournament.objects.get(name='t1')
         r = t.round_numbered(1)
@@ -3879,7 +3879,7 @@ class TournamentTests(TestCase):
             rp.save(update_fields=['tournament_score'])
             assigned_scores[rp.player] = score
 
-        p_and_s = t.positions_and_scores(after_round_num=1)
+        p_and_s = t.ranks_and_scores(after_round_num=1)
 
         expected_scores = {}
         for tp in t.tournamentplayer_set.filter(unranked=False).prefetch_related('player'):
@@ -3902,7 +3902,7 @@ class TournamentTests(TestCase):
             rp.tournament_score = original_scores[rp]
             rp.save(update_fields=['tournament_score'])
 
-    def test_tournament_positions_and_scores_last_round(self):
+    def test_tournament_ranks_and_scores_last_round(self):
         t = Tournament.objects.get(name='t3')
         # Store the current scores
         scores = {}
@@ -3930,7 +3930,7 @@ class TournamentTests(TestCase):
                 scores[rp] = rp.score
             # Call update_scores() to set rp.tournament_score
             r.update_scores()
-        p_and_s = t.positions_and_scores(after_round_num=t.round_set.count())
+        p_and_s = t.ranks_and_scores(after_round_num=t.round_set.count())
         # This should just report the scores stored in the database
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
@@ -3942,7 +3942,7 @@ class TournamentTests(TestCase):
         self.g31.gameplayer_set.all().delete()
         self.g32.gameplayer_set.all().delete()
 
-    def test_tournament_positions_and_scores_top_board_played(self):
+    def test_tournament_ranks_and_scores_top_board_played(self):
         """Tournament with a top board that has been played"""
         today = date.today()
         t = Tournament.objects.create(name='testy',
@@ -4057,7 +4057,7 @@ class TournamentTests(TestCase):
                           self.p5: 6,  # Sixth should go to the next highest tournament score (131)
                           self.p9: 7,  # Other tied top board player is way down in seventh
                          }
-        p_and_s = t.positions_and_scores()
+        p_and_s = t.ranks_and_scores()
         for player in expected_ranks.keys():
             with self.subTest(player=player):
                 self.assertEqual(p_and_s[player][0], expected_ranks[player])
@@ -4074,17 +4074,17 @@ class TournamentTests(TestCase):
                           self.p6: 5,
                           self.p5: 7,  # Seventh should go to the next highest tournament score (131)
                          }
-        p_and_s = t.positions_and_scores()
+        p_and_s = t.ranks_and_scores()
         for player in expected_ranks.keys():
             with self.subTest(player=player):
                 self.assertEqual(p_and_s[player][0], expected_ranks[player])
         # Cleanup
         t.delete()
 
-    def test_tournament_positions_and_scores_top_board_not_seeded(self):
+    def test_tournament_ranks_and_scores_top_board_not_seeded(self):
         """Tournament with a top board that has not yet been seeded"""
         t = Tournament.objects.get(name='t1')
-        p_and_s_before = t.positions_and_scores()
+        p_and_s_before = t.ranks_and_scores()
         r = t.round_numbered(3)
         p1 = Pool.objects.create(the_round=r,
                                  name='Top Board',
@@ -4096,7 +4096,7 @@ class TournamentTests(TestCase):
             game.pool = pool
             game.save()
         # Addition of pools shouldn't make any difference
-        p_and_s_after = t.positions_and_scores()
+        p_and_s_after = t.ranks_and_scores()
         self.assertEqual(p_and_s_before, p_and_s_after)
         # Cleanup
         for g in r.game_set.all():
@@ -4105,8 +4105,8 @@ class TournamentTests(TestCase):
         p1.delete()
         p2.delete()
 
-    def test_tournament_positions_and_scores_tscoringsumgames(self):
-        """Check that positions_and_scores() with round specified doesn't break TScoringSumGames"""
+    def test_tournament_ranks_and_scores_tscoringsumgames(self):
+        """Check that ranks_and_scores() with round specified doesn't break TScoringSumGames"""
         t = Tournament.objects.get(name='t3')
         # Store current scores
         t_scores = {}
@@ -4130,7 +4130,7 @@ class TournamentTests(TestCase):
             rp = rps.get(player=tp.player)
             rp.score = r_scores[tp]
             rp.save()
-        t.positions_and_scores(after_round_num=1)
+        t.ranks_and_scores(after_round_num=1)
         # TournamentPlayer and RoundPlayer scores should be unchanged
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
@@ -6066,15 +6066,15 @@ class TournamentPlayerTests(TestCase):
     # TODO In an ongoing Tournament with show_current_scores False, if there are no finished rounds,
     #       it should return zero
 
-    # TournamentPlayer.position()
-    def test_tournamentplayer_position_finished(self):
+    # TournamentPlayer.rank()
+    def test_tournamentplayer_rank_finished(self):
         t = Tournament.objects.get(name='t3')
         tp1 = t.tournamentplayer_set.get(player=self.p5)
         self.assertEqual(tp1.score, 147.3)
         tp2 = t.tournamentplayer_set.get(player=self.p7)
         self.assertEqual(tp2.score, 47.3)
-        self.assertEqual(tp1.position(), 1)
-        self.assertEqual(tp2.position(), 2)
+        self.assertEqual(tp1.rank(), 1)
+        self.assertEqual(tp2.rank(), 2)
 
     # TournamentPlayer.team()
     def test_tournamentplayer_team(self):
@@ -8263,11 +8263,11 @@ class GameTests(TestCase):
         # Clean up
         t.delete()
 
-    # Game.positions()
-    def test_game_positions(self):
+    # Game.ranks()
+    def test_game_ranks(self):
         g = Game.objects.first()
         # TODO Validate results
-        g.positions()
+        g.ranks()
 
     # Game.is_dias()
     def test_game_is_dias(self):

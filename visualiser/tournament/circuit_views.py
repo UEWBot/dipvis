@@ -55,7 +55,7 @@ def circuit_scores(request, circuit_id):
     cps = list(circuit.circuitplayer_set.select_related('player').order_by('-score',
                                                                             'player__last_name',
                                                                             'player__first_name'))
-    rankings = circuit.positions_and_scores()
+    rankings = circuit.ranks_and_scores()
 
     tps = CircuitPlayer.tournamentplayers.through.objects.filter(
         circuitplayer__circuit=circuit
@@ -126,7 +126,7 @@ def api(request, circuit_id, version):
                                                                args=(version, t.pk,)))}
         tournaments.append(entry)
     results = []
-    for player, (rank, score) in c.positions_and_scores().items():
+    for player, (rank, score) in c.ranks_and_scores().items():
         # TODO add 'score_breakdown' array
         entry = {'player_name': str(player),
                  'player_wdr_id': player.wdr_player_id,

@@ -340,14 +340,14 @@ class AddPlayerBgTests(TestCase):
         ranking = PlayerEventRanking.objects.create(player=p,
                                                     event_name='The World Diplomacy Championship 2018',
                                                     date=date(2018, 8, 4),
-                                                    position=1,
+                                                    rank=1,
                                                     event_kind=EventKinds.TOURNAMENT)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
         title = {'Tournament': 'The World Diplomacy Championship',
                  'Year': 2016,
                  'World Champion': str(p)}
 
-        self.assertIsNone(add_bg_module._event_ranking_for_wiki_title(p, title, ranking.position))
+        self.assertIsNone(add_bg_module._event_ranking_for_wiki_title(p, title, ranking.rank))
         # Cleanup
         p.delete()
 
@@ -358,12 +358,12 @@ class AddPlayerBgTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='WDC 2016',
                                           date=date(2016, 8, 4),
-                                          position=1,
+                                          rank=1,
                                           event_kind=EventKinds.TOURNAMENT)
         PlayerEventRanking.objects.create(player=p,
                                           event_name='DipCon 2016',
                                           date=date(2016, 7, 4),
-                                          position=1,
+                                          rank=1,
                                           event_kind=EventKinds.TOURNAMENT)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
         title = {'Year': 2016,
@@ -380,12 +380,12 @@ class AddPlayerBgTests(TestCase):
         PlayerEventRanking.objects.create(player=p,
                                           event_name='North American Grand Prix 2000 East',
                                           date=date(2001, 8, 5),
-                                          position=1,
+                                          rank=1,
                                           event_kind=EventKinds.CIRCUIT)
         PlayerEventRanking.objects.create(player=p,
                                           event_name='North American Grand Prix 2000 West',
                                           date=date(2000, 12, 31),
-                                          position=1,
+                                          rank=1,
                                           event_kind=EventKinds.CIRCUIT)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
         title = {'Tournament': 'North American Grand Prix',
@@ -589,7 +589,7 @@ class AddPlayerBgTests(TestCase):
         existing = PlayerEventRanking.objects.create(player=p,
                                                      event_name='Thailand Diplomacy Championship 2022-2023',
                                                      date=date(2023, 12, 15),
-                                                     position=2)
+                                                     rank=2)
         add_bg_module = importlib.import_module('tournament.players.add_player_bg')
         fake_wdr = {
             'tournaments': [{
@@ -631,7 +631,7 @@ class AddPlayerBgTests(TestCase):
         self.assertEqual(1, p.playereventranking_set.count())
         self.assertEqual(7005, existing.wdr_tournament_id)
         self.assertEqual(EventKinds.LEAGUE, existing.event_kind)
-        self.assertEqual(4, existing.position)
+        self.assertEqual(4, existing.rank)
         pgr = p.playergameresult_set.get(round_number=1, game_number=2)
         self.assertEqual(existing, pgr.event_ranking)
         # Cleanup
@@ -733,7 +733,7 @@ class AddPlayerBgTests(TestCase):
         # The event is retained even though WDR has no tournament rank.
         ptrs = p.playereventranking_set.filter(event_name='WAC 10 2013')
         self.assertEqual(1, ptrs.count())
-        self.assertIsNone(ptrs.first().position)
+        self.assertIsNone(ptrs.first().rank)
         # WAC 10 he played Germany and Turkey, and we want to include those games
         pgrs = p.playergameresult_set.filter(event_ranking__event_name='WAC 10 2013')
         self.assertEqual(2, pgrs.count())

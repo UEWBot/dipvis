@@ -275,7 +275,7 @@ class Circuit(models.Model):
             raise InvalidScoringSystem(self.scoring_system)
         return system
 
-    def positions_and_scores(self):
+    def ranks_and_scores(self):
         """
         Returns the scores for the Circuit
 

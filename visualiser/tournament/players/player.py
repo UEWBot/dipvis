@@ -42,7 +42,7 @@ from tournament.wdr import WDR_BASE_URL, validate_wdr_player_id
 
 from .event_kinds import EventKinds
 from .game_results import GameResults
-from .position_str import position_str
+from .rank_str import rank_str
 from .wdr_background import InvalidWDRId, WDRBackground, WDRNotAccessible
 
 
@@ -220,7 +220,7 @@ class Player(models.Model):
 
     def _ranking_queryset(self, event_kind):
         """Return the base filtered tournament-ranking queryset for the current background view."""
-        qs = self.playereventranking_set.filter(position__isnull=False)
+        qs = self.playereventranking_set.filter(rank__isnull=False)
         if event_kind is not None:
             qs = qs.filter(event_kind=event_kind)
         return qs
@@ -229,7 +229,7 @@ class Player(models.Model):
         """Structured data for event ranking aggregates."""
         ranking_set = ranking_set.order_by('date')
         plays = ranking_set.count()
-        wins_set = ranking_set.filter(position=1)
+        wins_set = ranking_set.filter(rank=1)
         wins = wins_set.count()
         first = ranking_set.first() if plays else None
         latest = ranking_set.last() if plays else None
@@ -240,7 +240,7 @@ class Player(models.Model):
                 'latest': ({'event_name': latest.event_name,
                             'year': latest.date.year}
                            if latest else None),
-                'best_position': ranking_set.aggregate(Min('position'))['position__min'] if plays else None,
+                'best_rank': ranking_set.aggregate(Min('rank'))['rank__min'] if plays else None,
                 'wins': wins,
                 'percentage_won': 100.0 * float(wins) / float(plays) if plays else None,
                 'first_win': None,
@@ -262,7 +262,7 @@ class Player(models.Model):
             game_count = len(games)
             solos = sum(1 for game in games if game.final_sc_count is not None and game.final_sc_count >= WINNING_SCS)
             eliminations = sum(1 for game in games if game.year_eliminated is not None or game.final_sc_count == 0)
-            board_tops = sum(1 for game in games if game.result == GameResults.WIN or game.position == 1)
+            board_tops = sum(1 for game in games if game.result == GameResults.WIN or game.rank == 1)
             top_board_games = sum(1 for game in games if game.is_top_board)
             return {'games': game_count,
                     'best_sc_count': max((game.final_sc_count for game in games
@@ -426,12 +426,12 @@ class Player(models.Model):
                               'event_name': event_ranking_data['last_win']['event_name'],
                               'year': event_ranking_data['last_win']['year'],
                               'an_event': an_event})
-        elif ((mask & MASK_BEST_TOURNEY_RESULT) != 0 and
-              'wins' in event_ranking_data and
-              event_ranking_data['best_position'] is not None):
-            pos = position_str(event_ranking_data['best_position'])
-            results.append(_(u'The best %(event)s result for %(name)s is %(position)s.')
-                           % {'name': self, 'position': pos, 'event': event})
+        if ((mask & MASK_BEST_TOURNEY_RESULT) != 0 and
+            event_ranking_data.get('wins') == 0 and
+            event_ranking_data['best_rank'] is not None):
+            rank = rank_str(event_ranking_data['best_rank'])
+            results.append(_(u'The best %(event)s result for %(name)s is %(rank)s.')
+                           % {'name': self, 'rank': rank, 'event': event})
         return results
 
     def _results(self, ranking_set, an_event, event, events, power=None, mask=MASK_ALL_BG):

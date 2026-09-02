@@ -46,7 +46,7 @@ class GScoringMaxonian(GameScoringSystem):
     """
     def __init__(self, name, threshold=13):
         self.name = name
-        self.position_points = [7, 6, 5, 4, 3, 2, 1]
+        self.rank_points = [7, 6, 5, 4, 3, 2, 1]
         self.bonus_threshold = threshold
 
     @property
@@ -77,7 +77,7 @@ class GScoringMaxonian(GameScoringSystem):
 
     def _scores_for_powers(self, state, year, power_list, points_list):
         """
-        Recursive function to calculate position points.
+        Recursive function to calculate rank points.
 
         points_list must be ordered highest to lowest
         """
@@ -125,11 +125,11 @@ class GScoringMaxonian(GameScoringSystem):
         """
         Return a dict, indexed by power id, of scores.
         """
-        # Get position points for each power
+        # Get rank points for each power
         retval = self._scores_for_powers(state,
                                          state.last_full_year(),
                                          state.all_powers(),
-                                         self.position_points)
+                                         self.rank_points)
         soloer = state.soloer()
 
         # add bonus points

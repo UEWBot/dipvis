@@ -31,8 +31,8 @@ class GScoringSydneyLeague(GameScoringSystem):
     """
     Sydney League scoring system
 
-    Points for position, 700, 600, 500, 400, 300, 200, 100,
-    with players on shared positions averaging the points between them.
+    Points for rank, 700, 600, 500, 400, 300, 200, 100,
+    with players on shared ranks averaging the points between them.
     i.e. 2 way board top (700+600)/2 for each player.,
          3 way board top (700+600+500)/3 for each player, etc.
     Points for centres, 25 per centre.
@@ -43,7 +43,7 @@ class GScoringSydneyLeague(GameScoringSystem):
         self.name = 'Sydney League'
         self.dead_score_can_change = True
         self.points_per_dot = 25
-        self.position_pts = [700, 600, 500, 400, 300, 200, 100]
+        self.rank_pts = [700, 600, 500, 400, 300, 200, 100]
 
     def scores(self, state):
         """
@@ -56,16 +56,16 @@ class GScoringSydneyLeague(GameScoringSystem):
 
         # Split out the eliminated powers
         live_scs = [(p, c) for (p, c) in dots if c > 0]
-        pos_pts_1 = self.position_pts[:len(live_scs)]
+        rank_pts_1 = self.rank_pts[:len(live_scs)]
         # Tweak the alive powers points to allow for ties
-        rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
+        rank_pts = _adjust_rank_score(live_scs, rank_pts_1)
         for i, (p, c) in enumerate(live_scs):
             retval[p] = self.points_per_dot * c + rank_pts[i]
 
         # Calculate scores for eliminated powers, if any
-        if len(self.position_pts) != len(pos_pts_1):
+        if len(self.rank_pts) != len(rank_pts_1):
             dead_scs = [(p, c) for (p, c) in dots if c == 0]
-            pos_pts_2 = self.position_pts[len(pos_pts_1) - len(self.position_pts):]
+            rank_pts_2 = self.rank_pts[len(rank_pts_1) - len(self.rank_pts):]
             # Find when the dead powers died
             dummys = []
             for p, c in dead_scs:
@@ -73,7 +73,7 @@ class GScoringSydneyLeague(GameScoringSystem):
                 # For both year and SC count, higher is better
                 dummys.append((p, year))
             dummys.sort(key=itemgetter(1), reverse=True)
-            rank_pts = _adjust_rank_score(dummys, pos_pts_2)
+            rank_pts = _adjust_rank_score(dummys, rank_pts_2)
             for i, (p, y) in enumerate(dummys):
                 # Add in points per year survived
                 retval[p] = rank_pts[i] + (y + 1 - FIRST_YEAR)

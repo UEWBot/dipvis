@@ -31,11 +31,11 @@ class GScoringCarnage(GameScoringSystem):
     """
     Carnage scoring system
 
-    Position grants a set number of points, with ties splitting those points.
+    Rank grants a set number of points, with ties splitting those points.
     Each power gets some set points per centre owned at the end, unless there's
     a solo, in which case the soloer gets all the SC points.
-    Eliminated powers either get position points based on when they were
-    eliminated or all split position points.
+    Eliminated powers either get rank points based on when they were
+    eliminated or all split rank points.
     In the centre-based version, losers to a solo also get some points.
     """
     def __init__(self, name, centre_based, dead_equal, pts_per_dot_lead):
@@ -45,13 +45,13 @@ class GScoringCarnage(GameScoringSystem):
         self.pts_per_dot_lead = pts_per_dot_lead
         if centre_based:
             self.points_per_dot = 500
-            self.position_pts = [7007, 6006, 5005, 4004, 3003, 2002, 1001]
+            self.rank_pts = [7007, 6006, 5005, 4004, 3003, 2002, 1001]
             self.solo_pts = 39028
             self.loss_pts = 1000
         else:
             self.points_per_dot = 1
-            self.position_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
-            self.solo_pts = sum(self.position_pts) + TOTAL_SCS
+            self.rank_pts = [7000, 6000, 5000, 4000, 3000, 2000, 1000]
+            self.solo_pts = sum(self.rank_pts) + TOTAL_SCS
             self.loss_pts = 0
 
     @property
@@ -63,25 +63,25 @@ class GScoringCarnage(GameScoringSystem):
         base = _("""
                  If any power soloed, they get %(solo_pts)d points and all others get %(loss_pts)d.
                  Otherwise, all powers score %(dot_pts)d point per centre owned at the end plus
-                 points for their final position.%(lead_str)s
-                 Position points are %(pos_1)d, %(pos_2)d, %(pos_3)d, %(pos_4)d, %(pos_5)d,
-                 %(pos_6)d, or %(pos_7)d, with ties splitting those points.
+                 points for their final rank.%(lead_str)s
+                 Rank points are %(rank_1)d, %(rank_2)d, %(rank_3)d, %(rank_4)d, %(rank_5)d,
+                 %(rank_6)d, or %(rank_7)d, with ties splitting those points.
                  """) % {'solo_pts': self.solo_pts,
                          'loss_pts': self.loss_pts,
                          'dot_pts': self.points_per_dot,
-                         'pos_1': self.position_pts[0],
-                         'pos_2': self.position_pts[1],
-                         'pos_3': self.position_pts[2],
-                         'pos_4': self.position_pts[3],
-                         'pos_5': self.position_pts[4],
-                         'pos_6': self.position_pts[5],
-                         'pos_7': self.position_pts[6],
+                         'rank_1': self.rank_pts[0],
+                         'rank_2': self.rank_pts[1],
+                         'rank_3': self.rank_pts[2],
+                         'rank_4': self.rank_pts[3],
+                         'rank_5': self.rank_pts[4],
+                         'rank_6': self.rank_pts[5],
+                         'rank_7': self.rank_pts[6],
                          'lead_str': lead_str,
                          }
         if self.dead_equal:
-            return base + _('Eliminated powers all split position points.')
+            return base + _('Eliminated powers all split rank points.')
         else:
-            return base + _('Eliminated powers get position points based on when they were eliminated.')
+            return base + _('Eliminated powers get rank points based on when they were eliminated.')
 
     def scores(self, state):
         """
@@ -105,16 +105,16 @@ class GScoringCarnage(GameScoringSystem):
         # Giving all the dead powers equal scores is easy
         if self.dead_equal:
             # Tweak the ranking points to allow for ties
-            rank_pts = _adjust_rank_score(dots, self.position_pts)
+            rank_pts = _adjust_rank_score(dots, self.rank_pts)
             for i, (p, c) in enumerate(dots):
                 retval[p] = c + rank_pts[i]
             return _sorted_scores(retval, state)
 
         # Split out the eliminated powers
         live_scs = [(p, c) for (p, c) in dots if c > 0]
-        pos_pts_1 = self.position_pts[:len(live_scs)]
+        rank_pts_1 = self.rank_pts[:len(live_scs)]
         # Tweak the alive powers points to allow for ties
-        rank_pts = _adjust_rank_score(live_scs, pos_pts_1)
+        rank_pts = _adjust_rank_score(live_scs, rank_pts_1)
         for i, (p, c) in enumerate(live_scs):
             retval[p] = self.points_per_dot * c + rank_pts[i]
 
@@ -126,11 +126,11 @@ class GScoringCarnage(GameScoringSystem):
             retval[live_scs[0][0]] += lead * self.pts_per_dot_lead
 
         # If nobody was eliminated, we're done
-        if len(self.position_pts) == len(pos_pts_1):
+        if len(self.rank_pts) == len(rank_pts_1):
             return _sorted_scores(retval, state)
 
         dead_scs = [(p, c) for (p, c) in dots if c == 0]
-        pos_pts_2 = self.position_pts[len(pos_pts_1) - len(self.position_pts):]
+        rank_pts_2 = self.rank_pts[len(rank_pts_1) - len(self.rank_pts):]
         # Find when the dead powers died
         dummys = []
         for p, c in dead_scs:
@@ -138,7 +138,7 @@ class GScoringCarnage(GameScoringSystem):
             # For both year and SC count, higher is better
             dummys.append((p, year))
         dummys.sort(key=itemgetter(1), reverse=True)
-        rank_pts = _adjust_rank_score(dummys, pos_pts_2)
+        rank_pts = _adjust_rank_score(dummys, rank_pts_2)
         for i, (p, c) in enumerate(dummys):
             retval[p] = rank_pts[i]
         return _sorted_scores(retval, state)

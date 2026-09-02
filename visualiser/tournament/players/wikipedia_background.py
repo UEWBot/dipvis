@@ -143,7 +143,7 @@ class WikipediaBackground():
         Titles won by this player
 
         Returns a list of dicts.
-        Keys are 'Tournament' and position.
+        Keys are 'Tournament' and rank.
         """
         try:
             soup = cache.soup()

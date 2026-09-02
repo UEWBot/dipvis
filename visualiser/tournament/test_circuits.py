@@ -670,8 +670,8 @@ class CircuitTests(TestCase):
         self.assertEqual(cp.get_absolute_url(),
                          reverse('circuit_player_detail', args=(circuit.id, cp.id)))
 
-    def test_positions_and_scores_assigns_tied_ranks(self):
-        circuit = Circuit.objects.create(name='Position tie circuit',
+    def test_ranks_and_scores_assigns_tied_ranks(self):
+        circuit = Circuit.objects.create(name='Rank tie circuit',
                                          start_date=self.today,
                                          end_date=self.today,
                                          scoring_system='Sum best 3 tournament percentiles')
@@ -679,18 +679,18 @@ class CircuitTests(TestCase):
         CircuitPlayer.objects.create(player=self.p2, circuit=circuit, score=9.0)
         CircuitPlayer.objects.create(player=self.p3, circuit=circuit, score=3.0)
 
-        ranking = circuit.positions_and_scores()
+        ranking = circuit.ranks_and_scores()
 
         self.assertEqual(ranking[self.p1], (1, 9.0))
         self.assertEqual(ranking[self.p2], (1, 9.0))
         self.assertEqual(ranking[self.p3], (3, 3.0))
 
-    def test_positions_and_scores_empty_circuit(self):
-        circuit = Circuit.objects.create(name='Empty positions circuit',
+    def test_ranks_and_scores_empty_circuit(self):
+        circuit = Circuit.objects.create(name='Empty ranks circuit',
                                          start_date=self.today,
                                          end_date=self.today,
                                          scoring_system='Sum best 3 tournament percentiles')
-        self.assertEqual(circuit.positions_and_scores(), {})
+        self.assertEqual(circuit.ranks_and_scores(), {})
 
     def test_circuit_tracks_tournamentplayer_lifecycle_cleanly(self):
         # Create a circuit and add a tournament before any players are registered.

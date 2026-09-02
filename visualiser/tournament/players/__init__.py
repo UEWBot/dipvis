@@ -17,7 +17,7 @@ from .player_game_result import PlayerGameResult
 from .player_ranking import PlayerRanking
 from .player_title import PlayerTitle
 from .player_event_ranking import PlayerEventRanking
-from .position_str import position_str
+from .rank_str import rank_str
 from .wdd_player import WDDPlayer, WDDPlayerIdField
 from .wdr_background import InvalidWDRId, WDRBackground, WDRNotAccessible
 from .wikipedia_background import WikipediaBackground, WikipediaNotAccessible

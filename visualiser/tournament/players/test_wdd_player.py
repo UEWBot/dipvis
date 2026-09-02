@@ -66,7 +66,7 @@ class WDDPlayerTests(TestCase):
         # Create one of each type of background record
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
-                                                position=3,
+                                                rank=3,
                                                 date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
@@ -76,7 +76,7 @@ class WDDPlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        position=2)
+                                        rank=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
                                    name='Nicest Person')
@@ -109,7 +109,7 @@ class WDDPlayerTests(TestCase):
         # Create one of each type of background record
         per = PlayerEventRanking.objects.create(player=p,
                                                 event_name='Some tournament',
-                                                position=3,
+                                                rank=3,
                                                 date=datetime.now(datetime_timezone.utc))
         PlayerTitle.objects.create(player=p,
                                    title='Canadian Beaver',
@@ -119,7 +119,7 @@ class WDDPlayerTests(TestCase):
                                         round_number=4,
                                         game_number=17,
                                         power=self.austria,
-                                        position=2)
+                                        rank=2)
         PlayerAward.objects.create(player=p,
                                    event_ranking=per,
                                    name='Nicest Person')

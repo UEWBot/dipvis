@@ -12,7 +12,7 @@ msgstr ""
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -547,10 +547,10 @@ msgid ""
 "others get zero.\n"
 "                 Otherwise, all powers score 1 point per centre owned at the "
 "end plus\n"
-"                 points for their final position.\n"
-"                 Position points are %(pos_1)d, %(pos_2)d, %(pos_3)d, "
-"%(pos_4)d, %(pos_5)d,\n"
-"                 %(pos_6)d, or %(pos_7)d, with ties splitting those points.\n"
+"                 points for their final rank.\n"
+"                 Rank points are %(rank_1)d, %(rank_2)d, %(rank_3)d, "
+"%(rank_4)d, %(rank_5)d,\n"
+"                 %(rank_6)d, or %(rank_7)d, with ties splitting those points.\n"
 "                 "
 msgstr ""
 "\n"
@@ -558,10 +558,10 @@ msgstr ""
 "obtiennent zero.\n"
 "                 Sinon, chaque pays obtient 1 point par centre contrôlé à la "
 "fin de la partie plus\n"
-"                 points pour leur position finale.\n"
-"                 Les points liés à la position sont %(pos_1)d, %(pos_2)d, "
-"%(pos_3)d, %(pos_4)d, %(pos_5)d,\n"
-"                 %(pos_6)d, or %(pos_7)d, les points étant partagés en cas "
+"                 points pour leur rang final.\n"
+"                 Les points liés au rang sont %(rank_1)d, %(rank_2)d, "
+"%(rank_3)d, %(rank_4)d, %(rank_5)d,\n"
+"                 %(rank_6)d, or %(rank_7)d, les points étant partagés en cas "
 "d'égalité.\n"
 "                 "
 
@@ -1147,8 +1147,8 @@ msgstr "La ronde %(r_num)d de %(rounds)d commencera à %(date)s"
 
 #: tournament/news.py:77
 #, python-format
-msgid "%(player)s came %(pos)s, with a score of %(score).2f."
-msgstr "%(player)s a fini %(pos)s, avec un score de %(score).2f."
+msgid "%(player)s came %(rank)s, with a score of %(score).2f."
+msgstr "%(player)s a fini %(rank)s, avec un score de %(score).2f."
 
 #: tournament/news.py:85
 #, python-format
@@ -1442,7 +1442,7 @@ msgstr "La victoire la plus récente de %(name)s est (%(tourney)s) en %(year)d."
 
 #: tournament/players.py:598
 #, python-format
-msgid "The best tournament result for %(name)s is %(position)s."
+msgid "The best event result for %(name)s is %(rank)s."
 msgstr ""
 
 #: tournament/players.py:613
@@ -2781,8 +2781,8 @@ msgid "Current Scores"
 msgstr "Scores actuels"
 
 #: tournament/templates/tournaments/scores.html:15
-msgid "Position"
-msgstr "Position"
+msgid "Rank"
+msgstr "Rang"
 
 #: tournament/templates/tournaments/scores.html:20
 msgid "Tournament"

@@ -843,21 +843,21 @@ class TournamentPlayerViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournament_players/detail.html')
-        self.assertContains(response, 'Position: Unranked')
+        self.assertContains(response, 'Rank: Unranked')
         self.assertContains(response, 'Ineligible for awards.')
         # Cleanup
         self.tp11.unranked = False
         self.tp11.save(update_fields=['unranked'])
 
-    def test_details_finished_position(self):
+    def test_details_finished_rank(self):
         tp = self.t4.tournamentplayer_set.get(player=self.p1)
         response = self.client.get(reverse('tournament_player_detail',
                                            args=(self.t4.pk, tp.pk)),
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournament_players/detail.html')
-        self.assertContains(response, 'Position:')
-        self.assertNotContains(response, 'Current position:')
+        self.assertContains(response, 'Rank:')
+        self.assertNotContains(response, 'Current rank:')
         self.assertContains(response, 'Round 1')
 
     def test_details_power_not_assigned(self):

@@ -56,8 +56,8 @@ class PlayerGameResult(models.Model):
     game_number = models.PositiveSmallIntegerField()
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     power = models.ForeignKey(GreatPower, related_name='+', on_delete=models.CASCADE)
-    position = models.PositiveSmallIntegerField()
-    position_equals = models.PositiveSmallIntegerField(blank=True, null=True)
+    rank = models.PositiveSmallIntegerField()
+    rank_equals = models.PositiveSmallIntegerField(blank=True, null=True)
     score = models.FloatField(blank=True, null=True)
     final_sc_count = models.PositiveSmallIntegerField(blank=True,
                                                       null=True,

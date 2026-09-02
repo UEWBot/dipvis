@@ -1310,9 +1310,9 @@ class Tournament(models.Model):
         # There can be only one Pool per Tournament with determines_top_rankings set
         return Pool.objects.filter(the_round__tournament=self).filter(determines_top_rankings__isnull=False).first()
 
-    def positions_and_scores(self, after_round_num=None):
+    def ranks_and_scores(self, after_round_num=None):
         """
-        Returns the positions and scores of everyone registered, after a specified round ended.
+        Returns the ranks and scores of everyone registered, after a specified round ended.
 
         If no round number is specified, it returns the "if all games ended now" results.
         If the specified round is still in progress, it returns the "if all games in the round
@@ -1409,7 +1409,7 @@ class Tournament(models.Model):
 
     def team_scores(self, after_round_num=None):
         """
-        Returns the positions and scores of all teams.
+        Returns the ranks and scores of all teams.
 
         If no round number is specified, it returns the "if all games ended now" results.
         If the specified round is still in progress, it returns the "if all games in the round
@@ -2071,13 +2071,13 @@ class TournamentPlayer(models.Model):
         # No Round they played in has finished yet
         return 0.0
 
-    def position(self):
+    def rank(self):
         """
         Where is the player (currently) ranked overall in the tournament?
 
         Returns Tournament.UNRANKED if self.unranked is True.
         """
-        return self.tournament.positions_and_scores()[self.player][0]
+        return self.tournament.ranks_and_scores()[self.player][0]
 
     def roundplayers(self):
         """
@@ -2738,22 +2738,22 @@ class Game(models.Model):
         Raises PowerAlreadyAssigned if any GamePlayers already have assigned
         powers.
         """
-        position_to_gps = {}
+        rank_to_gps = {}
         gps = self.gameplayer_set.select_related('player', 'power').order_by()
-        # Find current tournament positions (and scores)
-        ranks = self.the_round.tournament.positions_and_scores()
+        # Find current tournament ranks (and scores)
+        ranks = self.the_round.tournament.ranks_and_scores()
         # Check for any GamePlayer that already has a power assigned
-        # and find the interesting player positions
+        # and find the relevant player ranks
         for gp in gps:
             if gp.power:
                 raise PowerAlreadyAssigned(str(gp) + ' is already assigned ' + str(gp.power))
-            pos = ranks[gp.player][0]
-            position_to_gps.setdefault(pos, []).append(gp)
+            rank = ranks[gp.player][0]
+            rank_to_gps.setdefault(rank, []).append(gp)
         # Starting from the lowest rank, work through the whole list
-        for pos in sorted(position_to_gps.keys(), reverse=True):
+        for rank in sorted(rank_to_gps.keys(), reverse=True):
             # At each rank, order players randomly
-            random.shuffle(position_to_gps[pos])
-            for gp in position_to_gps[pos]:
+            random.shuffle(rank_to_gps[rank])
+            for gp in rank_to_gps[rank]:
                 gp.set_power_from_prefs()
 
     def set_is_finished(self, year=None):
@@ -2878,9 +2878,9 @@ class Game(models.Model):
             players = [gp.player for gp in gps]
             self.the_round.update_scores(players)
 
-    def positions(self):
+    def ranks(self):
         """
-        Returns the positions (ranks) of all the powers.
+        Returns the ranks of all the powers.
 
         Dict, keyed by power id, of integer rankings (1 for first place,
         2 for second place, etc)

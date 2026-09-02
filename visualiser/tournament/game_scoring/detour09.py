@@ -34,7 +34,7 @@ class GScoringDetour09(GameScoringSystem):
     If there's a single board topper, that player get points equal to the difference between their
     centre count and that of the player(s) immediately behind them.
     Leader gets 4 points, 2nd gets 3, 3rd gets 2 and 4th gets 1. If players are tied for
-    position, they all get the lower position points.
+    rank, they all get the lower rank points.
     Finally, scores for a game without a solo are normalised to be out of 100.
     Eliminated players and those who lose to a solo get 0.25 points per year of survival,
     to a maximum of 2 points. A year of survival is when the player has at least 1 centre during
@@ -66,16 +66,16 @@ class GScoringDetour09(GameScoringSystem):
                 retval[p] = dots
                 if dots > 0:
                     retval[p] += 2
-            # Figure out which power is in which position
+            # Figure out which power has which rank
             top_powers = sorted(retval, key=retval.get, reverse=True)
             second = top_powers[1]
-            # Now do a second pass to allocate position-based points
+            # Now do a second pass to allocate rank-based points
             for p in all_powers:
                 if state.dot_count(p) == leader_scs:
                     # Add gap to second-place power
                     retval[p] += leader_scs - state.dot_count(second)
             # 1st place gets another 4, 2nd 3, 3rd 2 and 4th 1,
-            # with ties getting the lower position points
+            # with ties getting the lower rank points
             i = 0
             bonus = 4
             while (bonus > 0) and (i < 4):

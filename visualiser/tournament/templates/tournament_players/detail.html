@@ -8,13 +8,13 @@
 <h1><a href="{{ tournament.get_absolute_url }}">{{ tournament }}</a> {{ player.player }}</h1>
 {% if tournament.is_finished or tournament.show_current_scores %}
   {% if player.unranked %}
-    <p>{% blocktrans %}Position: Unranked{% endblocktrans %}</p>
+    <p>{% blocktrans %}Rank: Unranked{% endblocktrans %}</p>
     <p>{% trans "Ineligible for awards." %}</p>
   {% else %}
     {% if player.score_is_final %}
-      <p>{% blocktrans with pos=player.position|ordinal %}Position: {{ pos }}{% endblocktrans %}</p>
+      <p>{% blocktrans with rank=player.rank|ordinal %}Rank: {{ rank }}{% endblocktrans %}</p>
     {% else %}
-      <p>{% blocktrans with pos=player.position|ordinal %}Current position: {{ pos }}{% endblocktrans %}</p>
+      <p>{% blocktrans with rank=player.rank|ordinal %}Current rank: {{ rank }}{% endblocktrans %}</p>
     {% endif %}
     <h2>{% trans "Awards" %}</h2>
     <ul>

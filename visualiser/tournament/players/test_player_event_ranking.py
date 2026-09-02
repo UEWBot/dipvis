@@ -34,7 +34,7 @@ class PlayerEventRankingTests(TestCase):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
-                                 position=3,
+                                 rank=3,
                                  date=datetime.now(datetime_timezone.utc),
                                  wdd_tournament_id=369)
         url = ptr.wdd_url()
@@ -50,7 +50,7 @@ class PlayerEventRankingTests(TestCase):
                                        wdd_player_id=990001)
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
-                                 position=3,
+                                 rank=3,
                                  date=datetime.now(datetime_timezone.utc),
                                  wdd_tournament_id=369)
         url = ptr.wdd_url()
@@ -67,7 +67,7 @@ class PlayerEventRankingTests(TestCase):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
-                                 position=3,
+                                 rank=3,
                                  date=datetime.now(datetime_timezone.utc),
                                  wdr_tournament_id=369)
         url = ptr.wdr_url()
@@ -80,7 +80,7 @@ class PlayerEventRankingTests(TestCase):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
-                                 position=3,
+                                 rank=3,
                                  date=datetime.now(datetime_timezone.utc))
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year
@@ -93,7 +93,7 @@ class PlayerEventRankingTests(TestCase):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament',
-                                 position=None,
+                                 rank=None,
                                  date=datetime.now(datetime_timezone.utc))
         p_str = str(ptr)
         self.assertIn(p.first_name, p_str)
@@ -105,7 +105,7 @@ class PlayerEventRankingTests(TestCase):
         p = Player.objects.first()
         ptr = PlayerEventRanking(player=p,
                                  event_name='Some tournament 1974',
-                                 position=3,
+                                 rank=3,
                                  date=datetime.now(datetime_timezone.utc))
         p_str = str(ptr)
         # We expect to find player name, tournament name, and year

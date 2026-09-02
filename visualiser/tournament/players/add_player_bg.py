@@ -116,10 +116,10 @@ def _tournament_kinds_for_wikipedia_event(title):
 
 def _playertitles_from_wiki_entry(player, title):
     """
-    Return (title, position) tuples from a Wikipedia result row.
+    Return (title, rank) tuples from a Wikipedia result row.
     """
     titles = []
-    for key, position in TITLE_MAP.items():
+    for key, rank in TITLE_MAP.items():
         try:
             if title[key] != str(player):
                 continue
@@ -135,18 +135,18 @@ def _playertitles_from_wiki_entry(player, title):
         elif 'Champion' in key:
             the_title = key
         if the_title:
-            titles.append((the_title, position))
+            titles.append((the_title, rank))
     return titles
 
 
-def _event_ranking_for_wiki_title(player, title, position):
+def _event_ranking_for_wiki_title(player, title, rank):
     """
     Return the unambiguous PlayerEventRanking for a Wikipedia title row.
     """
     event_kind = _event_kind_for_wikipedia_event(title)
     tournament_kinds = _tournament_kinds_for_wikipedia_event(title)
     candidates = PlayerEventRanking.objects.filter(player=player,
-                                                   position=position)
+                                                   rank=rank)
     if event_kind is not None:
         candidates = candidates.filter(event_kind=event_kind)
     if tournament_kinds:
@@ -174,10 +174,10 @@ def _update_or_create_playertitle_wiki(player, title):
     """
     Creates or updates PlayerTitles for the player from a Wikipedia row.
     """
-    for the_title, position in _playertitles_from_wiki_entry(player, title):
+    for the_title, rank in _playertitles_from_wiki_entry(player, title):
         try:
             defaults = {}
-            ranking = _event_ranking_for_wiki_title(player, title, position)
+            ranking = _event_ranking_for_wiki_title(player, title, rank)
             if ranking is not None:
                 defaults['ranking'] = ranking
             PlayerTitle.objects.update_or_create(player=player,
@@ -259,7 +259,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
             continue
         event_kind = _classify_wdr_tournament_kind(t.get('tournament_event_type'))
         defaults = {'event_kind': event_kind,
-                    'position': t['tournament_player_rank'] if t['tournament_player_rank'] and t['tournament_player_rank'] > 0 else None,
+                    'rank': t['tournament_player_rank'] if t['tournament_player_rank'] and t['tournament_player_rank'] > 0 else None,
                     'event_name': t['tournament_name'],
                     'tournament_kind': t.get('tournament_kind')}
         defaults['date'] = event_date
@@ -301,7 +301,7 @@ def _add_player_bg_from_wdr(player, wdr_id):
         event_ranking = rankings_by_wdr_tournament_id.get(t_id)
         if event_ranking is None:
             continue
-        defaults = {'position': b['board_rank'],
+        defaults = {'rank': b['board_rank'],
                     'is_top_board': bool(b.get('board_is_top'))}
         if not b['board_rank']:
             # This seems like a bug in WDR, but sometimes we don't get a rank

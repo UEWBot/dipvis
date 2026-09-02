@@ -18,12 +18,12 @@
 <h2>{% trans "Tournaments" %}</h2>
 <ul>
   {% for tp in player.tournamentplayers %}
-  <li>{% with t=tp.tournament %}<a href="{{ t.get_absolute_url }}">{{ t }}</a> {% if t.is_finished or t.show_current_scores %}{% with pos=tp.position %}{% if pos == t.UNRANKED %}{% trans "Unranked" %}{% else %}{% if not tp.score_is_final %}<i>{% endif %}{{ pos|ordinal }}{% if not tp.score_is_final %}</i>{% endif %}{% endif %}{% endwith %}{% endif %}{% endwith %}</li>
+  <li>{% with t=tp.tournament %}<a href="{{ t.get_absolute_url }}">{{ t }}</a> {% if t.is_finished or t.show_current_scores %}{% with rank=tp.rank %}{% if rank == t.UNRANKED %}{% trans "Unranked" %}{% else %}{% if not tp.score_is_final %}<i>{% endif %}{{ rank|ordinal }}{% if not tp.score_is_final %}</i>{% endif %}{% endif %}{% endwith %}{% endif %}{% endwith %}</li>
   {% empty %}
     <li>{% trans "No tournaments in the database" %}</li>
   {% endfor %}
 </ul>
-<p>{% trans "Italics indicate position may change" %}</p>
+<p>{% trans "Italics indicate rank may change" %}</p>
 
 <h2>{% trans "Circuits" %}</h2>
 <ul>
