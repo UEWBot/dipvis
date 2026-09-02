@@ -338,7 +338,7 @@ class TeamAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament']
     tournament_attr = 'tournament'
     ordering = ['name']
-    readonly_fields = ['calculated_score']
+    readonly_fields = ['calculated_rank', 'calculated_score']
 
 
 @admin.register(Tournament)
@@ -380,7 +380,7 @@ class TournamentPlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament', 'player', 'location', 'unranked']
     tournament_attr = 'tournament'
     ordering = ['player']
-    readonly_fields = ['calculated_score']
+    readonly_fields = ['calculated_rank', 'calculated_score']
 
 
 @admin.register(WDDPlayer)
