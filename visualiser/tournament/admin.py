@@ -202,6 +202,7 @@ class GamePlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['game__the_round__tournament', 'power', 'game', 'player']
     tournament_attr = 'game.the_round.tournament'
     ordering = ['game', 'power']
+    readonly_fields = ['calculated_score']
 
 
 class SetPowerInline(admin.TabularInline):
@@ -291,6 +292,7 @@ class RoundPlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['the_round__tournament', 'the_round', 'player', 'game_count']
     tournament_attr = 'the_round.tournament'
     ordering = ['player', 'the_round__start']
+    readonly_fields = ['calculated_score']
 
 
 @admin.register(SupplyCentreOwnership)
@@ -336,6 +338,7 @@ class TeamAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament']
     tournament_attr = 'tournament'
     ordering = ['name']
+    readonly_fields = ['calculated_score']
 
 
 @admin.register(Tournament)
@@ -377,6 +380,7 @@ class TournamentPlayerAdmin(ScoreVisibilityAdminMixin, admin.ModelAdmin):
     list_filter = ['tournament', 'player', 'location', 'unranked']
     tournament_attr = 'tournament'
     ordering = ['player']
+    readonly_fields = ['calculated_score']
 
 
 @admin.register(WDDPlayer)
