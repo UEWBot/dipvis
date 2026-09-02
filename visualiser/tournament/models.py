@@ -1842,6 +1842,11 @@ class Team(models.Model):
                               help_text=_('Score for the team'))
     calculated_score = models.FloatField(default=0.0,
                                          help_text=_('Score as calculated by the system'))
+    calculated_rank = models.PositiveSmallIntegerField(default=0,
+                                                        help_text=_('Rank as calculated by the system'))
+    rank_override = models.PositiveSmallIntegerField(null=True,
+                                                      blank=True,
+                                                      help_text=_('Official rank override'))
     players = models.ManyToManyField(Player)
 
     class Meta:
@@ -1855,6 +1860,11 @@ class Team(models.Model):
     def __str__(self):
         return _("%(team)s at %(tourney)s") % {'team': self.name,
                                                'tourney': self.tournament}
+
+    @property
+    def rank(self):
+        """Return the official rank, or the calculated rank if not overridden."""
+        return self.rank_override if self.rank_override is not None else self.calculated_rank
 
     def clean(self):
         """
@@ -1960,6 +1970,11 @@ class TournamentPlayer(models.Model):
                               help_text=_("Player's score for the tournament as a whole"))
     calculated_score = models.FloatField(default=0.0,
                                          help_text=_('Score as calculated by the system'))
+    calculated_rank = models.PositiveSmallIntegerField(default=0,
+                                                       help_text=_('Rank as calculated by the system'))
+    rank_override = models.PositiveSmallIntegerField(null=True,
+                                                     blank=True,
+                                                     help_text=_('Official rank override'))
     handicap = models.FloatField(default=0.0,
                                  help_text=_('Secret bonus score added after all games end. Only used if enabled for the Tournament'))
     unranked = TPUnrankedField(default=False,
@@ -2077,6 +2092,10 @@ class TournamentPlayer(models.Model):
 
         Returns Tournament.UNRANKED if self.unranked is True.
         """
+        if self.rank_override is not None:
+            return self.rank_override
+        if self.calculated_rank:
+            return self.calculated_rank
         return self.tournament.ranks_and_scores()[self.player][0]
 
     def roundplayers(self):

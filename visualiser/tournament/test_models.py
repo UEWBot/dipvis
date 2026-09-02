@@ -2997,6 +2997,16 @@ class TeamTests(TestCase):
     def test_team_str(self):
         s = str(self.tm)
 
+    # Team.rank
+    def test_team_rank_uses_override_or_calculated_rank(self):
+        self.tm.calculated_rank = 3
+        self.tm.rank_override = None
+        self.assertEqual(self.tm.rank, 3)
+        self.tm.rank_override = 1
+        self.assertEqual(self.tm.rank, 1)
+        self.tm.rank_override = 3
+        self.assertEqual(self.tm.rank, 3)
+
 
 class DBNCoverageTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
@@ -6376,6 +6386,18 @@ class TournamentPlayerTests(TestCase):
     # TODO Background objects should not be generated for existing TournamentPlayer
     # TODO Existing TournamentPlayer should not have unranked cleared when saved
     # TODO Existing TournamentPlayer should not have unranked set when saved
+
+    # TournamentPlayer.rank
+    def test_tournament_player_rank_uses_override_or_calculated_rank(self):
+        tournament = Tournament.objects.get(name='t1')
+        tp = tournament.tournamentplayer_set.get(player=self.p1)
+        tp.calculated_rank = 3
+        tp.rank_override = None
+        self.assertEqual(tp.rank(), 3)
+        tp.rank_override = 1
+        self.assertEqual(tp.rank(), 1)
+        tp.rank_override = 3
+        self.assertEqual(tp.rank(), 3)
 
 
 class SeederBiasTests(TestCase):
