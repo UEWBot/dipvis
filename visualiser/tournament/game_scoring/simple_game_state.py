@@ -121,7 +121,7 @@ class SimpleGameState(GameState):
 
     def year_eliminated(self, power):
         """Returns the year in which the specified power was eliminated, or None."""
-        return self.elimination_years[power]
+        return self.elimination_years.get(power)
 
     def elimination_year_list(self):
         """
@@ -129,13 +129,8 @@ class SimpleGameState(GameState):
 
         Entry is None is the power is still alive.
         """
-        retval = []
-        for p, c in self.sc_counts.items():
-            if c:
-                retval.append(None)
-            else:
-                retval.append(self.elimination_years[p])
-        return retval
+        return [None if count else self.year_eliminated(power)
+                for power, count in self.sc_counts.items()]
 
     def last_full_year(self):
         """Returns the last year for which we have SC ownerships."""

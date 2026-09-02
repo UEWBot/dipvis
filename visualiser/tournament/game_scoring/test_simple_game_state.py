@@ -100,3 +100,19 @@ class SimpleGameStateTests(TestCase):
                               draw=[self.italy])
         self.assertEqual(sgs.elimination_year_list(),
                          [1903, None, 1907, None, None, None, 1905])
+
+    def test_year_eliminated_missing_power_is_none(self):
+        sgs = SimpleGameState(sc_counts={self.austria: 0,
+                                         self.england: 10,
+                                         self.france: 0,
+                                         self.germany: 2,
+                                         self.italy: 10,
+                                         self.russia: 10,
+                                         self.turkey: 0},
+                              final_year=1907,
+                              elimination_years={self.austria: 1903,
+                                                 self.france: 1907,
+                                                 self.turkey: 1905},
+                              draw=[self.italy])
+        self.assertIsNone(sgs.year_eliminated(self.england))
+        self.assertEqual(sgs.year_eliminated(self.austria), 1903)
