@@ -4093,18 +4093,22 @@ class TournamentTests(TestCase):
         tm1 = Team.objects.create(tournament=t,
                                   score=10.0,
                                   calculated_score=10.0,
+                                  calculated_rank=1,
                                   name='Test team 1')
         tm1.players.add(self.p3)
         tm1.players.add(self.p5)
         tm2 = Team.objects.create(tournament=t,
                                   score=5.0,
                                   calculated_score=5.0,
+                                  calculated_rank=3,
+                                  rank_override=2,
                                   name='Test team 2')
         tm2.players.add(self.p1)
         tm2.players.add(self.p6)
         tm3 = Team.objects.create(tournament=t,
                                   score=10.0,
                                   calculated_score=10.0,
+                                  calculated_rank=1,
                                   name='Test team 3')
         tm3.players.add(self.p2)
         tm3.players.add(self.p8)
@@ -4116,7 +4120,7 @@ class TournamentTests(TestCase):
                 self.assertEqual(rank, 1)
                 self.assertEqual(score, 10.0)
             elif tm == tm2:
-                self.assertEqual(rank, 3)
+                self.assertEqual(rank, 2)
                 self.assertEqual(score, 5.0)
             elif tm == tm3:
                 self.assertEqual(rank, 1)
@@ -4838,6 +4842,7 @@ class TournamentTests(TestCase):
         tm = Team.objects.create(tournament=t,
                                  score=99.0,
                                  calculated_score=0.0,
+                                 rank_override=4,
                                  name='Test team')
         tm.players.add(self.p3)
         tm.players.add(self.p5)
@@ -4855,9 +4860,14 @@ class TournamentTests(TestCase):
         self.assertNotEqual(tm.calculated_score, 0.0)
         # score should be preserved since it was manually changed
         self.assertAlmostEqual(tm.score, 99.0)
+        self.assertEqual(tm.calculated_rank, 1)
+        self.assertEqual(tm.rank_override, 4)
+        self.assertEqual(tm.rank, 4)
+        self.assertEqual(t.team_scores()[tm][0], 4)
         # tm2 had no manual override, so both score and calculated_score should be updated
         self.assertNotAlmostEqual(tm2.score, 0.0)
         self.assertAlmostEqual(tm2.score, tm2.calculated_score)
+        self.assertEqual(tm2.calculated_rank, 2)
         # Cleanup
         tm.delete()
         tm2.delete()

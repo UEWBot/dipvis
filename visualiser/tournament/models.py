@@ -1426,33 +1426,32 @@ class Tournament(models.Model):
         Return a dict, keyed by Team, of 2-tuples containing integer rankings
         (1 for first place, etc) and float team scores.
         """
+        if (after_round_num is None) or (after_round_num >= self.round_set.count()):
+            return {team: (team.rank, team.score) for team in self.team_set.all()}
+
         t_scores = {}
-        if (after_round_num is not None) and (after_round_num < self.round_set.count()):
-            # Calculate the team scores after the specified round
-            if self.num_games_in_team_score is None:
-                # Every team member's score counts
-                for team in self.team_set.all():
-                    t_scores[team] = 0.0
-                    for r in self.team_rounds().order_by('start'):
-                        if r.number() > after_round_num:
-                            break
-                        t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
-            else:
-                # Find all the relevant game scores for each team
-                g_scores = {}
-                for team in self.team_set.all():
-                    for r in self.team_rounds().order_by('start'):
-                        if r.number() > after_round_num:
-                            break
-                        for gp in team.gameplayers().filter(game__the_round=r):
-                            g_scores.setdefault(team, []).append(gp.score)
-                # Now we can calculate the score for each team
-                for team in self.team_set.all():
-                    t_scores[team] = sum(s for s in sorted(g_scores[team],
-                                                           reverse=True)[:self.num_games_in_team_score])
-        else:
+        # Calculate the team scores after the specified round
+        if self.num_games_in_team_score is None:
+            # Every team member's score counts
             for team in self.team_set.all():
-                t_scores[team] = team.score
+                t_scores[team] = 0.0
+                for r in self.team_rounds().order_by('start'):
+                    if r.number() > after_round_num:
+                        break
+                    t_scores[team] += team.gameplayers().filter(game__the_round=r).aggregate(Sum('score'))['score__sum']
+        else:
+            # Find all the relevant game scores for each team
+            g_scores = {}
+            for team in self.team_set.all():
+                for r in self.team_rounds().order_by('start'):
+                    if r.number() > after_round_num:
+                        break
+                    for gp in team.gameplayers().filter(game__the_round=r):
+                        g_scores.setdefault(team, []).append(gp.score)
+            # Now we can calculate the score for each team
+            for team in self.team_set.all():
+                t_scores[team] = sum(s for s in sorted(g_scores[team],
+                                                       reverse=True)[:self.num_games_in_team_score])
         return add_ranks(t_scores)
 
     def _store_score(self, tp, scores, add_handicap):
@@ -1538,6 +1537,9 @@ class Tournament(models.Model):
                 gps = team.gameplayers().order_by('-score')
                 team_score = sum(gp.score for gp in gps[:self.num_games_in_team_score])
             _save_score(team, team_score)
+        ranks = add_ranks({team: team.score for team in self.team_set.all()})
+        for team in self.team_set.order_by():
+            _save_rank(team, ranks[team][0])
 
     def winner(self):
         """

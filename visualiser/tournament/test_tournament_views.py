@@ -979,6 +979,8 @@ class TournamentViewTests(TestCase):
         TEAM_NAME = 'Spam, eggs, and spam'
         tm = Team.objects.create(tournament=self.t4,
                                  score=123.4,
+                                 calculated_rank=2,
+                                 rank_override=1,
                                  name=TEAM_NAME)
         tm.players.add(self.p1)
         response = self.client.get(reverse('team_scores',
@@ -989,6 +991,7 @@ class TournamentViewTests(TestCase):
         self.assertContains(response, 'Total')
         self.assertContains(response, TEAM_NAME)
         self.assertContains(response, '123.40')
+        self.assertEqual(response.context['scores'][0]['rank'], 1)
         self.assertNotContains(response, '<meta http-equiv="refresh"')
         # Clean up
         tm.delete()
