@@ -277,10 +277,9 @@ The system will calculate scores as games progress (it continually updates all t
 on an "if all games ended now" basis), and will provide charts for best countries,
 as well as a leaderboard.
 
-If necessary, you can override the calculated scores.
-
 The system will automatically determine every player's placement in the tournament as well
-as who earned each "Best Country" award. You can record who earned any other awards and/or
+as who earned each "Best Country" award. If necessary, you can override the calculated scores
+and/or the calculated placements ("ranks"). You can record who earned any other awards and/or
 change the "Best Country" recipients if needed on the "Awards" page for the Tournament.
 
 Once the Tournament is over and all the data has been entered, please uncheck the "Editable"

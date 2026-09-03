@@ -1417,6 +1417,89 @@ class TournamentViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'tournaments/enter_scores.html')
 
+    def test_enter_player_ranks_post(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        players = list(self.t2.tournamentplayer_set.order_by('calculated_rank', 'player'))
+        response = self.client.get(reverse('enter_player_ranks', args=(self.t2.pk,)),
+                                   secure=True)
+        self.assertTemplateUsed(response, 'tournaments/enter_ranks.html')
+        self.assertContains(response, str(players[0].player))
+        self.assertContains(response, 'Calculated rank')
+        players[0].rank_override = 2
+        players[0].save(update_fields=['rank_override'])
+        data = {'form-TOTAL_FORMS': str(len(players)),
+                'form-INITIAL_FORMS': str(len(players)),
+                'form-MAX_NUM_FORMS': '1000'}
+        for index, tournament_player in enumerate(players):
+            data[f'form-{index}-id'] = str(tournament_player.pk)
+            if index in (0, 1):
+                data[f'form-{index}-rank_override'] = '1'
+            elif index == 2:
+                data[f'form-{index}-rank_override'] = '4'
+            else:
+                data[f'form-{index}-rank_override'] = ''
+        response = self.client.post(reverse('enter_player_ranks', args=(self.t2.pk,)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('tournament_scores', args=(self.t2.pk,)))
+        players[0].refresh_from_db()
+        players[1].refresh_from_db()
+        players[2].refresh_from_db()
+        self.assertEqual(players[0].rank_override, 1)
+        self.assertEqual(players[1].rank_override, 1)
+        self.assertEqual(players[2].rank_override, 4)
+        players[0].rank_override = None
+        players[0].save(update_fields=['rank_override'])
+
+    def test_enter_team_ranks_post(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.t1.team_size = 2
+        self.t1.save(update_fields=['team_size'])
+        team1 = Team.objects.create(tournament=self.t1, name='Team One', calculated_rank=1)
+        team2 = Team.objects.create(tournament=self.t1, name='Team Two', calculated_rank=2,
+                                    rank_override=3)
+        response = self.client.get(reverse('enter_team_ranks', args=(self.t1.pk,)),
+                       secure=True)
+        self.assertTemplateUsed(response, 'tournaments/enter_ranks.html')
+        self.assertContains(response, team1.name)
+        self.assertContains(response, 'Calculated rank')
+        teams = list(self.t1.team_set.order_by('calculated_rank', 'name'))
+        data = {'form-TOTAL_FORMS': str(len(teams)),
+                'form-INITIAL_FORMS': str(len(teams)),
+                'form-MAX_NUM_FORMS': '1000'}
+        for index, team in enumerate(teams):
+            data[f'form-{index}-id'] = str(team.pk)
+            data[f'form-{index}-rank_override'] = '1' if team == team1 else ''
+        response = self.client.post(reverse('enter_team_ranks', args=(self.t1.pk,)),
+                                    urlencode(data),
+                                    secure=True,
+                                    content_type='application/x-www-form-urlencoded')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('team_scores', args=(self.t1.pk,)))
+        team1.refresh_from_db()
+        team2.refresh_from_db()
+        self.assertEqual(team1.rank_override, 1)
+        self.assertIsNone(team2.rank_override)
+        team1.delete()
+        team2.delete()
+        self.t1.team_size = None
+        self.t1.save(update_fields=['team_size'])
+
+    def test_enter_team_ranks_without_teams(self):
+        self.client.login(username=self.USERNAME2, password=self.PWORD2)
+        self.assertIsNone(self.t1.team_size)
+        response = self.client.get(reverse('enter_team_ranks', args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 404)
+
+    def test_enter_player_ranks_not_logged_in(self):
+        response = self.client.get(reverse('enter_player_ranks', args=(self.t1.pk,)),
+                                   secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+
     def test_enter_scores_post(self):
         """A manager can enter scores for their tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)

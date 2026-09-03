@@ -46,7 +46,8 @@ from tournament.forms import (AwardRecipientFormSet,
                               BasePlayerRoundScoreFormset,
                               BaseTeamsFormset, EnableCheckInForm,
                               HandicapForm, PlayerRoundScoreForm, PrefsForm,
-                              SeederBiasForm, TeamForm)
+                              SeederBiasForm, TeamForm, TeamRankOverrideForm,
+                              TournamentPlayerRankOverrideForm)
 from tournament.models import (GamePlayer, InvalidPreferenceList, RoundPlayer,
                                SeederBias, Team, Tournament,
                                TournamentPlayer)
@@ -752,6 +753,48 @@ def enter_handicaps(request, tournament_id):
                   'tournaments/enter_handicaps.html',
                   {'tournament': t,
                    'formset': formset})
+
+
+@permission_required('tournament.change_tournamentplayer')
+def enter_player_ranks(request, tournament_id):
+    """Provide a form to set official TournamentPlayer rank overrides."""
+    tournament = get_modifiable_tournament_or_404(tournament_id, request.user)
+    RankFormset = modelformset_factory(TournamentPlayer,
+                                       form=TournamentPlayerRankOverrideForm,
+                                       extra=0)
+    queryset = tournament.tournamentplayer_set.select_related('player').order_by('calculated_rank', 'player')
+    formset = RankFormset(request.POST or None, queryset=queryset)
+    if formset.is_valid():
+        formset.save()
+        return HttpResponseRedirect(reverse('tournament_scores', args=(tournament_id,)))
+    return render(request,
+                  'tournaments/enter_ranks.html',
+                  {'tournament': tournament,
+                   'formset': formset,
+                   'entity_name': _('Player'),
+                   'post_url': request.path_info})
+
+
+@permission_required('tournament.change_team')
+def enter_team_ranks(request, tournament_id):
+    """Provide a form to set official Team rank overrides."""
+    tournament = get_modifiable_tournament_or_404(tournament_id, request.user)
+    if not tournament.team_size:
+        raise Http404('Tournament does not use teams')
+    RankFormset = modelformset_factory(Team,
+                                       form=TeamRankOverrideForm,
+                                       extra=0)
+    queryset = tournament.team_set.order_by('calculated_rank', 'name')
+    formset = RankFormset(request.POST or None, queryset=queryset)
+    if formset.is_valid():
+        formset.save()
+        return HttpResponseRedirect(reverse('team_scores', args=(tournament_id,)))
+    return render(request,
+                  'tournaments/enter_ranks.html',
+                  {'tournament': tournament,
+                   'formset': formset,
+                   'entity_name': _('Team'),
+                   'post_url': request.path_info})
 
 
 def teams(request, tournament_id):

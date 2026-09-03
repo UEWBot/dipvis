@@ -18,6 +18,7 @@ from .pools import PoolForm
 from .power_assign import BasePowerAssignFormset, PowerAssignForm
 from .power_death import DeathYearForm
 from .preferences import PrefsForm
+from .ranks import TeamRankOverrideForm, TournamentPlayerRankOverrideForm
 from .roll_call import BasePlayerRoundFormset, PlayerRoundForm
 from .round_scoring import BasePlayerRoundScoreFormset, PlayerRoundScoreForm
 from .sc_counts import BaseSCCountFormset, SCCountForm
