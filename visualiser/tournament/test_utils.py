@@ -366,8 +366,11 @@ class UtilsTests(TestCase):
                                         last_name='Player')
         p_zero = Player.objects.create(first_name='Zero',
                                        last_name='Player')
-        TournamentPlayer.objects.create(player=p_match, tournament=t, score=12.5)
-        TournamentPlayer.objects.create(player=p_zero, tournament=t, score=0.0)
+        TournamentPlayer.objects.create(player=p_match, tournament=t, score=12.5,
+                        calculated_rank=2,
+                        rank_override=1)
+        TournamentPlayer.objects.create(player=p_zero, tournament=t, score=0.0,
+                        calculated_rank=1)
         mock_wdr_json.return_value = {
             'tournament_classifications': [
                 {

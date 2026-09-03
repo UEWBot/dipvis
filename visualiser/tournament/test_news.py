@@ -258,13 +258,13 @@ class NewsTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p8, tournament=t1)
 
         # Add TournamentPlayers to t3
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=147.3)
-        TournamentPlayer.objects.create(player=cls.p6, tournament=t3, score=137.3)
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=127.3)
-        TournamentPlayer.objects.create(player=cls.p4, tournament=t3, score=117.3)
-        TournamentPlayer.objects.create(player=cls.p3, tournament=t3, score=107.3)
-        TournamentPlayer.objects.create(player=cls.p2, tournament=t3, score=97.3)
-        TournamentPlayer.objects.create(player=cls.p1, tournament=t3, score=87.3)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=147.3, calculated_rank=1)
+        TournamentPlayer.objects.create(player=cls.p6, tournament=t3, score=137.3, calculated_rank=2)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=127.3, calculated_rank=3)
+        TournamentPlayer.objects.create(player=cls.p4, tournament=t3, score=117.3, calculated_rank=4)
+        TournamentPlayer.objects.create(player=cls.p3, tournament=t3, score=107.3, calculated_rank=5)
+        TournamentPlayer.objects.create(player=cls.p2, tournament=t3, score=97.3, calculated_rank=6)
+        TournamentPlayer.objects.create(player=cls.p1, tournament=t3, score=87.3, calculated_rank=7)
         # Add RoundPlayers to r31
         RoundPlayer.objects.create(player=cls.p7, the_round=r31, score=0.0)
         RoundPlayer.objects.create(player=cls.p6, the_round=r31, score=0.0)

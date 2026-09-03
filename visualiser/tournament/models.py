@@ -155,6 +155,12 @@ def _save_score(obj, score):
     obj.save(update_fields=fields)
 
 
+def _save_rank(obj, rank):
+    """Store a calculated rank without replacing an explicit override."""
+    obj.calculated_rank = rank
+    obj.save(update_fields=['calculated_rank'])
+
+
 class RoundScoringSystem(ABC):
     """
     A scoring system for a Round.
@@ -1312,15 +1318,10 @@ class Tournament(models.Model):
 
     def ranks_and_scores(self, after_round_num=None):
         """
-        Returns the ranks and scores of everyone registered, after a specified round ended.
+        Returns the effective ranks and scores of everyone registered.
 
-        If no round number is specified, it returns the "if all games ended now" results.
-        If the specified round is still in progress, it returns the "if all games in the round
-        ended now" results.
-        Returns a dict, keyed by player, of 2-tuples containing integer rankings
-          (1 for first place, etc) and float tournament scores.
-          Players who are flagged as unranked in the tournament get the special
-          place UNRANKED.
+        Up-to-date ranks are retrieved from the database.
+        Ranks for an intermediate round are calculated on demand.
         """
         top_pool = self._top_pool()
 
@@ -1350,29 +1351,37 @@ class Tournament(models.Model):
                 result[tp.player] = (tp.place, tp.snapshot_score)
             return result
 
+        if after_round_num is None:
+            result = {}
+            for tp in self.tournamentplayer_set.select_related('player').order_by():
+                rank = tp.rank_override if tp.rank_override is not None else tp.calculated_rank
+                result[tp.player] = (Tournament.UNRANKED if tp.unranked else rank, tp.score)
+            return result
+
+        tp_rows = list(self.tournamentplayer_set.select_related('player').order_by())
+        player_map = {tp.player_id: tp.player for tp in tp_rows}
+
+        # Populate t_scores with a dict keyed by player id of scores.
+        t_scores = {}
+        for n, r in reversed(list(enumerate(self.round_set.order_by('start'),
+                                            start=1))[:after_round_num]):
+            for player_id, tournament_score in r.roundplayer_set.values_list('player_id',
+                                                                               'tournament_score').order_by():
+                if player_id not in t_scores:
+                    t_scores[player_id] = tournament_score
+        # Anyone who hadn't yet played scores zero.
+        for player_id in player_map:
+            if player_id not in t_scores:
+                t_scores[player_id] = 0.0
+        return self._calculate_ranks(t_scores)
+
+    def _calculate_ranks(self, t_scores):
+        """Add current tournament ranks to a dict of scores keyed by player id."""
+        t_scores = t_scores.copy()
+        top_pool = self._top_pool()
         tp_rows = list(self.tournamentplayer_set.select_related('player').order_by())
         player_map = {tp.player_id: tp.player for tp in tp_rows}
         unranked_player_ids = {tp.player_id for tp in tp_rows if tp.unranked}
-
-        # Populate t_scores with a dict keyed by player id of scores
-        if (after_round_num is not None) and (after_round_num < self.round_set.count()):
-            t_scores = {}
-            for n, r in reversed(list(enumerate(self.round_set.order_by('start'),
-                                                start=1))[:after_round_num]):
-                #if n > after_round_num:
-                #    # Skip this round
-                #    continue
-                # Keep the score from the latest round
-                for player_id, tournament_score in r.roundplayer_set.values_list('player_id',
-                                                                                 'tournament_score').order_by():
-                    if player_id not in t_scores:
-                        t_scores[player_id] = tournament_score
-            # Anyone who hadn't yet played scores zero
-            for player_id in player_map:
-                if player_id not in t_scores:
-                    t_scores[player_id] = 0.0
-        else:
-            t_scores = {tp.player_id: tp.score for tp in tp_rows}
         result = {}
         # First, deal with any unranked players
         for player_id in unranked_player_ids:
@@ -1470,8 +1479,8 @@ class Tournament(models.Model):
         """
         Recalculate the scores for the Tournament and store them in the TournamentPlayers.
 
-        Always sets calculated_score. Also updates score if it was previously equal
-        to calculated_score.
+        Always sets calculated_score and calculated_rank. Also updates score if it was
+        previously equal to calculated_score.
 
         If the Tournament has now ended, add Best Country awards to
         the appropriate TournamentPlayers.
@@ -1490,6 +1499,10 @@ class Tournament(models.Model):
         else:
             for tp in self.tournamentplayer_set.order_by():
                 self._store_score(tp, scores, add_handicap)
+        ranks = self._calculate_ranks({tp.player_id: tp.score
+                           for tp in self.tournamentplayer_set.order_by()})
+        for tp in self.tournamentplayer_set.order_by():
+            _save_rank(tp, ranks[tp.player][0])
         if self.is_finished:
             # Hand out Best Country awards
             for power, gp_list in self.best_countries().items():
@@ -1531,8 +1544,11 @@ class Tournament(models.Model):
         Return the player who won, or None if the tournament isn't yet finished
         """
         if self.is_finished:
-            # TODO This assumes no tie
-            return self.tournamentplayer_set.filter(unranked=False).order_by('-score').first().player
+            winner = self.tournamentplayer_set.filter(unranked=False).annotate(
+                effective_rank=Coalesce('rank_override', 'calculated_rank')
+            ).filter(effective_rank=1).select_related('player').first()
+            if winner is not None:
+                return winner.player
         return None
 
     def round_numbered(self, number):

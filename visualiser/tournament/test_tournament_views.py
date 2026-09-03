@@ -706,6 +706,17 @@ class TournamentViewTests(TestCase):
         self.assertNotContains(response, 'Handicap')
         self.assertTemplateUsed(response, 'tournaments/scores.html')
 
+    def test_scores_uses_rank_override(self):
+        self.tp11.calculated_rank = 2
+        self.tp11.rank_override = 1
+        self.tp11.save(update_fields=['calculated_rank', 'rank_override'])
+        response = self.client.get(reverse('tournament_scores',
+                                           args=(self.t1.pk,)),
+                                   secure=True)
+        row = next(row for row in response.context['scores']
+                   if row['player'] == self.tp11)
+        self.assertEqual(row['rank'], '1')
+
     def test_scores_old(self):
         """Scores page for an in-progress Tournament"""
         self.assertIs(True, self.t1.tournament_scoring_system_obj().uses_round_scores)
@@ -2431,6 +2442,17 @@ class TournamentViewTests(TestCase):
         g.is_finished = True
         g.save()
         tp.delete()
+
+    def test_api_uses_rank_override(self):
+        tp = self.t4.tournamentplayer_set.select_related('player').first()
+        tp.calculated_rank = 2
+        tp.rank_override = 1
+        tp.save(update_fields=['calculated_rank', 'rank_override'])
+        response = self.client.get(reverse('api_tournament', args=(1, self.t4.pk,)),
+                                   secure=True)
+        result = next(result for result in response.json()['results']
+                      if result['player_name'] == str(tp.player))
+        self.assertEqual(result['ranking'], 1)
 
     def test_api2(self):
         # Change one of the games to not be finished

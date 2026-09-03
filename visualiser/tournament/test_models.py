@@ -3349,8 +3349,10 @@ class TournamentTests(TestCase):
         TournamentPlayer.objects.create(player=cls.p8, tournament=t1, score=8.0, calculated_score=8.0)
 
         # Add TournamentPlayers to t3
-        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3, calculated_score=147.3)
-        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3, calculated_score=47.3)
+        TournamentPlayer.objects.create(player=cls.p5, tournament=t3, score=147.3,
+                        calculated_score=147.3, calculated_rank=1)
+        TournamentPlayer.objects.create(player=cls.p7, tournament=t3, score=47.3,
+                        calculated_score=47.3, calculated_rank=2)
         # Add RoundPlayers to r31
         RoundPlayer.objects.create(player=cls.p5, the_round=cls.r31, score=0.1, calculated_score=0.1)
         RoundPlayer.objects.create(player=cls.p7, the_round=cls.r31, score=5.0, calculated_score=5.0)
@@ -3571,59 +3573,6 @@ class TournamentTests(TestCase):
             with self.subTest(player=tp.player):
                 self.assertAlmostEqual(p_and_s[tp.player][1], scores[tp])
 
-    def test_tournament_ranks_and_scores_with_unranked(self):
-        t = Tournament.objects.get(name='t1')
-        scores = {}
-        for tp in t.tournamentplayer_set.all():
-            scores[tp] = tp.score
-            tp.score = 0.0
-            tp.save()
-        p_and_s = t.ranks_and_scores()
-        # The unranked player should have a special rank
-        self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
-        # As everyone else has the same score, they should all be ranked (joint) first
-        for k in p_and_s:
-            if k != self.p5:
-                with self.subTest(k=k):
-                    self.assertEqual(p_and_s[k][0], 1)
-        # Cleanup
-        for tp in t.tournamentplayer_set.all():
-            tp.score = scores[tp]
-            tp.save()
-
-    def test_tournament_ranks_and_scores_rank_ordering(self):
-        t = Tournament.objects.get(name='t1')
-        original_scores = {}
-        values = {
-            self.p1: 30.0,
-            self.p2: 20.0,
-            self.p3: 20.0,
-            self.p4: 10.0,
-            self.p5: 99.0,  # unranked player, should remain UNRANKED
-            self.p6: 0.0,
-            self.p7: 0.0,
-            self.p8: -5.0,
-        }
-
-        for tp in t.tournamentplayer_set.all():
-            original_scores[tp] = tp.score
-            tp.score = values[tp.player]
-            tp.save(update_fields=['score'])
-
-        p_and_s = t.ranks_and_scores()
-        self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
-        self.assertEqual(p_and_s[self.p1][0], 1)
-        self.assertEqual(p_and_s[self.p2][0], 2)
-        self.assertEqual(p_and_s[self.p3][0], 2)
-        self.assertEqual(p_and_s[self.p4][0], 4)
-        self.assertEqual(p_and_s[self.p6][0], 5)
-        self.assertEqual(p_and_s[self.p7][0], 5)
-        self.assertEqual(p_and_s[self.p8][0], 7)
-
-        for tp in t.tournamentplayer_set.all():
-            tp.score = original_scores[tp]
-            tp.save(update_fields=['score'])
-
     def _set_up_historical_round_scores(self, tournament):
         """Create the common historical game data used by as-of-round tests."""
         GamePlayer.objects.create(player=self.p5,
@@ -3655,6 +3604,7 @@ class TournamentTests(TestCase):
                 self.assertAlmostEqual(p_and_s[tp.player][1], 0.0)
                 # Everyone should be joint first
                 self.assertEqual(p_and_s[tp.player][0], 1)
+
     def test_tournament_ranks_and_scores_round(self):
         t = Tournament.objects.get(name='t3')
         self._set_up_historical_round_scores(t)
@@ -3665,6 +3615,7 @@ class TournamentTests(TestCase):
             with self.subTest(player=tp.player):
                 rp = rps.get(player=tp.player)
                 self.assertAlmostEqual(p_and_s[tp.player][1], rp.score)
+
     def test_tournament_ranks_and_scores_middle_round(self):
         """Neither the first nor the last round"""
         t = Tournament.objects.get(name='t3')
@@ -3741,6 +3692,7 @@ class TournamentTests(TestCase):
         new_rp2.delete()
         new_tp1.delete()
         new_tp2.delete()
+
     def test_tournament_ranks_and_scores_round_with_top_pool_fallback(self):
         """after_round_num should still work when a top pool exists."""
         today = date.today()
@@ -4003,6 +3955,7 @@ class TournamentTests(TestCase):
         for gp in g21.gameplayer_set.all():
             gp.tie_break_rank = None
             gp.save()
+        t.update_scores()
         # Unranked player should be skipped
         expected_ranks = {self.p7: 1,  # Highest score on the top board should get first overall (30)
                           self.p9: 2,  # The two tied for second place on the top board should both get second place overall (24)
@@ -4089,6 +4042,44 @@ class TournamentTests(TestCase):
             rp = rps.get(player=tp.player)
             rp.score = r_scores[tp]
             rp.save()
+
+    # Tournament._calculate_ranks()
+    def test_calculate_ranks_with_unranked(self):
+        t = Tournament.objects.get(name='t1')
+        t_scores = {tp.player_id: 0.0 for tp in t.tournamentplayer_set.all()}
+        p_and_s = t._calculate_ranks(t_scores)
+        # The unranked player should have a special rank
+        self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
+        # As everyone else has the same score, they should all be ranked (joint) first
+        for k in p_and_s:
+            if k != self.p5:
+                with self.subTest(k=k):
+                    self.assertEqual(p_and_s[k][0], 1)
+
+    def test_calculate_ranks_ordering_and_ties(self):
+        t = Tournament.objects.get(name='t1')
+        values = {
+            self.p1: 30.0,
+            self.p2: 20.0,
+            self.p3: 20.0,
+            self.p4: 10.0,
+            self.p5: 99.0,  # unranked player, should remain UNRANKED
+            self.p6: 0.0,
+            self.p7: 0.0,
+            self.p8: -5.0,
+        }
+
+        t_scores = {tp.player_id: values[tp.player]
+                for tp in t.tournamentplayer_set.all()}
+        p_and_s = t._calculate_ranks(t_scores)
+        self.assertEqual(p_and_s[self.p5][0], Tournament.UNRANKED)
+        self.assertEqual(p_and_s[self.p1][0], 1)
+        self.assertEqual(p_and_s[self.p2][0], 2)
+        self.assertEqual(p_and_s[self.p3][0], 2)
+        self.assertEqual(p_and_s[self.p4][0], 4)
+        self.assertEqual(p_and_s[self.p6][0], 5)
+        self.assertEqual(p_and_s[self.p7][0], 5)
+        self.assertEqual(p_and_s[self.p8][0], 7)
 
     # Tournament.team_scores()
     def test_tournament_team_scores_current(self):
@@ -4324,6 +4315,24 @@ class TournamentTests(TestCase):
     def test_tournament_winner_finished(self):
         t = Tournament.objects.get(name='t3')
         self.assertEqual(t.winner(), self.p5)
+
+    def test_tournament_winner_without_rank_one(self):
+        t = Tournament.objects.get(name='t3')
+        for tp in t.tournamentplayer_set.all():
+            tp.calculated_rank += 1
+            tp.save(update_fields=['calculated_rank'])
+        self.assertIsNone(t.winner())
+
+    def test_tournament_winner_uses_rank_override(self):
+        t = Tournament.objects.get(name='t3')
+        winner = t.tournamentplayer_set.get(player=self.p5)
+        winner.calculated_rank = 2
+        winner.save(update_fields=['calculated_rank'])
+        override = t.tournamentplayer_set.get(player=self.p7)
+        override.calculated_rank = 1
+        override.rank_override = 1
+        override.save(update_fields=['calculated_rank', 'rank_override'])
+        self.assertEqual(t.winner(), self.p7)
 
     # Tournament.update_scores()
     def test_tournament_update_scores_before_start(self):
@@ -5213,7 +5222,8 @@ class TournamentTests(TestCase):
                                             draw_secrecy=DrawSecrecy.SECRET)
         TournamentPlayer.objects.create(player=p,
                                         tournament=previous,
-                                        score=100)
+                                        score=100,
+                                        calculated_rank=1)
         TournamentPlayer.objects.create(player=p,
                                         tournament=current)
         s = Series.objects.create(name='Defending Champion Series',
@@ -6012,6 +6022,7 @@ class TournamentPlayerTests(TestCase):
         self.assertEqual(tp1.score, 147.3)
         tp2 = t.tournamentplayer_set.get(player=self.p7)
         self.assertEqual(tp2.score, 47.3)
+        t.update_scores()
         self.assertEqual(tp1.rank(), 1)
         self.assertEqual(tp2.rank(), 2)
 
@@ -7686,14 +7697,14 @@ class GameTests(TestCase):
 
     # Game.assign_powers_from_prefs()
     def test_game_assign_powers_from_prefs(self):
-        scores = {
-            self.p1: 30.0,
-            self.p2: 25.0,
-            self.p3: 20.0,
-            self.p4: 10.0,
-            self.p5: 7.0,
-            self.p6: 7.0,
-            self.p7: 1.0,
+        ranks = {
+            self.p1: 1,
+            self.p2: 2,
+            self.p3: 3,
+            self.p4: 4,
+            self.p5: 5,
+            self.p6: 5,
+            self.p7: 7,
         }
         today = date.today()
         t = Tournament(name='t5',
@@ -7783,10 +7794,10 @@ class GameTests(TestCase):
         gp.save()
         gp = GamePlayer(game=g2, player=self.p7)
         gp.save()
-        # Set the TournamentPlayer scores as we need them
+        # Set the calculated ranks as we need them
         for tp in t.tournamentplayer_set.all():
-            tp.score = scores[tp.player]
-            tp.save()
+            tp.calculated_rank = ranks[tp.player]
+            tp.save(update_fields=['calculated_rank'])
         # Now add preferences for some players
         p = Preference(player=tp1, power=self.austria, ranking=1)
         p.save()
