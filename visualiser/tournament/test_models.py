@@ -3624,13 +3624,8 @@ class TournamentTests(TestCase):
             tp.score = original_scores[tp]
             tp.save(update_fields=['score'])
 
-    def test_tournament_ranks_and_scores_round_zero(self):
-        t = Tournament.objects.get(name='t3')
-        # Store the current scores
-        scores = {}
-        for tp in t.tournamentplayer_set.all():
-            scores[tp] = tp.score
-        # Add GamePlayers to the first two rounds
+    def _set_up_historical_round_scores(self, tournament):
+        """Create the common historical game data used by as-of-round tests."""
         GamePlayer.objects.create(player=self.p5,
                                   game=self.g31,
                                   power=self.italy,
@@ -3647,11 +3642,12 @@ class TournamentTests(TestCase):
                                   game=self.g32,
                                   power=self.germany,
                                   score=57.3)
-        for r in t.round_set.all():
-            for rp in r.roundplayer_set.all():
-                scores[rp] = rp.score
-            # Call update_scores() to set rp.tournament_score
-            r.update_scores()
+        for round_obj in tournament.round_set.all():
+            round_obj.update_scores()
+
+    def test_tournament_ranks_and_scores_round_zero(self):
+        t = Tournament.objects.get(name='t3')
+        self._set_up_historical_round_scores(t)
         p_and_s = t.ranks_and_scores(after_round_num=0)
         # All scores should be zero before the first round
         for tp in t.tournamentplayer_set.all():
@@ -3659,41 +3655,9 @@ class TournamentTests(TestCase):
                 self.assertAlmostEqual(p_and_s[tp.player][1], 0.0)
                 # Everyone should be joint first
                 self.assertEqual(p_and_s[tp.player][0], 1)
-        # Cleanup
-        for xp, score in scores.items():
-            xp.score = score
-            xp.save()
-        self.g31.gameplayer_set.all().delete()
-        self.g32.gameplayer_set.all().delete()
-
     def test_tournament_ranks_and_scores_round(self):
         t = Tournament.objects.get(name='t3')
-        # Store the current scores
-        scores = {}
-        for tp in t.tournamentplayer_set.all():
-            scores[tp] = tp.score
-        # Add GamePlayers to the first two rounds
-        GamePlayer.objects.create(player=self.p5,
-                                  game=self.g31,
-                                  power=self.italy,
-                                  score=0.1)
-        GamePlayer.objects.create(player=self.p7,
-                                  game=self.g31,
-                                  power=self.russia,
-                                  score=5.0)
-        GamePlayer.objects.create(player=self.p5,
-                                  game=self.g32,
-                                  power=self.france,
-                                  score=47.3)
-        GamePlayer.objects.create(player=self.p7,
-                                  game=self.g32,
-                                  power=self.germany,
-                                  score=57.3)
-        for r in t.round_set.all():
-            for rp in r.roundplayer_set.all():
-                scores[rp] = rp.score
-            # Call update_scores() to set rp.tournament_score
-            r.update_scores()
+        self._set_up_historical_round_scores(t)
         p_and_s = t.ranks_and_scores(after_round_num=1)
         # Just the first round should count
         rps = t.round_numbered(1).roundplayer_set.all()
@@ -3701,37 +3665,10 @@ class TournamentTests(TestCase):
             with self.subTest(player=tp.player):
                 rp = rps.get(player=tp.player)
                 self.assertAlmostEqual(p_and_s[tp.player][1], rp.score)
-        # Cleanup
-        for xp, score in scores.items():
-            xp.score = score
-            xp.save()
-        self.g31.gameplayer_set.all().delete()
-        self.g32.gameplayer_set.all().delete()
-
     def test_tournament_ranks_and_scores_middle_round(self):
         """Neither the first nor the last round"""
         t = Tournament.objects.get(name='t3')
-        # Store the current scores
-        scores = {}
-        for tp in t.tournamentplayer_set.all():
-            scores[tp] = tp.score
-        # Add GamePlayers to the first two rounds
-        GamePlayer.objects.create(player=self.p5,
-                                  game=self.g31,
-                                  power=self.italy,
-                                  score=0.1)
-        GamePlayer.objects.create(player=self.p7,
-                                  game=self.g31,
-                                  power=self.russia,
-                                  score=5.0)
-        GamePlayer.objects.create(player=self.p5,
-                                  game=self.g32,
-                                  power=self.france,
-                                  score=47.3)
-        GamePlayer.objects.create(player=self.p7,
-                                  game=self.g32,
-                                  power=self.germany,
-                                  score=57.3)
+        self._set_up_historical_round_scores(t)
         # Add a third round
         new_r = Round.objects.create(tournament=t,
                                      scoring_system=self.r32.scoring_system,
@@ -3763,6 +3700,8 @@ class TournamentTests(TestCase):
                                             game=self.g32,
                                             power=self.austria,
                                             score=53.1)
+        t.round_numbered(1).update_scores()
+        t.round_numbered(2).update_scores()
         # add some players with scores to round 3
         RoundPlayer.objects.create(player=self.p7, the_round=new_r, score=81.9)
         GamePlayer.objects.create(player=self.p7,
@@ -3779,11 +3718,7 @@ class TournamentTests(TestCase):
                                   game=new_g,
                                   power=self.russia,
                                   score=62.0)
-        for r in t.round_set.all():
-            for rp in r.roundplayer_set.all():
-                scores[rp] = rp.score
-            # Call update_scores() to set rp.tournament_score
-            r.update_scores()
+        new_r.update_scores()
         # Get the ranks and scores
         p_and_s = t.ranks_and_scores(after_round_num=2)
         # Just the first two rounds should count
@@ -3801,18 +3736,11 @@ class TournamentTests(TestCase):
                 except RoundPlayer.DoesNotExist:
                     score2 = 0.0
                 self.assertAlmostEqual(p_and_s[p][1], score1 + score2)
-        # Cleanup
-        for xp, score in scores.items():
-            xp.score = score
-            xp.save()
         new_r.delete()
         new_rp1.delete()
         new_rp2.delete()
         new_tp1.delete()
         new_tp2.delete()
-        self.g31.gameplayer_set.all().delete()
-        self.g32.gameplayer_set.all().delete()
-
     def test_tournament_ranks_and_scores_round_with_top_pool_fallback(self):
         """after_round_num should still work when a top pool exists."""
         today = date.today()
@@ -4117,6 +4045,7 @@ class TournamentTests(TestCase):
 
     def test_tournament_ranks_and_scores_tscoringsumgames(self):
         """Check that ranks_and_scores() with round specified doesn't break TScoringSumGames"""
+        # TODO Move comprehensive TScoringSumGames coverage to scoring-system tests.
         t = Tournament.objects.get(name='t3')
         # Store current scores
         t_scores = {}
