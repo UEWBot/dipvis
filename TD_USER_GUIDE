@@ -62,10 +62,9 @@ Essentially it tells the system to do its best not to have those players play a
 game against each other. It is intended for use when you have family members
 that you would prefer not to end up at the same board.
 
-Finally, it reads background information from the World Diplomacy Database and/or
-World Diplomacy Reference and stores it as PlayerAwards, PlayerGameResults,
-PlayerRankings, and PlayerTournamentRankings, but you shouldn't need to worry about
-those at all.
+Finally, it reads background information from the World Diplomacy Reference and
+stores it as PlayerAwards, PlayerGameResults, PlayerRankings, and
+PlayerTournamentRankings, but you shouldn't need to worry about those at all.
 
 Creating Your Tournament
 ------------------------
@@ -193,7 +192,7 @@ characters, for example "FGIRT" meaning "France, then Germany, then Italy, then
 Russia, then Turkey, with England and Austria joint last".
 
 Roll Call, Pool Population, and Game Seeding
---------------------------
+--------------------------------------------
 
 Note: the software has the concept of "the current round", which is determined
 by which rounds have RoundPlayers (i.e. roll call has been done) and Games that
@@ -288,8 +287,8 @@ Once the Tournament is over and all the data has been entered, please uncheck th
 checkbox for the Tournament (and Save it). This will help prevent inadvertant changes.
 This will also trigger updates of any Circuits the Tournament is part of.
 
-Upload to WDR
--------------
+Upload to World Diplomacy Reference (WDR)
+-----------------------------------------
 
 Once your Tournament has been added to the WDR, please take a moment to set its "WDR Id"
 (and Save it) to help with cross-referencing.
