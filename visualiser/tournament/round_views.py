@@ -571,7 +571,7 @@ def seed_games(request, tournament_id, round_num):
         # Use the tournament's default GameSet, or fall back to sensible defaults
         if t.default_game_set:
             default_set = t.default_game_set
-        elif t.is_virtual():
+        elif t.is_virtual:
             default_set = GameSet.objects.get(name='Backstabbr')
         else:
             default_set = GameSet.objects.get(pk=1)

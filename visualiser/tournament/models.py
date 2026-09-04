@@ -1232,6 +1232,7 @@ class Tournament(models.Model):
         """
         return self.power_assignment == PowerAssignMethods.PREFERENCES
 
+    @property
     def is_virtual(self):
         """
         Returns True if the Tournament is online,
@@ -3034,7 +3035,7 @@ class Game(models.Model):
         if self.notes:
             game_text += ' ' + self.notes + '\n'
         tournament = self.the_round.tournament
-        include_backstabbr = tournament.is_virtual()
+        include_backstabbr = tournament.is_virtual
         backstabbr_by_player_id = {}
         if include_backstabbr:
             player_ids = self.gameplayer_set.values_list('player_id', flat=True)

@@ -8528,7 +8528,7 @@ class GameTests(TestCase):
     def test_game_board_call_msg_virtual(self):
         # Ensure some, but not all, players have backstabbr usernames
         t = Tournament.objects.get(name='t1')
-        self.assertIs(False, t.is_virtual())
+        self.assertIs(False, t.is_virtual)
         t.format = Formats.VFTF
         t.save(update_fields=['format'])
         g = t.round_numbered(1).game_set.get(name='g11')
@@ -8543,7 +8543,7 @@ class GameTests(TestCase):
 
     def test_game_board_call_msg_no_powers(self):
         t = Tournament.objects.get(name='t1')
-        self.assertIs(False, t.is_virtual())
+        self.assertIs(False, t.is_virtual)
         g = t.round_numbered(1).game_set.get(name='g11')
         powers = {}
         for gp in g.gameplayer_set.all():

@@ -297,7 +297,7 @@ class EmailTests(TestCase):
     def test_send_board_call_email(self):
         r = Round.objects.first()
         t = r.tournament
-        self.assertEqual(t.is_virtual(), False)
+        self.assertEqual(t.is_virtual, False)
         send_board_call_email(r)
         # 3 Games, but one where no players have an email address, so we expect to send 2 emails
         self.assertEqual(len(mail.outbox), 2)
@@ -386,7 +386,7 @@ class EmailTests(TestCase):
         """The same as test_send_board_call_email(), but with t.no_email = True"""
         r = Round.objects.first()
         t = r.tournament
-        self.assertEqual(t.is_virtual(), False)
+        self.assertEqual(t.is_virtual, False)
         self.assertEqual(t.no_email, False)
         t.no_email = True
         t.save(update_fields=['no_email'])
@@ -461,7 +461,7 @@ class EmailTests(TestCase):
         tp = self.t2.tournamentplayer_set.exclude(uuid_str='').exclude(player__email='').first()
         self.assertIsNotNone(tp)
         t = tp.tournament
-        self.assertEqual(t.is_virtual(), False)
+        self.assertEqual(t.is_virtual, False)
         self.assertEqual(t.no_email, False)
         t.no_email = True
         t.save(update_fields=['no_email'])
@@ -511,7 +511,7 @@ class EmailTests(TestCase):
         tp = self.t1.tournamentplayer_set.exclude(player__email='').first()
         self.assertIsNotNone(tp)
         t = tp.tournament
-        self.assertEqual(t.is_virtual(), False)
+        self.assertEqual(t.is_virtual, False)
         self.assertEqual(t.no_email, False)
         t.no_email = True
         old_pa = t.power_assignment
