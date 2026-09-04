@@ -2926,6 +2926,7 @@ class Game(models.Model):
         ranks_and_scores = add_ranks(self.scores())
         return {k: r for k, (r, s) in ranks_and_scores.items()}
 
+    @property
     def is_dias(self):
         """
         Returns whether the game Draws must Include All Survivors
@@ -3222,7 +3223,7 @@ class DrawProposal(models.Model):
         # We can only use drawing_powers after the pk has been set
         if self.pk is not None:
             # If DIAS, all alive powers must be included
-            dias = self.game.is_dias()
+            dias = self.game.is_dias
             # Get the most recent CentreCounts before the DrawProposal
             scs = self.game.centrecount_set.order_by('year').filter(year__lt=self.year)
             # We will always have at least the 1900 CentreCounts, and DrawProposal.year must be >= 1901

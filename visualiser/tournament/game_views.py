@@ -538,7 +538,7 @@ def draw_vote(request, tournament_id, game_name, concession):
         season = last_image.season
     form = DrawForm(request.POST or None,
                     concession=concession,
-                    dias=g.is_dias(),
+                    dias=g.is_dias,
                     secrecy=t.draw_secrecy,
                     initial={'year': year, 'season': season})
     if form.is_valid():

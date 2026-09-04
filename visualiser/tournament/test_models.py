@@ -8248,7 +8248,7 @@ class GameTests(TestCase):
     def test_game_is_dias(self):
         for g in Game.objects.all():
             with self.subTest(game=g):
-                self.assertEqual(g.is_dias(), g.the_round.dias)
+                self.assertEqual(g.is_dias, g.the_round.dias)
 
     # Game.years_played()
     def test_game_years_played_first(self):
