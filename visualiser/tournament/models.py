@@ -2104,17 +2104,18 @@ class TournamentPlayer(models.Model):
         # No Round they played in has finished yet
         return 0.0
 
+    @property
     def rank(self):
         """
-        Where is the player (currently) ranked overall in the tournament?
+        Return the player's effective overall tournament rank.
 
         Returns Tournament.UNRANKED if self.unranked is True.
         """
+        if self.unranked:
+            return Tournament.UNRANKED
         if self.rank_override is not None:
             return self.rank_override
-        if self.calculated_rank:
-            return self.calculated_rank
-        return self.tournament.ranks_and_scores()[self.player][0]
+        return self.calculated_rank
 
     def roundplayers(self):
         """

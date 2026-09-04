@@ -6025,16 +6025,19 @@ class TournamentPlayerTests(TestCase):
     # TODO In an ongoing Tournament with show_current_scores False, if there are no finished rounds,
     #       it should return zero
 
-    # TournamentPlayer.rank()
+    # TournamentPlayer.rank
     def test_tournamentplayer_rank_finished(self):
         t = Tournament.objects.get(name='t3')
         tp1 = t.tournamentplayer_set.get(player=self.p5)
         self.assertEqual(tp1.score, 147.3)
         tp2 = t.tournamentplayer_set.get(player=self.p7)
         self.assertEqual(tp2.score, 47.3)
-        t.update_scores()
-        self.assertEqual(tp1.rank(), 1)
-        self.assertEqual(tp2.rank(), 2)
+        tp1.calculated_rank = 1
+        tp1.save(update_fields=['calculated_rank'])
+        tp2.calculated_rank = 2
+        tp2.save(update_fields=['calculated_rank'])
+        self.assertEqual(tp1.rank, 1)
+        self.assertEqual(tp2.rank, 2)
 
     # TournamentPlayer.team()
     def test_tournamentplayer_team(self):
@@ -6343,11 +6346,11 @@ class TournamentPlayerTests(TestCase):
         tp = tournament.tournamentplayer_set.get(player=self.p1)
         tp.calculated_rank = 3
         tp.rank_override = None
-        self.assertEqual(tp.rank(), 3)
+        self.assertEqual(tp.rank, 3)
         tp.rank_override = 1
-        self.assertEqual(tp.rank(), 1)
+        self.assertEqual(tp.rank, 1)
         tp.rank_override = 3
-        self.assertEqual(tp.rank(), 3)
+        self.assertEqual(tp.rank, 3)
 
 
 class SeederBiasTests(TestCase):
