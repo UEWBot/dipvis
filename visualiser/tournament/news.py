@@ -72,12 +72,12 @@ def _tournament_news(t):
         results += _round_news(current_round)
     # If the tournament is over, just report the top three players, plus awards
     elif t.is_finished:
-        for player, (rank, score) in t.ranks_and_scores().items():
-            if rank in [1, 2, 3]:
-                     results.append(_(u'%(player)s came %(rank)s, with a score of %(score).2f.')
-                               % {'player': str(player),
-                                             'rank': rank_str(rank),
-                                  'score':  score})
+        for tp in t.tournamentplayer_set.select_related('player').order_by():
+            if tp.rank in [1, 2, 3]:
+                results.append(_(u'%(player)s came %(rank)s, with a score of %(score).2f.')
+                               % {'player': str(tp.player),
+                                  'rank': rank_str(tp.rank),
+                                  'score': tp.score})
         # Add all awards
         for tp in t.tournamentplayer_set.exclude(awardrecipient=None).order_by():
             awards_str = ''

@@ -203,16 +203,15 @@ def add_missing_player_wdr_ids(dry_run=False):
     for t in Tournament.objects.filter(is_published=True).exclude(wdr_tournament_id=None):
         tps = t.tournamentplayer_set.filter(player__wdr_player_id=None)
         if len(tps):
-            results = t.ranks_and_scores()
             data = wdr_tournament_as_json(t.wdr_tournament_id)
             for tp in tps:
-                p = tp.player
                 for player in data['tournament_classifications']:
+                    p = tp.player
                     # Look for matching score, rank, and first name
                     # But skip anyone with a score of zero due to ties
-                    if ((player['player_score'] == results[p][1]) and
-                        (player['player_rank'] == results[p][0]) and
-                        (results[p][1] != 0.0) and
+                    if ((player['player_score'] == tp.score) and
+                        (player['player_rank'] == tp.rank) and
+                        (tp.score != 0.0) and
                         (player['player_full_name'].startswith(p.first_name))):
                         print(f'Adding WDR id {player["player_id"]} to {p} (from {t})')
                         if not dry_run:

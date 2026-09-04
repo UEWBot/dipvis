@@ -131,8 +131,7 @@ def tournament_scores(request,
     # Round number is start-time order, so preserve that explicitly.
     rds = list(t.round_set.order_by('start'))
     if t.show_current_scores:
-        # Grab the tournament scores and ranks, all "if it ended now"
-        t_ranks_and_scores = t.ranks_and_scores()
+        t_ranks_and_scores = None
     else:
         # Get the scores after the last finished Round, if any
         finished_round = next((rd for rd in reversed(rds) if rd.is_finished), None)
@@ -158,7 +157,8 @@ def tournament_scores(request,
         for r in rds:
             # This player didn't play this round if the key is missing
             rs.append(round_player_map.get((r.id, tp.player_id)))
-        row = {'rank': f'{t_ranks_and_scores[tp.player][0]}',
+        rank = tp.rank if t.show_current_scores else t_ranks_and_scores[tp.player][0]
+        row = {'rank': f'{rank}',
                'player': tp,
                'rounds': rs}
         scores.append(row)
@@ -920,12 +920,13 @@ def api(request, tournament_id, version):
         rounds[num] = {'scoring_system': r.scoring_system,
                        'games': games}
     results = []
-    p_and_s = t.ranks_and_scores()
-    for player, res in p_and_s.items():
+    tournament_players = t.tournamentplayer_set.select_related('player').order_by()
+    for tp in tournament_players:
+        player = tp.player
         entry = {'player_name': str(player),
                  'player_wdr_id': player.wdr_player_id,
-                 'ranking': res[0],
-                 'score': res[1],
+                 'ranking': tp.rank,
+                 'score': tp.score,
                  'awards': [],
                  'score_breakdown': []}
         if entry['ranking'] == Tournament.UNRANKED:
@@ -947,7 +948,6 @@ def api(request, tournament_id, version):
                                                      'game': gp.game.name,
                                                      'score': gp.score,
                                                      'dropped': gp.score_dropped})
-        tp = player.tournamentplayer_set.get(tournament=t)
         for award in tp.awards.all():
             award_entry = {'name': award.name,
                            'power': str(award.power)}
