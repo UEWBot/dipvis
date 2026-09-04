@@ -1241,6 +1241,7 @@ class Tournament(models.Model):
         """
         return self.format == Formats.VFTF
 
+    @property
     def show_game_urls(self):
         """
         Return a boolean indicating whether Game external_url should be displayed.

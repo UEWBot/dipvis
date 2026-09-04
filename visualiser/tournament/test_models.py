@@ -3379,7 +3379,7 @@ class TournamentTests(TestCase):
     def test_tournament_show_game_urls_flag_unset(self):
         t = Tournament.objects.first()
         self.assertIs(False, t.delay_game_url_publication)
-        self.assertIs(True, t.show_game_urls())
+        self.assertIs(True, t.show_game_urls)
 
     def test_tournament_show_game_urls_still_playing(self):
         t = Tournament.objects.first()
@@ -3389,7 +3389,7 @@ class TournamentTests(TestCase):
         t.delay_game_url_publication = True
         t.end_date = date.today() + HOURS_24
         t.save(update_fields=['delay_game_url_publication', 'end_date'])
-        self.assertIs(False, t.show_game_urls())
+        self.assertIs(False, t.show_game_urls)
         # Clean up
         t.delay_game_url_publication = False
         t.end_date = end
@@ -3406,7 +3406,7 @@ class TournamentTests(TestCase):
         t.start_date = today - HOURS_72
         t.end_date = today - HOURS_48
         t.save(update_fields=['delay_game_url_publication', 'start_date', 'end_date'])
-        self.assertIs(True, t.show_game_urls())
+        self.assertIs(True, t.show_game_urls)
         # Clean up
         t.delay_game_url_publication = False
         t.start_date = start
