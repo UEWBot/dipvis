@@ -1353,13 +1353,15 @@ class Tournament(models.Model):
                 result[tp.player] = (tp.place, tp.snapshot_score)
             return result
 
-        if after_round_num is None:
+        # For up-to-date results, just read directly from the database
+        if (after_round_num is None) or (after_round_num >= self.round_set.count()):
             result = {}
             for tp in self.tournamentplayer_set.select_related('player').order_by():
                 rank = tp.rank_override if tp.rank_override is not None else tp.calculated_rank
                 result[tp.player] = (Tournament.UNRANKED if tp.unranked else rank, tp.score)
             return result
 
+        # Otherwise, calculate everything, allowing for top board
         tp_rows = list(self.tournamentplayer_set.select_related('player').order_by())
         player_map = {tp.player_id: tp.player for tp in tp_rows}
 

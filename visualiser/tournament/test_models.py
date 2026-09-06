@@ -3820,12 +3820,19 @@ class TournamentTests(TestCase):
                 scores[rp] = rp.score
             # Call update_scores() to set rp.tournament_score
             r.update_scores()
+        # Override one player's rank
+        tp1 = t.tournamentplayer_set.first()
+        tp1.rank_override = 47
+        tp1.save()
         p_and_s = t.ranks_and_scores(after_round_num=t.round_set.count())
-        # This should just report the scores stored in the database
+        # This should just report the ranks and scores stored in the database
         for tp in t.tournamentplayer_set.all():
             with self.subTest(player=tp.player):
+                self.assertAlmostEqual(p_and_s[tp.player][0], tp.rank)
                 self.assertAlmostEqual(p_and_s[tp.player][1], tp.score)
         # Cleanup
+        tp1.rank_override = None
+        tp1.save()
         for xp, score in scores.items():
             xp.score = score
             xp.save()
