@@ -1005,7 +1005,8 @@ class Tournament(models.Model):
     A Diplomacy tournament
     """
     # Flag value to use for players who are excluded from the rankings
-    UNRANKED = 999999
+    # Value picked so we can use a PositiveSmallIntegerField
+    UNRANKED = 32767
 
     MAX_NAME_LENGTH = 60
 
