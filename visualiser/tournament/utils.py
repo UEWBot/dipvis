@@ -42,7 +42,7 @@ from tournament.models import (NO_SCORING_SYSTEM_STR, Award, AwardRecipient,
                                GamePlayer, Pool, Preference, Round,
                                RoundPlayer, SeederBias, SupplyCentreOwnership,
                                Team, Tournament, TournamentAward,
-                               TournamentPlayer)
+                               TournamentPlayer, _save_rank)
 from tournament.players import (InvalidWDRId, Player, PlayerEventRanking,
                                 WDDPlayer, WDRBackground, WDRNotAccessible)
 from tournament.round_views import _create_game_seeder, _generate_game_name
@@ -834,3 +834,23 @@ def add_wdr_tournament_ids(csv_filename, dry_run=False):
                     ptr.wdr_tournament_id = row['id']
                     if not dry_run:
                         ptr.save(update_fields=['wdr_tournament_id'])
+
+
+def set_calculated_rank():
+    """
+    Set calculated_rank in all tournaments
+    """
+    # This should really be included in migrations
+    for t in Tournament.objects.all():
+        print(f"Setting calculated_rank for players in {t}")
+        # t.update_scores() has side-effects like awarding best country awards
+        tp_set = t.tournamentplayer_set.order_by()
+        ranks = t._calculate_ranks({tp.player_id: tp.score for tp in tp_set})
+        for tp in tp_set:
+            _save_rank(tp, ranks[tp.player][0])
+
+        if t.team_size is not None:
+            print(f"Setting calculated_rank for teams in {t}")
+            # Pick any one player to minimise work done
+            p = tp.player
+            t.update_team_scores(for_players=[p])
