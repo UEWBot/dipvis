@@ -28,7 +28,7 @@ from tournament.diplomacy import GameSet, GreatPower
 from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS,
                                Award, AwardRecipient, CentreCount, DrawSecrecy,
                                Game, GamePlayer, Round,
-                               RoundPlayer, Tournament, TournamentAward,
+                               RoundPlayer, Team, Tournament, TournamentAward,
                                TournamentPlayer)
 from tournament.players import Player, PlayerEventRanking, WDDPlayer
 from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
@@ -43,6 +43,7 @@ from tournament.utils import (archive_tournaments, map_to_backstabbr_power,
                               nuke_invalid_email,
                               player_emails,
                               populate_missed_years,
+                              set_calculated_rank,
                               upcoming_rounds,
                               _power_award_to_gameplayers)
 
@@ -109,6 +110,61 @@ class UtilsTests(TestCase):
         self.assertRaises(Player.DoesNotExist,
                           nuke_invalid_email,
                           'missing@example.com')
+
+    @patch('builtins.print')
+    def test_set_calculated_rank_sets_player_ranks(self, mock_print):
+        today = django_timezone.now().date()
+        t = Tournament.objects.create(name='util-rank-backfill',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET)
+        p1 = Player.objects.create(first_name='Rhea',
+                                   last_name='RankedOne')
+        p2 = Player.objects.create(first_name='Roger',
+                                   last_name='RankedTwo')
+        tp1 = TournamentPlayer.objects.create(player=p1,
+                                              tournament=t,
+                                              score=20.0)
+        tp2 = TournamentPlayer.objects.create(player=p2,
+                                              tournament=t,
+                                              score=10.0)
+
+        set_calculated_rank()
+
+        tp1.refresh_from_db()
+        tp2.refresh_from_db()
+        self.assertEqual(tp1.calculated_rank, 1)
+        self.assertEqual(tp2.calculated_rank, 2)
+        mock_print.assert_any_call(f'Setting calculated_rank for players in {t}')
+        # Cleanup
+        t.delete()
+        p1.delete()
+        p2.delete()
+
+    @patch('builtins.print')
+    def test_set_calculated_rank_empty_team_tournament(self, mock_print):
+        today = django_timezone.now().date()
+        t = Tournament.objects.create(name='util-empty-rank-backfill',
+                                      start_date=today,
+                                      end_date=today,
+                                      round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                      tournament_scoring_system=T_SCORING_SYSTEMS[0].name,
+                                      draw_secrecy=DrawSecrecy.SECRET,
+                                      team_size=2)
+        team = Team.objects.create(tournament=t,
+                                   name='No Players')
+
+        set_calculated_rank()
+
+        team.refresh_from_db()
+        self.assertEqual(team.calculated_score, 0.0)
+        self.assertEqual(team.calculated_rank, 0)
+        mock_print.assert_any_call(f'Setting calculated_rank for players in {t}')
+        mock_print.assert_any_call(f'Setting calculated_rank for teams in {t}')
+        # Cleanup
+        t.delete()
 
     @patch('builtins.print')
     def test_archive_tournaments(self, mock_print):

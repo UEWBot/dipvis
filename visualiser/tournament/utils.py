@@ -852,5 +852,6 @@ def set_calculated_rank():
         if t.team_size is not None:
             print(f"Setting calculated_rank for teams in {t}")
             # Pick any one player to minimise work done
-            p = tp.player
-            t.update_team_scores(for_players=[p])
+            tp = tp_set.first()
+            if tp is not None:
+                t.update_team_scores(for_players=[tp.player])
