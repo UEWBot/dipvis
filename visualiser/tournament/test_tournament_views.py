@@ -1504,10 +1504,14 @@ class TournamentViewTests(TestCase):
         """A manager can enter scores for their tournament"""
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         old_tp_scores = {}
+        old_tp_calculated_scores = {}
+        old_tp_ranks = {}
         old_rp_scores = {}
         data = {'form-MAX_NUM_FORMS': '1000'}
         for i, tp in enumerate(self.t2.tournamentplayer_set.all()):
             old_tp_scores[tp] = tp.score
+            old_tp_calculated_scores[tp] = tp.calculated_score
+            old_tp_ranks[tp] = tp.calculated_rank
             rp = self.t2.round_numbered(1).roundplayer_set.get(player=tp.player)
             old_rp_scores[rp] = rp.score
             data[f'form-{i}-tp'] = str(tp.pk)
@@ -1526,6 +1530,7 @@ class TournamentViewTests(TestCase):
                 data[f'form-{i}-round_1'] = '37.5'
                 data[f'form-{i}-overall_score'] = '124.8'
         i += 1
+        first_tp = next(iter(old_tp_scores))
         data['form-TOTAL_FORMS'] = f'{i}'
         data['form-INITIAL_FORMS'] = f'{i}'
         data = urlencode(data)
@@ -1544,16 +1549,22 @@ class TournamentViewTests(TestCase):
             if i == 0:
                 self.assertEqual(rp.score, 73.5)
                 self.assertEqual(tp.score, 142.8)
+                self.assertEqual(tp.calculated_rank, 1)
             elif i == 1:
                 self.assertEqual(rp.score, old_rp_scores[unchanged_rp])
                 self.assertEqual(tp.score, old_tp_scores[unchanged_tp])
             else:
                 self.assertEqual(rp.score, 37.5)
                 self.assertEqual(tp.score, 124.8)
+                self.assertGreaterEqual(tp.calculated_rank, 2)
+        first_tp.refresh_from_db()
+        self.assertEqual(first_tp.calculated_rank, 1)
         # Clean up
         for tp, score in old_tp_scores.items():
             tp.score = score
-            tp.save(update_fields=['score'])
+            tp.calculated_score = old_tp_calculated_scores[tp]
+            tp.calculated_rank = old_tp_ranks[tp]
+            tp.save(update_fields=['score', 'calculated_score', 'calculated_rank'])
         for rp, score in old_rp_scores.items():
             rp.score = score
             rp.save(update_fields=['score'])
@@ -1661,10 +1672,15 @@ class TournamentViewTests(TestCase):
         self.assertIs(False, self.t2.handicaps)
         self.t2.handicaps = True
         self.t2.save()
+        self.t2.is_finished = True
+        self.t2.save(update_fields=['is_finished'])
         self.client.login(username=self.USERNAME3, password=self.PWORD3)
         data = {'form-MAX_NUM_FORMS': '1000'}
         expected = {}
+        old_scores = {}
         for i, tp in enumerate(tps):
+            tp.refresh_from_db()
+            old_scores[tp.id] = tp.score
             # Distinct values make index-to-player mismatches obvious.
             data[f'form-{i}-id'] = str(tp.id)
             if i == 1:
@@ -1689,10 +1705,14 @@ class TournamentViewTests(TestCase):
         for tp in tps:
             tp.refresh_from_db()
             self.assertAlmostEqual(tp.handicap, expected[tp.id])
+            self.assertAlmostEqual(tp.score, old_scores[tp.id] + expected[tp.id])
+            self.assertEqual(tp.calculated_score, tp.score)
         # Clean up
         for tp in tps:
             tp.handicap = 0.0
             tp.save(update_fields=['handicap'])
+        self.t2.is_finished = False
+        self.t2.save(update_fields=['is_finished'])
         self.t2.handicaps = False
         self.t2.save()
 

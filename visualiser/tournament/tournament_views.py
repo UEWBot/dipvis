@@ -466,8 +466,10 @@ def enter_scores(request, tournament_id):
                                       tournament=t,
                                       initial=data)
     if formset.is_valid():
+        changed = False
         for form in formset:
             if form.has_changed():
+                changed = True
                 tp = form.cleaned_data['tp']
                 for r_name, value in form.cleaned_data.items():
                     # Skip if no score was entered
@@ -487,6 +489,8 @@ def enter_scores(request, tournament_id):
                         # Store the player's tournament score
                         tp.score = value
                         tp.save(update_fields=['score'])
+        if changed:
+            t.update_scores()
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_scores',
                                             args=(tournament_id,)))
@@ -746,6 +750,7 @@ def enter_handicaps(request, tournament_id):
     formset = HandicapsFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()
+        t.update_scores()
         # Redirect to the TP index page
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
