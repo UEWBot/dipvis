@@ -2033,6 +2033,10 @@ class TournamentPlayer(models.Model):
     def save(self, *args, **kwargs):
         """Store the TournamentPlayer in the database"""
         is_new = self.pk is None
+        update_fields = kwargs.get('update_fields')
+        check_unranked_changed = (not is_new) and ((update_fields is None) or ('unranked' in update_fields))
+        if check_unranked_changed:
+            old_unranked = type(self).objects.get(pk=self.pk).unranked
         super().save(*args, **kwargs)
         # Update Player if things have changed
         if ((self.location != self.player.location) or
@@ -2044,6 +2048,8 @@ class TournamentPlayer(models.Model):
         if is_new:
             send_prefs_email(self)
             add_player_bg(self.player)
+        elif check_unranked_changed and (old_unranked != self.unranked):
+            self.tournament.update_scores([self.player])
 
     def get_absolute_url(self):
         """Returns the canonical URL for the object."""

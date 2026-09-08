@@ -6359,6 +6359,41 @@ class TournamentPlayerTests(TestCase):
         tp.rank_override = 3
         self.assertEqual(tp.rank, 3)
 
+    def test_tournament_player_save_unranked_change_updates_ranks(self):
+        today = date.today()
+        tournament = Tournament.objects.create(name='TP unranked rank update test',
+                                               start_date=today,
+                                               end_date=today + HOURS_24,
+                                               round_scoring_system=R_SCORING_SYSTEMS[0].name,
+                                               tournament_scoring_system='Sum all round scores',
+                                               draw_secrecy=DrawSecrecy.SECRET,
+                                               is_published=True)
+        p1 = Player.objects.create(first_name='Ranked',
+                                   last_name='Model')
+        p2 = Player.objects.create(first_name='Unranked',
+                                   last_name='Model')
+        tp1 = TournamentPlayer.objects.create(tournament=tournament,
+                                              player=p1,
+                                              score=10.0,
+                                              calculated_rank=2)
+        tp2 = TournamentPlayer.objects.create(tournament=tournament,
+                                              player=p2,
+                                              score=20.0,
+                                              calculated_rank=1)
+
+        tp2.unranked = True
+        tp2.save(update_fields=['unranked'])
+
+        tp1.refresh_from_db()
+        tp2.refresh_from_db()
+        self.assertEqual(tp1.calculated_rank, 1)
+        self.assertEqual(tp2.calculated_rank, Tournament.UNRANKED)
+
+        # Cleanup
+        tournament.delete()
+        p1.delete()
+        p2.delete()
+
 
 class SeederBiasTests(TestCase):
     fixtures = ['game_sets.json', 'players.json']
