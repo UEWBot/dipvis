@@ -31,7 +31,7 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models, transaction
 from django.db.models import F, Max, Q, Sum
 from django.db.models.signals import post_delete
@@ -1869,6 +1869,7 @@ class Team(models.Model):
                                                         help_text=_('Rank as calculated by the system'))
     rank_override = models.PositiveSmallIntegerField(null=True,
                                                       blank=True,
+                                                      validators=[MaxValueValidator(Tournament.UNRANKED - 1)],
                                                       help_text=_('Official rank override'))
     players = models.ManyToManyField(Player)
 
@@ -1997,6 +1998,7 @@ class TournamentPlayer(models.Model):
                                                        help_text=_('Rank as calculated by the system'))
     rank_override = models.PositiveSmallIntegerField(null=True,
                                                      blank=True,
+                                                     validators=[MaxValueValidator(Tournament.UNRANKED - 1)],
                                                      help_text=_('Official rank override'))
     handicap = models.FloatField(default=0.0,
                                  help_text=_('Secret bonus score added after all games end. Only used if enabled for the Tournament'))

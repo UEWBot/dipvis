@@ -78,6 +78,12 @@ class RankOverrideFormTests(TestCase):
         self.tournament_player.refresh_from_db()
         self.assertIsNone(self.tournament_player.rank_override)
 
+    def test_tournament_player_form_rejects_unranked_sentinel_override(self):
+        form = TournamentPlayerRankOverrideForm(instance=self.tournament_player,
+                                                 data={'rank_override': str(Tournament.UNRANKED)})
+        self.assertFalse(form.is_valid())
+        self.assertIn('rank_override', form.errors)
+
     def test_team_form_displays_calculated_values(self):
         form = TeamRankOverrideForm(instance=self.team)
         self.assertEqual(form['name'].initial, 'The Team')
@@ -101,3 +107,9 @@ class RankOverrideFormTests(TestCase):
         other.refresh_from_db()
         self.assertEqual(self.team.rank_override, 1)
         self.assertEqual(other.rank_override, 4)
+
+    def test_team_form_rejects_unranked_sentinel_override(self):
+        form = TeamRankOverrideForm(instance=self.team,
+                                    data={'rank_override': str(Tournament.UNRANKED)})
+        self.assertFalse(form.is_valid())
+        self.assertIn('rank_override', form.errors)
