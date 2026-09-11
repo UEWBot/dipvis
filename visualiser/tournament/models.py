@@ -1317,7 +1317,8 @@ class Tournament(models.Model):
     def _top_pool(self):
         """Returns the Pool with determines_top_rankings set, or None"""
         # There can be only one Pool per Tournament with determines_top_rankings set
-        return Pool.objects.filter(the_round__tournament=self).filter(determines_top_rankings__isnull=False).first()
+        return Pool.objects.filter(the_round__tournament=self,
+                                   determines_top_rankings__isnull=False).first()
 
     def ranks_and_scores(self, after_round_num=None):
         """
@@ -1944,7 +1945,9 @@ class Team(models.Model):
         """
         Returns a QuerySet of the Team's GamePlayers for the team round(s).
         """
-        return GamePlayer.objects.filter(game__the_round__tournament=self.tournament).filter(game__the_round__is_team_round=True).filter(player__in=self.players.all())
+        return GamePlayer.objects.filter(game__the_round__tournament=self.tournament,
+                                         game__the_round__is_team_round=True,
+                                         player__in=self.players.all())
 
     def results(self):
         """
@@ -1956,7 +1959,8 @@ class Team(models.Model):
         retval = []
         for p in self.players.all():
             entry = {'player': p}
-            gps = p.gameplayer_set.filter(game__the_round__tournament=self.tournament).filter(game__the_round__is_team_round=True)
+            gps = p.gameplayer_set.filter(game__the_round__tournament=self.tournament,
+                                          game__the_round__is_team_round=True)
             entry['gameplayers'] = list(gps)
             retval.append(entry)
         # Add empty entries if the team isn't full
@@ -2402,8 +2406,10 @@ class Round(models.Model):
                 for r in rp.the_round.tournament.round_set.all():
                     if r == rp.the_round:
                         break
-                    rps_exists = RoundPlayer.objects.filter(the_round=r).filter(player=rp.player).exists()
-                    gps_exists = GamePlayer.objects.filter(game__the_round=r).distinct().filter(player=rp.player).exists()
+                    rps_exists = RoundPlayer.objects.filter(the_round=r,
+                                                            player=rp.player).exists()
+                    gps_exists = GamePlayer.objects.filter(game__the_round=r,
+                                                           player=rp.player).exists()
                     if rps_exists and not gps_exists:
                         # Player also didn't play in this earlier round
                         bonus_already_given = True
@@ -2754,7 +2760,8 @@ class Game(models.Model):
         Game names must be unique within the tournament.
         Game pool must be a Pool within the Round.
         """
-        if Game.objects.filter(the_round__tournament=self.the_round.tournament).exclude(pk=self.pk).filter(name=self.name).exists():
+        if Game.objects.filter(the_round__tournament=self.the_round.tournament,
+                               name=self.name).exclude(pk=self.pk).exists():
             raise ValidationError({'name': _('Game names must be unique within the tournament')})
         if (self.pool is None) and self.the_round.pool_set.exists():
             raise ValidationError({'pool': _("Game must be assigned to one of the round's pools")})
@@ -3525,7 +3532,8 @@ class GamePlayer(models.Model):
         """
         Year in which the player was eliminated, or None.
         """
-        sc = self.game.centrecount_set.filter(power=self.power).filter(count=0).order_by('year').first()
+        sc = self.game.centrecount_set.filter(power=self.power,
+                                              count=0).order_by('year').first()
         if not sc:
             return None
         return sc.year

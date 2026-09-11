@@ -751,7 +751,8 @@ class TournamentScoringWDC2025Tests(TestCase):
         # Propagate scores from GP through RP to TP
         for r in [self.r1, self.r2, self.r3, self.r4]:
             r.update_scores()
-        rps = RoundPlayer.objects.filter(the_round__tournament=self.t).filter(player=self.p10)
+        rps = RoundPlayer.objects.filter(the_round__tournament=self.t,
+                                         player=self.p10)
         scores = self.tss.scores(rps)
         # validate results
         self.assertEqual(len(scores), 1)
@@ -3461,7 +3462,8 @@ class TournamentTests(TestCase):
     def test_tournament_calculated_scores_for_players(self):
         t = Tournament.objects.get(name='t1')
         player_list = [self.p2, self.p3, self.p6, self.p8]
-        rps = RoundPlayer.objects.filter(the_round__tournament=t).filter(player__in=player_list)
+        rps = RoundPlayer.objects.filter(the_round__tournament=t,
+                                         player__in=player_list)
         scores = t._calculated_scores(for_players=rps)
         self.assertEqual(len(scores), len(player_list))
         # This should be recalculated from the round scores
