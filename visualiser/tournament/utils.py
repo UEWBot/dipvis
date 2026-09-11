@@ -157,7 +157,7 @@ def archive_tournaments(dry_run=False):
     """
     Clear the editable flag in all published tournaments that are over
     """
-    for t in Tournament.objects.filter(editable=True).filter(is_published=True).filter(end_date__lte=django_timezone.now()):
+    for t in Tournament.objects.filter(editable=True, is_published=True, end_date__lte=django_timezone.now()):
         print(f'Archiving {t}')
         if not dry_run:
             t.editable = False
@@ -336,18 +336,21 @@ def populate_missed_years(game, dry_run=False):
 
 def find_users_without_players():
     """List Users that aren't associated with Players"""
-    for u in User.objects.filter(is_active=True).filter(player__isnull=True):
+    for u in User.objects.filter(is_active=True,
+                                 player__isnull=True):
         print(u)
 
 def find_tournaments_missing_wdd_ids():
     """List completed tournaments without WDD ids (they should probably have one)"""
-    for t in Tournament.objects.filter(wdd_tournament_id=None).filter(is_finished=True):
+    for t in Tournament.objects.filter(wdd_tournament_id=None,
+                                       is_finished=True):
         print(t)
 
 
 def find_tournaments_missing_wdr_ids():
     """List completed tournaments without WDR ids (they should probably have one)"""
-    for t in Tournament.objects.filter(wdr_tournament_id=None).filter(is_finished=True):
+    for t in Tournament.objects.filter(wdr_tournament_id=None,
+                                       is_finished=True):
         print(t)
 
 
@@ -375,7 +378,8 @@ def upcoming_rounds(num_days=45, include_unpublished=False):
     current_tz = django_timezone.get_current_timezone()
     today = django_timezone.now()
     end_date = today + timedelta(days=num_days)
-    for r in Round.objects.filter(is_finished=False).filter(start__range=[today, end_date]):
+    for r in Round.objects.filter(is_finished=False,
+                                  start__range=[today, end_date]):
         if include_unpublished or r.tournament.is_published:
             print(f'{r.start.astimezone(current_tz)} {r}')
 
