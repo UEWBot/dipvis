@@ -669,7 +669,8 @@ def _previous_bias(tournament, user):
     # Start with all SeederBiases except any from this tournament
     sb_set = SeederBias.objects.exclude(player1__tournament=tournament)
     # Look for any where both players are in this tournament
-    sb_set = sb_set.filter(player1__player__in=players).filter(player2__player__in=players)
+    sb_set = sb_set.filter(player1__player__in=players,
+                           player2__player__in=players)
     # Remove any from tournaments the user can't see
     sb_list = [sb for sb in sb_set if sb.player1.tournament.can_be_viewed_by(user)]
     # TODO remove any that are also in the current tournament ?
