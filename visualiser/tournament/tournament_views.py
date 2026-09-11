@@ -673,11 +673,12 @@ def _previous_bias(tournament, user):
                            player2__player__in=players)
     # Remove any from tournaments the user can't see
     sb_list = [sb for sb in sb_set if sb.player1.tournament.can_be_viewed_by(user)]
-    # TODO remove any that are also in the current tournament ?
-    # Note that this list will include SeederBiases that the current user can't
-    # normally see (because they can't manage the tournament). We could
-    # restrict it to just tournaments that they manage, but it's more useful to
-    # be more inclusive, and I don't think the knowledge leak should matter
+    # TODO remove any where the current tournament already has a bias for those
+    #      players?
+    # Note that this list will include SeederBiases in published tournaments
+    # that the current user isn't a manager for, which they can't otherwise see.
+    # We could restrict it to just tournaments that they manage, but it's more
+    # useful to be more inclusive, and I don't think the knowledge leak should matter
     return sb_list
 
 
