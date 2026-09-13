@@ -7327,6 +7327,17 @@ class RoundTests(TestCase):
         # TODO Validate result
         str(r)
 
+    def test_round_str_after_delete(self):
+        # When a Round is deleted, Django stringifies the (now orphaned)
+        # in-memory object while logging the deletion. number() can no longer
+        # find the Round in its Tournament, so str() must degrade gracefully
+        # rather than raising AssertionError.
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.order_by('start').first()
+        r.delete()
+        # Should not raise, and should still identify the Tournament
+        self.assertIn(str(t), str(r))
+
     # Round.save()
     # On save(), the scores for all Games in the round, the round itself, and the tournament should be updated
     def test_round_save(self):

@@ -2321,8 +2321,15 @@ class Round(models.Model):
         ]
 
     def __str__(self):
+        try:
+            number = self.number()
+        except AssertionError:
+            # The Round is no longer part of its Tournament - e.g. it has just
+            # been deleted, but Django is still building a log message for it.
+            # Fall back to a label that doesn't need the round number.
+            return _(u'%(tournament)s round') % {'tournament': self.tournament}
         return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament,
-                                                       'round': self.number()}
+                                                       'round': number}
 
     def save(self, *args, **kwargs):
         """
