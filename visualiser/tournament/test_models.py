@@ -7329,6 +7329,26 @@ class RoundTests(TestCase):
         # TODO Validate result
         str(r)
 
+    def test_round_str_after_delete(self):
+        # When a Round is deleted, Django stringifies the in-memory object
+        # while logging the deletion. delete() sets pk to None, and __str__
+        # keys off that: with no pk it can't determine the round number, so it
+        # must fall back to a label without one rather than raising
+        # AssertionError from number().
+        t = Tournament.objects.get(name='t1')
+        r = t.round_set.order_by('start').first()
+        r.delete()
+        # delete() clears the pk, the condition __str__ checks
+        self.assertIsNone(r.pk)
+        # This is the assertion that guards against the regression: before the
+        # fix, str(r) called number(), which iterated the tournament's rounds
+        # looking for this (now-deleted) one, failed to find it, and raised
+        # AssertionError. It must instead return the number-less fallback
+        # label, so evaluating str(r) here both proves it no longer raises and
+        # checks the fallback names the tournament.
+        # I.e. instead of "Tournament1 Round 1" just "Tournament1 Round"
+        self.assertEqual(str(r), f'{t} round')
+
     # Round.save()
     # On save(), the scores for all Games in the round, the round itself, and the tournament should be updated
     def test_round_save(self):

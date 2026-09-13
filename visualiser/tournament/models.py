@@ -2325,6 +2325,12 @@ class Round(models.Model):
         ]
 
     def __str__(self):
+        if self.pk is None:
+            # The Round has no database row - e.g. it has just been deleted,
+            # but Django is still building a log message for it. number() can't
+            # find it in its Tournament, so fall back to a label without the
+            # round number.
+            return _(u'%(tournament)s round') % {'tournament': self.tournament}
         return _(u'%(tournament)s round %(round)d') % {'tournament': self.tournament,
                                                        'round': self.number()}
 
