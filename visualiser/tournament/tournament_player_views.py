@@ -19,6 +19,7 @@ Tournament Player Views for the Diplomacy Tournament Visualiser.
 """
 
 from django.contrib.auth.decorators import permission_required
+from django.contrib.admin.models import ADDITION, DELETION
 from django.forms import modelformset_factory
 from django.forms.formsets import formset_factory
 from django.http import Http404, HttpResponseRedirect
@@ -27,6 +28,7 @@ from django.urls import reverse
 from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_exempt
 
+from tournament.audit import log_formset_actions, log_objects_action
 from tournament.email import send_prefs_email
 from tournament.forms import PaidForm, PlayerForm, PrefsForm
 from tournament.models import Tournament, TournamentPlayer
@@ -69,8 +71,12 @@ def index(request, tournament_id):
                 tp_qs = TournamentPlayer.objects.filter(pk=pk)
                 # Also delete any corresponding RoundPlayers
                 # Can't use QuerySet.delete() after distinct()
-                for rp in tp_qs.get().roundplayers():
+                tp = tp_qs.get()
+                round_players = list(tp.roundplayers())
+                log_objects_action(request.user, round_players, DELETION, [{'deleted': {}}])
+                for rp in round_players:
                     rp.delete()
+                log_objects_action(request.user, [tp], DELETION, [{'deleted': {}}])
                 tp_qs.delete()
                 redirect = True
                 break
@@ -81,7 +87,9 @@ def index(request, tournament_id):
                     player = form.cleaned_data['player']
                     tp, created = TournamentPlayer.objects.get_or_create(player=player,
                                                                          tournament=t)
-                    if not created:
+                    if created:
+                        log_objects_action(request.user, [tp], ADDITION, [{'added': {}}])
+                    else:
                         # TODO Because we don't pass the modified formset to render(),
                         # this error is never seen.
                         # In practice, though, the player *is* (already) registered...
@@ -107,6 +115,7 @@ def payments(request, tournament_id):
     formset = PaidFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()
+        log_formset_actions(request.user, formset)
         # Redirect to the index page
         return HttpResponseRedirect(reverse('tournament_players',
                                             args=(tournament_id,)))
@@ -158,6 +167,8 @@ def player_prefs(request, tournament_id, uuid):
 
     if prefs_form.is_valid() and prefs_form.has_changed():
         prefs_form.save()
+        # This endpoint is normally used by players without accounts, so there
+        # is usually no user available to record in LogEntry.
 
         # Redirect back here to flush the POST data
         return HttpResponseRedirect(reverse('player_prefs',

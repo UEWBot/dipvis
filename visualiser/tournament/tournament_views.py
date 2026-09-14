@@ -26,6 +26,7 @@ import matplotlib.figure as figure
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
+from django.contrib.admin.models import ADDITION, CHANGE
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.models import User
@@ -42,6 +43,7 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_roll_call_emails
+from tournament.audit import log_form_action, log_formset_actions
 from tournament.forms import (AwardRecipientFormSet,
                               BasePlayerRoundScoreFormset,
                               BaseTeamsFormset, EnableCheckInForm,
@@ -552,7 +554,8 @@ def enter_prefs(request, tournament_id):
     if formset.is_valid():
         for form in formset:
             if form.has_changed():
-                form.save()
+                obj = form.save()
+                log_form_action(request.user, form, obj, CHANGE)
         # If all went well, re-direct
         return HttpResponseRedirect(reverse('tournament_detail',
                                             args=(tournament_id,)))
@@ -706,7 +709,8 @@ def seeder_bias(request, tournament_id):
                 return HttpResponseRedirect(reverse('seeder_bias',
                                                     args=(tournament_id,)))
         if form.is_valid():
-            form.save()
+            seeder_bias = form.save()
+            log_form_action(request.user, form, seeder_bias, ADDITION, add=True)
             # Redirect back here to flush the POST data
             return HttpResponseRedirect(reverse('seeder_bias',
                                                 args=(tournament_id,)))
@@ -730,6 +734,7 @@ def enter_awards(request, tournament_id):
         with transaction.atomic():
             for fs in formsets:
                 fs.save()
+                log_formset_actions(request.user, fs)
         # Redirect to the read-only version
         return HttpResponseRedirect(reverse('tournament_awards',
                                             args=(tournament_id,)))
@@ -752,6 +757,7 @@ def enter_handicaps(request, tournament_id):
     formset = HandicapsFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()
+        log_formset_actions(request.user, formset)
         t.update_scores()
         # Redirect to the TP index page
         return HttpResponseRedirect(reverse('tournament_players',
@@ -773,6 +779,7 @@ def enter_player_ranks(request, tournament_id):
     formset = RankFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()
+        log_formset_actions(request.user, formset)
         return HttpResponseRedirect(reverse('tournament_scores', args=(tournament_id,)))
     return render(request,
                   'tournaments/enter_ranks.html',
@@ -795,6 +802,7 @@ def enter_team_ranks(request, tournament_id):
     formset = RankFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
         formset.save()
+        log_formset_actions(request.user, formset)
         return HttpResponseRedirect(reverse('team_scores', args=(tournament_id,)))
     return render(request,
                   'tournaments/enter_ranks.html',
