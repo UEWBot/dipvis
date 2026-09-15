@@ -1588,6 +1588,11 @@ class TournamentViewTests(TestCase):
                 self.assertGreaterEqual(tp.calculated_rank, 2)
         first_tp.refresh_from_db()
         self.assertEqual(first_tp.calculated_rank, 1)
+        score_messages = [json.loads(entry.change_message)
+                  for entry in LogEntry.objects.filter(user=self.u3)]
+        self.assertTrue(any({'form': {'name': 'PlayerRoundScoreForm'}} in message
+                    and {'changed': {'fields': ['Score']}} in message
+                    for message in score_messages))
         # Clean up
         for tp, score in old_tp_scores.items():
             tp.score = score
@@ -2126,7 +2131,7 @@ class TournamentViewTests(TestCase):
                  for entry in LogEntry.objects.filter(action_flag=CHANGE)]
         self.assertTrue(any({'form': {'name': 'TeamForm'}} in message
                     and {'changed': {'fields': ['Players']}} in message
-                    for message in team_messages), team_messages)
+                    for message in team_messages))
         self.assertTrue(any(entry.action_flag == ADDITION
                     and {'form': {'name': 'TeamForm'}} in json.loads(entry.change_message)
                     for entry in LogEntry.objects.all()))

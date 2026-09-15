@@ -469,6 +469,9 @@ def enter_scores(request, tournament_id):
                                       initial=data)
     if formset.is_valid():
         changed = False
+        added_round_players = []
+        changed_round_players = []
+        changed_tournament_players = []
         for form in formset:
             if form.has_changed():
                 changed = True
@@ -484,13 +487,25 @@ def enter_scores(request, tournament_id):
                         # Find that Round
                         r = t.round_numbered(i)
                         # Update the score
-                        RoundPlayer.objects.update_or_create(player=tp.player,
-                                                             the_round=r,
-                                                             defaults={'score': value})
+                        rp, created = RoundPlayer.objects.update_or_create(
+                            player=tp.player,
+                            the_round=r,
+                            defaults={'score': value})
+                        if created:
+                            added_round_players.append(rp)
+                        else:
+                            changed_round_players.append(rp)
                     elif r_name == 'overall_score':
                         # Store the player's tournament score
                         tp.score = value
                         tp.save(update_fields=['score'])
+                        changed_tournament_players.append(tp)
+        log_objects_action(request.user, added_round_players, ADDITION, [{'added': {}}],
+                           form_name='PlayerRoundScoreForm')
+        log_objects_change(request.user, changed_round_players, ['Score'],
+                           form_name='PlayerRoundScoreForm')
+        log_objects_change(request.user, changed_tournament_players, ['Score'],
+                           form_name='PlayerRoundScoreForm')
         if changed:
             t.update_scores()
         # Redirect to the read-only version
