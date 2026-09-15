@@ -8200,9 +8200,23 @@ class GameTests(TestCase):
         g.supplycentreownership_set.filter(year=YEAR).delete()
         ccs.delete()
 
-    # TODO Game.compare_sc_counts_and_ownerships() raises SCOwnershipsNotFound
+    def test_game_compare_sc_counts_and_ownerships_without_ownerships(self):
+        g = Game.objects.first()
+        with self.assertRaises(SCOwnershipsNotFound):
+            g.compare_sc_counts_and_ownerships(1921)
 
-    # TODO Game.compare_sc_counts_and_ownerships() with missing CentreCount
+    def test_game_compare_sc_counts_and_ownerships_missing_count(self):
+        g = Game.objects.first()
+        year = 1922
+        SupplyCentreOwnership.objects.create(
+            game=g,
+            year=year,
+            sc=SupplyCentre.objects.first(),
+            owner=self.austria)
+        issues = g.compare_sc_counts_and_ownerships(year)
+        self.assertEqual(len(issues), GreatPower.objects.count())
+        self.assertTrue(any('Missing count of one centre' in issue for issue in issues))
+        g.supplycentreownership_set.filter(year=year).delete()
 
     # TODO Game._calc_scores()
     def test_calc_scores_multiplier(self):
