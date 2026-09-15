@@ -1714,6 +1714,13 @@ class GameViewTests(TestCase):
         self.assertIsNone(dp.votes_in_favour)
         self.g2.refresh_from_db()
         self.assertIs(True, self.g2.is_finished)
+        draw_entries = LogEntry.objects.filter(user__username=self.USERNAME1)
+        self.assertTrue(any(entry.action_flag == ADDITION
+                    and {'form': {'name': 'DrawForm'}} in json.loads(entry.change_message)
+                    for entry in draw_entries))
+        self.assertTrue(any(entry.action_flag == CHANGE
+                    and {'changed': {'fields': ['Is finished']}} in json.loads(entry.change_message)
+                    for entry in draw_entries))
         # Clean up
         dp.delete()
         self.g2.is_finished = False

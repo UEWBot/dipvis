@@ -576,6 +576,7 @@ def draw_vote(request, tournament_id, game_name, concession):
                     secrecy=t.draw_secrecy,
                     initial={'year': year, 'season': season})
     if form.is_valid():
+        old_finished = g.is_finished
         year = form.cleaned_data['year']
         try:
             countries = form.cleaned_data['powers']
@@ -628,6 +629,11 @@ def draw_vote(request, tournament_id, game_name, concession):
                            'game': g,
                            'concession': concession,
                            'form': form})
+        log_objects_action(request.user, [dp], ADDITION, [{'added': {}}],
+                           form_name='DrawForm')
+        if old_finished != g.is_finished:
+            log_objects_change(request.user, [g], ['Is finished'],
+                               form_name='DrawForm')
         # Redirect to the page for the game
         return HttpResponseRedirect(reverse('game_detail',
                                             args=(tournament_id, game_name)))
