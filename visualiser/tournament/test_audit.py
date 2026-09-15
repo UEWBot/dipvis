@@ -6,7 +6,7 @@ from django.contrib.auth.models import AnonymousUser, User
 from django.forms import modelformset_factory
 from django.test import TestCase
 
-from tournament.audit import log_form_action, log_formset_actions
+from tournament.audit import log_form_action, log_formset_actions, log_objects_change
 from tournament.forms import PaidForm
 from tournament.models import R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, DrawSecrecy, Tournament, TournamentPlayer
 from tournament.players import Player
@@ -80,3 +80,16 @@ class AuditTests(TestCase):
         obj = form.save()
         log_form_action(AnonymousUser(), form, obj, CHANGE)
         self.assertFalse(LogEntry.objects.exists())
+
+    def test_log_objects_change_records_fields_and_form(self):
+        log_objects_change(self.user,
+                           [self.tournament_player],
+                           ['Paid'],
+                           form_name='PaidForm')
+
+        entry = LogEntry.objects.get()
+        self.assertEqual(entry.action_flag, CHANGE)
+        self.assertEqual(json.loads(entry.change_message), [
+            {'changed': {'fields': ['Paid']}},
+            {'form': {'name': 'PaidForm'}},
+        ])

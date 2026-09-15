@@ -60,13 +60,23 @@ def log_formset_actions(user, formset):
         )
 
 
-def log_objects_action(user, objects, action_flag, change_message):
+def log_objects_action(user, objects, action_flag, change_message, form_name=None):
     """Record an action for objects that were not saved through a form."""
     if not user.is_authenticated:
         return
+    if form_name:
+        change_message = list(change_message)
+        change_message.append({'form': {'name': form_name}})
     LogEntry.objects.log_actions(
         user_id=user.pk,
         queryset=objects,
         action_flag=action_flag,
         change_message=change_message,
     )
+
+
+def log_objects_change(user, objects, fields, form_name=None):
+    """Record a change with the fields changed by a custom form workflow."""
+    log_objects_action(user, objects, CHANGE,
+                       [{'changed': {'fields': fields}}],
+                       form_name=form_name)

@@ -25,6 +25,7 @@ import requests
 
 from django.conf import settings
 from django.contrib.auth.decorators import permission_required
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Sum
@@ -36,6 +37,7 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_board_call_email
+from tournament.audit import log_objects_action, log_objects_change
 from tournament.forms import (BaseGamePlayersFormset, BasePlayerRoundFormset,
                               BasePowerAssignFormset, GamePlayersForm,
                               GameScoreForm, GetSevenPlayersForm,
@@ -152,18 +154,26 @@ def roll_call(request, tournament_id, round_num):
             if form.has_changed():
                 p = form.cleaned_data['player']
                 # Ensure that this Player is in the Tournament
-                TournamentPlayer.objects.get_or_create(player=p,
-                                                       tournament=t)
+                tp, tp_created = TournamentPlayer.objects.get_or_create(player=p,
+                                                                         tournament=t)
+                if tp_created:
+                    log_objects_action(request.user, [tp], ADDITION, [{'added': {}}],
+                                       form_name='PlayerRoundForm')
                 if form.cleaned_data['present'] is True:
                     # Ensure that we have a corresponding RoundPlayer
                     is_standby = form.cleaned_data['standby']
                     sandboxer = form.cleaned_data['sandboxer']
-                    RoundPlayer.objects.update_or_create(player=p,
-                                                         the_round=r,
-                                                         # Reset game_count in case we've been here before
-                                                         defaults={'game_count': 0 if is_standby else 1,
-                                                                   'standby': is_standby,
-                                                                   'sandboxer': sandboxer})
+                    rp, rp_created = RoundPlayer.objects.update_or_create(
+                        player=p,
+                        the_round=r,
+                        # Reset game_count in case we've been here before
+                        defaults={'game_count': 0 if is_standby else 1,
+                                  'standby': is_standby,
+                                  'sandboxer': sandboxer})
+                    log_objects_action(request.user, [rp],
+                                       ADDITION if rp_created else CHANGE,
+                                       [{'added': {}}] if rp_created else [{'changed': {}}],
+                                       form_name='PlayerRoundForm')
                 elif r.game_set.filter(gameplayer__player=p).exists():
                     # Refuse to delete this one
                     form.add_error(None,
@@ -173,8 +183,11 @@ def roll_call(request, tournament_id, round_num):
                     # delete any corresponding RoundPlayer
                     # This could be a player who was previously checked-off in error
                     try:
-                        RoundPlayer.objects.get(player=p,
-                                                the_round=r).delete()
+                        rp = RoundPlayer.objects.get(player=p, the_round=r)
+                        log_objects_action(request.user, [rp], DELETION,
+                                           [{'deleted': {}}],
+                                           form_name='PlayerRoundForm')
+                        rp.delete()
                     except RoundPlayer.DoesNotExist:
                         pass
         if not errors_added:
@@ -225,18 +238,23 @@ def populate_pools(request, tournament_id, round_num):
     form = PoolForm(request.POST or None,
                     pool=pool)
     if form.is_valid():
+        changed = []
         # Assign RoundPlayers to Pools
         # First the constrained pool
         for rp in form.cleaned_data.values():
             rp.pool = pool
             rp.game_count = 1
             rp.save(update_fields=['pool', 'game_count'])
+            changed.append(rp)
         # Everyone else goes in the unconstrained pool
         pool = pool_set.get(board_count__isnull=True)
         for rp in rps:
             if rp.pool is None:
                 rp.pool = pool
                 rp.save(update_fields=['pool'])
+                changed.append(rp)
+        log_objects_change(request.user, changed, ['Pool', 'Game count'],
+                           form_name='PoolForm')
         # Next we have to get a whole number of boards in the variable Pool
         return HttpResponseRedirect(reverse('get_seven',
                                             args=(tournament_id,
@@ -281,6 +299,7 @@ def get_seven(request, tournament_id, round_num):
                                the_round=r,
                                pool=pool)
     if form.is_valid():
+        changed = []
         # Update RoundPlayers to indicate number of games they're playing
         # First clear any old game_counts
         for rp in rps.all():
@@ -289,20 +308,26 @@ def get_seven(request, tournament_id, round_num):
             else:
                 rp.game_count = 1
             rp.save(update_fields=['game_count'])
+            changed.append(rp)
         for i in range(form.standbys):
             rp = form.cleaned_data[f'standby_{i}']
             rp.game_count = 1
             rp.save(update_fields=['game_count'])
+            changed.append(rp)
         for i in range(form.sitters):
             rp = form.cleaned_data[f'sitter_{i}']
             if rp:
                 rp.game_count = 0
                 rp.save(update_fields=['game_count'])
+                changed.append(rp)
         for i in range(form.doubles):
             rp = form.cleaned_data[f'double_{i}']
             if rp:
                 rp.game_count = 2
                 rp.save(update_fields=['game_count'])
+                changed.append(rp)
+        log_objects_change(request.user, changed, ['Game count'],
+                           form_name='GetSevenPlayersForm')
         return HttpResponseRedirect(reverse('seed_games',
                                             args=(tournament_id,
                                                   round_num)))
@@ -506,6 +531,10 @@ def seed_games(request, tournament_id, round_num):
                                              extra=0)
         formset = PowerAssignFormset(request.POST, the_round=r, initial=data)
         if formset.is_valid():
+            changed_games = []
+            changed_gameplayers = []
+            changed_game_fields = set()
+            changed_gameplayer_fields = set()
             non_player_fields = {'name',
                                  'the_set',
                                  'top_board',
@@ -533,6 +562,8 @@ def seed_games(request, tournament_id, round_num):
                                            'round': r,
                                            'formset': formset})
                         g.save()
+                        changed_games.append(g)
+                        changed_game_fields.update(set(f.changed_data) & non_player_fields)
                     # Have any player fields changed?
                     if set(f.changed_data) - non_player_fields:
                         with transaction.atomic():
@@ -546,10 +577,18 @@ def seed_games(request, tournament_id, round_num):
                                 gp = GamePlayer.objects.get(id=gp_id)
                                 gp.power = field
                                 gp.save(update_fields=['power'])
+                                changed_gameplayers.append(gp)
+                                changed_gameplayer_fields.add('Power')
                 # Generate initial scores
                 g.update_scores(update_round=False)
             # Now all GamePlayer scores have been generated, update the RoundPlayer scores
             r.update_scores()
+            log_objects_change(request.user, changed_games,
+                               sorted(changed_game_fields),
+                               form_name='PowerAssignForm')
+            log_objects_change(request.user, changed_gameplayers,
+                               sorted(changed_gameplayer_fields),
+                               form_name='PowerAssignForm')
             # Notify the players
             send_board_call_email(r)
             _send_board_call_to_discord(r)
@@ -567,6 +606,12 @@ def seed_games(request, tournament_id, round_num):
                                                 args=(tournament_id,
                                                       round_num)))
         # Delete any existing Games and GamePlayers for this round
+        old_games = list(r.game_set.all())
+        old_gameplayers = [gp for game in old_games for gp in game.gameplayer_set.all()]
+        log_objects_action(request.user, old_gameplayers, DELETION, [{'deleted': {}}],
+                   form_name='PowerAssignForm')
+        log_objects_action(request.user, old_games, DELETION, [{'deleted': {}}],
+                   form_name='PowerAssignForm')
         r.game_set.all().delete()
         # Use the tournament's default GameSet, or fall back to sensible defaults
         if t.default_game_set:
@@ -604,6 +649,10 @@ def seed_games(request, tournament_id, round_num):
                                                 game=new_game)
                     current[str(gp.id)] = gp.power
             data.append(current)
+            log_objects_action(request.user, [new_game], ADDITION, [{'added': {}}],
+                               form_name='PowerAssignForm')
+            log_objects_action(request.user, list(new_game.gameplayer_set.all()), ADDITION,
+                               [{'added': {}}], form_name='PowerAssignForm')
         # Create a form for each of the resulting games
         PowerAssignFormset = formset_factory(PowerAssignForm,
                                              formset=BasePowerAssignFormset,
@@ -665,6 +714,10 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
     if formset.is_valid():
         non_player_fields = {'name', 'the_set', 'top_board', 'external_url', 'notes'}
         players_changed = False
+        changed_games = []
+        changed_game_fields = set()
+        added_games = []
+        added_gameplayers = []
         for f in formset:
             if f.has_changed():
                 if f.cleaned_data['game_id'] is not None:
@@ -672,6 +725,7 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                     g = Game.objects.get(pk=f.cleaned_data['game_id'])
                 # Have any non-player fields changed?
                 if set(f.changed_data) & non_player_fields:
+                    game_created = f.cleaned_data['game_id'] is None
                     if f.cleaned_data['game_id'] is not None:
                         # Game should exist
                         g = Game.objects.get(pk=f.cleaned_data['game_id'])
@@ -698,6 +752,11 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                                        'round': r,
                                        'formset': formset})
                     g.save()
+                    if game_created:
+                        added_games.append(g)
+                    else:
+                        changed_games.append(g)
+                        changed_game_fields.update(set(f.changed_data) & non_player_fields)
                 # Have any player fields changed?
                 if set(f.changed_data) - non_player_fields:
                     players_changed = True
@@ -706,15 +765,20 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
                         # We may already have a set of GamePlayers, and changing
                         # them may (temporarily) violate uniqueness constraints,
                         # so delete any that already exist and then create new ones
+                        old_gameplayers = list(g.gameplayer_set.all())
+                        log_objects_action(request.user, old_gameplayers, DELETION,
+                                           [{'deleted': {}}],
+                                           form_name='GamePlayersForm')
                         g.gameplayer_set.all().delete()
                         for power, field in f.cleaned_data.items():
                             try:
                                 p = GreatPower.objects.get(name=power)
                             except GreatPower.DoesNotExist:
                                 continue
-                            GamePlayer.objects.create(game=g,
-                                                      power=p,
-                                                      player=field.player)
+                            added_gameplayers.append(GamePlayer.objects.create(
+                                game=g,
+                                power=p,
+                                player=field.player))
                     # Generate initial scores
                     g.update_scores(update_round=False)
         if players_changed:
@@ -723,6 +787,13 @@ def create_games(request, tournament_id, round_num, game_name=None, pool_slug=''
             # Notify the players
             send_board_call_email(r)
             _send_board_call_to_discord(r)
+            log_objects_change(request.user, changed_games,
+                               sorted(changed_game_fields),
+                               form_name='GamePlayersForm')
+            log_objects_action(request.user, added_games, ADDITION, [{'added': {}}],
+                       form_name='GamePlayersForm')
+            log_objects_action(request.user, added_gameplayers, ADDITION, [{'added': {}}],
+                       form_name='GamePlayersForm')
         # Redirect to the board call page
         return HttpResponseRedirect(reverse('board_call',
                                             args=(tournament_id, round_num)))
