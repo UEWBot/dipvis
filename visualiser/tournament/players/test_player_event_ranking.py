@@ -19,7 +19,7 @@ import datetime as dt
 from django.test import TestCase
 
 from tournament.diplomacy import GreatPower
-from tournament.players import Player, WDDPlayer
+from tournament.players import EventKinds, Player, WDDPlayer
 
 from . import PlayerEventRanking
 
@@ -59,6 +59,21 @@ class PlayerEventRankingTests(TestCase):
         self.assertIn('id_player=990001', url)
         # Cleanup
         wdd.delete()
+        p.delete()
+
+    def test_playereventranking_wdd_url_for_circuit(self):
+        p = Player.objects.create(first_name='PTR', last_name='CircuitURL')
+        WDDPlayer.objects.create(player=p, wdd_player_id=990002)
+        ptr = PlayerEventRanking(player=p,
+                                 event_name='Some circuit',
+                                 event_kind=EventKinds.CIRCUIT,
+                                 rank=3,
+                                 date=dt.datetime.now(dt.timezone.utc),
+                                 wdd_tournament_id=370)
+        url = ptr.wdd_url()
+        self.assertIn('circuit_player.php', url)
+        self.assertIn('id_circuit=370', url)
+        self.assertIn('id_player=990002', url)
         p.delete()
 
     # PlayerEventRanking.wdr_url()
