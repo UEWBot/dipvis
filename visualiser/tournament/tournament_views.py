@@ -567,10 +567,8 @@ def enter_prefs(request, tournament_id):
     queryset = t.tournamentplayer_set.select_related('player').order_by('player')
     formset = PrefsFormset(request.POST or None, queryset=queryset)
     if formset.is_valid():
-        for form in formset:
-            if form.has_changed():
-                obj = form.save()
-                log_form_action(request.user, form, obj, CHANGE)
+        formset.save()
+        log_formset_actions(request.user, formset)
         # If all went well, re-direct
         return HttpResponseRedirect(reverse('tournament_detail',
                                             args=(tournament_id,)))

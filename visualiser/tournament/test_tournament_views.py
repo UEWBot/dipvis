@@ -2344,6 +2344,11 @@ class TournamentViewTests(TestCase):
         for tp in tps:
             tp.refresh_from_db()
             self.assertEqual(tp.prefs_string(), expected[tp.id])
+        preference_messages = [json.loads(entry.change_message)
+                               for entry in LogEntry.objects.filter(user=self.u3,
+                                                                    action_flag=CHANGE)]
+        self.assertTrue(any({'form': {'name': 'TournamentPlayerForm'}} in message
+                            for message in preference_messages))
         # Clean up
         Preference.objects.filter(player__tournament=self.t2).all().delete()
 
