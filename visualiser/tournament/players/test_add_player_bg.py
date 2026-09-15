@@ -476,6 +476,56 @@ class AddPlayerBgTests(TestCase):
         # Cleanup
         p.delete()
 
+    def test_event_ranking_for_wiki_title_returns_unique_name_match(self):
+        p = Player.objects.create(first_name='Wdr', last_name='MatchingCircuit')
+        expected = PlayerEventRanking.objects.create(
+            player=p,
+            event_name='North American Grand Prix 2000',
+            date=dt.date(2000, 12, 31),
+            rank=1,
+            event_kind=EventKinds.CIRCUIT,
+            tournament_kind='NAGP')
+        PlayerEventRanking.objects.create(
+            player=p,
+            event_name='Other Circuit 2000',
+            date=dt.date(2000, 6, 1),
+            rank=1,
+            event_kind=EventKinds.CIRCUIT,
+            tournament_kind='NAGP')
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        title = {'Tournament': 'North American Grand Prix',
+                 'Year': 2000,
+                 'Winner': str(p)}
+        self.assertEqual(add_bg_module._event_ranking_for_wiki_title(p, title, 1),
+                         expected)
+        p.delete()
+
+    def test_classify_unknown_wdr_tournament_kind_as_other(self):
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        for kind in (None, '', 'Convention'):
+            with self.subTest(kind=kind):
+                self.assertEqual(add_bg_module._classify_wdr_tournament_kind(kind),
+                                 EventKinds.OTHER)
+
+    def test_add_player_bg_skips_board_without_event_ranking(self):
+        p = Player.objects.create(first_name='Wdr', last_name='OrphanBoard')
+        add_bg_module = importlib.import_module('tournament.players.add_player_bg')
+        board = {'board_round': 1, 'board_number': 1, 'board_is_top': False,
+                 'board_tournament': 9999, 'board_power': 'Austria',
+                 'board_centers': 8, 'board_score': 8.0, 'board_rank': 2,
+                 'board_year_of_elimination': None, 'board_url': '',
+                 'board_variant': 'Standard'}
+        with patch.object(add_bg_module, 'WDRBackground') as mock_wdr:
+            mock_wdr.return_value.tournaments.return_value = []
+            mock_wdr.return_value.boards.return_value = [board]
+            mock_wdr.return_value.awards.return_value = []
+            mock_wdr.return_value.rankings.return_value = {}
+            mock_wdr.return_value.nationality.return_value = ''
+            mock_wdr.return_value.location.return_value = ''
+            self.assertEqual(add_bg_module._add_player_bg_from_wdr(p, 9999), [])
+        self.assertFalse(p.playergameresult_set.exists())
+        p.delete()
+
     @patch('builtins.print')
     def test_update_or_create_playertitle_wiki_handles_save_exception(self, mock_print):
         p = Player.objects.create(first_name='Wdr',

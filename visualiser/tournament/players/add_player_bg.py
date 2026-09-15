@@ -229,9 +229,7 @@ def _classify_wdr_tournament_kind(kind):
     """
     Classify a raw WDR tournament_event_type string into an EventKinds choice.
     """
-    if not kind:
-        return EventKinds.OTHER
-    return WDR_EVENT_TYPE_MAP[kind]
+    return WDR_EVENT_TYPE_MAP.get(kind, EventKinds.OTHER)
 
 
 def _update_or_create_event_ranking(player, lookup, defaults):
