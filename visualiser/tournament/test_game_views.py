@@ -22,6 +22,7 @@ from unittest.mock import patch
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, tag
 from django.urls import reverse
 
@@ -1271,6 +1272,25 @@ class GameViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'games/add_image.html')
+
+    def test_add_position_post_logs_image(self):
+        self.client.login(username=self.USERNAME1, password=self.PWORD1)
+        with open('media/games/starting_positions/ah_start_position.jpg', 'rb') as image_file:
+            data = {'game': str(self.g1.pk),
+                    'year': '1902',
+                    'season': Seasons.SPRING,
+                    'phase': 'M',
+                    'image': SimpleUploadedFile('position.jpg',
+                                                image_file.read(),
+                                                content_type='image/jpeg')}
+            response = self.client.post(reverse('add_game_image',
+                                                args=(self.t1.pk, self.g1.name)),
+                                        data,
+                                        secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(any(entry.action_flag == ADDITION
+                            and {'form': {'name': 'GameImageForm'}} in json.loads(entry.change_message)
+                            for entry in LogEntry.objects.filter(user__username=self.USERNAME1)))
 
     def test_news(self):
         response = self.client.get(reverse('game_news',

@@ -15,11 +15,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime as dt
+import json
 from urllib.parse import urlencode
 from unittest.mock import patch
 
 from django_countries import countries
 
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
@@ -951,6 +953,9 @@ class PlayerViewTests(TestCase):
         p = Player.objects.get(first_name='Una', last_name='Update')
         self.assertEqual(p.email, 'una@example.com')
         self.assertEqual(p.backstabbr_username, 'una_bs')
+        self.assertTrue(any(entry.action_flag == ADDITION
+                    and {'form': {'name': 'Player CSV import'}} in json.loads(entry.change_message)
+                            for entry in LogEntry.objects.filter(user__username=self.USERNAME)))
         # Cleanup
         p.delete()
 
@@ -975,6 +980,9 @@ class PlayerViewTests(TestCase):
         p.refresh_from_db()
         self.assertEqual(p.email, 'nadia@example.com')
         self.assertEqual(p.backstabbr_username, 'nadia_bs')
+        self.assertTrue(any(entry.action_flag == CHANGE
+                    and {'form': {'name': 'Player CSV import'}} in json.loads(entry.change_message)
+                            for entry in LogEntry.objects.filter(user__username=self.USERNAME)))
         # Cleanup
         p.delete()
 

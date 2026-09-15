@@ -730,6 +730,7 @@ def add_game_image(request, tournament_id, game_name=''):
     if form.is_valid():
         # Create the new image in the database
         image = form.save()
+        log_form_action(request.user, form, image, ADDITION, add=True)
         return HttpResponseRedirect(reverse('game_image',
                                             args=(tournament_id,
                                                   image.game.name,

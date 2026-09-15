@@ -23,6 +23,7 @@ from urllib.parse import urlencode
 
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Permission, User
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -2409,6 +2410,34 @@ class TournamentViewTests(TestCase):
                                    secure=True)
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
+
+    def test_upload_prefs_logs_changes(self):
+        tp = self.t2.tournamentplayer_set.first()
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        csv_data = ('Id,First Name,Last Name,Preferences\n'
+                    f'{tp.pk},{tp.player.first_name},{tp.player.last_name},AE\n')
+        response = self.client.post(reverse('upload_prefs', args=(self.t2.pk,)),
+                                    {'csv_file': SimpleUploadedFile('prefs.csv',
+                                                                     csv_data.encode('utf-8'),
+                                                                     content_type='text/csv')},
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(any({'form': {'name': 'Preferences CSV import'}} in json.loads(entry.change_message)
+                            for entry in LogEntry.objects.filter(user=self.u3)))
+
+    def test_self_check_in_control_logs_changes(self):
+        self.client.login(username=self.USERNAME3, password=self.PWORD3)
+        data = {f'round_{number}': 'on'
+                for number in range(1, self.t2.round_set.count() + 1)}
+        response = self.client.post(reverse('self_check_in_control', args=(self.t2.pk,)),
+                                    data,
+                                    secure=True)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(any(
+            any(message.get('changed', {}).get('fields') == ['Enable Check In', 'Email Sent']
+                for message in json.loads(entry.change_message))
+            and {'form': {'name': 'EnableCheckInForm'}} in json.loads(entry.change_message)
+            for entry in LogEntry.objects.filter(user=self.u3)))
 
     def test_prefs_csv(self):
         response = self.client.get(reverse('prefs_csv',

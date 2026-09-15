@@ -530,6 +530,7 @@ def self_check_in_control(request, tournament_id):
                              tournament=t,
                              initial=enable_data)
     if form.is_valid():
+        changed_rounds = []
         for r_name, value in form.cleaned_data.items():
             # Extract the round number from the field name
             i = int(r_name[6:])
@@ -544,6 +545,10 @@ def self_check_in_control(request, tournament_id):
                     fields.append('email_sent')
             rd.enable_check_in = value
             rd.save(update_fields=fields)
+            changed_rounds.append((rd, fields))
+        for rd, fields in changed_rounds:
+            log_objects_change(request.user, [rd], [field.replace('_', ' ').title() for field in fields],
+                               form_name='EnableCheckInForm')
         # Redirect to the roll call page
         return HttpResponseRedirect(reverse('round_roll_call',
                                             args=(tournament_id, t.current_round().number())))
@@ -633,6 +638,8 @@ def upload_prefs(request, tournament_id):
                                                     args=(tournament_id,)))
             try:
                 tp.create_preferences_from_string(ps)
+                log_objects_change(request.user, [tp], ['Preferences'],
+                                   form_name='Preferences CSV import')
             except InvalidPreferenceList:
                 messages.error(request, f'Invalid preference string {ps}')
                 return HttpResponseRedirect(reverse('upload_prefs',

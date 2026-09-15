@@ -21,6 +21,7 @@ Player Views for the Diplomacy Tournament Visualiser.
 import csv
 from io import StringIO
 
+from django.contrib.admin.models import ADDITION
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
@@ -31,6 +32,7 @@ from django.urls import reverse
 from django.utils import timezone as django_timezone
 from django.views import generic
 
+from tournament.audit import log_objects_action, log_objects_change
 from tournament.forms import PlayerForm
 from tournament.players import (EventKinds, Player, PlayerGameResult, WDDPlayer,
                                 add_player_bg)
@@ -147,6 +149,8 @@ def upload_players(request):
                       'players/upload_players.html')
 
     count = 0
+    added_players = []
+    changed_players = []
     try:
         csv_file = request.FILES['csv_file']
         if csv_file.multiple_chunks():
@@ -265,6 +269,10 @@ def upload_players(request):
                                                          last_name=last_name,
                                                          defaults={'email': email,
                                                                    'backstabbr_username': bs_un})
+            if created:
+                added_players.append(p)
+            else:
+                changed_players.append(p)
             if wdr_id:
                 if p.wdr_player_id is None:
                     p.wdr_player_id = wdr_id
@@ -308,5 +316,9 @@ def upload_players(request):
         messages.error(request, 'Unable to upload file: ' + repr(e))
 
     messages.success(request, f'Added {count} player(s)')
+    log_objects_action(request.user, added_players, ADDITION, [{'added': {}}],
+                       form_name='Player CSV import')
+    log_objects_change(request.user, changed_players, ['Player data'],
+                       form_name='Player CSV import')
 
     return HttpResponseRedirect(reverse('upload_players'))
