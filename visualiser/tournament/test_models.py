@@ -2612,8 +2612,17 @@ class AwardRecipientTests(TestCase):
         power = GreatPower.objects.get(abbreviation='A')
         self.ta.award.power = power
         self.ta.award.save()
+        GamePlayer.objects.create(player=self.tp.player,
+                                  game=self.g,
+                                  power=GreatPower.objects.get(abbreviation='E'))
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp, game=self.g)
-        self.assertRaises(ValidationError, ar.full_clean)
+        with self.assertRaisesMessage(ValidationError,
+                                      'This player did not play that Great Power in that game'):
+            ar.full_clean()
+
+    def test_award_recipient_str(self):
+        ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.tp)
+        self.assertEqual(str(ar), f'{self.tp} won {self.a}')
 
     def test_award_recipient_player_in_other_tournament_invalid(self):
         ar = AwardRecipient(tournament_award=self.ta, tournament_player=self.other_tp)
