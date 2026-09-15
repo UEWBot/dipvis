@@ -851,7 +851,7 @@ class RoundViewTests(TestCase):
                           'form-7-player': str(self.p8.pk),
                           'form-7-present': 'ok',
                           'form-8-player': str(self.p9.pk),
-                          'form-9-player': '',
+                          'form-9-player': str(self.p14.pk),
                           'form-10-player': ''})
         url = reverse('round_roll_call', args=(self.t3.pk, 1))
         response = self.client.post(url,
@@ -861,7 +861,7 @@ class RoundViewTests(TestCase):
         # Should still redirect to the get seven page
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response.url, reverse('get_seven', args=(self.t3.pk, 1)))
-        # No clean up needed because we left the same 7 players playing
+        self.t3.tournamentplayer_set.filter(player=self.p14).delete()
 
     def test_roll_call_post_old_round_refuse_delete(self):
         """POST of roll_call() for a Round that is finished, trying to delete a player who played a game"""
