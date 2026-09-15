@@ -34,7 +34,7 @@ class GScoringGIRSH(GameScoringSystem):
     occupied by the tied players.
     In a non-solo game, survivors receive 5 points per supply centre.
     In a solo, the soloer instead receives 90 points.
-    In a non-solo game, a sole board topper at least 3 centres ahead
+    A sole board topper at least 3 centres ahead
     receives 10 points per centre of lead, capped at 60. Each other
     survivor pays an equal share rounded down to a whole point.
     Finally, players receive one point for each year survived, including
@@ -55,9 +55,6 @@ class GScoringGIRSH(GameScoringSystem):
     @staticmethod
     def _gap_scores(state):
         scores = {power: 0 for power in state.all_powers()}
-        if state.soloer() is not None:
-            return scores
-
         survivors = list(state.survivors())
         leader_centres = state.highest_dot_count()
         leaders = [power for power in survivors if state.dot_count(power) == leader_centres]
@@ -66,8 +63,8 @@ class GScoringGIRSH(GameScoringSystem):
 
         leader = leaders[0]
         payers = [power for power in survivors if power != leader]
-        # The rules of the game guarantee at least one other survivor
-        assert payers
+        if not payers:
+            return scores
         second_centres = max(state.dot_count(power) for power in payers)
         gap = leader_centres - second_centres
         if gap < 3:

@@ -159,6 +159,52 @@ class GIRSHGameScoringTests(TestCase):
         self.assertEqual(scores[self.russia], 20 + 0 + 0 + 5)
         self.assertEqual(scores[self.turkey], 10 + 0 + 0 + 3)
 
+    def test_girsh_tied_first_places_share_first_and_second_points(self):
+        state = self._state({1901: {self.austria: 6, self.england: 6,
+                                   self.france: 5, self.germany: 4,
+                                   self.italy: 3, self.russia: 2,
+                                   self.turkey: 1},
+                            1902: {self.austria: 6, self.england: 6,
+                                   self.france: 5, self.germany: 4,
+                                   self.italy: 3, self.russia: 2,
+                                   self.turkey: 1}})
+        scores = self._system().scores(state)
+        self.assertEqual(scores[self.austria], 110 + 30 + 2)
+        self.assertEqual(scores[self.england], 110 + 30 + 2)
+
+    def test_girsh_tied_second_places_share_second_and_third_points(self):
+        state = self._state({1901: {self.austria: 7, self.england: 6,
+                                   self.france: 6, self.germany: 5,
+                                   self.italy: 4, self.russia: 3,
+                                   self.turkey: 2},
+                            1902: {self.austria: 7, self.england: 6,
+                                   self.france: 6, self.germany: 5,
+                                   self.italy: 4, self.russia: 3,
+                                   self.turkey: 2}})
+        scores = self._system().scores(state)
+        self.assertEqual(scores[self.austria], 130 + 35 + 2)
+        self.assertEqual(scores[self.england], 75 + 30 + 2)
+        self.assertEqual(scores[self.france], 75 + 30 + 2)
+
+    def test_girsh_gap_bonus_is_not_rounded_with_payer_points(self):
+        state = self._state({1901: {self.austria: 8, self.england: 5,
+                                    self.france: 5, self.germany: 5,
+                                    self.italy: 5, self.russia: 0,
+                                    self.turkey: 0}})
+        scores = self._system().scores(state)
+        gap_scores = self._system()._gap_scores(state)
+        self.assertEqual(gap_scores[self.austria], 30)
+        self.assertEqual(gap_scores[self.england], -7)
+        self.assertEqual(scores[self.austria], 130 + 40 + 30 + 1)
+
+    def test_girsh_soloer_can_receive_gap_bonus(self):
+        state = self._state({1901: {self.austria: 18, self.england: 5,
+                                   self.france: 4, self.germany: 3,
+                                   self.italy: 2, self.russia: 1,
+                                   self.turkey: 0}})
+        scores = self._system().scores(state)
+        self.assertEqual(scores[self.austria], 130 + 90 + 60 + 1)
+
     def test_girsh_solo_bonus(self):
         state = self._state({1901: {self.austria: 4, self.england: 4, self.france: 4,
                                    self.germany: 4, self.italy: 4, self.russia: 4,
@@ -186,12 +232,12 @@ class GIRSHGameScoringTests(TestCase):
                                    self.turkey: 2}})
         scores = self._system().scores(state)
         self.assertEqual(scores[self.austria], 10 + 4)
-        self.assertEqual(scores[self.england], 130 + 90 + 8)
+        self.assertEqual(scores[self.england], 130 + 90 + 60 + 8)
         self.assertEqual(scores[self.france], 20 + 6)
-        self.assertEqual(scores[self.germany], 90 + 8)
-        self.assertEqual(scores[self.italy], 60 + 8)
+        self.assertEqual(scores[self.germany], 90 + 8 - 20)
+        self.assertEqual(scores[self.italy], 60 + 8 - 20)
         self.assertEqual(scores[self.russia], 30 + 7)
-        self.assertEqual(scores[self.turkey], 40 + 8)
+        self.assertEqual(scores[self.turkey], 40 + 8 - 20)
 
     def test_girsh_countback_breaks_ties(self):
         state = self._state({1901: {self.austria: 5, self.england: 5, self.france: 5,
