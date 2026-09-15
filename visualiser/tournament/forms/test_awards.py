@@ -19,6 +19,7 @@ Award Forms Tests for the Diplomacy Tournament Visualiser.
 """
 import datetime as dt
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 from tournament.diplomacy import GameSet, GreatPower
@@ -28,7 +29,8 @@ from tournament.models import (R_SCORING_SYSTEMS, T_SCORING_SYSTEMS, Award,
                                TournamentPlayer)
 from tournament.players import Player
 
-from . import AwardRecipientForm, AwardRecipientFormSet
+from . import (AwardRecipientForm, AwardRecipientFormSet,
+               TournamentPlayerMultipleChoiceField)
 
 
 class AwardRecipientFormTest(TestCase):
@@ -138,6 +140,46 @@ class AwardRecipientFormTest(TestCase):
                                   tournament_award=self.ta1)
         self.assertFalse(form.is_valid())
         self.assertTrue(any('Select a valid choice' in message for message in form.errors['game']))
+
+    def test_clean_rejects_game_not_played_by_player(self):
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        form.cleaned_data = {'tournament_player': self.tp1, 'game': self.g}
+        with self.assertRaisesMessage(ValidationError, 'This player did not play in that game'):
+            form.clean()
+
+    def test_clean_rejects_wrong_power(self):
+        power = GreatPower.objects.get(abbreviation='A')
+        self.ta1.award.power = power
+        self.ta1.award.save(update_fields=['power'])
+        GamePlayer.objects.create(player=self.tp1.player,
+                                  game=self.g,
+                                  power=GreatPower.objects.get(abbreviation='E'))
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        form.cleaned_data = {'tournament_player': self.tp1, 'game': self.g}
+        with self.assertRaisesMessage(ValidationError,
+                                      'This player did not play that Great Power in that game'):
+            form.clean()
+
+    def test_clean_accepts_game_played_for_non_power_award(self):
+        GamePlayer.objects.create(player=self.tp1.player, game=self.g)
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        form.cleaned_data = {'tournament_player': self.tp1, 'game': self.g}
+        self.assertEqual(form.clean(), form.cleaned_data)
+
+    def test_clean_accepts_matching_power(self):
+        power = GreatPower.objects.get(abbreviation='A')
+        self.ta1.award.power = power
+        self.ta1.award.save(update_fields=['power'])
+        GamePlayer.objects.create(player=self.tp1.player, game=self.g, power=power)
+        form = AwardRecipientForm(tournament_award=self.ta1)
+        form.cleaned_data = {'tournament_player': self.tp1, 'game': self.g}
+        self.assertEqual(form.clean(), form.cleaned_data)
+
+    def test_tournament_player_multiple_choice_label(self):
+        field = TournamentPlayerMultipleChoiceField(
+            queryset=TournamentPlayer.objects.filter(pk=self.tp1.pk))
+        self.assertEqual(field.label_from_instance(self.tp1),
+                         self.tp1.player.sortable_str())
 
     def test_power_specific_award_game_choices_restrict_to_that_power(self):
         power = GreatPower.objects.get(abbreviation='A')
