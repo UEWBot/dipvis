@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+from pathlib import Path
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
@@ -25,6 +27,7 @@ from ..tasks.validate_max_greatpowers import validate_max_greatpowers
 from ..tasks.validate_max_supplycentres import validate_max_supplycentres
 from ..tasks.validate_year import validate_year
 from ..tasks.validate_year_including_start import validate_year_including_start
+from ..utils.game_image_location import game_image_location
 from ..values.diplomacy_values import TOTAL_SCS, WINNING_SCS
 
 
@@ -81,7 +84,9 @@ class DiplomacyTests(TestCase):
 
     # TODO validate_preference_string()
 
-    # TODO game_image_location()
+    def test_game_image_location(self):
+        self.assertEqual(game_image_location(None, 'position.png'),
+                         Path('games', 'starting_positions', 'position.png'))
 
     # GreatPower
     # GreatPower.starting_centres
