@@ -43,7 +43,7 @@ from django.utils.translation import gettext as _
 
 from tournament.diplomacy import GameSet, GreatPower
 from tournament.email import send_roll_call_emails
-from tournament.audit import log_form_action, log_formset_actions
+from tournament.audit import log_form_action, log_formset_actions, log_objects_action, log_objects_change
 from tournament.forms import (AwardRecipientFormSet,
                               BasePlayerRoundScoreFormset,
                               BaseTeamsFormset, EnableCheckInForm,
@@ -838,11 +838,16 @@ def enter_teams(request, tournament_id):
                            tournament=t,
                            queryset=t.team_set.all())
     if formset.is_valid():
+        added_teams = []
+        changed_teams = []
+        changed_team_fields = set()
         try:
             with transaction.atomic():
                 for form in formset:
                     if form.has_changed():
                         tm = form.instance
+                        team_created = not tm.pk
+                        old_players = set(tm.players.values_list('pk', flat=True)) if tm.pk else set()
                         if tm.pk:
                             tm.name = form.cleaned_data['name']
                         else:
@@ -859,6 +864,14 @@ def enter_teams(request, tournament_id):
                         # Update membership and enforce model-level validation.
                         tm.players.set(players)
                         tm.full_clean()
+                        if team_created:
+                            added_teams.append(tm)
+                        else:
+                            changed_teams.append(tm)
+                            if 'name' in form.changed_data:
+                                changed_team_fields.add('Name')
+                            if old_players != {player.pk for player in players}:
+                                changed_team_fields.add('Players')
         except (IntegrityError, ValidationError) as exc:
             if isinstance(exc, IntegrityError):
                 form.add_error(None, _('Team could not be saved due to a database constraint.'))
@@ -887,6 +900,11 @@ def enter_teams(request, tournament_id):
                           'tournaments/enter_teams.html',
                           {'tournament': t,
                            'formset': formset})
+        log_objects_action(request.user, added_teams, ADDITION, [{'added': {}}],
+                           form_name='TeamForm')
+        log_objects_change(request.user, changed_teams,
+                           sorted(changed_team_fields),
+                           form_name='TeamForm')
         # Redirect to the teams page
         return HttpResponseRedirect(reverse('teams',
                                             args=(tournament_id,)))

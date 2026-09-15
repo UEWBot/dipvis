@@ -14,12 +14,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
 import uuid
 import warnings
 import datetime as dt
 from unittest.mock import patch
 from urllib.parse import urlencode
 
+from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth.models import Permission, User
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -2120,6 +2122,14 @@ class TournamentViewTests(TestCase):
             self.assertEqual(tm.players.count(), 3)
         self.assertIn(player_swapped_to_2, tm2.players.all())
         self.assertIn(player_swapped_to_3, team_set[2].players.all())
+        team_messages = [json.loads(entry.change_message)
+                 for entry in LogEntry.objects.filter(action_flag=CHANGE)]
+        self.assertTrue(any({'form': {'name': 'TeamForm'}} in message
+                    and {'changed': {'fields': ['Players']}} in message
+                    for message in team_messages), team_messages)
+        self.assertTrue(any(entry.action_flag == ADDITION
+                    and {'form': {'name': 'TeamForm'}} in json.loads(entry.change_message)
+                    for entry in LogEntry.objects.all()))
         # Clean up
         self.t2.team_set.all().delete()
         self.t2.team_size = None
