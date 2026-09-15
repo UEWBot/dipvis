@@ -1226,6 +1226,27 @@ class TournamentViewTests(TestCase):
         # Should be a PNG image
         self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
 
+    def test_graph_skips_hidden_round_and_uses_leader_score(self):
+        rounds = list(self.t4.round_set.all())
+        hidden_round = rounds[0]
+        visible_round = Round.objects.create(tournament=self.t4,
+                                             scoring_system=hidden_round.scoring_system,
+                                             dias=hidden_round.dias,
+                                             start=hidden_round.start + dt.timedelta(hours=24))
+        rounds.append(visible_round)
+        player = self.t4.tournamentplayer_set.first().player
+        with patch.object(Round, 'show_scores', autospec=True,
+                          side_effect=lambda round_obj: round_obj.pk != hidden_round.pk), \
+             patch.object(Tournament, 'ranks_and_scores',
+                          return_value={player: (1, 42.0)}) as mock_scores:
+            response = self.client.get(reverse('graph_img_score',
+                                               args=(self.t4.pk,)),
+                                       secure=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_scores.call_count, len(rounds) - 1)
+        self.assertEqual(b'\x89PNG\r\n\x1a\n', response.content[:8])
+        visible_round.delete()
+
     def test_game_results(self):
         response = self.client.get(reverse('tournament_game_results',
                                            args=(self.t4.pk,)),
